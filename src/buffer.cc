@@ -171,6 +171,18 @@ BufferTest::run_tests (void)
 	buffer->read_u8 ();
 	buffer->read_u8 ();
 	buffer->reset ();
+	buffer->write_u16 (0x6369);
+	if (buffer->read_u16 () != 0x6369) {
+		ok = false;
+	}
+	buffer->write_u32 (0xdeadbeaf);
+	if (buffer->read_u32 () != 0xdeadbeaf) {
+		ok = false;
+	}
+	buffer->write_htons_u32 (0xdeadbeaf);
+	if (buffer->read_nstoh_u32 () != 0xdeadbeaf) {
+		ok = false;
+	}
 	
 	return ok;
 }
