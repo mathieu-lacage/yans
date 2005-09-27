@@ -1,10 +1,11 @@
+/* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 #ifndef CHUNK_H
 #define CHUNK_H
 
 #include <stdint.h>
+#include <ostream>
 
 class Buffer;
-class std::ostream;
 
 class Chunk {
 public:

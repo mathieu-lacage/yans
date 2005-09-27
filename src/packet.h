@@ -1,11 +1,13 @@
+/* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
+
 #ifndef PACKET_H
 #define PACKET_H
 
 #include <stdint.h>
+#include <ostream>
 
 class Chunk;
 class Buffer;
-class std::ostream;
 
 
 class Packet {
