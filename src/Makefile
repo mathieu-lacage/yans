@@ -4,17 +4,18 @@ SOURCE= \
 	buffer.cc \
 	chunk.cc \
 	packet.cc \
-	test.cc
+	test.cc \
+	main.cc
 
 OBJFILES=$(addsuffix .o, $(basename $(SOURCE)))
 
 all: test
 
 test: $(OBJFILES)
-	$(CC) $(LDFLAGS) -o $@ $^
+	$(CXX) $(LDFLAGS) -o $@ $^
 
 %.o:%.cc
-	$(CC) $(CXXFLAGS) -c -o $@ $^
+	$(CXX) $(CXXFLAGS) -c -o $@ $^
 
 
 clean:
