@@ -41,7 +41,7 @@ Buffer::ensure_write_room_left (uint8_t needed)
 bool
 Buffer::is_read_room_left (uint8_t needed)
 {
-	if ((m_write - m_read) > needed) {
+	if ((m_write - m_read) >= needed) {
 		return true;
 	} else {
 		return false;
@@ -167,6 +167,10 @@ BufferTest::run_tests (void)
 	if (buffer->read_u8 () != 0x67) {
 		ok = false;
 	}
+	buffer->write_u16 (0x6568);
+	buffer->read_u8 ();
+	buffer->read_u8 ();
+	buffer->reset ();
 	
 	return ok;
 }
