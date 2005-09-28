@@ -1,12 +1,14 @@
 Packet class Functional objectives:
   1) can print a human-readable view of any of the headers of any packet
-  2) can serialize and deserialize to a byte buffer any packet
-  3) can prepend, append, and remove arbitrary headers and trailers to a packet
-  4) can subclass the header/trailer classes.
+  2) can generate real-life byte-serialized packets to inject in real networks
+  3) easy to deserialize packets coming from a real network (this cannot be
+     completely automatic but it can be made really easy).
+  4) can prepend, append, and remove arbitrary headers and trailers to a packet
+  5) can subclass the header/trailer classes.
+  6) can generate libpcap-compatible traces.
 
-2) should be necessary for emulation, that is, the integration
+2) and 3) should be necessary for emulation, that is, the integration
 of the simulator in a real network. Otherwise, it should be 
 possible to run simulations without having to provide
 serializing/deserializing code which should speed quite a
 bit development for a lot of protocols.
-

@@ -67,11 +67,6 @@ Packet::serialize (WriteBuffer *buffer)
 		(*j)->serialize (buffer);
 	}
 }
-void 
-Packet::deserialize (ReadBuffer *buffer)
-{
-	// XXX think.
-}
 
 void 
 Packet::print (std::ostream *os)

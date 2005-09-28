@@ -26,7 +26,6 @@ public:
 	uint32_t get_size (void);
 
 	void serialize (WriteBuffer *buffer);
-	void deserialize (ReadBuffer *buffer);
 
 	void print (std::ostream *os);
 
