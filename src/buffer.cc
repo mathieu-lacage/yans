@@ -63,6 +63,14 @@ WriteBuffer::write_u8 (uint8_t data)
 	m_write++;
 }
 void 
+WriteBuffer::write (uint8_t const *data, uint8_t size)
+{
+	ensure_write_room_left (size);
+	for (uint8_t i = 0; i < size; i++) {
+		m_buffer[m_write+i] = data[i];
+	}
+}
+void 
 WriteBuffer::write_htons_u16 (uint16_t data)
 {
 	ensure_write_room_left (2);
@@ -121,6 +129,14 @@ ReadBuffer::read_u8 (void)
 	uint8_t retval = m_buffer[m_read];
 	m_read++;
 	return retval;
+}
+void 
+ReadBuffer::read (uint8_t *buffer, uint8_t size)
+{
+	assert (is_read_room_left (size));
+	for(uint8_t i = 0; i < size; i++) {
+		buffer[i] = m_buffer[m_read+i];
+	}
 }
 
 uint16_t 

@@ -16,6 +16,7 @@ public:
 	void reset (void);
 
 	void write_u8 (uint8_t data);
+	void write (uint8_t const*buffer, uint8_t size);
 	void write_htons_u16 (uint16_t data);
 	void write_htons_u32 (uint32_t data);
 
@@ -35,6 +36,7 @@ public:
 	uint8_t *peek_data (void);
 
 	uint8_t read_u8 (void);
+	void read (uint8_t *buffer, uint8_t size);
 	uint16_t read_nstoh_u16 (void);
 	uint32_t read_nstoh_u32 (void);
 

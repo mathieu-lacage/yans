@@ -4,6 +4,7 @@ SOURCE= \
 	buffer.cc \
 	chunk.cc \
 	packet.cc \
+	utils.cc \
 	test.cc \
 	main.cc
 
