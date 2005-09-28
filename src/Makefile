@@ -6,6 +6,7 @@ SOURCE= \
 	packet.cc \
 	utils.cc \
 	chunk-ipv4.cc \
+	chunk-tcp.cc \
 	test.cc \
 	main.cc
 
