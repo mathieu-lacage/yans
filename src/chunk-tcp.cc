@@ -184,6 +184,16 @@ ChunkTcp::is_option_mss (void)
 	return (m_mss != 0)?true:false;
 }
 
+bool 
+ChunkTcp::is_checksum_ok (void)
+{
+	uint16_t checksum = calculate_checksum ((uint8_t *)&m_source_port, 20);
+	if (checksum == 0xffff) {
+		return true;
+	} else {
+		return false;
+	}
+}
 
 uint32_t 
 ChunkTcp::get_size (void)
@@ -225,11 +235,64 @@ ChunkTcp::serialize (WriteBuffer *buffer)
 
 void
 ChunkTcp::deserialize (ReadBuffer *buffer)
-{}
+{
+	buffer->read ((uint8_t *)&m_source_port, 2);
+	buffer->read ((uint8_t *)&m_destination_port, 2);
+	buffer->read ((uint8_t *)&m_sequence_number, 4);
+	buffer->read ((uint8_t *)&m_ack_number, 4);
+	m_header_length = buffer->read_u8 ();
+	m_flags = buffer->read_u8 ();
+	buffer->read ((uint8_t *)&m_window_size, 2);
+	buffer->read ((uint8_t *)&m_checksum, 2);
+	buffer->read ((uint8_t *)&m_urgent_pointer, 2);
+	if (get_size () == 24) {
+		buffer->read ((uint8_t *)&m_mss, 4);
+	}
+}
 
 void
 ChunkTcp::print (std::ostream *os)
-{}
+{
+	*os << "tcp -- ";
+	*os << " source port: " << m_source_port;
+	*os << " destination port: " << m_destination_port;
+	*os << " sequence number: " << m_sequence_number;
+	if (is_flag_ack ()) {
+		*os << " ack number: " << m_ack_number;
+	}
+	*os << " header length: " << get_size ();
+	*os << " flags:";
+	if (m_flags == 0) {
+		*os << " nil";
+	} else {
+		if (is_flag_syn ()) {
+			*os << " syn";
+		} 
+		if (is_flag_fin ()) {
+			*os << "fin";
+		}
+		if (is_flag_rst ()) {
+			*os << " rst";
+		}
+		if (is_flag_ack ()) {
+			*os << " ack";
+		}
+		if (is_flag_urg ()) {
+			*os << " urg";
+		}
+		if (is_flag_psh ()) {
+			*os << " psh";
+		}
+	}
+	*os << " window size: " << m_window_size;
+	*os << " checksum: " << m_checksum;
+	if (is_flag_urg ()) {
+		*os << " urgent pointer: " << m_urgent_pointer;
+	}
+	if (is_option_mss ()) {
+		*os << " mss: " << (m_mss >> 16);
+	}
+}
 
 
 bool 

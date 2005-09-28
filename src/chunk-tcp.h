@@ -46,6 +46,8 @@ public:
 	bool is_flag_psh (void);
 	bool is_option_mss (void);
 
+	bool is_checksum_ok (void);
+
 	virtual uint32_t get_size (void);
 	virtual Chunk *copy (void);
 	virtual void serialize (WriteBuffer *buffer);
