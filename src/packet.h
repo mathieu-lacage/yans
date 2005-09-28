@@ -5,17 +5,19 @@
 
 #include <stdint.h>
 #include <ostream>
+#include <vector>
 
 class Chunk;
-class Buffer;
-
+class WriteBuffer;
+class ReadBuffer;
 
 class Packet {
 public:
 	Packet ();
+	~Packet ();
 
-	void append_header (Chunk *header);
-	void prepend_trailer (Chunk *trailer);
+	void add_header (Chunk *header);
+	void add_trailer (Chunk *trailer);
 	Chunk *remove_header (void);
 	Chunk *remove_trailer (void);
 	Chunk const *peek_header (void);
@@ -23,12 +25,24 @@ public:
 
 	uint32_t get_size (void);
 
-	void serialize (Buffer *buffer);
-	void deserialize (Buffer const *buffer);
+	void serialize (WriteBuffer *buffer);
+	void deserialize (ReadBuffer *buffer);
 
 	void print (std::ostream *os);
 
 	Packet *copy (void);
+ private:
+	typedef std::vector<Chunk *> Headers;
+	typedef std::vector<Chunk *> Trailers;
+	typedef std::vector<Chunk *>::const_iterator HeadersCI;
+	typedef std::vector<Chunk *>::reverse_iterator HeadersRI;
+	typedef std::vector<Chunk *>::const_iterator TrailersCI;
+	/* The last header added is pushed at the front 
+	 * of the header list while the last trailer added
+	 * is pushed at the back of the trailer list.
+	 */
+	Headers m_headers;
+	Trailers m_trailers;
 };
 
 #endif /* PACKET_H */
