@@ -5,7 +5,8 @@
 #include <stdint.h>
 #include <ostream>
 
-class Buffer;
+class WriteBuffer;
+class ReadBuffer;
 
 class Chunk {
 public:
@@ -13,8 +14,8 @@ public:
 
 	virtual uint32_t get_size (void) = 0;
 	virtual Chunk *copy (void) = 0;
-	virtual void serialize (Buffer *buffer) = 0;
-	virtual void deserialize (Buffer *buffer) = 0;
+	virtual void serialize (WriteBuffer *buffer) = 0;
+	virtual void deserialize (ReadBuffer *buffer) = 0;
 	virtual void print (std::ostream *os) = 0;
 };
 
