@@ -63,34 +63,28 @@ WriteBuffer::write_u8 (uint8_t data)
 	m_write++;
 }
 void 
-WriteBuffer::write_u16 (uint16_t data)
+WriteBuffer::write_htons_u16 (uint16_t data)
 {
 	ensure_write_room_left (2);
-	m_buffer[m_write] = (data >> 8) & 0xff;
-	m_write++;
 	m_buffer[m_write] = (data >> 0) & 0xff;
+	m_write++;
+	m_buffer[m_write] = (data >> 8) & 0xff;
 	m_write++;
 }
 
-void 
-WriteBuffer::write_u32 (uint32_t data)
-{
-	ensure_write_room_left (4);
-	m_buffer[m_write] = (data >> 24) & 0xff;
-	m_write++;
-	m_buffer[m_write] = (data >> 16) & 0xff;
-	m_write++;
-	m_buffer[m_write] = (data >> 8)  & 0xff;
-	m_write++;
-	m_buffer[m_write] = (data >> 0)  & 0xff;
-	m_write++;
-}
 void 
 WriteBuffer::write_htons_u32 (uint32_t data)
 {
 	ensure_write_room_left (4);
+	m_buffer[m_write] = (data >> 0)  & 0xff;
+	m_write++;
+	m_buffer[m_write] = (data >> 8)  & 0xff;
+	m_write++;
+	m_buffer[m_write] = (data >> 16) & 0xff;
+	m_write++;
+	m_buffer[m_write] = (data >> 24) & 0xff;
+	m_write++;
 }
-
 
 
 ReadBuffer::ReadBuffer (uint32_t size)
@@ -130,47 +124,87 @@ ReadBuffer::read_u8 (void)
 }
 
 uint16_t 
-ReadBuffer::read_u16 (void)
+ReadBuffer::read_nstoh_u16 (void)
 {
 	assert (is_read_room_left (2));
-	uint16_t retval = m_buffer[m_read] << 8;
-	m_read++;
+	uint16_t retval = 0;
 	retval |= m_buffer[m_read];
-	m_read++;
-	return retval;
-}
-
-uint32_t 
-ReadBuffer::read_u32 (void)
-{
-	assert (is_read_room_left (4));
-	uint32_t retval = 0;
-	retval |= m_buffer[m_read] << 24;
-	m_read++;
-	retval |= m_buffer[m_read] << 16;
 	m_read++;
 	retval |= m_buffer[m_read] << 8;
 	m_read++;
-	retval |= m_buffer[m_read];
-	m_read++;
 	return retval;
 }
-
 
 uint32_t 
 ReadBuffer::read_nstoh_u32 (void)
 {
 	assert (is_read_room_left (4));
-	return 0;
+	uint32_t retval = 0;
+	retval |= m_buffer[m_read];
+	m_read++;
+	retval |= m_buffer[m_read] << 8;
+	m_read++;
+	retval |= m_buffer[m_read] << 16;
+	m_read++;
+	retval |= m_buffer[m_read] << 24;
+	m_read++;
+	return retval;
 }
+
 
 #ifdef RUN_SELF_TESTS
 
 #include "test.h"
+#include <iomanip>
 
 BufferTest::BufferTest (TestManager *manager)
 	: Test (manager)
 {}
+
+void
+BufferTest::ensure_written_bytes (WriteBuffer *buffer, uint32_t n, uint8_t array[])
+{
+	bool success = true;
+	uint8_t *expected = array;
+	uint8_t *got;
+	if (buffer->get_written_size () != n) {
+		success = false;
+	}
+	got = buffer->peek_data ();
+	for (uint32_t i = 0; i < n; i++) {
+		if (got[i] != expected[i]) {
+			success = false;
+		}
+	}
+	if (!success) {
+		failure () << "WriteBuffer -- ";
+		failure () << "expected: ";
+		failure () << n << " ";
+		for (uint32_t i = 0; i < n; i++) {
+			failure ().width (2);
+			failure ().fill (0);
+			failure () << std::ios::hex << array[i] << " ";
+		}
+		failure () << "got: ";
+		failure () << buffer->get_written_size () << " ";
+		for (uint32_t i = 0; i < n; i++) {
+			failure ().width (2);
+			failure ().fill (0);
+			failure () << std::ios::hex << got[i] << " ";
+		}
+		failure () << std::endl;
+	}
+}
+
+/* Note: works only when variadic macros are
+ * available which is the case for gcc.
+ * XXX
+ */
+#define ENSURE_WRITTEN_BYTES(buffer, n, ...) \
+{ \
+	uint8_t bytes[] = {__VA_ARGS__}; \
+	ensure_written_bytes (buffer, n , bytes); \
+}
 
 bool
 BufferTest::run_tests (void)
@@ -178,48 +212,17 @@ BufferTest::run_tests (void)
 	bool ok = true;
 	WriteBuffer *buffer = new WriteBuffer (1);
 	buffer->write_u8 (0x66);
-	if (buffer->get_written_size () != 1) {
-		ok = false;
-	}
-	if (buffer->peek_data () [0] != 0x66) {
-		ok = false;
-	}
+	ENSURE_WRITTEN_BYTES (buffer, 1, 0x66);
 	buffer->reset ();
 	buffer->write_u8 (0x67);
-	if (buffer->get_written_size () != 1) {
-		ok = false;
-	}
-	if (buffer->peek_data () [0] != 0x67) {
-		ok = false;
-	}
-	buffer->write_u16 (0x6568);
-	if (buffer->get_written_size () != 3) {
-		ok = false;
-	}
-	if (buffer->peek_data () [0] != 0x67) {
-		ok = false;
-	}
-	if (buffer->peek_data () [0] != 0x65) {
-		ok = false;
-	}
-	if (buffer->peek_data () [0] != 0x68) {
-		ok = false;
-	}
-#if 0
+	ENSURE_WRITTEN_BYTES (buffer, 1, 0x67);
+	buffer->write_htons_u16 (0x6568);
+	ENSURE_WRITTEN_BYTES (buffer, 3, 0x67, 0x68, 0x64);
 	buffer->reset ();
-	buffer->write_u16 (0x6369);
-	if (buffer->read_u16 () != 0x6369) {
-		ok = false;
-	}
-	buffer->write_u32 (0xdeadbeaf);
-	if (buffer->read_u32 () != 0xdeadbeaf) {
-		ok = false;
-	}
+	buffer->write_htons_u16 (0x6369);
+	ENSURE_WRITTEN_BYTES (buffer, 2, 0x69, 0x63);
 	buffer->write_htons_u32 (0xdeadbeaf);
-	if (buffer->read_nstoh_u32 () != 0xdeadbeaf) {
-		ok = false;
-	}
-#endif
+	ENSURE_WRITTEN_BYTES (buffer, 6, 0x69, 0x63, 0xaf, 0xbe, 0xad, 0xde);
 	return ok;
 }
 

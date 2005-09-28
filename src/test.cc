@@ -28,17 +28,10 @@ TestManager::enable_verbose (void)
 {
 	m_verbose = true;
 }
-void 
-TestManager::report_error (std::string *str)
+std::ostream &
+TestManager::failure (void)
 {
-	std::cerr << "Test failed: \"" << *m_test_name << "\" " << str << std::endl;
-}
-void 
-TestManager::report_ok (std::string *str)
-{
-	if (m_verbose) {
-		std::cerr << "Test ok: \"" << *m_test_name << "\" " << str << std::endl;
-	}
+	return std::cerr;
 }
 bool 
 TestManager::run_tests (void)
@@ -48,7 +41,6 @@ TestManager::run_tests (void)
 		m_test_name = (*i).second;
 		if (!(*i).first->run_tests ()) {
 			is_success = false;
-			std::cerr << "Test \"" << *m_test_name << "\" failed." << std::endl;
 		} else {
 			if (m_verbose) {
 				std::cerr << "Test \"" << *m_test_name << "\" success." << std::endl;
@@ -64,15 +56,10 @@ Test::Test (TestManager *manager)
 Test::~Test ()
 {}
 
-void 
-Test::report_error (std::string *str)
+std::ostream &
+Test::failure (void)
 {
-	m_manager->report_error (str);
-}
-void 
-Test::report_ok (std::string *str)
-{
-	m_manager->report_ok (str);
+	return m_manager->failure ();
 }
 
 #endif /* RUN_SELF_TESTS */

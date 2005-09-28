@@ -16,9 +16,9 @@ public:
 	void reset (void);
 
 	void write_u8 (uint8_t data);
-	void write_u16 (uint16_t data);
-	void write_u32 (uint32_t data);
+	void write_htons_u16 (uint16_t data);
 	void write_htons_u32 (uint32_t data);
+
 private:
 	void ensure_write_room_left (uint8_t needed);
 	uint32_t m_size;
@@ -35,9 +35,9 @@ public:
 	uint8_t *peek_data (void);
 
 	uint8_t read_u8 (void);
-	uint16_t read_u16 (void);
-	uint32_t read_u32 (void);
+	uint16_t read_nstoh_u16 (void);
 	uint32_t read_nstoh_u32 (void);
+
 private:
 	bool is_read_room_left (uint8_t needed);
 	uint32_t m_size;
@@ -51,6 +51,9 @@ public:
 	BufferTest (TestManager *manager);
 	
 	virtual bool run_tests (void);
+private:
+	void ensure_written_bytes (WriteBuffer *buffer, 
+				   uint32_t n, uint8_t array[]);
 };
 
 

@@ -6,6 +6,7 @@
 #include <list>
 #include <string>
 #include <utility>
+#include <ostream>
 
 class TestManager;
 
@@ -17,9 +18,8 @@ public:
 	virtual ~Test ();
 
 	virtual bool run_tests (void) = 0;
-protected:
-	void report_error (std::string *str);
-	void report_ok    (std::string *str);
+
+	std::ostream &failure (void);
 private:
 	TestManager *m_manager;
 };
@@ -32,8 +32,7 @@ public:
 	void enable_verbose (void);
 	bool run_tests (void);
 
-	void report_error (std::string *str);
-	void report_ok    (std::string *str);
+	std::ostream &failure (void);
 private:
 	typedef std::list<std::pair<Test *,std::string *> > Tests;
 	typedef std::list<std::pair<Test *,std::string *> >::iterator TestsI;
