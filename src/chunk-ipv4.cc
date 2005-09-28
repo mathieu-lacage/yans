@@ -159,7 +159,7 @@ ChunkIpv4::copy (void)
 bool
 ChunkIpv4::is_checksum_ok (void)
 {
-	uint16_t checksum = calc_checksum ();
+	uint16_t checksum = calculate_checksum ((uint8_t *)&m_ver_ihl, 20);
 	if (checksum == 0xffff) {
 		return true;
 	} else {
@@ -167,28 +167,10 @@ ChunkIpv4::is_checksum_ok (void)
 	}
 }
 
-uint16_t
-ChunkIpv4::calc_checksum (void)
-{
-	/* see RFC 1071 to understand this code. */
-	uint32_t sum = 0;
-	uint32_t *data = (uint32_t *) &m_ver_ihl;
-	sum += data[0];
-	sum += data[1];
-	sum += data[2];
-	sum += data[3];
-	sum += data[4];
-	while ( sum >> 16) {
-		sum = (sum & 0xffff) + (sum >> 16);
-	}
-	uint16_t checksum =  ~sum;
-	return checksum;
-}
-
 void 
 ChunkIpv4::serialize (WriteBuffer *buffer)
 {
-	uint16_t checksum = htons (calc_checksum ());
+	uint16_t checksum = htons (calculate_checksum ((uint8_t *)&m_ver_ihl, 20));
 
 	buffer->write_u8 (m_ver_ihl);
 	buffer->write_u8 (m_tos);

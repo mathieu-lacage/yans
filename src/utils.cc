@@ -40,3 +40,20 @@ nstoh (uint32_t v)
 	val |= array[3] << 24;
 	return val;
 }
+
+uint16_t 
+calculate_checksum (uint8_t *buffer, uint16_t size)
+{
+	/* see RFC 1071 to understand this code. */
+	uint32_t sum = 0;
+	uint32_t *data = (uint32_t *) buffer;
+	for (uint16_t i = 0; i < size; i += 4) {
+		sum += data[i];
+	}
+	while (sum >> 16) {
+		sum = (sum & 0xffff) + (sum >> 16);
+	}
+	uint16_t checksum =  ~sum;
+	return checksum;
+
+}

@@ -9,4 +9,6 @@ uint32_t htons (uint32_t v);
 uint16_t nstoh (uint16_t v);
 uint32_t nstoh (uint32_t v);
 
+uint16_t calculate_checksum (uint8_t *buffer, uint16_t size);
+
 #endif /* UTILS_H */

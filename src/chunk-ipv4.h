@@ -44,8 +44,6 @@ public:
 	virtual void deserialize (ReadBuffer *buffer);
 	virtual void print (std::ostream *os);
 private:
-	uint16_t calc_checksum (void);
-
 	uint8_t m_ver_ihl;
 	uint8_t m_tos;
 	uint16_t m_id;

@@ -2,6 +2,7 @@
 
 #include "chunk-tcp.h"
 #include "utils.h"
+#include "buffer.h"
 
 ChunkTcp::ChunkTcp ()
 	: m_source_port (0),
@@ -205,7 +206,22 @@ ChunkTcp::copy (void)
 
 void
 ChunkTcp::serialize (WriteBuffer *buffer)
-{}
+{
+	uint16_t checksum = calculate_checksum ((uint8_t *)&m_source_port, 
+						get_size ());
+	buffer->write ((uint8_t *)&m_source_port, 2);
+	buffer->write ((uint8_t *)&m_destination_port, 2);
+	buffer->write ((uint8_t *)&m_sequence_number, 4);
+	buffer->write ((uint8_t *)&m_ack_number, 4);
+	buffer->write_u8 (m_header_length);
+	buffer->write_u8 (m_flags);
+	buffer->write ((uint8_t *)&m_window_size, 2);
+	buffer->write ((uint8_t *)&checksum, 2);
+	buffer->write ((uint8_t *)&m_urgent_pointer, 2);
+	if (is_option_mss ()) {
+		buffer->write ((uint8_t *)&m_mss, 4);
+	}
+}
 
 void
 ChunkTcp::deserialize (ReadBuffer *buffer)
