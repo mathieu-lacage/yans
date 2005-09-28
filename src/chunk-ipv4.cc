@@ -170,6 +170,7 @@ ChunkIpv4::is_checksum_ok (void)
 void 
 ChunkIpv4::serialize (WriteBuffer *buffer)
 {
+	// XXX 
 	uint16_t checksum = htons (calculate_checksum ((uint8_t *)&m_ver_ihl, 20));
 
 	buffer->write_u8 (m_ver_ihl);

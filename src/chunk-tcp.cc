@@ -217,6 +217,7 @@ ChunkTcp::copy (void)
 void
 ChunkTcp::serialize (WriteBuffer *buffer)
 {
+	// XXX 
 	uint16_t checksum = calculate_checksum ((uint8_t *)&m_source_port, 
 						get_size ());
 	buffer->write ((uint8_t *)&m_source_port, 2);
