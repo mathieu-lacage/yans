@@ -180,17 +180,16 @@ BufferTest::ensure_written_bytes (WriteBuffer *buffer, uint32_t n, uint8_t array
 		failure () << "WriteBuffer -- ";
 		failure () << "expected: ";
 		failure () << n << " ";
+		failure ().setf (std::ios::hex, std::ios::basefield);
 		for (uint32_t i = 0; i < n; i++) {
-			failure ().width (2);
-			failure ().fill (0);
-			failure () << std::ios::hex << array[i] << " ";
+			failure () << (uint16_t)expected[i] << " ";
 		}
+		failure ().setf (std::ios::dec, std::ios::basefield);
 		failure () << "got: ";
 		failure () << buffer->get_written_size () << " ";
+		failure ().setf (std::ios::hex, std::ios::basefield);
 		for (uint32_t i = 0; i < n; i++) {
-			failure ().width (2);
-			failure ().fill (0);
-			failure () << std::ios::hex << got[i] << " ";
+			failure () << (uint16_t)got[i] << " ";
 		}
 		failure () << std::endl;
 	}
@@ -217,7 +216,7 @@ BufferTest::run_tests (void)
 	buffer->write_u8 (0x67);
 	ENSURE_WRITTEN_BYTES (buffer, 1, 0x67);
 	buffer->write_htons_u16 (0x6568);
-	ENSURE_WRITTEN_BYTES (buffer, 3, 0x67, 0x68, 0x64);
+	ENSURE_WRITTEN_BYTES (buffer, 3, 0x67, 0x68, 0x65);
 	buffer->reset ();
 	buffer->write_htons_u16 (0x6369);
 	ENSURE_WRITTEN_BYTES (buffer, 2, 0x69, 0x63);
