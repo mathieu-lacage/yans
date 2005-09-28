@@ -49,9 +49,10 @@ TestManager::run_tests (void)
 		if (!(*i).first->run_tests ()) {
 			is_success = false;
 			std::cerr << "Test \"" << *m_test_name << "\" failed." << std::endl;
-		}
-		if (m_verbose) {
-			std::cerr << "Test \"" << *m_test_name << "\" success." << std::endl;
+		} else {
+			if (m_verbose) {
+				std::cerr << "Test \"" << *m_test_name << "\" success." << std::endl;
+			}
 		}
 	}
 	return is_success;
