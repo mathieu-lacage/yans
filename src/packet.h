@@ -36,10 +36,6 @@ public:
 	typedef std::vector<Chunk *>::const_iterator HeadersCI;
 	typedef std::vector<Chunk *>::reverse_iterator HeadersRI;
 	typedef std::vector<Chunk *>::const_iterator TrailersCI;
-	/* The last header added is pushed at the front 
-	 * of the header list while the last trailer added
-	 * is pushed at the back of the trailer list.
-	 */
 	Headers m_headers;
 	Trailers m_trailers;
 };
