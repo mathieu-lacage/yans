@@ -20,15 +20,20 @@ public:
 	 */
 	Ipv4Address (char const *address);
 
-	bool is_equal (Ipv4Address *other);
+	bool is_equal (Ipv4Address other);
 
 	/* Using this method is frowned upon.
 	 * Please, do _not_ use this method.
 	 * It is there only for chunk-ipv4.
 	 */
 	uint32_t get_host_order (void);
+
+	static Ipv4Address get_zero (void);
+	static Ipv4Address get_broadcast (void);
 private:
 	uint32_t m_address;
+	static Ipv4Address m_zero;
+	static Ipv4Address m_broadcast;
 };
 
 

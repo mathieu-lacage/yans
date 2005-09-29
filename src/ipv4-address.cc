@@ -34,9 +34,9 @@ Ipv4Address::Ipv4Address (char const *address)
 }
 
 bool 
-Ipv4Address::is_equal (Ipv4Address *other)
+Ipv4Address::is_equal (Ipv4Address other)
 {
-	if (other->m_address == m_address) {
+	if (other.m_address == m_address) {
 		return true;
 	} else {
 		return false;
@@ -47,4 +47,18 @@ uint32_t
 Ipv4Address::get_host_order (void)
 {
 	return m_address;
+}
+
+Ipv4Address Ipv4Address::m_zero ("0.0.0.0");
+Ipv4Address Ipv4Address::m_broadcast ("255.255.255.255");
+
+Ipv4Address 
+Ipv4Address::get_zero (void)
+{
+	return m_zero;
+}
+Ipv4Address 
+Ipv4Address::get_broadcast (void)
+{
+	return m_broadcast;
 }

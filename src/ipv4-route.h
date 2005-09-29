@@ -3,6 +3,10 @@
 #ifndef IPV4_ROUTE_H
 #define IPV4_ROUTE_H
 
+#include "ipv4-address.h"
+
+class NetworkInterface;
+
 class HostRoute {
 public:
 	HostRoute (Ipv4Address dest,
