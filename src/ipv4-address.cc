@@ -21,7 +21,9 @@ Ipv4Mask::is_match (Ipv4Address a, Ipv4Address b)
 	}
 }
 
-
+Ipv4Address::Ipv4Address ()
+	: m_address (0x66666666)
+{}
 Ipv4Address::Ipv4Address (uint32_t address)
 {
 	m_address = address;

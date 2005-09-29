@@ -11,6 +11,7 @@ SOURCE= \
 	ipv4-address.cc \
 	network-interface.cc \
 	loopback-interface.cc \
+	ipv4-route.cc \
 	ipv4.cc \
 	test.cc \
 	main.cc

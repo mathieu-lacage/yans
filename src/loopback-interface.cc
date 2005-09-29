@@ -36,13 +36,20 @@ LoopbackInterface::get_mac_address (void)
 }
 
 void 
-LoopbackInterface::register_ipv4_handler (Ipv4 *ipv4)
+LoopbackInterface::set_ipv4_handler (Ipv4 *ipv4)
 {
 	m_ipv4 = ipv4;
 }
 
 void 
-LoopbackInterface::send_ipv4 (Packet *packet)
+LoopbackInterface::set_ipv4_next_hop (Ipv4Address next_hop)
+{
+	/* I do not think this makes any sense */
+	assert (false);
+}
+
+void 
+LoopbackInterface::send (Packet *packet)
 {
 	m_ipv4->receive (packet, this);
 }

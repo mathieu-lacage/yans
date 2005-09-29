@@ -10,6 +10,7 @@
  */
 class Ipv4Address {
 public:
+	Ipv4Address ();
 	/* input address is in host order. */
 	Ipv4Address (uint32_t address);
 	/* input address is in format:

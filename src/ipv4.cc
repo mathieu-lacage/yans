@@ -5,6 +5,7 @@
 #include "chunk-ipv4.h"
 #include "packet.h"
 #include "network-interface.h"
+#include "ipv4-route.h"
 
 Ipv4::Ipv4 ()
 {}
@@ -12,7 +13,13 @@ Ipv4::~Ipv4 ()
 {}
 
 void 
-Ipv4::set_destination (uint32_t destination)
+Ipv4::set_routing_table (Ipv4Route *route)
+{
+	m_route = route;
+}
+
+void 
+Ipv4::set_destination (Ipv4Address destination)
 {
 	m_send_destination = destination;
 }
@@ -21,38 +28,56 @@ Ipv4::set_protocol (uint8_t protocol)
 {
 	m_send_protocol = protocol;
 }
-NetworkInterface *
-Ipv4::choose_out_interface (uint32_t destination)
-{
-	return 0;
-}
+
 void 
 Ipv4::send (Packet *packet)
 {
 	ChunkIpv4 *ip_header;
-	NetworkInterface *interface;
 	ip_header = new ChunkIpv4 ();
 	ip_header->set_destination (m_send_destination);
 	ip_header->set_protocol (m_send_protocol);
 	ip_header->set_payload_size (packet->get_size ());
-
-	interface = choose_out_interface (m_send_destination);
-	ip_header->set_source (interface->get_ipv4_address ());
 	packet->add_header (ip_header);
 
-	if (packet->get_size () > interface->get_mtu ()) {
+	NetworkInterface *out_interface;
+	HostRoute *host_route = m_route->lookup_host (m_send_destination);
+	if (host_route == 0) {
+		NetworkRoute *network_route = m_route->lookup_network (m_send_destination);
+		if (network_route == 0) {
+			DefaultRoute *default_route = m_route->lookup_default ();
+			if (default_route == 0) {
+				// XXX dump packet.
+				assert (false);
+				return;
+			}
+			out_interface = default_route->get_interface ();
+			Ipv4Address gateway = default_route->get_gateway ();
+			out_interface->set_ipv4_next_hop (gateway);
+		} else {
+			out_interface = network_route->get_interface ();
+			if (network_route->is_gateway ()) {
+				Ipv4Address gateway = network_route->get_gateway ();
+				out_interface->set_ipv4_next_hop (gateway);
+			}
+		}
+	} else {
+		out_interface = host_route->get_interface ();
+		if (host_route->is_gateway ()) {
+			Ipv4Address gateway = host_route->get_gateway ();
+			out_interface->set_ipv4_next_hop (gateway);
+		}
+	}
+	ip_header->set_source (out_interface->get_ipv4_address ());
+
+	if (packet->get_size () > out_interface->get_mtu ()) {
 		/* we need to fragment the packet. */
 		// XXX
+		assert (false);
 	} else {
-		interface->send_ipv4 (packet);
+		out_interface->send (packet);
 	}
 }
 
-void 
-Ipv4::register_network_interface (NetworkInterface *interface)
-{
-	m_interfaces.push_back (interface);
-}
 void 
 Ipv4::register_transport_protocol (TransportProtocol *protocol)
 {

@@ -14,13 +14,14 @@ public:
 	virtual ~LoopbackInterface ();
 
 	virtual uint16_t get_mtu (void);
-	virtual Ipv4Address get_ipv4_address (void);
-	virtual Ipv4Mask get_ipv4_mask (void);
 	virtual MacAddress get_mac_address (void);
 
-	virtual void register_ipv4_handler (Ipv4 *ipv4);
+	virtual void set_ipv4_handler (Ipv4 *ipv4);
+	virtual Ipv4Address get_ipv4_address (void);
+	virtual Ipv4Mask get_ipv4_mask (void);
+	virtual void set_ipv4_next_hop (Ipv4Address next_hop);
 
-	virtual void send_ipv4 (Packet *packet);
+	virtual void send (Packet *packet);
 private:
 	Ipv4 *m_ipv4;
 	Ipv4Address m_address;
