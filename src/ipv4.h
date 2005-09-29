@@ -23,7 +23,7 @@ public:
 	void register_network_interface (NetworkInterface *interface);
 	void register_transport_protocol (TransportProtocol *protocol);
 	/* invoked from lower-layers. */
-	void receive (Packet *packet);
+	void receive (Packet *packet, NetworkInterface *from);
 
 private:
 	NetworkInterface *choose_out_interface (uint32_t destination);

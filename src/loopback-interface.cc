@@ -1,6 +1,7 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 
 #include "loopback-interface.h"
+#include "ipv4.h"
 
 LoopbackInterface::LoopbackInterface ()
 	: m_address (Ipv4Address ("127.0.0.1")),
@@ -35,6 +36,14 @@ LoopbackInterface::get_mac_address (void)
 }
 
 void 
+LoopbackInterface::register_ipv4_handler (Ipv4 *ipv4)
+{
+	m_ipv4 = ipv4;
+}
+
+void 
 LoopbackInterface::send_ipv4 (Packet *packet)
-{}
+{
+	m_ipv4->receive (packet, this);
+}
 

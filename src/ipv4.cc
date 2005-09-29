@@ -61,5 +61,7 @@ Ipv4::register_transport_protocol (TransportProtocol *protocol)
 }
 
 void 
-Ipv4::receive (Packet *packet)
-{}
+Ipv4::receive (Packet *packet, NetworkInterface *interface)
+{
+	// XXX
+}

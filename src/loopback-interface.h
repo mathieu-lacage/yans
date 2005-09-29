@@ -18,8 +18,11 @@ public:
 	virtual Ipv4Mask get_ipv4_mask (void);
 	virtual MacAddress get_mac_address (void);
 
+	virtual void register_ipv4_handler (Ipv4 *ipv4);
+
 	virtual void send_ipv4 (Packet *packet);
 private:
+	Ipv4 *m_ipv4;
 	Ipv4Address m_address;
 	Ipv4Mask m_mask;
 	uint16_t m_mtu;
