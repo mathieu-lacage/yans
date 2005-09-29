@@ -5,9 +5,10 @@
 
 #include "mac-address.h"
 
+class Packet;
+
 class NetworkInterface {
 public:
-	NetworkInterface ();
 	virtual ~NetworkInterface ();
 
 	/* needed to decide whether or not to perform
@@ -19,9 +20,7 @@ public:
 	virtual uint32_t get_ipv4_mask (void) = 0;
 	virtual MacAddress get_mac_address (void) = 0;
 
-
-	virtual void set_destination (MacAddress address);
-	virtual void send (Packet *packet) = 0;
+	virtual void send_ipv4 (Packet *packet) = 0;
 };
 
 

@@ -26,6 +26,8 @@ public:
 	void receive (Packet *packet);
 
 private:
+	NetworkInterface *choose_out_interface (uint32_t destination);
+
 	typedef Sgi::hash_map<uint8_t, TransportProtocol *> TransportProtocols;
 	typedef std::vector<NetworkInterface *> NetworkInterfaces;
 	TransportProtocols m_protocols;
