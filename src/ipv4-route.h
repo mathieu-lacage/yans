@@ -3,6 +3,8 @@
 #ifndef IPV4_ROUTE_H
 #define IPV4_ROUTE_H
 
+#include <list>
+
 #include "ipv4-address.h"
 
 class NetworkInterface;
@@ -63,26 +65,26 @@ public:
 	/* add route to host dest through host next_hop 
 	 * on interface.
 	 */
-	void add_route_to (Ipv4Address dest, 
-			   Ipv4Address next_hop, 
-			   NetworkInterface *interface);
+	void add_host_route_to (Ipv4Address dest, 
+				Ipv4Address next_hop, 
+				NetworkInterface *interface);
 	/* add route to host dest on interface.
 	 */
-	void add_route_to (Ipv4Address dest, 
-			   NetworkInterface *interface);
+	void add_host_route_to (Ipv4Address dest, 
+				NetworkInterface *interface);
 	/* add route to network dest with netmask 
 	 * through host next_hop on interface
 	 */
-	void add_route_to (Ipv4Address network, 
-			   Ipv4Mask network_mask, 
-			   Ipv4Address next_hop, 
-			   NetworkInterface *interface);
+	void add_network_route_to (Ipv4Address network, 
+				   Ipv4Mask network_mask, 
+				   Ipv4Address next_hop, 
+				   NetworkInterface *interface);
 	/* add route to network dest with netmask 
 	 * on interface
 	 */
-	void add_route_to (Ipv4Address network, 
-			   Ipv4Mask network_mask, 
-			   NetworkInterface *interface);
+	void add_network_route_to (Ipv4Address network, 
+				   Ipv4Mask network_mask, 
+				   NetworkInterface *interface);
 	/* set the default route to host next_hop on
 	 * interface. 
 	 */
@@ -94,6 +96,13 @@ public:
 	DefaultRoute *lookup_default (void);
 
 private:
+	typedef std::list<HostRoute *> HostRoutes;
+	typedef std::list<HostRoute *>::iterator HostRoutesI;
+	typedef std::list<NetworkRoute *> NetworkRoutes;
+	typedef std::list<NetworkRoute *>::iterator NetworkRoutesI;
+	
+	HostRoutes m_host_routes;
+	NetworkRoutes m_network_routes;
 	DefaultRoute *m_default_route;
 };
 

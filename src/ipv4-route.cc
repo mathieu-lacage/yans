@@ -125,35 +125,51 @@ DefaultRoute::get_interface (void)
  *****************************************************/
 
 Ipv4Route::Ipv4Route ()
+	: m_default_route (0)
 {}
 Ipv4Route::~Ipv4Route ()
 {}
 
 
 void 
-Ipv4Route::add_route_to (Ipv4Address dest, 
-		    Ipv4Address next_hop, 
-		    NetworkInterface *interface)
-{}
+Ipv4Route::add_host_route_to (Ipv4Address dest, 
+			      Ipv4Address next_hop, 
+			      NetworkInterface *interface)
+{
+	m_host_routes.push_back (new HostRoute (dest, next_hop, interface));
+}
 void 
-Ipv4Route::add_route_to (Ipv4Address dest, 
-		    NetworkInterface *interface)
-{}
+Ipv4Route::add_host_route_to (Ipv4Address dest, 
+			      NetworkInterface *interface)
+{
+	m_host_routes.push_back (new HostRoute (dest, interface));
+}
 void 
-Ipv4Route::add_route_to (Ipv4Address network, 
-		    Ipv4Mask network_mask, 
-		    Ipv4Address next_hop, 
-		    NetworkInterface *interface)
-{}
+Ipv4Route::add_network_route_to (Ipv4Address network, 
+				 Ipv4Mask network_mask, 
+				 Ipv4Address next_hop, 
+				 NetworkInterface *interface)
+{
+	m_network_routes.push_back (new NetworkRoute (network, network_mask, 
+						      next_hop, interface));
+}
 void 
-Ipv4Route::add_route_to (Ipv4Address network, 
-		    Ipv4Mask network_mask, 
-		    NetworkInterface *interface)
-{}
+Ipv4Route::add_network_route_to (Ipv4Address network, 
+				 Ipv4Mask network_mask, 
+				 NetworkInterface *interface)
+{
+	m_network_routes.push_back (new NetworkRoute (network, network_mask, 
+						      interface));
+}
 void 
 Ipv4Route::set_default_route (Ipv4Address next_hop, 
-			 NetworkInterface *interface)
-{}
+			      NetworkInterface *interface)
+{
+	if (m_default_route != 0) {
+		delete m_default_route;
+	}
+	m_default_route = new DefaultRoute (next_hop, interface);
+}
 HostRoute *
 Ipv4Route::lookup_host (Ipv4Address dest)
 {
@@ -167,6 +183,6 @@ Ipv4Route::lookup_network (Ipv4Address dest)
 DefaultRoute *
 Ipv4Route::lookup_default (void)
 {
-	return 0;
+	return m_default_route;
 }
 
