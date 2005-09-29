@@ -15,8 +15,8 @@ public:
 	 * this interface.
 	 */
 	virtual uint16_t get_mtu (void) = 0;
-
 	virtual uint32_t get_ip_address (void) = 0;
+	virtual uint32_t get_ip_mask (void) = 0;
 	virtual MacAddress get_mac_address (void) = 0;
 
 
