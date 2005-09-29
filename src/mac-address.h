@@ -31,10 +31,11 @@ public:
 	void serialize (WriteBuffer *buffer);
 	void deserialize (ReadBuffer *buffer);
 
+	static MacAddress *get_broadcast (void);
 private:
+	static MacAddress *m_broadcast;
 	uint32_t get_multicast_part (void);
 	uint8_t m_address[6];
 };
-
 
 #endif /* MAC_ADDRESS_H */

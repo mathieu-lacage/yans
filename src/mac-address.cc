@@ -96,3 +96,19 @@ MacAddress::deserialize (ReadBuffer *buffer)
 {
 	buffer->read (m_address, 6);
 }
+
+
+
+MacAddress *
+MacAddress::m_broadcast = 0;
+
+MacAddress *
+MacAddress::get_broadcast (void)
+{
+	if (m_broadcast == 0) {
+		uint8_t address[6] = {0xff, 0xff, 0xff, 
+				      0xff, 0xff, 0xff};
+		m_broadcast = new MacAddress (address);
+	}
+	return m_broadcast;
+}
