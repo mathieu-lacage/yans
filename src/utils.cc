@@ -41,6 +41,64 @@ nstoh (uint32_t v)
 	return val;
 }
 
+#define ASCII_DOT (0x2e)
+#define ASCII_ZERO (0x30)
+
+uint32_t 
+ascii_to_ipv4_host (char const *address)
+{
+	uint32_t host = 0;
+	while (*address != 0) {
+		uint8_t byte = 0;
+		while (*address != ASCII_DOT ) {
+			byte *= 10;
+			byte |= *address - ASCII_ZERO;
+			address++;
+		}
+		host <<= 8;
+		host |= byte;
+		address++;
+	}
+	return host;
+}
+
+#define ASCII_A (0x41)
+#define ASCII_Z (0x5a)
+#define ASCII_a (0x61)
+#define ASCII_z (0x7a)
+
+char
+ascii_to_low_case (char c)
+{
+	if (c >= ASCII_a && c <= ASCII_z) {
+		return c;
+	} else if (c >= ASCII_A && c <= ASCII_Z) {
+		return c + (ASCII_a - ASCII_A);
+	} else {
+		return c;
+	}
+}
+
+#define ASCII_MINUS (0x2d)
+
+void 
+ascii_to_mac_network (char const *str, uint8_t address[6])
+{
+	uint8_t i = 0;
+	while (*str != 0 && i < 6) {
+		uint8_t byte = 0;
+		while (*str != ASCII_MINUS ) {
+			byte <<= 8;
+			char low = ascii_to_low_case (*str);
+			byte |= low - ASCII_a;
+			str++;
+		}
+		address[6-i] = byte;
+		str++;
+		i++;
+	}
+}
+
 uint16_t 
 calculate_checksum (uint8_t *buffer, uint16_t size)
 {

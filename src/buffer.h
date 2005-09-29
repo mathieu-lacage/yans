@@ -54,7 +54,7 @@ public:
 	
 	virtual bool run_tests (void);
 private:
-	void ensure_written_bytes (WriteBuffer *buffer, 
+	bool ensure_written_bytes (WriteBuffer *buffer, 
 				   uint32_t n, uint8_t array[]);
 };
 

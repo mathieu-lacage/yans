@@ -177,7 +177,7 @@ BufferTest::BufferTest (TestManager *manager)
 	: Test (manager)
 {}
 
-void
+bool
 BufferTest::ensure_written_bytes (WriteBuffer *buffer, uint32_t n, uint8_t array[])
 {
 	bool success = true;
@@ -209,6 +209,7 @@ BufferTest::ensure_written_bytes (WriteBuffer *buffer, uint32_t n, uint8_t array
 		}
 		failure () << std::endl;
 	}
+	return success;
 }
 
 /* Note: works only when variadic macros are
@@ -218,7 +219,9 @@ BufferTest::ensure_written_bytes (WriteBuffer *buffer, uint32_t n, uint8_t array
 #define ENSURE_WRITTEN_BYTES(buffer, n, ...) \
 { \
 	uint8_t bytes[] = {__VA_ARGS__}; \
-	ensure_written_bytes (buffer, n , bytes); \
+	if (!ensure_written_bytes (buffer, n , bytes)) { \
+		ok = false; \
+	} \
 }
 
 bool

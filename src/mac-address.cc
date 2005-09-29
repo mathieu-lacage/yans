@@ -2,6 +2,7 @@
 
 #include "mac-address.h"
 #include "buffer.h"
+#include "utils.h"
 
 MacAddress::MacAddress (uint8_t address[6])
 {
@@ -14,8 +15,7 @@ MacAddress::MacAddress (uint8_t address[6])
 }
 MacAddress::MacAddress (char const *address)
 {
-	assert (false);
-	// XXX: implement.
+	ascii_to_mac_network (address, m_address);
 }
 MacAddress::MacAddress (uint32_t ip_multicast_address)
 {
@@ -99,16 +99,11 @@ MacAddress::deserialize (ReadBuffer *buffer)
 
 
 
-MacAddress *
-MacAddress::m_broadcast = 0;
+MacAddress
+MacAddress::m_broadcast = MacAddress ("ff-ff-ff-ff-ff-ff");
 
-MacAddress *
+MacAddress
 MacAddress::get_broadcast (void)
 {
-	if (m_broadcast == 0) {
-		uint8_t address[6] = {0xff, 0xff, 0xff, 
-				      0xff, 0xff, 0xff};
-		m_broadcast = new MacAddress (address);
-	}
 	return m_broadcast;
 }

@@ -14,7 +14,9 @@ public:
 	 */
 	MacAddress (uint8_t address[6]);
 	/* The string should look like this:
-	 * xx-xx-xx-xx-xx-xx
+	 * hh-xx-xx-xx-xx-ll
+	 * where hh is the high byte and ll is
+	 * the low byte.
 	 */
 	MacAddress (char const *address);
 	/* create the mac address associated to 
@@ -31,9 +33,9 @@ public:
 	void serialize (WriteBuffer *buffer);
 	void deserialize (ReadBuffer *buffer);
 
-	static MacAddress *get_broadcast (void);
+	static MacAddress get_broadcast (void);
 private:
-	static MacAddress *m_broadcast;
+	static MacAddress m_broadcast;
 	uint32_t get_multicast_part (void);
 	uint8_t m_address[6];
 };

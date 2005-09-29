@@ -4,6 +4,7 @@
 #define NETWORK_INTERFACE_H
 
 #include "mac-address.h"
+#include "ipv4-address.h"
 
 class Packet;
 
@@ -16,8 +17,8 @@ public:
 	 * this interface.
 	 */
 	virtual uint16_t get_mtu (void) = 0;
-	virtual uint32_t get_ipv4_address (void) = 0;
-	virtual uint32_t get_ipv4_mask (void) = 0;
+	virtual Ipv4Address get_ipv4_address (void) = 0;
+	virtual Ipv4Mask get_ipv4_mask (void) = 0;
 	virtual MacAddress get_mac_address (void) = 0;
 
 	virtual void send_ipv4 (Packet *packet) = 0;

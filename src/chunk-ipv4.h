@@ -3,6 +3,7 @@
 #define CHUNK_IPV4_H
 
 #include "chunk.h"
+#include "ipv4-address.h"
 
 class ChunkIpv4 : public Chunk {
 public:
@@ -30,11 +31,11 @@ public:
 	uint8_t get_protocol (void);
 	void set_protocol (uint8_t);
 
-	void set_source (uint32_t src);
-	uint32_t get_source (void);
+	void set_source (Ipv4Address source);
+	Ipv4Address get_source (void);
 
-	void set_destination (uint32_t dst);
-	uint32_t get_destination (void);
+	void set_destination (Ipv4Address destination);
+	Ipv4Address get_destination (void);
 
 	bool is_checksum_ok (void);
 

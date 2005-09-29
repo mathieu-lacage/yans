@@ -119,25 +119,25 @@ ChunkIpv4::set_protocol (uint8_t protocol)
 }
 
 void 
-ChunkIpv4::set_source (uint32_t src)
+ChunkIpv4::set_source (Ipv4Address source)
 {
-	m_source = htons (src);
+	m_source = htons (source.get_host_order ());
 }
-uint32_t 
+Ipv4Address
 ChunkIpv4::get_source (void)
 {
-	return nstoh (m_source);
+	return Ipv4Address (nstoh (m_source));
 }
 
 void 
-ChunkIpv4::set_destination (uint32_t dst)
+ChunkIpv4::set_destination (Ipv4Address dst)
 {
-	m_destination = htons (dst);
+	m_destination = htons (dst.get_host_order ());
 }
-uint32_t 
+Ipv4Address
 ChunkIpv4::get_destination (void)
 {
-	return nstoh (m_destination);
+	return Ipv4Address (nstoh (m_destination));
 }
 
 
