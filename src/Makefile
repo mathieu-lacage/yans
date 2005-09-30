@@ -3,6 +3,8 @@ CXXFLAGS=-Wall -Werror -O3
 SOURCE= \
 	buffer.cc \
 	chunk.cc \
+	tag-manager.cc \
+	tag-ipv4.cc \
 	packet.cc \
 	utils.cc \
 	chunk-ipv4.cc \

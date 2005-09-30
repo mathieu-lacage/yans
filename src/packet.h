@@ -7,6 +7,8 @@
 #include <ostream>
 #include <vector>
 
+#include "tag-manager.h"
+
 class Chunk;
 class WriteBuffer;
 class ReadBuffer;
@@ -18,6 +20,10 @@ public:
 
 	void ref (void);
 	void unref (void);
+
+	void add_tag (uint32_t tag_id, Tag *tag);
+	Tag *get_tag (uint32_t tag_id);
+	Tag *remove_tag (uint32_t tag_id);
 
 	void add_header (Chunk *header);
 	void add_trailer (Chunk *trailer);
