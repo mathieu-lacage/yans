@@ -16,6 +16,9 @@ public:
 	Packet ();
 	~Packet ();
 
+	void ref (void);
+	void unref (void);
+
 	void add_header (Chunk *header);
 	void add_trailer (Chunk *trailer);
 	Chunk *remove_header (void);
@@ -34,10 +37,13 @@ public:
 	typedef std::vector<Chunk *> Headers;
 	typedef std::vector<Chunk *> Trailers;
 	typedef std::vector<Chunk *>::const_iterator HeadersCI;
+	typedef std::vector<Chunk *>::iterator HeadersI;
 	typedef std::vector<Chunk *>::reverse_iterator HeadersRI;
 	typedef std::vector<Chunk *>::const_iterator TrailersCI;
+	typedef std::vector<Chunk *>::iterator TrailersI;
 	Headers m_headers;
 	Trailers m_trailers;
+	uint32_t m_ref;
 };
 
 #endif /* PACKET_H */

@@ -4,10 +4,33 @@
 #include "chunk.h"
 
 Packet::Packet ()
+	: m_ref (1)
 {}
 
 Packet::~Packet ()
-{}
+{
+	for (HeadersI i = m_headers.begin (); i != m_headers.end (); i = m_headers.erase (i)) {
+		delete (*i);
+	}
+	for (TrailersI j = m_trailers.begin (); j != m_trailers.end (); j = m_trailers.erase (j)) {
+		delete (*j);
+	}
+}
+
+void 
+Packet::ref (void)
+{
+	m_ref++;
+}
+
+void 
+Packet::unref (void)
+{
+	m_ref--;
+	if (m_ref == 0) {
+		delete this;
+	}
+}
 
 void 
 Packet::add_header (Chunk *header)
