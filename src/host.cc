@@ -15,6 +15,8 @@ Host::Host ()
 	loopback->set_ipv4_address (Ipv4Address::get_loopback ());
 	loopback->set_ipv4_mask (Ipv4Mask::get_loopback ());
 	loopback->set_up ();
+	m_routing_table->add_host_route_to (Ipv4Address::get_loopback (),
+					    loopback);
 }
 
 Host::~Host ()
