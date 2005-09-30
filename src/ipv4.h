@@ -32,6 +32,7 @@ public:
 
 private:
 	Ipv4Route *get_route (void);
+	void drop_packet (Packet *packet);
 
 	Host *m_host;
 	typedef Sgi::hash_map<uint8_t, TransportProtocol *> TransportProtocols;

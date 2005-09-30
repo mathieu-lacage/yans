@@ -36,6 +36,13 @@ Ipv4::set_protocol (uint8_t protocol)
 	m_send_protocol = protocol;
 }
 
+void
+Ipv4::drop_packet (Packet *packet)
+{
+	packet->unref ();
+	// XXX should we print something ?
+}
+
 void 
 Ipv4::send (Packet *packet)
 {
@@ -55,8 +62,9 @@ Ipv4::send (Packet *packet)
 		    network_route->get_interface ()->is_down ()) {
 			DefaultRoute *default_route = get_route ()->lookup_default ();
 			if (default_route == 0) {
-				// XXX dump packet.
 				assert (false);
+				delete ip_header;
+				drop_packet (packet);
 				return;
 			}
 			out_interface = default_route->get_interface ();
