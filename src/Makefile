@@ -7,6 +7,7 @@ SOURCE= \
 	utils.cc \
 	chunk-ipv4.cc \
 	chunk-tcp.cc \
+	chunk-udp.cc \
 	mac-address.cc \
 	ipv4-address.cc \
 	network-interface.cc \

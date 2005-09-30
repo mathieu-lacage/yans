@@ -3,6 +3,8 @@
 #ifndef TRANSPORT_PROTOCOL_H
 #define TRANSPORT_PROTOCOL_H
 
+class Packet;
+
 class TransportProtocol {
 public:
 	virtual ~TransportProtocol ();
