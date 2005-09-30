@@ -4,11 +4,17 @@
 #include "network-interface.h"
 #include "ipv4.h"
 #include "ipv4-route.h"
+#include "loopback-interface.h"
 
 Host::Host ()
 {
 	m_ipv4 = new Ipv4 ();
 	m_routing_table = new Ipv4Route ();
+	LoopbackInterface *loopback = new LoopbackInterface ();
+	add_interface (loopback);
+	loopback->set_ipv4_address (Ipv4Address::get_loopback ());
+	loopback->set_ipv4_mask (Ipv4Mask::get_loopback ());
+	loopback->set_up ();
 }
 
 Host::~Host ()
@@ -50,4 +56,5 @@ void
 Host::add_interface (NetworkInterface *interface)
 {
 	m_interfaces.push_back (interface);
+	interface->set_ipv4_handler (m_ipv4);
 }

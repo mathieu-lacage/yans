@@ -4,8 +4,7 @@
 #include "ipv4.h"
 
 LoopbackInterface::LoopbackInterface ()
-	: m_address (Ipv4Address ("127.0.0.1")),
-	  m_mask (Ipv4Mask ("255.0.0.0")),
+	: m_name ("lo"),
 	  m_mtu (16436)
 {}
 LoopbackInterface::~LoopbackInterface ()
@@ -16,6 +15,28 @@ LoopbackInterface::get_mtu (void)
 {
 	return m_mtu;
 }
+std::string const *
+LoopbackInterface::get_name (void)
+{
+	return &m_name;
+}
+MacAddress 
+LoopbackInterface::get_mac_address (void)
+{
+	return MacAddress::get_broadcast ();
+}
+
+void 
+LoopbackInterface::set_ipv4_address (Ipv4Address address)
+{
+	m_address = address;
+}
+void 
+LoopbackInterface::set_ipv4_mask    (Ipv4Mask mask)
+{
+	m_mask = mask;
+}
+
 
 Ipv4Address
 LoopbackInterface::get_ipv4_address (void)
@@ -29,11 +50,6 @@ LoopbackInterface::get_ipv4_mask (void)
 	return m_mask;
 }
 
-MacAddress 
-LoopbackInterface::get_mac_address (void)
-{
-	return MacAddress::get_broadcast ();
-}
 
 void 
 LoopbackInterface::set_ipv4_handler (Ipv4 *ipv4)
@@ -52,5 +68,22 @@ void
 LoopbackInterface::send (Packet *packet)
 {
 	m_ipv4->receive (packet, this);
+}
+
+
+void 
+LoopbackInterface::set_up   (void)
+{
+	m_down = false;
+}
+void 
+LoopbackInterface::set_down (void)
+{
+	m_down = true;
+}
+bool 
+LoopbackInterface::is_down (void)
+{
+	return m_down;
 }
 

@@ -19,7 +19,7 @@ public:
 	 * this interface.
 	 */
 	virtual MacAddress get_mac_address (void) = 0;
-	virtual std::string *get_name (void) = 0;
+	virtual std::string const *get_name (void) = 0;
 	virtual uint16_t get_mtu (void) = 0;
 
 	virtual void set_up   (void) = 0;

@@ -30,21 +30,28 @@ public:
 
 	static Ipv4Address get_zero (void);
 	static Ipv4Address get_broadcast (void);
+	static Ipv4Address get_loopback (void);
 private:
 	uint32_t m_address;
 	static Ipv4Address m_zero;
 	static Ipv4Address m_broadcast;
+	static Ipv4Address m_loopback;
 };
 
 
 class Ipv4Mask {
 public:
+	Ipv4Mask ();
 	Ipv4Mask (uint32_t mask);
 	Ipv4Mask (char const *mask);
 
 	bool is_match (Ipv4Address a, Ipv4Address b);
 
+	static Ipv4Mask get_loopback (void);
+	static Ipv4Mask get_zero (void);
 private:
+	static Ipv4Mask m_loopback;
+	static Ipv4Mask m_zero;
 	uint32_t m_mask;
 };
 
