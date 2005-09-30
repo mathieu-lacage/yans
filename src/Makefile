@@ -13,6 +13,7 @@ SOURCE= \
 	loopback-interface.cc \
 	ipv4-route.cc \
 	ipv4.cc \
+	host.cc \
 	test.cc \
 	main.cc
 

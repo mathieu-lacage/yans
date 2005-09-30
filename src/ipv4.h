@@ -12,13 +12,14 @@ class NetworkInterface;
 class TransportProtocol;
 class Packet;
 class Ipv4Route;
+class Host;
 
 class Ipv4 {
 public:
 	Ipv4 ();
 	~Ipv4 ();
 
-	void set_routing_table (Ipv4Route *route);
+	void set_host (Host *host);
 
 	void set_destination (Ipv4Address destination);
 	void set_protocol (uint8_t protocol);
@@ -30,7 +31,9 @@ public:
 	void receive (Packet *packet, NetworkInterface *from);
 
 private:
-	Ipv4Route *m_route;
+	Ipv4Route *get_route (void);
+
+	Host *m_host;
 	typedef Sgi::hash_map<uint8_t, TransportProtocol *> TransportProtocols;
 	typedef std::vector<NetworkInterface *> NetworkInterfaces;
 	typedef std::vector<NetworkInterface *>::const_iterator NetworkInterfacesCI;

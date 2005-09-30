@@ -6,6 +6,7 @@
 #include "packet.h"
 #include "network-interface.h"
 #include "ipv4-route.h"
+#include "host.h"
 
 Ipv4::Ipv4 ()
 {}
@@ -13,9 +14,15 @@ Ipv4::~Ipv4 ()
 {}
 
 void 
-Ipv4::set_routing_table (Ipv4Route *route)
+Ipv4::set_host (Host *host)
 {
-	m_route = route;
+	m_host = host;
+}
+
+Ipv4Route *
+Ipv4::get_route (void)
+{
+	return m_host->get_routing_table ();
 }
 
 void 
@@ -40,11 +47,13 @@ Ipv4::send (Packet *packet)
 	packet->add_header (ip_header);
 
 	NetworkInterface *out_interface;
-	HostRoute *host_route = m_route->lookup_host (m_send_destination);
-	if (host_route == 0) {
-		NetworkRoute *network_route = m_route->lookup_network (m_send_destination);
-		if (network_route == 0) {
-			DefaultRoute *default_route = m_route->lookup_default ();
+	HostRoute *host_route = get_route ()->lookup_host (m_send_destination);
+	if (host_route == 0 || 
+	    host_route->get_interface ()->is_down ()) {
+		NetworkRoute *network_route = get_route ()->lookup_network (m_send_destination);
+		if (network_route == 0 || 
+		    network_route->get_interface ()->is_down ()) {
+			DefaultRoute *default_route = get_route ()->lookup_default ();
 			if (default_route == 0) {
 				// XXX dump packet.
 				assert (false);
@@ -88,5 +97,8 @@ Ipv4::register_transport_protocol (TransportProtocol *protocol)
 void 
 Ipv4::receive (Packet *packet, NetworkInterface *interface)
 {
-	// XXX
+	//ChunkIpv4 *ip_header = static_cast <ChunkIpv4 *> (packet->remove_header ());
+	/* need to verify if this packet is targetted at _any_ of the
+	 * IP for this host.
+	 */
 }
