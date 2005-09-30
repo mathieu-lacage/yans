@@ -4,7 +4,7 @@
 #define TAG_MANAGER_H
 
 #include <stdint.h>
-#include <map>
+#include "sgi-hashmap.h"
 
 class Tag {};
 
@@ -23,7 +23,7 @@ public:
 	uint32_t lookup_tag_id (char const *name);
 
 private:
-	typedef std::map <uint32_t, char const *name> TagMapping;
+	typedef Sgi::hash_map<uint32_t, char const *> TagMapping;
 	uint32_t m_tag_id;
 	TagMapping m_tag_mapping;
 	static TagManager *m_instance;

@@ -4,6 +4,7 @@
 #define TAG_IPV4_H
 
 #include "tag-manager.h"
+#include "ipv4-address.h"
 
 class TagIpv4 : public Tag {
 public:
