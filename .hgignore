@@ -1,7 +1,6 @@
-src/.*\.o
-src/.*~$
+.*\.o
+.*~$
 src/test
 src/patch
+test/test
 patch
-doc/.*~$
-.*~$

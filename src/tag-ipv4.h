@@ -12,6 +12,9 @@ public:
 	Ipv4Address m_dip;
 	uint16_t m_sport;
 	uint16_t m_dport;
+	Ipv4Address m_gateway;
+	NetworkInterface *m_input;
+	NetworkInterface *m_output;
 
 	static uint32_t get_tag (void);
  private:
