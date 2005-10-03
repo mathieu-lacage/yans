@@ -8,7 +8,7 @@
 int main (int argc, char *arg[])
 {
 	TestObject test;
-	printf ("sizeof: %d\n", sizeof (Object));
+	printf ("sizeof: %lu\n", sizeof (Object));
 	Time time;
 	time.start ();
 	for (int i = 0; i < 100000; i++) {
