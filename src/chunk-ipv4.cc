@@ -22,14 +22,14 @@ ChunkIpv4::~ChunkIpv4 ()
 void 
 ChunkIpv4::set_payload_size (uint16_t size)
 {
-	uint16_t old_total = nstoh (m_total_length);
+	uint16_t old_total = utils_nstoh (m_total_length);
 	uint16_t new_total = old_total + get_size ();
-	m_total_length = htons (new_total);
+	m_total_length = utils_htons (new_total);
 }
 uint16_t 
 ChunkIpv4::get_payload_size (void)
 {
-	uint16_t payload = nstoh (m_total_length) - get_size ();
+	uint16_t payload = utils_nstoh (m_total_length) - get_size ();
 	return payload;
 }
 
@@ -47,35 +47,35 @@ ChunkIpv4::get_tos (void)
 void 
 ChunkIpv4::set_id (uint16_t id)
 {
-	m_id = htons (id);
+	m_id = utils_htons (id);
 }
 uint16_t 
 ChunkIpv4::get_id (void)
 {
-	return nstoh (m_id);
+	return utils_nstoh (m_id);
 }
 void 
 ChunkIpv4::set_more_fragments (void)
 {
-	uint16_t fragment_offset = nstoh (m_fragment_offset) >> 3;
-	uint8_t flags = nstoh (m_fragment_offset) & 0x7;
+	uint16_t fragment_offset = utils_nstoh (m_fragment_offset) >> 3;
+	uint8_t flags = utils_nstoh (m_fragment_offset) & 0x7;
 	flags |= 0x4;
 	uint16_t new_fragment_offset = flags | (fragment_offset << 3);
-	m_fragment_offset = htons (new_fragment_offset);
+	m_fragment_offset = utils_htons (new_fragment_offset);
 }
 void
 ChunkIpv4::set_last_fragment (void)
 {
-	uint16_t fragment_offset = nstoh (m_fragment_offset) >> 3;
-	uint8_t flags = nstoh (m_fragment_offset) & 0x7;
+	uint16_t fragment_offset = utils_nstoh (m_fragment_offset) >> 3;
+	uint8_t flags = utils_nstoh (m_fragment_offset) & 0x7;
 	flags &= ~0x4;
 	uint16_t new_fragment_offset = flags | (fragment_offset << 3);
-	m_fragment_offset = htons (new_fragment_offset);
+	m_fragment_offset = utils_htons (new_fragment_offset);
 }
 bool 
 ChunkIpv4::is_last_fragment (void)
 {
-	uint8_t flags = nstoh (m_fragment_offset) & 0x7;
+	uint8_t flags = utils_nstoh (m_fragment_offset) & 0x7;
 	if (flags & 0x4) {
 		return false;
 	} else {
@@ -85,14 +85,14 @@ ChunkIpv4::is_last_fragment (void)
 void 
 ChunkIpv4::set_fragment_offset (uint16_t offset)
 {
-	uint16_t flags = nstoh (m_fragment_offset) & 0x7;
+	uint16_t flags = utils_nstoh (m_fragment_offset) & 0x7;
 	uint16_t new_fragment_offset = flags | (offset << 3);
-	m_fragment_offset = htons (new_fragment_offset);
+	m_fragment_offset = utils_htons (new_fragment_offset);
 }
 uint16_t 
 ChunkIpv4::get_fragment_offset (void)
 {
-	uint16_t fragment_offset = nstoh (m_fragment_offset) >> 3;
+	uint16_t fragment_offset = utils_nstoh (m_fragment_offset) >> 3;
 	return fragment_offset;
 }
 
@@ -121,23 +121,23 @@ ChunkIpv4::set_protocol (uint8_t protocol)
 void 
 ChunkIpv4::set_source (Ipv4Address source)
 {
-	m_source = htons (source.get_host_order ());
+	m_source = utils_htons (source.get_host_order ());
 }
 Ipv4Address
 ChunkIpv4::get_source (void)
 {
-	return Ipv4Address (nstoh (m_source));
+	return Ipv4Address (utils_nstoh (m_source));
 }
 
 void 
 ChunkIpv4::set_destination (Ipv4Address dst)
 {
-	m_destination = htons (dst.get_host_order ());
+	m_destination = utils_htons (dst.get_host_order ());
 }
 Ipv4Address
 ChunkIpv4::get_destination (void)
 {
-	return Ipv4Address (nstoh (m_destination));
+	return Ipv4Address (utils_nstoh (m_destination));
 }
 
 
@@ -171,7 +171,7 @@ void
 ChunkIpv4::serialize (WriteBuffer *buffer)
 {
 	// XXX 
-	uint16_t checksum = htons (calculate_checksum ((uint8_t *)&m_ver_ihl, 20));
+	uint16_t checksum = utils_htons (calculate_checksum ((uint8_t *)&m_ver_ihl, 20));
 
 	buffer->write_u8 (m_ver_ihl);
 	buffer->write_u8 (m_tos);

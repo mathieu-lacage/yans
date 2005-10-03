@@ -23,52 +23,52 @@ ChunkTcp::~ChunkTcp ()
 void 
 ChunkTcp::set_source_port (uint16_t port)
 {
-	m_source_port = htons (port);
+	m_source_port = utils_htons (port);
 }
 void 
 ChunkTcp::set_destination_port (uint16_t port)
 {
-	m_destination_port = htons (port);
+	m_destination_port = utils_htons (port);
 }
 void 
 ChunkTcp::set_sequence_number (uint32_t sequence)
 {
-	m_sequence_number = htons (sequence);
+	m_sequence_number = utils_htons (sequence);
 }
 void ChunkTcp::set_window_size (uint16_t size)
 {
-	m_window_size = htons (size);
+	m_window_size = utils_htons (size);
 }
 
 uint16_t 
 ChunkTcp::get_source_port (void)
 {
-	return nstoh (m_source_port);
+	return utils_nstoh (m_source_port);
 }
 uint16_t 
 ChunkTcp::get_destination_port (void)
 {
-	return nstoh (m_destination_port);
+	return utils_nstoh (m_destination_port);
 }
 uint32_t 
 ChunkTcp::get_sequence_number (void)
 {
-	return nstoh (m_sequence_number);
+	return utils_nstoh (m_sequence_number);
 }
 uint32_t 
 ChunkTcp::get_ack_number (void)
 {
-	return nstoh (m_ack_number);
+	return utils_nstoh (m_ack_number);
 }
 uint16_t 
 ChunkTcp::get_window_size (void)
 {
-	return nstoh (m_window_size);
+	return utils_nstoh (m_window_size);
 }
 uint16_t 
 ChunkTcp::get_urgent_pointer (void)
 {
-	return nstoh (m_urgent_pointer);
+	return utils_nstoh (m_urgent_pointer);
 }
 uint16_t 
 ChunkTcp::get_option_mss (void)
@@ -94,13 +94,13 @@ void
 ChunkTcp::enable_flag_ack (uint32_t ack)
 {
 	enable_flag (ACK);
-	m_ack_number = htons (ack);
+	m_ack_number = utils_htons (ack);
 }
 void 
 ChunkTcp::enable_flag_urg (uint16_t ptr)
 {
 	enable_flag (URG);
-	m_urgent_pointer = htons (ptr);
+	m_urgent_pointer = utils_htons (ptr);
 }
 void 
 ChunkTcp::enable_flag_psh (void)
@@ -112,7 +112,7 @@ ChunkTcp::enable_option_mss (uint16_t mss)
 {
 	uint32_t real = 0;
 	real = (2) | (4 << 8) | (mss << 16);
-	m_mss = htons (real);
+	m_mss = utils_htons (real);
 	m_header_length = 6;
 }
 

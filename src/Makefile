@@ -17,6 +17,7 @@ SOURCE= \
 	ipv4-route.cc \
 	ipv4.cc \
 	host.cc \
+	simu-socket.cc \
 	test.cc \
 	main.cc
 
