@@ -5,9 +5,12 @@
 
 #include <stdio.h>
 
+#define noREALLY_TEST 1
+
 void 
 TestObject::run (Object *object)
 {
+#ifdef REALLY_TEST
 	for (unsigned int i = 0; i < OBJECT_SIZE; i++) {
 		object->set (0x66, i);
 	}
@@ -16,11 +19,13 @@ TestObject::run (Object *object)
 			printf ("baad.\n");
 		}
 	}	
+#endif
 }
 
 void 
 TestObject::run (Object object)
 {
+#ifdef REALLY_TEST
 	for (unsigned int i = 0; i < OBJECT_SIZE; i++) {
 		object.set (0x67, i);
 	}
@@ -28,5 +33,6 @@ TestObject::run (Object object)
 		if (object.get (i) != 0x67) {
 			printf ("baad.\n");
 		}
-	}	
+	}
+#endif	
 }

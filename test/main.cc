@@ -8,19 +8,24 @@
 int main (int argc, char *arg[])
 {
 	TestObject test;
+	printf ("sizeof: %d\n", sizeof (Object));
 	Time time;
 	time.start ();
 	for (int i = 0; i < 100000; i++) {
 		Object *object = new Object ();
-		test.run (object);
+		for (int j = 0; j < 100; j++) {
+			test.run (object);
+		}
 	}
-	printf ("indirect: %llums", time.end ());
+	printf ("indirect: %llums\n", time.end ());
 	time.start ();
 	for (int i = 0; i < 100000; i++) {
 		Object object = Object ();
-		test.run (object);
+		for (int j = 0; j < 100; j++) {
+			test.run (object);
+		}
 	}
-	printf ("direct: %llums", time.end ());
+	printf ("direct: %llums\n", time.end ());
 
 	return 0;
 }

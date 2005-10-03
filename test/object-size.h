@@ -1,3 +1,3 @@
-#ifndef OBJECT_SIZE
-#define OBJECT_SIZE 10
+#ifndef OBJET_SIZE
+#define OBJECT_SIZE 74
 #endif
