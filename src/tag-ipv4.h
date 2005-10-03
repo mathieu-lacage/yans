@@ -6,6 +6,8 @@
 #include "tag-manager.h"
 #include "ipv4-address.h"
 
+class NetworkInterface;
+
 class TagIpv4 : public Tag {
 public:
 	Ipv4Address m_sip;
