@@ -90,10 +90,6 @@ simu_getsockname (int fd, struct sockaddr *addr,
 		errno = EBADF;
 		goto error;
 	}
-	if (!socket->is_connected ()) {
-		errno = ENOTCONN;
-		goto error;
-	}
 	if (socket->is_ipv6 ()) {
 		if (*addrlen < sizeof (struct sockaddr_in6)) {
 			errno = EINVAL;
@@ -114,8 +110,8 @@ simu_getsockname (int fd, struct sockaddr *addr,
 		in_addr->sin_family = AF_INET;
 		*addrlen = sizeof (struct sockaddr_in);
 
-		in_addr->sin_addr.s_addr = utils_htons (socket->get_peer_ipv4_address ().get_host_order ());
-		in_addr->sin_port = utils_htons (socket->get_peer_port ());
+		in_addr->sin_addr.s_addr = utils_htons (socket->get_ipv4_address ().get_host_order ());
+		in_addr->sin_port = utils_htons (socket->get_port ());
 	}
 
 	return 0;
@@ -175,12 +171,39 @@ simu_connect (int fd, struct sockaddr const * addr,
 }
 int 
 simu_getpeername (int fd, struct sockaddr * addr,
-		  socklen_t *len)
+		  socklen_t *addrlen)
 {
 	Socket *socket = socket_lookup (fd);
 	if (socket == 0) {
 		errno = EBADF;
 		goto error;
+	}
+	if (!socket->is_connected ()) {
+		errno = ENOTCONN;
+		goto error;
+	}
+	if (socket->is_ipv6 ()) {
+		if (*addrlen < sizeof (struct sockaddr_in6)) {
+			errno = EINVAL;
+			goto error;
+		}
+		struct sockaddr_in6 *in6_addr = (struct sockaddr_in6 *)addr;
+		in6_addr->sin6_family = AF_INET6;
+		*addrlen = sizeof (struct sockaddr_in6);
+		// XXX
+		assert (false);
+		return -1;
+	} else {
+		if (*addrlen < sizeof (struct sockaddr_in)) {
+			errno = EINVAL;
+			goto error;
+		}
+		struct sockaddr_in *in_addr = (struct sockaddr_in *)addr;
+		in_addr->sin_family = AF_INET;
+		*addrlen = sizeof (struct sockaddr_in);
+
+		in_addr->sin_addr.s_addr = utils_htons (socket->get_peer_ipv4_address ().get_host_order ());
+		in_addr->sin_port = utils_htons (socket->get_peer_port ());
 	}
  error:
 	return -1;
