@@ -9,12 +9,27 @@ Packet::Packet ()
 
 Packet::~Packet ()
 {
-	for (HeadersI i = m_headers.begin (); i != m_headers.end (); i = m_headers.erase (i)) {
+	for (PacketDestroyNotifiersCI k = m_destroy_notifiers.begin ();
+	     k != m_destroy_notifiers.end (); k++) {
+		(*k)->notify (this);
+		delete (*k);
+	}
+	m_destroy_notifiers.erase (m_destroy_notifiers.begin (),
+				   m_destroy_notifiers.end ());
+	for (HeadersCI i = m_headers.begin (); i != m_headers.end (); i++) {
 		delete (*i);
 	}
-	for (TrailersI j = m_trailers.begin (); j != m_trailers.end (); j = m_trailers.erase (j)) {
+	m_headers.erase (m_headers.begin (), m_headers.end ());
+	for (TrailersCI j = m_trailers.begin (); j != m_trailers.end (); j++) {
 		delete (*j);
 	}
+	m_trailers.erase (m_trailers.begin (), m_trailers.end ());
+}
+
+void 
+Packet::add_destroy_notifier (PacketDestroyNotifier *notifier)
+{
+	m_destroy_notifiers.push_back (notifier);
 }
 
 void 

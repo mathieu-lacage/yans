@@ -12,6 +12,9 @@ class SocketUdp {
  public:
 	SocketUdp (Host *host);
 
+	void enable_non_blocking (void);
+	void enable_blocking (void);
+
 	void close (void);
 
 	/* binding-related operations. */
@@ -29,6 +32,8 @@ class SocketUdp {
 	uint16_t m_self_port;
 	Ipv4Address m_peer_address;
 	uint16_t m_peer_port;
+	uint32_t m_buffer_len;
+	uint32_t m_used_buffer_len;
 };
 
 #endif /* SOCKET_UDP */

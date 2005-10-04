@@ -12,6 +12,13 @@
 class Chunk;
 class WriteBuffer;
 class ReadBuffer;
+class Packet;
+
+class PacketDestroyNotifier {
+public:
+	virtual ~PacketDestroyNotifier ();
+	virtual void notify (Packet *packet);
+};
 
 class Packet {
 public:
@@ -20,6 +27,8 @@ public:
 
 	void ref (void);
 	void unref (void);
+
+	void add_destroy_notifier (PacketDestroyNotifier *notifier);
 
 	void add_tag (uint32_t tag_id, Tag *tag);
 	Tag *get_tag (uint32_t tag_id);
@@ -43,10 +52,11 @@ public:
 	typedef std::vector<Chunk *> Headers;
 	typedef std::vector<Chunk *> Trailers;
 	typedef std::vector<Chunk *>::const_iterator HeadersCI;
-	typedef std::vector<Chunk *>::iterator HeadersI;
 	typedef std::vector<Chunk *>::reverse_iterator HeadersRI;
 	typedef std::vector<Chunk *>::const_iterator TrailersCI;
-	typedef std::vector<Chunk *>::iterator TrailersI;
+	typedef std::vector<PacketDestroyNotifier *> PacketDestroyNotifiers;
+	typedef std::vector<PacketDestroyNotifier *>::const_iterator PacketDestroyNotifiersCI;
+	PacketDestroyNotifiers m_destroy_notifiers;
 	Headers m_headers;
 	Trailers m_trailers;
 	uint32_t m_ref;
