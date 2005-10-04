@@ -47,6 +47,8 @@ public:
 
 	bool is_match (Ipv4Address a, Ipv4Address b);
 
+	bool is_equal (Ipv4Mask other);
+
 	static Ipv4Mask get_loopback (void);
 	static Ipv4Mask get_zero (void);
 private:

@@ -4,83 +4,82 @@
 #include "ipv4.h"
 
 /*****************************************************
- *           Host Route
+ *           Network Route
  *****************************************************/
 
-HostRoute::HostRoute (Ipv4Address dest,
-		      Ipv4Address gateway,
-		      NetworkInterface *interface)
+Route::Route (Ipv4Address dest,
+	      Ipv4Address gateway,
+	      NetworkInterface *interface)
 	: m_dest (dest),
+	  m_dest_network_mask (Ipv4Mask::get_zero ()),
 	  m_gateway (gateway),
 	  m_interface (interface)
 {}
-HostRoute::HostRoute (Ipv4Address dest,
-		      NetworkInterface *interface)
+Route::Route (Ipv4Address dest,
+	      NetworkInterface *interface)
 	: m_dest (dest),
+	  m_dest_network_mask (Ipv4Mask::get_zero ()),
+	  m_gateway (Ipv4Address::get_zero ()),
+	  m_interface (interface)
+{}
+Route::Route (Ipv4Address network,
+	      Ipv4Mask network_mask,
+	      Ipv4Address gateway,
+	      NetworkInterface *interface)
+	: m_dest (network),
+	  m_dest_network_mask (network_mask),
+	  m_gateway (gateway),
+	  m_interface (interface)
+{}
+Route::Route (Ipv4Address network,
+	      Ipv4Mask network_mask,
+	      NetworkInterface *interface)
+	: m_dest (network),
+	  m_dest_network_mask (network_mask),
 	  m_gateway (Ipv4Address::get_zero ()),
 	  m_interface (interface)
 {}
 
+bool 
+Route::is_host (void)
+{
+	if (m_dest_network_mask.is_equal (Ipv4Mask::get_zero ())) {
+		return true;
+	} else {
+		return false;
+	}
+}
 Ipv4Address 
-HostRoute::get_dest (void)
+Route::get_dest (void)
 {
 	return m_dest;
 }
 bool 
-HostRoute::is_gateway (void)
+Route::is_network (void)
 {
-	if (m_gateway.is_equal (Ipv4Address::get_zero ())) {
-		return false;
-	} else {
-		return true;
-	}
-}
-Ipv4Address 
-HostRoute::get_gateway (void)
-{
-	return m_gateway;
-}
-NetworkInterface *
-HostRoute::get_interface (void)
-{
-	return m_interface;
-}
-
-
-/*****************************************************
- *           Network Route
- *****************************************************/
-
-NetworkRoute::NetworkRoute (Ipv4Address network,
-			    Ipv4Mask network_mask,
-			    Ipv4Address gateway,
-			    NetworkInterface *interface)
-	: m_network (network),
-	  m_network_mask (network_mask),
-	  m_gateway (gateway),
-	  m_interface (interface)
-{}
-NetworkRoute::NetworkRoute (Ipv4Address network,
-			    Ipv4Mask network_mask,
-			    NetworkInterface *interface)
-	: m_network (network),
-	  m_network_mask (network_mask),
-	  m_gateway (Ipv4Address::get_zero ()),
-	  m_interface (interface)
-{}
-
-Ipv4Address 
-NetworkRoute::get_dest_network (void)
-{
-	return m_network;
-}
-Ipv4Mask 
-NetworkRoute::get_dest_network_mask (void)
-{
-	return m_network_mask;
+	return !is_host ();
 }
 bool 
-NetworkRoute::is_gateway (void)
+Route::is_default (void)
+{
+	if (m_dest.is_equal (Ipv4Address::get_zero ())) {
+		return true;
+	} else {
+		return false;
+	}
+}
+Ipv4Address 
+Route::get_dest_network (void)
+{
+	return m_dest;
+}
+Ipv4Mask 
+Route::get_dest_network_mask (void)
+{
+	return m_dest_network_mask;
+}
+bool 
+Route::is_gateway (void)
 {
 	if (m_gateway.is_equal (Ipv4Address::get_zero ())) {
 		return false;
@@ -89,36 +88,15 @@ NetworkRoute::is_gateway (void)
 	}
 }
 Ipv4Address 
-NetworkRoute::get_gateway (void)
+Route::get_gateway (void)
 {
 	return m_gateway;
 }
 NetworkInterface *
-NetworkRoute::get_interface (void)
+Route::get_interface (void)
 {
 	return m_interface;
 }
-
-/*****************************************************
- *           Default Route
- *****************************************************/
-
-DefaultRoute::DefaultRoute (Ipv4Address gateway,
-			    NetworkInterface *interface)
-	: m_gateway (gateway),
-	  m_interface (interface)
-{}
-Ipv4Address 
-DefaultRoute::get_gateway (void)
-{
-	return m_gateway;
-}
-NetworkInterface *
-DefaultRoute::get_interface (void)
-{
-	return m_interface;
-}
-
 
 /*****************************************************
  *           Very simple Ipv4 Routing module
@@ -128,7 +106,18 @@ Ipv4Route::Ipv4Route ()
 	: m_default_route (0)
 {}
 Ipv4Route::~Ipv4Route ()
-{}
+{
+	for (HostRoutesI i = m_host_routes.begin (); 
+	     i != m_host_routes.end (); 
+	     i = m_host_routes.erase (i)) {
+		delete (*i);
+	}
+	for (NetworkRoutesI j = m_network_routes.begin (); 
+	     j != m_network_routes.end (); 
+	     j = m_network_routes.erase (j)) {
+		delete (*j);
+	}
+}
 
 
 void 
@@ -136,13 +125,13 @@ Ipv4Route::add_host_route_to (Ipv4Address dest,
 			      Ipv4Address next_hop, 
 			      NetworkInterface *interface)
 {
-	m_host_routes.push_back (new HostRoute (dest, next_hop, interface));
+	m_host_routes.push_back (new Route (dest, next_hop, interface));
 }
 void 
 Ipv4Route::add_host_route_to (Ipv4Address dest, 
 			      NetworkInterface *interface)
 {
-	m_host_routes.push_back (new HostRoute (dest, interface));
+	m_host_routes.push_back (new Route (dest, interface));
 }
 void 
 Ipv4Route::add_network_route_to (Ipv4Address network, 
@@ -150,16 +139,16 @@ Ipv4Route::add_network_route_to (Ipv4Address network,
 				 Ipv4Address next_hop, 
 				 NetworkInterface *interface)
 {
-	m_network_routes.push_back (new NetworkRoute (network, network_mask, 
-						      next_hop, interface));
+	m_network_routes.push_back (new Route (network, network_mask, 
+					       next_hop, interface));
 }
 void 
 Ipv4Route::add_network_route_to (Ipv4Address network, 
 				 Ipv4Mask network_mask, 
 				 NetworkInterface *interface)
 {
-	m_network_routes.push_back (new NetworkRoute (network, network_mask, 
-						      interface));
+	m_network_routes.push_back (new Route (network, network_mask, 
+					       interface));
 }
 void 
 Ipv4Route::set_default_route (Ipv4Address next_hop, 
@@ -168,21 +157,32 @@ Ipv4Route::set_default_route (Ipv4Address next_hop,
 	if (m_default_route != 0) {
 		delete m_default_route;
 	}
-	m_default_route = new DefaultRoute (next_hop, interface);
+	m_default_route = new Route (Ipv4Address::get_zero (), next_hop, interface);
 }
-HostRoute *
-Ipv4Route::lookup_host (Ipv4Address dest)
+Route *
+Ipv4Route::lookup (Ipv4Address dest)
 {
+	for (HostRoutesCI i = m_host_routes.begin (); 
+	     i != m_host_routes.end (); 
+	     i++) {
+		assert ((*i)->is_host ());
+		if ((*i)->get_dest ().is_equal (dest)) {
+			return (*i);
+		}
+	}
+	for (NetworkRoutesI j = m_network_routes.begin (); 
+	     j != m_network_routes.end (); 
+	     j++) {
+		assert ((*j)->is_network ());
+		Ipv4Mask mask = (*j)->get_dest_network_mask ();
+		Ipv4Address entry = (*j)->get_dest_network ();
+		if (mask.is_match (dest, entry)) {
+			return (*j);
+		}
+	}
+	if (m_default_route != 0) {
+		assert (m_default_route->is_default ());
+		return m_default_route;
+	}
 	return 0;
 }
-NetworkRoute *
-Ipv4Route::lookup_network (Ipv4Address dest)
-{
-	return 0;
-}
-DefaultRoute *
-Ipv4Route::lookup_default (void)
-{
-	return m_default_route;
-}
-

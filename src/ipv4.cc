@@ -54,34 +54,15 @@ Ipv4::send (Packet *packet)
 	packet->add_header (ip_header);
 
 	NetworkInterface *out_interface;
-	HostRoute *host_route = get_route ()->lookup_host (m_send_destination);
-	if (host_route == 0 || 
-	    host_route->get_interface ()->is_down ()) {
-		NetworkRoute *network_route = get_route ()->lookup_network (m_send_destination);
-		if (network_route == 0 || 
-		    network_route->get_interface ()->is_down ()) {
-			DefaultRoute *default_route = get_route ()->lookup_default ();
-			if (default_route == 0) {
-				assert (false);
-				delete ip_header;
-				drop_packet (packet);
-				return;
-			}
-			out_interface = default_route->get_interface ();
-			Ipv4Address gateway = default_route->get_gateway ();
-			out_interface->set_ipv4_next_hop (gateway);
-		} else {
-			out_interface = network_route->get_interface ();
-			if (network_route->is_gateway ()) {
-				Ipv4Address gateway = network_route->get_gateway ();
-				out_interface->set_ipv4_next_hop (gateway);
-			}
-		}
+	Route *route = get_route ()->lookup (m_send_destination);
+	if (route == 0) {
+		assert (false);
+		delete ip_header;
+		drop_packet (packet);		
 	} else {
-		out_interface = host_route->get_interface ();
-		if (host_route->is_gateway ()) {
-			Ipv4Address gateway = host_route->get_gateway ();
-			out_interface->set_ipv4_next_hop (gateway);
+		out_interface = route->get_interface ();
+		if (route->is_gateway ()) {
+			out_interface->set_ipv4_next_hop (route->get_gateway ());
 		}
 	}
 	ip_header->set_source (out_interface->get_ipv4_address ());

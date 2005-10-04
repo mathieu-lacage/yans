@@ -19,6 +19,17 @@ Ipv4Mask::Ipv4Mask (char const *mask)
 }
 
 bool 
+Ipv4Mask::is_equal (Ipv4Mask other)
+{
+	if (other.m_mask == m_mask) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+
+bool 
 Ipv4Mask::is_match (Ipv4Address a, Ipv4Address b)
 {
 	if ((a.get_host_order () & m_mask) == (b.get_host_order () & m_mask)) {

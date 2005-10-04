@@ -9,50 +9,38 @@
 
 class NetworkInterface;
 
-class HostRoute {
+class Route {
 public:
-	HostRoute (Ipv4Address dest,
-		   Ipv4Address gateway,
-		   NetworkInterface *interface);
-	HostRoute (Ipv4Address dest,
-		   NetworkInterface *interface);
-
+	bool is_host (void);
 	Ipv4Address get_dest (void);
-	bool is_gateway (void);
-	Ipv4Address get_gateway (void);
-	NetworkInterface *get_interface (void);
-private:
-	Ipv4Address m_dest;
-	Ipv4Address m_gateway;
-	NetworkInterface *m_interface;
-};
-class NetworkRoute {
-public:
-	NetworkRoute (Ipv4Address network,
-		      Ipv4Mask mask,
-		      Ipv4Address gateway,
-		      NetworkInterface *interface);
-	NetworkRoute (Ipv4Address dest,
-		      Ipv4Mask mask,
-		      NetworkInterface *interface);
+
+	bool is_network (void);
 	Ipv4Address get_dest_network (void);
 	Ipv4Mask get_dest_network_mask (void);
+
+	bool is_default (void);
+
 	bool is_gateway (void);
 	Ipv4Address get_gateway (void);
+
 	NetworkInterface *get_interface (void);
 private:
-	Ipv4Address m_network;
-	Ipv4Mask m_network_mask;
-	Ipv4Address m_gateway;
-	NetworkInterface *m_interface;
-};
-class DefaultRoute {
-public:
-	DefaultRoute (Ipv4Address gateway,
-		      NetworkInterface *interface);
-	Ipv4Address get_gateway (void);
-	NetworkInterface *get_interface (void);
-private:
+	friend class Ipv4Route;
+	Route (Ipv4Address network,
+	       Ipv4Mask mask,
+	       Ipv4Address gateway,
+	       NetworkInterface *interface);
+	Route (Ipv4Address dest,
+	       Ipv4Mask mask,
+	       NetworkInterface *interface);
+	Route (Ipv4Address dest,
+	       Ipv4Address gateway,
+	       NetworkInterface *interface);
+	Route (Ipv4Address dest,
+	       NetworkInterface *interface);
+
+	Ipv4Address m_dest;
+	Ipv4Mask m_dest_network_mask;
 	Ipv4Address m_gateway;
 	NetworkInterface *m_interface;
 };
@@ -91,19 +79,18 @@ public:
 	void set_default_route (Ipv4Address next_hop, 
 				NetworkInterface *interface);
 
-	HostRoute *lookup_host (Ipv4Address dest);
-	NetworkRoute *lookup_network (Ipv4Address dest);
-	DefaultRoute *lookup_default (void);
-
+	Route *lookup (Ipv4Address dest);
 private:
-	typedef std::list<HostRoute *> HostRoutes;
-	typedef std::list<HostRoute *>::iterator HostRoutesI;
-	typedef std::list<NetworkRoute *> NetworkRoutes;
-	typedef std::list<NetworkRoute *>::iterator NetworkRoutesI;
-	
+	typedef std::list<Route *> HostRoutes;
+	typedef std::list<Route *>::const_iterator HostRoutesCI;
+	typedef std::list<Route *>::iterator HostRoutesI;
+	typedef std::list<Route *> NetworkRoutes;
+	typedef std::list<Route *>::const_iterator NetworkRoutesCI;
+	typedef std::list<Route *>::iterator NetworkRoutesI;
+
 	HostRoutes m_host_routes;
 	NetworkRoutes m_network_routes;
-	DefaultRoute *m_default_route;
+	Route *m_default_route;
 };
 
 #endif /* IPV4_ROUTE_H */
