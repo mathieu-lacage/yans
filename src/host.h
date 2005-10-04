@@ -9,7 +9,9 @@
 class Ipv4;
 class Ipv4Route;
 class NetworkInterface;
-class Socket;
+class SocketUdp;
+class File;
+class Process;
 
 typedef std::vector<NetworkInterface *> NetworkInterfaces;
 typedef std::vector<NetworkInterface *>::const_iterator NetworkInterfacesCI;
@@ -26,7 +28,9 @@ public:
 	NetworkInterface *lookup_interface (char const *name);
 	void add_interface (NetworkInterface *interface);
 
-	Socket *create_udp_socket (void);
+	SocketUdp *create_socket_udp (void);
+	File *create_file (void);
+	Process *create_process (void);
 
 private:
 	typedef std::vector<NetworkInterface *>::iterator NetworkInterfacesI;
