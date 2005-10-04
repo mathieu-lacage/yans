@@ -71,7 +71,7 @@ WriteBuffer::write (uint8_t const *data, uint8_t size)
 	}
 }
 void 
-WriteBuffer::write_htons_u16 (uint16_t data)
+WriteBuffer::write_hton_u16 (uint16_t data)
 {
 	ensure_write_room_left (2);
 	m_buffer[m_write] = (data >> 0) & 0xff;
@@ -81,7 +81,7 @@ WriteBuffer::write_htons_u16 (uint16_t data)
 }
 
 void 
-WriteBuffer::write_htons_u32 (uint32_t data)
+WriteBuffer::write_hton_u32 (uint32_t data)
 {
 	ensure_write_room_left (4);
 	m_buffer[m_write] = (data >> 0)  & 0xff;
@@ -140,7 +140,7 @@ ReadBuffer::read (uint8_t *buffer, uint8_t size)
 }
 
 uint16_t 
-ReadBuffer::read_nstoh_u16 (void)
+ReadBuffer::read_ntoh_u16 (void)
 {
 	assert (is_read_room_left (2));
 	uint16_t retval = 0;
@@ -152,7 +152,7 @@ ReadBuffer::read_nstoh_u16 (void)
 }
 
 uint32_t 
-ReadBuffer::read_nstoh_u32 (void)
+ReadBuffer::read_ntoh_u32 (void)
 {
 	assert (is_read_room_left (4));
 	uint32_t retval = 0;
@@ -234,12 +234,12 @@ BufferTest::run_tests (void)
 	buffer->reset ();
 	buffer->write_u8 (0x67);
 	ENSURE_WRITTEN_BYTES (buffer, 1, 0x67);
-	buffer->write_htons_u16 (0x6568);
+	buffer->write_hton_u16 (0x6568);
 	ENSURE_WRITTEN_BYTES (buffer, 3, 0x67, 0x68, 0x65);
 	buffer->reset ();
-	buffer->write_htons_u16 (0x6369);
+	buffer->write_hton_u16 (0x6369);
 	ENSURE_WRITTEN_BYTES (buffer, 2, 0x69, 0x63);
-	buffer->write_htons_u32 (0xdeadbeaf);
+	buffer->write_hton_u32 (0xdeadbeaf);
 	ENSURE_WRITTEN_BYTES (buffer, 6, 0x69, 0x63, 0xaf, 0xbe, 0xad, 0xde);
 	return ok;
 }

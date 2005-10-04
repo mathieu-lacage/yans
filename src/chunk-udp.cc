@@ -59,21 +59,21 @@ ChunkUdp::copy (void)
 void 
 ChunkUdp::serialize (WriteBuffer *buffer)
 {
-	buffer->write_htons_u16 (m_source_port);
-	buffer->write_htons_u16 (m_destination_port);
-	buffer->write_htons_u16 (m_udp_length);
+	buffer->write_hton_u16 (m_source_port);
+	buffer->write_hton_u16 (m_destination_port);
+	buffer->write_hton_u16 (m_udp_length);
 	/* we do not calculate the udp header checksum
 	 * This is bad but, well...
 	 */
-	buffer->write_htons_u16 (0);
+	buffer->write_hton_u16 (0);
 }
 void 
 ChunkUdp::deserialize (ReadBuffer *buffer)
 {
-	m_source_port = buffer->read_nstoh_u16 ();
-	m_destination_port = buffer->read_nstoh_u16 ();
-	m_udp_length = buffer->read_nstoh_u16 ();
-	uint16_t checksum = buffer->read_nstoh_u16 ();
+	m_source_port = buffer->read_ntoh_u16 ();
+	m_destination_port = buffer->read_ntoh_u16 ();
+	m_udp_length = buffer->read_ntoh_u16 ();
+	uint16_t checksum = buffer->read_ntoh_u16 ();
 	assert (checksum == 0);
 }
 
