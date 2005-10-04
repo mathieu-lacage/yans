@@ -4,6 +4,7 @@
 #include "chunk-udp.h"
 #include "packet.h"
 #include "ipv4.h"
+#include "tag-ipv4.h"
 
 /* see http://www.iana.org/assignments/protocol-numbers */
 const uint8_t Udp::UDP_PROTOCOL = 17;
@@ -28,32 +29,20 @@ Udp::receive (Packet *packet)
 {
 }
 
-void 
-Udp::set_destination (Ipv4Address dest)
-{
-	m_destination = dest;
-}
-void 
-Udp::set_destination (uint16_t port)
-{
-	m_destination_port = port;
-}
-void 
-Udp::set_source (uint16_t port)
-{
-	m_source_port = port;
-}
-		
-
-
 void
 Udp::send (Packet *packet)
 {
+	TagOutIpv4 *tag = static_cast <TagOutIpv4 *> (packet->get_tag (TagOutIpv4::get_tag ()));
+	assert (tag != 0);
 	ChunkUdp *udp_chunk = new ChunkUdp ();
-	udp_chunk->set_destination (m_destination_port);
-	udp_chunk->set_source (m_source_port);
+	udp_chunk->set_destination (tag->get_dport ());
+	udp_chunk->set_source (tag->get_sport ());
+	udp_chunk->set_payload_size (packet->get_size ());
+
 	packet->add_header (udp_chunk);
+
 	m_ipv4->set_protocol (UDP_PROTOCOL);
-	m_ipv4->set_destination (m_destination);
 	m_ipv4->send (packet);
+
+	// XXX: if we wanted to, we could generate the udp checksum here.
 }

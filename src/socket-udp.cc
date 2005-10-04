@@ -81,7 +81,10 @@ SocketUdp::send (uint8_t const *buf, uint32_t length, int flags)
 		m_used_buffer_len += length;
 	}
 	Packet *packet = new Packet ();
-	TagOutIpv4 *tag = new TagOutIpv4 (route, m_self_port, m_peer_port);
+	TagOutIpv4 *tag = new TagOutIpv4 (route);
+	tag->set_sport (m_self_port);
+	tag->set_dport (m_peer_port);
+	tag->set_daddress (m_peer_address);
 	packet->add_tag (TagOutIpv4::get_tag (), tag);
 	packet->add_destroy_notifier (new SocketUdpPacketDestroyNotifier (this, length));
 	ChunkData *data = new ChunkData (buf, length);

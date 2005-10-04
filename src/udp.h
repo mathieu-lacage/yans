@@ -16,10 +16,6 @@ public:
 
 	void set_ipv4 (Ipv4 *ipv4);
 
-	void set_destination (Ipv4Address dest);
-	void set_destination (uint16_t port);
-	void set_source (uint16_t port);
-
 	void send (Packet *packet);
 
 	virtual uint8_t get_protocol (void);

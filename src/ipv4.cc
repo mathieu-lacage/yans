@@ -27,11 +27,6 @@ Ipv4::get_route (void)
 }
 
 void 
-Ipv4::set_destination (Ipv4Address destination)
-{
-	m_send_destination = destination;
-}
-void 
 Ipv4::set_protocol (uint8_t protocol)
 {
 	m_send_protocol = protocol;
@@ -49,10 +44,7 @@ Ipv4::send (Packet *packet)
 {
 	ChunkIpv4 *ip_header;
 	ip_header = new ChunkIpv4 ();
-	ip_header->set_destination (m_send_destination);
-	ip_header->set_protocol (m_send_protocol);
 	ip_header->set_payload_size (packet->get_size ());
-	packet->add_header (ip_header);
 
 	TagOutIpv4 *tag = static_cast <TagOutIpv4 *> (packet->remove_tag (TagOutIpv4::get_tag ()));
 	Route const*route = tag->get_route ();
@@ -62,6 +54,10 @@ Ipv4::send (Packet *packet)
 		out_interface->set_ipv4_next_hop (route->get_gateway ());
 	}
 	ip_header->set_source (out_interface->get_ipv4_address ());
+	ip_header->set_destination (tag->get_daddress ());
+	ip_header->set_protocol (m_send_protocol);
+
+	packet->add_header (ip_header);
 
 	if (packet->get_size () > out_interface->get_mtu ()) {
 		/* we need to fragment the packet. */

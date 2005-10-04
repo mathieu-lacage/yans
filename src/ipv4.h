@@ -21,7 +21,6 @@ public:
 
 	void set_host (Host *host);
 
-	void set_destination (Ipv4Address destination);
 	void set_protocol (uint8_t protocol);
 	void send (Packet *packet);
 

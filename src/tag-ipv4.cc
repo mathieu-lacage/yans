@@ -4,10 +4,8 @@
 
 uint32_t TagOutIpv4::m_tag = TagManager::instance ()->register_tag ("ipv4");
 
-TagOutIpv4::TagOutIpv4 (Route const*route, uint16_t sport, uint16_t dport)
-	: m_route (*route),
-	  m_sport (sport),
-	  m_dport (dport)
+TagOutIpv4::TagOutIpv4 (Route const*route)
+	: m_route (*route)
 {}
 
 uint16_t 
@@ -21,6 +19,26 @@ TagOutIpv4::get_sport (void)
 	return m_sport;
 }
 
+Ipv4Address
+TagOutIpv4::get_daddress (void)
+{
+	return m_daddress;
+}
+void 
+TagOutIpv4::set_dport (uint16_t dport)
+{
+	m_dport = dport;
+}
+void 
+TagOutIpv4::set_sport (uint16_t sport)
+{
+	m_sport = sport;
+}
+void 
+TagOutIpv4::set_daddress (Ipv4Address daddress)
+{
+	m_daddress = daddress;
+}
 Route const *
 TagOutIpv4::get_route (void)
 {
