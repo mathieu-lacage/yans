@@ -48,7 +48,7 @@ Route::Route (Ipv4Address network,
 {}
 
 bool 
-Route::is_host (void)
+Route::is_host (void) const
 {
 	if (m_dest_network_mask.is_equal (Ipv4Mask::get_zero ())) {
 		return true;
@@ -57,17 +57,17 @@ Route::is_host (void)
 	}
 }
 Ipv4Address 
-Route::get_dest (void)
+Route::get_dest (void) const
 {
 	return m_dest;
 }
 bool 
-Route::is_network (void)
+Route::is_network (void) const
 {
 	return !is_host ();
 }
 bool 
-Route::is_default (void)
+Route::is_default (void) const
 {
 	if (m_dest.is_equal (Ipv4Address::get_zero ())) {
 		return true;
@@ -76,17 +76,17 @@ Route::is_default (void)
 	}
 }
 Ipv4Address 
-Route::get_dest_network (void)
+Route::get_dest_network (void) const
 {
 	return m_dest;
 }
 Ipv4Mask 
-Route::get_dest_network_mask (void)
+Route::get_dest_network_mask (void) const
 {
 	return m_dest_network_mask;
 }
 bool 
-Route::is_gateway (void)
+Route::is_gateway (void) const
 {
 	if (m_gateway.is_equal (Ipv4Address::get_zero ())) {
 		return false;
@@ -95,12 +95,12 @@ Route::is_gateway (void)
 	}
 }
 Ipv4Address 
-Route::get_gateway (void)
+Route::get_gateway (void) const
 {
 	return m_gateway;
 }
 NetworkInterface *
-Route::get_interface (void)
+Route::get_interface (void) const
 {
 	return m_interface;
 }

@@ -20,7 +20,7 @@ public:
 	 */
 	Ipv4Address (char const *address);
 
-	bool is_equal (Ipv4Address other);
+	bool is_equal (Ipv4Address other) const;
 
 	/* Using this method is frowned upon.
 	 * Please, do _not_ use this method.
@@ -47,7 +47,7 @@ public:
 
 	bool is_match (Ipv4Address a, Ipv4Address b);
 
-	bool is_equal (Ipv4Mask other);
+	bool is_equal (Ipv4Mask other) const;
 
 	static Ipv4Mask get_loopback (void);
 	static Ipv4Mask get_zero (void);

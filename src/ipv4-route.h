@@ -13,19 +13,19 @@ class Route {
 public:
 	Route (Route const &route);
 
-	bool is_host (void);
-	Ipv4Address get_dest (void);
+	bool is_host (void) const;
+	Ipv4Address get_dest (void) const;
 
-	bool is_network (void);
-	Ipv4Address get_dest_network (void);
-	Ipv4Mask get_dest_network_mask (void);
+	bool is_network (void) const;
+	Ipv4Address get_dest_network (void) const;
+	Ipv4Mask get_dest_network_mask (void) const;
 
-	bool is_default (void);
+	bool is_default (void) const;
 
-	bool is_gateway (void);
-	Ipv4Address get_gateway (void);
+	bool is_gateway (void) const;
+	Ipv4Address get_gateway (void) const;
 
-	NetworkInterface *get_interface (void);
+	NetworkInterface *get_interface (void) const;
 private:
 	friend class Ipv4Route;
 	Route (Ipv4Address network,

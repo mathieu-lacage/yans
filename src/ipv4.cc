@@ -7,6 +7,7 @@
 #include "network-interface.h"
 #include "ipv4-route.h"
 #include "host.h"
+#include "tag-ipv4.h"
 
 Ipv4::Ipv4 ()
 {}
@@ -53,17 +54,12 @@ Ipv4::send (Packet *packet)
 	ip_header->set_payload_size (packet->get_size ());
 	packet->add_header (ip_header);
 
-	NetworkInterface *out_interface;
-	Route *route = get_route ()->lookup (m_send_destination);
-	if (route == 0) {
-		assert (false);
-		delete ip_header;
-		drop_packet (packet);		
-	} else {
-		out_interface = route->get_interface ();
-		if (route->is_gateway ()) {
-			out_interface->set_ipv4_next_hop (route->get_gateway ());
-		}
+	TagOutIpv4 *tag = static_cast <TagOutIpv4 *> (packet->remove_tag (TagOutIpv4::get_tag ()));
+	Route const*route = tag->get_route ();
+	assert (route != 0);
+	NetworkInterface *out_interface = route->get_interface ();
+	if (route->is_gateway ()) {
+		out_interface->set_ipv4_next_hop (route->get_gateway ());
 	}
 	ip_header->set_source (out_interface->get_ipv4_address ());
 

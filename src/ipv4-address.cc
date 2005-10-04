@@ -19,7 +19,7 @@ Ipv4Mask::Ipv4Mask (char const *mask)
 }
 
 bool 
-Ipv4Mask::is_equal (Ipv4Mask other)
+Ipv4Mask::is_equal (Ipv4Mask other) const
 {
 	if (other.m_mask == m_mask) {
 		return true;
@@ -63,7 +63,7 @@ Ipv4Address::Ipv4Address (char const *address)
 }
 
 bool 
-Ipv4Address::is_equal (Ipv4Address other)
+Ipv4Address::is_equal (Ipv4Address other) const
 {
 	if (other.m_address == m_address) {
 		return true;
