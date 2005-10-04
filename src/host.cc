@@ -12,6 +12,8 @@ Host::Host ()
 {
 	m_ipv4 = new Ipv4 ();
 	m_udp = new Udp ();
+	m_udp->set_ipv4 (m_ipv4);
+	m_ipv4->register_transport_protocol (m_udp);
 	m_routing_table = new Ipv4Route ();
 	LoopbackInterface *loopback = new LoopbackInterface ();
 	add_interface (loopback);
