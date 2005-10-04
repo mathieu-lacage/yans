@@ -8,9 +8,13 @@
 #include "transport-protocol.h"
 #include "ipv4-address.h"
 
+class Ipv4;
+
 class Udp : public TransportProtocol {
 public:
 	virtual ~Udp ();
+
+	void set_ipv4 (Ipv4 *ipv4);
 
 	void set_destination (Ipv4Address dest);
 	void set_destination (uint16_t port);
@@ -23,6 +27,7 @@ public:
 
  private:
 	static const uint8_t UDP_PROTOCOL;
+	Ipv4 *m_ipv4;
 	Ipv4Address m_destination;
 	uint16_t m_destination_port;
 	uint16_t m_source_port;

@@ -17,7 +17,7 @@ class Packet;
 class PacketDestroyNotifier {
 public:
 	virtual ~PacketDestroyNotifier ();
-	virtual void notify (Packet *packet);
+	virtual void notify (Packet *packet) = 0;
 };
 
 class Packet {

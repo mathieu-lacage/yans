@@ -3,6 +3,9 @@
 #include "packet.h"
 #include "chunk.h"
 
+PacketDestroyNotifier::~PacketDestroyNotifier ()
+{}
+
 Packet::Packet ()
 	: m_ref (1)
 {}

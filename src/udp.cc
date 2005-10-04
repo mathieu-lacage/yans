@@ -1,12 +1,21 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 
 #include "udp.h"
+#include "chunk-udp.h"
+#include "packet.h"
+#include "ipv4.h"
 
 /* see http://www.iana.org/assignments/protocol-numbers */
 const uint8_t Udp::UDP_PROTOCOL = 17;
 
 Udp::~Udp ()
 {}
+
+void 
+Udp::set_ipv4 (Ipv4 *ipv4)
+{
+	m_ipv4 = ipv4;
+}
 
 uint8_t 
 Udp::get_protocol (void)
@@ -46,5 +55,5 @@ Udp::send (Packet *packet)
 	packet->add_header (udp_chunk);
 	m_ipv4->set_protocol (UDP_PROTOCOL);
 	m_ipv4->set_destination (m_destination);
-	m_ipv4->send (udp_chunk);
+	m_ipv4->send (packet);
 }

@@ -3,6 +3,8 @@
 #ifndef TRANSPORT_PROTOCOL_H
 #define TRANSPORT_PROTOCOL_H
 
+#include <stdint.h>
+
 class Packet;
 
 class TransportProtocol {

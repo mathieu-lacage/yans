@@ -12,6 +12,7 @@ class NetworkInterface;
 class SocketUdp;
 class File;
 class Process;
+class Udp;
 
 typedef std::vector<NetworkInterface *> NetworkInterfaces;
 typedef std::vector<NetworkInterface *>::const_iterator NetworkInterfacesCI;
@@ -37,6 +38,7 @@ private:
 	NetworkInterfaces m_interfaces;
 	Ipv4Route *m_routing_table;
 	Ipv4 *m_ipv4;
+	Udp *m_udp;
 };
 
 

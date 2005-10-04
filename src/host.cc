@@ -6,10 +6,12 @@
 #include "ipv4-route.h"
 #include "loopback-interface.h"
 #include "socket-udp.h"
+#include "udp.h"
 
 Host::Host ()
 {
 	m_ipv4 = new Ipv4 ();
+	m_udp = new Udp ();
 	m_routing_table = new Ipv4Route ();
 	LoopbackInterface *loopback = new LoopbackInterface ();
 	add_interface (loopback);
@@ -65,5 +67,5 @@ Host::add_interface (NetworkInterface *interface)
 SocketUdp *
 Host::create_socket_udp (void)
 {
-	return new SocketUdp (this);
+	return new SocketUdp (this, m_udp);
 }

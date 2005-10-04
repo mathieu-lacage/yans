@@ -6,12 +6,11 @@
 #include <stdint.h>
 #include "ipv4-address.h"
 
+class Udp;
 class Host;
 
 class SocketUdp {
  public:
-	SocketUdp (Host *host);
-
 	void enable_non_blocking (void);
 	void enable_blocking (void);
 
@@ -27,7 +26,14 @@ class SocketUdp {
 	uint32_t send (uint8_t const *buf, uint32_t length, int flags);
 	uint32_t recv (uint8_t const *buf, uint32_t length, int flags);
  private:
+	friend class SocketUdpPacketDestroyNotifier;
+	friend class Host;
+
+	SocketUdp (Host *host, Udp *udp);
+	void notify_packet_destroyed (uint32_t len);
+
 	Host *m_host;
+	Udp *m_udp;
 	Ipv4Address m_self_address;
 	uint16_t m_self_port;
 	Ipv4Address m_peer_address;

@@ -1,29 +1,45 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 
 #include "socket-udp.h"
+#include "packet.h"
+#include "ipv4-route.h"
+#include "host.h"
+#include "chunk-data.h"
+#include "udp.h"
 
 class SocketUdpPacketDestroyNotifier : public PacketDestroyNotifier {
+public:
 	SocketUdpPacketDestroyNotifier (SocketUdp *socket, uint32_t size)
 		: m_socket (socket),
 		  m_size (size) {}
 	virtual ~SocketUdpPacketDestroyNotifier () {
-		m_socket = 0x33;
+		m_socket = (SocketUdp *)0xdeadbeaf;
 	}
 	virtual void notify (Packet *packet) {
-		m_socket->notifyPacketDestroyed (m_size);
+		m_socket->notify_packet_destroyed (m_size);
 	}
 private:
 	SocketUdp *m_socket;
 	uint32_t m_size;
 };
 
-SocketUdp::SocketUdp (Host *host)
+SocketUdp::SocketUdp (Host *host, Udp *udp)
+	: m_host (host),
+	  m_udp (udp),
+	  m_buffer_len (2048),
+	  m_used_buffer_len (0)
 {}
 
 void 
 SocketUdp::close (void)
 {
 	delete this;
+}
+
+void 
+SocketUdp::notify_packet_destroyed (uint32_t len)
+{
+	m_used_buffer_len -= len;
 }
 
 void 
@@ -53,12 +69,12 @@ SocketUdp::set_peer (Ipv4Address address, uint16_t port)
 uint32_t 
 SocketUdp::send (uint8_t const *buf, uint32_t length, int flags)
 {
-	Ipv4Route *routing_table = m_host->get_routing_table ();
+	//Ipv4Route *routing_table = m_host->get_routing_table ();
 	// XXX calculate route.
-	if (m_used_buffer_size + length > m_buffer_size) {
+	if (m_used_buffer_len + length > m_buffer_len) {
 		return 0;
 	} else {
-		m_used_buffer_size += length;
+		m_used_buffer_len += length;
 	}
 	Packet *packet = new Packet ();
 	// associate route to packet.
