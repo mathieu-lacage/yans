@@ -23,6 +23,8 @@ public:
 	Ipv4Address get_peer_ipv4_address (void);
 	uint16_t get_peer_port (void);
 
+	uint32_t send (uint8_t const *buf, uint32_t length, int flags);
+
 #if 0
 	void accept (SocketAddress *addr);
 	void listen (int backlog);

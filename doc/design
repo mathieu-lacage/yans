@@ -1,4 +1,7 @@
-Packet class Functional objectives:
+Packet
+------
+
+Functional objectives:
   1) can print a human-readable view of any of the headers of any packet
   2) can generate real-life byte-serialized packets to inject in real networks
   3) easy to deserialize packets coming from a real network (this cannot be
@@ -6,6 +9,7 @@ Packet class Functional objectives:
   4) can prepend, append, and remove arbitrary headers and trailers to a packet
   5) can subclass the header/trailer classes.
   6) can generate libpcap-compatible traces.
+     (see http://wiki.ethereal.com/Development/LibpcapFileFormat)
   7) attach arbitrary information to packets as they are processed in the
      network stack. This mechanism must be low-cost.
 
@@ -14,3 +18,44 @@ of the simulator in a real network. Otherwise, it should be
 possible to run simulations without having to provide
 serializing/deserializing code which should speed quite a
 bit development for a lot of protocols.
+
+
+Socket
+------
+
+  1) support simple client/server tcp/udp applications
+  2) support blocking/non-blocking sockets
+  3) ipv6/ipv4 support
+  4) posix compliance (p279, p351 ieee 1003-1-base-2001,
+     section 2.10 ieee 1003-1-system-2001)
+  5) ipv6 sockets: RFC 2292, 2133
+
+The first step is to support blocking/non-blocking ipv4 sockets
+with a minimum set of socket options and TCP/UDP support.
+
+The second step is to add RAW socket support.
+
+The third step is to add ipv6 support.
+
+Finally, you want to add weird features such as ancillary 
+messages and the sendmsg/recvmsg API.
+
+So, for now, we want:
+  - ipv4, blocking, tcp/udp
+  - send/recv/sendto/recvfrom/write/read
+  - non-blocking/select
+  
+Threaded socket processes
+-------------------------
+
+This should allow you to support stuff like
+  - socket signal delivery
+  - multithreaded socket-based server
+
+To support this sort of thing, you need to re-implement
+a complete posix thread library. It is not inherently
+hard or really tricky but it is quite complex so
+it will have to wait until we get to want this 
+feature badly.
+
+

@@ -5,7 +5,7 @@
 #include <cassert>
 
 #include "sgi-hashmap.h"
-#include "simu-socket.h"
+#include "posix-socket.h"
 #include "host.h"
 #include "socket.h"
 #include "utils.h"
@@ -33,7 +33,7 @@ socket_lookup (int fd)
 }
 
 int 
-simu_socket(struct Host *host, int domain, int type, int protocol)
+posix_socket(struct Host *host, int domain, int type, int protocol)
 {
 	assert (domain == AF_INET ||
 		domain == AF_INET6);
@@ -48,7 +48,7 @@ simu_socket(struct Host *host, int domain, int type, int protocol)
 	return socket_add (socket);
 }
 int 
-simu_bind(int sockfd, struct sockaddr *my_addr, 
+posix_bind(int sockfd, struct sockaddr *my_addr, 
 	  socklen_t addrlen)
 {
 	Socket *socket = socket_lookup (sockfd);
@@ -82,7 +82,7 @@ simu_bind(int sockfd, struct sockaddr *my_addr,
 	return -1;
 }
 int 
-simu_getsockname (int fd, struct sockaddr *addr, 
+posix_getsockname (int fd, struct sockaddr *addr, 
 		  socklen_t *addrlen)
 {
 	Socket *socket = socket_lookup (fd);
@@ -119,7 +119,7 @@ simu_getsockname (int fd, struct sockaddr *addr,
 	return -1;
 }
 int 
-simu_connect (int fd, struct sockaddr const * addr, 
+posix_connect (int fd, struct sockaddr const * addr, 
 	      socklen_t addrlen)
 {
 	Socket *socket = socket_lookup (fd);
@@ -170,7 +170,7 @@ simu_connect (int fd, struct sockaddr const * addr,
 	return -1;
 }
 int 
-simu_getpeername (int fd, struct sockaddr * addr,
+posix_getpeername (int fd, struct sockaddr * addr,
 		  socklen_t *addrlen)
 {
 	Socket *socket = socket_lookup (fd);
@@ -209,7 +209,19 @@ simu_getpeername (int fd, struct sockaddr * addr,
 	return -1;
 }
 ssize_t 
-simu_send (int fd, const void *buf, size_t n, int flags)
+posix_send (int fd, const void *buf, size_t n, int flags)
+{
+	Socket *socket = socket_lookup (fd);
+	if (socket == 0) {
+		errno = EBADF;
+		goto error;
+	}
+
+ error:
+	return -1;
+}
+ssize_t 
+posix_recv (int fd, void *buf, size_t n, int flags)
 {
 	Socket *socket = socket_lookup (fd);
 	if (socket == 0) {
@@ -220,18 +232,7 @@ simu_send (int fd, const void *buf, size_t n, int flags)
 	return -1;
 }
 ssize_t 
-simu_recv (int fd, void *buf, size_t n, int flags)
-{
-	Socket *socket = socket_lookup (fd);
-	if (socket == 0) {
-		errno = EBADF;
-		goto error;
-	}
- error:
-	return -1;
-}
-ssize_t 
-simu_sendto (int fd, const void *buf, size_t n,
+posix_sendto (int fd, const void *buf, size_t n,
 	     int flags, struct sockaddr const * addr,
 	     socklen_t addr_len)
 {
@@ -244,7 +245,7 @@ simu_sendto (int fd, const void *buf, size_t n,
 	return -1;
 }
 ssize_t 
-simu_recvfrom (int fd, void *buf, size_t n,
+posix_recvfrom (int fd, void *buf, size_t n,
 	       int flags, struct sockaddr * addr,
 	       socklen_t *addr_len)
 {
@@ -257,7 +258,7 @@ simu_recvfrom (int fd, void *buf, size_t n,
 	return -1;
 }
 ssize_t 
-simu_sendmsg (int fd, const struct msghdr *message, 
+posix_sendmsg (int fd, const struct msghdr *message, 
 	      int flags)
 {
 	Socket *socket = socket_lookup (fd);
@@ -269,7 +270,7 @@ simu_sendmsg (int fd, const struct msghdr *message,
 	return -1;
 }
 ssize_t 
-simu_recvmsg (int fd, struct msghdr *message, 
+posix_recvmsg (int fd, struct msghdr *message, 
 	      int flags)
 {
 	Socket *socket = socket_lookup (fd);
@@ -281,7 +282,7 @@ simu_recvmsg (int fd, struct msghdr *message,
 	return -1;
 }
 int 
-simu_getsockopt (int fd, int level, int optname,
+posix_getsockopt (int fd, int level, int optname,
 		 void *optval,
 		 socklen_t *optlen)
 {
@@ -294,7 +295,7 @@ simu_getsockopt (int fd, int level, int optname,
 	return -1;
 }
 int 
-simu_setsockopt (int fd, int level, int optname,
+posix_setsockopt (int fd, int level, int optname,
 		 const void *optval, socklen_t optlen)
 {
 	Socket *socket = socket_lookup (fd);
@@ -306,7 +307,7 @@ simu_setsockopt (int fd, int level, int optname,
 	return -1;
 }
 int 
-simu_listen (int fd, int n)
+posix_listen (int fd, int n)
 {
 	Socket *socket = socket_lookup (fd);
 	if (socket == 0) {
@@ -317,7 +318,7 @@ simu_listen (int fd, int n)
 	return -1;
 }
 int 
-simu_accept (int fd, struct sockaddr *addr, 
+posix_accept (int fd, struct sockaddr *addr, 
 		 socklen_t *addr_len)
 {
 	Socket *socket = socket_lookup (fd);
@@ -329,7 +330,7 @@ simu_accept (int fd, struct sockaddr *addr,
 	return -1;
 }
 int 
-simu_shutdown (int fd, int how)
+posix_shutdown (int fd, int how)
 {
 	Socket *socket = socket_lookup (fd);
 	if (socket == 0) {
@@ -340,7 +341,7 @@ simu_shutdown (int fd, int how)
 	return -1;
 }
 int 
-simu_sockatmark (int fd)
+posix_sockatmark (int fd)
 {
 	Socket *socket = socket_lookup (fd);
 	if (socket == 0) {
@@ -351,7 +352,7 @@ simu_sockatmark (int fd)
 	return -1;
 }
 int 
-simu_isfdtype (int fd, int fdtype)
+posix_isfdtype (int fd, int fdtype)
 {
 	Socket *socket = socket_lookup (fd);
 	if (socket == 0) {
