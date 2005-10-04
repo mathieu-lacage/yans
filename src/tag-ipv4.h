@@ -5,21 +5,24 @@
 
 #include "tag-manager.h"
 #include "ipv4-address.h"
+#include "ipv4-route.h"
 
 class NetworkInterface;
 
-class TagIpv4 : public Tag {
+class TagOutIpv4 : public Tag {
 public:
-	Ipv4Address m_sip;
-	Ipv4Address m_dip;
-	uint16_t m_sport;
-	uint16_t m_dport;
-	Ipv4Address m_gateway;
-	NetworkInterface *m_input;
-	NetworkInterface *m_output;
+	TagOutIpv4 (Route const *route, uint16_t sport, uint16_t dport);
+
+	uint16_t get_dport (void);
+	uint16_t get_sport (void);
+
+	Route const *get_route (void);
 
 	static uint32_t get_tag (void);
  private:
+	Route m_route;
+	uint16_t m_sport;
+	uint16_t m_dport;
 	static uint32_t m_tag;
 };
 

@@ -11,6 +11,8 @@ class NetworkInterface;
 
 class Route {
 public:
+	Route (Route const &route);
+
 	bool is_host (void);
 	Ipv4Address get_dest (void);
 

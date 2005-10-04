@@ -51,6 +51,34 @@ Packet::unref (void)
 }
 
 void 
+Packet::add_tag (uint32_t tag_id, Tag *tag)
+{
+	assert (m_tags.find (tag_id) == m_tags.end ());
+	m_tags[tag_id] = tag;
+}
+Tag *
+Packet::get_tag (uint32_t tag_id)
+{
+	if (m_tags.find (tag_id) == m_tags.end ()) {
+		return 0;
+	} else {
+		return m_tags[tag_id];
+	}
+}
+Tag *
+Packet::remove_tag (uint32_t tag_id)
+{
+	if (m_tags.find (tag_id) == m_tags.end ()) {
+		return 0;
+	} else {
+		Tag *tag = m_tags[tag_id];
+		m_tags.erase (m_tags.find (tag_id));
+		return tag;
+	}
+}
+
+
+void 
 Packet::add_header (Chunk *header)
 {
 	m_headers.push_back (header);

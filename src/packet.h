@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <ostream>
 #include <vector>
+#include "sgi-hashmap.h"
 
 #include "tag-manager.h"
 
@@ -50,15 +51,17 @@ public:
 	Packet *copy (void);
  private:
 	typedef std::vector<Chunk *> Headers;
-	typedef std::vector<Chunk *> Trailers;
 	typedef std::vector<Chunk *>::const_iterator HeadersCI;
 	typedef std::vector<Chunk *>::reverse_iterator HeadersRI;
+	typedef std::vector<Chunk *> Trailers;
 	typedef std::vector<Chunk *>::const_iterator TrailersCI;
 	typedef std::vector<PacketDestroyNotifier *> PacketDestroyNotifiers;
 	typedef std::vector<PacketDestroyNotifier *>::const_iterator PacketDestroyNotifiersCI;
+	typedef Sgi::hash_map<uint32_t, Tag *> Tags;
 	PacketDestroyNotifiers m_destroy_notifiers;
 	Headers m_headers;
 	Trailers m_trailers;
+	Tags m_tags;
 	uint32_t m_ref;
 };
 

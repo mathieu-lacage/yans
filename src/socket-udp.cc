@@ -6,6 +6,7 @@
 #include "host.h"
 #include "chunk-data.h"
 #include "udp.h"
+#include "tag-ipv4.h"
 
 class SocketUdpPacketDestroyNotifier : public PacketDestroyNotifier {
 public:
@@ -69,15 +70,19 @@ SocketUdp::set_peer (Ipv4Address address, uint16_t port)
 uint32_t 
 SocketUdp::send (uint8_t const *buf, uint32_t length, int flags)
 {
-	//Ipv4Route *routing_table = m_host->get_routing_table ();
-	// XXX calculate route.
+	Ipv4Route *routing_table = m_host->get_routing_table ();
+	Route *route = routing_table->lookup (m_peer_address);
+	if (route == 0) {
+		return 0;
+	}
 	if (m_used_buffer_len + length > m_buffer_len) {
 		return 0;
 	} else {
 		m_used_buffer_len += length;
 	}
 	Packet *packet = new Packet ();
-	// associate route to packet.
+	TagOutIpv4 *tag = new TagOutIpv4 (route, m_self_port, m_peer_port);
+	packet->add_tag (TagOutIpv4::get_tag (), tag);
 	packet->add_destroy_notifier (new SocketUdpPacketDestroyNotifier (this, length));
 	ChunkData *data = new ChunkData (buf, length);
 	packet->add_header (data);
