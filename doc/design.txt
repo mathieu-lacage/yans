@@ -1,1 +1,11 @@
+sockets
+-------
+
+  - posix compliance (p279, p351 ieee 1003-1-base-2001,
+    section 2.10 ieee 1003-1-system-2001)
+  - ipv6 sockets: RFC 2292, 2133
+  
+
+posix
+-----
 
