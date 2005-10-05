@@ -25,7 +25,6 @@ public:
 	Ipv4Route *get_routing_table (void);
 
 	NetworkInterfaces const *get_interfaces (void);
-
 	NetworkInterface *lookup_interface (char const *name);
 	void add_interface (NetworkInterface *interface);
 
