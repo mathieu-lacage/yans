@@ -47,6 +47,7 @@ private:
 	uint8_t *m_buffer;
 };
 
+#ifdef RUN_SELF_TESTS
 #include "test.h"
 class BufferTest: public Test {
 public:
@@ -57,6 +58,6 @@ private:
 	bool ensure_written_bytes (WriteBuffer *buffer, 
 				   uint32_t n, uint8_t array[]);
 };
-
+#endif /* RUN_SELF_TESTS */
 
 #endif /* BUFFER_H */
