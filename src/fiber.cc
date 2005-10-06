@@ -19,6 +19,7 @@ private:
 	virtual void run (void);
 	FiberContext m_context;
 	Fiber *m_fiber;
+	bool m_first_run;
 };
 
 
@@ -47,9 +48,10 @@ FiberContextStack::save (void)
 void 
 FiberContextStack::run (void)
 {
-	bool first_run = true;
+	m_first_run = true;
 	m_context.save ();
-	if (first_run) {
+	if (m_first_run) {
+		m_first_run = false;
 		return;
 	}
 	m_fiber->run ();
