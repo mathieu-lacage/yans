@@ -10,8 +10,6 @@
 
 class TestManager;
 
-#define RUN_SELF_TESTS 1
-
 class Test {
 public:
 	Test (TestManager *manager);
