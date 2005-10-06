@@ -65,7 +65,6 @@ FiberScheduler::select_next_fiber (void)
 		m_active.pop_front ();
 		return fiber;
 	}
-	assert (false);
 	return 0;
 }
 
@@ -150,9 +149,10 @@ private:
 	virtual void run (void) {
 		for (uint8_t i = 0; i < 5; i++) {
 			m_test->record_run (m_n);
-			set_blocked ();
 			FiberScheduler::instance ()->schedule ();
 		}
+		set_blocked ();
+		FiberScheduler::instance ()->schedule ();
 	}
 	uint8_t m_n;
 	TestFiberScheduler *m_test;
@@ -183,7 +183,8 @@ TestFiberScheduler::run_tests (void)
 	new TestFiber (0x33, this);
 	sched->run_main ();
 	if (get_run (0x33) != 5) {
-		failure () << " FiberScheduler -- ";
+		ok = false;
+		failure () << "FiberScheduler -- ";
 		failure () << std::endl;
 	}
 	return ok;
