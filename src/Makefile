@@ -1,4 +1,5 @@
-CXXFLAGS=-Wall -Werror -O3
+RUN_TESTS=-DRUN_SELF_TESTS=1
+CXXFLAGS=-Wall -Werror -O0 -gdwarf-2 $(RUN_TESTS)
 
 SOURCE= \
 	buffer.cc \
@@ -21,6 +22,10 @@ SOURCE= \
 	udp.cc \
 	host.cc \
 	socket-udp.cc \
+	fiber-stack-ia32.cc \
+	fiber-context-posix.cc \
+	fiber.cc \
+	fiber-scheduler.cc \
 	test.cc \
 	main.cc
 

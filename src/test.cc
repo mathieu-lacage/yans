@@ -1,10 +1,13 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 
 #include "test.h"
-#include <iostream>
-#include "buffer.h"
 
 #ifdef RUN_SELF_TESTS
+#include <iostream>
+#include "buffer.h"
+#include "fiber-stack.h"
+#include "fiber-scheduler.h"
+
 
 #define ADD_TEST(klass, name) 	m_tests.push_back (std::make_pair (new klass (this), new std::string (name)));
 
@@ -12,6 +15,8 @@ TestManager::TestManager ()
 	: m_verbose (false)
 {
 	ADD_TEST (BufferTest, "Buffer");
+	ADD_TEST (FiberStackTest, "FiberStack");
+	ADD_TEST (TestFiberScheduler, "FiberScheduler");
 }
 
 TestManager::~TestManager ()
