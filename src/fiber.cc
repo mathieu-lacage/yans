@@ -61,12 +61,14 @@ FiberContextStack::run (void)
 
 Fiber::Fiber ()
 {
+	m_state = ACTIVE;
 	m_stack = new FiberContextStack (this, 8192);
 	FiberScheduler::instance ()->register_new_fiber (this);
 	m_stack->run_on_new_stack ();
 }
 Fiber::Fiber (uint32_t stack_size)
 {
+	m_state = ACTIVE;
 	m_stack = new FiberContextStack (this, stack_size);
 	FiberScheduler::instance ()->register_new_fiber (this);
 	m_stack->run_on_new_stack ();
