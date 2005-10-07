@@ -65,39 +65,41 @@ Fiber::Fiber ()
 {
 	m_state = ACTIVE;
 	m_stack = new FiberContextStack (this, 8192);
-	FiberScheduler::instance ()->register_new_fiber (this);
+	FiberScheduler::instance ()->register_fiber (this);
 	m_stack->run_on_new_stack ();
 }
 Fiber::Fiber (uint32_t stack_size)
 {
 	m_state = ACTIVE;
 	m_stack = new FiberContextStack (this, stack_size);
-	FiberScheduler::instance ()->register_new_fiber (this);
+	FiberScheduler::instance ()->register_fiber (this);
 	m_stack->run_on_new_stack ();
 }
 Fiber::~Fiber ()
 {
+	assert (m_state == DEAD);
+	FiberScheduler::instance ()->unregister_fiber (this);
 	delete m_stack;
 	m_stack = (FiberContextStack *)0xdeadbeaf;
 }
 
 bool 
-Fiber::is_running (void)
+Fiber::is_running (void) const
 {
 	return (m_state == RUNNING)?true:false;
 }
 bool 
-Fiber::is_active (void)
+Fiber::is_active (void) const
 {
 	return (m_state == ACTIVE)?true:false;
 }
 bool 
-Fiber::is_blocked (void)
+Fiber::is_blocked (void) const
 {
 	return (m_state == BLOCKED)?true:false;
 }
 bool 
-Fiber::is_dead (void)
+Fiber::is_dead (void) const
 {
 	return (m_state == DEAD)?true:false;
 }

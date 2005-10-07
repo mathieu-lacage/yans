@@ -13,10 +13,10 @@ public:
 	Fiber (uint32_t stack_size);
 	virtual ~Fiber ();
 
-	bool is_running (void);
-	bool is_active (void);
-	bool is_blocked (void);
-	bool is_dead (void);
+	bool is_running (void) const;
+	bool is_active (void) const;
+	bool is_blocked (void) const;
+	bool is_dead (void) const;
 
 	void set_active (void);
 	void set_blocked (void);

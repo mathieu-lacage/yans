@@ -22,7 +22,8 @@ public:
 	void set_active (Fiber *fiber);
 
 	/* manage a new fiber. */
-	void register_new_fiber (Fiber *fiber);
+	void register_fiber (Fiber *fiber);
+	void unregister_fiber (Fiber *fiber);
 
 	static FiberScheduler *instance (void);
 private:
@@ -44,6 +45,7 @@ private:
 
 #ifdef RUN_SELF_TESTS
 #include "test.h"
+#include <map>
 class TestFiberScheduler : public Test {
 public:
 	TestFiberScheduler (TestManager *manager);
@@ -51,10 +53,13 @@ public:
 
 	virtual bool run_tests (void);
 
-	void record_run (uint8_t n);
+	void record_run (Fiber const *fiber);
 private:
-	uint8_t get_run (uint8_t n);
-	uint8_t m_n;
+	bool ensure_dead (Fiber const *fiber);
+	bool ensure_runs (Fiber const *fiber, uint32_t expected);
+	uint32_t get_run (Fiber const *fiber);
+	typedef std::map<Fiber const*, uint32_t> Runs;
+	Runs m_runs;
 };
 #endif /* RUN_SELF_TESTS */
 

@@ -123,10 +123,17 @@ FiberScheduler::is_work_left (void)
 
 
 void
-FiberScheduler::register_new_fiber (Fiber *fiber)
+FiberScheduler::register_fiber (Fiber *fiber)
 {
 	assert (fiber->is_active ());
 	m_active.push_back (fiber);
+}
+
+void
+FiberScheduler::unregister_fiber (Fiber *fiber)
+{
+	assert (fiber->is_dead ());
+	m_dead.remove (fiber);
 }
 
 FiberScheduler *
@@ -143,19 +150,18 @@ FiberScheduler::instance (void)
 
 class TestFiber : public Fiber {
 public:
-	TestFiber (uint8_t n, TestFiberScheduler *test)
-		: m_n (n), m_test (test) {}
+	TestFiber (TestFiberScheduler *test, uint8_t max)
+		: m_test (test), m_max (max) {}
 private:
 	virtual void run (void) {
-		for (uint8_t i = 0; i < 5; i++) {
-			m_test->record_run (m_n);
+		for (uint8_t i = 0; i < m_max; i++) {
+			m_test->record_run (this);
 			FiberScheduler::instance ()->schedule ();
 		}
-		set_blocked ();
 		FiberScheduler::instance ()->schedule ();
 	}
-	uint8_t m_n;
 	TestFiberScheduler *m_test;
+	uint8_t m_max;
 };
 
 TestFiberScheduler::TestFiberScheduler (TestManager *manager)
@@ -165,14 +171,56 @@ TestFiberScheduler::~TestFiberScheduler ()
 {}
 
 void 
-TestFiberScheduler::record_run (uint8_t n)
+TestFiberScheduler::record_run (Fiber const *fiber)
 {
-	m_n++;
+	if (m_runs.find (fiber) == m_runs.end ()) {
+		m_runs[fiber] = 0;
+	} else {
+		m_runs[fiber] ++;
+	}
 }
-uint8_t 
-TestFiberScheduler::get_run (uint8_t n)
+uint32_t 
+TestFiberScheduler::get_run (Fiber const *fiber)
 {
-	return m_n;
+	return m_runs[fiber];
+	return 0;
+}
+
+bool
+TestFiberScheduler::ensure_dead (Fiber const *fiber)
+{
+	bool ok = true;
+	if (!fiber->is_dead ()) {
+		ok = false;
+		failure () << "FiberScheduler -- "
+			   << "expected dead fiber."
+			   << std::endl;
+	}
+	return ok;
+}
+
+bool
+TestFiberScheduler::ensure_runs (Fiber const *fiber, uint32_t expected)
+{
+	bool ok;
+	if (get_run (fiber) != 5) {
+		ok = false;
+		failure () << "FiberScheduler -- "
+			   << "expected runs: " << expected << ", "
+			   << "got: " << get_run (fiber)
+			   << std::endl;
+	}
+	return ok;
+}
+
+
+#define ENSURE_DEAD(f)  \
+if (!ensure_dead (f)) { \
+	ok = false;     \
+}
+#define ENSURE_RUNS(f,expected)   \
+if (!ensure_runs (f, expected)) { \
+	ok = false;               \
 }
 
 bool 
@@ -180,13 +228,18 @@ TestFiberScheduler::run_tests (void)
 {
 	bool ok = true;
 	FiberScheduler *sched = FiberScheduler::instance ();
-	new TestFiber (0x33, this);
+	TestFiber *fiber = new TestFiber (this, 5);
 	sched->run_main ();
-	if (get_run (0x33) != 5) {
-		ok = false;
-		failure () << "FiberScheduler -- ";
-		failure () << std::endl;
-	}
+	ENSURE_DEAD (fiber);
+	delete fiber;
+	TestFiber *fiber1 = new TestFiber (this, 9);
+	TestFiber *fiber2 = new TestFiber (this, 7);
+	sched->run_main ();
+	ENSURE_RUNS (fiber1, 9);
+	ENSURE_DEAD (fiber1);
+	ENSURE_RUNS (fiber2, 7);
+	ENSURE_DEAD (fiber2);
+	
 	return ok;
 }
 
