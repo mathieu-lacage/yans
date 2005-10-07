@@ -1,5 +1,6 @@
 RUN_TESTS=-DRUN_SELF_TESTS=1
-CXXFLAGS=-Wall -Werror -O0 -gdwarf-2 $(RUN_TESTS)
+INCLUDES=-I./fiber -I./simulator -I./
+CXXFLAGS=-Wall -Werror -O0 -gdwarf-2 $(RUN_TESTS) $(INCLUDES)
 
 SOURCE= \
 	buffer.cc \
@@ -22,14 +23,14 @@ SOURCE= \
 	udp.cc \
 	host.cc \
 	socket-udp.cc \
-	fiber-stack-ia32.cc \
-	fiber-context-posix.cc \
-	fiber.cc \
-	fiber-scheduler.cc \
-	clock.cc \
-	event-heap.cc \
-	event-fiber.cc \
-	simulator.cc \
+	fiber/fiber-stack-ia32.cc \
+	fiber/fiber-context-posix.cc \
+	fiber/fiber.cc \
+	fiber/fiber-scheduler.cc \
+	simulator/clock.cc \
+	simulator/event-heap.cc \
+	simulator/event-fiber.cc \
+	simulator/simulator.cc \
 	test.cc \
 	main.cc
 

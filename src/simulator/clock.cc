@@ -4,17 +4,6 @@
 
 #include <cassert>
 
-Clock *Clock::m_instance = 0;
-
-Clock *
-Clock::instance (void)
-{
-	if (m_instance == 0) {
-		m_instance = new Clock ();
-	}
-	return m_instance;
-}
-
 Clock::Clock ()
 	: m_current_us (0)
 {}
