@@ -7,8 +7,7 @@
 
 class Clock {
 public:
-	static Clock *instance (void);
-
+	Clock ();
 	/* in microseconds */
 	uint64_t get_current_us (void);
 	void update_current_us (uint64_t new_time);
@@ -16,9 +15,7 @@ public:
 	/* in seconds */
 	double get_current_s (void);
 private:
-	Clock ();
 	uint64_t m_current_us;
-	static Clock *m_instance;
 };
 
 

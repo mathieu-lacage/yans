@@ -28,6 +28,8 @@ SOURCE= \
 	fiber-scheduler.cc \
 	clock.cc \
 	event-heap.cc \
+	event-fiber.cc \
+	simulator.cc \
 	test.cc \
 	main.cc
 

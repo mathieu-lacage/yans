@@ -17,19 +17,17 @@ class EventHeap {
 	 * really fast.
 	 */
 
-	/* in microseconds. */
-	void insert_in_us (Event *event, uint64_t delta);
 	void insert_at_us (Event *event, uint64_t time);
-
-	/* in seconds. */
-	void insert_in_s (Event *event, double delta);
 	void insert_at_s (Event *event, double time);
 
 	Event   *peek_next (void);
-	uint64_t peek_next_time (void);
+	uint64_t peek_next_time_us (void);
 	void     remove_next (void);
 
 	void clear (void);
+
+	/* blocking call until there is a non-zero number of events. */
+	void wait (void);
  private:
 	typedef std::list<std::pair<Event *, uint64_t> > Events;
 	typedef std::list<std::pair<Event *, uint64_t> >::iterator EventsI;

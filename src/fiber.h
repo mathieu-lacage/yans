@@ -29,10 +29,12 @@ public:
 	std::string *peek_name (void) const;
 
 private:
-	friend class FiberContextStack;
-
 	/* for children to override. */
 	virtual void run (void) = 0;
+
+
+
+	friend class FiberContextStack;
 	void set_dead (void);
 	enum FiberState_e { 
 		RUNNING,

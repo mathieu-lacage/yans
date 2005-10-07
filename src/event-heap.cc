@@ -2,18 +2,13 @@
 
 #include "event-heap.h"
 #include "clock.h"
+#include "event.h"
 #include <math.h>
 #include <utility>
 
 
 EventHeap::EventHeap ()
 {}
-void 
-EventHeap::insert_in_us (Event *event, uint64_t delta)
-{
-	uint64_t current = Clock::instance ()->get_current_us ();
-	insert_at_us (event, current+delta);
-}
 void 
 EventHeap::insert_at_us (Event *event, uint64_t time)
 {
@@ -23,12 +18,6 @@ EventHeap::insert_at_us (Event *event, uint64_t time)
 			break;
 		}
 	}
-}
-void 
-EventHeap::insert_in_s (Event *event, double delta)
-{
-	double current = Clock::instance ()->get_current_s ();
-	insert_at_s (event, current+delta);
 }
 void 
 EventHeap::insert_at_s (Event *event, double time)
@@ -41,11 +30,17 @@ EventHeap::insert_at_s (Event *event, double time)
 Event *
 EventHeap::peek_next (void)
 {
+	if (m_events.empty ()) {
+		return 0;
+	}
 	return m_events.front ().first;
 }
 uint64_t
-EventHeap::peek_next_time (void)
+EventHeap::peek_next_time_us (void)
 {
+	if (m_events.empty ()) {
+		return 0;
+	}
 	return m_events.front ().second;
 }
 
@@ -53,4 +48,19 @@ void
 EventHeap::remove_next (void)
 {
 	m_events.pop_front ();
+}
+
+void 
+EventHeap::clear (void)
+{
+	for (EventsI i = m_events.begin (); i != m_events.end (); i++) {
+		(*i).first->notify_canceled ();
+	}
+	m_events.erase (m_events.begin (), m_events.end ());
+}
+
+void
+EventHeap::wait (void)
+{
+	assert (false);
 }
