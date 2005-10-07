@@ -4,6 +4,38 @@
 #include "fiber.h"
 #include "fiber-context.h"
 
+#define SCHED_DEBUG 1
+
+#ifdef SCHED_DEBUG
+#  include <stdio.h>
+static void
+print_fiber (Fiber const *f)
+{
+	printf ("\"%s\" ", f->peek_name ()->c_str ());
+	if (f->is_blocked ()) {
+		printf ("blocked ");
+	} else if (f->is_dead ()) {
+		printf ("dead ");
+	} else if (f->is_active ()) {
+		printf ("active ");
+	}
+}
+#  define TRACE_LEAVE(f) \
+printf ("SCHED leave "); \
+print_fiber (f);
+#  define TRACE_ENTER_MAIN() \
+printf ("enter main\n")
+#  define TRACE_ENTER(f) \
+printf ("enter ");       \
+print_fiber (f);         \
+printf ("\n");
+#else
+#  define TRACE_LEAVE(f)
+#  define TRACE_ENTER_MAIN()
+#  define TRACE_ENTER(f)
+#endif
+
+
 FiberScheduler *FiberScheduler::m_instance = 0;
 
 FiberScheduler::FiberScheduler ()
@@ -26,6 +58,7 @@ FiberScheduler::update_current_state (void)
 	} else if (m_current->is_active ()) {
 		m_active.push_back (m_current);
 	}
+	TRACE_LEAVE (m_current);
 	m_current->save ();
 	if (m_current->is_running ()) {
 		return;
@@ -43,8 +76,10 @@ FiberScheduler::update_next_state (void)
 	}
 	Fiber *new_fiber = select_next_fiber ();
 	if (new_fiber == 0) {
+		TRACE_ENTER_MAIN ();
 		m_context.load ();
 	} else {
+		TRACE_ENTER (new_fiber);
 		m_current = new_fiber;
 		m_current->switch_to ();
 	}
@@ -150,8 +185,10 @@ FiberScheduler::instance (void)
 
 class TestFiber : public Fiber {
 public:
-	TestFiber (TestFiberScheduler *test, uint8_t max)
-		: m_test (test), m_max (max) {}
+	TestFiber (char const *name, TestFiberScheduler *test, uint8_t max)
+		: Fiber (name), 
+		  m_test (test), 
+		  m_max (max) {}
 private:
 	virtual void run (void) {
 		for (uint8_t i = 0; i < m_max; i++) {
@@ -228,12 +265,12 @@ TestFiberScheduler::run_tests (void)
 {
 	bool ok = true;
 	FiberScheduler *sched = FiberScheduler::instance ();
-	TestFiber *fiber = new TestFiber (this, 5);
+	TestFiber *fiber = new TestFiber ("test0", this, 5);
 	sched->run_main ();
 	ENSURE_DEAD (fiber);
 	delete fiber;
-	TestFiber *fiber1 = new TestFiber (this, 9);
-	TestFiber *fiber2 = new TestFiber (this, 7);
+	TestFiber *fiber1 = new TestFiber ("test1", this, 9);
+	TestFiber *fiber2 = new TestFiber ("test2", this, 7);
 	sched->run_main ();
 	ENSURE_RUNS (fiber1, 9);
 	ENSURE_DEAD (fiber1);

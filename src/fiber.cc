@@ -61,15 +61,17 @@ FiberContextStack::run (void)
 
 
 
-Fiber::Fiber ()
+Fiber::Fiber (char const *name)
 {
+	m_name = new std::string (name);
 	m_state = ACTIVE;
 	m_stack = new FiberContextStack (this, 8192);
 	FiberScheduler::instance ()->register_fiber (this);
 	m_stack->run_on_new_stack ();
 }
-Fiber::Fiber (uint32_t stack_size)
+Fiber::Fiber (char const *name, uint32_t stack_size)
 {
+	m_name = new std::string (name);
 	m_state = ACTIVE;
 	m_stack = new FiberContextStack (this, stack_size);
 	FiberScheduler::instance ()->register_fiber (this);
@@ -81,6 +83,12 @@ Fiber::~Fiber ()
 	FiberScheduler::instance ()->unregister_fiber (this);
 	delete m_stack;
 	m_stack = (FiberContextStack *)0xdeadbeaf;
+}
+
+std::string *
+Fiber::peek_name (void) const
+{
+	return m_name;
 }
 
 bool 

@@ -4,13 +4,14 @@
 #define FIBER_H
 
 #include <stdint.h>
+#include <string>
 
 class FiberContextStack;
 
 class Fiber {
 public:
-	Fiber ();
-	Fiber (uint32_t stack_size);
+	Fiber (char const *name);
+	Fiber (char const *name, uint32_t stack_size);
 	virtual ~Fiber ();
 
 	bool is_running (void) const;
@@ -24,6 +25,8 @@ public:
 	void switch_to (void);
 
 	void save (void);
+
+	std::string *peek_name (void) const;
 
 private:
 	friend class FiberContextStack;
@@ -39,6 +42,7 @@ private:
 	};
 	enum FiberState_e m_state;
 	FiberContextStack *m_stack;
+	std::string *m_name;
 };
 
 
