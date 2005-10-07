@@ -15,7 +15,6 @@ public:
 
 	/* in seconds */
 	double get_current_s (void);
-	void update_current_s (double new_time);
 private:
 	Clock ();
 	uint64_t m_current_us;

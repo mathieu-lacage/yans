@@ -3,7 +3,6 @@
 #include "clock.h"
 
 #include <cassert>
-#include <math.h>
 
 Clock *Clock::m_instance = 0;
 
@@ -40,12 +39,4 @@ Clock::get_current_s (void)
 {
 	double s = ((double)m_current_us)/1000000;
 	return s;
-}
-void 
-Clock::update_current_s (double new_time)
-{
-	assert (new_time > 0);
-	long int us = lrint (new_time * 1000000);
-	assert (us > 0);
-	update_current_us ((uint64_t)us);
 }

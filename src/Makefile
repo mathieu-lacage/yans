@@ -27,6 +27,7 @@ SOURCE= \
 	fiber.cc \
 	fiber-scheduler.cc \
 	clock.cc \
+	event-heap.cc \
 	test.cc \
 	main.cc
 
