@@ -26,6 +26,7 @@ SOURCE= \
 	fiber-context-posix.cc \
 	fiber.cc \
 	fiber-scheduler.cc \
+	clock.cc \
 	test.cc \
 	main.cc
 
