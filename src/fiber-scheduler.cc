@@ -4,7 +4,7 @@
 #include "fiber.h"
 #include "fiber-context.h"
 
-#define SCHED_DEBUG 1
+#define noSCHED_DEBUG 1
 
 #ifdef SCHED_DEBUG
 #  include <stdio.h>
@@ -210,7 +210,7 @@ void
 TestFiberScheduler::record_run (Fiber const *fiber)
 {
 	if (m_runs.find (fiber) == m_runs.end ()) {
-		m_runs[fiber] = 0;
+		m_runs[fiber] = 1;
 	} else {
 		m_runs[fiber] ++;
 	}
@@ -223,9 +223,7 @@ TestFiberScheduler::get_run (Fiber const *fiber)
 void
 TestFiberScheduler::clear_runs (void)
 {
-	for (RunsI i = m_runs.begin (); i != m_runs.end (); i++) {
-		(*i).second = 0;
-	}
+	m_runs.clear ();
 }
 
 bool
@@ -245,7 +243,7 @@ bool
 TestFiberScheduler::ensure_runs (Fiber const *fiber, uint32_t expected)
 {
 	bool ok = true;
-	if (get_run (fiber) != 5) {
+	if (get_run (fiber) != expected) {
 		ok = false;
 		failure () << "FiberScheduler -- "
 			   << "expected runs: " << expected << ", "
