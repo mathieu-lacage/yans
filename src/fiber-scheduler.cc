@@ -195,7 +195,6 @@ private:
 			m_test->record_run (this);
 			FiberScheduler::instance ()->schedule ();
 		}
-		FiberScheduler::instance ()->schedule ();
 	}
 	TestFiberScheduler *m_test;
 	uint8_t m_max;
@@ -220,7 +219,13 @@ uint32_t
 TestFiberScheduler::get_run (Fiber const *fiber)
 {
 	return m_runs[fiber];
-	return 0;
+}
+void
+TestFiberScheduler::clear_runs (void)
+{
+	for (RunsI i = m_runs.begin (); i != m_runs.end (); i++) {
+		(*i).second = 0;
+	}
 }
 
 bool
@@ -239,7 +244,7 @@ TestFiberScheduler::ensure_dead (Fiber const *fiber)
 bool
 TestFiberScheduler::ensure_runs (Fiber const *fiber, uint32_t expected)
 {
-	bool ok;
+	bool ok = true;
 	if (get_run (fiber) != 5) {
 		ok = false;
 		failure () << "FiberScheduler -- "
@@ -265,18 +270,24 @@ TestFiberScheduler::run_tests (void)
 {
 	bool ok = true;
 	FiberScheduler *sched = FiberScheduler::instance ();
+
 	TestFiber *fiber = new TestFiber ("test0", this, 5);
 	sched->run_main ();
 	ENSURE_DEAD (fiber);
+	clear_runs ();
 	delete fiber;
+
 	TestFiber *fiber1 = new TestFiber ("test1", this, 9);
-	TestFiber *fiber2 = new TestFiber ("test2", this, 7);
+	TestFiber *fiber2 = new TestFiber ("test2", this, 3);
 	sched->run_main ();
 	ENSURE_RUNS (fiber1, 9);
 	ENSURE_DEAD (fiber1);
-	ENSURE_RUNS (fiber2, 7);
+	ENSURE_RUNS (fiber2, 3);
 	ENSURE_DEAD (fiber2);
-	
+	clear_runs ();
+	delete fiber1;
+	delete fiber2;
+
 	return ok;
 }
 

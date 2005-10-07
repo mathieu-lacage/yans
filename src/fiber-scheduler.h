@@ -58,7 +58,9 @@ private:
 	bool ensure_dead (Fiber const *fiber);
 	bool ensure_runs (Fiber const *fiber, uint32_t expected);
 	uint32_t get_run (Fiber const *fiber);
+	void clear_runs (void);
 	typedef std::map<Fiber const*, uint32_t> Runs;
+	typedef std::map<Fiber const*, uint32_t>::iterator RunsI;
 	Runs m_runs;
 };
 #endif /* RUN_SELF_TESTS */
