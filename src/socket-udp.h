@@ -8,6 +8,7 @@
 
 class Udp;
 class Host;
+class Chunk;
 
 class SocketUdp {
  public:
@@ -23,8 +24,8 @@ class SocketUdp {
 
 	void set_peer (Ipv4Address address, uint16_t port);
 
-	uint32_t send (uint8_t const *buf, uint32_t length, int flags);
-	uint32_t recv (uint8_t const *buf, uint32_t length, int flags);
+	uint32_t send (Chunk *data);
+	Chunk *recv (void);
  private:
 	friend class SocketUdpPacketDestroyNotifier;
 	friend class Host;

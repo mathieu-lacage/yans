@@ -12,6 +12,7 @@ class NetworkInterface;
 class SocketUdp;
 class File;
 class Process;
+class ProcessLoop;
 class Udp;
 
 typedef std::vector<NetworkInterface *> NetworkInterfaces;
@@ -19,7 +20,7 @@ typedef std::vector<NetworkInterface *>::const_iterator NetworkInterfacesCI;
 
 class Host {
 public:
-	Host ();
+	Host (ProcessLoop *init, char const *path);
 	~Host ();
 
 	Ipv4Route *get_routing_table (void);

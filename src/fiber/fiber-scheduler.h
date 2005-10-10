@@ -25,6 +25,8 @@ public:
 	void register_fiber (Fiber *fiber);
 	void unregister_fiber (Fiber *fiber);
 
+	Fiber *get_current (void);
+
 	static FiberScheduler *instance (void);
 private:
 	void update_current_state (void);

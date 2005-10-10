@@ -67,18 +67,18 @@ SocketUdp::set_peer (Ipv4Address address, uint16_t port)
 	m_peer_port = port;
 }
 
-uint32_t 
-SocketUdp::send (uint8_t const *buf, uint32_t length, int flags)
+uint32_t
+SocketUdp::send (Chunk *data)
 {
 	Ipv4Route *routing_table = m_host->get_routing_table ();
 	Route *route = routing_table->lookup (m_peer_address);
 	if (route == 0) {
 		return 0;
 	}
-	if (m_used_buffer_len + length > m_buffer_len) {
+	if (m_used_buffer_len + data->get_size () > m_buffer_len) {
 		return 0;
 	} else {
-		m_used_buffer_len += length;
+		m_used_buffer_len += data->get_size ();
 	}
 	Packet *packet = new Packet ();
 	TagOutIpv4 *tag = new TagOutIpv4 (route);
@@ -86,14 +86,13 @@ SocketUdp::send (uint8_t const *buf, uint32_t length, int flags)
 	tag->set_dport (m_peer_port);
 	tag->set_daddress (m_peer_address);
 	packet->add_tag (TagOutIpv4::get_tag (), tag);
-	packet->add_destroy_notifier (new SocketUdpPacketDestroyNotifier (this, length));
-	ChunkData *data = new ChunkData (buf, length);
+	packet->add_destroy_notifier (new SocketUdpPacketDestroyNotifier (this, data->get_size ()));
 	packet->add_header (data);
 	m_udp->send (packet);
-	return length;
+	return data->get_size ();
 }
-uint32_t 
-SocketUdp::recv (uint8_t const *buf, uint32_t length, int flags)
+Chunk *
+SocketUdp::recv (void)
 {
 	return 0;
 }

@@ -171,6 +171,12 @@ FiberScheduler::unregister_fiber (Fiber *fiber)
 	m_dead.remove (fiber);
 }
 
+Fiber *
+FiberScheduler::get_current (void)
+{
+	return m_current;
+}
+
 FiberScheduler *
 FiberScheduler::instance (void)
 {

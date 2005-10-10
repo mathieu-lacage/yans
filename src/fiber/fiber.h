@@ -7,9 +7,12 @@
 #include <string>
 
 class FiberContextStack;
+class Host;
 
 class Fiber {
 public:
+	Fiber (Host *host, char const *name);
+	Fiber (Host *host, char const *name, uint32_t stack_size);
 	Fiber (char const *name);
 	Fiber (char const *name, uint32_t stack_size);
 	virtual ~Fiber ();
@@ -28,13 +31,16 @@ public:
 
 	std::string *peek_name (void) const;
 
+	Host *get_host (void) const;
+
 private:
 	/* for children to override. */
 	virtual void run (void) = 0;
 
-
+	static uint32_t const DEFAULT_STACK_SIZE;
 
 	friend class FiberContextStack;
+	void initialize (char const *name, uint32_t stack_size);
 	void set_dead (void);
 	enum FiberState_e { 
 		RUNNING,
@@ -45,6 +51,7 @@ private:
 	enum FiberState_e m_state;
 	FiberContextStack *m_stack;
 	std::string *m_name;
+	Host *m_host;
 };
 
 

@@ -2,7 +2,6 @@
 
 #include "test.h"
 
-
 int main (int argc, char *argv[])
 {
 #ifdef RUN_SELF_TESTS
@@ -10,6 +9,6 @@ int main (int argc, char *argv[])
 	manager->enable_verbose ();
 	manager->run_tests ();
 #endif /* RUN_SELF_TESTS */
-	
+
 	return 0;
 }

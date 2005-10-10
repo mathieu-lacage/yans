@@ -8,7 +8,7 @@
 #include "socket-udp.h"
 #include "udp.h"
 
-Host::Host ()
+Host::Host (ProcessLoop *init, char const *path)
 {
 	m_ipv4 = new Ipv4 ();
 	m_udp = new Udp ();
@@ -22,6 +22,7 @@ Host::Host ()
 	loopback->set_up ();
 	m_routing_table->add_host_route_to (Ipv4Address::get_loopback (),
 					    loopback);
+
 }
 
 Host::~Host ()

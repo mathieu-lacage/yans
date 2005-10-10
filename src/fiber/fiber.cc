@@ -60,16 +60,32 @@ FiberContextStack::run (void)
 }
 
 
+uint32_t const Fiber::DEFAULT_STACK_SIZE = 8192;
+
+
+Fiber::Fiber (Host *host, char const *name)
+	: m_host (host)
+{
+	initialize (name, DEFAULT_STACK_SIZE);
+}
+Fiber::Fiber (Host *host, char const *name, uint32_t stack_size)
+	: m_host (host)
+{
+	initialize (name, stack_size);
+}
 
 Fiber::Fiber (char const *name)
 {
-	m_name = new std::string (name);
-	m_state = ACTIVE;
-	m_stack = new FiberContextStack (this, 8192);
-	FiberScheduler::instance ()->register_fiber (this);
-	m_stack->run_on_new_stack ();
+	m_host = FiberScheduler::instance ()->get_current ()->get_host ();
+	initialize (name, DEFAULT_STACK_SIZE);
 }
 Fiber::Fiber (char const *name, uint32_t stack_size)
+{
+	m_host = FiberScheduler::instance ()->get_current ()->get_host ();
+	initialize (name, stack_size);
+}
+void
+Fiber::initialize (char const *name, uint32_t stack_size)
 {
 	m_name = new std::string (name);
 	m_state = ACTIVE;
@@ -139,4 +155,10 @@ Fiber::switch_to (void)
 {
 	m_state = RUNNING;
 	m_stack->switch_to ();
+}
+
+Host *
+Fiber::get_host (void) const
+{
+	return m_host;
 }
