@@ -211,7 +211,7 @@ FiberScheduler::instance (void)
 class TestRunnable : public Runnable {
 public:
 	TestRunnable (char const *name, TestFiberScheduler *test, uint8_t max)
-		: m_fiber (new Fiber (this, name)), 
+		: m_fiber (new Fiber (0, this, name)), 
 		  m_test (test), 
 		  m_max (max) {}
 	virtual ~TestRunnable () {
