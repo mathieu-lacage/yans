@@ -20,6 +20,7 @@ public:
 	bool is_work_left (void);
 
 	void set_active (Fiber *fiber);
+	void set_current_blocked (void);
 
 	/* manage a new fiber. */
 	void register_fiber (Fiber *fiber);
@@ -48,6 +49,7 @@ private:
 #ifdef RUN_SELF_TESTS
 #include "test.h"
 #include <map>
+class TestRunnable;
 class TestFiberScheduler : public Test {
 public:
 	TestFiberScheduler (TestManager *manager);
@@ -55,14 +57,14 @@ public:
 
 	virtual bool run_tests (void);
 
-	void record_run (Fiber const *fiber);
+	void record_run (TestRunnable const *fiber);
 private:
-	bool ensure_dead (Fiber const *fiber);
-	bool ensure_runs (Fiber const *fiber, uint32_t expected);
-	uint32_t get_run (Fiber const *fiber);
+	bool ensure_dead (TestRunnable const *fiber);
+	bool ensure_runs (TestRunnable const *fiber, uint32_t expected);
+	uint32_t get_run (TestRunnable const *fiber);
 	void clear_runs (void);
-	typedef std::map<Fiber const*, uint32_t> Runs;
-	typedef std::map<Fiber const*, uint32_t>::iterator RunsI;
+	typedef std::map<TestRunnable const*, uint32_t> Runs;
+	typedef std::map<TestRunnable const*, uint32_t>::iterator RunsI;
 	Runs m_runs;
 };
 #endif /* RUN_SELF_TESTS */

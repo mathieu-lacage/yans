@@ -27,9 +27,11 @@ SOURCE= \
 	fiber/fiber-context-posix.cc \
 	fiber/fiber.cc \
 	fiber/fiber-scheduler.cc \
+	fiber/semaphore.cc \
+	fiber/runnable.cc \
 	simulator/clock.cc \
 	simulator/event-heap.cc \
-	simulator/event-fiber.cc \
+	simulator/event-runnable.cc \
 	simulator/simulator.cc \
 	test.cc \
 	main.cc

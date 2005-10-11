@@ -1,15 +1,15 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 
-#ifndef EVENT_FIBER_H
-#define EVENT_FIBER_H
+#ifndef EVENT_RUNNABLE_H
+#define EVENT_RUNNABLE_H
 
-#include "fiber.h"
+#include "runnable.h"
 
 class Simulator;
 
-class EventFiber : public Fiber {
+class EventRunnable : public Runnable {
 public:
-	EventFiber ();
+	EventRunnable ();
 
 	void set_simulator (Simulator *simulator);
 
@@ -20,4 +20,4 @@ private:
 	bool m_stop;
 };
 
-#endif /* EVENT_FIBER_H */
+#endif /* EVENT_RUNNABLE_H */

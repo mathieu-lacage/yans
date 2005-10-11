@@ -7,12 +7,15 @@
 #include <stdint.h>
 
 class Event;
-class EventFiber;
+class Fiber;
+class EventRunnable;
 class EventHeap;
 class Clock;
 
 class Simulator {
 public:
+	void destroy (void);
+
 	/* this is a blocking call which will return
 	 * only when the simulation ends.
 	 */
@@ -35,6 +38,7 @@ public:
 	static Simulator *instance (void);
 private:
 	Simulator ();
+	~Simulator ();
 	Clock *get_clock (void);
 	EventHeap *get_events (void);
 
@@ -42,9 +46,10 @@ private:
 	EventHeap *m_events;
 	Clock *m_clock;
 
-	friend class EventFiber;
+	friend class EventRunnable;
 
-	EventFiber *m_event_fiber;
+	EventRunnable *m_event_runnable;
+	Fiber *m_event_fiber;
 };
 
 #endif /* SIMULATOR_H */

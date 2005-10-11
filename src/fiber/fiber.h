@@ -8,22 +8,20 @@
 
 class FiberContextStack;
 class Host;
+class Runnable;
 
 class Fiber {
 public:
-	Fiber (Host *host, char const *name);
-	Fiber (Host *host, char const *name, uint32_t stack_size);
-	Fiber (char const *name);
-	Fiber (char const *name, uint32_t stack_size);
+	Fiber (Host *host, Runnable *runnable, char const *name);
+	Fiber (Host *host, Runnable *runnable, char const *name, uint32_t stack_size);
+	Fiber (Runnable *runnable, char const *name);
+	Fiber (Runnable *runnable, char const *name, uint32_t stack_size);
 	virtual ~Fiber ();
 
 	bool is_running (void) const;
 	bool is_active (void) const;
 	bool is_blocked (void) const;
 	bool is_dead (void) const;
-
-	void set_active (void);
-	void set_blocked (void);
 
 	void switch_to (void);
 
@@ -34,14 +32,16 @@ public:
 	Host *get_host (void) const;
 
 private:
-	/* for children to override. */
-	virtual void run (void) = 0;
-
 	static uint32_t const DEFAULT_STACK_SIZE;
 
 	friend class FiberContextStack;
+	friend class FiberScheduler;
 	void initialize (char const *name, uint32_t stack_size);
 	void set_dead (void);
+	void set_active (void);
+	void set_blocked (void);
+	void run (void);
+
 	enum FiberState_e { 
 		RUNNING,
 		ACTIVE,
@@ -52,6 +52,7 @@ private:
 	FiberContextStack *m_stack;
 	std::string *m_name;
 	Host *m_host;
+	Runnable *m_runnable;
 };
 
 

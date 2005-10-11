@@ -10,7 +10,8 @@ class Ipv4;
 class Ipv4Route;
 class NetworkInterface;
 class SocketUdp;
-class File;
+class ReadFile;
+class WriteFile;
 class Process;
 class ProcessLoop;
 class Udp;
@@ -30,7 +31,8 @@ public:
 	void add_interface (NetworkInterface *interface);
 
 	SocketUdp *create_socket_udp (void);
-	File *create_file (void);
+	ReadFile *open_for_read (void);
+	WriteFile *open_for_write (void);
 	Process *create_process (void);
 
 private:

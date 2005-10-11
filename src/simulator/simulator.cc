@@ -3,7 +3,8 @@
 #include "simulator.h"
 #include "clock.h"
 #include "event-heap.h"
-#include "event-fiber.h"
+#include "event-runnable.h"
+#include "fiber.h"
 
 Simulator *Simulator::m_instance = 0;
 
@@ -16,13 +17,29 @@ Simulator::instance (void)
 	return m_instance;
 }
 
+void
+Simulator::destroy (void)
+{
+	delete m_instance;
+	m_instance = 0;
+}
 
 Simulator::Simulator ()
 {
 	m_clock = new Clock ();
 	m_events = new EventHeap ();
-	m_event_fiber = new EventFiber ();
-	m_event_fiber->set_simulator (this);
+	m_event_runnable = new EventRunnable ();
+	m_event_runnable->set_simulator (this);
+	m_event_fiber = new Fiber (m_event_runnable, "events");
+}
+
+Simulator::~Simulator ()
+{
+	delete m_clock;
+	delete m_events;
+	m_event_runnable->stop ();
+	delete m_event_fiber;
+	delete m_event_runnable;
 }
 
 void 
@@ -33,7 +50,7 @@ Simulator::run (void)
 void 
 Simulator::stop (void)
 {
-	m_event_fiber->stop ();
+	m_event_runnable->stop ();
 	m_events->clear ();
 }
 void 

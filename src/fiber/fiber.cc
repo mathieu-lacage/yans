@@ -6,6 +6,7 @@
 #include <string.h>
 #include "fiber-context.h"
 #include "fiber-stack.h"
+#include "runnable.h"
 
 class FiberContextStack : public FiberStack {
 public:
@@ -63,23 +64,25 @@ FiberContextStack::run (void)
 uint32_t const Fiber::DEFAULT_STACK_SIZE = 8192;
 
 
-Fiber::Fiber (Host *host, char const *name)
-	: m_host (host)
+Fiber::Fiber (Host *host, Runnable *runnable, char const *name)
+	: m_host (host), m_runnable (runnable)
 {
 	initialize (name, DEFAULT_STACK_SIZE);
 }
-Fiber::Fiber (Host *host, char const *name, uint32_t stack_size)
-	: m_host (host)
+Fiber::Fiber (Host *host, Runnable *runnable, char const *name, uint32_t stack_size)
+	: m_host (host), m_runnable (runnable)
 {
 	initialize (name, stack_size);
 }
 
-Fiber::Fiber (char const *name)
+Fiber::Fiber (Runnable *runnable, char const *name)
+	: m_runnable (runnable)
 {
 	m_host = FiberScheduler::instance ()->get_current ()->get_host ();
 	initialize (name, DEFAULT_STACK_SIZE);
 }
-Fiber::Fiber (char const *name, uint32_t stack_size)
+Fiber::Fiber (Runnable *runnable, char const *name, uint32_t stack_size)
+	: m_runnable (runnable)
 {
 	m_host = FiberScheduler::instance ()->get_current ()->get_host ();
 	initialize (name, stack_size);
@@ -161,4 +164,10 @@ Host *
 Fiber::get_host (void) const
 {
 	return m_host;
+}
+
+void
+Fiber::run (void)
+{
+	m_runnable->run ();
 }

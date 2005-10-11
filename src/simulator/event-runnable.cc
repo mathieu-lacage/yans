@@ -1,29 +1,28 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 
-#include "event-fiber.h"
+#include "event-runnable.h"
 #include "clock.h"
 #include "event-heap.h"
 #include "event.h"
 #include "simulator.h"
 #include "fiber-scheduler.h"
 
-EventFiber::EventFiber ()
-	: Fiber ("events")
+EventRunnable::EventRunnable ()
 {
 	m_stop = false;
 }
 void
-EventFiber::set_simulator (Simulator *simulator)
+EventRunnable::set_simulator (Simulator *simulator)
 {
 	m_simulator = simulator;
 }
 void
-EventFiber::stop (void)
+EventRunnable::stop (void)
 {
 	m_stop = true;
 }
 void 
-EventFiber::run (void)
+EventRunnable::run (void)
 {
 	Event *ev = m_simulator->get_events ()->peek_next ();
 	uint64_t now = m_simulator->get_events ()->peek_next_time_us ();
