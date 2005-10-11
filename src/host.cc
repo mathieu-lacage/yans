@@ -8,7 +8,7 @@
 #include "socket-udp.h"
 #include "udp.h"
 
-Host::Host (ProcessLoop *init, char const *path)
+Host::Host (char const *path)
 {
 	m_ipv4 = new Ipv4 ();
 	m_udp = new Udp ();

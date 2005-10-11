@@ -13,6 +13,7 @@ class SleepEvent;
 class Thread : public Runnable {
 public:
 	Thread (char const *name);
+	Thread (Host *host, char const *name);
 	virtual ~Thread ();
 
 	void sleep_s (double delta);

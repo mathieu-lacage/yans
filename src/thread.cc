@@ -42,11 +42,18 @@ Thread::Thread (char const *name)
 	m_sleep = new SleepEvent (m_sleep_sem);
 	m_fiber = new Fiber (this, name);
 }
+Thread::Thread (Host *host, char const *name)
+{
+	m_sleep_sem = new Semaphore (0);
+	m_sleep = new SleepEvent (m_sleep_sem);
+	m_fiber = new Fiber (host, this, name);
+}
 
 Thread::~Thread ()
 {
 	delete m_sleep_sem;
 	delete m_sleep;
+	delete m_fiber;
 }
 
 void 

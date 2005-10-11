@@ -23,6 +23,7 @@ SOURCE= \
 	udp.cc \
 	host.cc \
 	thread.cc \
+	process.cc \
 	socket-udp.cc \
 	fiber/fiber-stack-ia32.cc \
 	fiber/fiber-context-posix.cc \

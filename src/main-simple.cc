@@ -64,11 +64,13 @@ main (int argc, char *argv[])
 	cable->connect_to (lserver);
 
 	/* create server host, connect it to network. */
-	Host *hserver = new Host (new SimpleServer (), "server");
+	Host *hserver = new Host ("server");
+	new SimpleServer (hserver);
 	hserver->add_interface (lserver);
 
 	/* create client host, connect it to network. */
-	Host *hclient = new Host (new SimpleClient (), "client");
+	Host *hclient = new Host ("client");
+	new SimpleClient (hclient);
 	hclient->add_interface (lclient);
 
 	Simulator::instance ()->run ();
