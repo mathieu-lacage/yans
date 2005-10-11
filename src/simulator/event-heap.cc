@@ -6,6 +6,8 @@
 #include <math.h>
 #include <utility>
 
+// XXX perform locking on list integrity.
+
 
 EventHeap::EventHeap ()
 {}

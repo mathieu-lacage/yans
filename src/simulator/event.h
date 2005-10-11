@@ -8,7 +8,7 @@ public:
 	Event ();
 	virtual ~Event ();
 
-	virtual void notify (void);
+	virtual void notify (void) = 0;
 	virtual void notify_canceled (void);
 };
 

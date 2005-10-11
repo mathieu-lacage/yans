@@ -22,6 +22,7 @@ SOURCE= \
 	transport-protocol.cc \
 	udp.cc \
 	host.cc \
+	thread.cc \
 	socket-udp.cc \
 	fiber/fiber-stack-ia32.cc \
 	fiber/fiber-context-posix.cc \
@@ -33,6 +34,7 @@ SOURCE= \
 	simulator/event-heap.cc \
 	simulator/event-runnable.cc \
 	simulator/simulator.cc \
+	simulator/event.cc \
 	test.cc \
 	main.cc
 
