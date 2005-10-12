@@ -30,8 +30,8 @@ public:
 	void add_interface (NetworkInterface *interface);
 
 	SocketUdp *create_socket_udp (void);
-	ReadFile *open_for_read (void);
-	WriteFile *open_for_write (void);
+	ReadFile *open_for_read (char const *file);
+	WriteFile *open_for_write (char const *file);
 	Process *create_process (void);
 
 private:
@@ -40,6 +40,7 @@ private:
 	Ipv4Route *m_routing_table;
 	Ipv4 *m_ipv4;
 	Udp *m_udp;
+	std::string *m_root;
 };
 
 

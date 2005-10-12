@@ -1,5 +1,5 @@
 RUN_TESTS=-DRUN_SELF_TESTS=1
-INCLUDES=-I./fiber -I./simulator -I./
+INCLUDES=-I./fiber -I./simulator -I./ -I./file
 CXXFLAGS=-Wall -Werror -O0 -gdwarf-2 $(RUN_TESTS) $(INCLUDES)
 
 SOURCE= \
