@@ -16,6 +16,8 @@ public:
 	Thread (Host *host, char const *name);
 	virtual ~Thread ();
 
+	void yield (void);
+
 	void sleep_s (double delta);
 	void sleep_us (uint64_t delta);
 

@@ -5,6 +5,7 @@
 #include "semaphore.h"
 #include "fiber.h"
 #include "simulator.h"
+#include "fiber-scheduler.h"
 
 
 class SleepEvent : public Event {
@@ -54,6 +55,12 @@ Thread::~Thread ()
 	delete m_sleep_sem;
 	delete m_sleep;
 	delete m_fiber;
+}
+
+void 
+Thread::yield (void)
+{
+	FiberScheduler::instance ()->schedule ();
 }
 
 void 
