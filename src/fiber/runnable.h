@@ -9,7 +9,7 @@ class Runnable {
 public:
 	Runnable ();
 	virtual ~Runnable () = 0;
-	Host *get_host (void);
+	static Host *get_host (void);
 
 private:
 	friend class Fiber;

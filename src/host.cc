@@ -7,8 +7,6 @@
 #include "loopback-interface.h"
 #include "socket-udp.h"
 #include "udp.h"
-#include "read-file.h"
-#include "write-file.h"
 
 Host::Host (char const *path)
 {
@@ -73,23 +71,4 @@ SocketUdp *
 Host::create_socket_udp (void)
 {
 	return new SocketUdp (this, m_udp);
-}
-
-ReadFile *
-Host::open_for_read (char const *path)
-{
-	ReadFile *file = new ReadFile ();
-	std::string *filename = new std::string (*m_root);
-	filename->append (path);
-	file->open (filename);
-	return file;
-}
-WriteFile *
-Host::open_for_write (char const *path)
-{
-	WriteFile *file = new WriteFile ();
-	std::string *filename = new std::string (*m_root);
-	filename->append (path);
-	file->open (filename);
-	return file;
 }

@@ -4,6 +4,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include "runnable.h"
+#include "host.h"
 #include "write-file.h"
 
 class WriteFilePrivate {
@@ -25,7 +27,9 @@ WriteFile::~WriteFile ()
 void 
 WriteFile::open (std::string *filename)
 {
-	m_priv->m_fd = ::open (filename->c_str (), O_WRONLY);
+	std::string *file = new std::string (*(Runnable::get_host ()->m_root));
+	file->append (*filename);
+	m_priv->m_fd = ::open (file->c_str (), O_WRONLY);
 }
 void 
 WriteFile::close (void)

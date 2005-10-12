@@ -10,9 +10,6 @@ class Ipv4;
 class Ipv4Route;
 class NetworkInterface;
 class SocketUdp;
-class ReadFile;
-class WriteFile;
-class Process;
 class Udp;
 
 typedef std::vector<NetworkInterface *> NetworkInterfaces;
@@ -30,12 +27,12 @@ public:
 	void add_interface (NetworkInterface *interface);
 
 	SocketUdp *create_socket_udp (void);
-	ReadFile *open_for_read (char const *file);
-	WriteFile *open_for_write (char const *file);
-	Process *create_process (void);
 
 private:
 	typedef std::vector<NetworkInterface *>::iterator NetworkInterfacesI;
+	friend class ReadFile;
+	friend class WriteFile;
+
 	NetworkInterfaces m_interfaces;
 	Ipv4Route *m_routing_table;
 	Ipv4 *m_ipv4;

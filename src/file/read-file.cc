@@ -4,6 +4,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include "runnable.h"
+#include "host.h"
 #include "read-file.h"
 
 class ReadFilePrivate {
@@ -25,6 +27,8 @@ ReadFile::~ReadFile ()
 void 
 ReadFile::open (std::string *filename)
 {
+	std::string *file = new std::string (*(Runnable::get_host ()->m_root));
+	file->append (*filename);
 	m_priv->m_fd = ::open (filename->c_str (), O_RDONLY);
 }
 void 
