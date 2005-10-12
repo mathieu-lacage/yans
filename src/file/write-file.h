@@ -3,10 +3,10 @@
 #ifndef WRITE_FILE_H
 #define WRITE_FILE_H
 
-#include <unistd.h>
 #include <stdint.h>
-#include <stdarg.h>
 #include <string>
+
+class WriteFilePrivate;
 
 class WriteFile {
 public:
@@ -17,11 +17,9 @@ public:
 	void close (void);
 
 	ssize_t write (uint8_t *buf, size_t count);
-	int printf (const char *format, ...);
-	int vprintf (const char *format, va_list ap);
 
 private:
-	FILE *m_file;
+	WriteFilePrivate *m_priv;
 };
 
 #endif /* WRITE_FILE_H */

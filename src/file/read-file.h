@@ -3,10 +3,10 @@
 #ifndef READ_FILE_H
 #define READ_FILE_H
 
-#include <unistd.h>
 #include <stdint.h>
-#include <stdarg.h>
 #include <string>
+
+class ReadFilePrivate;
 
 class ReadFile {
 public:
@@ -17,11 +17,8 @@ public:
 	void close (void);
 
 	ssize_t read (uint8_t *buf, size_t count);
-	int scanf (const char *format, ...);
-	int vscanf (const char *format, va_list ap);
-
 private:
-	FILE *m_file;
+	ReadFilePrivate *m_priv;
 };
 
 #endif /* READ_FILE_H */
