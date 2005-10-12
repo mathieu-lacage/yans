@@ -25,6 +25,8 @@ SOURCE= \
 	thread.cc \
 	process.cc \
 	socket-udp.cc \
+	file/sync-read-file.cc \
+	file/sync-write-file.cc \
 	fiber/fiber-stack-ia32.cc \
 	fiber/fiber-context-posix.cc \
 	fiber/fiber.cc \
