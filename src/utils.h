@@ -4,10 +4,10 @@
 
 #include <stdint.h>
 
-uint16_t utils_htons (uint16_t v);
-uint32_t utils_htons (uint32_t v);
-uint16_t utils_nstoh (uint16_t v);
-uint32_t utils_nstoh (uint32_t v);
+uint16_t utils_hton_16 (uint16_t v);
+uint32_t utils_hton_32 (uint32_t v);
+uint16_t utils_ntoh_16 (uint16_t v);
+uint32_t utils_ntoh_32 (uint32_t v);
 
 uint32_t ascii_to_ipv4_host (char const *address);
 void ascii_to_mac_network (char const *str, uint8_t address[6]);
