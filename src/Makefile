@@ -1,5 +1,5 @@
 RUN_TESTS=-DRUN_SELF_TESTS=1
-INCLUDES=-I./fiber -I./simulator -I./ -I./file
+INCLUDES=-I./fiber -I./simulator -I./ -I./file -I./arp
 CXXFLAGS=-Wall -Werror -O0 -gdwarf-2 $(RUN_TESTS) $(INCLUDES)
 
 SOURCE= \
@@ -39,6 +39,7 @@ SOURCE= \
 	simulator/simulator.cc \
 	simulator/event.cc \
 	ethernet/ethernet-network-interface.cc \
+	ethernet/cable.cc \
 	arp/arp.cc \
 	arp/arp-cache-entry.cc \
 	arp/chunk-arp.cc \
