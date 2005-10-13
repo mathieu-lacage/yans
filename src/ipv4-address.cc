@@ -2,6 +2,7 @@
 
 #include "utils.h"
 #include "ipv4-address.h"
+#include "buffer.h"
 
 Ipv4Mask Ipv4Mask::m_loopback = Ipv4Mask ("255.0.0.0");
 Ipv4Mask Ipv4Mask::m_zero = Ipv4Mask ("0.0.0.0");
@@ -73,10 +74,30 @@ Ipv4Address::is_equal (Ipv4Address other) const
 }
 
 uint32_t
-Ipv4Address::get_host_order (void)
+Ipv4Address::get_host_order (void) const
 {
 	return m_address;
 }
+
+void 
+Ipv4Address::serialize (WriteBuffer *buffer)
+{
+	buffer->write_hton_u32 (m_address);
+}
+void 
+Ipv4Address::deserialize (ReadBuffer *buffer)
+{
+	m_address = buffer->read_ntoh_u32 ();
+}
+void 
+Ipv4Address::print (std::ostream *os)
+{
+	*os << ((m_address >> 24) & 0xff) << "."
+	    << ((m_address >> 16) & 0xff) << "."
+	    << ((m_address >> 8) & 0xff) << "."
+	    << ((m_address >> 0) & 0xff);
+}
+
 
 Ipv4Address Ipv4Address::m_zero ("0.0.0.0");
 Ipv4Address Ipv4Address::m_broadcast ("255.255.255.255");
@@ -96,4 +117,13 @@ Ipv4Address
 Ipv4Address::get_loopback (void)
 {
 	return m_broadcast;
+}
+
+bool operator == (Ipv4Address const &a, Ipv4Address const &b)
+{
+	return a.is_equal (b);
+}
+size_t Ipv4AddressHash::operator()(Ipv4Address const &x) const 
+{ 
+	return x.get_host_order ();
 }

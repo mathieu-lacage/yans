@@ -28,12 +28,12 @@ public:
 	/* in microseconds. */
 	void insert_in_us (Event *event, uint64_t delta);
 	void insert_at_us (Event *event, uint64_t time);
-	uint64_t get_current_us (void);
+	uint64_t now_us (void);
 
 	/* in seconds. */
 	void insert_in_s (Event *event, double delta);
 	void insert_at_s (Event *event, double time);
-	double get_current_s (void);
+	double now_s (void);
 
 	static Simulator *instance (void);
 private:

@@ -4,6 +4,16 @@
 #include "buffer.h"
 #include "utils.h"
 
+MacAddress::MacAddress ()
+{
+	m_address[0] = 0;
+	m_address[1] = 0;
+	m_address[2] = 0;
+	m_address[3] = 0;
+	m_address[4] = 0;
+	m_address[5] = 0;
+}
+
 MacAddress::MacAddress (uint8_t address[6])
 {
 	m_address[0] = address[0];
@@ -95,6 +105,19 @@ void
 MacAddress::deserialize (ReadBuffer *buffer)
 {
 	buffer->read (m_address, 6);
+}
+
+void
+MacAddress::print (std::ostream *os)
+{
+	os->setf (std::ios::hex, std::ios::basefield);
+	*os << m_address[0] << "-"
+	    << m_address[1] << "-"
+	    << m_address[2] << "-"
+	    << m_address[3] << "-"
+	    << m_address[4] << "-"
+	    << m_address[5];
+	os->setf (std::ios::dec, std::ios::basefield);
 }
 
 

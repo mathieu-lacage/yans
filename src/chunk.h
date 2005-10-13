@@ -10,7 +10,7 @@ class ReadBuffer;
 
 class Chunk {
 public:
-	virtual ~Chunk ();
+	virtual ~Chunk () = 0;
 
 	virtual uint32_t get_size (void) = 0;
 	virtual Chunk *copy (void) = 0;

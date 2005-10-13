@@ -38,6 +38,10 @@ SOURCE= \
 	simulator/event-runnable.cc \
 	simulator/simulator.cc \
 	simulator/event.cc \
+	ethernet/ethernet-network-interface.cc \
+	arp/arp.cc \
+	arp/arp-cache-entry.cc \
+	arp/chunk-arp.cc \
 	test.cc \
 	main.cc
 

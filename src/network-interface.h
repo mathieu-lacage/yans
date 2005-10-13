@@ -12,7 +12,7 @@ class Ipv4;
 
 class NetworkInterface {
 public:
-	virtual ~NetworkInterface ();
+	virtual ~NetworkInterface () = 0;
 
 	/* needed to decide whether or not to perform
 	 * ip fragmentation when sending a packet on
@@ -32,9 +32,8 @@ public:
 	virtual void set_ipv4_mask    (Ipv4Mask mask) = 0;
 	virtual Ipv4Address get_ipv4_address (void) = 0;
 	virtual Ipv4Mask    get_ipv4_mask    (void) = 0;
-	virtual void set_ipv4_next_hop (Ipv4Address next_hope) = 0;
 
-	virtual void send (Packet *packet) = 0;
+	virtual void send (Packet *packet, Ipv4Address dest) = 0;
 };
 
 

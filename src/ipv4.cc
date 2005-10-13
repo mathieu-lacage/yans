@@ -50,9 +50,6 @@ Ipv4::send (Packet *packet)
 	Route const*route = tag->get_route ();
 	assert (route != 0);
 	NetworkInterface *out_interface = route->get_interface ();
-	if (route->is_gateway ()) {
-		out_interface->set_ipv4_next_hop (route->get_gateway ());
-	}
 	ip_header->set_source (out_interface->get_ipv4_address ());
 	ip_header->set_destination (tag->get_daddress ());
 	ip_header->set_protocol (m_send_protocol);
@@ -64,7 +61,11 @@ Ipv4::send (Packet *packet)
 		// XXX
 		assert (false);
 	} else {
-		out_interface->send (packet);
+		if (route->is_gateway ()) {
+			out_interface->send (packet, route->get_gateway ());
+		} else {
+			out_interface->send (packet, tag->get_daddress ());
+		}
 	}
 }
 

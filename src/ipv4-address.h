@@ -4,6 +4,11 @@
 #define IPV4_ADDRESS_H
 
 #include <stdint.h>
+#include <ostream>
+
+class WriteBuffer;
+class ReadBuffer;
+
 
 /* Ipv4 addresses are stored in host order in
  * this class.
@@ -26,7 +31,11 @@ public:
 	 * Please, do _not_ use this method.
 	 * It is there only for chunk-ipv4.
 	 */
-	uint32_t get_host_order (void);
+	uint32_t get_host_order (void) const;
+
+	void serialize (WriteBuffer *buffer);
+	void deserialize (ReadBuffer *buffer);
+	void print (std::ostream *os);
 
 	static Ipv4Address get_zero (void);
 	static Ipv4Address get_broadcast (void);
@@ -55,6 +64,12 @@ private:
 	static Ipv4Mask m_loopback;
 	static Ipv4Mask m_zero;
 	uint32_t m_mask;
+};
+
+bool operator == (Ipv4Address const &a, Ipv4Address const &b);
+class Ipv4AddressHash : public std::unary_function<Ipv4Address, size_t> {
+public:
+	size_t operator()(Ipv4Address const &x) const;
 };
 
 #endif /* IPV4_ADDRESS_H */

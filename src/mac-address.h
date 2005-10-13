@@ -4,12 +4,14 @@
 #define MAC_ADDRESS_H
 
 #include <stdint.h>
+#include <ostream>
 
 class WriteBuffer;
 class ReadBuffer;
 
 class MacAddress {
 public:
+	MacAddress (void);
 	/* low byte should be first.
 	 */
 	MacAddress (uint8_t address[6]);
@@ -32,6 +34,7 @@ public:
 
 	void serialize (WriteBuffer *buffer);
 	void deserialize (ReadBuffer *buffer);
+	void print (std::ostream *os);
 
 	static MacAddress get_broadcast (void);
 private:

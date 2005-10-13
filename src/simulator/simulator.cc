@@ -65,7 +65,7 @@ Simulator::insert_at_us (Event *event, uint64_t time)
 	m_events->insert_at_us (event, time);
 }
 uint64_t 
-Simulator::get_current_us (void)
+Simulator::now_us (void)
 {
 	return m_clock->get_current_us ();
 }
@@ -81,7 +81,7 @@ Simulator::insert_at_s (Event *event, double time)
 	m_events->insert_at_s (event, time);
 }
 double 
-Simulator::get_current_s (void)
+Simulator::now_s (void)
 {
 	return m_clock->get_current_s ();
 }

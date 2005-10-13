@@ -26,9 +26,8 @@ public:
 	virtual void set_ipv4_mask    (Ipv4Mask mask);
 	virtual Ipv4Address get_ipv4_address (void);
 	virtual Ipv4Mask    get_ipv4_mask    (void);
-	virtual void set_ipv4_next_hop (Ipv4Address next_hop);
 
-	virtual void send (Packet *packet);
+	virtual void send (Packet *packet, Ipv4Address to);
 private:
 	std::string m_name;
 	Ipv4 *m_ipv4;

@@ -58,14 +58,7 @@ LoopbackInterface::set_ipv4_handler (Ipv4 *ipv4)
 }
 
 void 
-LoopbackInterface::set_ipv4_next_hop (Ipv4Address next_hop)
-{
-	/* I do not think this makes any sense */
-	assert (false);
-}
-
-void 
-LoopbackInterface::send (Packet *packet)
+LoopbackInterface::send (Packet *packet, Ipv4Address to)
 {
 	m_ipv4->receive (packet, this);
 }
