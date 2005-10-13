@@ -33,7 +33,7 @@ private:
 	ArpCacheEntryState_e m_state;
 	double m_last_seen_time;
 	union {
-		int m_mac_address;
+		MacAddress m_mac_address;
 		Packet *m_waiting;
 	} m_u;
 };

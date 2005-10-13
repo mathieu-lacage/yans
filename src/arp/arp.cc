@@ -140,5 +140,24 @@ Arp::send_data (Packet *packet, Ipv4Address to)
 void 
 Arp::recv_arp (Packet *packet)
 {
-
+	ChunkArp *arp = static_cast <ChunkArp *> (packet->remove_header ());
+	if (arp->is_request () && 
+	    arp->get_destination_ipv4_address () == m_interface.get_ipv4_address ()) {
+		send_arp_reply (arp->get_source_ipv4_address (),
+				arp->get_source_hardware_address ());
+	} else if (arp->is_reply () &&
+		   arp->get_destination_ipv4_address () == m_interface.get_ipv4_address () &&
+		   arp->get_destination_hardward_address () == m_interface.get_mac_address ()) {
+		if (m_arp_cache.find (to) != m_arp_cache.end ()) {
+			ArpCacheEntry *entry = m_arp_cache[to];
+			assert (entry != 0);
+			if (entry->is_wait_reply ()) {
+				entry->mark_alive (arp->get_source_hardware_address ());
+			} else {
+				// ignore this reply which might well be an attempt 
+				// at poisening my arp cache.
+			}
+		}
+	}
+	packet->unref ();
 }

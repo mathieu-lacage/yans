@@ -34,10 +34,12 @@ ArpCacheEntry::mark_dead (void)
 	update_seen ();
 }
 void 
-ArpCacheEntry::mark_alive (int mac_address) 
+ArpCacheEntry::mark_alive (MacAddress mac_address) 
 {
+	assert (m_state == WAIT_REPLY);
 	m_u.m_mac_address = mac_address;
 	m_state = ALIVE;
+	m_sender->send (m_waiting, mac_address);
 	update_seen ();
 }
 
