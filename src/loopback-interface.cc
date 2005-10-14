@@ -20,6 +20,11 @@ LoopbackInterface::get_name (void)
 {
 	return &m_name;
 }
+void
+LoopbackInterface::set_mac_address (MacAddress self)
+{
+	assert (false);
+}
 MacAddress 
 LoopbackInterface::get_mac_address (void)
 {

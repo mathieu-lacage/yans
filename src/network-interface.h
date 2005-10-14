@@ -14,12 +14,13 @@ class NetworkInterface {
 public:
 	virtual ~NetworkInterface () = 0;
 
+	virtual void set_mac_address (MacAddress self) = 0;
+	virtual MacAddress get_mac_address (void) = 0;
+	virtual std::string const *get_name (void) = 0;
 	/* needed to decide whether or not to perform
 	 * ip fragmentation when sending a packet on
 	 * this interface.
 	 */
-	virtual MacAddress get_mac_address (void) = 0;
-	virtual std::string const *get_name (void) = 0;
 	virtual uint16_t get_mtu (void) = 0;
 
 	virtual void set_up   (void) = 0;

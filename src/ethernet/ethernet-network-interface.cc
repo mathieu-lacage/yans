@@ -50,6 +50,11 @@ EthernetNetworkInterface::~EthernetNetworkInterface ()
 	delete m_name;
 	m_name = (std::string *)0xdeadbeaf;
 }
+void 
+EthernetNetworkInterface::set_mac_address (MacAddress self)
+{
+	m_mac_address = self;
+}
 MacAddress 
 EthernetNetworkInterface::get_mac_address (void)
 {

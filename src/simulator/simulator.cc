@@ -30,7 +30,7 @@ Simulator::Simulator ()
 	m_events = new EventHeap ();
 	m_event_runnable = new EventRunnable ();
 	m_event_runnable->set_simulator (this);
-	m_event_fiber = new Fiber (m_event_runnable, "events");
+	m_event_fiber = new Fiber (0, m_event_runnable, "events");
 }
 
 Simulator::~Simulator ()

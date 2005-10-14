@@ -14,10 +14,7 @@ public:
 	EthernetNetworkInterface ();
 	virtual ~EthernetNetworkInterface ();
 
-	/* needed to decide whether or not to perform
-	 * ip fragmentation when sending a packet on
-	 * this interface.
-	 */
+	virtual void set_mac_address (MacAddress self);
 	virtual MacAddress get_mac_address (void);
 	virtual std::string const *get_name (void);
 	virtual uint16_t get_mtu (void);
@@ -26,7 +23,6 @@ public:
 	virtual void set_down (void);
 	virtual bool is_down (void);
 
-	/* methods specific to ipv4. */
 	virtual void set_ipv4_handler (Ipv4 *ipv4);
 	virtual void set_ipv4_address (Ipv4Address address);
 	virtual void set_ipv4_mask    (Ipv4Mask mask);
