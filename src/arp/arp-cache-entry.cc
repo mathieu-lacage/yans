@@ -37,9 +37,8 @@ void
 ArpCacheEntry::mark_alive (MacAddress mac_address) 
 {
 	assert (m_state == WAIT_REPLY);
-	m_u.m_mac_address = mac_address;
+	m_mac_address = mac_address;
 	m_state = ALIVE;
-	m_sender->send (m_waiting, mac_address);
 	update_seen ();
 }
 
@@ -51,8 +50,8 @@ ArpCacheEntry::update_wait_reply (Packet *waiting)
 	 * we dump the previously waiting packet and
 	 * replace it with this one.
 	 */
-	Packet *old = m_u.m_waiting;
-	m_u.m_waiting = waiting;
+	Packet *old = m_waiting;
+	m_waiting = waiting;
 	return old;
 }
 void 
@@ -60,7 +59,7 @@ ArpCacheEntry::mark_wait_reply (Packet *waiting)
 {
 	assert (m_state == ALIVE || m_state == DEAD);
 	m_state = WAIT_REPLY;
-	m_u.m_waiting = waiting;
+	m_waiting = waiting;
 	update_seen ();
 }
 
@@ -68,14 +67,14 @@ Packet *
 ArpCacheEntry::get_waiting_packet (void)
 {
 	assert (m_state == WAIT_REPLY);
-	return m_u.m_waiting;
+	return m_waiting;
 }
 
-int 
+MacAddress
 ArpCacheEntry::get_mac_address (void)
 {
 	assert (m_state == ALIVE);
-	return m_u.m_mac_address;
+	return m_mac_address;
 }
 bool 
 ArpCacheEntry::is_expired (void)

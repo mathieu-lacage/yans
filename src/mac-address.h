@@ -27,19 +27,19 @@ public:
 	MacAddress (uint32_t multicast_ip_address);
 	~MacAddress ();
 
-	bool is_equal (MacAddress *other);
-	bool is_broadcast (void);
-	bool is_multicast (void);
-	bool is_multicast_equal (MacAddress *other);
+	bool is_equal (MacAddress other) const;
+	bool is_broadcast (void) const;
+	bool is_multicast (void) const;
+	bool is_multicast_equal (MacAddress other) const;
 
-	void serialize (WriteBuffer *buffer);
+	void serialize (WriteBuffer *buffer) const;
 	void deserialize (ReadBuffer *buffer);
-	void print (std::ostream *os);
+	void print (std::ostream *os) const;
 
 	static MacAddress get_broadcast (void);
 private:
 	static MacAddress m_broadcast;
-	uint32_t get_multicast_part (void);
+	uint32_t get_multicast_part (void) const;
 	uint8_t m_address[6];
 };
 

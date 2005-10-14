@@ -40,21 +40,21 @@ MacAddress::~MacAddress ()
 {}
 
 bool 
-MacAddress::is_equal (MacAddress *other)
+MacAddress::is_equal (MacAddress other) const
 {
-	if (m_address[0] == other->m_address[0] &&
-	    m_address[1] == other->m_address[1] &&
-	    m_address[2] == other->m_address[2] &&
-	    m_address[3] == other->m_address[3] &&
-	    m_address[4] == other->m_address[4] &&
-	    m_address[5] == other->m_address[5]) {
+	if (m_address[0] == other.m_address[0] &&
+	    m_address[1] == other.m_address[1] &&
+	    m_address[2] == other.m_address[2] &&
+	    m_address[3] == other.m_address[3] &&
+	    m_address[4] == other.m_address[4] &&
+	    m_address[5] == other.m_address[5]) {
 		return true;
 	} else {
 		return false;
 	}
 }
 bool 
-MacAddress::is_broadcast (void)
+MacAddress::is_broadcast (void) const
 {
 	if (m_address[0] == 0xff &&
 	    m_address[1] == 0xff &&
@@ -68,7 +68,7 @@ MacAddress::is_broadcast (void)
 	}
 }
 bool 
-MacAddress::is_multicast (void)
+MacAddress::is_multicast (void) const
 {
 	if (m_address[0] & 0x1) {
 		return true;
@@ -77,9 +77,9 @@ MacAddress::is_multicast (void)
 	}
 }
 bool 
-MacAddress::is_multicast_equal (MacAddress *other)
+MacAddress::is_multicast_equal (MacAddress other) const
 {
-	if (get_multicast_part () == other->get_multicast_part ()) {
+	if (get_multicast_part () == other.get_multicast_part ()) {
 		return true;
 	} else {
 		return false;
@@ -87,7 +87,7 @@ MacAddress::is_multicast_equal (MacAddress *other)
 }
 
 uint32_t
-MacAddress::get_multicast_part (void)
+MacAddress::get_multicast_part (void) const
 {
 	uint32_t part = 0;
 	part |= m_address[0] >> 1;
@@ -97,7 +97,7 @@ MacAddress::get_multicast_part (void)
 }
 
 void 
-MacAddress::serialize (WriteBuffer *buffer)
+MacAddress::serialize (WriteBuffer *buffer) const
 {
 	buffer->write (m_address, 6);
 }
@@ -108,7 +108,7 @@ MacAddress::deserialize (ReadBuffer *buffer)
 }
 
 void
-MacAddress::print (std::ostream *os)
+MacAddress::print (std::ostream *os) const
 {
 	os->setf (std::ios::hex, std::ios::basefield);
 	*os << m_address[0] << "-"

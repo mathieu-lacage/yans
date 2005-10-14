@@ -8,7 +8,7 @@ public:
 	ArpCacheEntry (Arp *arp);
 
 	void mark_dead (void);
-	void mark_alive (int mac_address);
+	void mark_alive (MacAddress mac_address);
 	void mark_wait_reply (Packet *waiting);
 	Packet *update_wait_reply (Packet *waiting);
 
@@ -17,7 +17,7 @@ public:
 	bool is_wait_reply (void);
 
 	Packet *get_waiting_packet (void);
-	int get_mac_address (void);
+	MacAddress get_mac_address (void);
 	bool is_expired (void);
 private:
 	enum ArpCacheEntryState_e {
@@ -32,10 +32,8 @@ private:
 	Arp *m_arp;
 	ArpCacheEntryState_e m_state;
 	double m_last_seen_time;
-	union {
-		MacAddress m_mac_address;
-		Packet *m_waiting;
-	} m_u;
+	MacAddress m_mac_address;
+	Packet *m_waiting;
 };
 
 #endif /* ARP_CACHE_ENTRY_H */

@@ -142,17 +142,20 @@ Arp::recv_arp (Packet *packet)
 {
 	ChunkArp *arp = static_cast <ChunkArp *> (packet->remove_header ());
 	if (arp->is_request () && 
-	    arp->get_destination_ipv4_address () == m_interface.get_ipv4_address ()) {
+	    arp->get_destination_ipv4_address () == m_interface->get_ipv4_address ()) {
 		send_arp_reply (arp->get_source_ipv4_address (),
 				arp->get_source_hardware_address ());
 	} else if (arp->is_reply () &&
-		   arp->get_destination_ipv4_address () == m_interface.get_ipv4_address () &&
-		   arp->get_destination_hardward_address () == m_interface.get_mac_address ()) {
-		if (m_arp_cache.find (to) != m_arp_cache.end ()) {
-			ArpCacheEntry *entry = m_arp_cache[to];
+		   arp->get_destination_ipv4_address ().is_equal (m_interface->get_ipv4_address ()) &&
+		   arp->get_destination_hardware_address ().is_equal (m_interface->get_mac_address ())) {
+		Ipv4Address from = arp->get_destination_ipv4_address ();
+		if (m_arp_cache.find (from) != m_arp_cache.end ()) {
+			ArpCacheEntry *entry = m_arp_cache[from];
 			assert (entry != 0);
 			if (entry->is_wait_reply ()) {
-				entry->mark_alive (arp->get_source_hardware_address ());
+				MacAddress from_mac = arp->get_source_hardware_address ();
+				m_sender->send (entry->get_waiting_packet (), from_mac);
+				entry->mark_alive (from_mac);
 			} else {
 				// ignore this reply which might well be an attempt 
 				// at poisening my arp cache.
