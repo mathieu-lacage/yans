@@ -18,6 +18,9 @@ public:
 
 	void up (uint8_t delta);
 	void down (uint8_t delta);
+
+	void up_all (void);
+	void down_all (void);
 private:
 	int32_t m_n;
 	std::list<Fiber *> m_waiting;

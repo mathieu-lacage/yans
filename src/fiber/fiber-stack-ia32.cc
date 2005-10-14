@@ -5,12 +5,24 @@
 #include <setjmp.h>
 
 
+#define FIBER_STACK_TRACE 1
+
+#ifdef FIBER_STACK_TRACE
+#include <stdio.h>
+# define TRACE(x, a, b) \
+printf ("STACK " x, a, b);
+#else /* FIBER_STACK_TRACE */
+# define TRACE(x, a, b)
+#endif /* FIBER_STACK_TRACE */
+
+
 
 FiberStack::FiberStack (uint32_t stack_size)
 {
 	m_stack = new uint8_t [stack_size];
 	m_stack_size = stack_size;
 	memset (m_stack, 0, m_stack_size);
+	TRACE ("stack: 0x%lx to 0x%lx\n", (long)m_stack, (long)m_stack+m_stack_size);
 }
 FiberStack::~FiberStack ()
 {

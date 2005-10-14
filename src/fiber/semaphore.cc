@@ -59,3 +59,17 @@ Semaphore::down (uint8_t delta)
 		scheduler->schedule ();
 	}
 }
+
+void
+Semaphore::up_all (void)
+{
+	assert (m_n <= 0);
+	up (-m_n);
+}
+
+void
+Semaphore::down_all (void)
+{
+	assert (m_n >= 0);
+	down (m_n);
+}

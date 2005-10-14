@@ -3,13 +3,11 @@
 #include "event-heap.h"
 #include "clock.h"
 #include "event.h"
-#include <math.h>
 #include <utility>
 
-// XXX perform locking on list integrity.
-
-
 EventHeap::EventHeap ()
+{}
+EventHeap::~EventHeap ()
 {}
 void 
 EventHeap::insert_at_us (Event *event, uint64_t time)
@@ -20,14 +18,6 @@ EventHeap::insert_at_us (Event *event, uint64_t time)
 			break;
 		}
 	}
-}
-void 
-EventHeap::insert_at_s (Event *event, double time)
-{
-	assert (time > 0);
-	long int us = lrint (time * 1000000);
-	assert (us > 0);
-	insert_at_us (event, (uint64_t)us);
 }
 Event *
 EventHeap::peek_next (void)
@@ -59,10 +49,4 @@ EventHeap::clear (void)
 		(*i).first->notify_canceled ();
 	}
 	m_events.erase (m_events.begin (), m_events.end ());
-}
-
-void
-EventHeap::wait (void)
-{
-	assert (false);
 }

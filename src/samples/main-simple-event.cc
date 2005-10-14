@@ -45,6 +45,7 @@ int main (int argc, char *argv[])
 	delete hclient;
 	delete hserver;
 	TagManager::instance ()->destroy ();
+	Simulator::instance ()->destroy ();
 
 	return 0;
 }

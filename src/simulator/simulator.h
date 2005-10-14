@@ -39,15 +39,8 @@ public:
 private:
 	Simulator ();
 	~Simulator ();
-	Clock *get_clock (void);
-	EventHeap *get_events (void);
 
 	static Simulator *m_instance;
-	EventHeap *m_events;
-	Clock *m_clock;
-
-	friend class EventRunnable;
-
 	EventRunnable *m_event_runnable;
 	Fiber *m_event_fiber;
 };

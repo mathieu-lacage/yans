@@ -5,6 +5,7 @@
 #include "event-heap.h"
 #include "event-runnable.h"
 #include "fiber.h"
+#include "fiber-scheduler.h"
 
 Simulator *Simulator::m_instance = 0;
 
@@ -26,18 +27,14 @@ Simulator::destroy (void)
 
 Simulator::Simulator ()
 {
-	m_clock = new Clock ();
-	m_events = new EventHeap ();
 	m_event_runnable = new EventRunnable ();
-	m_event_runnable->set_simulator (this);
 	m_event_fiber = new Fiber (0, m_event_runnable, "events");
 }
 
 Simulator::~Simulator ()
 {
-	delete m_clock;
-	delete m_events;
 	m_event_runnable->stop ();
+	//m_event_fiber->wait_until_is_dead ();
 	delete m_event_fiber;
 	delete m_event_runnable;
 }
@@ -45,54 +42,41 @@ Simulator::~Simulator ()
 void 
 Simulator::run (void)
 {
-	
+	FiberScheduler::instance ()->run_main ();
 }
 void 
 Simulator::stop (void)
 {
 	m_event_runnable->stop ();
-	m_events->clear ();
 }
 void 
 Simulator::insert_in_us (Event *event, uint64_t delta)
 {
-	uint64_t current = m_clock->get_current_us ();
-	insert_at_us (event, current+delta);
+	m_event_runnable->insert_in_us (event, delta);
 }
 void 
 Simulator::insert_at_us (Event *event, uint64_t time)
 {
-	m_events->insert_at_us (event, time);
+	m_event_runnable->insert_at_us (event, time);
 }
 uint64_t 
 Simulator::now_us (void)
 {
-	return m_clock->get_current_us ();
+	return m_event_runnable->now_us ();
 }
 void 
 Simulator::insert_in_s (Event *event, double delta)
 {
-	double current = m_clock->get_current_s ();
-	insert_at_s (event, current+delta);
+	m_event_runnable->insert_in_s (event, delta);
 }
 void 
 Simulator::insert_at_s (Event *event, double time)
 {
-	m_events->insert_at_s (event, time);
+	m_event_runnable->insert_at_s (event, time);
 }
 double 
 Simulator::now_s (void)
 {
-	return m_clock->get_current_s ();
-}
-Clock *
-Simulator::get_clock (void)
-{
-	return m_clock;
-}
-EventHeap *
-Simulator::get_events (void)
-{
-	return m_events;
+	return m_event_runnable->now_s ();
 }
 

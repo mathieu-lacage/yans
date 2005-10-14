@@ -7,6 +7,7 @@
 #include "fiber-context.h"
 #include "fiber-stack.h"
 #include "runnable.h"
+#include "semaphore.h"
 
 class FiberContextStack : public FiberStack {
 public:
@@ -37,11 +38,14 @@ FiberContextStack::~FiberContextStack ()
 void 
 FiberContextStack::switch_to (void)
 {
+	printf ("switch from %p\n", this);
 	m_context.load ();
+	assert (false);
 }
 void 
 FiberContextStack::save (void)
 {
+	printf ("save  in %p\n", this);
 	m_context.save ();
 }
 
@@ -55,6 +59,7 @@ FiberContextStack::run (void)
 		m_first_run = false;
 		return;
 	}
+	printf ("go into fiber\n");
 	m_fiber->run ();
 	m_fiber->set_dead ();
 	FiberScheduler::instance ()->schedule ();
@@ -94,6 +99,7 @@ Fiber::initialize (char const *name, uint32_t stack_size)
 	m_state = ACTIVE;
 	m_stack = new FiberContextStack (this, stack_size);
 	FiberScheduler::instance ()->register_fiber (this);
+	m_sem_dead = new Semaphore (0);
 	m_stack->run_on_new_stack ();
 }
 Fiber::~Fiber ()
@@ -102,6 +108,7 @@ Fiber::~Fiber ()
 	FiberScheduler::instance ()->unregister_fiber (this);
 	delete m_stack;
 	m_stack = (FiberContextStack *)0xdeadbeaf;
+	delete m_sem_dead;
 }
 
 std::string *
@@ -145,6 +152,7 @@ void
 Fiber::set_dead (void)
 {
 	m_state = DEAD;
+	m_sem_dead->up_all ();
 }
 
 void
@@ -158,12 +166,19 @@ Fiber::switch_to (void)
 {
 	m_state = RUNNING;
 	m_stack->switch_to ();
+	assert (false);
 }
 
 Host *
 Fiber::get_host (void) const
 {
 	return m_host;
+}
+
+void 
+Fiber::wait_until_is_dead (void)
+{
+	m_sem_dead->down ();
 }
 
 void

@@ -9,6 +9,7 @@
 class FiberContextStack;
 class Host;
 class Runnable;
+class Semaphore;
 
 class Fiber {
 public:
@@ -30,6 +31,8 @@ public:
 	std::string *peek_name (void) const;
 
 	Host *get_host (void) const;
+
+	void wait_until_is_dead (void);
 
 private:
 	static uint32_t const DEFAULT_STACK_SIZE;
@@ -53,6 +56,7 @@ private:
 	std::string *m_name;
 	Host *m_host;
 	Runnable *m_runnable;
+	Semaphore *m_sem_dead;
 };
 
 
