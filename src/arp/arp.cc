@@ -73,7 +73,7 @@ Arp::send_arp_request (Ipv4Address to)
 			  to);
 	Packet *packet = new Packet ();
 	packet->add_header (arp);
-	m_sender->send (packet, MacAddress::get_broadcast ());
+	m_sender->send_arp (packet, MacAddress::get_broadcast ());
 }
 
 void
@@ -85,7 +85,7 @@ Arp::send_arp_reply (Ipv4Address to_ip, MacAddress to_mac)
 			to_mac, to_ip);
 	Packet *packet = new Packet ();
 	packet->add_header (arp);
-	m_sender->send (packet, to_mac);
+	m_sender->send_arp (packet, to_mac);
 }
 
 void
@@ -120,7 +120,7 @@ Arp::send_data (Packet *packet, Ipv4Address to)
 				drop_dead_packet (packet);
 			} else if (entry->is_alive ()) {
 				TRACE ("alive entry for %d valid -- send", to.get_host_order ());
-				m_sender->send (packet, entry->get_mac_address ());
+				m_sender->send_data (packet, entry->get_mac_address ());
 			} else if (entry->is_wait_reply ()) {
 				TRACE ("wait reply for %d valid -- drop previous", to.get_host_order ());
 				Packet *previous = entry->update_wait_reply (packet);
@@ -154,7 +154,7 @@ Arp::recv_arp (Packet *packet)
 			assert (entry != 0);
 			if (entry->is_wait_reply ()) {
 				MacAddress from_mac = arp->get_source_hardware_address ();
-				m_sender->send (entry->get_waiting_packet (), from_mac);
+				m_sender->send_data (entry->get_waiting_packet (), from_mac);
 				entry->mark_alive (from_mac);
 			} else {
 				// ignore this reply which might well be an attempt 

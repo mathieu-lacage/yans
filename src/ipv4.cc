@@ -81,6 +81,6 @@ Ipv4::receive (Packet *packet, NetworkInterface *interface)
 {
 	//ChunkIpv4 *ip_header = static_cast <ChunkIpv4 *> (packet->remove_header ());
 	/* need to verify if this packet is targetted at _any_ of the
-	 * IP for this host.
+	 * IPs for this host.
 	 */
 }

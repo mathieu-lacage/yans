@@ -40,6 +40,8 @@ SOURCE= \
 	simulator/event.cc \
 	ethernet/ethernet-network-interface.cc \
 	ethernet/cable.cc \
+	ethernet/chunk-mac-llc-snap.cc \
+	ethernet/chunk-mac-crc.cc \
 	arp/arp.cc \
 	arp/arp-cache-entry.cc \
 	arp/chunk-arp.cc \

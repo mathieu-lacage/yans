@@ -51,26 +51,7 @@ Local Code field is set to Ether Type
 5) LLC Control
 This field is a U field for type-1 LLC frames.
 i.e., it is 1 byte big. (other types of frames/fields
-have a 16 bit Control field)
-Format is:
-  3      1     2     2
-M M M | P/F | M M | 1 1 |
 
-M: Modifier bits, they are set depending on the mode of 
-operation: Command, Response or Data
+03 is, a priori, an invalid value but the SNAP spec
+is hard to come by.
 
-P/F: Poll / Final bit: this bit is used by the Source to solicit 
-a response from the Destination. It is used by the Destination to 
-respond to a solicit from the Source.
-
-03 is, a priori, an invalid value.
-
-Here are the possible commands:
-UI- Unnumbered information (here's some data - hope it arrives)
-DISC- Disconnect (we're done, shut her down)
-SABME- Set Asynchronous Balanced Mode Extended (start now)
-XID- Exchange IDs(Here's who I am, who are you?)
-TEST- Test the link (Here's a test, send me back a test)
-UA- Unnumbered Acknowledgement(Yes, I'm still here)
-DM- Disconnect Mode (I'm disconnecting)
-FRMR- Frame Reject (Bad frame - reject)

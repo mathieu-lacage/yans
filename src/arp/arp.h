@@ -14,7 +14,8 @@ class ArpCacheEntry;
 class ArpMacSender {
 public:
 	virtual ~ArpMacSender () = 0;
-	virtual void send (Packet *packet, MacAddress dest) = 0;
+	virtual void send_data (Packet *packet, MacAddress dest) = 0;
+	virtual void send_arp (Packet *packet, MacAddress dest) = 0;
 };
 
 class Arp {
