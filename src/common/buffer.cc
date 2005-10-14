@@ -8,6 +8,7 @@
 
 WriteBuffer::WriteBuffer (uint32_t size)
 {
+	m_write = 0;
 	if (size == 0) {
 		m_size = 16;
 	} else {
