@@ -2,6 +2,8 @@ RUN_TESTS=-DRUN_SELF_TESTS=1
 INCLUDES=-I./fiber -I./simulator -I./ -I./file -I./arp -I./common -I./ipv4
 CXXFLAGS=-Wall -Werror -O0 -gdwarf-2 $(RUN_TESTS) $(INCLUDES)
 
+MAIN_TEST_SOURCE=main-test
+MAIN_SIMPLE_EVENT_SOURCE=samples/main-simple-event.cc
 SOURCE= \
 	chunk-tcp.cc \
 	chunk-udp.cc \
@@ -15,6 +17,7 @@ SOURCE= \
 	thread.cc \
 	process.cc \
 	socket-udp.cc \
+	test.cc \
 	common/buffer.cc \
 	common/chunk.cc \
 	common/tag-manager.cc \
@@ -44,15 +47,18 @@ SOURCE= \
 	ethernet/chunk-mac-crc.cc \
 	arp/arp.cc \
 	arp/arp-cache-entry.cc \
-	arp/chunk-arp.cc \
-	test.cc \
-	main.cc
+	arp/chunk-arp.cc
 
 OBJFILES=$(addsuffix .o, $(basename $(SOURCE)))
+OBJ_MAIN_TEST=$(addsuffix .o, $(basename $(MAIN_TEST_SOURCE)))
+OBJ_MAIN_SIMPLE_EVENT=$(addsuffix .o, $(basename $(MAIN_SIMPLE_EVENT_SOURCE)))
 
-all: test
+all: main-test samples/main-simple-event
 
-test: $(OBJFILES)
+main-test: $(OBJFILES) $(OBJ_MAIN_TEST)
+	$(CXX) $(LDFLAGS) -o $@ $^
+
+samples/main-simple-event: $(OBJFILES) $(OBJ_MAIN_SIMPLE_EVENT)
 	$(CXX) $(LDFLAGS) -o $@ $^
 
 %.o:%.cc
