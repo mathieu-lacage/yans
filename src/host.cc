@@ -27,8 +27,10 @@ Host::Host (char const *path)
 
 Host::~Host ()
 {
+	delete m_root;
 	delete m_ipv4;
 	delete m_routing_table;
+	delete m_udp;
 	for (NetworkInterfacesI i = m_interfaces.begin (); 
 	     i != m_interfaces.end (); 
 	     i = m_interfaces.erase (i)) {
