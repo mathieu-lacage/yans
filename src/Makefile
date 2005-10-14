@@ -3,28 +3,28 @@ INCLUDES=-I./fiber -I./simulator -I./ -I./file -I./arp
 CXXFLAGS=-Wall -Werror -O0 -gdwarf-2 $(RUN_TESTS) $(INCLUDES)
 
 SOURCE= \
-	buffer.cc \
-	chunk.cc \
-	chunk-ipv4.cc \
 	chunk-tcp.cc \
 	chunk-udp.cc \
 	chunk-data.cc \
-	tag-manager.cc \
-	tag-ipv4.cc \
-	packet.cc \
-	utils.cc \
 	mac-address.cc \
-	ipv4-address.cc \
 	network-interface.cc \
 	loopback-interface.cc \
-	ipv4-route.cc \
-	ipv4.cc \
 	transport-protocol.cc \
 	udp.cc \
 	host.cc \
 	thread.cc \
 	process.cc \
 	socket-udp.cc \
+	common/buffer.cc \
+	common/chunk.cc \
+	common/tag-manager.cc \
+	common/packet.cc \
+	common/utils.cc \
+	ipv4/chunk-ipv4.cc \
+	ipv4/ipv4-address.cc \
+	ipv4/tag-ipv4.cc \
+	ipv4/ipv4-route.cc \
+	ipv4/ipv4.cc \
 	file/read-file.cc \
 	file/write-file.cc \
 	fiber/fiber-stack-ia32.cc \
