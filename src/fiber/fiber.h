@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include <string>
 
-class FiberContextStack;
+struct FiberContext;
 class Host;
 class Runnable;
 class Semaphore;
@@ -24,10 +24,6 @@ public:
 	bool is_blocked (void) const;
 	bool is_dead (void) const;
 
-	void switch_to (void);
-
-	void save (void);
-
 	std::string *peek_name (void) const;
 
 	Host *get_host (void) const;
@@ -35,15 +31,19 @@ public:
 	void wait_until_is_dead (void);
 
 private:
+	friend class FiberScheduler;
+
 	static uint32_t const DEFAULT_STACK_SIZE;
 
-	friend class FiberContextStack;
-	friend class FiberScheduler;
+	void switch_from (struct FiberContext *from);
+	void switch_to (struct FiberContext *to);
+	void switch_to (Fiber *to);
 	void initialize (char const *name, uint32_t stack_size);
 	void set_dead (void);
 	void set_active (void);
 	void set_blocked (void);
 	void run (void);
+	static void run_static (void *data);
 
 	enum FiberState_e { 
 		RUNNING,
@@ -52,7 +52,7 @@ private:
 		DEAD
 	};
 	enum FiberState_e m_state;
-	FiberContextStack *m_stack;
+	FiberContext *m_context;
 	std::string *m_name;
 	Host *m_host;
 	Runnable *m_runnable;

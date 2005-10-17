@@ -43,22 +43,20 @@ FiberScheduler *FiberScheduler::m_instance = 0;
 
 FiberScheduler::FiberScheduler ()
 	: m_current (0)
-{}
-
-void
-FiberScheduler::update_current_state (void)
 {
+	m_context = fiber_context_new_blank ();
 }
 
-void
-FiberScheduler::update_next_state (void)
+FiberScheduler::~FiberScheduler ()
 {
+	fiber_context_delete (m_context);
+	m_context = (struct FiberContext *)0xdeadbeaf;
 }
 	
 void 
 FiberScheduler::schedule (void)
 {
-	Fiber *new_fiber;
+	Fiber *next, *prev;
 
 	if (m_current != 0) {
 		if (m_current->is_dead ()) {
@@ -72,40 +70,36 @@ FiberScheduler::schedule (void)
 			m_active.push_back (m_current);
 		}
 		TRACE_LEAVE (m_current);
-		m_current->save ();
-		if (m_current->is_running ()) {
-			assert (false);
-			return;
-		}
+		prev = m_current;
 		m_current = 0;
+
+		if (m_do_n > 0) {
+			m_do_n--;
+		}
+		next = select_next_fiber ();
+		if (next != 0 && m_do_n != 0) {
+			m_current = next;
+			TRACE_ENTER (m_current);
+			prev->switch_to (next);
+		} else {
+			TRACE_ENTER_MAIN ();
+			prev->switch_to (m_context);
+		}
 	} else {
 		TRACE_LEAVE_MAIN ();
-		m_context.save ();
+		if (m_do_n > 0) {
+			m_do_n--;
+		}
+		next = select_next_fiber ();
+		if (next != 0 && m_do_n != 0) {
+			m_current = next;
+			TRACE_ENTER (m_current);
+			next->switch_from (m_context);
+		} else {
+			TRACE_ENTER_MAIN ();
+		}		
 	}
 
-	assert (m_current == 0);
-	if (m_do_n > 0) {
-		m_do_n--;
-	} else if (m_do_n == 0) {
-		TRACE_ENTER_MAIN ();
-		m_context.load ();
-		assert (false);
-		return;
-	}
-	new_fiber = select_next_fiber ();
-	if (new_fiber == 0) {
-		TRACE_ENTER_MAIN ();
-		assert (m_current == 0);
-		m_context.load ();
-		assert (false);
-		return;
-	} else {
-		m_current = new_fiber;
-		TRACE_ENTER (m_current);
-		m_current->switch_to ();
-		assert (false);
-		return;
-	}
 }
 
 Fiber *
@@ -146,7 +140,6 @@ void
 FiberScheduler::run_main (void)
 {
 	m_do_n = -1;
-	m_context.save ();
 	while (!is_all_fibers_dead () &&
 	       !is_deadlock ()) {
 		schedule ();
@@ -157,7 +150,6 @@ void
 FiberScheduler::run_main_one (void)
 {
 	m_do_n = 1;
-	m_context.save ();
 	assert (m_current == 0);
 	schedule ();
 }
@@ -210,6 +202,12 @@ FiberScheduler::get_current (void)
 	return m_current;
 }
 
+void
+FiberScheduler::destroy (void)
+{
+	delete this;
+	m_instance = 0;
+}
 FiberScheduler *
 FiberScheduler::instance (void)
 {
@@ -320,13 +318,13 @@ TestFiberScheduler::run_tests (void)
 {
 	bool ok = true;
 	FiberScheduler *sched = FiberScheduler::instance ();
-#if 0
+
 	TestRunnable *fiber = new TestRunnable ("test0", this, 5);
 	sched->run_main ();
 	ENSURE_DEAD (fiber);
 	clear_runs ();
 	delete fiber;
-#endif
+
 	TestRunnable *fiber1 = new TestRunnable ("test1", this, 9);
 	TestRunnable *fiber2 = new TestRunnable ("test2", this, 3);
 	sched->run_main ();
@@ -335,6 +333,8 @@ TestFiberScheduler::run_tests (void)
 	ENSURE_RUNS (fiber2, 3);
 	ENSURE_DEAD (fiber2);
 	clear_runs ();
+	ENSURE_DEAD (fiber1);
+	ENSURE_DEAD (fiber2);
 	delete fiber1;
 	delete fiber2;
 

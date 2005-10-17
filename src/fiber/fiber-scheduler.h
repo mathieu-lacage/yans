@@ -9,9 +9,7 @@
 class Fiber;
 
 class FiberScheduler {
-public:
-	FiberScheduler ();
-	
+public:	
 	void schedule (void);
 
 	/* returns when the last fiber is dead. */
@@ -28,17 +26,18 @@ public:
 
 	Fiber *get_current (void);
 
+	void destroy (void);
 	static FiberScheduler *instance (void);
 private:
-	void update_current_state (void);
-	void update_next_state (void);
+	FiberScheduler ();
+	~FiberScheduler ();
 	bool is_all_fibers_dead (void);
 	bool is_deadlock (void);
 	Fiber *select_next_fiber (void);
 
 	typedef std::list<Fiber *> Fibers;
 	static FiberScheduler *m_instance;
-	FiberContext m_context;
+	FiberContext *m_context;
 	Fiber *m_current;
 	Fibers m_active;
 	Fibers m_dead;

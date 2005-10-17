@@ -1,6 +1,7 @@
 RUN_TESTS=-DRUN_SELF_TESTS=1
 INCLUDES=-I./fiber -I./simulator -I./ -I./file -I./arp -I./common -I./ipv4 -I./ethernet
 CXXFLAGS=-Wall -Werror -O0 -gdwarf-2 $(RUN_TESTS) $(INCLUDES)
+CFLAGS=-Wall -Werror -O0 -gdwarf-2 $(RUN_TESTS) $(INCLUDES)
 
 MAIN_TEST_SOURCE=main-test
 MAIN_SIMPLE_EVENT_SOURCE=samples/main-simple-event.cc
@@ -30,8 +31,7 @@ SOURCE= \
 	ipv4/ipv4.cc \
 	file/read-file.cc \
 	file/write-file.cc \
-	fiber/fiber-stack-ia32.cc \
-	fiber/fiber-context-posix.cc \
+	fiber/fiber-context-x86.c \
 	fiber/fiber.cc \
 	fiber/fiber-scheduler.cc \
 	fiber/semaphore.cc \

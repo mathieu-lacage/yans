@@ -9,65 +9,7 @@
 #include "runnable.h"
 #include "semaphore.h"
 
-class FiberContextStack : public FiberStack {
-public:
-	FiberContextStack (Fiber *fiber, uint32_t stack_size);
-	virtual ~FiberContextStack ();
-
-	void switch_to (void);
-	void save (void);
-
-private:
-	virtual void run (void);
-	FiberContext m_context;
-	Fiber *m_fiber;
-	bool m_first_run;
-};
-
-
-FiberContextStack::FiberContextStack (Fiber *fiber, uint32_t stack_size)
-	: FiberStack (stack_size)
-{
-	m_fiber = fiber;
-}
-FiberContextStack::~FiberContextStack ()
-{
-	m_fiber = (Fiber *)0xdeadbeaf;
-}
-
-void 
-FiberContextStack::switch_to (void)
-{
-	printf ("switch from %p\n", this);
-	m_context.load ();
-	assert (false);
-}
-void 
-FiberContextStack::save (void)
-{
-	printf ("save  in %p\n", this);
-	m_context.save ();
-}
-
-
-void 
-FiberContextStack::run (void)
-{
-	m_first_run = true;
-	m_context.save ();
-	if (m_first_run) {
-		m_first_run = false;
-		return;
-	}
-	printf ("go into fiber\n");
-	m_fiber->run ();
-	m_fiber->set_dead ();
-	FiberScheduler::instance ()->schedule ();
-}
-
-
 uint32_t const Fiber::DEFAULT_STACK_SIZE = 8192;
-
 
 Fiber::Fiber (Host *host, Runnable *runnable, char const *name)
 	: m_host (host), m_runnable (runnable)
@@ -97,19 +39,35 @@ Fiber::initialize (char const *name, uint32_t stack_size)
 {
 	m_name = new std::string (name);
 	m_state = ACTIVE;
-	m_stack = new FiberContextStack (this, stack_size);
+	m_context = fiber_context_new (Fiber::run_static, this, stack_size);
 	FiberScheduler::instance ()->register_fiber (this);
 	m_sem_dead = new Semaphore (0);
-	m_stack->run_on_new_stack ();
 }
 Fiber::~Fiber ()
 {
 	assert (m_state == DEAD);
 	FiberScheduler::instance ()->unregister_fiber (this);
-	delete m_stack;
-	m_stack = (FiberContextStack *)0xdeadbeaf;
+	fiber_context_delete (m_context);
+	m_context = (FiberContext *)0xdeadbeaf;
 	delete m_sem_dead;
 }
+
+void 
+Fiber::run_static (void *data)
+{
+	Fiber *fiber = reinterpret_cast<Fiber *> (data);
+	fiber->run ();
+}
+
+void
+Fiber::run (void)
+{
+	m_runnable->run ();
+	set_dead ();
+	FiberScheduler::instance ()->schedule ();
+}
+
+
 
 std::string *
 Fiber::peek_name (void) const
@@ -155,18 +113,25 @@ Fiber::set_dead (void)
 	m_sem_dead->up_all ();
 }
 
-void
-Fiber::save (void)
+void 
+Fiber::switch_from (struct FiberContext *from)
 {
-	m_stack->save ();
+	m_state = RUNNING;
+	fiber_context_switch_to (from, m_context);
+}
+void 
+Fiber::switch_to (struct FiberContext *to)
+{
+	assert (m_state != RUNNING);
+	fiber_context_switch_to (m_context, to);
 }
 
 void 
-Fiber::switch_to (void)
+Fiber::switch_to (Fiber *to)
 {
-	m_state = RUNNING;
-	m_stack->switch_to ();
-	assert (false);
+	assert (m_state != RUNNING);
+	to->m_state = RUNNING;
+	fiber_context_switch_to (m_context, to->m_context);
 }
 
 Host *
@@ -181,8 +146,3 @@ Fiber::wait_until_is_dead (void)
 	m_sem_dead->down ();
 }
 
-void
-Fiber::run (void)
-{
-	m_runnable->run ();
-}

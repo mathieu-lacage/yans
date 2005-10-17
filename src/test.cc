@@ -5,7 +5,6 @@
 #ifdef RUN_SELF_TESTS
 #include <iostream>
 #include "buffer.h"
-#include "fiber-stack.h"
 #include "fiber-scheduler.h"
 
 
@@ -15,7 +14,6 @@ TestManager::TestManager ()
 	: m_verbose (false)
 {
 	ADD_TEST (BufferTest, "Buffer");
-	ADD_TEST (FiberStackTest, "FiberStack");
 	ADD_TEST (TestFiberScheduler, "FiberScheduler");
 }
 
