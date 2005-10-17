@@ -12,6 +12,9 @@ class Cable {
 public:
 	Cable ();
 
+	void ref (void);
+	void unref (void);
+
 	void connect_to (EthernetNetworkInterface *interface);
 
 	void send (Packet *packet, EthernetNetworkInterface *sender);
@@ -21,6 +24,7 @@ private:
 	typedef std::list<EthernetNetworkInterface *>::iterator EthernetNetworkInterfacesI;
 
 	EthernetNetworkInterfaces m_interfaces;
+	uint32_t m_ref;
 };
 
 

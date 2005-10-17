@@ -5,12 +5,28 @@
 #include "ethernet-network-interface.h"
 
 Cable::Cable ()
+	: m_ref (1)
 {}
+
+void
+Cable::ref (void)
+{
+	m_ref++;
+}
+void
+Cable::unref (void)
+{
+	m_ref--;
+	if (m_ref == 0) {
+		delete this;
+	}
+}
 
 void 
 Cable::connect_to (EthernetNetworkInterface *interface)
 {
 	m_interfaces.push_back (interface);
+	interface->connect_to (this);
 }
 
 void 

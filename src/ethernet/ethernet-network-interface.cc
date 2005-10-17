@@ -49,6 +49,8 @@ EthernetNetworkInterface::~EthernetNetworkInterface ()
 {
 	delete m_name;
 	m_name = (std::string *)0xdeadbeaf;
+	m_cable->unref ();
+	m_cable = (Cable *)0xdeadbeaf;
 }
 void 
 EthernetNetworkInterface::set_mac_address (MacAddress self)
@@ -120,7 +122,7 @@ EthernetNetworkInterface::send (Packet *packet, Ipv4Address dest)
 void 
 EthernetNetworkInterface::connect_to (Cable *cable)
 {
-	cable->connect_to (this);
+	cable->ref ();
 	m_cable = cable;
 }
 void 

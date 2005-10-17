@@ -17,6 +17,7 @@ int main (int argc, char *argv[])
 	Cable *cable = new Cable ();
 	cable->connect_to (eth_client);
 	cable->connect_to (eth_server);
+	cable->unref ();
 
 	/* associate ipv4 addresses to the ethernet network elements */
 	eth_client->set_ipv4_address (Ipv4Address ("192.168.0.3"));
