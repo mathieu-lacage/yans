@@ -124,6 +124,8 @@ Ipv4Route::~Ipv4Route ()
 	     j = m_network_routes.erase (j)) {
 		delete (*j);
 	}
+	delete m_default_route;
+	m_default_route = (Route *)0xdeadbeaf;
 }
 
 

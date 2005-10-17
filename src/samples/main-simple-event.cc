@@ -2,6 +2,7 @@
 
 #include "host.h"
 #include "ethernet-network-interface.h"
+#include "ipv4-route.h"
 #include "cable.h"
 #include "simulator.h"
 
@@ -34,7 +35,10 @@ int main (int argc, char *argv[])
 	hserver->add_interface (eth_server);
 
 	/* setup the routing tables. */
-	
+	hclient->get_routing_table ()->set_default_route (Ipv4Address ("192.168.0.2"),
+							  eth_client);
+	hserver->get_routing_table ()->set_default_route (Ipv4Address ("192.168.0.3"),
+							  eth_server);
 
 
 	/* run simulation */
