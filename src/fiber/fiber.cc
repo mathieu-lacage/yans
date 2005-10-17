@@ -5,7 +5,6 @@
 #include <cassert>
 #include <string.h>
 #include "fiber-context.h"
-#include "fiber-stack.h"
 #include "runnable.h"
 #include "semaphore.h"
 
