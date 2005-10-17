@@ -37,6 +37,7 @@ Simulator::~Simulator ()
 	//m_event_fiber->wait_until_is_dead ();
 	delete m_event_fiber;
 	delete m_event_runnable;
+	FiberScheduler::instance ()->destroy ();
 }
 
 void 
