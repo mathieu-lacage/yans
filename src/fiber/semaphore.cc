@@ -44,7 +44,7 @@ void
 Semaphore::down (uint8_t delta)
 {
 	m_n -= delta;
-	if (m_n < 0) {
+	while (m_n < 0) {
 		FiberScheduler *scheduler = FiberScheduler::instance ();
 		Fiber *current = scheduler->get_current ();
 		/* If the assert below is triggered, it means

@@ -6,6 +6,7 @@
 #include "event-runnable.h"
 #include "fiber.h"
 #include "fiber-scheduler.h"
+#include "tag-manager.h"
 
 Simulator *Simulator::m_instance = 0;
 
@@ -34,10 +35,11 @@ Simulator::Simulator ()
 Simulator::~Simulator ()
 {
 	m_event_runnable->stop ();
-	//m_event_fiber->wait_until_is_dead ();
+	FiberScheduler::instance ()->run_main ();
 	delete m_event_fiber;
 	delete m_event_runnable;
 	FiberScheduler::instance ()->destroy ();
+	TagManager::instance ()->destroy ();
 }
 
 void 

@@ -3,7 +3,6 @@
 #include "host.h"
 #include "ethernet-network-interface.h"
 #include "cable.h"
-#include "tag-manager.h"
 #include "simulator.h"
 
 int main (int argc, char *argv[])
@@ -45,7 +44,6 @@ int main (int argc, char *argv[])
 	/* destroy network */
 	delete hclient;
 	delete hserver;
-	TagManager::instance ()->destroy ();
 	Simulator::instance ()->destroy ();
 
 	return 0;
