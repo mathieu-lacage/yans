@@ -49,6 +49,9 @@ Fiber::~Fiber ()
 	fiber_context_delete (m_context);
 	m_context = (FiberContext *)0xdeadbeaf;
 	delete m_sem_dead;
+	m_sem_dead = (Semaphore *)0xdeadbeaf;
+	delete m_name;
+	m_name = (std::string *)0xdeadbeaf;
 }
 
 void 

@@ -51,6 +51,10 @@ EthernetNetworkInterface::~EthernetNetworkInterface ()
 	m_name = (std::string *)0xdeadbeaf;
 	m_cable->unref ();
 	m_cable = (Cable *)0xdeadbeaf;
+	delete m_arp;
+	m_arp = (Arp *)0xdeadbeaf;
+	delete m_arp_sender;
+	m_arp_sender = (EthernetArpMacSender *)0xdeadbeaf;
 }
 void 
 EthernetNetworkInterface::set_mac_address (MacAddress self)
