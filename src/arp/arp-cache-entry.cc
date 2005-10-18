@@ -90,6 +90,10 @@ ArpCacheEntry::is_expired (void)
 	case ArpCacheEntry::ALIVE:
 		timeout = m_arp->get_alive_timeout ();
 		break;
+	default:
+		assert (false);
+		/* NOTREACHED */
+		break;
 	}
 	double elapsed_since_last_event = now () - m_last_seen_time;
 	if (elapsed_since_last_event >= timeout) {

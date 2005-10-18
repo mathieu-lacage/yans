@@ -1,7 +1,7 @@
 RUN_TESTS=-DRUN_SELF_TESTS=1
 INCLUDES=-I./fiber -I./simulator -I./ -I./file -I./arp -I./common -I./ipv4 -I./ethernet
-CXXFLAGS=-Wall -Werror -O0 -gdwarf-2 $(RUN_TESTS) $(INCLUDES)
-CFLAGS=-Wall -Werror -O0 -gdwarf-2 $(RUN_TESTS) $(INCLUDES)
+CXXFLAGS=-Wall -Werror -O3 -gdwarf-2 $(RUN_TESTS) $(INCLUDES)
+CFLAGS=-Wall -Werror -O3 -gdwarf-2 $(RUN_TESTS) $(INCLUDES)
 
 MAIN_TEST_SOURCE=main-test
 MAIN_SIMPLE_EVENT_SOURCE=samples/main-simple-event.cc
