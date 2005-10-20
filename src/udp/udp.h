@@ -24,9 +24,6 @@ public:
  private:
 	static const uint8_t UDP_PROTOCOL;
 	Ipv4 *m_ipv4;
-	Ipv4Address m_destination;
-	uint16_t m_destination_port;
-	uint16_t m_source_port;
 };
 
 #endif /* UDP_H */
