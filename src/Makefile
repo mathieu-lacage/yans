@@ -7,18 +7,18 @@ MAIN_TEST_SOURCE=main-test
 MAIN_SIMPLE_EVENT_SOURCE=samples/main-simple-event.cc
 SOURCE= \
 	chunk-tcp.cc \
-	chunk-udp.cc \
 	chunk-data.cc \
 	mac-address.cc \
 	network-interface.cc \
 	loopback-interface.cc \
 	transport-protocol.cc \
-	udp.cc \
 	host.cc \
 	thread.cc \
 	process.cc \
 	socket-udp.cc \
 	test.cc \
+	udp/udp.cc \
+	udp/chunk-udp.cc \
 	common/buffer.cc \
 	common/chunk.cc \
 	common/tag-manager.cc \
