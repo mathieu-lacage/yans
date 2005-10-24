@@ -72,15 +72,35 @@ Ipv4::send (Packet *packet)
 void 
 Ipv4::register_transport_protocol (TransportProtocol *protocol)
 {
-	assert (m_protocols.find (protocol->get_protocol ()) == m_protocols.end ());
-	m_protocols[protocol->get_protocol ()] = protocol;
+	assert (lookup_protocol (protocol->get_protocol ()) == 0);
+	m_protocols.push_back (std::make_pair (protocol->get_protocol (), protocol));
+}
+
+TransportProtocol *
+Ipv4::lookup_protocol (uint8_t protocol)
+{
+	for (ProtocolsI i = m_protocols.begin (); i != m_protocols.end (); i++) {
+		if ((*i).first == protocol) {
+			return (*i).second;
+		}
+	}
+	return 0;
 }
 
 void 
 Ipv4::receive (Packet *packet, NetworkInterface *interface)
 {
-	//ChunkIpv4 *ip_header = static_cast <ChunkIpv4 *> (packet->remove_header ());
+	TagInIpv4 *tag = new TagInIpv4 (interface);
+	packet->add_tag (TagInIpv4::get_tag (), tag);
+	ChunkIpv4 *ip_header = static_cast <ChunkIpv4 *> (packet->remove_header ());
 	/* need to verify if this packet is targetted at _any_ of the
 	 * IPs for this host.
 	 */
+	tag->set_daddress (ip_header->get_destination ());
+	TransportProtocol *protocol = lookup_protocol (ip_header->get_protocol ());
+	if (protocol == 0) {
+		drop_packet (packet);
+		return;
+	}
+	protocol->receive (packet);
 }

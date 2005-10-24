@@ -1,5 +1,5 @@
 RUN_TESTS=-DRUN_SELF_TESTS=1
-INCLUDES=-I./fiber -I./simulator -I./ -I./file -I./arp -I./common -I./ipv4 -I./ethernet
+INCLUDES=-I./fiber -I./simulator -I./ -I./file -I./arp -I./common -I./ipv4 -I./ethernet -I./udp
 CXXFLAGS=-Wall -Werror -O3 -gdwarf-2 $(RUN_TESTS) $(INCLUDES)
 CFLAGS=-Wall -Werror -O3 -gdwarf-2 $(RUN_TESTS) $(INCLUDES)
 
@@ -17,13 +17,14 @@ SOURCE= \
 	process.cc \
 	socket-udp.cc \
 	test.cc \
-	udp/udp.cc \
-	udp/chunk-udp.cc \
 	common/buffer.cc \
 	common/chunk.cc \
 	common/tag-manager.cc \
 	common/packet.cc \
 	common/utils.cc \
+	udp/udp.cc \
+	ipv4/chunk-udp.cc \
+	ipv4/ipv4-endpoint.cc \
 	ipv4/chunk-ipv4.cc \
 	ipv4/ipv4-address.cc \
 	ipv4/tag-ipv4.cc \

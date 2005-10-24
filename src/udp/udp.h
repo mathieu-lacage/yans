@@ -9,21 +9,24 @@
 #include "ipv4-address.h"
 
 class Ipv4;
+class Ipv4EndPoints;
 
 class Udp : public TransportProtocol {
 public:
+	Udp ();
 	virtual ~Udp ();
 
 	void set_ipv4 (Ipv4 *ipv4);
 
-	void send (Packet *packet);
+	Ipv4EndPoints *get_end_points (void);
 
 	virtual uint8_t get_protocol (void);
 	virtual void receive (Packet *packet);
-
+	void send (Packet *packet);
  private:
 	static const uint8_t UDP_PROTOCOL;
 	Ipv4 *m_ipv4;
+	Ipv4EndPoints *m_end_points;
 };
 
 #endif /* UDP_H */

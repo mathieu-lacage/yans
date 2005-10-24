@@ -38,6 +38,7 @@ public:
 	void print (std::ostream *os);
 
 	static Ipv4Address get_zero (void);
+	static Ipv4Address get_any (void);
 	static Ipv4Address get_broadcast (void);
 	static Ipv4Address get_loopback (void);
 private:

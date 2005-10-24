@@ -5,12 +5,20 @@
 #include "packet.h"
 #include "ipv4.h"
 #include "tag-ipv4.h"
+#include "ipv4-endpoint.h"
 
 /* see http://www.iana.org/assignments/protocol-numbers */
 const uint8_t Udp::UDP_PROTOCOL = 17;
 
+Udp::Udp ()
+{
+	m_end_points = new Ipv4EndPoints ();
+}
+
 Udp::~Udp ()
-{}
+{
+	delete m_end_points;
+}
 
 void 
 Udp::set_ipv4 (Ipv4 *ipv4)
@@ -24,9 +32,26 @@ Udp::get_protocol (void)
 	return UDP_PROTOCOL;
 }
 
+Ipv4EndPoints *
+Udp::get_end_points (void)
+{
+	return m_end_points;
+}
+
 void 
 Udp::receive (Packet *packet)
 {
+	TagInIpv4 *tag = static_cast <TagInIpv4 *> (packet->get_tag (TagInIpv4::get_tag ()));
+	assert (tag != 0);
+	ChunkUdp *udp_chunk = static_cast <ChunkUdp *> (packet->remove_header ());
+	tag->set_dport (udp_chunk->get_destination ());
+	tag->set_sport (udp_chunk->get_source ());
+	Ipv4EndPoint *end_point = m_end_points->lookup (tag->get_daddress (), tag->get_dport ());
+	if (end_point == 0) {
+		packet->unref ();
+		return;
+	}
+	end_point->get_listener ()->receive (packet);
 }
 
 void

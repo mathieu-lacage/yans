@@ -25,7 +25,7 @@ public:
 	NetworkInterfaces const *get_interfaces (void);
 	NetworkInterface *lookup_interface (char const *name);
 	void add_interface (NetworkInterface *interface);
-
+	
 	SocketUdp *create_socket_udp (void);
 
 private:

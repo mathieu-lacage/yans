@@ -3,7 +3,6 @@
 #ifndef IPV4_H
 #define IPV4_H
 
-#include "sgi-hashmap.h"
 #include <vector>
 
 #include "ipv4-address.h"
@@ -32,13 +31,12 @@ public:
 private:
 	Ipv4Route *get_route (void);
 	void drop_packet (Packet *packet);
+	TransportProtocol *lookup_protocol (uint8_t id);
 
 	Host *m_host;
-	typedef Sgi::hash_map<uint8_t, TransportProtocol *> TransportProtocols;
-	typedef std::vector<NetworkInterface *> NetworkInterfaces;
-	typedef std::vector<NetworkInterface *>::const_iterator NetworkInterfacesCI;
-	TransportProtocols m_protocols;
-	NetworkInterfaces m_interfaces;
+	typedef std::vector<std::pair<uint8_t, TransportProtocol *> > Protocols;
+	typedef std::vector<std::pair<uint8_t, TransportProtocol *> >::iterator ProtocolsI;
+	Protocols m_protocols;
 	Ipv4Address m_send_destination;
 	uint8_t m_send_protocol;
 };

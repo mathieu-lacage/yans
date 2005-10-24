@@ -109,6 +109,11 @@ Ipv4Address::get_zero (void)
 	return m_zero;
 }
 Ipv4Address 
+Ipv4Address::get_any (void)
+{
+	return m_zero;
+}
+Ipv4Address 
 Ipv4Address::get_broadcast (void)
 {
 	return m_broadcast;

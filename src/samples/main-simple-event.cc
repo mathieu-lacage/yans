@@ -5,6 +5,8 @@
 #include "ipv4-route.h"
 #include "cable.h"
 #include "simulator.h"
+#include "udp-source.h"
+#include "udp-sink.h"
 
 int main (int argc, char *argv[])
 {
@@ -39,6 +41,17 @@ int main (int argc, char *argv[])
 							  eth_client);
 	hserver->get_routing_table ()->set_default_route (Ipv4Address ("192.168.0.3"),
 							  eth_server);
+
+	/* start applications. */
+	UdpSource *source = new UdpSource (hclient);
+	source->bind ();
+	UdpSink *sink = new UdpSink (hserver);
+	sink->bind ();
+
+	source->set_peer (sink->get_address (), sink->get_port ());
+	source->set_packet_interval (0.01);
+	source->set_packet_length (100);
+	source->start_at (1.0);
 
 
 	/* run simulation */
