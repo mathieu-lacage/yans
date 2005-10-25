@@ -9,7 +9,9 @@
 #define noTRACE_ARP 1
 
 #ifdef TRACE_ARP
-# define TRACE(format,...)
+#include <stdio.h>
+#include "simulator.h"
+# define TRACE(format,...) \
 	printf ("LLARP TRACE %f " format "\n", \
                 Simulator::instance ()->now_s (), ## __VA_ARGS__);
 #else /* TRACE_ARP */
@@ -20,7 +22,10 @@ ArpMacSender::~ArpMacSender ()
 {}
 
 Arp::Arp (NetworkInterface *interface)
-	: m_interface (interface)
+	: m_interface (interface),
+	  m_alive_timeout (1200.0),
+	  m_dead_timeout (100.0),
+	  m_wait_reply_timeout (1.0)
 {}
 Arp::~Arp ()
 {}
@@ -102,64 +107,70 @@ Arp::send_data (Packet *packet, Ipv4Address to)
 		assert (entry != 0);
 		if (entry->is_expired ()) {
 			if (entry->is_dead ()) {
-				TRACE ("dead entry for %d expired -- send arp request", to.get_host_order ());
+				TRACE ("dead entry for %u expired -- send arp request", to.get_host_order ());
 				entry->mark_wait_reply (packet);
 				send_arp_request (to);
 			} else if (entry->is_alive ()) {
-				TRACE ("alive entry for %d expired -- send arp request", to.get_host_order ());
+				TRACE ("alive entry for %u expired -- send arp request", to.get_host_order ());
 				entry->mark_wait_reply (packet);
 				send_arp_request (to);
 			} else if (entry->is_wait_reply ()) {
-				TRACE ("wait reply for %d expired -- drop", to.get_host_order ());
+				TRACE ("wait reply for %u expired -- drop", to.get_host_order ());
 				drop_dead_packet (entry->get_waiting_packet ());
 				entry->mark_dead ();
 			}
 		} else {
 			if (entry->is_dead ()) {
-				TRACE ("dead entry for %d valid -- drop", to.get_host_order ());
+				TRACE ("dead entry for %u valid -- drop", to.get_host_order ());
 				drop_dead_packet (packet);
 			} else if (entry->is_alive ()) {
-				TRACE ("alive entry for %d valid -- send", to.get_host_order ());
+				TRACE ("alive entry for %u valid -- send", to.get_host_order ());
 				m_sender->send_data (packet, entry->get_mac_address ());
 			} else if (entry->is_wait_reply ()) {
-				TRACE ("wait reply for %d valid -- drop previous", to.get_host_order ());
+				TRACE ("wait reply for %u valid -- drop previous", to.get_host_order ());
 				Packet *previous = entry->update_wait_reply (packet);
 				drop_dead_packet (previous);
 			}
 		}
 	} else {
 		// This is our first attempt to transmit data to this destination.
-		TRACE ("no entry for %d -- send arp request", to.get_host_order ());
+		TRACE ("no entry for %u -- send arp request", to.get_host_order ());
 		ArpCacheEntry *entry = new ArpCacheEntry (this);
 		entry->mark_wait_reply (packet);
 		m_arp_cache[to] = entry;
 		send_arp_request (to);
 	}
 }
-
 void 
 Arp::recv_arp (Packet *packet)
 {
 	ChunkArp *arp = static_cast <ChunkArp *> (packet->remove_header ());
 	if (arp->is_request () && 
 	    arp->get_destination_ipv4_address () == m_interface->get_ipv4_address ()) {
+		TRACE ("got request from %u -- send reply", arp->get_source_ipv4_address ().get_host_order ());
 		send_arp_reply (arp->get_source_ipv4_address (),
 				arp->get_source_hardware_address ());
 	} else if (arp->is_reply () &&
 		   arp->get_destination_ipv4_address ().is_equal (m_interface->get_ipv4_address ()) &&
 		   arp->get_destination_hardware_address ().is_equal (m_interface->get_mac_address ())) {
-		Ipv4Address from = arp->get_destination_ipv4_address ();
+		Ipv4Address from = arp->get_source_ipv4_address ();
 		if (m_arp_cache.find (from) != m_arp_cache.end ()) {
 			ArpCacheEntry *entry = m_arp_cache[from];
 			assert (entry != 0);
 			if (entry->is_wait_reply ()) {
+				TRACE ("got reply from %u for waiting entry -- flush",
+				       arp->get_source_ipv4_address ().get_host_order ());
 				MacAddress from_mac = arp->get_source_hardware_address ();
 				m_sender->send_data (entry->get_waiting_packet (), from_mac);
 				entry->mark_alive (from_mac);
 			} else {
 				// ignore this reply which might well be an attempt 
 				// at poisening my arp cache.
+				TRACE ("got reply from %u for non-waiting entry -- drop",
+				       arp->get_source_ipv4_address ().get_host_order ());
 			}
+		} else {
+			TRACE ("got reply for unknown entry -- drop");
 		}
 	}
 	packet->unref ();

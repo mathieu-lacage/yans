@@ -105,7 +105,7 @@ ArpCacheEntry::is_expired (void)
 void 
 ArpCacheEntry::update_seen (void)
 {
-	m_last_seen_time = now();
+	m_last_seen_time = now ();
 }
 double 
 ArpCacheEntry::now (void)
