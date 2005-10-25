@@ -16,8 +16,8 @@ utils_hton_32 (uint32_t v)
 	uint8_t array[4];
 	array[0] = v & 0xff;
 	array[1] = (v >> 8) & 0xff;
-	array[1] = (v >> 16) & 0xff;
-	array[1] = (v >> 24) & 0xff;
+	array[2] = (v >> 16) & 0xff;
+	array[3] = (v >> 24) & 0xff;
 	return *((uint32_t *)array);
 }
 uint16_t 
@@ -43,29 +43,35 @@ utils_ntoh_32 (uint32_t v)
 
 #define ASCII_DOT (0x2e)
 #define ASCII_ZERO (0x30)
+#define ASCII_A (0x41)
+#define ASCII_Z (0x5a)
+#define ASCII_a (0x61)
+#define ASCII_z (0x7a)
+#define ASCII_MINUS (0x2d)
+
 
 uint32_t 
 ascii_to_ipv4_host (char const *address)
 {
 	uint32_t host = 0;
-	while (*address != 0) {
+	while (true) {
 		uint8_t byte = 0;
-		while (*address != ASCII_DOT ) {
+		while (*address != ASCII_DOT &&
+		       *address != 0) {
 			byte *= 10;
-			byte |= *address - ASCII_ZERO;
+			byte += *address - ASCII_ZERO;
 			address++;
 		}
 		host <<= 8;
 		host |= byte;
+		if (*address == 0) {
+			break;
+		}
 		address++;
 	}
 	return host;
 }
 
-#define ASCII_A (0x41)
-#define ASCII_Z (0x5a)
-#define ASCII_a (0x61)
-#define ASCII_z (0x7a)
 
 char
 ascii_to_low_case (char c)
@@ -78,8 +84,6 @@ ascii_to_low_case (char c)
 		return c;
 	}
 }
-
-#define ASCII_MINUS (0x2d)
 
 void 
 ascii_to_mac_network (char const *str, uint8_t address[6])
@@ -115,3 +119,48 @@ calculate_checksum (uint8_t *buffer, uint16_t size)
 	return checksum;
 
 }
+
+
+#ifdef RUN_SELF_TESTS
+#include "test.h"
+UtilsTest::UtilsTest (TestManager *manager)
+	: Test (manager)
+{}
+UtilsTest::~UtilsTest ()
+{}
+
+bool
+UtilsTest::test_ipv4_ascii_to_host (char const *str, uint32_t expected)
+{
+	if (ascii_to_ipv4_host (str) != expected) {
+		failure () << "Utils ascii to host --"
+			   << " for: \"" << str << "\""
+			   << " expected: " << expected
+			   << " got: " << ascii_to_ipv4_host (str)
+			   << std::endl;
+		return false;
+	}
+	return true;
+}
+
+#define TEST_IPV4_ASCII_TO_HOST(a,b)  \
+if (!test_ipv4_ascii_to_host (a,b)) { \
+	ok = false;                   \
+}
+
+bool 
+UtilsTest::run_tests (void)
+{
+	bool ok = true;
+	TEST_IPV4_ASCII_TO_HOST ("255.255.255.255", 0xffffffff);
+	TEST_IPV4_ASCII_TO_HOST ("255.255.255.0", 0xffffff00);
+	TEST_IPV4_ASCII_TO_HOST ("255.255.255.00", 0xffffff00);
+	TEST_IPV4_ASCII_TO_HOST ("255.255.255.000", 0xffffff00);
+	TEST_IPV4_ASCII_TO_HOST ("255.255.255.0000", 0xffffff00);
+	TEST_IPV4_ASCII_TO_HOST ("255.255.0.255", 0xffff00ff);
+	TEST_IPV4_ASCII_TO_HOST ("192.168.0.1", 0xc0a80001);
+	TEST_IPV4_ASCII_TO_HOST ("0.168.0.1", 0x00a80001);
+	return ok;
+}
+
+#endif /* RUN_SELF_TESTS */

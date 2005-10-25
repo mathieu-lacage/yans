@@ -14,4 +14,17 @@ void ascii_to_mac_network (char const *str, uint8_t address[6]);
 
 uint16_t calculate_checksum (uint8_t *buffer, uint16_t size);
 
+#ifdef RUN_SELF_TESTS
+#include "test.h"
+class UtilsTest : public Test {
+public:
+	UtilsTest (TestManager *manager);
+	virtual ~UtilsTest ();
+
+	virtual bool run_tests (void);
+private:
+	bool test_ipv4_ascii_to_host (char const *str, uint32_t expected);
+};
+#endif /* RUN_SELF_TESTS */
+
 #endif /* UTILS_H */
