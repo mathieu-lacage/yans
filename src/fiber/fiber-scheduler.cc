@@ -4,7 +4,7 @@
 #include "fiber.h"
 #include "fiber-context.h"
 
-#define SCHED_DEBUG 1
+#define noSCHED_DEBUG 1
 
 #ifdef SCHED_DEBUG
 #  include <stdio.h>
