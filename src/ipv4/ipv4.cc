@@ -50,7 +50,7 @@ Ipv4::send (Packet *packet)
 	Route const*route = tag->get_route ();
 	assert (route != 0);
 	NetworkInterface *out_interface = route->get_interface ();
-	ip_header->set_source (out_interface->get_ipv4_address ());
+	ip_header->set_source (tag->get_saddress ());
 	ip_header->set_destination (tag->get_daddress ());
 	ip_header->set_protocol (m_send_protocol);
 

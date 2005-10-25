@@ -26,7 +26,7 @@ public:
 	NetworkInterface *lookup_interface (char const *name);
 	void add_interface (NetworkInterface *interface);
 	
-	SocketUdp *create_socket_udp (void);
+	Udp *get_udp (void);
 
 private:
 	typedef std::vector<NetworkInterface *>::iterator NetworkInterfacesI;

@@ -24,6 +24,11 @@ TagOutIpv4::get_daddress (void)
 {
 	return m_daddress;
 }
+Ipv4Address
+TagOutIpv4::get_saddress (void)
+{
+	return m_saddress;
+}
 void 
 TagOutIpv4::set_dport (uint16_t dport)
 {
@@ -38,6 +43,11 @@ void
 TagOutIpv4::set_daddress (Ipv4Address daddress)
 {
 	m_daddress = daddress;
+}
+void 
+TagOutIpv4::set_saddress (Ipv4Address saddress)
+{
+	m_saddress = saddress;
 }
 Route const *
 TagOutIpv4::get_route (void)

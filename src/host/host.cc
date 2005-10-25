@@ -5,7 +5,6 @@
 #include "ipv4.h"
 #include "ipv4-route.h"
 #include "loopback-interface.h"
-#include "socket-udp.h"
 #include "udp.h"
 
 Host::Host (char const *path)
@@ -69,8 +68,8 @@ Host::add_interface (NetworkInterface *interface)
 	interface->set_ipv4_handler (m_ipv4);
 }
 
-SocketUdp *
-Host::create_socket_udp (void)
+Udp *
+Host::get_udp (void)
 {
-	return new SocketUdp (this, m_udp);
+	return m_udp;
 }

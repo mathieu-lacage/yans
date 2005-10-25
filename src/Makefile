@@ -1,28 +1,30 @@
 RUN_TESTS=-DRUN_SELF_TESTS=1
-INCLUDES=-I./fiber -I./simulator -I./ -I./file -I./arp -I./common -I./ipv4 -I./ethernet -I./udp
+INCLUDES=-I./fiber -I./simulator -I./ -I./arp -I./common -I./ipv4 -I./ethernet -I./test -I./host
 CXXFLAGS=-Wall -Werror -O3 -gdwarf-2 $(RUN_TESTS) $(INCLUDES)
 CFLAGS=-Wall -Werror -O3 -gdwarf-2 $(RUN_TESTS) $(INCLUDES)
 
-MAIN_TEST_SOURCE=main-test
+MAIN_TEST_SOURCE=test/main-test.cc
 MAIN_SIMPLE_EVENT_SOURCE=samples/main-simple-event.cc
 SOURCE= \
-	chunk-tcp.cc \
-	chunk-data.cc \
-	mac-address.cc \
-	network-interface.cc \
-	loopback-interface.cc \
-	transport-protocol.cc \
-	host.cc \
-	thread.cc \
-	process.cc \
-	socket-udp.cc \
-	test.cc \
+	test/test.cc \
+	host/mac-address.cc \
+	host/network-interface.cc \
+	host/loopback-interface.cc \
+	host/transport-protocol.cc \
+	host/host.cc \
+	os-model/chunk-data.cc \
+	os-model/thread.cc \
+	os-model/process.cc \
+	os-model/socket-udp.cc \
+	os-model/read-file.cc \
+	os-model/write-file.cc \
 	common/buffer.cc \
 	common/chunk.cc \
 	common/tag-manager.cc \
 	common/packet.cc \
 	common/utils.cc \
-	udp/udp.cc \
+	ipv4/udp.cc \
+	ipv4/chunk-tcp.cc \
 	ipv4/chunk-udp.cc \
 	ipv4/ipv4-endpoint.cc \
 	ipv4/chunk-ipv4.cc \
@@ -30,8 +32,6 @@ SOURCE= \
 	ipv4/tag-ipv4.cc \
 	ipv4/ipv4-route.cc \
 	ipv4/ipv4.cc \
-	file/read-file.cc \
-	file/write-file.cc \
 	fiber/fiber-context-x86.c \
 	fiber/fiber.cc \
 	fiber/fiber-scheduler.cc \
@@ -54,9 +54,9 @@ OBJFILES=$(addsuffix .o, $(basename $(SOURCE)))
 OBJ_MAIN_TEST=$(addsuffix .o, $(basename $(MAIN_TEST_SOURCE)))
 OBJ_MAIN_SIMPLE_EVENT=$(addsuffix .o, $(basename $(MAIN_SIMPLE_EVENT_SOURCE)))
 
-all: main-test samples/main-simple-event
+all: test/main-test samples/main-simple-event
 
-main-test: $(OBJFILES) $(OBJ_MAIN_TEST)
+test/main-test: $(OBJFILES) $(OBJ_MAIN_TEST)
 	$(CXX) $(LDFLAGS) -o $@ $^
 
 samples/main-simple-event: $(OBJFILES) $(OBJ_MAIN_SIMPLE_EVENT)
