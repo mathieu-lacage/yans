@@ -22,7 +22,7 @@ ChunkMacLlcSnap::set_destination (MacAddress dest)
 void 
 ChunkMacLlcSnap::set_length (uint16_t length)
 {
-	assert (m_length <= 0x05dc);
+	assert (length <= 0x05dc);
 	m_length = length;
 }
 uint16_t 
