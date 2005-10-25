@@ -7,6 +7,9 @@ MAIN_TEST_SOURCE=test/main-test.cc
 MAIN_SIMPLE_EVENT_SOURCE=samples/main-simple-event.cc
 SOURCE= \
 	test/test.cc \
+	samples/chunk-fake-data.cc \
+	samples/udp-source.cc \
+	samples/udp-sink.cc \
 	host/mac-address.cc \
 	host/network-interface.cc \
 	host/loopback-interface.cc \

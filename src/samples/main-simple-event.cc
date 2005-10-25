@@ -45,14 +45,13 @@ int main (int argc, char *argv[])
 	/* start applications. */
 	UdpSource *source = new UdpSource (hclient);
 	source->bind (Ipv4Address ("192.168.0.3"), 1025);
-	UdpSink *sink = new UdpSink (hserver);
-	sink->bind (Ipv4Address ("192.168.0.2"), 1026);
-
 	source->set_peer (Ipv4Address ("192.168.0.2"), 1026);
 	source->set_packet_interval (0.01);
-	source->set_packet_length (100);
+	source->set_packet_size (100);
 	source->start_at (1.0);
 
+	UdpSink *sink = new UdpSink (hserver);
+	sink->bind (Ipv4Address ("192.168.0.2"), 1026);
 
 	/* run simulation */
 	Simulator::instance ()->run ();
