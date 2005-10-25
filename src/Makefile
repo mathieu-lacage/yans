@@ -70,4 +70,6 @@ samples/main-simple-event: $(OBJFILES) $(OBJ_MAIN_SIMPLE_EVENT)
 
 
 clean:
-	rm -f $(OBJFILES) *~ test;
+	rm -f $(OBJFILES) test/main-test samples/main-simple-event \
+	*~ arp/*~ ethernet/*~ simulator/*~ fiber/*~ ipv4/*~ \
+	common/*~ os-model/*~ host/*~ samples/*~ test/*~ ;
