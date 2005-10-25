@@ -205,16 +205,18 @@ ChunkIpv4::print (std::ostream *os)
 {
 	// ipv4, right ?
 	assert ((m_ver_ihl & 0x0f) == 4);
-	*os << "ipv4 --";
-	*os << " ihl: " << ((m_ver_ihl >> 4) & 0x0f);
-	*os << " tos: " << m_tos;
-	*os << " total length: " << m_total_length;
-	*os << " id: " << m_id;
-	*os << " flags: " << (m_fragment_offset & 0x7);
-	*os << " frag offset: " << (m_fragment_offset>>3);
-	*os << " ttl: " << m_ttl;
-	*os << " protocol: " << m_protocol;
-	*os << " checksum: " << m_checksum;
-	*os << " source: " << m_source;
-	*os << " destination: " << m_destination;
+	*os << "(ipv4)"
+	    << " ihl: " << ((m_ver_ihl >> 4) & 0x0f)
+	    << " tos: " << (uint32_t)m_tos
+	    << " total length: " << m_total_length
+	    << " id: " << m_id
+	    << " flags: " << (m_fragment_offset & 0x7)
+	    << " frag offset: " << (m_fragment_offset>>3)
+	    << " ttl: " << (uint32_t)m_ttl
+	    << " protocol: " << (uint32_t)m_protocol
+	    << " checksum: " << m_checksum
+	    << " source: ";
+	Ipv4Address (utils_ntoh_32 (m_source)).print (os);
+	*os << " destination: ";
+	Ipv4Address (utils_ntoh_32 (m_destination)).print (os);
 }

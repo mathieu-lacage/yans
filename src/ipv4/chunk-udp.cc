@@ -80,10 +80,10 @@ ChunkUdp::deserialize (ReadBuffer *buffer)
 void 
 ChunkUdp::print (std::ostream *os)
 {
-	*os << "udp -- ";
-	*os << " port source: " << m_source_port;
-	*os << " post destination: " << m_destination_port;
-	*os << " length: " << m_udp_length;
+	*os << "(udp)"
+	    << " port source: " << m_source_port
+	    << " post destination: " << m_destination_port
+	    << " length: " << m_udp_length;
 }
 
 

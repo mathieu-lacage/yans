@@ -45,6 +45,6 @@ ChunkFakeData::deserialize (ReadBuffer *buffer)
 void 
 ChunkFakeData::print (std::ostream *os)
 {
-	*os << "fake data -- ";
-	*os << " len: " << m_len;
+	*os << "(fake data)"
+	    << " len: " << m_len;
 }
