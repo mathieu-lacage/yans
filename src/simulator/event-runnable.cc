@@ -68,17 +68,20 @@ EventRunnable::stop (void)
 	m_stop = true;
 	m_wait->up ();
 }
+#include "stdio.h"
 void 
 EventRunnable::run (void)
 {
-	Event *ev = m_event_heap->peek_next ();
-	uint64_t now = m_event_heap->peek_next_time_us ();
 	while (!m_stop) {
-		while (ev != 0 && !m_stop) {
-			m_clock->update_current_us (now);
-			ev->notify ();
-			ev = m_event_heap->peek_next ();
-			now = m_event_heap->peek_next_time_us ();
+		Event *next_ev = m_event_heap->peek_next ();
+		uint64_t next_now = m_event_heap->peek_next_time_us ();
+		while (next_ev != 0 && !m_stop) {
+			m_event_heap->remove_next ();
+			m_clock->update_current_us (next_now);
+			next_ev->notify ();
+			m_wait->down ();
+			next_ev = m_event_heap->peek_next ();
+			next_now = m_event_heap->peek_next_time_us ();
 			FiberScheduler::instance ()->schedule ();
 		}
 		m_wait->down ();

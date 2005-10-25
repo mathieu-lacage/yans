@@ -18,6 +18,7 @@ EventHeap::insert_at_us (Event *event, uint64_t time)
 			break;
 		}
 	}
+	m_events.push_back (std::make_pair (event, time));
 }
 Event *
 EventHeap::peek_next (void)
