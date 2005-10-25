@@ -7,6 +7,7 @@
 #include "simulator.h"
 #include "udp-source.h"
 #include "udp-sink.h"
+#include "tracer.h"
 
 int main (int argc, char *argv[])
 {
@@ -33,6 +34,8 @@ int main (int argc, char *argv[])
 	Host *hclient, *hserver;
 	hclient = new Host ("client");
 	hserver = new Host ("server");
+	hclient->get_tracer ()->enable_all ();
+	hserver->get_tracer ()->enable_all ();
 	hclient->add_interface (eth_client);
 	hserver->add_interface (eth_server);
 
@@ -49,6 +52,7 @@ int main (int argc, char *argv[])
 	source->set_packet_interval (0.01);
 	source->set_packet_size (100);
 	source->start_at (1.0);
+	source->stop_at (10.0);
 
 	UdpSink *sink = new UdpSink (hserver);
 	sink->bind (Ipv4Address ("192.168.0.2"), 1026);

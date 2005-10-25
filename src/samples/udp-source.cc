@@ -9,6 +9,7 @@
 #include "udp.h"
 #include "simulator.h"
 #include "tag-ipv4.h"
+#include "tracer.h"
 
 class UdpSourceEvent : public Event {
 public:
@@ -121,5 +122,6 @@ UdpSource::send_next_packet (void)
 	tag->set_saddress (m_end_point->get_address ());
 	packet->add_tag (TagOutIpv4::get_tag (), tag);
 	/* send packet. */
+	m_host->get_tracer ()->trace_tx_app (packet);
 	m_host->get_udp ()->send (packet);
 }
