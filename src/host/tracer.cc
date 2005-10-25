@@ -36,6 +36,16 @@ Tracer::trace_tx_ipv4 (Packet *packet)
 	}
 }
 void 
+Tracer::trace_tx_mac (Packet *packet)
+{
+	if (m_enable_all || m_enable_mac) {
+		std::cout << Simulator::instance ()->now_s ()
+			  << " tx ";
+		packet->print (&std::cout);
+		std::cout << std::endl;
+	}
+}
+void 
 Tracer::trace_rx_app (Packet *packet)
 {
 	if (m_enable_all || m_enable_app) {
@@ -65,6 +75,16 @@ Tracer::trace_rx_ipv4 (Packet *packet)
 		std::cout << std::endl;
 	}
 }
+void 
+Tracer::trace_rx_mac (Packet *packet)
+{
+	if (m_enable_all || m_enable_mac) {
+		std::cout << Simulator::instance ()->now_s ()
+			  << " rx ";
+		packet->print (&std::cout);
+		std::cout << std::endl;
+	}
+}
 
 void 
 Tracer::enable_all (void)
@@ -81,6 +101,7 @@ Tracer::Tracer (WriteFile *file)
 	  m_enable_app (false),
 	  m_enable_udp (false),
 	  m_enable_ipv4 (false),
+	  m_enable_mac (false),
 	  m_file (file)
 {}
 Tracer::~Tracer ()

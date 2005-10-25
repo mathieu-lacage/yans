@@ -7,6 +7,8 @@
 #include "chunk-mac-crc.h"
 #include "packet.h"
 #include "ipv4.h"
+#include "host.h"
+#include "tracer.h"
 
 class EthernetArpMacSender : public ArpMacSender {
 public:
@@ -55,6 +57,12 @@ EthernetNetworkInterface::~EthernetNetworkInterface ()
 	m_arp = (Arp *)0xdeadbeaf;
 	delete m_arp_sender;
 	m_arp_sender = (EthernetArpMacSender *)0xdeadbeaf;
+}
+
+void 
+EthernetNetworkInterface::set_host (Host *host)
+{
+	m_host = host;
 }
 void 
 EthernetNetworkInterface::set_mac_address (MacAddress self)
@@ -132,6 +140,7 @@ EthernetNetworkInterface::connect_to (Cable *cable)
 void 
 EthernetNetworkInterface::recv (Packet *packet)
 {
+	m_host->get_tracer ()->trace_rx_mac (packet);
 	ChunkMacLlcSnap *header;
 	ChunkMacCrc *trailer;
 	header = static_cast <ChunkMacLlcSnap *> (packet->remove_header ());
@@ -146,7 +155,6 @@ EthernetNetworkInterface::recv (Packet *packet)
 	}
 }
 
-
 void 
 EthernetNetworkInterface::send_data (Packet *packet, MacAddress dest)
 {
@@ -158,6 +166,7 @@ EthernetNetworkInterface::send_data (Packet *packet, MacAddress dest)
 	packet->add_header (header);
 	ChunkMacCrc *trailer = new ChunkMacCrc ();
 	packet->add_trailer (trailer);
+	m_host->get_tracer ()->trace_tx_mac (packet);
 	m_cable->send (packet, this);
 }
 
@@ -172,5 +181,6 @@ EthernetNetworkInterface::send_arp (Packet *packet, MacAddress dest)
 	packet->add_header (header);
 	ChunkMacCrc *trailer = new ChunkMacCrc ();
 	packet->add_trailer (trailer);
+	m_host->get_tracer ()->trace_tx_mac (packet);
 	m_cable->send (packet, this);
 }

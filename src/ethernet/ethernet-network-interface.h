@@ -14,6 +14,8 @@ public:
 	EthernetNetworkInterface ();
 	virtual ~EthernetNetworkInterface ();
 
+	virtual void set_host (Host *host);
+
 	virtual void set_mac_address (MacAddress self);
 	virtual MacAddress get_mac_address (void);
 	virtual std::string const *get_name (void);
@@ -54,6 +56,7 @@ public:
 	std::string *m_name;
 	bool m_up;
 	Cable *m_cable;
+	Host *m_host;
 };
 
 

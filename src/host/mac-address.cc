@@ -111,19 +111,19 @@ void
 MacAddress::print (std::ostream *os) const
 {
 	os->setf (std::ios::hex, std::ios::basefield);
-	*os << m_address[0] << "-"
-	    << m_address[1] << "-"
-	    << m_address[2] << "-"
-	    << m_address[3] << "-"
-	    << m_address[4] << "-"
-	    << m_address[5];
+	*os << (uint32_t)m_address[5] << ":"
+	    << (uint32_t)m_address[4] << ":"
+	    << (uint32_t)m_address[3] << ":"
+	    << (uint32_t)m_address[2] << ":"
+	    << (uint32_t)m_address[1] << ":"
+	    << (uint32_t)m_address[0];
 	os->setf (std::ios::dec, std::ios::basefield);
 }
 
 
 
 MacAddress
-MacAddress::m_broadcast = MacAddress ("ff-ff-ff-ff-ff-ff");
+MacAddress::m_broadcast = MacAddress ("ff:ff:ff:ff:ff:ff");
 
 MacAddress
 MacAddress::get_broadcast (void)

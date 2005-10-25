@@ -70,6 +70,7 @@ Host::add_interface (NetworkInterface *interface)
 {
 	m_interfaces.push_back (interface);
 	interface->set_ipv4_handler (m_ipv4);
+	interface->set_host (this);
 }
 
 Udp *

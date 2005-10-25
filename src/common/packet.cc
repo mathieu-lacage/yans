@@ -150,11 +150,9 @@ Packet::print (std::ostream *os)
 	}
 	Trailers::size_type l = 0;
 	for (TrailersCI j = m_trailers.begin (); j != m_trailers.end (); j++) {
+		*os << " | ";
 		(*j)->print (os);
 		l++;
-		if (l < m_trailers.size ()) {
-			*os << " | ";
-		}
 	}
 }
 

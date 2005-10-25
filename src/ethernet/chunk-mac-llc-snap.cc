@@ -99,7 +99,7 @@ ChunkMacLlcSnap::deserialize (ReadBuffer *buffer)
 void 
 ChunkMacLlcSnap::print (std::ostream *os)
 {
-	*os << "mac --"
+	*os << "(mac)"
 	    << " source: ";
 	m_source.print (os);
 	*os << " dest: ";

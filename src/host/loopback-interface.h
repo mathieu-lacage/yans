@@ -13,6 +13,8 @@ public:
 	LoopbackInterface ();
 	virtual ~LoopbackInterface ();
 
+	virtual void set_host (Host *host);
+
 	virtual uint16_t get_mtu (void);
 	virtual std::string const *get_name (void);
 	virtual void set_mac_address (MacAddress self);

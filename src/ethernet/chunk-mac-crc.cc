@@ -40,5 +40,5 @@ ChunkMacCrc::deserialize (ReadBuffer *buffer)
 void 
 ChunkMacCrc::print (std::ostream *os)
 {
-	*os << "crc";
+	*os << "(mac) crc";
 }

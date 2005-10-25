@@ -10,6 +10,10 @@ LoopbackInterface::LoopbackInterface ()
 LoopbackInterface::~LoopbackInterface ()
 {}
 
+void 
+LoopbackInterface::set_host (Host *host)
+{}
+
 uint16_t 
 LoopbackInterface::get_mtu (void)
 {

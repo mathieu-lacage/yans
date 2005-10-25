@@ -111,7 +111,7 @@ ChunkArp::deserialize (ReadBuffer *buffer)
 void 
 ChunkArp::print (std::ostream *os)
 {
-	*os << "ipv4 --";
+	*os << "(arp)";
 	if (is_request ()) {
 		*os << " source mac: ";
 		m_mac_source.print (os);
