@@ -6,6 +6,8 @@
 #include "ipv4.h"
 #include "tag-ipv4.h"
 #include "ipv4-endpoint.h"
+#include "tracer.h"
+#include "host.h"
 
 /* see http://www.iana.org/assignments/protocol-numbers */
 const uint8_t Udp::UDP_PROTOCOL = 17;
@@ -20,6 +22,11 @@ Udp::~Udp ()
 	delete m_end_points;
 }
 
+void 
+Udp::set_host (Host *host)
+{
+	m_host = host;
+}
 void 
 Udp::set_ipv4 (Ipv4 *ipv4)
 {
@@ -41,6 +48,7 @@ Udp::get_end_points (void)
 void 
 Udp::receive (Packet *packet)
 {
+	m_host->get_tracer ()->trace_rx_udp (packet);
 	TagInIpv4 *tag = static_cast <TagInIpv4 *> (packet->get_tag (TagInIpv4::get_tag ()));
 	assert (tag != 0);
 	ChunkUdp *udp_chunk = static_cast <ChunkUdp *> (packet->remove_header ());
@@ -67,6 +75,7 @@ Udp::send (Packet *packet)
 	packet->add_header (udp_chunk);
 
 	m_ipv4->set_protocol (UDP_PROTOCOL);
+	m_host->get_tracer ()->trace_tx_udp (packet);
 	m_ipv4->send (packet);
 
 	// XXX: if we wanted to, we could generate the udp checksum here.

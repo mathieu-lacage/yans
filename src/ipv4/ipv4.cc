@@ -8,6 +8,7 @@
 #include "ipv4-route.h"
 #include "host.h"
 #include "tag-ipv4.h"
+#include "tracer.h"
 
 Ipv4::Ipv4 ()
 {}
@@ -61,6 +62,7 @@ Ipv4::send (Packet *packet)
 		// XXX
 		assert (false);
 	} else {
+		m_host->get_tracer ()->trace_tx_ipv4 (packet);
 		if (route->is_gateway ()) {
 			out_interface->send (packet, route->get_gateway ());
 		} else {
@@ -90,6 +92,7 @@ Ipv4::lookup_protocol (uint8_t protocol)
 void 
 Ipv4::receive (Packet *packet, NetworkInterface *interface)
 {
+	m_host->get_tracer ()->trace_rx_ipv4 (packet);
 	TagInIpv4 *tag = new TagInIpv4 (interface);
 	packet->add_tag (TagInIpv4::get_tag (), tag);
 	ChunkIpv4 *ip_header = static_cast <ChunkIpv4 *> (packet->remove_header ());

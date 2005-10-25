@@ -6,13 +6,16 @@
 #include "ipv4-route.h"
 #include "loopback-interface.h"
 #include "udp.h"
+#include "tracer.h"
 
 Host::Host (char const *path)
 {
 	m_ipv4 = new Ipv4 ();
 	m_udp = new Udp ();
-	m_udp->set_ipv4 (m_ipv4);
+	m_ipv4->set_host (this);
 	m_ipv4->register_transport_protocol (m_udp);
+	m_udp->set_host (this);
+	m_udp->set_ipv4 (m_ipv4);
 	m_routing_table = new Ipv4Route ();
 	LoopbackInterface *loopback = new LoopbackInterface ();
 	add_interface (loopback);
@@ -22,6 +25,7 @@ Host::Host (char const *path)
 	m_routing_table->add_host_route_to (Ipv4Address::get_loopback (),
 					    loopback);
 	m_root = new std::string (path);
+	m_tracer = new Tracer (0);
 }
 
 Host::~Host ()
@@ -72,4 +76,10 @@ Udp *
 Host::get_udp (void)
 {
 	return m_udp;
+}
+
+Tracer *
+Host::get_tracer (void)
+{
+	return m_tracer;
 }

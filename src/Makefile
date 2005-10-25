@@ -15,6 +15,7 @@ SOURCE= \
 	host/loopback-interface.cc \
 	host/transport-protocol.cc \
 	host/host.cc \
+	host/tracer.cc \
 	os-model/chunk-data.cc \
 	os-model/thread.cc \
 	os-model/process.cc \

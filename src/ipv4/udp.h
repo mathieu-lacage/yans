@@ -10,12 +10,14 @@
 
 class Ipv4;
 class Ipv4EndPoints;
+class Host;
 
 class Udp : public TransportProtocol {
 public:
 	Udp ();
 	virtual ~Udp ();
 
+	void set_host (Host *host);
 	void set_ipv4 (Ipv4 *ipv4);
 
 	Ipv4EndPoints *get_end_points (void);
@@ -26,6 +28,7 @@ public:
  private:
 	static const uint8_t UDP_PROTOCOL;
 	Ipv4 *m_ipv4;
+	Host *m_host;
 	Ipv4EndPoints *m_end_points;
 };
 
