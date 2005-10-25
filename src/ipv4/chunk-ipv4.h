@@ -55,6 +55,7 @@ private:
 	uint16_t m_checksum;
 	uint32_t m_source;
 	uint32_t m_destination;
+	uint16_t m_payload_size;
 };
 
 

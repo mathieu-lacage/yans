@@ -54,6 +54,7 @@ Ipv4::send (Packet *packet)
 	ip_header->set_source (tag->get_saddress ());
 	ip_header->set_destination (tag->get_daddress ());
 	ip_header->set_protocol (m_send_protocol);
+	ip_header->set_payload_size (packet->get_size ());
 
 	packet->add_header (ip_header);
 

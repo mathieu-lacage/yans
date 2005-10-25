@@ -2,13 +2,15 @@
 
 #include "tracer.h"
 #include "packet.h"
+#include "simulator.h"
 #include <iostream>
 
 void 
 Tracer::trace_tx_app (Packet *packet)
 {
 	if (m_enable_all || m_enable_app) {
-		std::cout << "tx ";
+		std::cout << Simulator::instance ()->now_s ()
+			  << " tx ";
 		packet->print (&std::cout);
 		std::cout << std::endl;
 	}
@@ -17,7 +19,8 @@ void
 Tracer::trace_tx_udp (Packet *packet)
 {
 	if (m_enable_all || m_enable_udp) {
-		std::cout << "tx ";
+		std::cout << Simulator::instance ()->now_s ()
+			  << " tx ";
 		packet->print (&std::cout);
 		std::cout << std::endl;
 	}
@@ -26,7 +29,8 @@ void
 Tracer::trace_tx_ipv4 (Packet *packet)
 {
 	if (m_enable_all || m_enable_ipv4) {
-		std::cout << "tx ";
+		std::cout << Simulator::instance ()->now_s ()
+			  << " tx ";
 		packet->print (&std::cout);
 		std::cout << std::endl;
 	}
@@ -35,7 +39,8 @@ void
 Tracer::trace_rx_app (Packet *packet)
 {
 	if (m_enable_all || m_enable_app) {
-		std::cout << "rx ";
+		std::cout << Simulator::instance ()->now_s ()
+			  << " rx ";
 		packet->print (&std::cout);
 		std::cout << std::endl;
 	}
@@ -44,7 +49,8 @@ void
 Tracer::trace_rx_udp (Packet *packet)
 {
 	if (m_enable_all || m_enable_udp) {
-		std::cout << "rx ";
+		std::cout << Simulator::instance ()->now_s ()
+			  << " rx ";
 		packet->print (&std::cout);
 		std::cout << std::endl;
 	}
@@ -53,7 +59,8 @@ void
 Tracer::trace_rx_ipv4 (Packet *packet)
 {
 	if (m_enable_all || m_enable_ipv4) {
-		std::cout << "rx ";
+		std::cout << Simulator::instance ()->now_s ()
+			  << " rx ";
 		packet->print (&std::cout);
 		std::cout << std::endl;
 	}
