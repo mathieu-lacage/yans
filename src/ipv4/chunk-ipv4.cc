@@ -14,7 +14,8 @@ ChunkIpv4::ChunkIpv4 ()
 	  m_ttl (0),
 	  m_protocol (0),
 	  m_source (0),
-	  m_destination (0)
+	  m_destination (0),
+	  m_payload_size (0)
 {}
 ChunkIpv4::~ChunkIpv4 ()
 {}
@@ -22,15 +23,14 @@ ChunkIpv4::~ChunkIpv4 ()
 void 
 ChunkIpv4::set_payload_size (uint16_t size)
 {
-	uint16_t old_total = utils_ntoh_16 (m_total_length);
-	uint16_t new_total = old_total + get_size ();
+	uint16_t new_total = size + get_size ();
 	m_total_length = utils_hton_16 (new_total);
+	m_payload_size = size;
 }
 uint16_t 
 ChunkIpv4::get_payload_size (void)
 {
-	uint16_t payload = utils_ntoh_16 (m_total_length) - get_size ();
-	return payload;
+	return m_payload_size;
 }
 
 
