@@ -47,7 +47,7 @@ utils_ntoh_32 (uint32_t v)
 #define ASCII_Z (0x5a)
 #define ASCII_a (0x61)
 #define ASCII_z (0x7a)
-#define ASCII_MINUS (0x2d)
+#define ASCII_COLON (0x3a)
 
 
 uint32_t 
@@ -84,20 +84,23 @@ ascii_to_low_case (char c)
 		return c;
 	}
 }
-
 void 
 ascii_to_mac_network (char const *str, uint8_t address[6])
 {
 	uint8_t i = 0;
 	while (*str != 0 && i < 6) {
 		uint8_t byte = 0;
-		while (*str != ASCII_MINUS ) {
-			byte <<= 8;
+		while (*str != ASCII_COLON && *str != 0) {
+			byte <<= 4;
 			char low = ascii_to_low_case (*str);
-			byte |= low - ASCII_a;
+			if (low >= ASCII_a) {
+				byte |= low - ASCII_a + 10;
+			} else {
+				byte |= low - ASCII_ZERO;
+			}
 			str++;
 		}
-		address[6-i] = byte;
+		address[5-i] = byte;
 		str++;
 		i++;
 	}
@@ -143,9 +146,51 @@ UtilsTest::test_ipv4_ascii_to_host (char const *str, uint32_t expected)
 	return true;
 }
 
+bool
+UtilsTest::test_mac_ascii (char const *str, uint8_t expected[6])
+{
+	uint8_t got[6];
+	ascii_to_mac_network (str, got);
+	for (uint8_t i = 0; i < 6; i++) {
+		if (got[i] != expected[i]) {
+			failure () << "Utils ascii to mac --"
+				   << " for: \"" << str << "\""
+				   << " expected: ";
+			failure ().setf (std::ios::hex, std::ios::basefield);
+			failure () << (uint32_t)expected[0] << ":"
+				   << (uint32_t)expected[1] << ":"
+				   << (uint32_t)expected[2] << ":"
+				   << (uint32_t)expected[3] << ":"
+				   << (uint32_t)expected[4] << ":"
+				   << (uint32_t)expected[5];
+			failure ().setf (std::ios::dec, std::ios::basefield);
+			failure () << " got: ";
+			failure ().setf (std::ios::hex, std::ios::basefield);
+			failure () << (uint32_t)got[0] << ":"
+				   << (uint32_t)got[1] << ":"
+				   << (uint32_t)got[2] << ":"
+				   << (uint32_t)got[3] << ":"
+				   << (uint32_t)got[4] << ":"
+				   << (uint32_t)got[5];
+			failure ().setf (std::ios::dec, std::ios::basefield);
+			failure () << std::endl;
+			return false;
+		}
+	}
+	return true;
+}
+
 #define TEST_IPV4_ASCII_TO_HOST(a,b)  \
 if (!test_ipv4_ascii_to_host (a,b)) { \
 	ok = false;                   \
+}
+
+#define TEST_MAC_ASCII(ad, a, b, c, d, e, f)       \
+{                                                  \
+	uint8_t expected[6] = {a, b, c, d, e, f};  \
+	if (!test_mac_ascii (ad, expected)) {      \
+		ok = false;                        \
+	}                                          \
 }
 
 bool 
@@ -160,6 +205,11 @@ UtilsTest::run_tests (void)
 	TEST_IPV4_ASCII_TO_HOST ("255.255.0.255", 0xffff00ff);
 	TEST_IPV4_ASCII_TO_HOST ("192.168.0.1", 0xc0a80001);
 	TEST_IPV4_ASCII_TO_HOST ("0.168.0.1", 0x00a80001);
+	TEST_MAC_ASCII ("00:00:00:00:00:00", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00);
+	TEST_MAC_ASCII ("00:00:00:00:00:01", 0x01, 0x00, 0x00, 0x00, 0x00, 0x00);
+	TEST_MAC_ASCII ("01:00:00:00:00:01", 0x01, 0x00, 0x00, 0x00, 0x00, 0x01);
+	TEST_MAC_ASCII ("ff:00:00:ff:00:01", 0x01, 0x00, 0xff, 0x00, 0x00, 0xff);
+	TEST_MAC_ASCII ("f0:00:00:00:5d:01", 0x01, 0x5d, 0x00, 0x00, 0x00, 0xf0);
 	return ok;
 }
 
