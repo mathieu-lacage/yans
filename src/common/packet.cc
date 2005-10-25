@@ -140,11 +140,21 @@ Packet::serialize (WriteBuffer *buffer)
 void 
 Packet::print (std::ostream *os)
 {
+	Headers::size_type k = 0;
 	for (HeadersRI i = m_headers.rbegin (); i != m_headers.rend (); i++) {
 		(*i)->print (os);
+		k++;
+		if (k < m_headers.size ()) {
+			*os << " | ";
+		}
 	}
+	Trailers::size_type l = 0;
 	for (TrailersCI j = m_trailers.begin (); j != m_trailers.end (); j++) {
 		(*j)->print (os);
+		l++;
+		if (l < m_trailers.size ()) {
+			*os << " | ";
+		}
 	}
 }
 
