@@ -9,7 +9,7 @@
 #include "udp.h"
 #include "simulator.h"
 #include "tag-ipv4.h"
-#include "tracer.h"
+#include "host-tracer.h"
 
 class UdpSourceEvent : public Event {
 public:

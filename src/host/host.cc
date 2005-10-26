@@ -6,7 +6,7 @@
 #include "ipv4-route.h"
 #include "loopback-interface.h"
 #include "udp.h"
-#include "tracer.h"
+#include "host-tracer.h"
 
 Host::Host (char const *path)
 {
@@ -25,7 +25,7 @@ Host::Host (char const *path)
 	m_routing_table->add_host_route_to (Ipv4Address::get_loopback (),
 					    loopback);
 	m_root = new std::string (path);
-	m_tracer = new Tracer (0);
+	m_tracer = new HostTracer (0);
 }
 
 Host::~Host ()
@@ -80,7 +80,7 @@ Host::get_udp (void)
 	return m_udp;
 }
 
-Tracer *
+HostTracer *
 Host::get_tracer (void)
 {
 	return m_tracer;

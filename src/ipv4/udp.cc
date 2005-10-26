@@ -6,7 +6,7 @@
 #include "ipv4.h"
 #include "tag-ipv4.h"
 #include "ipv4-endpoint.h"
-#include "tracer.h"
+#include "host-tracer.h"
 #include "host.h"
 
 /* see http://www.iana.org/assignments/protocol-numbers */

@@ -7,7 +7,7 @@
 #include "simulator.h"
 #include "udp-source.h"
 #include "udp-sink.h"
-#include "tracer.h"
+#include "host-tracer.h"
 
 int main (int argc, char *argv[])
 {

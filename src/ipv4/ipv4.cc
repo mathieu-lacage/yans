@@ -8,7 +8,7 @@
 #include "ipv4-route.h"
 #include "host.h"
 #include "tag-ipv4.h"
-#include "tracer.h"
+#include "host-tracer.h"
 
 Ipv4::Ipv4 ()
 {}

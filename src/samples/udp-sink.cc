@@ -5,7 +5,7 @@
 #include "host.h"
 #include "ipv4-endpoint.h"
 #include "packet.h"
-#include "tracer.h"
+#include "host-tracer.h"
 
 
 class UdpSinkListener : public Ipv4EndPointListener {
