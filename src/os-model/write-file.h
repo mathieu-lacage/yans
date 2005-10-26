@@ -7,9 +7,11 @@
 #include <string>
 
 class WriteFilePrivate;
+class Host;
 
 class WriteFile {
 public:
+	WriteFile (Host *host);
 	WriteFile ();
 	~WriteFile ();
 

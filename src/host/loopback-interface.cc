@@ -13,6 +13,12 @@ LoopbackInterface::~LoopbackInterface ()
 void 
 LoopbackInterface::set_host (Host *host)
 {}
+NetworkInterfaceTracer *
+LoopbackInterface::get_tracer (void)
+{
+	assert (false);
+	return 0;
+}
 
 uint16_t 
 LoopbackInterface::get_mtu (void)

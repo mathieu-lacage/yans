@@ -1,5 +1,5 @@
 RUN_TESTS=-DRUN_SELF_TESTS=1
-INCLUDES=-I./fiber -I./simulator -I./ -I./arp -I./common -I./ipv4 -I./ethernet -I./test -I./host
+INCLUDES=-I./fiber -I./simulator -I./ -I./arp -I./common -I./ipv4 -I./ethernet -I./test -I./host -I./os-model
 CXXFLAGS=-Wall -Werror -O0 -gdwarf-2 $(RUN_TESTS) $(INCLUDES)
 CFLAGS=-Wall -Werror -O0 -gdwarf-2 $(RUN_TESTS) $(INCLUDES)
 
@@ -16,6 +16,7 @@ SOURCE= \
 	host/transport-protocol.cc \
 	host/host.cc \
 	host/host-tracer.cc \
+	host/network-interface-tracer.cc \
 	os-model/chunk-data.cc \
 	os-model/thread.cc \
 	os-model/process.cc \

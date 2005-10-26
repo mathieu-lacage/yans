@@ -15,6 +15,7 @@ public:
 	virtual ~EthernetNetworkInterface ();
 
 	virtual void set_host (Host *host);
+	virtual NetworkInterfaceTracer *get_tracer (void);
 
 	virtual void set_mac_address (MacAddress self);
 	virtual MacAddress get_mac_address (void);
@@ -57,6 +58,7 @@ public:
 	bool m_up;
 	Cable *m_cable;
 	Host *m_host;
+	NetworkInterfaceTracer *m_tracer;
 };
 
 

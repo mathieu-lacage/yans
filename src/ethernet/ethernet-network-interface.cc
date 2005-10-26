@@ -8,6 +8,7 @@
 #include "packet.h"
 #include "ipv4.h"
 #include "host.h"
+#include "network-interface-tracer.h"
 
 class EthernetArpMacSender : public ArpMacSender {
 public:
@@ -62,6 +63,12 @@ void
 EthernetNetworkInterface::set_host (Host *host)
 {
 	m_host = host;
+	m_tracer = new NetworkInterfaceTracer (host, this);
+}
+NetworkInterfaceTracer *
+EthernetNetworkInterface::get_tracer (void)
+{
+	return m_tracer;
 }
 void 
 EthernetNetworkInterface::set_mac_address (MacAddress self)
@@ -139,6 +146,7 @@ EthernetNetworkInterface::connect_to (Cable *cable)
 void 
 EthernetNetworkInterface::recv (Packet *packet)
 {
+	m_tracer->trace_rx_mac (packet);
 	ChunkMacLlcSnap *header;
 	ChunkMacCrc *trailer;
 	header = static_cast <ChunkMacLlcSnap *> (packet->remove_header ());
@@ -164,6 +172,7 @@ EthernetNetworkInterface::send_data (Packet *packet, MacAddress dest)
 	packet->add_header (header);
 	ChunkMacCrc *trailer = new ChunkMacCrc ();
 	packet->add_trailer (trailer);
+	m_tracer->trace_tx_mac (packet);
 	m_cable->send (packet, this);
 }
 
@@ -178,5 +187,6 @@ EthernetNetworkInterface::send_arp (Packet *packet, MacAddress dest)
 	packet->add_header (header);
 	ChunkMacCrc *trailer = new ChunkMacCrc ();
 	packet->add_trailer (trailer);
+	m_tracer->trace_tx_mac (packet);
 	m_cable->send (packet, this);
 }

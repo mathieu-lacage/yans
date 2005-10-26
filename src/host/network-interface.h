@@ -10,12 +10,14 @@
 class Packet;
 class Ipv4;
 class Host;
+class NetworkInterfaceTracer;
 
 class NetworkInterface {
 public:
 	virtual ~NetworkInterface () = 0;
 
 	virtual void set_host (Host *host) = 0;
+	virtual NetworkInterfaceTracer *get_tracer (void) = 0;
 
 	virtual void set_mac_address (MacAddress self) = 0;
 	virtual MacAddress get_mac_address (void) = 0;

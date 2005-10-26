@@ -11,10 +11,16 @@
 class WriteFilePrivate {
 public:
 	WriteFilePrivate ()
-		: m_fd (-1) {}
+		: m_fd (-1), m_host (0) {}
+	WriteFilePrivate (Host *host)
+		: m_fd (-1), m_host (host) {}
 	int m_fd;
+	Host *m_host;
 };
 
+WriteFile::WriteFile (Host *host)
+	: m_priv (new WriteFilePrivate (host))
+{}
 WriteFile::WriteFile ()
 	: m_priv (new WriteFilePrivate ())
 {}
@@ -26,10 +32,16 @@ WriteFile::~WriteFile ()
 
 void 
 WriteFile::open (std::string *filename)
-{
-	std::string *file = new std::string (*(Runnable::get_host ()->m_root));
-	file->append (*filename);
-	m_priv->m_fd = ::open (file->c_str (), O_WRONLY);
+{	
+	Host *host;
+	if (m_priv->m_host == 0) {
+		host = Runnable::get_host ();
+	} else {
+		host = m_priv->m_host;
+	}
+	std::string *root = new std::string (*(host->m_root));
+	root->append (*filename);
+	m_priv->m_fd = ::open (root->c_str (), O_WRONLY);
 }
 void 
 WriteFile::close (void)

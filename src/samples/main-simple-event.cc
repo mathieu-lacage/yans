@@ -8,6 +8,7 @@
 #include "udp-source.h"
 #include "udp-sink.h"
 #include "host-tracer.h"
+#include "network-interface-tracer.h"
 
 int main (int argc, char *argv[])
 {
@@ -34,10 +35,12 @@ int main (int argc, char *argv[])
 	Host *hclient, *hserver;
 	hclient = new Host ("client");
 	hserver = new Host ("server");
-	hclient->get_tracer ()->enable_all ();
-	hserver->get_tracer ()->enable_all ();
+	//hclient->get_tracer ()->enable_all ();
+	//hserver->get_tracer ()->enable_all ();
 	hclient->add_interface (eth_client);
 	hserver->add_interface (eth_server);
+	eth_client->get_tracer ()->enable_all ();
+	eth_server->get_tracer ()->enable_all ();
 
 	/* setup the routing tables. */
 	hclient->get_routing_table ()->set_default_route (Ipv4Address ("192.168.0.2"),
