@@ -31,6 +31,7 @@ void
 UdpSourceEvent::notify (void)
 {
 	m_source->send_next_packet ();
+	delete this;
 }
 void 
 UdpSourceEvent::notify_canceled (void)
