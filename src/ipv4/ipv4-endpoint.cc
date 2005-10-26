@@ -14,10 +14,9 @@ Ipv4EndPoints::~Ipv4EndPoints ()
 	m_ephemeral = 0x6666;
 	for (AddressesI i = m_addresses.begin (); i != m_addresses.end (); i++) {
 		EndPoints *end_points = (*i).second;
-		for (EndPointsI j = end_points->begin (); j != end_points->end (); j++) {
-			delete (*j);
-		}
+		assert (end_points->empty ());
 		end_points->erase (end_points->begin (), end_points->end ());
+		delete end_points;
 	}
 	m_addresses.erase (m_addresses.begin (), m_addresses.end ());
 }
@@ -57,6 +56,26 @@ Ipv4EndPoints::allocate (Ipv4EndPointListener *listener,
 	Ipv4EndPoint *end_point = insert (listener, address, port);
 	return end_point;
 }
+void
+Ipv4EndPoints::destroy (Ipv4EndPoint *end_point)
+{
+	for (AddressesI i = m_addresses.begin (); i != m_addresses.end (); i++) {
+		if ((*i).first.is_equal (end_point->get_address ())) {
+			EndPoints *end_points = (*i).second;
+			assert (end_points != 0);
+			for (EndPointsI j = end_points->begin (); 
+			     j != end_points->end (); 
+			     j++) {
+				if ((*j) == end_point) {
+					end_points->erase (j);
+					delete end_point;
+					return;
+				}
+			}
+		}
+	}
+	assert (false);
+}
 
 Ipv4EndPoint *
 Ipv4EndPoints::insert (Ipv4EndPointListener *listener, 
@@ -70,7 +89,7 @@ Ipv4EndPoints::insert (Ipv4EndPointListener *listener,
 			return end_point;
 		}
 	}
-	m_addresses.push_back (make_pair (address, new EndPoints ()));
+	m_addresses.push_back (std::make_pair (address, new EndPoints ()));
 	Ipv4EndPoint *end_point = insert (listener, address, port);
 	return end_point;
 }

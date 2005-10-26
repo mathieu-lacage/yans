@@ -41,6 +41,7 @@ public:
 				Ipv4Address address);
 	Ipv4EndPoint *allocate (Ipv4EndPointListener *listener,
 				Ipv4Address address, uint16_t port);
+	void destroy (Ipv4EndPoint *end_point);
 
 	Ipv4EndPoint *lookup (Ipv4Address address, uint16_t port);
 private:

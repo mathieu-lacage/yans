@@ -62,6 +62,8 @@ int main (int argc, char *argv[])
 
 
 	/* destroy network */
+	delete source;
+	delete sink;
 	delete hclient;
 	delete hserver;
 	Simulator::instance ()->destroy ();
