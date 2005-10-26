@@ -9,6 +9,7 @@
 class Host;
 class Packet;
 class Ipv4EndPoint;
+class UdpSinkListener;
 
 class UdpSink {
 public:
@@ -21,6 +22,7 @@ private:
 	void receive (Packet *packet);
 	Host *m_host;
 	Ipv4EndPoint *m_end_point;
+	UdpSinkListener *m_listener;
 };
 
 

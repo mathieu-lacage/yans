@@ -56,7 +56,8 @@ void UdpSourceListener::receive (Packet *packet)
 
 UdpSource::UdpSource (Host *host)
 	: m_host (host),
-	  m_end_point (0)
+	  m_end_point (0),
+	  m_listener (new UdpSourceListener ())
 {}
 UdpSource::~UdpSource ()
 {
@@ -66,12 +67,14 @@ UdpSource::~UdpSource ()
 	}
 	m_end_point = (Ipv4EndPoint *) 0xdeadbeaf;
 	m_host = (Host *)0xdeadbeaf;
+	delete m_listener;
+	m_listener = (UdpSourceListener *)0xdeadbeaf;
 }
 bool 
 UdpSource::bind (Ipv4Address address, uint16_t port)
 {
 	Ipv4EndPoints *end_points = m_host->get_udp ()->get_end_points ();
-	m_end_point = end_points->allocate (new UdpSourceListener (), address, port);
+	m_end_point = end_points->allocate (m_listener, address, port);
 	if (m_end_point == 0) {
 		return false;
 	}

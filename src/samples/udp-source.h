@@ -5,9 +5,11 @@
 
 #include <stdint.h>
 #include "ipv4-address.h"
+#include "ipv4-endpoint.h"
 
 class Host;
 class Ipv4EndPoint;
+class UdpSourceListener;
 
 class UdpSource {
 public:
@@ -36,6 +38,7 @@ private:
 	Ipv4EndPoint *m_end_point;
 	Ipv4Address m_peer_address;
 	uint16_t m_peer_port;
+	UdpSourceListener *m_listener;
 };
 
 #endif /* UDP_SOURCE_H */

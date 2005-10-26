@@ -29,7 +29,8 @@ void UdpSinkListener::receive (Packet *packet)
 
 UdpSink::UdpSink (Host *host)
 	: m_host (host),
-	  m_end_point (0)
+	  m_end_point (0),
+	  m_listener (new UdpSinkListener (this))
 {}
 
 UdpSink::~UdpSink ()
@@ -40,6 +41,8 @@ UdpSink::~UdpSink ()
 	}
 	m_end_point = (Ipv4EndPoint *) 0xdeadbeaf;
 	m_host = (Host *)0xdeadbeaf;
+	delete m_listener;
+	m_listener = (UdpSinkListener *)0xdeadbeaf;
 }
 
 bool 
@@ -47,7 +50,7 @@ UdpSink::bind (Ipv4Address address, uint16_t port)
 {
 	assert (m_end_point == 0);
 	Ipv4EndPoints *end_points = m_host->get_udp ()->get_end_points ();
-	m_end_point = end_points->allocate (new UdpSinkListener (this), address, port);
+	m_end_point = end_points->allocate (m_listener, address, port);
 	if (m_end_point == 0) {
 		return false;
 	}
