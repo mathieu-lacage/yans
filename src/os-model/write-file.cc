@@ -29,7 +29,8 @@ WriteFile::~WriteFile ()
 	delete m_priv;
 	m_priv = (WriteFilePrivate *)0xdeadbeaf;
 }
-
+#include <errno.h>
+#include <iostream>
 void 
 WriteFile::open (std::string *filename)
 {	
@@ -41,7 +42,13 @@ WriteFile::open (std::string *filename)
 	}
 	std::string *root = new std::string (*(host->m_root));
 	root->append (*filename);
-	m_priv->m_fd = ::open (root->c_str (), O_WRONLY);
+	m_priv->m_fd = ::open (root->c_str (), O_WRONLY | O_CREAT);
+	if (m_priv->m_fd == -1) {
+		std::cerr << "errno: " << errno
+			  << " err: " << strerror (errno) 
+			  << " file: " << root->c_str ()
+			  << std::endl;
+	}
 }
 void 
 WriteFile::close (void)
@@ -53,5 +60,10 @@ WriteFile::close (void)
 ssize_t 
 WriteFile::write (uint8_t *buf, size_t count)
 {
-	return ::write (m_priv->m_fd, buf, count);
+	ssize_t written = ::write (m_priv->m_fd, buf, count);
+	assert (written >= 0);
+	if (((size_t)written) != count) {
+		std::cerr << "not wrote all: " << written << "/" << count << std::endl;
+	} 
+	return written;
 }

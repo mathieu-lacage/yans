@@ -4,14 +4,21 @@
 #include "buffer.h"
 
 ChunkMacCrc::ChunkMacCrc ()
+	: m_pad_size (0)
 {}
 ChunkMacCrc::~ChunkMacCrc ()	
 {}
 
+void
+ChunkMacCrc::set_pad (uint8_t pad_size)
+{
+	m_pad_size = pad_size;
+}
+
 uint32_t 
 ChunkMacCrc::get_size (void)
 {
-	return 4;
+	return 4 + m_pad_size;
 }
 Chunk *
 ChunkMacCrc::copy (void)
@@ -22,6 +29,9 @@ ChunkMacCrc::copy (void)
 void 
 ChunkMacCrc::serialize (WriteBuffer *buffer)
 {
+	for (uint8_t i = 0; i < m_pad_size; i++) {
+		buffer->write_u8 (0x31);
+	}
 	buffer->write_u8 (0);
 	buffer->write_u8 (0);
 	buffer->write_u8 (0);

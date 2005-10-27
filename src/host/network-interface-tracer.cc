@@ -22,6 +22,7 @@ NetworkInterfaceTracer::NetworkInterfaceTracer (Host *host, NetworkInterface *in
 }
 NetworkInterfaceTracer::~NetworkInterfaceTracer ()
 {
+	m_file->close ();
 	delete m_file;
 }
 
@@ -44,7 +45,7 @@ NetworkInterfaceTracer::write_pcap_header (void)
 	write_16 (4);
 	write_32 (0);
 	write_32 (0);
-	write_32 (4000);
+	write_32 (0xffff);
 	write_32 (1);
 }
 

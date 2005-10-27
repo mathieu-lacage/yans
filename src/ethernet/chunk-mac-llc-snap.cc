@@ -28,6 +28,7 @@ ChunkMacLlcSnap::set_length (uint16_t length)
 uint16_t 
 ChunkMacLlcSnap::get_length (void)
 {
+	assert (m_length <= 0x05dc);
 	return m_length;
 }
 MacAddress 
@@ -63,12 +64,15 @@ ChunkMacLlcSnap::copy (void)
 	*chunk = *this;
 	return chunk;
 }
+#include <iostream>
 void 
 ChunkMacLlcSnap::serialize (WriteBuffer *buffer)
 {
 	m_source.serialize (buffer);
 	m_destination.serialize (buffer);
-	buffer->write_hton_u16 (m_length);
+	assert (m_length <= 0x05dc);
+	/* ieee 802.3 says length is msb. */
+	buffer->write_hton_u16 (m_length + 8);
 	buffer->write_u8 (0xaa);
 	buffer->write_u8 (0xaa);
 	buffer->write_u8 (0x03);
@@ -82,7 +86,7 @@ ChunkMacLlcSnap::deserialize (ReadBuffer *buffer)
 {
 	m_source.deserialize (buffer);
 	m_destination.deserialize (buffer);
-	m_length = buffer->read_ntoh_u16 ();
+	m_length = buffer->read_ntoh_u16 () - 8;
 	uint8_t dsap = buffer->read_u8 ();
 	assert (dsap == 0xaa);
 	uint8_t ssap = buffer->read_u8 ();

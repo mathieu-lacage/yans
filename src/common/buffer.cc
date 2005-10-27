@@ -70,14 +70,15 @@ WriteBuffer::write (uint8_t const *data, uint8_t size)
 	for (uint8_t i = 0; i < size; i++) {
 		m_buffer[m_write+i] = data[i];
 	}
+	m_write += size;
 }
 void 
 WriteBuffer::write_hton_u16 (uint16_t data)
 {
 	ensure_write_room_left (2);
-	m_buffer[m_write] = (data >> 0) & 0xff;
-	m_write++;
 	m_buffer[m_write] = (data >> 8) & 0xff;
+	m_write++;
+	m_buffer[m_write] = (data >> 0) & 0xff;
 	m_write++;
 }
 
@@ -85,13 +86,13 @@ void
 WriteBuffer::write_hton_u32 (uint32_t data)
 {
 	ensure_write_room_left (4);
-	m_buffer[m_write] = (data >> 0)  & 0xff;
+	m_buffer[m_write] = (data >> 24)  & 0xff;
 	m_write++;
-	m_buffer[m_write] = (data >> 8)  & 0xff;
+	m_buffer[m_write] = (data >> 16)  & 0xff;
 	m_write++;
-	m_buffer[m_write] = (data >> 16) & 0xff;
+	m_buffer[m_write] = (data >> 8) & 0xff;
 	m_write++;
-	m_buffer[m_write] = (data >> 24) & 0xff;
+	m_buffer[m_write] = (data >> 0) & 0xff;
 	m_write++;
 }
 
@@ -138,6 +139,7 @@ ReadBuffer::read (uint8_t *buffer, uint8_t size)
 	for(uint8_t i = 0; i < size; i++) {
 		buffer[i] = m_buffer[m_read+i];
 	}
+	m_read += size;
 }
 
 uint16_t 
@@ -145,9 +147,9 @@ ReadBuffer::read_ntoh_u16 (void)
 {
 	assert (is_read_room_left (2));
 	uint16_t retval = 0;
-	retval |= m_buffer[m_read];
-	m_read++;
 	retval |= m_buffer[m_read] << 8;
+	m_read++;
+	retval |= m_buffer[m_read] << 0;
 	m_read++;
 	return retval;
 }
@@ -157,16 +159,17 @@ ReadBuffer::read_ntoh_u32 (void)
 {
 	assert (is_read_room_left (4));
 	uint32_t retval = 0;
-	retval |= m_buffer[m_read];
-	m_read++;
-	retval |= m_buffer[m_read] << 8;
+	retval |= m_buffer[m_read] << 24;
 	m_read++;
 	retval |= m_buffer[m_read] << 16;
 	m_read++;
-	retval |= m_buffer[m_read] << 24;
+	retval |= m_buffer[m_read] << 8;
+	m_read++;
+	retval |= m_buffer[m_read] << 0;
 	m_read++;
 	return retval;
 }
+
 
 
 #ifdef RUN_SELF_TESTS

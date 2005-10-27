@@ -6,18 +6,18 @@ uint16_t
 utils_hton_16 (uint16_t v)
 {
 	uint8_t array[2];
-	array[0] = v & 0xff;
-	array[1] = (v >> 8) & 0xff;
+	array[0] = (v >> 8) & 0xff;
+	array[1] = (v >> 0) & 0xff;
 	return *((uint16_t *)array);
 }
 uint32_t 
 utils_hton_32 (uint32_t v)
 {
 	uint8_t array[4];
-	array[0] = v & 0xff;
-	array[1] = (v >> 8) & 0xff;
-	array[2] = (v >> 16) & 0xff;
-	array[3] = (v >> 24) & 0xff;
+	array[0] = (v >> 24) & 0xff;
+	array[1] = (v >> 16) & 0xff;
+	array[2] = (v >>  8) & 0xff;
+	array[3] = (v >>  0) & 0xff;
 	return *((uint32_t *)array);
 }
 uint16_t 
@@ -26,7 +26,7 @@ utils_ntoh_16 (uint16_t v)
 	uint16_t val;
 	uint8_t *array;
 	array = (uint8_t *)&v;
-	val = array[0] | (array[1] << 8);
+	val = (array[0] << 8) | (array[1] << 0);
 	return val;
 }
 uint32_t 
@@ -34,10 +34,10 @@ utils_ntoh_32 (uint32_t v)
 {
 	uint32_t val = 0;
 	uint8_t *array = (uint8_t *)&v;
-	val |= array[0] << 0;
-	val |= array[1] << 8;
-	val |= array[2] << 16;
-	val |= array[3] << 24;
+	val |= array[0] << 24;
+	val |= array[1] << 16;
+	val |= array[2] << 8;
+	val |= array[3] << 0;
 	return val;
 }
 
@@ -100,7 +100,7 @@ ascii_to_mac_network (char const *str, uint8_t address[6])
 			}
 			str++;
 		}
-		address[5-i] = byte;
+		address[i] = byte;
 		str++;
 		i++;
 	}
@@ -180,6 +180,29 @@ UtilsTest::test_mac_ascii (char const *str, uint8_t expected[6])
 	return true;
 }
 
+bool
+UtilsTest::test_hton_16 (uint16_t v, uint8_t expected[2])
+{
+	uint16_t result = utils_hton_16 (v);
+	uint8_t *got = (uint8_t *)&result;
+	if (got[0] != expected[0] ||
+	    got[1] != expected[1]) {
+		failure () << "Utils hton 16 --"
+			   << " for: \"" << v << "\""
+			   << " expected: ";
+		failure ().setf (std::ios::hex, std::ios::basefield);
+		failure () << (uint32_t)expected[0] << ":"
+			   << (uint32_t)expected[1];
+		failure () << " got: ";
+		failure () << (uint32_t)got[0] << ":"
+			   << (uint32_t)got[1];
+		failure ().setf (std::ios::dec, std::ios::basefield);
+		failure () << std::endl;
+		return false;
+	}
+	return true;
+}
+
 #define TEST_IPV4_ASCII_TO_HOST(a,b)  \
 if (!test_ipv4_ascii_to_host (a,b)) { \
 	ok = false;                   \
@@ -192,6 +215,15 @@ if (!test_ipv4_ascii_to_host (a,b)) { \
 		ok = false;                        \
 	}                                          \
 }
+
+#define TEST_HTON_16(v, a, b)               \
+{                                           \
+	uint8_t expected[2] = {a, b};       \
+	if (!test_hton_16 (v, expected)) {  \
+		ok = false;                 \
+	}                                   \
+}
+
 
 bool 
 UtilsTest::run_tests (void)
@@ -206,10 +238,11 @@ UtilsTest::run_tests (void)
 	TEST_IPV4_ASCII_TO_HOST ("192.168.0.1", 0xc0a80001);
 	TEST_IPV4_ASCII_TO_HOST ("0.168.0.1", 0x00a80001);
 	TEST_MAC_ASCII ("00:00:00:00:00:00", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00);
-	TEST_MAC_ASCII ("00:00:00:00:00:01", 0x01, 0x00, 0x00, 0x00, 0x00, 0x00);
+	TEST_MAC_ASCII ("00:00:00:00:00:01", 0x00, 0x00, 0x00, 0x00, 0x00, 0x01);
 	TEST_MAC_ASCII ("01:00:00:00:00:01", 0x01, 0x00, 0x00, 0x00, 0x00, 0x01);
-	TEST_MAC_ASCII ("ff:00:00:ff:00:01", 0x01, 0x00, 0xff, 0x00, 0x00, 0xff);
-	TEST_MAC_ASCII ("f0:00:00:00:5d:01", 0x01, 0x5d, 0x00, 0x00, 0x00, 0xf0);
+	TEST_MAC_ASCII ("ff:00:00:ff:00:01", 0xff, 0x00, 0x00, 0xff, 0x00, 0x01);
+	TEST_MAC_ASCII ("f0:00:00:00:5d:01", 0xf0, 0x00, 0x00, 0x00, 0x5d, 0x01);
+	TEST_HTON_16 (0xf00f, 0xf0, 0x0f);
 	return ok;
 }
 

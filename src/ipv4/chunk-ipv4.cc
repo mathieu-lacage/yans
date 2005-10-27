@@ -6,7 +6,7 @@
 #include "buffer.h"
 
 ChunkIpv4::ChunkIpv4 ()
-	: m_ver_ihl (4 | (20 << 4)),
+	: m_ver_ihl (5 | (20 << 4)),
 	  m_tos (0),
 	  m_id (0),
 	  m_total_length (20),

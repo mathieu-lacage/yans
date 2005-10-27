@@ -24,6 +24,7 @@ public:
 	virtual bool run_tests (void);
 private:
 	bool test_mac_ascii (char const *str, uint8_t expected[6]);
+	bool test_hton_16 (uint16_t v, uint8_t expected[2]);
 	bool test_ipv4_ascii_to_host (char const *str, uint32_t expected);
 };
 #endif /* RUN_SELF_TESTS */

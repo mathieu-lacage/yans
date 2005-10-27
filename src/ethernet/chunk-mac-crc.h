@@ -10,13 +10,18 @@
 class ChunkMacCrc : public Chunk {
  public:
 	ChunkMacCrc ();
-	virtual ~ChunkMacCrc ();	
+	virtual ~ChunkMacCrc ();
+
+	void set_pad (uint8_t pad_size);
+
 
 	virtual uint32_t get_size (void);
 	virtual Chunk *copy (void);
 	virtual void serialize (WriteBuffer *buffer);
 	virtual void deserialize (ReadBuffer *buffer);
 	virtual void print (std::ostream *os);
+private:
+	uint8_t m_pad_size;
 };
 
-#endif /* CHUNK_MAC_LLC_SNAP_H */
+#endif /* CHUNK_MAC_CRC_H */

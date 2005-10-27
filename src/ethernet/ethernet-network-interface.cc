@@ -169,8 +169,11 @@ EthernetNetworkInterface::send_data (Packet *packet, MacAddress dest)
 	header->set_source (get_mac_address ());
 	header->set_length (packet->get_size ());
 	header->set_ether_type (ETHER_TYPE_IPV4);
-	packet->add_header (header);
 	ChunkMacCrc *trailer = new ChunkMacCrc ();
+	if (packet->get_size () < 38) {
+		trailer->set_pad (38 - packet->get_size ());
+	}
+	packet->add_header (header);
 	packet->add_trailer (trailer);
 	m_tracer->trace_tx_mac (packet);
 	m_cable->send (packet, this);
@@ -182,10 +185,15 @@ EthernetNetworkInterface::send_arp (Packet *packet, MacAddress dest)
 	ChunkMacLlcSnap *header = new ChunkMacLlcSnap ();
 	header->set_destination (dest);
 	header->set_source (get_mac_address ());
-	header->set_length (packet->get_size ());
 	header->set_ether_type (ETHER_TYPE_ARP);
-	packet->add_header (header);
 	ChunkMacCrc *trailer = new ChunkMacCrc ();
+	if (packet->get_size () < 38) {
+		trailer->set_pad (38 - packet->get_size ());
+		header->set_length (38);
+	} else {
+		header->set_length (packet->get_size ());
+	}
+	packet->add_header (header);
 	packet->add_trailer (trailer);
 	m_tracer->trace_tx_mac (packet);
 	m_cable->send (packet, this);
