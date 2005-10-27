@@ -13,6 +13,7 @@ ChunkIpv4::ChunkIpv4 ()
 	  m_fragment_offset (0),
 	  m_ttl (0),
 	  m_protocol (0),
+	  m_checksum (0),
 	  m_source (0),
 	  m_destination (0),
 	  m_payload_size (0)
@@ -144,7 +145,7 @@ ChunkIpv4::get_destination (void)
 uint32_t 
 ChunkIpv4::get_size (void)
 {
-	uint8_t ihl = (m_ver_ihl >> 4) & 0x0f;
+	uint8_t ihl = m_ver_ihl & 0x0f;
 	uint32_t size = ihl * 4;
 	return size;
 }
