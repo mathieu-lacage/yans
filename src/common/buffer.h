@@ -19,6 +19,7 @@
  * Author: Mathieu Lacage <mathieu.lacage.inria.fr>
  */
 
+#ifndef BUFFER_H
 #define BUFFER_H
 
 #include <stdint.h>

@@ -19,6 +19,7 @@
  * Author: Mathieu Lacage <mathieu.lacage.inria.fr>
  */
 
+#ifndef CHUNK_IPV4_H
 #define CHUNK_IPV4_H
 
 #include "chunk.h"

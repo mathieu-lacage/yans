@@ -19,6 +19,7 @@
  * Author: Mathieu Lacage <mathieu.lacage.inria.fr>
  */
 
+#ifndef CHUNK_H
 #define CHUNK_H
 
 #include <stdint.h>

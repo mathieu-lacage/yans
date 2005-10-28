@@ -19,6 +19,7 @@
  * Author: Mathieu Lacage <mathieu.lacage.inria.fr>
  */
 
+#ifndef UTILS_H
 #define UTILS_H
 
 #include <stdint.h>

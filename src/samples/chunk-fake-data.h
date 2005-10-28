@@ -19,6 +19,7 @@
  * Author: Mathieu Lacage <mathieu.lacage.inria.fr>
  */
 
+#ifndef CHUNK_FAKE_DATA_H
 #define CHUNK_FAKE_DATA_H
 
 #include "chunk.h"
