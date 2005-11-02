@@ -151,6 +151,14 @@ EthernetNetworkInterface::get_ipv4_mask    (void)
 {
 	return m_ipv4_mask;
 }
+Ipv4Address 
+EthernetNetworkInterface::get_ipv4_broadcast (void)
+{
+	uint32_t mask = m_ipv4_mask.get_host_order ();
+	uint32_t address = m_ipv4_address.get_host_order ();
+	Ipv4Address broadcast = Ipv4Address (address | (~mask));
+	return broadcast;
+}
 
 void 
 EthernetNetworkInterface::send (Packet *packet, Ipv4Address dest)
@@ -180,6 +188,8 @@ EthernetNetworkInterface::recv (Packet *packet)
 		m_ipv4->receive (packet, this);
 		break;
 	}
+	delete header;
+	delete trailer;
 }
 
 void 

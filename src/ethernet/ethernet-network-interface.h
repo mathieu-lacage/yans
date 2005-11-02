@@ -50,6 +50,7 @@ public:
 	virtual void set_ipv4_mask    (Ipv4Mask mask);
 	virtual Ipv4Address get_ipv4_address (void);
 	virtual Ipv4Mask    get_ipv4_mask    (void);
+	virtual Ipv4Address get_ipv4_broadcast (void);
 
 	virtual void send (Packet *packet, Ipv4Address dest);
 

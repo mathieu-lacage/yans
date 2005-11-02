@@ -113,17 +113,53 @@ void
 Ipv4::receive (Packet *packet, NetworkInterface *interface)
 {
 	m_host->get_tracer ()->trace_rx_ipv4 (packet);
+	ChunkIpv4 *ip_header = static_cast <ChunkIpv4 *> (packet->peek_header ());
+
+	if (!ip_header->is_checksum_ok ()) {
+		goto drop_packet;
+	}
+	NetworkInterfaces const * interfaces = m_host->get_interfaces ();
+	for (NetworkInterfacesCI i = interfaces->begin ();
+	     i != interfaces->end (); i++) {
+		if ((*i)->get_ipv4_address ().is_equal (ip_header->get_destination ())) {
+			goto for_us;
+		}
+	}
+	if (ip_header->get_destination ().is_equal (interface->get_ipv4_broadcast ())) {
+		goto for_us;
+	}
+	if (ip_header->get_destination ().is_equal (Ipv4Address::get_broadcast ())) {
+		goto for_us;
+	}
+	if (ip_header->get_destination ().is_equal (Ipv4Address::get_any ())) {
+		goto for_us;
+	}
+	if (ip_header->get_ttl () == 1) {
+		//send_icmp_time_exceeded (ip_header->get_source ());
+		goto drop_packet;
+	}
+	ip_header->set_ttl (ip_header->get_ttl () - 1);
+	Route *route = m_host->get_routing_table ()->lookup (ip_header->get_destination ());
+	if (route->is_gateway ()) {
+		route->get_interface ()->send (packet, route->get_gateway ());
+	} else {
+		route->get_interface ()->send (packet, ip_header->get_destination ());
+	}
+	return;
+ for_us:
+	packet->remove_header ();
 	TagInIpv4 *tag = new TagInIpv4 (interface);
 	packet->add_tag (TagInIpv4::get_tag (), tag);
-	ChunkIpv4 *ip_header = static_cast <ChunkIpv4 *> (packet->remove_header ());
-	/* need to verify if this packet is targetted at _any_ of the
-	 * IPs for this host.
-	 */
+
 	tag->set_daddress (ip_header->get_destination ());
 	TransportProtocol *protocol = lookup_protocol (ip_header->get_protocol ());
+	delete ip_header;
 	if (protocol == 0) {
-		drop_packet (packet);
-		return;
+		goto drop_packet;
 	}
 	protocol->receive (packet);
+	return;
+ drop_packet:
+	packet->unref ();
+	return;
 }

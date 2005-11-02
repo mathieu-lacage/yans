@@ -58,8 +58,8 @@ public:
 	void add_trailer (Chunk *trailer);
 	Chunk *remove_header (void);
 	Chunk *remove_trailer (void);
-	Chunk const *peek_header (void);
-	Chunk const *peek_trailer (void);
+	Chunk *peek_header (void);
+	Chunk *peek_trailer (void);
 
 	uint32_t get_size (void);
 

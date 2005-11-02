@@ -121,12 +121,12 @@ Packet::remove_trailer (void)
 	m_trailers.pop_back ();
 	return trailer;
 }
-Chunk const *
+Chunk *
 Packet::peek_header (void)
 {
 	return m_headers.back ();
 }
-Chunk const *
+Chunk *
 Packet::peek_trailer (void)
 {
 	return m_trailers.back ();

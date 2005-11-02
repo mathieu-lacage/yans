@@ -74,9 +74,16 @@ public:
 	Ipv4Mask (uint32_t mask);
 	Ipv4Mask (char const *mask);
 
-	bool is_match (Ipv4Address a, Ipv4Address b);
+	bool is_match (Ipv4Address a, Ipv4Address b) const;
 
 	bool is_equal (Ipv4Mask other) const;
+
+
+	/* Using this method is frowned upon.
+	 * Please, do _not_ use this method.
+	 */
+	uint32_t get_host_order (void) const;
+
 
 	static Ipv4Mask get_loopback (void);
 	static Ipv4Mask get_zero (void);

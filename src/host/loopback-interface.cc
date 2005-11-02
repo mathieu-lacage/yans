@@ -83,6 +83,11 @@ LoopbackInterface::get_ipv4_mask (void)
 {
 	return m_mask;
 }
+Ipv4Address 
+LoopbackInterface::get_ipv4_broadcast (void)
+{
+	return Ipv4Address::get_broadcast ();
+}
 
 
 void 

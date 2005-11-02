@@ -48,7 +48,7 @@ ChunkIpv4::set_payload_size (uint16_t size)
 	m_payload_size = size;
 }
 uint16_t 
-ChunkIpv4::get_payload_size (void)
+ChunkIpv4::get_payload_size (void) const
 {
 	return m_payload_size;
 }
@@ -60,7 +60,7 @@ ChunkIpv4::set_tos (uint8_t tos)
 	m_tos = tos;
 }
 uint8_t 
-ChunkIpv4::get_tos (void)
+ChunkIpv4::get_tos (void) const
 {
 	return m_tos;
 }
@@ -70,7 +70,7 @@ ChunkIpv4::set_id (uint16_t id)
 	m_id = utils_hton_16 (id);
 }
 uint16_t 
-ChunkIpv4::get_id (void)
+ChunkIpv4::get_id (void) const
 {
 	return utils_ntoh_16 (m_id);
 }
@@ -93,7 +93,7 @@ ChunkIpv4::set_last_fragment (void)
 	m_fragment_offset = utils_hton_16 (new_fragment_offset);
 }
 bool 
-ChunkIpv4::is_last_fragment (void)
+ChunkIpv4::is_last_fragment (void) const
 {
 	uint8_t flags = utils_ntoh_16 (m_fragment_offset) & 0x7;
 	if (flags & 0x4) {
@@ -110,7 +110,7 @@ ChunkIpv4::set_fragment_offset (uint16_t offset)
 	m_fragment_offset = utils_hton_16 (new_fragment_offset);
 }
 uint16_t 
-ChunkIpv4::get_fragment_offset (void)
+ChunkIpv4::get_fragment_offset (void) const
 {
 	uint16_t fragment_offset = utils_ntoh_16 (m_fragment_offset) >> 3;
 	return fragment_offset;
@@ -122,13 +122,13 @@ ChunkIpv4::set_ttl (uint8_t ttl)
 	m_ttl = ttl;
 }
 uint8_t 
-ChunkIpv4::get_ttl (void)
+ChunkIpv4::get_ttl (void) const
 {
 	return m_ttl;
 }
 	
 uint8_t 
-ChunkIpv4::get_protocol (void)
+ChunkIpv4::get_protocol (void) const
 {
 	return m_protocol;
 }
@@ -144,7 +144,7 @@ ChunkIpv4::set_source (Ipv4Address source)
 	m_source = utils_hton_32 (source.get_host_order ());
 }
 Ipv4Address
-ChunkIpv4::get_source (void)
+ChunkIpv4::get_source (void) const
 {
 	return Ipv4Address (utils_ntoh_32 (m_source));
 }
@@ -155,7 +155,7 @@ ChunkIpv4::set_destination (Ipv4Address dst)
 	m_destination = utils_hton_32 (dst.get_host_order ());
 }
 Ipv4Address
-ChunkIpv4::get_destination (void)
+ChunkIpv4::get_destination (void) const
 {
 	return Ipv4Address (utils_ntoh_32 (m_destination));
 }
@@ -177,7 +177,7 @@ ChunkIpv4::copy (void)
 }
 
 bool
-ChunkIpv4::is_checksum_ok (void)
+ChunkIpv4::is_checksum_ok (void) const
 {
 	uint16_t checksum = calculate_checksum ((uint8_t *)&m_ver_ihl, 20);
 	if (checksum == 0xffff) {

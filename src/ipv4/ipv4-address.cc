@@ -50,13 +50,19 @@ Ipv4Mask::is_equal (Ipv4Mask other) const
 
 
 bool 
-Ipv4Mask::is_match (Ipv4Address a, Ipv4Address b)
+Ipv4Mask::is_match (Ipv4Address a, Ipv4Address b) const
 {
 	if ((a.get_host_order () & m_mask) == (b.get_host_order () & m_mask)) {
 		return true;
 	} else {
 		return false;
 	}
+}
+
+uint32_t 
+Ipv4Mask::get_host_order (void) const
+{
+	return m_mask;
 }
 
 Ipv4Mask

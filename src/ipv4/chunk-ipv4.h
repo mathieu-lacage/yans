@@ -31,33 +31,33 @@ public:
 	virtual ~ChunkIpv4 ();
 
 	void set_payload_size (uint16_t size);
-	uint16_t get_payload_size (void);
+	uint16_t get_payload_size (void) const;
 
 	void set_tos (uint8_t);
-	uint8_t get_tos (void);
+	uint8_t get_tos (void) const;
 	void set_id (uint16_t);
-	uint16_t get_id (void);
+	uint16_t get_id (void) const;
 
 	void set_more_fragments (void);
 	void set_last_fragment (void);
-	bool is_last_fragment (void);
+	bool is_last_fragment (void) const;
 
 	void set_fragment_offset (uint16_t offset);
-	uint16_t get_fragment_offset (void);
+	uint16_t get_fragment_offset (void) const;
 
 	void set_ttl (uint8_t);
-	uint8_t get_ttl (void);
+	uint8_t get_ttl (void) const;
 	
-	uint8_t get_protocol (void);
+	uint8_t get_protocol (void) const;
 	void set_protocol (uint8_t);
 
 	void set_source (Ipv4Address source);
-	Ipv4Address get_source (void);
+	Ipv4Address get_source (void) const;
 
 	void set_destination (Ipv4Address destination);
-	Ipv4Address get_destination (void);
+	Ipv4Address get_destination (void) const;
 
-	bool is_checksum_ok (void);
+	bool is_checksum_ok (void) const;
 
 	virtual uint32_t get_size (void);
 	virtual Chunk *copy (void);
