@@ -46,6 +46,9 @@ Packet::~Packet ()
 		delete (*j);
 	}
 	m_trailers.erase (m_trailers.begin (), m_trailers.end ());
+	for (TagsI k = m_tags.begin (); k != m_tags.end (); k++) {
+		m_tags.erase (m_tags.begin (), m_tags.end ());
+	}
 }
 
 void 

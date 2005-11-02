@@ -77,6 +77,7 @@ public:
 	typedef std::vector<PacketDestroyNotifier *> PacketDestroyNotifiers;
 	typedef std::vector<PacketDestroyNotifier *>::const_iterator PacketDestroyNotifiersCI;
 	typedef Sgi::hash_map<uint32_t, Tag *> Tags;
+	typedef Sgi::hash_map<uint32_t, Tag *>::iterator TagsI;
 	PacketDestroyNotifiers m_destroy_notifiers;
 	Headers m_headers;
 	Trailers m_trailers;

@@ -47,7 +47,12 @@ Arp::Arp (NetworkInterface *interface)
 	  m_wait_reply_timeout (1.0)
 {}
 Arp::~Arp ()
-{}
+{
+	for (ArpCacheI i = m_arp_cache.begin (); i != m_arp_cache.end (); i++) {
+		delete (*i).second;
+	}
+	m_arp_cache.erase (m_arp_cache.begin (), m_arp_cache.end ());
+}
 
 void 
 Arp::set_alive_timeout (double alive_timeout)
@@ -192,5 +197,6 @@ Arp::recv_arp (Packet *packet)
 			TRACE ("got reply for unknown entry -- drop");
 		}
 	}
+	delete arp;
 	packet->unref ();
 }

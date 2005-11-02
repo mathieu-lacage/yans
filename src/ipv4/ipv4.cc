@@ -89,6 +89,7 @@ Ipv4::send (Packet *packet)
 			out_interface->send (packet, tag->get_daddress ());
 		}
 	}
+	delete tag;
 }
 
 void 
