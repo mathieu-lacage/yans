@@ -74,6 +74,7 @@ Udp::receive (Packet *packet)
 	tag->set_dport (udp_chunk->get_destination ());
 	tag->set_sport (udp_chunk->get_source ());
 	Ipv4EndPoint *end_point = m_end_points->lookup (tag->get_daddress (), tag->get_dport ());
+	delete udp_chunk;
 	if (end_point == 0) {
 		packet->unref ();
 		return;

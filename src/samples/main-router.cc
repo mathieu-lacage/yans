@@ -109,6 +109,7 @@ int main (int argc, char *argv[])
 	delete sink;
 	delete hclient;
 	delete hserver;
+	delete hrouter;
 	Simulator::instance ()->destroy ();
 
 	return 0;
