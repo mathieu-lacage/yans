@@ -68,6 +68,7 @@ WriteFile::open (std::string *filename)
 			  << " file: " << root->c_str ()
 			  << std::endl;
 	}
+	delete root;
 }
 void 
 WriteFile::close (void)

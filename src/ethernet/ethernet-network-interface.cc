@@ -76,6 +76,8 @@ EthernetNetworkInterface::~EthernetNetworkInterface ()
 	m_arp = (Arp *)0xdeadbeaf;
 	delete m_arp_sender;
 	m_arp_sender = (EthernetArpMacSender *)0xdeadbeaf;
+	delete m_tracer;
+	m_tracer = (NetworkInterfaceTracer *)0xdeadbeaf;
 }
 
 void 

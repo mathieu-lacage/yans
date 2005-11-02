@@ -36,6 +36,7 @@ NetworkInterfaceTracer::NetworkInterfaceTracer (Host *host, NetworkInterface *in
 	filename->append (*(interface->get_name ()));
 	m_file = new WriteFile (host);
 	m_file->open (filename);
+	delete filename;
 	m_buffer = new WriteBuffer (64);
 	write_pcap_header ();
 }
@@ -43,6 +44,9 @@ NetworkInterfaceTracer::~NetworkInterfaceTracer ()
 {
 	m_file->close ();
 	delete m_file;
+	m_file = (WriteFile *)0xdeadbeaf;
+	delete m_buffer;
+	m_buffer = (WriteBuffer *)0xdeadbeaf;
 }
 
 void
