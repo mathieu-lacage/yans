@@ -56,9 +56,10 @@ Host::~Host ()
 	delete m_tracer;
 	for (NetworkInterfacesI i = m_interfaces.begin (); 
 	     i != m_interfaces.end (); 
-	     i = m_interfaces.erase (i)) {
+	     i++) {
 		delete (*i);
 	}
+	m_interfaces.erase (m_interfaces.begin (), m_interfaces.end ());
 }
 
 Ipv4Route *
