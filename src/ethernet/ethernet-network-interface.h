@@ -30,7 +30,7 @@ class Cable;
 
 class EthernetNetworkInterface : public NetworkInterface {
 public:
-	EthernetNetworkInterface ();
+	EthernetNetworkInterface (char const *name);
 	virtual ~EthernetNetworkInterface ();
 
 	virtual void set_host (Host *host);

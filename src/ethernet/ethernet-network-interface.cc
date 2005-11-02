@@ -58,8 +58,8 @@ EthernetArpMacSender::send_arp (Packet *packet, MacAddress dest)
 }
 
 
-EthernetNetworkInterface::EthernetNetworkInterface ()
-	: m_name (new std::string ("eth0"))
+EthernetNetworkInterface::EthernetNetworkInterface (char const *name)
+	: m_name (new std::string (name))
 {
 	m_arp = new Arp (this);
 	m_arp_sender = new EthernetArpMacSender (this);

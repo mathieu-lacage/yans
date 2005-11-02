@@ -33,8 +33,8 @@ int main (int argc, char *argv[])
 {
 	/* setup the ethernet network itself. */
 	EthernetNetworkInterface *eth_client, *eth_server;
-	eth_client = new EthernetNetworkInterface ();
-	eth_server = new EthernetNetworkInterface ();
+	eth_client = new EthernetNetworkInterface ("eth0");
+	eth_server = new EthernetNetworkInterface ("eth0");
 	eth_client->set_mac_address (MacAddress ("00:00:00:00:00:01"));
 	eth_server->set_mac_address (MacAddress ("00:00:00:00:00:02"));
 	Cable *cable = new Cable ();

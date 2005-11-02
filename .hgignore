@@ -1,7 +1,7 @@
 .*\.o
 .*~$
-src/main-test
-src/samples/main-simple-event
+src/test/main-test
+src/samples/main-simple
+src/samples/main-router
 src/patch
-test/test
 patch
