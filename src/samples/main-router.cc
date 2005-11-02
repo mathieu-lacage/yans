@@ -70,7 +70,7 @@ int main (int argc, char *argv[])
 	Host *hclient, *hserver, *hrouter;
 	hclient = new Host ("client");
 	hserver = new Host ("server");
-	hserver = new Host ("router");
+	hrouter = new Host ("router");
 	//hclient->get_tracer ()->enable_all ();
 	//hserver->get_tracer ()->enable_all ();
 	hclient->add_interface (eth_client);
