@@ -61,7 +61,7 @@ WriteFile::open (std::string *filename)
 	}
 	std::string *root = new std::string (*(host->m_root));
 	root->append (*filename);
-	m_priv->m_fd = ::open (root->c_str (), O_WRONLY | O_CREAT);
+	m_priv->m_fd = ::open (root->c_str (), O_WRONLY | O_CREAT, S_IRWXU);
 	if (m_priv->m_fd == -1) {
 		std::cerr << "errno: " << errno
 			  << " err: " << strerror (errno) 
