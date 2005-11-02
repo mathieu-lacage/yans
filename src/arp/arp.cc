@@ -103,6 +103,7 @@ Arp::send_arp_request (Ipv4Address to)
 	Packet *packet = new Packet ();
 	packet->add_header (arp);
 	m_sender->send_arp (packet, MacAddress::get_broadcast ());
+	packet->unref ();
 }
 
 void
@@ -115,13 +116,9 @@ Arp::send_arp_reply (Ipv4Address to_ip, MacAddress to_mac)
 	Packet *packet = new Packet ();
 	packet->add_header (arp);
 	m_sender->send_arp (packet, to_mac);
-}
-
-void
-Arp::drop_dead_packet (Packet *packet)
-{
 	packet->unref ();
 }
+
 
 void 
 Arp::send_data (Packet *packet, Ipv4Address to)
@@ -140,20 +137,17 @@ Arp::send_data (Packet *packet, Ipv4Address to)
 				send_arp_request (to);
 			} else if (entry->is_wait_reply ()) {
 				TRACE ("wait reply for %u expired -- drop", to.get_host_order ());
-				drop_dead_packet (entry->get_waiting_packet ());
 				entry->mark_dead ();
 			}
 		} else {
 			if (entry->is_dead ()) {
 				TRACE ("dead entry for %u valid -- drop", to.get_host_order ());
-				drop_dead_packet (packet);
 			} else if (entry->is_alive ()) {
 				TRACE ("alive entry for %u valid -- send", to.get_host_order ());
 				m_sender->send_data (packet, entry->get_mac_address ());
 			} else if (entry->is_wait_reply ()) {
 				TRACE ("wait reply for %u valid -- drop previous", to.get_host_order ());
-				Packet *previous = entry->update_wait_reply (packet);
-				drop_dead_packet (previous);
+				entry->update_wait_reply (packet);
 			}
 		}
 	} else {
@@ -185,8 +179,9 @@ Arp::recv_arp (Packet *packet)
 				TRACE ("got reply from %u for waiting entry -- flush",
 				       arp->get_source_ipv4_address ().get_host_order ());
 				MacAddress from_mac = arp->get_source_hardware_address ();
-				m_sender->send_data (entry->get_waiting_packet (), from_mac);
-				entry->mark_alive (from_mac);
+				Packet *waiting = entry->mark_alive (from_mac);
+				m_sender->send_data (waiting, from_mac);
+				waiting->unref ();
 			} else {
 				// ignore this reply which might well be an attempt 
 				// at poisening my arp cache.
@@ -198,5 +193,4 @@ Arp::recv_arp (Packet *packet)
 		}
 	}
 	delete arp;
-	packet->unref ();
 }

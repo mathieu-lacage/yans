@@ -80,5 +80,4 @@ void
 UdpSink::receive (Packet *packet)
 {
 	m_host->get_tracer ()->trace_rx_app (packet);
-	packet->unref ();
 }

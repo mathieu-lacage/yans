@@ -54,8 +54,9 @@ Cable::send (Packet *packet, EthernetNetworkInterface *sender)
 	for (EthernetNetworkInterfacesI i = m_interfaces.begin ();
 	     i != m_interfaces.end (); i++) {
 		if ((*i) != sender) {
-			(*i)->recv (packet->copy ());
+			Packet *copy = packet->copy ();
+			(*i)->recv (copy);
+			copy->unref ();
 		}
 	}
-	packet->unref ();
 }

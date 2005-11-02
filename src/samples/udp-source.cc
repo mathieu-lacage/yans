@@ -154,4 +154,5 @@ UdpSource::send_next_packet (void)
 	/* send packet. */
 	m_host->get_tracer ()->trace_tx_app (packet);
 	m_host->get_udp ()->send (packet);
+	packet->unref ();
 }

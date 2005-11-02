@@ -29,10 +29,41 @@
 #include "tag-ipv4.h"
 #include "host-tracer.h"
 
+class IcmpTransportProtocol : public TransportProtocol {
+public:
+	IcmpTransportProtocol ();
+	virtual ~IcmpTransportProtocol ();
+
+	virtual uint8_t get_protocol (void);
+	virtual void receive (Packet *packet);
+};
+
+IcmpTransportProtocol::IcmpTransportProtocol ()
+{}
+IcmpTransportProtocol::~IcmpTransportProtocol ()
+{}
+uint8_t 
+IcmpTransportProtocol::get_protocol (void)
+{
+	return 1;
+}
+void 
+IcmpTransportProtocol::receive (Packet *packet)
+{
+
+}
+
+
+
 Ipv4::Ipv4 ()
-{}
+{
+	m_icmp = new IcmpTransportProtocol ();
+	register_transport_protocol (m_icmp);
+}
 Ipv4::~Ipv4 ()
-{}
+{
+	delete m_icmp;
+}
 
 void 
 Ipv4::set_host (Host *host)
@@ -50,13 +81,6 @@ void
 Ipv4::set_protocol (uint8_t protocol)
 {
 	m_send_protocol = protocol;
-}
-
-void
-Ipv4::drop_packet (Packet *packet)
-{
-	packet->unref ();
-	// XXX should we print something ?
 }
 
 void 
@@ -161,6 +185,5 @@ Ipv4::receive (Packet *packet, NetworkInterface *interface)
 	protocol->receive (packet);
 	return;
  drop_packet:
-	packet->unref ();
 	return;
 }

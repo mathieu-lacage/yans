@@ -76,7 +76,6 @@ Udp::receive (Packet *packet)
 	Ipv4EndPoint *end_point = m_end_points->lookup (tag->get_daddress (), tag->get_dport ());
 	delete udp_chunk;
 	if (end_point == 0) {
-		packet->unref ();
 		return;
 	}
 	end_point->get_listener ()->receive (packet);
@@ -97,6 +96,5 @@ Udp::send (Packet *packet)
 	m_ipv4->set_protocol (UDP_PROTOCOL);
 	m_host->get_tracer ()->trace_tx_udp (packet);
 	m_ipv4->send (packet);
-
 	// XXX: if we wanted to, we could generate the udp checksum here.
 }

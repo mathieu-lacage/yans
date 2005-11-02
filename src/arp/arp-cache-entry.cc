@@ -22,10 +22,12 @@
 #include "simulator.h"
 #include "arp.h"
 #include "arp-cache-entry.h"
+#include "packet.h"
 
 ArpCacheEntry::ArpCacheEntry (Arp *arp)
 	: m_arp (arp),
-	  m_state (ALIVE)
+	  m_state (ALIVE),
+	  m_waiting (0)
 {}
 
 
@@ -50,18 +52,25 @@ void
 ArpCacheEntry::mark_dead (void) 
 {
 	m_state = DEAD;
+	assert (m_waiting != 0);
+	m_waiting->unref ();
+	m_waiting = 0;
 	update_seen ();
 }
-void 
+Packet *
 ArpCacheEntry::mark_alive (MacAddress mac_address) 
 {
 	assert (m_state == WAIT_REPLY);
+	assert (m_waiting != 0);
 	m_mac_address = mac_address;
 	m_state = ALIVE;
 	update_seen ();
+	Packet *waiting = m_waiting;
+	m_waiting = 0;
+	return waiting;
 }
 
-Packet *
+void
 ArpCacheEntry::update_wait_reply (Packet *waiting)
 {
 	assert (m_state == WAIT_REPLY);
@@ -70,23 +79,19 @@ ArpCacheEntry::update_wait_reply (Packet *waiting)
 	 * replace it with this one.
 	 */
 	Packet *old = m_waiting;
+	old->unref ();
+	waiting->ref ();
 	m_waiting = waiting;
-	return old;
 }
 void 
 ArpCacheEntry::mark_wait_reply (Packet *waiting)
 {
 	assert (m_state == ALIVE || m_state == DEAD);
+	assert (m_waiting == 0);
 	m_state = WAIT_REPLY;
+	waiting->ref ();
 	m_waiting = waiting;
 	update_seen ();
-}
-
-Packet *
-ArpCacheEntry::get_waiting_packet (void)
-{
-	assert (m_state == WAIT_REPLY);
-	return m_waiting;
 }
 
 MacAddress

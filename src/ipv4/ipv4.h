@@ -31,6 +31,7 @@ class TransportProtocol;
 class Packet;
 class Ipv4Route;
 class Host;
+class IcmpTransportProtocol;
 
 class Ipv4 {
 public:
@@ -49,7 +50,6 @@ public:
 
 private:
 	Ipv4Route *get_route (void);
-	void drop_packet (Packet *packet);
 	TransportProtocol *lookup_protocol (uint8_t id);
 
 	Host *m_host;
@@ -58,6 +58,7 @@ private:
 	Protocols m_protocols;
 	Ipv4Address m_send_destination;
 	uint8_t m_send_protocol;
+	IcmpTransportProtocol *m_icmp;
 };
 
 #endif /* IPV4_H */
