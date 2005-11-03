@@ -26,30 +26,30 @@
 #define noSCHED_DEBUG 1
 
 #ifdef SCHED_DEBUG
-#  include <stdio.h>
+#  include <iostream>
 static void
 print_fiber (Fiber const *f)
 {
-	printf ("\"%s\" ", f->peek_name ()->c_str ());
+	std::cout << f->peek_name ();
 	if (f->is_blocked ()) {
-		printf ("blocked ");
+		std::cout << "blocked ";
 	} else if (f->is_dead ()) {
-		printf ("dead ");
+		std::cout << "dead ";
 	} else if (f->is_active ()) {
-		printf ("active ");
+		std::cout << "active ";
 	}
 }
 #  define TRACE_LEAVE(f) \
-printf ("SCHED leave "); \
+std::cout << "SCHED leave "; \
 print_fiber (f);
 #  define TRACE_ENTER_MAIN() \
-printf ("enter main\n")
+std::cout << "enter main\n";
 #  define TRACE_LEAVE_MAIN() \
-printf ("SCHED leave main ")
+std::cout << "SCHED leave main ";
 #  define TRACE_ENTER(f) \
-printf ("enter ");       \
+std::cout << "enter ";   \
 print_fiber (f);         \
-printf ("\n");
+std::cout << std::endl;
 #else
 #  define TRACE_LEAVE(f)
 #  define TRACE_ENTER_MAIN()
