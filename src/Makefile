@@ -32,8 +32,10 @@ SOURCE= \
 	ipv4/udp.cc \
 	ipv4/chunk-tcp.cc \
 	ipv4/chunk-udp.cc \
-	ipv4/ipv4-endpoint.cc \
 	ipv4/chunk-ipv4.cc \
+	ipv4/chunk-piece.cc \
+	ipv4/chunk-icmp.cc \
+	ipv4/ipv4-endpoint.cc \
 	ipv4/ipv4-address.cc \
 	ipv4/tag-ipv4.cc \
 	ipv4/ipv4-route.cc \

@@ -73,6 +73,7 @@ Ipv4::Ipv4 ()
 {
 	m_icmp = new IcmpTransportProtocol ();
 	register_transport_protocol (m_icmp);
+	/* this is recommended by rfc 1700 */
 	m_default_ttl = 64;
 }
 Ipv4::~Ipv4 ()
