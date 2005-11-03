@@ -29,6 +29,20 @@
 #include "tag-ipv4.h"
 #include "host-tracer.h"
 
+
+#define TRACE_IPV4 1
+
+#ifdef TRACE_IPV4
+#include <stdio.h>
+#include "simulator.h"
+# define TRACE(format,...) \
+	printf ("IPV4 TRACE %f " format "\n", \
+                Simulator::instance ()->now_s (), ## __VA_ARGS__);
+#else /* TRACE_IPV4 */
+# define TRACE(format,...)
+#endif /* TRACE_IPV4 */
+
+
 class IcmpTransportProtocol : public TransportProtocol {
 public:
 	IcmpTransportProtocol ();
@@ -59,6 +73,7 @@ Ipv4::Ipv4 ()
 {
 	m_icmp = new IcmpTransportProtocol ();
 	register_transport_protocol (m_icmp);
+	m_default_ttl = 64;
 }
 Ipv4::~Ipv4 ()
 {
@@ -98,6 +113,7 @@ Ipv4::send (Packet *packet)
 	ip_header->set_destination (tag->get_daddress ());
 	ip_header->set_protocol (m_send_protocol);
 	ip_header->set_payload_size (packet->get_size ());
+	ip_header->set_ttl (m_default_ttl);
 
 	packet->add_header (ip_header);
 
@@ -134,6 +150,50 @@ Ipv4::lookup_protocol (uint8_t protocol)
 	return 0;
 }
 
+bool
+Ipv4::forwarding (Packet *packet, NetworkInterface *interface)
+{
+	ChunkIpv4 *ip_header = static_cast <ChunkIpv4 *> (packet->peek_header ());
+	NetworkInterfaces const * interfaces = m_host->get_interfaces ();
+	for (NetworkInterfacesCI i = interfaces->begin ();
+	     i != interfaces->end (); i++) {
+		if ((*i)->get_ipv4_address ().is_equal (ip_header->get_destination ())) {
+			TRACE ("for me 1");
+			return false;
+		}
+	}
+	if (ip_header->get_destination ().is_equal (interface->get_ipv4_broadcast ())) {
+		TRACE ("for me 2");
+		return false;
+	}
+	if (ip_header->get_destination ().is_equal (Ipv4Address::get_broadcast ())) {
+		TRACE ("for me 3");
+		return false;
+	}
+	if (ip_header->get_destination ().is_equal (Ipv4Address::get_any ())) {
+		TRACE ("for me 4");
+		return false;
+	}
+	if (ip_header->get_ttl () == 1) {
+		//send_icmp_time_exceeded (ip_header->get_source ());
+		TRACE ("not for me -- ttl expired. drop.");
+		return true;
+	}
+	ip_header->set_ttl (ip_header->get_ttl () - 1);
+	Route *route = m_host->get_routing_table ()->lookup (ip_header->get_destination ());
+	if (route == 0) {
+		TRACE ("not for me -- forwarding but no route to host. drop.");
+		return true;
+	}
+	TRACE ("not for me -- forwarding.");
+	if (route->is_gateway ()) {
+		route->get_interface ()->send (packet, route->get_gateway ());
+	} else {
+		route->get_interface ()->send (packet, ip_header->get_destination ());
+	}
+	return true;
+}
+
 void 
 Ipv4::receive (Packet *packet, NetworkInterface *interface)
 {
@@ -141,37 +201,16 @@ Ipv4::receive (Packet *packet, NetworkInterface *interface)
 	ChunkIpv4 *ip_header = static_cast <ChunkIpv4 *> (packet->peek_header ());
 
 	if (!ip_header->is_checksum_ok ()) {
-		goto drop_packet;
+		TRACE ("checksum not ok");
+		// XXX should drop packet but checksum calc does not work.
+		//return;
 	}
-	NetworkInterfaces const * interfaces = m_host->get_interfaces ();
-	for (NetworkInterfacesCI i = interfaces->begin ();
-	     i != interfaces->end (); i++) {
-		if ((*i)->get_ipv4_address ().is_equal (ip_header->get_destination ())) {
-			goto for_us;
-		}
+	if (forwarding (packet, interface)) {
+		return;
 	}
-	if (ip_header->get_destination ().is_equal (interface->get_ipv4_broadcast ())) {
-		goto for_us;
-	}
-	if (ip_header->get_destination ().is_equal (Ipv4Address::get_broadcast ())) {
-		goto for_us;
-	}
-	if (ip_header->get_destination ().is_equal (Ipv4Address::get_any ())) {
-		goto for_us;
-	}
-	if (ip_header->get_ttl () == 1) {
-		//send_icmp_time_exceeded (ip_header->get_source ());
-		goto drop_packet;
-	}
-	ip_header->set_ttl (ip_header->get_ttl () - 1);
-	Route *route = m_host->get_routing_table ()->lookup (ip_header->get_destination ());
-	if (route->is_gateway ()) {
-		route->get_interface ()->send (packet, route->get_gateway ());
-	} else {
-		route->get_interface ()->send (packet, ip_header->get_destination ());
-	}
-	return;
- for_us:
+
+
+	/* receive the packet. */
 	packet->remove_header ();
 	TagInIpv4 *tag = new TagInIpv4 (interface);
 	packet->add_tag (TagInIpv4::get_tag (), tag);
@@ -179,11 +218,7 @@ Ipv4::receive (Packet *packet, NetworkInterface *interface)
 	tag->set_daddress (ip_header->get_destination ());
 	TransportProtocol *protocol = lookup_protocol (ip_header->get_protocol ());
 	delete ip_header;
-	if (protocol == 0) {
-		goto drop_packet;
+	if (protocol != 0) {
+		protocol->receive (packet);
 	}
-	protocol->receive (packet);
-	return;
- drop_packet:
-	return;
 }

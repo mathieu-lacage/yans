@@ -87,6 +87,13 @@ int main (int argc, char *argv[])
 							  eth_client);
 	hserver->get_routing_table ()->set_default_route (Ipv4Address ("192.168.1.1"),
 							  eth_server);
+	hrouter->get_routing_table ()->add_network_route_to (Ipv4Address ("192.168.0.0"),
+							     Ipv4Mask ("255.255.255.0"),
+							     eth_router_client);
+	hrouter->get_routing_table ()->add_network_route_to (Ipv4Address ("192.168.1.0"),
+							     Ipv4Mask ("255.255.255.0"),
+							     eth_router_server);
+	
 
 	/* start applications. */
 	UdpSource *source = new UdpSource (hclient);

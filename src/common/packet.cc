@@ -47,8 +47,10 @@ Packet::~Packet ()
 	}
 	m_trailers.erase (m_trailers.begin (), m_trailers.end ());
 	for (TagsI k = m_tags.begin (); k != m_tags.end (); k++) {
-		m_tags.erase (m_tags.begin (), m_tags.end ());
+		delete (*k).second;
 	}
+	m_tags.erase (m_tags.begin (), m_tags.end ());
+	m_ref = 0xdeadbeaf;
 }
 
 void 
@@ -66,6 +68,7 @@ Packet::ref (void)
 void 
 Packet::unref (void)
 {
+	assert (m_ref != 0xdeadbeaf);
 	m_ref--;
 	if (m_ref == 0) {
 		delete this;

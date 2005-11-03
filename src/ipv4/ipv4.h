@@ -49,6 +49,7 @@ public:
 	void receive (Packet *packet, NetworkInterface *from);
 
 private:
+	bool forwarding (Packet *packet, NetworkInterface *from);
 	Ipv4Route *get_route (void);
 	TransportProtocol *lookup_protocol (uint8_t id);
 
@@ -58,6 +59,7 @@ private:
 	Protocols m_protocols;
 	Ipv4Address m_send_destination;
 	uint8_t m_send_protocol;
+	uint8_t m_default_ttl;
 	IcmpTransportProtocol *m_icmp;
 };
 
