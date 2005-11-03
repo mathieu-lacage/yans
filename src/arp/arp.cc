@@ -28,11 +28,11 @@
 #define noTRACE_ARP 1
 
 #ifdef TRACE_ARP
-#include <stdio.h>
+#include <iostream>
 #include "simulator.h"
-# define TRACE(format,...) \
-	printf ("LLARP TRACE %f " format "\n", \
-                Simulator::instance ()->now_s (), ## __VA_ARGS__);
+# define TRACE(x) \
+std::cout << "LLARP TRACE " << Simulator::instance ()->now_s () << " " \
+          << x << std::endl;
 #else /* TRACE_ARP */
 # define TRACE(format,...)
 #endif /* TRACE_ARP */
@@ -128,31 +128,31 @@ Arp::send_data (Packet *packet, Ipv4Address to)
 		assert (entry != 0);
 		if (entry->is_expired ()) {
 			if (entry->is_dead ()) {
-				TRACE ("dead entry for %u expired -- send arp request", to.get_host_order ());
+				TRACE ("dead entry for " << to << " expired -- send arp request");
 				entry->mark_wait_reply (packet);
 				send_arp_request (to);
 			} else if (entry->is_alive ()) {
-				TRACE ("alive entry for %u expired -- send arp request", to.get_host_order ());
+				TRACE ("alive entry for " << to << " expired -- send arp request");
 				entry->mark_wait_reply (packet);
 				send_arp_request (to);
 			} else if (entry->is_wait_reply ()) {
-				TRACE ("wait reply for %u expired -- drop", to.get_host_order ());
+				TRACE ("wait reply for " << to << " expired -- drop");
 				entry->mark_dead ();
 			}
 		} else {
 			if (entry->is_dead ()) {
-				TRACE ("dead entry for %u valid -- drop", to.get_host_order ());
+				TRACE ("dead entry for " << to << " valid -- drop");
 			} else if (entry->is_alive ()) {
-				TRACE ("alive entry for %u valid -- send", to.get_host_order ());
+				TRACE ("alive entry for " << to << " valid -- send");
 				m_sender->send_data (packet, entry->get_mac_address ());
 			} else if (entry->is_wait_reply ()) {
-				TRACE ("wait reply for %u valid -- drop previous", to.get_host_order ());
+				TRACE ("wait reply for " << to << " valid -- drop previous");
 				entry->update_wait_reply (packet);
 			}
 		}
 	} else {
 		// This is our first attempt to transmit data to this destination.
-		TRACE ("no entry for %u -- send arp request", to.get_host_order ());
+		TRACE ("no entry for " << to << " -- send arp request");
 		ArpCacheEntry *entry = new ArpCacheEntry (this);
 		entry->mark_wait_reply (packet);
 		m_arp_cache[to] = entry;
@@ -165,7 +165,7 @@ Arp::recv_arp (Packet *packet)
 	ChunkArp *arp = static_cast <ChunkArp *> (packet->remove_header ());
 	if (arp->is_request () && 
 	    arp->get_destination_ipv4_address () == m_interface->get_ipv4_address ()) {
-		TRACE ("got request from %u -- send reply", arp->get_source_ipv4_address ().get_host_order ());
+		TRACE ("got request from " << arp->get_source_ipv4_address () << " -- send reply");
 		send_arp_reply (arp->get_source_ipv4_address (),
 				arp->get_source_hardware_address ());
 	} else if (arp->is_reply () &&
@@ -176,8 +176,8 @@ Arp::recv_arp (Packet *packet)
 			ArpCacheEntry *entry = m_arp_cache[from];
 			assert (entry != 0);
 			if (entry->is_wait_reply ()) {
-				TRACE ("got reply from %u for waiting entry -- flush",
-				       arp->get_source_ipv4_address ().get_host_order ());
+				TRACE ("got reply from " << arp->get_source_ipv4_address ()
+				       << " for waiting entry -- flush");
 				MacAddress from_mac = arp->get_source_hardware_address ();
 				Packet *waiting = entry->mark_alive (from_mac);
 				m_sender->send_data (waiting, from_mac);
@@ -185,8 +185,8 @@ Arp::recv_arp (Packet *packet)
 			} else {
 				// ignore this reply which might well be an attempt 
 				// at poisening my arp cache.
-				TRACE ("got reply from %u for non-waiting entry -- drop",
-				       arp->get_source_ipv4_address ().get_host_order ());
+				TRACE ("got reply from " << arp->get_source_ipv4_address () << 
+				       " for non-waiting entry -- drop");
 			}
 		} else {
 			TRACE ("got reply for unknown entry -- drop");
