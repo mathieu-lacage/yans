@@ -1,0 +1,20 @@
+Release 0.2
+-----------
+
+This release features:
+   - ipv4 forwarding
+   - preliminary icmp support
+
+Release 0.1
+-----------
+
+This release features:
+   - a UDP/IPv4 stack without multicast
+   - a nice packet API
+   - a complete arp module
+   - an empty ethernet module which uses the arp module to perform address
+     translation between IPv4 addresses and MAC addresses.
+   - libpcap dump support at the network interface level
+   - a sample application with a simple udp source and sink pair.
+   - the framework to provide a POSIX environment (this is far from the
+     real thing for now).
