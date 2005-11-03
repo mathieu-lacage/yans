@@ -137,7 +137,7 @@ calculate_checksum (uint8_t *buffer, uint16_t size)
 	while (sum >> 16) {
 		sum = (sum & 0xffff) + (sum >> 16);
 	}
-	uint16_t checksum =  ~sum;
+	uint16_t checksum = ~sum;
 	return checksum;
 
 }
