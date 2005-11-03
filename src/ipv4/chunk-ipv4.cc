@@ -162,7 +162,7 @@ ChunkIpv4::get_destination (void) const
 
 
 uint32_t 
-ChunkIpv4::get_size (void)
+ChunkIpv4::get_size (void) const
 {
 	uint8_t ihl = m_ver_ihl & 0x0f;
 	uint32_t size = ihl * 4;
@@ -221,7 +221,7 @@ ChunkIpv4::deserialize (ReadBuffer *buffer)
 }
 
 void 
-ChunkIpv4::print (std::ostream *os)
+ChunkIpv4::print (std::ostream *os) const
 {
 	// ipv4, right ?
 	assert ((m_ver_ihl & 0x0f) == 4);
@@ -235,8 +235,6 @@ ChunkIpv4::print (std::ostream *os)
 	    << " ttl: " << (uint32_t)m_ttl
 	    << " protocol: " << (uint32_t)m_protocol
 	    << " checksum: " << m_checksum
-	    << " source: ";
-	Ipv4Address (utils_ntoh_32 (m_source)).print (os);
-	*os << " destination: ";
-	Ipv4Address (utils_ntoh_32 (m_destination)).print (os);
+	    << " source: " << m_source
+	    << " destination: " << m_destination;
 }

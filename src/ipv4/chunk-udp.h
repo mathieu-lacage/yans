@@ -38,11 +38,11 @@ public:
 
 	void set_payload_size (uint16_t size);
 
-	virtual uint32_t get_size (void);
+	virtual uint32_t get_size (void) const;
 	virtual Chunk *copy (void);
 	virtual void serialize (WriteBuffer *buffer);
 	virtual void deserialize (ReadBuffer *buffer);
-	virtual void print (std::ostream *os);
+	virtual void print (std::ostream *os) const;
 private:
 	uint16_t m_source_port;
 	uint16_t m_destination_port;

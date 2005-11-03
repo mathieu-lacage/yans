@@ -62,4 +62,6 @@ private:
 	uint8_t m_address[6];
 };
 
+std::ostream& operator<< (std::ostream& os, MacAddress const& address);
+
 #endif /* MAC_ADDRESS_H */

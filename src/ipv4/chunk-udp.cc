@@ -64,7 +64,7 @@ ChunkUdp::set_payload_size (uint16_t size)
 	m_udp_length = size + 8;
 }
 uint32_t 
-ChunkUdp::get_size (void)
+ChunkUdp::get_size (void) const
 {
 	return 8;
 }
@@ -97,7 +97,7 @@ ChunkUdp::deserialize (ReadBuffer *buffer)
 }
 
 void 
-ChunkUdp::print (std::ostream *os)
+ChunkUdp::print (std::ostream *os) const
 {
 	*os << "(udp)"
 	    << " port source: " << m_source_port

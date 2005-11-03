@@ -28,16 +28,17 @@
 #include "host.h"
 #include "tag-ipv4.h"
 #include "host-tracer.h"
+#include "chunk-icmp.h"
+#include "chunk-piece.h"
 
 
 #define TRACE_IPV4 1
 
 #ifdef TRACE_IPV4
-#include <stdio.h>
+#include <iostream>
 #include "simulator.h"
-# define TRACE(format,...) \
-	printf ("IPV4 TRACE %f " format "\n", \
-                Simulator::instance ()->now_s (), ## __VA_ARGS__);
+# define TRACE(x) \
+std::cout << "IPV4 TRACE " << Simulator::instance ()->now_s () << " " << x << std::endl;
 #else /* TRACE_IPV4 */
 # define TRACE(format,...)
 #endif /* TRACE_IPV4 */
@@ -74,7 +75,7 @@ Ipv4::Ipv4 ()
 	m_icmp = new IcmpTransportProtocol ();
 	register_transport_protocol (m_icmp);
 	/* this is recommended by rfc 1700 */
-	m_default_ttl = 64;
+	m_default_ttl = 1;
 }
 Ipv4::~Ipv4 ()
 {
@@ -151,6 +152,46 @@ Ipv4::lookup_protocol (uint8_t protocol)
 	return 0;
 }
 
+void
+Ipv4::send_icmp_time_exceeded_ttl (Packet *original, NetworkInterface *interface)
+{
+	Packet *packet = new Packet ();
+
+	ChunkIpv4 *ip_header = static_cast <ChunkIpv4 *> (original->remove_header ());
+	Chunk *payload = original->remove_header ();
+
+	ChunkPiece *payload_piece = new ChunkPiece ();
+	payload_piece->set_original (payload, 8);
+	packet->add_header (payload_piece);
+
+	packet->add_header (ip_header);
+	
+	ChunkIcmp *icmp = new ChunkIcmp ();
+	icmp->set_time_exceeded ();
+	icmp->set_code (0);
+	packet->add_header (icmp);
+
+	ChunkIpv4 *ip_real = new ChunkIpv4 ();
+	ip_real->set_destination (ip_header->get_source ());
+	ip_real->set_source (interface->get_ipv4_address ());
+	ip_real->set_payload_size (packet->get_size ());
+	ip_real->set_protocol (m_icmp->get_protocol ());
+	ip_real->set_ttl (m_default_ttl);
+	packet->add_header (ip_real);
+
+	Route *route = m_host->get_routing_table ()->lookup (ip_real->get_destination ());
+	if (route == 0) {
+		TRACE ("cannot send back icmp message to " << ip_real->get_destination ());
+		return;
+	}
+	TRACE ("send back icmp ttl exceeded to " << ip_real->get_destination ());
+	if (route->is_gateway ()) {
+		route->get_interface ()->send (packet, route->get_gateway ());
+	} else {
+		route->get_interface ()->send (packet, ip_real->get_destination ());
+	}	
+}
+
 bool
 Ipv4::forwarding (Packet *packet, NetworkInterface *interface)
 {
@@ -176,7 +217,7 @@ Ipv4::forwarding (Packet *packet, NetworkInterface *interface)
 		return false;
 	}
 	if (ip_header->get_ttl () == 1) {
-		//send_icmp_time_exceeded (ip_header->get_source ());
+		send_icmp_time_exceeded_ttl (packet, interface);
 		TRACE ("not for me -- ttl expired. drop.");
 		return true;
 	}

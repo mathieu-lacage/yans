@@ -72,7 +72,7 @@ ChunkMacLlcSnap::get_ether_type (void)
 }
 
 uint32_t 
-ChunkMacLlcSnap::get_size (void)
+ChunkMacLlcSnap::get_size (void) const
 {
 	return 6 + 6 + 2 + 1 + 1 + 1 + 3 + 2;
 }
@@ -120,7 +120,7 @@ ChunkMacLlcSnap::deserialize (ReadBuffer *buffer)
 	m_ether_type = buffer->read_ntoh_u16 ();
 }
 void 
-ChunkMacLlcSnap::print (std::ostream *os)
+ChunkMacLlcSnap::print (std::ostream *os) const
 {
 	*os << "(mac)"
 	    << " source: ";

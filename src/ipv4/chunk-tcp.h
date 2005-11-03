@@ -57,21 +57,21 @@ public:
 	void disable_flag_urg (void);
 	void disable_flag_psh (void);
 
-	bool is_flag_syn (void);
-	bool is_flag_fin (void);
-	bool is_flag_rst (void);
-	bool is_flag_ack (void);
-	bool is_flag_urg (void);
-	bool is_flag_psh (void);
-	bool is_option_mss (void);
+	bool is_flag_syn (void) const;
+	bool is_flag_fin (void) const;
+	bool is_flag_rst (void) const;
+	bool is_flag_ack (void) const;
+	bool is_flag_urg (void) const;
+	bool is_flag_psh (void) const;
+	bool is_option_mss (void) const;
 
 	bool is_checksum_ok (void);
 
-	virtual uint32_t get_size (void);
+	virtual uint32_t get_size (void) const;
 	virtual Chunk *copy (void);
 	virtual void serialize (WriteBuffer *buffer);
 	virtual void deserialize (ReadBuffer *buffer);
-	virtual void print (std::ostream *os);
+	virtual void print (std::ostream *os) const;
 private:
 	enum {
 		URG = 2,
@@ -81,7 +81,7 @@ private:
 		SYN = 6,
 		FIN = 7
 	};
-	bool is_flag (uint8_t n);
+	bool is_flag (uint8_t n) const;
 	void enable_flag (uint8_t n);
 	void disable_flag (uint8_t n);
 	uint16_t m_source_port;

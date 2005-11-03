@@ -23,3 +23,10 @@
 
 Chunk::~Chunk ()
 {}
+
+
+std::ostream& operator<< (std::ostream& os, Chunk const& chunk)
+{
+	chunk.print (&os);
+	return os;
+}

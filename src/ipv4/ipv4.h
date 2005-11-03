@@ -52,6 +52,7 @@ private:
 	bool forwarding (Packet *packet, NetworkInterface *from);
 	Ipv4Route *get_route (void);
 	TransportProtocol *lookup_protocol (uint8_t id);
+	void send_icmp_time_exceeded_ttl (Packet *original, NetworkInterface *interface);
 
 	Host *m_host;
 	typedef std::vector<std::pair<uint8_t, TransportProtocol *> > Protocols;

@@ -26,6 +26,8 @@
 #include "packet.h"
 #include "host-tracer.h"
 
+#include <iostream>
+
 
 class UdpSinkListener : public Ipv4EndPointListener {
 public:
@@ -49,7 +51,9 @@ void UdpSinkListener::receive (Packet *packet)
 UdpSink::UdpSink (Host *host)
 	: m_host (host),
 	  m_end_point (0),
-	  m_listener (new UdpSinkListener (this))
+	  m_listener (new UdpSinkListener (this)),
+	  m_n_rx (0),
+	  m_size_rx (0)
 {}
 
 UdpSink::~UdpSink ()
@@ -62,6 +66,13 @@ UdpSink::~UdpSink ()
 	m_host = (Host *)0xdeadbeaf;
 	delete m_listener;
 	m_listener = (UdpSinkListener *)0xdeadbeaf;
+}
+
+void 
+UdpSink::print_stats (void)
+{
+	std::cout << "packets received: " << m_n_rx << std::endl
+		  << "bytes received: " << m_size_rx << std::endl;
 }
 
 bool 
@@ -80,4 +91,6 @@ void
 UdpSink::receive (Packet *packet)
 {
 	m_host->get_tracer ()->trace_rx_app (packet);
+	m_n_rx++;
+	m_size_rx += packet->get_size ();	
 }

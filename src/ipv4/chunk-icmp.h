@@ -36,11 +36,11 @@ public:
 
 	void set_time_exceeded (void);
 
-	virtual uint32_t get_size (void);
+	virtual uint32_t get_size (void) const;
 	virtual Chunk *copy (void);
 	virtual void serialize (WriteBuffer *buffer);
 	virtual void deserialize (ReadBuffer *buffer);
-	virtual void print (std::ostream *os);
+	virtual void print (std::ostream *os) const;
 
 	enum {
 		ECHO_REPLY    = 0,

@@ -32,11 +32,13 @@ class Chunk {
 public:
 	virtual ~Chunk () = 0;
 
-	virtual uint32_t get_size (void) = 0;
+	virtual uint32_t get_size (void) const = 0;
 	virtual Chunk *copy (void) = 0;
 	virtual void serialize (WriteBuffer *buffer) = 0;
 	virtual void deserialize (ReadBuffer *buffer) = 0;
-	virtual void print (std::ostream *os) = 0;
+	virtual void print (std::ostream *os) const = 0;
 };
+
+std::ostream& operator<< (std::ostream& os, Chunk const& chunk);
 
 #endif /* CHUNK_H */

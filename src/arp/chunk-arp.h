@@ -37,18 +37,18 @@ class ChunkArp : public Chunk {
 			Ipv4Address source_protocol_address,
 			MacAddress destination_hardware_address,
 			Ipv4Address destination_protocol_address);
-	bool is_request (void);
-	bool is_reply (void);
+	bool is_request (void) const;
+	bool is_reply (void) const;
 	MacAddress get_source_hardware_address (void);
 	MacAddress get_destination_hardware_address (void);
 	Ipv4Address get_source_ipv4_address (void);
 	Ipv4Address get_destination_ipv4_address (void);
 
-	virtual uint32_t get_size (void);
+	virtual uint32_t get_size (void) const;
 	virtual Chunk *copy (void);
 	virtual void serialize (WriteBuffer *buffer);
 	virtual void deserialize (ReadBuffer *buffer);
-	virtual void print (std::ostream *os);
+	virtual void print (std::ostream *os) const;
 
 private:
 	enum ArpType_e {

@@ -35,6 +35,8 @@ public:
 	UdpSink (Host *host);
 	~UdpSink ();
 
+	void print_stats (void);
+
 	bool bind (Ipv4Address address, uint16_t port);
 private:
 	friend class UdpSinkListener;
@@ -42,6 +44,8 @@ private:
 	Host *m_host;
 	Ipv4EndPoint *m_end_point;
 	UdpSinkListener *m_listener;
+	uint32_t m_n_rx;
+	uint32_t m_size_rx;
 };
 
 

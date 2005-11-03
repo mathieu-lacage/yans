@@ -52,7 +52,7 @@ ChunkIcmp::set_time_exceeded (void)
 
 
 uint32_t 
-ChunkIcmp::get_size (void)
+ChunkIcmp::get_size (void) const
 {
 	if (m_type == UNREACH  ||
 	    m_type == TIME_EXCEEDED ||
@@ -121,7 +121,7 @@ void
 ChunkIcmp::deserialize (ReadBuffer *buffer)
 {}
 void 
-ChunkIcmp::print (std::ostream *os)
+ChunkIcmp::print (std::ostream *os) const
 {
 	*os << "(icmp) "
 	    << "type: " << m_type << " "

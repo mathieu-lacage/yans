@@ -42,11 +42,11 @@ class ChunkMacLlcSnap : public Chunk {
 	uint16_t get_ether_type (void);
 	
 
-	virtual uint32_t get_size (void);
+	virtual uint32_t get_size (void) const;
 	virtual Chunk *copy (void);
 	virtual void serialize (WriteBuffer *buffer);
 	virtual void deserialize (ReadBuffer *buffer);
-	virtual void print (std::ostream *os);
+	virtual void print (std::ostream *os) const;
 private:
 	MacAddress m_source;
 	MacAddress m_destination;

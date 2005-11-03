@@ -48,7 +48,7 @@ ChunkPiece::set_original (Chunk *original, uint32_t size)
 	
 
 uint32_t 
-ChunkPiece::get_size (void)
+ChunkPiece::get_size (void) const
 {
 	return m_size;
 }
@@ -80,7 +80,7 @@ ChunkPiece::deserialize (ReadBuffer *buffer)
 	assert (false);
 }
 void 
-ChunkPiece::print (std::ostream *os)
+ChunkPiece::print (std::ostream *os) const
 {
 	*os << "(piece)"
 	    << " size: " << m_size << " ";

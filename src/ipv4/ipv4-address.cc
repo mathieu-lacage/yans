@@ -65,6 +65,16 @@ Ipv4Mask::get_host_order (void) const
 	return m_mask;
 }
 
+void 
+Ipv4Mask::print (std::ostream *os) const
+{
+	*os << ((m_mask >> 24) & 0xff) << "."
+	    << ((m_mask >> 16) & 0xff) << "."
+	    << ((m_mask >> 8) & 0xff) << "."
+	    << ((m_mask >> 0) & 0xff);
+}
+
+
 Ipv4Mask
 Ipv4Mask::get_loopback (void)
 {
@@ -115,7 +125,7 @@ Ipv4Address::deserialize (ReadBuffer *buffer)
 	m_address = buffer->read_ntoh_u32 ();
 }
 void 
-Ipv4Address::print (std::ostream *os)
+Ipv4Address::print (std::ostream *os) const
 {
 	*os << ((m_address >> 24) & 0xff) << "."
 	    << ((m_address >> 16) & 0xff) << "."
@@ -156,4 +166,15 @@ bool operator == (Ipv4Address const &a, Ipv4Address const &b)
 size_t Ipv4AddressHash::operator()(Ipv4Address const &x) const 
 { 
 	return x.get_host_order ();
+}
+
+std::ostream& operator<< (std::ostream& os, Ipv4Address const& address)
+{
+	address.print (&os);
+	return os;
+}
+std::ostream& operator<< (std::ostream& os, Ipv4Mask const& mask)
+{
+	mask.print (&os);
+	return os;
 }

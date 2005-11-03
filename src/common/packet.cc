@@ -152,9 +152,9 @@ Packet::get_size (void)
 }
 
 void 
-Packet::serialize (WriteBuffer *buffer)
+Packet::serialize (WriteBuffer *buffer) const
 {
-	for (HeadersRI i = m_headers.rbegin (); i != m_headers.rend (); i++) {
+	for (HeadersRCI i = m_headers.rbegin (); i != m_headers.rend (); i++) {
 		(*i)->serialize (buffer);
 	}
 	for (TrailersCI j = m_trailers.begin (); j != m_trailers.end (); j++) {
@@ -163,10 +163,10 @@ Packet::serialize (WriteBuffer *buffer)
 }
 
 void 
-Packet::print (std::ostream *os)
+Packet::print (std::ostream *os) const
 {
 	Headers::size_type k = 0;
-	for (HeadersRI i = m_headers.rbegin (); i != m_headers.rend (); i++) {
+	for (HeadersRCI i = m_headers.rbegin (); i != m_headers.rend (); i++) {
 		(*i)->print (os);
 		k++;
 		if (k < m_headers.size ()) {
@@ -194,4 +194,12 @@ Packet::copy (void)
 		other->add_trailer (new_chunk);
 	}
 	return other;
+}
+
+
+
+std::ostream& operator<< (std::ostream& os, Packet const& packet)
+{
+	packet.print (&os);
+	return os;
 }

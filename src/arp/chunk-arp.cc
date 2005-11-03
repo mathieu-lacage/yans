@@ -49,12 +49,12 @@ ChunkArp::set_reply (MacAddress source_hardware_address,
 	m_ipv4_dest = destination_protocol_address;
 }
 bool 
-ChunkArp::is_request (void)
+ChunkArp::is_request (void) const
 {
 	return (m_type == ARP_TYPE_REQUEST)?true:false;
 }
 bool 
-ChunkArp::is_reply (void)
+ChunkArp::is_reply (void) const
 {
 	return (m_type == ARP_TYPE_REPLY)?true:false;
 }
@@ -81,7 +81,7 @@ ChunkArp::get_destination_ipv4_address (void)
 
 
 uint32_t 
-ChunkArp::get_size (void)
+ChunkArp::get_size (void) const
 {
 	/* this is the size of an ARP payload. */
 	return 28;
@@ -128,26 +128,19 @@ ChunkArp::deserialize (ReadBuffer *buffer)
 	m_ipv4_dest.deserialize (buffer);
 }
 void 
-ChunkArp::print (std::ostream *os)
+ChunkArp::print (std::ostream *os) const
 {
 	*os << "(arp)";
 	if (is_request ()) {
-		*os << " source mac: ";
-		m_mac_source.print (os);
-		*os << " source ipv4: ";
-		m_ipv4_source.print (os);
-		*os << " dest ipv4: ";
-		m_ipv4_dest.print (os);
+		*os << " source mac: " << m_mac_source
+		    << " source ipv4: " << m_ipv4_source
+		    << " dest ipv4: " << m_ipv4_dest;
 	} else {
 		assert (is_reply ());
-		*os << " source mac: ";
-		m_mac_source.print (os);
-		*os << " source ipv4: ";
-		m_ipv4_source.print (os);
-		*os << " dest mac: ";
-		m_mac_dest.print (os);
-		*os << " dest ipv4: ";
-		m_ipv4_dest.print (os);
+		*os << " source mac: " << m_mac_source
+		    << " source ipv4: " << m_ipv4_source
+		    << " dest mac: " << m_mac_dest
+		    << " dest ipv4: " <<m_ipv4_dest;
 	}
 }
 

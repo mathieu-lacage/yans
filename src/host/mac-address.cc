@@ -149,3 +149,11 @@ MacAddress::get_broadcast (void)
 {
 	return m_broadcast;
 }
+
+
+
+std::ostream& operator<< (std::ostream& os, MacAddress const& address)
+{
+	address.print (&os);
+	return os;
+}

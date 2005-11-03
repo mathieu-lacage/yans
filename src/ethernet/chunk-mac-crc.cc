@@ -35,7 +35,7 @@ ChunkMacCrc::set_pad (uint8_t pad_size)
 }
 
 uint32_t 
-ChunkMacCrc::get_size (void)
+ChunkMacCrc::get_size (void) const
 {
 	return 4 + m_pad_size;
 }
@@ -67,7 +67,7 @@ ChunkMacCrc::deserialize (ReadBuffer *buffer)
 	assert (crc[3] == 0);
 }
 void 
-ChunkMacCrc::print (std::ostream *os)
+ChunkMacCrc::print (std::ostream *os) const
 {
 	*os << "(mac) crc";
 }

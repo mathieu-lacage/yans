@@ -63,15 +63,15 @@ public:
 
 	uint32_t get_size (void);
 
-	void serialize (WriteBuffer *buffer);
+	void serialize (WriteBuffer *buffer) const;
 
-	void print (std::ostream *os);
+	void print (std::ostream *os) const;
 
 	Packet *copy (void);
  private:
 	typedef std::vector<Chunk *> Headers;
 	typedef std::vector<Chunk *>::const_iterator HeadersCI;
-	typedef std::vector<Chunk *>::reverse_iterator HeadersRI;
+	typedef std::vector<Chunk *>::const_reverse_iterator HeadersRCI;
 	typedef std::vector<Chunk *> Trailers;
 	typedef std::vector<Chunk *>::const_iterator TrailersCI;
 	typedef std::vector<PacketDestroyNotifier *> PacketDestroyNotifiers;
@@ -84,5 +84,7 @@ public:
 	Tags m_tags;
 	uint32_t m_ref;
 };
+
+std::ostream& operator<< (std::ostream& os, Packet const& packet);
 
 #endif /* PACKET_H */

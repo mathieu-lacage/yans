@@ -167,37 +167,37 @@ ChunkTcp::disable_flag_psh (void)
 }
 
 bool 
-ChunkTcp::is_flag_syn (void)
+ChunkTcp::is_flag_syn (void) const
 {
 	return is_flag (SYN);
 }
 bool 
-ChunkTcp::is_flag_fin (void)
+ChunkTcp::is_flag_fin (void) const
 {
 	return is_flag (FIN);
 }
 bool 
-ChunkTcp::is_flag_rst (void)
+ChunkTcp::is_flag_rst (void) const
 {
 	return is_flag (RST);
 }
 bool 
-ChunkTcp::is_flag_ack (void)
+ChunkTcp::is_flag_ack (void) const
 {
 	return is_flag (ACK);
 }
 bool 
-ChunkTcp::is_flag_urg (void)
+ChunkTcp::is_flag_urg (void) const
 {
 	return is_flag (URG);
 }
 bool 
-ChunkTcp::is_flag_psh (void)
+ChunkTcp::is_flag_psh (void) const
 {
 	return is_flag (PSH);
 }
 bool 
-ChunkTcp::is_option_mss (void)
+ChunkTcp::is_option_mss (void) const
 {
 	assert ((m_mss != 0)?m_header_length == 6:m_header_length == 5);
 	return (m_mss != 0)?true:false;
@@ -215,7 +215,7 @@ ChunkTcp::is_checksum_ok (void)
 }
 
 uint32_t 
-ChunkTcp::get_size (void)
+ChunkTcp::get_size (void) const
 {
 	uint32_t size = 0;
 	size += 20;
@@ -271,7 +271,7 @@ ChunkTcp::deserialize (ReadBuffer *buffer)
 }
 
 void
-ChunkTcp::print (std::ostream *os)
+ChunkTcp::print (std::ostream *os) const
 {
 	*os << "tcp -- ";
 	*os << " source port: " << m_source_port;
@@ -316,7 +316,7 @@ ChunkTcp::print (std::ostream *os)
 
 
 bool 
-ChunkTcp::is_flag (uint8_t n)
+ChunkTcp::is_flag (uint8_t n) const
 {
 	if (m_flags & (1 << n)) {
 		return true;

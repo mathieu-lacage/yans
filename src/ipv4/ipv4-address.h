@@ -54,7 +54,7 @@ public:
 
 	void serialize (WriteBuffer *buffer);
 	void deserialize (ReadBuffer *buffer);
-	void print (std::ostream *os);
+	void print (std::ostream *os) const;
 
 	static Ipv4Address get_zero (void);
 	static Ipv4Address get_any (void);
@@ -84,6 +84,7 @@ public:
 	 */
 	uint32_t get_host_order (void) const;
 
+	void print (std::ostream *os) const;
 
 	static Ipv4Mask get_loopback (void);
 	static Ipv4Mask get_zero (void);
@@ -92,6 +93,9 @@ private:
 	static Ipv4Mask m_zero;
 	uint32_t m_mask;
 };
+
+std::ostream& operator<< (std::ostream& os, Ipv4Address const& address);
+std::ostream& operator<< (std::ostream& os, Ipv4Mask const& mask);
 
 bool operator == (Ipv4Address const &a, Ipv4Address const &b);
 class Ipv4AddressHash : public std::unary_function<Ipv4Address, size_t> {

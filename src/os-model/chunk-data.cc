@@ -37,7 +37,7 @@ ChunkData::~ChunkData ()
 }
 
 uint32_t 
-ChunkData::get_size (void)
+ChunkData::get_size (void) const
 {
 	return m_len;
 }
@@ -58,8 +58,8 @@ ChunkData::deserialize (ReadBuffer *buffer)
 	buffer->read (m_data, m_len);
 }
 void 
-ChunkData::print (std::ostream *os)
+ChunkData::print (std::ostream *os) const
 {
-	*os << "data -- ";
+	*os << "(data)";
 	*os << " len: " << m_len;
 }

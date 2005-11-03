@@ -32,7 +32,7 @@ ChunkFakeData::~ChunkFakeData ()
 }
 
 uint32_t 
-ChunkFakeData::get_size (void)
+ChunkFakeData::get_size (void) const
 {
 	return m_len;
 }
@@ -62,7 +62,7 @@ ChunkFakeData::deserialize (ReadBuffer *buffer)
 	}
 }
 void 
-ChunkFakeData::print (std::ostream *os)
+ChunkFakeData::print (std::ostream *os) const
 {
 	*os << "(fake data)"
 	    << " len: " << m_len;
