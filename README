@@ -50,7 +50,7 @@ The next features which require work are:
 4) Known bugs
 -------------
 
-ipv4 checksum calculation is wrong.
+Mac crc are not calculated.
    
 5) Contributing/Using
 ---------------------
