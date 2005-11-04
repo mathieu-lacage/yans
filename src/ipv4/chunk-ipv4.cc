@@ -74,34 +74,61 @@ ChunkIpv4::get_id (void) const
 {
 	return utils_ntoh_16 (m_id);
 }
-void 
-ChunkIpv4::set_more_fragments (void)
-{
-	uint16_t fragment_offset = utils_ntoh_16 (m_fragment_offset) >> 3;
-	uint8_t flags = utils_ntoh_16 (m_fragment_offset) & 0x7;
-	flags |= 0x4;
-	uint16_t new_fragment_offset = flags | (fragment_offset << 3);
-	m_fragment_offset = utils_hton_16 (new_fragment_offset);
-}
 void
-ChunkIpv4::set_last_fragment (void)
+ChunkIpv4::set_control_flag (uint8_t flag, uint8_t val)
 {
 	uint16_t fragment_offset = utils_ntoh_16 (m_fragment_offset) >> 3;
 	uint8_t flags = utils_ntoh_16 (m_fragment_offset) & 0x7;
-	flags &= ~0x4;
+	if (val) {
+		flags |= (1<<flag);
+	} else {
+		flags &= ~(1<<flag);
+	}
 	uint16_t new_fragment_offset = flags | (fragment_offset << 3);
 	m_fragment_offset = utils_hton_16 (new_fragment_offset);
 }
-bool 
-ChunkIpv4::is_last_fragment (void) const
+bool
+ChunkIpv4::is_control_flag (uint8_t flag) const
 {
 	uint8_t flags = utils_ntoh_16 (m_fragment_offset) & 0x7;
-	if (flags & 0x4) {
+	if (flags & (1<<flag)) {
 		return false;
 	} else {
 		return true;
 	}
 }
+void 
+ChunkIpv4::set_more_fragments (void)
+{
+	set_control_flag (2, 1);
+}
+void
+ChunkIpv4::set_last_fragment (void)
+{
+	set_control_flag (2, 0);
+}
+bool 
+ChunkIpv4::is_last_fragment (void) const
+{
+	return is_control_flag (2);
+}
+
+void 
+ChunkIpv4::set_dont_fragment (void)
+{
+	set_control_flag (2, 1);
+}
+void 
+ChunkIpv4::set_may_fragment (void)
+{
+	set_control_flag (2, 0);
+}
+bool 
+ChunkIpv4::is_dont_fragment (void) const
+{
+	return is_control_flag (2);
+}
+
 void 
 ChunkIpv4::set_fragment_offset (uint16_t offset)
 {
@@ -180,7 +207,7 @@ bool
 ChunkIpv4::is_checksum_ok (void) const
 {
 	uint16_t checksum = calculate_checksum ((uint8_t *)&m_ver_ihl, 20);
-	if (checksum == 0xffff) {
+	if (checksum == 0) {
 		return true;
 	} else {
 		return false;
@@ -188,10 +215,15 @@ ChunkIpv4::is_checksum_ok (void) const
 }
 
 void 
+ChunkIpv4::update_checksum (void)
+{
+	m_checksum = 0;
+	m_checksum = calculate_checksum ((uint8_t *)&m_ver_ihl, 20);
+}
+
+void 
 ChunkIpv4::serialize (WriteBuffer *buffer)
 {
-	uint16_t checksum = calculate_checksum ((uint8_t *)&m_ver_ihl, 20);
-
 	buffer->write_u8 (m_ver_ihl);
 	buffer->write_u8 (m_tos);
 	buffer->write ((uint8_t*)&m_total_length, 2);
@@ -199,7 +231,7 @@ ChunkIpv4::serialize (WriteBuffer *buffer)
 	buffer->write ((uint8_t*)&m_fragment_offset, 2);
 	buffer->write_u8 (m_ttl);
 	buffer->write_u8 (m_protocol);
-	buffer->write ((uint8_t*)&checksum, 2);
+	buffer->write ((uint8_t*)&m_checksum, 2);
 	buffer->write ((uint8_t*)&m_source, 4);
 	buffer->write ((uint8_t*)&m_destination, 4);
 }

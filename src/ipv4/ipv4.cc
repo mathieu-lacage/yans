@@ -108,29 +108,18 @@ Ipv4::send (Packet *packet)
 	ip_header->set_payload_size (packet->get_size ());
 
 	TagOutIpv4 *tag = static_cast <TagOutIpv4 *> (packet->remove_tag (TagOutIpv4::get_tag ()));
-	Route const*route = tag->get_route ();
-	assert (route != 0);
-	NetworkInterface *out_interface = route->get_interface ();
 	ip_header->set_source (tag->get_saddress ());
 	ip_header->set_destination (tag->get_daddress ());
 	ip_header->set_protocol (m_send_protocol);
 	ip_header->set_payload_size (packet->get_size ());
 	ip_header->set_ttl (m_default_ttl);
 
+	Route const*route = tag->get_route ();
+	assert (route != 0);
 	packet->add_header (ip_header);
 
-	if (packet->get_size () > out_interface->get_mtu ()) {
-		/* we need to fragment the packet. */
-		// XXX
-		assert (false);
-	} else {
-		m_host->get_tracer ()->trace_tx_ipv4 (packet);
-		if (route->is_gateway ()) {
-			out_interface->send (packet, route->get_gateway ());
-		} else {
-			out_interface->send (packet, tag->get_daddress ());
-		}
-	}
+	send_out (packet, route);
+
 	delete tag;
 }
 
@@ -150,6 +139,29 @@ Ipv4::lookup_protocol (uint8_t protocol)
 		}
 	}
 	return 0;
+}
+
+bool
+Ipv4::send_out (Packet *packet, Route const *route)
+{
+	ChunkIpv4 *ip = static_cast <ChunkIpv4 *> (packet->peek_header ());
+	ip->update_checksum ();
+	NetworkInterface *out_interface = route->get_interface ();
+	if (packet->get_size () > out_interface->get_mtu ()) {
+		if (ip->is_dont_fragment ()) {
+			return false;
+		}
+		//XXX
+		return true;
+	} else {
+		m_host->get_tracer ()->trace_tx_ipv4 (packet);
+		if (route->is_gateway ()) {
+			out_interface->send (packet, route->get_gateway ());
+		} else {
+			out_interface->send (packet, ip->get_destination ());
+		}
+		return true;
+	}
 }
 
 void
@@ -185,11 +197,7 @@ Ipv4::send_icmp_time_exceeded_ttl (Packet *original, NetworkInterface *interface
 		return;
 	}
 	TRACE ("send back icmp ttl exceeded to " << ip_real->get_destination ());
-	if (route->is_gateway ()) {
-		route->get_interface ()->send (packet, route->get_gateway ());
-	} else {
-		route->get_interface ()->send (packet, ip_real->get_destination ());
-	}	
+	send_out (packet, route);
 }
 
 bool
@@ -228,11 +236,7 @@ Ipv4::forwarding (Packet *packet, NetworkInterface *interface)
 		return true;
 	}
 	TRACE ("not for me -- forwarding.");
-	if (route->is_gateway ()) {
-		route->get_interface ()->send (packet, route->get_gateway ());
-	} else {
-		route->get_interface ()->send (packet, ip_header->get_destination ());
-	}
+	send_out (packet, route);
 	return true;
 }
 
@@ -244,8 +248,7 @@ Ipv4::receive (Packet *packet, NetworkInterface *interface)
 
 	if (!ip_header->is_checksum_ok ()) {
 		TRACE ("checksum not ok");
-		// XXX should drop packet but checksum calc does not work.
-		//return;
+		return;
 	}
 	if (forwarding (packet, interface)) {
 		return;

@@ -42,6 +42,10 @@ public:
 	void set_last_fragment (void);
 	bool is_last_fragment (void) const;
 
+	void set_dont_fragment (void);
+	void set_may_fragment (void);
+	bool is_dont_fragment (void) const;
+
 	void set_fragment_offset (uint16_t offset);
 	uint16_t get_fragment_offset (void) const;
 
@@ -57,6 +61,8 @@ public:
 	void set_destination (Ipv4Address destination);
 	Ipv4Address get_destination (void) const;
 
+	void update_checksum (void);
+
 	bool is_checksum_ok (void) const;
 
 	virtual uint32_t get_size (void) const;
@@ -65,6 +71,8 @@ public:
 	virtual void deserialize (ReadBuffer *buffer);
 	virtual void print (std::ostream *os) const;
 private:
+	void set_control_flag (uint8_t flag, uint8_t val);
+	bool is_control_flag (uint8_t flag) const;
 	uint8_t m_ver_ihl;
 	uint8_t m_tos;
 	uint16_t m_id;

@@ -32,6 +32,7 @@ class Packet;
 class Ipv4Route;
 class Host;
 class IcmpTransportProtocol;
+class Route;
 
 class Ipv4 {
 public:
@@ -53,6 +54,7 @@ private:
 	Ipv4Route *get_route (void);
 	TransportProtocol *lookup_protocol (uint8_t id);
 	void send_icmp_time_exceeded_ttl (Packet *original, NetworkInterface *interface);
+	bool send_out (Packet *packet, Route const*route);
 
 	Host *m_host;
 	typedef std::vector<std::pair<uint8_t, TransportProtocol *> > Protocols;
