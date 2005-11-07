@@ -64,6 +64,7 @@ EthernetNetworkInterface::EthernetNetworkInterface (char const *name)
 	m_arp = new Arp (this);
 	m_arp_sender = new EthernetArpMacSender (this);
 	m_arp->set_sender (m_arp_sender);
+	m_mtu = 1000;
 }
 
 EthernetNetworkInterface::~EthernetNetworkInterface ()
@@ -78,6 +79,11 @@ EthernetNetworkInterface::~EthernetNetworkInterface ()
 	m_arp_sender = (EthernetArpMacSender *)0xdeadbeaf;
 	delete m_tracer;
 	m_tracer = (NetworkInterfaceTracer *)0xdeadbeaf;
+}
+void 
+EthernetNetworkInterface::set_mtu (uint16_t mtu)
+{
+	m_mtu = mtu;
 }
 
 void 
@@ -109,7 +115,7 @@ EthernetNetworkInterface::get_name (void)
 uint16_t 
 EthernetNetworkInterface::get_mtu (void)
 {
-	return 1000;
+	return m_mtu;
 }
 void 
 EthernetNetworkInterface::set_up   (void)

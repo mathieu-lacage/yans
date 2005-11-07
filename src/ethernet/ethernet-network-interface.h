@@ -33,6 +33,8 @@ public:
 	EthernetNetworkInterface (char const *name);
 	virtual ~EthernetNetworkInterface ();
 
+	void set_mtu (uint16_t mtu);
+
 	virtual void set_host (Host *host);
 	virtual NetworkInterfaceTracer *get_tracer (void);
 
@@ -79,6 +81,7 @@ public:
 	Cable *m_cable;
 	Host *m_host;
 	NetworkInterfaceTracer *m_tracer;
+	uint16_t m_mtu;
 };
 
 
