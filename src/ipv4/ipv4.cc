@@ -144,26 +144,62 @@ Ipv4::lookup_protocol (uint8_t protocol)
 	return 0;
 }
 
+void
+Ipv4::send_real_out (Packet *packet, Route const *route)
+{
+	ChunkIpv4 *ip = static_cast <ChunkIpv4 *> (packet->peek_header ());
+	ip->update_checksum ();
+	NetworkInterface *out_interface = route->get_interface ();
+	assert (packet->get_size () <= out_interface->get_mtu ());
+	m_host->get_tracer ()->trace_tx_ipv4 (packet);
+	if (route->is_gateway ()) {
+		out_interface->send (packet, route->get_gateway ());
+	} else {
+		out_interface->send (packet, ip->get_destination ());
+	}
+}
+
 bool
 Ipv4::send_out (Packet *packet, Route const *route)
 {
 	ChunkIpv4 *ip = static_cast <ChunkIpv4 *> (packet->peek_header ());
 	ip->set_identification (m_identification);
-	ip->update_checksum ();
 	NetworkInterface *out_interface = route->get_interface ();
+
 	if (packet->get_size () > out_interface->get_mtu ()) {
 		if (ip->is_dont_fragment ()) {
 			return false;
 		}
-		//XXX
+		uint16_t fragment_length = (out_interface->get_mtu () - 20) & (~0x7);
+		uint16_t last_fragment_length = packet->get_size () % fragment_length;
+		uint16_t n_fragments = packet->get_size () / fragment_length + 1;
+		assert (n_fragments > 1);
+		for (uint16_t i = 0; i < n_fragments - 1; i++) {
+			Packet *fragment = new Packet ();
+			ChunkPiece *piece = new ChunkPiece ();
+			piece->set_original (packet, fragment_length);
+			fragment->add_header (piece);
+			ChunkIpv4 *ip_fragment = static_cast <ChunkIpv4 *> (ip->copy ());
+			ip_fragment->set_more_fragments ();
+			fragment->add_header (ip_fragment);
+			send_real_out (fragment, route);
+		}
+		Packet *last_fragment = new Packet ();
+		ChunkPiece *piece = new ChunkPiece ();
+		piece->set_original (packet, last_fragment_length);
+		last_fragment->add_header (piece);
+		ChunkIpv4 *ip_fragment = static_cast <ChunkIpv4 *> (ip->copy ());
+		if (ip->is_last_fragment ()) {
+			/* we have just finished fragmenting an ipv4 fragment. */
+			ip_fragment->set_more_fragments ();
+		} else {
+			ip_fragment->set_last_fragment ();
+		}
+		last_fragment->add_header (ip_fragment);
+		send_real_out (last_fragment, route);
 		return true;
 	} else {
-		m_host->get_tracer ()->trace_tx_ipv4 (packet);
-		if (route->is_gateway ()) {
-			out_interface->send (packet, route->get_gateway ());
-		} else {
-			out_interface->send (packet, ip->get_destination ());
-		}
+		send_real_out (packet, route);
 		return true;
 	}
 }

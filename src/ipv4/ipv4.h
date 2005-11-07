@@ -56,6 +56,7 @@ private:
 	TransportProtocol *lookup_protocol (uint8_t id);
 	void send_icmp_time_exceeded_ttl (Packet *original, NetworkInterface *interface);
 	bool send_out (Packet *packet, Route const*route);
+	void send_real_out (Packet *packet, Route const*route);
 	Packet *re_assemble (Packet *fragment);
 
 	Host *m_host;
