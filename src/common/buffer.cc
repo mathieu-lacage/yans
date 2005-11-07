@@ -59,7 +59,7 @@ WriteBuffer::reset (void)
 }
 
 void
-WriteBuffer::ensure_write_room_left (uint8_t needed)
+WriteBuffer::ensure_write_room_left (uint16_t needed)
 {
 	if (m_size > (m_write + needed)) {
 		return;
@@ -83,12 +83,10 @@ WriteBuffer::write_u8 (uint8_t data)
 	m_write++;
 }
 void 
-WriteBuffer::write (uint8_t const *data, uint8_t size)
+WriteBuffer::write (uint8_t const *data, uint16_t size)
 {
 	ensure_write_room_left (size);
-	for (uint8_t i = 0; i < size; i++) {
-		m_buffer[m_write+i] = data[i];
-	}
+	memcpy (m_buffer+m_write, data, size);
 	m_write += size;
 }
 void 
@@ -133,7 +131,7 @@ ReadBuffer::peek_data (void)
 	return m_buffer;
 }
 bool
-ReadBuffer::is_read_room_left (uint8_t needed)
+ReadBuffer::is_read_room_left (uint16_t needed)
 {
 	if ((m_size - m_read) >= needed) {
 		return true;
@@ -152,12 +150,10 @@ ReadBuffer::read_u8 (void)
 	return retval;
 }
 void 
-ReadBuffer::read (uint8_t *buffer, uint8_t size)
+ReadBuffer::read (uint8_t *buffer, uint16_t size)
 {
 	assert (is_read_room_left (size));
-	for(uint8_t i = 0; i < size; i++) {
-		buffer[i] = m_buffer[m_read+i];
-	}
+	memcpy (buffer, m_buffer+m_read, size);
 	m_read += size;
 }
 
