@@ -25,10 +25,10 @@
 #include "buffer.h"
 
 ChunkIpv4::ChunkIpv4 ()
-	: m_ver_ihl (5 | (20 << 4)),
+	: m_ver_ihl (5 | (4 << 4)),
 	  m_tos (0),
-	  m_id (0),
 	  m_total_length (20),
+	  m_id (0),
 	  m_fragment_offset (0),
 	  m_ttl (0),
 	  m_protocol (0),
@@ -56,12 +56,12 @@ ChunkIpv4::get_payload_size (void) const
 uint16_t 
 ChunkIpv4::get_identification () const
 {
-	return m_id;
+	return utils_ntoh_16 (m_id);
 }
 void 
 ChunkIpv4::set_identification (uint16_t identification)
 {
-	m_id = identification;
+	m_id = utils_hton_16 (identification);
 }
 
 
@@ -89,20 +89,20 @@ ChunkIpv4::get_id (void) const
 void
 ChunkIpv4::set_control_flag (uint8_t flag, uint8_t val)
 {
-	uint16_t fragment_offset = utils_ntoh_16 (m_fragment_offset) >> 3;
-	uint8_t flags = utils_ntoh_16 (m_fragment_offset) & 0x7;
+	uint16_t fragment_offset = get_fragment_offset ();
+	uint8_t flags = (utils_ntoh_16 (m_fragment_offset) >> 13) & 0x7;
 	if (val) {
 		flags |= (1<<flag);
 	} else {
 		flags &= ~(1<<flag);
 	}
-	uint16_t new_fragment_offset = flags | (fragment_offset << 3);
+	uint16_t new_fragment_offset = (flags << 13)| fragment_offset;
 	m_fragment_offset = utils_hton_16 (new_fragment_offset);
 }
 bool
 ChunkIpv4::is_control_flag (uint8_t flag) const
 {
-	uint8_t flags = utils_ntoh_16 (m_fragment_offset) & 0x7;
+	uint8_t flags = (utils_ntoh_16 (m_fragment_offset) >> 13) & 0x7;
 	if (flags & (1<<flag)) {
 		return true;
 	} else {
@@ -112,47 +112,47 @@ ChunkIpv4::is_control_flag (uint8_t flag) const
 void 
 ChunkIpv4::set_more_fragments (void)
 {
-	set_control_flag (2, 1);
+	set_control_flag (0, 1);
 }
 void
 ChunkIpv4::set_last_fragment (void)
 {
-	set_control_flag (2, 0);
+	set_control_flag (0, 0);
 }
 bool 
 ChunkIpv4::is_last_fragment (void) const
 {
-	return !is_control_flag (2);
+	return !is_control_flag (0);
 }
 
 void 
 ChunkIpv4::set_dont_fragment (void)
 {
-	set_control_flag (2, 1);
+	set_control_flag (1, 1);
 }
 void 
 ChunkIpv4::set_may_fragment (void)
 {
-	set_control_flag (2, 0);
+	set_control_flag (1, 0);
 }
 bool 
 ChunkIpv4::is_dont_fragment (void) const
 {
-	return is_control_flag (2);
+	return is_control_flag (1);
 }
 
 void 
 ChunkIpv4::set_fragment_offset (uint16_t offset)
 {
-	uint16_t flags = utils_ntoh_16 (m_fragment_offset) & 0x7;
-	uint16_t new_fragment_offset = flags | (offset << 3);
+	uint16_t flags = utils_ntoh_16 (m_fragment_offset) & 0xe000;
+	uint16_t new_fragment_offset = flags | (offset >> 3);
 	m_fragment_offset = utils_hton_16 (new_fragment_offset);
 }
 uint16_t 
 ChunkIpv4::get_fragment_offset (void) const
 {
-	uint16_t fragment_offset = utils_ntoh_16 (m_fragment_offset) >> 3;
-	return fragment_offset;
+	uint16_t fragment_offset = utils_ntoh_16 (m_fragment_offset) & 0x1fff;
+	return (fragment_offset << 3);
 }
 
 void 

@@ -78,8 +78,8 @@ private:
 	bool is_control_flag (uint8_t flag) const;
 	uint8_t m_ver_ihl;
 	uint8_t m_tos;
-	uint16_t m_id;
 	uint16_t m_total_length;
+	uint16_t m_id;
 	uint16_t m_fragment_offset;
 	uint8_t m_ttl;
 	uint8_t m_protocol;
