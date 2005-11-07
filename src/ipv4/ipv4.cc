@@ -82,7 +82,9 @@ Ipv4::Ipv4 ()
 Ipv4::~Ipv4 ()
 {
 	delete m_icmp;
+	m_icmp = (IcmpTransportProtocol *)0xdeadbeaf;
 	delete m_defrag_states;
+	m_defrag_states = (DefragStates *)0xdeadbeaf;
 }
 
 void 
@@ -109,6 +111,7 @@ Ipv4::send (Packet *packet)
 	ChunkIpv4 *ip_header;
 	ip_header = new ChunkIpv4 ();
 	ip_header->set_payload_size (packet->get_size ());
+	ip_header->set_may_fragment ();
 
 	TagOutIpv4 *tag = static_cast <TagOutIpv4 *> (packet->remove_tag (TagOutIpv4::get_tag ()));
 	ip_header->set_source (tag->get_saddress ());
@@ -164,38 +167,57 @@ Ipv4::send_out (Packet *packet, Route const *route)
 {
 	ChunkIpv4 *ip = static_cast <ChunkIpv4 *> (packet->peek_header ());
 	ip->set_identification (m_identification);
+	m_identification ++;
 	NetworkInterface *out_interface = route->get_interface ();
 
 	if (packet->get_size () > out_interface->get_mtu ()) {
 		if (ip->is_dont_fragment ()) {
 			return false;
 		}
+		ip = static_cast <ChunkIpv4 *> (packet->remove_header ());
+
 		uint16_t fragment_length = (out_interface->get_mtu () - 20) & (~0x7);
 		uint16_t last_fragment_length = packet->get_size () % fragment_length;
 		uint16_t n_fragments = packet->get_size () / fragment_length + 1;
+		uint16_t current_offset = ip->get_fragment_offset ();
 		assert (n_fragments > 1);
 		for (uint16_t i = 0; i < n_fragments - 1; i++) {
 			Packet *fragment = new Packet ();
+
 			ChunkPiece *piece = new ChunkPiece ();
 			piece->set_original (packet, fragment_length);
 			fragment->add_header (piece);
+
 			ChunkIpv4 *ip_fragment = static_cast <ChunkIpv4 *> (ip->copy ());
 			ip_fragment->set_more_fragments ();
+			ip_fragment->set_fragment_offset (current_offset);
+			ip_fragment->set_payload_size (fragment_length);
 			fragment->add_header (ip_fragment);
+
 			send_real_out (fragment, route);
+			current_offset += fragment_length;
 		}
+
+		/* generate the last fragment */
 		Packet *last_fragment = new Packet ();
+
 		ChunkPiece *piece = new ChunkPiece ();
 		piece->set_original (packet, last_fragment_length);
 		last_fragment->add_header (piece);
+
 		ChunkIpv4 *ip_fragment = static_cast <ChunkIpv4 *> (ip->copy ());
-		if (ip->is_last_fragment ()) {
-			/* we have just finished fragmenting an ipv4 fragment. */
+		if (!ip->is_last_fragment ()) {
+			/* this is the last fragment of an ipv4 fragment. */
 			ip_fragment->set_more_fragments ();
 		} else {
+			/* this is the last fragment of an ipv4 packet or of
+			 * the last fragment of an ipv4 packet. */
 			ip_fragment->set_last_fragment ();
 		}
+		ip_fragment->set_fragment_offset (current_offset);
+		ip_fragment->set_payload_size (last_fragment_length);
 		last_fragment->add_header (ip_fragment);
+
 		send_real_out (last_fragment, route);
 		return true;
 	} else {
