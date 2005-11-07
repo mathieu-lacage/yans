@@ -24,13 +24,15 @@
 
 #include "chunk.h"
 
+class Packet;
+
 class ChunkPiece: public Chunk {
 public:
 	ChunkPiece ();
 	virtual ~ChunkPiece ();
 
-	Chunk *peek_original (void);
-	void set_original (Chunk *original, uint32_t size);
+	Packet *get_original (void);
+	void set_original (Packet *original, uint32_t size);
 	
 
 	virtual uint32_t get_size (void) const;
@@ -40,7 +42,7 @@ public:
 	virtual void print (std::ostream *os) const;
 
 private:
-	Chunk *m_original;
+	Packet *m_original;
 	uint32_t m_size;
 };
 

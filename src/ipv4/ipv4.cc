@@ -30,6 +30,7 @@
 #include "host-tracer.h"
 #include "chunk-icmp.h"
 #include "chunk-piece.h"
+#include "defrag-state.h"
 
 
 #define TRACE_IPV4 1
@@ -76,10 +77,12 @@ Ipv4::Ipv4 ()
 	register_transport_protocol (m_icmp);
 	/* this is recommended by rfc 1700 */
 	m_default_ttl = 64;
+	m_defrag_states = new DefragStates ();
 }
 Ipv4::~Ipv4 ()
 {
 	delete m_icmp;
+	delete m_defrag_states;
 }
 
 void 
@@ -145,6 +148,7 @@ bool
 Ipv4::send_out (Packet *packet, Route const *route)
 {
 	ChunkIpv4 *ip = static_cast <ChunkIpv4 *> (packet->peek_header ());
+	ip->set_identification (m_identification);
 	ip->update_checksum ();
 	NetworkInterface *out_interface = route->get_interface ();
 	if (packet->get_size () > out_interface->get_mtu ()) {
@@ -170,10 +174,9 @@ Ipv4::send_icmp_time_exceeded_ttl (Packet *original, NetworkInterface *interface
 	Packet *packet = new Packet ();
 
 	ChunkIpv4 *ip_header = static_cast <ChunkIpv4 *> (original->remove_header ());
-	Chunk *payload = original->remove_header ();
 
 	ChunkPiece *payload_piece = new ChunkPiece ();
-	payload_piece->set_original (payload, 8);
+	payload_piece->set_original (original, 8);
 	packet->add_header (payload_piece);
 
 	packet->add_header (ip_header);
@@ -240,6 +243,26 @@ Ipv4::forwarding (Packet *packet, NetworkInterface *interface)
 	return true;
 }
 
+Packet *
+Ipv4::re_assemble (Packet *fragment)
+{
+	DefragState *state = m_defrag_states->lookup (fragment);
+	if (state == 0) {
+		state = new DefragState ();
+		state->add (fragment);
+		m_defrag_states->add (state);
+		return 0;
+	}
+	state->add (fragment);
+	if (state->is_complete ()) {
+		Packet *completed = state->get_complete ();
+		m_defrag_states->remove (state);
+		delete state;
+		return completed;
+	}
+	return 0;
+}
+
 void 
 Ipv4::receive (Packet *packet, NetworkInterface *interface)
 {
@@ -252,6 +275,15 @@ Ipv4::receive (Packet *packet, NetworkInterface *interface)
 	}
 	if (forwarding (packet, interface)) {
 		return;
+	}
+	if (!ip_header->is_last_fragment () ||
+	    ip_header->get_fragment_offset () != 0) {
+		Packet *new_packet = re_assemble (packet);
+		if (new_packet == 0) {
+			return;
+		}
+		packet = new_packet;
+		ip_header = static_cast <ChunkIpv4 *> (packet->peek_header ());
 	}
 
 

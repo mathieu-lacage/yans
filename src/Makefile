@@ -39,6 +39,7 @@ SOURCE= \
 	ipv4/ipv4-address.cc \
 	ipv4/tag-ipv4.cc \
 	ipv4/ipv4-route.cc \
+	ipv4/defrag-state.cc \
 	ipv4/ipv4.cc \
 	fiber/fiber-context-x86.c \
 	fiber/fiber.cc \

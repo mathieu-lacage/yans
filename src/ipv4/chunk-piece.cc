@@ -21,6 +21,7 @@
 
 #include "chunk-piece.h"
 #include "buffer.h"
+#include "packet.h"
 
 ChunkPiece::ChunkPiece ()
 {
@@ -29,19 +30,21 @@ ChunkPiece::ChunkPiece ()
 }
 ChunkPiece::~ChunkPiece ()
 {
-	delete m_original;
-	m_original = (Chunk *)0xdeadbeaf;
+	m_original->unref ();
+	m_original = (Packet *)0xdeadbeaf;
 	m_size = 0xdeadbeaf;
 }
 
-Chunk *
-ChunkPiece::peek_original (void)
+Packet *
+ChunkPiece::get_original (void)
 {
+	m_original->ref ();
 	return m_original;
 }
 void 
-ChunkPiece::set_original (Chunk *original, uint32_t size)
+ChunkPiece::set_original (Packet *original, uint32_t size)
 {
+	original->ref ();
 	m_original = original;
 	m_size = size;
 }
@@ -56,7 +59,8 @@ Chunk *
 ChunkPiece::copy (void)
 {
 	ChunkPiece *copy = new ChunkPiece ();
-	copy->m_original = m_original->copy ();
+	m_original->ref ();
+	copy->m_original = m_original;
 	copy->m_size = m_size;
 	return copy;
 }

@@ -33,6 +33,9 @@ public:
 	void set_payload_size (uint16_t size);
 	uint16_t get_payload_size (void) const;
 
+	uint16_t get_identification () const;
+	void set_identification (uint16_t identification);
+
 	void set_tos (uint8_t);
 	uint8_t get_tos (void) const;
 	void set_id (uint16_t);

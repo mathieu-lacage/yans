@@ -33,6 +33,7 @@ class Ipv4Route;
 class Host;
 class IcmpTransportProtocol;
 class Route;
+class DefragStates;
 
 class Ipv4 {
 public:
@@ -55,6 +56,7 @@ private:
 	TransportProtocol *lookup_protocol (uint8_t id);
 	void send_icmp_time_exceeded_ttl (Packet *original, NetworkInterface *interface);
 	bool send_out (Packet *packet, Route const*route);
+	Packet *re_assemble (Packet *fragment);
 
 	Host *m_host;
 	typedef std::vector<std::pair<uint8_t, TransportProtocol *> > Protocols;
@@ -64,6 +66,8 @@ private:
 	uint8_t m_send_protocol;
 	uint8_t m_default_ttl;
 	IcmpTransportProtocol *m_icmp;
+	uint16_t m_identification;
+	DefragStates *m_defrag_states;
 };
 
 #endif /* IPV4_H */

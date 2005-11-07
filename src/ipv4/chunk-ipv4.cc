@@ -53,6 +53,18 @@ ChunkIpv4::get_payload_size (void) const
 	return m_payload_size;
 }
 
+uint16_t 
+ChunkIpv4::get_identification () const
+{
+	return m_id;
+}
+void 
+ChunkIpv4::set_identification (uint16_t identification)
+{
+	m_id = identification;
+}
+
+
 
 void 
 ChunkIpv4::set_tos (uint8_t tos)
