@@ -104,9 +104,9 @@ ChunkIpv4::is_control_flag (uint8_t flag) const
 {
 	uint8_t flags = utils_ntoh_16 (m_fragment_offset) & 0x7;
 	if (flags & (1<<flag)) {
-		return false;
-	} else {
 		return true;
+	} else {
+		return false;
 	}
 }
 void 
@@ -122,7 +122,7 @@ ChunkIpv4::set_last_fragment (void)
 bool 
 ChunkIpv4::is_last_fragment (void) const
 {
-	return is_control_flag (2);
+	return !is_control_flag (2);
 }
 
 void 
