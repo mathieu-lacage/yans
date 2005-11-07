@@ -80,10 +80,11 @@ WriteFile::close (void)
 ssize_t 
 WriteFile::write (uint8_t *buf, size_t count)
 {
-	ssize_t written = ::write (m_priv->m_fd, buf, count);
-	assert (written >= 0);
-	if (((size_t)written) != count) {
-		std::cerr << "not wrote all: " << written << "/" << count << std::endl;
-	} 
+	size_t written = 0;
+	while (written < count) {
+	       ssize_t tmp = ::write (m_priv->m_fd, buf+written, count-written);
+	       assert (tmp >= 0);
+	       written += tmp;
+	}
 	return written;
 }
