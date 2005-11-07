@@ -124,6 +124,8 @@ Ipv4::send (Packet *packet)
 	assert (route != 0);
 	packet->add_header (ip_header);
 
+	ip_header->set_identification (m_identification);
+	m_identification ++;
 	send_out (packet, route);
 
 	delete tag;
@@ -166,8 +168,6 @@ bool
 Ipv4::send_out (Packet *packet, Route const *route)
 {
 	ChunkIpv4 *ip = static_cast <ChunkIpv4 *> (packet->peek_header ());
-	ip->set_identification (m_identification);
-	m_identification ++;
 	NetworkInterface *out_interface = route->get_interface ();
 
 	if (packet->get_size () > out_interface->get_mtu ()) {
@@ -258,6 +258,8 @@ Ipv4::send_icmp_time_exceeded_ttl (Packet *original, NetworkInterface *interface
 		return;
 	}
 	TRACE ("send back icmp ttl exceeded to " << ip_real->get_destination ());
+	ip_real->set_identification (m_identification);
+	m_identification ++;
 	send_out (packet, route);
 }
 
