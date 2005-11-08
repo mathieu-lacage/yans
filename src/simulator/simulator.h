@@ -26,10 +26,7 @@
 #include <stdint.h>
 
 class Event;
-class Fiber;
-class EventRunnable;
-class EventHeap;
-class Clock;
+class SimulatorPrivate;
 
 class Simulator {
 public:
@@ -59,9 +56,8 @@ private:
 	Simulator ();
 	~Simulator ();
 
+	SimulatorPrivate *m_priv;
 	static Simulator *m_instance;
-	EventRunnable *m_event_runnable;
-	Fiber *m_event_fiber;
 };
 
 #endif /* SIMULATOR_H */

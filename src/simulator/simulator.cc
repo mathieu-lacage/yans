@@ -29,6 +29,84 @@
 
 Simulator *Simulator::m_instance = 0;
 
+class SimulatorPrivate {
+public:
+	SimulatorPrivate ();
+	~SimulatorPrivate ();
+
+	void run (void);
+	void stop (void);
+	void insert_in_us (Event *event, uint64_t delta);
+	void insert_at_us (Event *event, uint64_t time);
+	uint64_t now_us (void);
+	void insert_in_s (Event *event, double delta);
+	void insert_at_s (Event *event, double time);
+	double now_s (void);
+
+private:
+	EventRunnable *m_event_runnable;
+	Fiber *m_event_fiber;
+};
+
+SimulatorPrivate::SimulatorPrivate ()
+{
+	m_event_runnable = new EventRunnable ();
+	m_event_fiber = new Fiber (0, m_event_runnable, "events");
+}
+
+SimulatorPrivate::~SimulatorPrivate ()
+{
+	m_event_runnable->stop ();
+	FiberScheduler::instance ()->run_main ();
+	delete m_event_fiber;
+	delete m_event_runnable;
+	FiberScheduler::instance ()->destroy ();
+	TagManager::instance ()->destroy ();
+}
+
+void
+SimulatorPrivate::run (void)
+{
+	FiberScheduler::instance ()->run_main ();
+}
+
+void 
+SimulatorPrivate::stop (void)
+{
+	m_event_runnable->stop ();
+}
+void 
+SimulatorPrivate::insert_in_us (Event *event, uint64_t delta)
+{
+	m_event_runnable->insert_in_us (event, delta);
+}
+void 
+SimulatorPrivate::insert_at_us (Event *event, uint64_t time)
+{
+	m_event_runnable->insert_at_us (event, time);
+}
+uint64_t 
+SimulatorPrivate::now_us (void)
+{
+	return m_event_runnable->now_us ();
+}
+void 
+SimulatorPrivate::insert_in_s (Event *event, double delta)
+{
+	m_event_runnable->insert_in_s (event, delta);
+}
+void 
+SimulatorPrivate::insert_at_s (Event *event, double time)
+{
+	m_event_runnable->insert_at_s (event, time);
+}
+double 
+SimulatorPrivate::now_s (void)
+{
+	return m_event_runnable->now_s ();
+}
+
+
 Simulator *
 Simulator::instance (void)
 {
@@ -47,58 +125,53 @@ Simulator::destroy (void)
 
 Simulator::Simulator ()
 {
-	m_event_runnable = new EventRunnable ();
-	m_event_fiber = new Fiber (0, m_event_runnable, "events");
+	m_priv = new SimulatorPrivate ();
 }
 
 Simulator::~Simulator ()
 {
-	m_event_runnable->stop ();
-	FiberScheduler::instance ()->run_main ();
-	delete m_event_fiber;
-	delete m_event_runnable;
-	FiberScheduler::instance ()->destroy ();
-	TagManager::instance ()->destroy ();
+	delete m_priv;
+	m_priv = (SimulatorPrivate *)0xdeadbeaf;
 }
 
 void 
 Simulator::run (void)
 {
-	FiberScheduler::instance ()->run_main ();
+	m_priv->run ();
 }
 void 
 Simulator::stop (void)
 {
-	m_event_runnable->stop ();
+	m_priv->stop ();
 }
 void 
 Simulator::insert_in_us (Event *event, uint64_t delta)
 {
-	m_event_runnable->insert_in_us (event, delta);
+	m_priv->insert_in_us (event, delta);
 }
 void 
 Simulator::insert_at_us (Event *event, uint64_t time)
 {
-	m_event_runnable->insert_at_us (event, time);
+	m_priv->insert_at_us (event, time);
 }
 uint64_t 
 Simulator::now_us (void)
 {
-	return m_event_runnable->now_us ();
+	return m_priv->now_us ();
 }
 void 
 Simulator::insert_in_s (Event *event, double delta)
 {
-	m_event_runnable->insert_in_s (event, delta);
+	m_priv->insert_in_s (event, delta);
 }
 void 
 Simulator::insert_at_s (Event *event, double time)
 {
-	m_event_runnable->insert_at_s (event, time);
+	m_priv->insert_at_s (event, time);
 }
 double 
 Simulator::now_s (void)
 {
-	return m_event_runnable->now_s ();
+	return m_priv->now_s ();
 }
 
