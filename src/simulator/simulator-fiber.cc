@@ -20,8 +20,6 @@
  */
 
 #include "simulator.h"
-#include "clock.h"
-#include "event-heap.h"
 #include "event-runnable.h"
 #include "fiber.h"
 #include "fiber-scheduler.h"
