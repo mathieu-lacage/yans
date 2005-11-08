@@ -87,7 +87,7 @@ EventRunnable::stop (void)
 	m_stop = true;
 	m_wait->up ();
 }
-#include "stdio.h"
+
 void 
 EventRunnable::run (void)
 {
