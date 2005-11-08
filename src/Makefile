@@ -96,6 +96,8 @@ samples/main-router: $(OBJFILES) $(OBJ_MAIN_ROUTER)
 
 
 clean:
-	rm -f $(OBJFILES) test/main-test samples/main-simple-event \
+	rm -f $(OBJFILES) test/main-test samples/main-simple \
+	samples/main-router $(OBJ_MAIN_TEST) $(OBJ_MAIN_SIMPLE) \
+	$(OBJ_MAIN_ROUTER) \
 	*~ arp/*~ ethernet/*~ simulator/*~ fiber/*~ ipv4/*~ \
 	common/*~ os-model/*~ host/*~ samples/*~ test/*~ ;
