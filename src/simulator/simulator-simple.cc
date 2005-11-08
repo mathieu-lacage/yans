@@ -23,6 +23,8 @@
 #include "clock.h"
 #include "event-heap.h"
 #include "tag-manager.h"
+#include "event.h"
+#include <math.h>
 
 Simulator *Simulator::m_instance = 0;
 
@@ -41,50 +43,80 @@ public:
 	double now_s (void);
 
 private:
+	bool m_stop;
+	Clock *m_clock;
+	EventHeap *m_event_heap;
 };
 
 SimulatorPrivate::SimulatorPrivate ()
 {
+	m_stop = false;
+	m_clock = new Clock ();
+	m_event_heap = new EventHeap ();
 }
 
 SimulatorPrivate::~SimulatorPrivate ()
 {
+	delete m_clock;
+	m_clock = (Clock *)0xdeadbeaf;
+	delete m_event_heap;
+	m_event_heap = (EventHeap *)0xdeadbeaf;
+	TagManager::instance ()->destroy ();
 }
 
 void
 SimulatorPrivate::run (void)
 {
+	Event *next_ev = m_event_heap->peek_next ();
+	uint64_t next_now = m_event_heap->peek_next_time_us ();
+	while (next_ev != 0 && !m_stop) {
+		m_event_heap->remove_next ();
+		m_clock->update_current_us (next_now);
+		next_ev->notify ();
+		next_ev = m_event_heap->peek_next ();
+		next_now = m_event_heap->peek_next_time_us ();
+	}
 }
 
 void 
 SimulatorPrivate::stop (void)
 {
+	m_stop = true;
 }
 void 
 SimulatorPrivate::insert_in_us (Event *event, uint64_t delta)
 {
+	uint64_t current = m_clock->get_current_us ();
+	m_event_heap->insert_at_us (event, current+delta);
 }
 void 
 SimulatorPrivate::insert_at_us (Event *event, uint64_t time)
 {
+	m_event_heap->insert_at_us (event, time);
 }
 uint64_t 
 SimulatorPrivate::now_us (void)
 {
-	return 0;
+	return m_clock->get_current_us ();
 }
 void 
 SimulatorPrivate::insert_in_s (Event *event, double delta)
 {
+	double current = m_clock->get_current_s ();
+	insert_at_s (event, current+delta);
 }
 void 
 SimulatorPrivate::insert_at_s (Event *event, double time)
 {
+	assert (time > 0);
+	long int us = lrint (time * 1000000);
+	assert (us > 0);
+	m_event_heap->insert_at_us (event, (uint64_t)us);
 }
 double 
 SimulatorPrivate::now_s (void)
 {
-	return 0;
+	return m_clock->get_current_s ();
 }
 
 

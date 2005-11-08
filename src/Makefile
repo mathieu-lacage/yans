@@ -1,4 +1,4 @@
-SIMULATOR=fiber
+SIMULATOR=simple
 
 RUN_SELF_TESTS=-DRUN_SELF_TESTS=1
 INCLUDES=-I./fiber -I./simulator -I./ -I./arp -I./common -I./ipv4 -I./ethernet -I./test -I./host -I./os-model
