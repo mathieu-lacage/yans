@@ -31,7 +31,6 @@ class Host;
 class WriteFile {
 public:
 	WriteFile (Host *host);
-	WriteFile ();
 	~WriteFile ();
 
 	void open (std::string *filename);
