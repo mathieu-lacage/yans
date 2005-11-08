@@ -157,7 +157,12 @@ DefragState::get_reassembly_timeout (void)
 DefragStates::DefragStates ()
 {}
 DefragStates::~DefragStates ()
-{}
+{
+	for (StatesI i = m_states.begin (); i != m_states.end (); i++) {
+		delete (*i);
+	}
+	m_states.erase (m_states.begin (), m_states.end ());
+}
 
 DefragState *
 DefragStates::lookup (Packet *fragment)
