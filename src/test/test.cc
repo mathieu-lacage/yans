@@ -24,8 +24,8 @@
 #ifdef RUN_SELF_TESTS
 #include <iostream>
 #include "buffer.h"
-#include "fiber-scheduler.h"
 #include "utils.h"
+#include "fiber-scheduler.h"
 
 
 #define ADD_TEST(klass, name) 	m_tests.push_back (std::make_pair (new klass (this), new std::string (name)));
@@ -34,8 +34,10 @@ TestManager::TestManager ()
 	: m_verbose (false)
 {
 	ADD_TEST (BufferTest, "Buffer");
-	ADD_TEST (TestFiberScheduler, "FiberScheduler");
 	ADD_TEST (UtilsTest, "Utils");
+#ifdef SIMULATOR_FIBER
+	ADD_TEST (TestFiberScheduler, "FiberScheduler");
+#endif
 }
 
 TestManager::~TestManager ()
