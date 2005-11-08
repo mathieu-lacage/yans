@@ -42,11 +42,12 @@ ChunkPiece::get_original (void)
 	return m_original;
 }
 void 
-ChunkPiece::set_original (Packet *original, uint32_t size)
+ChunkPiece::set_original (Packet *original, uint32_t offset, uint32_t size)
 {
 	original->ref ();
 	m_original = original;
 	m_size = size;
+	m_offset = offset;
 }
 	
 
@@ -62,6 +63,7 @@ ChunkPiece::copy (void)
 	m_original->ref ();
 	copy->m_original = m_original;
 	copy->m_size = m_size;
+	copy->m_offset = m_offset;
 	return copy;
 }
 void 
@@ -69,14 +71,17 @@ ChunkPiece::serialize (WriteBuffer *buffer)
 {
 	WriteBuffer *tmp = new WriteBuffer (m_size);
 	m_original->serialize (tmp);
-	if (tmp->get_written_size () >= m_size) {
-		buffer->write (tmp->peek_data (), m_size);
+	assert (tmp->get_written_size () >= m_offset);
+	uint32_t offset = tmp->get_written_size () - m_offset;
+	if (offset >= m_size) {
+		buffer->write (tmp->peek_data ()+m_offset, m_size);
 	} else {
-		buffer->write (tmp->peek_data (), tmp->get_written_size ());
-		for (uint32_t left = tmp->get_written_size (); left < m_size; left++) {
+		buffer->write (tmp->peek_data ()+m_offset, offset);
+		for (uint32_t left = offset; left < m_size; left++) {
 			buffer->write_u8 (0);
 		}
 	}
+	delete tmp;
 }
 void 
 ChunkPiece::deserialize (ReadBuffer *buffer)
@@ -87,6 +92,7 @@ void
 ChunkPiece::print (std::ostream *os) const
 {
 	*os << "(piece)"
-	    << " size: " << m_size << " ";
+	    << " size: " << m_size << " "
+	    << " offset: " << m_offset << " ";
 	m_original->print (os);
 }

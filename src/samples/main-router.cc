@@ -81,6 +81,8 @@ int main (int argc, char *argv[])
 	eth_server->get_tracer ()->enable_all ();
 	eth_router_client->get_tracer ()->enable_all ();
 	eth_router_server->get_tracer ()->enable_all ();
+	eth_client->set_mtu (980);
+	eth_router_server->set_mtu (979);
 
 	/* setup the routing tables. */
 	hclient->get_routing_table ()->set_default_route (Ipv4Address ("192.168.0.1"),
@@ -100,7 +102,7 @@ int main (int argc, char *argv[])
 	source->bind (Ipv4Address ("192.168.0.2"), 1025);
 	source->set_peer (Ipv4Address ("192.168.1.2"), 1026);
 	source->set_packet_interval (0.01);
-	source->set_packet_size (100);
+	source->set_packet_size (981);
 	source->start_at (1.0);
 	source->stop_at (10.0);
 

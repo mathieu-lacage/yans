@@ -78,6 +78,7 @@ Ipv4::Ipv4 ()
 	/* this is recommended by rfc 1700 */
 	m_default_ttl = 64;
 	m_defrag_states = new DefragStates ();
+	m_identification = 0;
 }
 Ipv4::~Ipv4 ()
 {
@@ -175,17 +176,28 @@ Ipv4::send_out (Packet *packet, Route const *route)
 			return false;
 		}
 		ip = static_cast <ChunkIpv4 *> (packet->remove_header ());
-
 		uint16_t fragment_length = (out_interface->get_mtu () - 20) & (~0x7);
 		uint16_t last_fragment_length = packet->get_size () % fragment_length;
 		uint16_t n_fragments = packet->get_size () / fragment_length + 1;
 		uint16_t current_offset = ip->get_fragment_offset ();
+		Packet *original;
+		if (!ip->is_last_fragment () ||
+		    ip->get_fragment_offset () != 0) {
+			/* we are attempting to fragment an ipv4 fragment so
+			   we try to get access to the underlying ip packet.
+			 */
+			ChunkPiece *piece = static_cast <ChunkPiece *> (packet->peek_header ());
+			original = piece->get_original ();
+		} else {
+			original = packet;
+		}
+
 		assert (n_fragments > 1);
 		for (uint16_t i = 0; i < n_fragments - 1; i++) {
 			Packet *fragment = new Packet ();
 
 			ChunkPiece *piece = new ChunkPiece ();
-			piece->set_original (packet, fragment_length);
+			piece->set_original (original, current_offset, fragment_length);
 			fragment->add_header (piece);
 
 			ChunkIpv4 *ip_fragment = static_cast <ChunkIpv4 *> (ip->copy ());
@@ -195,6 +207,7 @@ Ipv4::send_out (Packet *packet, Route const *route)
 			fragment->add_header (ip_fragment);
 
 			send_real_out (fragment, route);
+			fragment->unref ();
 			current_offset += fragment_length;
 		}
 
@@ -202,16 +215,19 @@ Ipv4::send_out (Packet *packet, Route const *route)
 		Packet *last_fragment = new Packet ();
 
 		ChunkPiece *piece = new ChunkPiece ();
-		piece->set_original (packet, last_fragment_length);
+		piece->set_original (original, current_offset, last_fragment_length);
 		last_fragment->add_header (piece);
 
 		ChunkIpv4 *ip_fragment = static_cast <ChunkIpv4 *> (ip->copy ());
 		if (!ip->is_last_fragment ()) {
 			/* this is the last fragment of an ipv4 fragment. */
+			original->unref ();
 			ip_fragment->set_more_fragments ();
+		} else if (ip->get_fragment_offset () != 0) {
+			/* this is the last fragment of the last fragment of an ipv4 packet.*/
+			original->unref ();
+			ip_fragment->set_last_fragment ();
 		} else {
-			/* this is the last fragment of an ipv4 packet or of
-			 * the last fragment of an ipv4 packet. */
 			ip_fragment->set_last_fragment ();
 		}
 		ip_fragment->set_fragment_offset (current_offset);
@@ -219,6 +235,8 @@ Ipv4::send_out (Packet *packet, Route const *route)
 		last_fragment->add_header (ip_fragment);
 
 		send_real_out (last_fragment, route);
+		last_fragment->unref ();
+		delete ip;
 		return true;
 	} else {
 		send_real_out (packet, route);
@@ -234,7 +252,7 @@ Ipv4::send_icmp_time_exceeded_ttl (Packet *original, NetworkInterface *interface
 	ChunkIpv4 *ip_header = static_cast <ChunkIpv4 *> (original->remove_header ());
 
 	ChunkPiece *payload_piece = new ChunkPiece ();
-	payload_piece->set_original (original, 8);
+	payload_piece->set_original (original, 0, 8);
 	packet->add_header (payload_piece);
 
 	packet->add_header (ip_header);
@@ -323,6 +341,19 @@ Ipv4::re_assemble (Packet *fragment)
 	return 0;
 }
 
+void
+Ipv4::receive_packet (Packet *packet, ChunkIpv4 *ip, NetworkInterface *interface)
+{
+	/* receive the packet. */
+	TagInIpv4 *tag = new TagInIpv4 (interface);
+	packet->add_tag (TagInIpv4::get_tag (), tag);
+	tag->set_daddress (ip->get_destination ());
+	TransportProtocol *protocol = lookup_protocol (ip->get_protocol ());
+	if (protocol != 0) {
+		protocol->receive (packet);
+	}
+}
+
 void 
 Ipv4::receive (Packet *packet, NetworkInterface *interface)
 {
@@ -330,7 +361,7 @@ Ipv4::receive (Packet *packet, NetworkInterface *interface)
 	ChunkIpv4 *ip_header = static_cast <ChunkIpv4 *> (packet->peek_header ());
 
 	if (!ip_header->is_checksum_ok ()) {
-		TRACE ("checksum not ok");
+		TRACE ("checksum not ok. " << *ip_header );
 		return;
 	}
 	if (forwarding (packet, interface)) {
@@ -340,22 +371,16 @@ Ipv4::receive (Packet *packet, NetworkInterface *interface)
 	    ip_header->get_fragment_offset () != 0) {
 		Packet *new_packet = re_assemble (packet);
 		if (new_packet == 0) {
+			TRACE ("reassemble fragment not finished.");
 			return;
 		}
-		packet = new_packet;
-		ip_header = static_cast <ChunkIpv4 *> (packet->peek_header ());
+		TRACE ("reassemble fragment finished.");
+		receive_packet (new_packet, ip_header, interface);
+		new_packet->unref ();
+		return;
 	}
 
-
-	/* receive the packet. */
 	packet->remove_header ();
-	TagInIpv4 *tag = new TagInIpv4 (interface);
-	packet->add_tag (TagInIpv4::get_tag (), tag);
-
-	tag->set_daddress (ip_header->get_destination ());
-	TransportProtocol *protocol = lookup_protocol (ip_header->get_protocol ());
+	receive_packet (packet, ip_header, interface);
 	delete ip_header;
-	if (protocol != 0) {
-		protocol->receive (packet);
-	}
 }

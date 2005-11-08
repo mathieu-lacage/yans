@@ -34,6 +34,7 @@ class Host;
 class IcmpTransportProtocol;
 class Route;
 class DefragStates;
+class ChunkIpv4;
 
 class Ipv4 {
 public:
@@ -58,6 +59,7 @@ private:
 	bool send_out (Packet *packet, Route const*route);
 	void send_real_out (Packet *packet, Route const*route);
 	Packet *re_assemble (Packet *fragment);
+	void receive_packet (Packet *packet, ChunkIpv4 *ip, NetworkInterface *interface);
 
 	Host *m_host;
 	typedef std::vector<std::pair<uint8_t, TransportProtocol *> > Protocols;

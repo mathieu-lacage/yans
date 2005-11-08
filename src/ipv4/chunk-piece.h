@@ -32,7 +32,7 @@ public:
 	virtual ~ChunkPiece ();
 
 	Packet *get_original (void);
-	void set_original (Packet *original, uint32_t size);
+	void set_original (Packet *original, uint32_t offset, uint32_t size);
 	
 
 	virtual uint32_t get_size (void) const;
@@ -44,6 +44,7 @@ public:
 private:
 	Packet *m_original;
 	uint32_t m_size;
+	uint32_t m_offset;
 };
 
 
