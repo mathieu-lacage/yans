@@ -43,8 +43,7 @@ ChunkIpv4::~ChunkIpv4 ()
 void 
 ChunkIpv4::set_payload_size (uint16_t size)
 {
-	uint16_t new_total = size + get_size ();
-	m_total_length = utils_hton_16 (new_total);
+	m_total_length = utils_hton_16 (size + get_size ());
 	m_payload_size = size;
 }
 uint16_t 
@@ -214,7 +213,6 @@ ChunkIpv4::copy (void)
 	ChunkIpv4 *ipv4 = new ChunkIpv4 (*this);
 	return ipv4;
 }
-
 bool
 ChunkIpv4::is_checksum_ok (void) const
 {
@@ -267,17 +265,17 @@ void
 ChunkIpv4::print (std::ostream *os) const
 {
 	// ipv4, right ?
-	assert ((m_ver_ihl & 0x0f) == 4);
 	*os << "(ipv4)"
-	    << " ihl: " << ((m_ver_ihl >> 4) & 0x0f)
+	    << " ihl: " << (uint32_t)(m_ver_ihl & 0x0f)
 	    << " tos: " << (uint32_t)m_tos
-	    << " total length: " << m_total_length
-	    << " id: " << m_id
-	    << " flags: " << (m_fragment_offset & 0x7)
-	    << " frag offset: " << (m_fragment_offset>>3)
-	    << " ttl: " << (uint32_t)m_ttl
-	    << " protocol: " << (uint32_t)m_protocol
+	    << " total length: " << utils_ntoh_16 (m_total_length)
+	    << " id: " << get_identification ()
+	    << " may/don't frag: " << is_control_flag (1)
+	    << " last/more frag: " << is_control_flag (0)
+	    << " frag offset: " << get_fragment_offset ()
+	    << " ttl: " << (uint32_t)get_ttl ()
+	    << " protocol: " << (uint32_t)get_protocol ()
 	    << " checksum: " << m_checksum
-	    << " source: " << m_source
-	    << " destination: " << m_destination;
+	    << " source: " << Ipv4Address (utils_ntoh_32 (m_source))
+	    << " destination: " << Ipv4Address (utils_ntoh_32 (m_destination));
 }
