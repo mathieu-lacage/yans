@@ -38,10 +38,10 @@ public:
 
 	uint32_t get_n_packets_received (void);
 	uint32_t get_n_bytes_received (void);
-	uint32_t get_packet_size_mean (void);
-	uint32_t get_packet_size_variance (void);
-	uint32_t get_packet_interval_mean (void);
-	uint32_t get_packet_interval_variance (void);
+	double get_packet_size_mean (void);
+	double get_packet_size_variance (void);
+	double get_packet_interval_mean (void);
+	double get_packet_interval_variance (void);
 
 	void print_stats (void);
 

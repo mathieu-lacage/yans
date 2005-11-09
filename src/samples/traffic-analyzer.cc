@@ -54,22 +54,22 @@ TrafficAnalyzer::get_n_bytes_received (void)
 {
 	return 0;
 }
-uint32_t 
+double
 TrafficAnalyzer::get_packet_size_mean (void)
 {
 	return 0;
 }
-uint32_t 
+double
 TrafficAnalyzer::get_packet_size_variance (void)
 {
 	return 0;
 }
-uint32_t 
+double
 TrafficAnalyzer::get_packet_interval_mean (void)
 {
 	return 0;
 }
-uint32_t 
+double
 TrafficAnalyzer::get_packet_interval_variance (void)
 {
 	return 0;
