@@ -55,14 +55,29 @@ PeriodicGeneratorEvent::notify_canceled (void)
 
 
 PeriodicGenerator::PeriodicGenerator ()
+	: m_ref (this)
 {}
 
 PeriodicGenerator::~PeriodicGenerator ()
-{}
+{
+	m_source->unref ();
+}
+
+void
+PeriodicGenerator::ref (void)
+{
+	m_ref.ref ();
+}
+void
+PeriodicGenerator::unref (void)
+{
+	m_ref.unref ();
+}
 
 void 
 PeriodicGenerator::set_source (Source *source)
 {
+	source->ref ();
 	m_source = source;
 }
 

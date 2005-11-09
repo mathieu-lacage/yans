@@ -53,7 +53,8 @@ UdpSink::UdpSink (Host *host)
 	: m_host (host),
 	  m_end_point (0),
 	  m_listener (new UdpSinkListener (this)),
-	  m_analyzer (0)
+	  m_analyzer (0),
+	  m_ref (this)
 {}
 
 UdpSink::~UdpSink ()
@@ -69,6 +70,16 @@ UdpSink::~UdpSink ()
 	if (m_analyzer != 0) {
 		delete m_analyzer;
 	}
+}
+void
+UdpSink::ref (void)
+{
+	m_ref.ref ();
+}
+void
+UdpSink::unref (void)
+{
+	m_ref.unref ();
 }
 
 void 

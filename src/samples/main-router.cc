@@ -29,6 +29,7 @@
 #include "host-tracer.h"
 #include "network-interface-tracer.h"
 #include "periodic-generator.h"
+#include "traffic-analyzer.h"
 
 int main (int argc, char *argv[])
 {
@@ -113,6 +114,8 @@ int main (int argc, char *argv[])
 	generator->set_packet_size (981);
 	generator->start_at (1.0);
 	generator->stop_at (10.0);
+	TrafficAnalyzer *analyzer = new TrafficAnalyzer ();
+	sink->set_analyzer (analyzer);
 
 
 
@@ -122,9 +125,10 @@ int main (int argc, char *argv[])
 
 
 	/* destroy network */
-	delete source;
-	delete generator;
-	delete sink;
+	source->unref ();
+	generator->unref ();
+	sink->unref ();
+	analyzer->unref ();
 	delete hclient;
 	delete hserver;
 	delete hrouter;

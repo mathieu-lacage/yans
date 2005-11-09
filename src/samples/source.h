@@ -27,6 +27,8 @@ class Packet;
 class Source {
 public:
 	virtual ~Source () = 0;
+	virtual void ref (void) = 0;
+	virtual void unref (void) = 0;
 	virtual void send (Packet *packet) = 0;
 };
 

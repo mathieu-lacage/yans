@@ -22,10 +22,11 @@
 #ifndef UDP_SOURCE_H
 #define UDP_SOURCE_H
 
-#include "source.h"
 #include <stdint.h>
+#include "source.h"
 #include "ipv4-address.h"
 #include "ipv4-endpoint.h"
+#include "ref-count.tcc"
 
 class Host;
 class Ipv4EndPoint;
@@ -35,6 +36,8 @@ class UdpSource : public Source {
 public:
 	UdpSource (Host *host);
 	virtual ~UdpSource ();
+	virtual void ref (void);
+	virtual void unref (void);
 
 	/* return true on success. */
 	bool bind (Ipv4Address address, uint16_t port);
@@ -49,6 +52,7 @@ private:
 	Ipv4Address m_peer_address;
 	uint16_t m_peer_port;
 	UdpSourceListener *m_listener;
+	RefCount<UdpSource> m_ref;
 };
 
 #endif /* UDP_SOURCE_H */

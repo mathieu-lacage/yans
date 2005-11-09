@@ -24,9 +24,21 @@
 
 
 TrafficAnalyzer::TrafficAnalyzer ()
+	: m_ref (this)
 {}
 TrafficAnalyzer::~TrafficAnalyzer ()
 {}
+
+void
+TrafficAnalyzer::ref (void)
+{
+	m_ref.ref ();
+}
+void
+TrafficAnalyzer::unref (void)
+{
+	m_ref.unref ();
+}
 
 void 
 TrafficAnalyzer::receive (Packet *packet)

@@ -24,12 +24,15 @@
 #define TRAFFIC_ANALYZER_H
 
 #include <stdint.h>
+#include "ref-count.tcc"
 class Packet;
 
 class TrafficAnalyzer {
 public:
 	TrafficAnalyzer ();
 	~TrafficAnalyzer ();
+	void ref (void);
+	void unref (void);
 
 	void receive (Packet *packet);
 
@@ -45,6 +48,7 @@ public:
 private:
 	uint32_t m_n_rx;
 	uint32_t m_size_rx;
+	RefCount<TrafficAnalyzer> m_ref;
 };
 
 

@@ -50,7 +50,8 @@ void UdpSourceListener::receive (Packet *packet)
 UdpSource::UdpSource (Host *host)
 	: m_host (host),
 	  m_end_point (0),
-	  m_listener (new UdpSourceListener ())
+	  m_listener (new UdpSourceListener ()),
+	  m_ref (this)
 {}
 UdpSource::~UdpSource ()
 {
@@ -63,6 +64,18 @@ UdpSource::~UdpSource ()
 	delete m_listener;
 	m_listener = (UdpSourceListener *)0xdeadbeaf;
 }
+
+void 
+UdpSource::ref (void)
+{
+	m_ref.ref ();
+}
+void 
+UdpSource::unref (void)
+{
+	m_ref.unref ();
+}
+
 bool 
 UdpSource::bind (Ipv4Address address, uint16_t port)
 {

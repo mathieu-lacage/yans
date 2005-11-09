@@ -23,6 +23,7 @@
 #define PERIODIC_GENERATOR_H
 
 #include <stdint.h>
+#include "ref-count.tcc"
 
 class Source;
 
@@ -30,6 +31,8 @@ class PeriodicGenerator {
 public:
 	PeriodicGenerator ();
 	~PeriodicGenerator ();
+	void ref (void);
+	void unref (void);
 
 	void set_source (Source *source);
 
@@ -47,6 +50,7 @@ private:
 	double m_interval;
 	uint16_t m_size;
 	double m_stop_at;
+	RefCount<PeriodicGenerator> m_ref;
 };
 
 

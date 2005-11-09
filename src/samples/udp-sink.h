@@ -24,6 +24,7 @@
 
 #include <stdint.h>
 #include "ipv4-address.h"
+#include "ref-count.tcc"
 
 class Host;
 class Packet;
@@ -35,6 +36,8 @@ class UdpSink {
 public:
 	UdpSink (Host *host);
 	~UdpSink ();
+	void ref (void);
+	void unref (void);
 
 	void set_analyzer (TrafficAnalyzer *analyzer);
 
@@ -46,6 +49,7 @@ private:
 	Ipv4EndPoint *m_end_point;
 	UdpSinkListener *m_listener;
 	TrafficAnalyzer *m_analyzer;
+	RefCount<UdpSink> m_ref;
 };
 
 
