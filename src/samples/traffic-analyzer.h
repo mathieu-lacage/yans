@@ -40,7 +40,6 @@ public:
 	void print_stats (void);
 
 private:
-	uint32_t m_n_packets;
 	PopulationAnalysis *m_data;
 	PopulationAnalysis *m_inter_arrival_time;
 	double m_previous_arrival;

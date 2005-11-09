@@ -122,6 +122,8 @@ int main (int argc, char *argv[])
 	/* run simulation */
 	Simulator::instance ()->run ();
 
+	analyzer->print_stats ();
+
 
 
 	/* destroy network */

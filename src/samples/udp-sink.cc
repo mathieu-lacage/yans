@@ -68,7 +68,7 @@ UdpSink::~UdpSink ()
 	delete m_listener;
 	m_listener = (UdpSinkListener *)0xdeadbeaf;
 	if (m_analyzer != 0) {
-		delete m_analyzer;
+		m_analyzer->unref ();
 	}
 }
 void
@@ -85,6 +85,7 @@ UdpSink::unref (void)
 void 
 UdpSink::set_analyzer (TrafficAnalyzer *analyzer)
 {
+	analyzer->ref ();
 	m_analyzer = analyzer;
 }
 

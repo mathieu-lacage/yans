@@ -31,7 +31,6 @@ TrafficAnalyzer::TrafficAnalyzer ()
 	: m_ref (this)
 {
 	m_previous_arrival = -1.0;
-	m_n_packets = 0;
 	m_data = new PopulationAnalysis ();
 	m_inter_arrival_time = new PopulationAnalysis ();
 }
@@ -55,7 +54,6 @@ TrafficAnalyzer::unref (void)
 void 
 TrafficAnalyzer::receive (Packet *packet)
 {
-	m_n_packets++;
 	m_data->add_term (packet->get_size ());
 	double now = Simulator::instance ()->now_s ();
 	if (m_previous_arrival >= 0.0) {
@@ -67,9 +65,9 @@ TrafficAnalyzer::receive (Packet *packet)
 void 
 TrafficAnalyzer::print_stats (void)
 {
-	std::cout << "received " << m_n_packets << " packets." << std::endl
+	std::cout << "received " << m_data->get_n () << " packets." << std::endl
 		  << " packet size avg: " << m_data->get_mean () << ", std dev: " << m_data->get_standard_deviation () << std::endl
 		  << " packet inter arrival avg: " << m_inter_arrival_time->get_mean ()
 		  << ", std dev: " << m_inter_arrival_time->get_standard_deviation () << std::endl
-		  << "received " << m_data->get_n () << " bytes." << std::endl;
+		  << "received " << m_data->get_total () << " bytes." << std::endl;
 }
