@@ -25,16 +25,24 @@
 #include "ipv4-route.h"
 #include "loopback-interface.h"
 #include "udp.h"
+#include "tcp.h"
 #include "host-tracer.h"
 
 Host::Host (char const *path)
 {
 	m_ipv4 = new Ipv4 ();
-	m_udp = new Udp ();
 	m_ipv4->set_host (this);
+
+	m_udp = new Udp ();
 	m_ipv4->register_transport_protocol (m_udp);
 	m_udp->set_host (this);
 	m_udp->set_ipv4 (m_ipv4);
+
+	m_tcp = new Tcp ();
+	m_ipv4->register_transport_protocol (m_tcp);
+	m_tcp->set_host (this);
+	m_tcp->set_ipv4 (m_ipv4);
+
 	m_routing_table = new Ipv4Route ();
 	LoopbackInterface *loopback = new LoopbackInterface ();
 	add_interface (loopback);
@@ -53,6 +61,7 @@ Host::~Host ()
 	delete m_ipv4;
 	delete m_routing_table;
 	delete m_udp;
+	delete m_tcp;
 	delete m_tracer;
 	for (NetworkInterfacesI i = m_interfaces.begin (); 
 	     i != m_interfaces.end (); 
@@ -98,6 +107,11 @@ Udp *
 Host::get_udp (void)
 {
 	return m_udp;
+}
+Tcp *
+Host::get_tcp (void)
+{
+	return m_tcp;
 }
 
 HostTracer *

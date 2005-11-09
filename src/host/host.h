@@ -30,6 +30,7 @@ class Ipv4Route;
 class NetworkInterface;
 class SocketUdp;
 class Udp;
+class Tcp;
 class HostTracer;
 
 typedef std::vector<NetworkInterface *> NetworkInterfaces;
@@ -47,6 +48,7 @@ public:
 	void add_interface (NetworkInterface *interface);
 	
 	Udp *get_udp (void);
+	Tcp *get_tcp (void);
 
 	HostTracer *get_tracer (void);
 
@@ -59,6 +61,7 @@ private:
 	Ipv4Route *m_routing_table;
 	Ipv4 *m_ipv4;
 	Udp *m_udp;
+	Tcp *m_tcp;
 	HostTracer *m_tracer;
 	std::string *m_root;
 };

@@ -8,6 +8,7 @@ FLAGS=-Wall -Werror -O0 -gdwarf-2
 MAIN_TEST_SOURCE=test/main-test.cc
 MAIN_SIMPLE_SOURCE=samples/main-simple.cc
 MAIN_ROUTER_SOURCE=samples/main-router.cc
+MAIN_TCP_SOURCE=samples/main-tcp.cc
 SOURCE= \
 	test/test.cc \
 	samples/chunk-fake-data.cc \
@@ -16,6 +17,8 @@ SOURCE= \
 	samples/traffic-analyzer.cc \
 	samples/udp-source.cc \
 	samples/udp-sink.cc \
+	samples/tcp-source.cc \
+	samples/tcp-sink.cc \
 	host/mac-address.cc \
 	host/network-interface.cc \
 	host/loopback-interface.cc \
@@ -31,6 +34,7 @@ SOURCE= \
 	common/utils.cc \
 	common/population-analysis.cc \
 	ipv4/udp.cc \
+	ipv4/tcp.cc \
 	ipv4/chunk-tcp.cc \
 	ipv4/chunk-udp.cc \
 	ipv4/chunk-ipv4.cc \
@@ -84,8 +88,9 @@ OBJFILES=$(addsuffix .o, $(basename $(SOURCE)))
 OBJ_MAIN_TEST=$(addsuffix .o, $(basename $(MAIN_TEST_SOURCE)))
 OBJ_MAIN_SIMPLE=$(addsuffix .o, $(basename $(MAIN_SIMPLE_SOURCE)))
 OBJ_MAIN_ROUTER=$(addsuffix .o, $(basename $(MAIN_ROUTER_SOURCE)))
+OBJ_MAIN_TCP=$(addsuffix .o, $(basename $(MAIN_TCP_SOURCE)))
 
-all: test/main-test samples/main-simple samples/main-router
+all: test/main-test samples/main-simple samples/main-router samples/main-tcp
 
 test/main-test: $(OBJFILES) $(OBJ_MAIN_TEST)
 	$(CXX) $(LDFLAGS) -o $@ $^
@@ -94,14 +99,16 @@ samples/main-simple: $(OBJFILES) $(OBJ_MAIN_SIMPLE)
 	$(CXX) $(LDFLAGS) -o $@ $^
 samples/main-router: $(OBJFILES) $(OBJ_MAIN_ROUTER)
 	$(CXX) $(LDFLAGS) -o $@ $^
+samples/main-tcp: $(OBJFILES) $(OBJ_MAIN_TCP)
+	$(CXX) $(LDFLAGS) -o $@ $^
 
 %.o:%.cc
 	$(CXX) $(CXXFLAGS) -c -o $@ $^
 
 
 clean:
-	rm -f $(OBJFILES) test/main-test samples/main-simple \
-	samples/main-router $(OBJ_MAIN_TEST) $(OBJ_MAIN_SIMPLE) \
-	$(OBJ_MAIN_ROUTER) \
+	rm -f $(OBJFILES) test/main-test samples/main-simple  \
+	samples/main-router samples/main-tcp $(OBJ_MAIN_TEST) \
+	$(OBJ_MAIN_SIMPLE) $(OBJ_MAIN_ROUTER) $(OBJ_MAIN_TCP) \
 	*~ arp/*~ ethernet/*~ simulator/*~ fiber/*~ ipv4/*~ \
 	common/*~ os-model/*~ host/*~ samples/*~ test/*~ ;
