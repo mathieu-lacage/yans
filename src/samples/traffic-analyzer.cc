@@ -21,13 +21,25 @@
 
 
 #include "traffic-analyzer.h"
+#include "population-analysis.h"
+#include "packet.h"
+#include "simulator.h"
+#include <iostream>
 
 
 TrafficAnalyzer::TrafficAnalyzer ()
 	: m_ref (this)
-{}
+{
+	m_previous_arrival = -1.0;
+	m_n_packets = 0;
+	m_data = new PopulationAnalysis ();
+	m_inter_arrival_time = new PopulationAnalysis ();
+}
 TrafficAnalyzer::~TrafficAnalyzer ()
-{}
+{
+	delete m_data;
+	delete m_inter_arrival_time;
+}
 
 void
 TrafficAnalyzer::ref (void)
@@ -42,39 +54,22 @@ TrafficAnalyzer::unref (void)
 
 void 
 TrafficAnalyzer::receive (Packet *packet)
-{}
-
-uint32_t 
-TrafficAnalyzer::get_n_packets_received (void)
 {
-	return 0;
-}
-uint32_t 
-TrafficAnalyzer::get_n_bytes_received (void)
-{
-	return 0;
-}
-double
-TrafficAnalyzer::get_packet_size_mean (void)
-{
-	return 0;
-}
-double
-TrafficAnalyzer::get_packet_size_variance (void)
-{
-	return 0;
-}
-double
-TrafficAnalyzer::get_packet_interval_mean (void)
-{
-	return 0;
-}
-double
-TrafficAnalyzer::get_packet_interval_variance (void)
-{
-	return 0;
+	m_n_packets++;
+	m_data->add_term (packet->get_size ());
+	double now = Simulator::instance ()->now_s ();
+	if (m_previous_arrival >= 0.0) {
+		m_inter_arrival_time->add_term (now - m_previous_arrival);
+	}
+	m_previous_arrival = now;
 }
 
 void 
 TrafficAnalyzer::print_stats (void)
-{}
+{
+	std::cout << "received " << m_n_packets << " packets." << std::endl
+		  << " packet size avg: " << m_data->get_mean () << ", std dev: " << m_data->get_standard_deviation () << std::endl
+		  << " packet inter arrival avg: " << m_inter_arrival_time->get_mean ()
+		  << ", std dev: " << m_inter_arrival_time->get_standard_deviation () << std::endl
+		  << "received " << m_data->get_n () << " bytes." << std::endl;
+}

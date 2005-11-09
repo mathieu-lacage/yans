@@ -26,6 +26,7 @@
 #include <stdint.h>
 #include "ref-count.tcc"
 class Packet;
+class PopulationAnalysis;
 
 class TrafficAnalyzer {
 public:
@@ -36,18 +37,13 @@ public:
 
 	void receive (Packet *packet);
 
-	uint32_t get_n_packets_received (void);
-	uint32_t get_n_bytes_received (void);
-	double get_packet_size_mean (void);
-	double get_packet_size_variance (void);
-	double get_packet_interval_mean (void);
-	double get_packet_interval_variance (void);
-
 	void print_stats (void);
 
 private:
-	uint32_t m_n_rx;
-	uint32_t m_size_rx;
+	uint32_t m_n_packets;
+	PopulationAnalysis *m_data;
+	PopulationAnalysis *m_inter_arrival_time;
+	double m_previous_arrival;
 	RefCount<TrafficAnalyzer> m_ref;
 };
 
