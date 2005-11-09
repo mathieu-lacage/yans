@@ -29,6 +29,7 @@ SOURCE= \
 	common/tag-manager.cc \
 	common/packet.cc \
 	common/utils.cc \
+	common/population-analysis.cc \
 	ipv4/udp.cc \
 	ipv4/chunk-tcp.cc \
 	ipv4/chunk-udp.cc \

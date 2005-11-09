@@ -53,6 +53,11 @@ PopulationAnalysis::add_term (double term)
         m_square_sum += d * (term - m_mean);
 }
 
+uint32_t
+PopulationAnalysis::get_n (void)
+{
+	return m_n;
+}
 double 
 PopulationAnalysis::get_mean (void)
 {
