@@ -25,9 +25,10 @@
 #include <stdint.h>
 #include <ostream>
 #include <vector>
-#include "sgi-hashmap.h"
 
+#include "sgi-hashmap.h"
 #include "tag-manager.h"
+#include "ref-count.tcc"
 
 class Chunk;
 class WriteBuffer;
@@ -82,7 +83,7 @@ public:
 	Headers m_headers;
 	Trailers m_trailers;
 	Tags m_tags;
-	uint32_t m_ref;
+	RefCount<Packet> m_ref;
 };
 
 std::ostream& operator<< (std::ostream& os, Packet const& packet);

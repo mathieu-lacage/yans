@@ -26,7 +26,7 @@ PacketDestroyNotifier::~PacketDestroyNotifier ()
 {}
 
 Packet::Packet ()
-	: m_ref (1)
+	: m_ref (this)
 {}
 
 Packet::~Packet ()
@@ -50,7 +50,6 @@ Packet::~Packet ()
 		delete (*k).second;
 	}
 	m_tags.erase (m_tags.begin (), m_tags.end ());
-	m_ref = 0xdeadbeaf;
 }
 
 void 
@@ -62,17 +61,13 @@ Packet::add_destroy_notifier (PacketDestroyNotifier *notifier)
 void 
 Packet::ref (void)
 {
-	m_ref++;
+	m_ref.ref ();
 }
 
 void 
 Packet::unref (void)
 {
-	assert (m_ref != 0xdeadbeaf);
-	m_ref--;
-	if (m_ref == 0) {
-		delete this;
-	}
+	m_ref.unref ();
 }
 
 void 
