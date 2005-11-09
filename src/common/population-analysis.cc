@@ -42,6 +42,7 @@ PopulationAnalysis::reset (void)
 	m_n = 0;
 	m_square_sum = 0.0;
 	m_mean = 0.0;
+	m_sum = 0.0;
 }
 
 void 
@@ -51,12 +52,18 @@ PopulationAnalysis::add_term (double term)
         m_n++;
         m_mean += d / m_n;
         m_square_sum += d * (term - m_mean);
+	m_sum += term;
 }
 
 uint32_t
 PopulationAnalysis::get_n (void)
 {
 	return m_n;
+}
+double 
+PopulationAnalysis::get_total (void)
+{
+	return m_sum;
 }
 double 
 PopulationAnalysis::get_mean (void)

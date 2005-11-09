@@ -35,6 +35,7 @@ public:
 	void add_term (double term);
 
 	uint32_t get_n (void);
+	double get_total (void);
 	double get_mean (void);
 	double get_standard_deviation (void);
 	double get_unbiased_variance (void);
@@ -42,6 +43,7 @@ public:
 private:
 	double m_mean;
 	double m_square_sum;
+	double m_sum;
 	uint32_t m_n;
 };
 
