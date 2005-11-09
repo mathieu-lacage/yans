@@ -25,6 +25,7 @@
 #include "ipv4-endpoint.h"
 #include "packet.h"
 #include "host-tracer.h"
+#include "traffic-analyzer.h"
 
 #include <iostream>
 
@@ -52,8 +53,7 @@ UdpSink::UdpSink (Host *host)
 	: m_host (host),
 	  m_end_point (0),
 	  m_listener (new UdpSinkListener (this)),
-	  m_n_rx (0),
-	  m_size_rx (0)
+	  m_analyzer (0)
 {}
 
 UdpSink::~UdpSink ()
@@ -66,13 +66,15 @@ UdpSink::~UdpSink ()
 	m_host = (Host *)0xdeadbeaf;
 	delete m_listener;
 	m_listener = (UdpSinkListener *)0xdeadbeaf;
+	if (m_analyzer != 0) {
+		delete m_analyzer;
+	}
 }
 
 void 
-UdpSink::print_stats (void)
+UdpSink::set_analyzer (TrafficAnalyzer *analyzer)
 {
-	std::cout << "packets received: " << m_n_rx << std::endl
-		  << "bytes received: " << m_size_rx << std::endl;
+	m_analyzer = analyzer;
 }
 
 bool 
@@ -91,6 +93,7 @@ void
 UdpSink::receive (Packet *packet)
 {
 	m_host->get_tracer ()->trace_rx_app (packet);
-	m_n_rx++;
-	m_size_rx += packet->get_size ();	
+	if (m_analyzer != 0) {
+		m_analyzer->receive (packet);
+	}
 }

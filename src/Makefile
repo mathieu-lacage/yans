@@ -13,6 +13,7 @@ SOURCE= \
 	samples/chunk-fake-data.cc \
 	samples/source.cc \
 	samples/periodic-generator.cc \
+	samples/traffic-analyzer.cc \
 	samples/udp-source.cc \
 	samples/udp-sink.cc \
 	host/mac-address.cc \

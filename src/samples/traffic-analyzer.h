@@ -19,34 +19,34 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#ifndef UDP_SINK_H
-#define UDP_SINK_H
+
+#ifndef TRAFFIC_ANALYZER_H
+#define TRAFFIC_ANALYZER_H
 
 #include <stdint.h>
-#include "ipv4-address.h"
-
-class Host;
 class Packet;
-class Ipv4EndPoint;
-class UdpSinkListener;
-class TrafficAnalyzer;
 
-class UdpSink {
+class TrafficAnalyzer {
 public:
-	UdpSink (Host *host);
-	~UdpSink ();
+	TrafficAnalyzer ();
+	~TrafficAnalyzer ();
 
-	void set_analyzer (TrafficAnalyzer *analyzer);
-
-	bool bind (Ipv4Address address, uint16_t port);
-private:
-	friend class UdpSinkListener;
 	void receive (Packet *packet);
-	Host *m_host;
-	Ipv4EndPoint *m_end_point;
-	UdpSinkListener *m_listener;
-	TrafficAnalyzer *m_analyzer;
+
+	uint32_t get_n_packets_received (void);
+	uint32_t get_n_bytes_received (void);
+	uint32_t get_packet_size_mean (void);
+	uint32_t get_packet_size_variance (void);
+	uint32_t get_packet_interval_mean (void);
+	uint32_t get_packet_interval_variance (void);
+
+	void print_stats (void);
+
+private:
+	uint32_t m_n_rx;
+	uint32_t m_size_rx;
 };
 
 
-#endif /* UDP_SINK_H */
+
+#endif /* TRAFFIC_ANALYZER_H */

@@ -119,7 +119,6 @@ int main (int argc, char *argv[])
 	/* run simulation */
 	Simulator::instance ()->run ();
 
-	sink->print_stats ();
 
 
 	/* destroy network */
