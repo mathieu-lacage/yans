@@ -19,36 +19,7 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#ifndef UDP_SOURCE_H
-#define UDP_SOURCE_H
-
 #include "source.h"
-#include <stdint.h>
-#include "ipv4-address.h"
-#include "ipv4-endpoint.h"
 
-class Host;
-class Ipv4EndPoint;
-class UdpSourceListener;
-
-class UdpSource : public Source {
-public:
-	UdpSource (Host *host);
-	virtual ~UdpSource ();
-
-	/* return true on success. */
-	bool bind (Ipv4Address address, uint16_t port);
-
-	void set_peer (Ipv4Address address, uint16_t port);
-
-	virtual void send (Packet *packet);
-
-private:
-	Host *m_host;
-	Ipv4EndPoint *m_end_point;
-	Ipv4Address m_peer_address;
-	uint16_t m_peer_port;
-	UdpSourceListener *m_listener;
-};
-
-#endif /* UDP_SOURCE_H */
+Source::~Source ()
+{}

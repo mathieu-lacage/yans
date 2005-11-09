@@ -28,6 +28,7 @@
 #include "udp-sink.h"
 #include "host-tracer.h"
 #include "network-interface-tracer.h"
+#include "periodic-generator.h"
 
 int main (int argc, char *argv[])
 {
@@ -97,17 +98,23 @@ int main (int argc, char *argv[])
 							     eth_router_server);
 	
 
-	/* start applications. */
+	/* create udp source endpoint. */
 	UdpSource *source = new UdpSource (hclient);
 	source->bind (Ipv4Address ("192.168.0.2"), 1025);
 	source->set_peer (Ipv4Address ("192.168.1.2"), 1026);
-	source->set_packet_interval (0.01);
-	source->set_packet_size (981);
-	source->start_at (1.0);
-	source->stop_at (10.0);
-
+	/* create udp sink endpoint. */
 	UdpSink *sink = new UdpSink (hserver);
 	sink->bind (Ipv4Address ("192.168.1.2"), 1026);
+
+
+	PeriodicGenerator *generator = new PeriodicGenerator ();
+	generator->set_source (source);
+	generator->set_packet_interval (0.01);
+	generator->set_packet_size (981);
+	generator->start_at (1.0);
+	generator->stop_at (10.0);
+
+
 
 	/* run simulation */
 	Simulator::instance ()->run ();
@@ -117,6 +124,7 @@ int main (int argc, char *argv[])
 
 	/* destroy network */
 	delete source;
+	delete generator;
 	delete sink;
 	delete hclient;
 	delete hserver;

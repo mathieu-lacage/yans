@@ -11,6 +11,8 @@ MAIN_ROUTER_SOURCE=samples/main-router.cc
 SOURCE= \
 	test/test.cc \
 	samples/chunk-fake-data.cc \
+	samples/source.cc \
+	samples/periodic-generator.cc \
 	samples/udp-source.cc \
 	samples/udp-sink.cc \
 	host/mac-address.cc \

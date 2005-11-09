@@ -22,39 +22,12 @@
 #include "udp-source.h"
 #include "event.h"
 #include "packet.h"
-#include "chunk-fake-data.h"
 #include "ipv4-endpoint.h"
 #include "host.h"
 #include "udp.h"
-#include "simulator.h"
 #include "tag-ipv4.h"
 #include "host-tracer.h"
 
-class UdpSourceEvent : public Event {
-public:
-	UdpSourceEvent (UdpSource *source);
-	virtual ~UdpSourceEvent ();
-
-	virtual void notify (void);
-	virtual void notify_canceled (void);
-private:
-	UdpSource *m_source;
-};
-
-UdpSourceEvent::UdpSourceEvent (UdpSource *source)
-	: m_source (source)
-{}
-UdpSourceEvent::~UdpSourceEvent ()
-{}
-void 
-UdpSourceEvent::notify (void)
-{
-	m_source->send_next_packet ();
-	delete this;
-}
-void 
-UdpSourceEvent::notify_canceled (void)
-{}
 
 class UdpSourceListener : public Ipv4EndPointListener {
 public:
@@ -106,42 +79,10 @@ UdpSource::set_peer (Ipv4Address address, uint16_t port)
 	m_peer_address = address;
 	m_peer_port = port;
 }
-void 
-UdpSource::set_packet_interval (double interval)
-{
-	m_interval = interval;
-}
-void 
-UdpSource::set_packet_size (uint16_t size)
-{
-	m_size = size;
-}
 
-void 
-UdpSource::start_at (double start)
+void
+UdpSource::send (Packet *packet)
 {
-	Simulator::instance ()->insert_at_s (new UdpSourceEvent (this), start);
-}
-void 
-UdpSource::stop_at (double end)
-{
-	m_stop_at = end;
-}
-
-
-void 
-UdpSource::send_next_packet (void)
-{
-	/* stop packet transmissions.*/
-	if (m_stop_at > 0.0 && Simulator::instance ()->now_s () >= m_stop_at) {
-		return;
-	}
-	/* schedule next packet transmission. */
-	Simulator::instance ()->insert_in_s (new UdpSourceEvent (this), m_interval);
-	/* create packet. */
-	Packet *packet = new Packet ();
-	ChunkFakeData *data = new ChunkFakeData (m_size);
-	packet->add_header (data);
 	/* route packet. */
 	Ipv4Route *routing_table = m_host->get_routing_table ();
 	Route *route = routing_table->lookup (m_peer_address);
@@ -154,5 +95,4 @@ UdpSource::send_next_packet (void)
 	/* send packet. */
 	m_host->get_tracer ()->trace_tx_app (packet);
 	m_host->get_udp ()->send (packet);
-	packet->unref ();
 }

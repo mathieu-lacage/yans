@@ -19,36 +19,35 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#ifndef UDP_SOURCE_H
-#define UDP_SOURCE_H
+#ifndef PERIODIC_GENERATOR_H
+#define PERIODIC_GENERATOR_H
 
-#include "source.h"
 #include <stdint.h>
-#include "ipv4-address.h"
-#include "ipv4-endpoint.h"
 
-class Host;
-class Ipv4EndPoint;
-class UdpSourceListener;
+class Source;
 
-class UdpSource : public Source {
+class PeriodicGenerator {
 public:
-	UdpSource (Host *host);
-	virtual ~UdpSource ();
+	PeriodicGenerator ();
+	~PeriodicGenerator ();
 
-	/* return true on success. */
-	bool bind (Ipv4Address address, uint16_t port);
+	void set_source (Source *source);
 
-	void set_peer (Ipv4Address address, uint16_t port);
+	void set_packet_interval (double interval);
+	void set_packet_size (uint16_t size);
 
-	virtual void send (Packet *packet);
+	void start_at (double start);
+	void stop_at (double end);
 
 private:
-	Host *m_host;
-	Ipv4EndPoint *m_end_point;
-	Ipv4Address m_peer_address;
-	uint16_t m_peer_port;
-	UdpSourceListener *m_listener;
+	friend class PeriodicGeneratorEvent;
+	void send_next_packet (void);
+
+	Source *m_source;
+	double m_interval;
+	uint16_t m_size;
+	double m_stop_at;
 };
 
-#endif /* UDP_SOURCE_H */
+
+#endif /* PERIODIC_GENERATOR_H */
