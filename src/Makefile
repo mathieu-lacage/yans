@@ -12,13 +12,11 @@ MAIN_TCP_SOURCE=samples/main-tcp.cc
 SOURCE= \
 	test/test.cc \
 	samples/chunk-fake-data.cc \
-	samples/source.cc \
 	samples/periodic-generator.cc \
+	samples/reception-listener.cc \
 	samples/traffic-analyzer.cc \
 	samples/udp-source.cc \
 	samples/udp-sink.cc \
-	samples/tcp-source.cc \
-	samples/tcp-sink.cc \
 	host/mac-address.cc \
 	host/network-interface.cc \
 	host/loopback-interface.cc \

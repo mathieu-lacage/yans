@@ -33,7 +33,6 @@ public:
 	virtual ~SleepEvent ();
 
 	virtual void notify (void);
-	virtual void notify_canceled (void);
 private:
 	Semaphore *m_sem;
 };
@@ -47,11 +46,6 @@ SleepEvent::~SleepEvent ()
 
 void 
 SleepEvent::notify (void)
-{
-	m_sem->up ();
-}
-void 
-SleepEvent::notify_canceled (void)
 {
 	m_sem->up ();
 }

@@ -19,18 +19,21 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#ifndef SOURCE_H
-#define SOURCE_H
-
-class Packet;
-
-class Source {
-public:
-	virtual ~Source () = 0;
-	virtual void ref (void) = 0;
-	virtual void unref (void) = 0;
-	virtual void send (Packet *packet) = 0;
-};
+#include "reception-listener.h"
 
 
-#endif /* SOURCE_H */
+ReceptionListener::ReceptionListener ()
+	: m_ref (this)
+{}
+
+ReceptionListener::~ReceptionListener ()
+{}
+
+void ReceptionListener::ref (void)
+{
+	m_ref.ref ();
+}
+void ReceptionListener::unref (void)
+{
+	m_ref.unref ();
+}

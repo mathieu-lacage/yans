@@ -19,7 +19,22 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "source.h"
+#ifndef RECEPTION_LISTENER_H
+#define RECEPTION_LISTENER_H
 
-Source::~Source ()
-{}
+class Packet;
+
+#include "ref-count.tcc"
+
+class ReceptionListener {
+public:
+	ReceptionListener ();
+	void ref (void);
+	void unref (void);
+	virtual ~ReceptionListener () = 0;
+	virtual void receive (Packet *packet) = 0;
+private:
+	RefCount<ReceptionListener> m_ref;
+};
+
+#endif /* RECEPTION_LISTENER_H */

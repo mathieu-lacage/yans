@@ -27,6 +27,29 @@
 #include "udp.h"
 #include "tag-ipv4.h"
 #include "host-tracer.h"
+#include "periodic-generator.h"
+
+class UdpGeneratorListener : public GeneratorListener {
+public:
+	UdpGeneratorListener (UdpSource *source);
+	virtual ~UdpGeneratorListener ();
+	virtual void send (Packet *packet);
+private:
+	UdpSource *m_source;
+};
+
+UdpGeneratorListener::UdpGeneratorListener (UdpSource *source)
+	: m_source (source)
+{}
+UdpGeneratorListener::~UdpGeneratorListener ()
+{}
+void 
+UdpGeneratorListener::send (Packet *packet)
+{
+	m_source->send (packet);
+}
+
+
 
 
 class UdpSourceListener : public Ipv4EndPointListener {
@@ -50,9 +73,10 @@ void UdpSourceListener::receive (Packet *packet)
 UdpSource::UdpSource (Host *host)
 	: m_host (host),
 	  m_end_point (0),
-	  m_listener (new UdpSourceListener ()),
-	  m_ref (this)
-{}
+	  m_listener (new UdpSourceListener ())
+{
+	m_generator_listener = new UdpGeneratorListener (this);
+}
 UdpSource::~UdpSource ()
 {
 	if (m_end_point != 0) {
@@ -63,18 +87,16 @@ UdpSource::~UdpSource ()
 	m_host = (Host *)0xdeadbeaf;
 	delete m_listener;
 	m_listener = (UdpSourceListener *)0xdeadbeaf;
+	m_generator_listener->unref ();
+	m_generator_listener = (UdpGeneratorListener *)0xdeadbeaf;
 }
 
-void 
-UdpSource::ref (void)
+GeneratorListener *
+UdpSource::peek_listener (void)
 {
-	m_ref.ref ();
+	return m_generator_listener;
 }
-void 
-UdpSource::unref (void)
-{
-	m_ref.unref ();
-}
+
 
 bool 
 UdpSource::bind (Ipv4Address address, uint16_t port)

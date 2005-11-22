@@ -69,23 +69,27 @@ int main (int argc, char *argv[])
 	hserver->get_routing_table ()->set_default_route (Ipv4Address ("192.168.0.3"),
 							  eth_server);
 
+#if 0
 	TcpSource *source = new TcpSource (hclient);
 	source->bind (Ipv4Address ("192.168.0.3"), 1025);
 	source->set_peer (Ipv4Address ("192.168.0.2"), 1026);
 
 	TcpSink *sink = new TcpSink (hserver);
 	sink->bind (Ipv4Address ("192.168.0.2"), 1026);
-	
+#endif
 
 	PeriodicGenerator *generator = new PeriodicGenerator ();
-	generator->set_source (source);
 	generator->set_packet_interval (0.01);
 	generator->set_packet_size (100);
 	generator->start_at (1.0);
 	generator->stop_at (10.0);
 
+#if 0
+	generator->set_source (source);
+#endif
+
 	TrafficAnalyzer *analyzer = new TrafficAnalyzer ();
-	sink->set_analyzer (analyzer);
+	//sink->set_listener (analyzer->peek_listener ());
 
 
 	/* run simulation */
@@ -95,10 +99,10 @@ int main (int argc, char *argv[])
 
 
 	/* destroy network */
-	source->unref ();
-	generator->unref ();
-	sink->unref ();
-	analyzer->unref ();
+	//delete source;
+	delete generator;
+	//delete sink;
+	delete analyzer;
 	delete hclient;
 	delete hserver;
 	Simulator::instance ()->destroy ();

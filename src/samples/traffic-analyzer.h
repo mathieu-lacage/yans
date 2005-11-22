@@ -24,26 +24,28 @@
 #define TRAFFIC_ANALYZER_H
 
 #include <stdint.h>
-#include "ref-count.tcc"
+
 class Packet;
 class PopulationAnalysis;
+class ReceptionListener;
+class TrafficReceptionListener;
 
 class TrafficAnalyzer {
 public:
 	TrafficAnalyzer ();
 	~TrafficAnalyzer ();
-	void ref (void);
-	void unref (void);
 
-	void receive (Packet *packet);
+	ReceptionListener *peek_listener (void);
 
 	void print_stats (void);
 
 private:
+	friend class TrafficReceptionListener;
+	void receive (Packet *packet);
 	PopulationAnalysis *m_data;
 	PopulationAnalysis *m_inter_arrival_time;
 	double m_previous_arrival;
-	RefCount<TrafficAnalyzer> m_ref;
+	TrafficReceptionListener *m_listener;
 };
 
 

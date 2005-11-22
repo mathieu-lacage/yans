@@ -22,6 +22,8 @@
 #ifndef REF_COUNT_H
 #define REF_COUNT_H
 
+#include <stdint.h>
+
 template<typename T>
 class RefCount {
 public:

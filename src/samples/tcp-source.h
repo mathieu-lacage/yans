@@ -23,7 +23,6 @@
 #define TCP_SOURCE_H
 
 #include <stdint.h>
-#include "source.h"
 #include "ipv4-address.h"
 #include "ipv4-endpoint.h"
 #include "ref-count.tcc"
@@ -32,13 +31,10 @@ class Host;
 class Ipv4EndPoint;
 class TcpSourceListener;
 
-class TcpSource : public Source {
+class TcpSource {
  public:
 	TcpSource (Host *host);
-	virtual ~TcpSource ();
-	virtual void ref (void);
-	virtual void unref (void);
-	virtual void send (Packet *packet);
+	~TcpSource ();
 
 	/* return true on success. */
 	bool bind (Ipv4Address address, uint16_t port);

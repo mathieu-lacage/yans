@@ -26,6 +26,7 @@
 #include "packet.h"
 #include "host-tracer.h"
 #include "traffic-analyzer.h"
+#include "reception-listener.h"
 
 #include <iostream>
 
@@ -53,8 +54,7 @@ UdpSink::UdpSink (Host *host)
 	: m_host (host),
 	  m_end_point (0),
 	  m_listener (new UdpSinkListener (this)),
-	  m_analyzer (0),
-	  m_ref (this)
+	  m_reception_listener (0)
 {}
 
 UdpSink::~UdpSink ()
@@ -67,27 +67,17 @@ UdpSink::~UdpSink ()
 	m_host = (Host *)0xdeadbeaf;
 	delete m_listener;
 	m_listener = (UdpSinkListener *)0xdeadbeaf;
-	if (m_analyzer != 0) {
-		m_analyzer->unref ();
-	}
-}
-void
-UdpSink::ref (void)
-{
-	m_ref.ref ();
-}
-void
-UdpSink::unref (void)
-{
-	m_ref.unref ();
+	m_reception_listener->unref ();
+	m_reception_listener = 0;
 }
 
 void 
-UdpSink::set_analyzer (TrafficAnalyzer *analyzer)
+UdpSink::set_listener (ReceptionListener *listener)
 {
-	analyzer->ref ();
-	m_analyzer = analyzer;
+	listener->ref ();
+	m_reception_listener = listener;
 }
+
 
 bool 
 UdpSink::bind (Ipv4Address address, uint16_t port)
@@ -105,7 +95,7 @@ void
 UdpSink::receive (Packet *packet)
 {
 	m_host->get_tracer ()->trace_rx_app (packet);
-	if (m_analyzer != 0) {
-		m_analyzer->receive (packet);
+	if (m_reception_listener != 0) {
+		m_reception_listener->receive (packet);
 	}
 }

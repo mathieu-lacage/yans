@@ -24,10 +24,12 @@
 #define TCP_H
 
 #include "transport-protocol.h"
+#include "ipv4-address.h"
 
 class Ipv4;
 class Host;
 class Ipv4EndPoints;
+class Ipv4EndPointListener;
 
 class Tcp : public TransportProtocol {
  public:
@@ -43,11 +45,49 @@ class Tcp : public TransportProtocol {
 
 	Ipv4EndPoints *get_end_points (void);
 
+	void send (Packet *packet);
 private:
 	static const uint8_t TCP_PROTOCOL;
 	Ipv4EndPoints *m_end_points;
 	Host *m_host;
 	Ipv4 *m_ipv4;
+};
+
+class TcpConnectionListener {
+public:
+	virtual ~TcpConnectionListener () = 0;
+
+	virtual bool should_accept (Ipv4Address from, uint16_t from_port) = 0;
+	virtual bool completed (void) = 0;
+};
+class TcpReceptionListener {
+public:
+	virtual ~TcpReceptionListener () = 0;
+
+	virtual void receive (Packet *packet) = 0;
+};
+class TcpTransmissionListener {
+public:
+	virtual ~TcpTransmissionListener () = 0;
+
+	virtual void got_ack (Packet *packet) = 0;
+};
+
+class TcpEndPoint {
+public:
+	TcpEndPoint ();
+
+	Ipv4EndPointListener *get_ipv4_listener (void);
+
+	void set_peer (Ipv4Address dest, uint16_t port);
+	void set_connection_listener (TcpConnectionListener *listener);
+	void start_connect (void);
+
+	void set_reception_listener (TcpReceptionListener *listener);
+	void set_transmission_listener (TcpTransmissionListener *listener);
+
+	void send (Packet *packet);
+private:
 };
 
 

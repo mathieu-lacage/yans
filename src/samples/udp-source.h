@@ -23,36 +23,34 @@
 #define UDP_SOURCE_H
 
 #include <stdint.h>
-#include "source.h"
 #include "ipv4-address.h"
 #include "ipv4-endpoint.h"
-#include "ref-count.tcc"
 
 class Host;
 class Ipv4EndPoint;
 class UdpSourceListener;
+class GeneratorListener;
 
-class UdpSource : public Source {
+class UdpSource  {
 public:
 	UdpSource (Host *host);
-	virtual ~UdpSource ();
-	virtual void ref (void);
-	virtual void unref (void);
+	~UdpSource ();
+
+	GeneratorListener *peek_listener (void);
 
 	/* return true on success. */
 	bool bind (Ipv4Address address, uint16_t port);
 
 	void set_peer (Ipv4Address address, uint16_t port);
-
-	virtual void send (Packet *packet);
-
 private:
+	friend class UdpGeneratorListener;
+	void send (Packet *packet);
 	Host *m_host;
 	Ipv4EndPoint *m_end_point;
 	Ipv4Address m_peer_address;
 	uint16_t m_peer_port;
 	UdpSourceListener *m_listener;
-	RefCount<UdpSource> m_ref;
+	UdpGeneratorListener *m_generator_listener;
 };
 
 #endif /* UDP_SOURCE_H */

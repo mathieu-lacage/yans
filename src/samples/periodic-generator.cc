@@ -24,16 +24,32 @@
 #include "packet.h"
 #include "chunk-fake-data.h"
 #include "event.h"
-#include "source.h"
+
+
+GeneratorListener::GeneratorListener ()
+	: m_ref (this)
+{}
+GeneratorListener::~GeneratorListener ()
+{}
+void 
+GeneratorListener::ref (void)
+{
+	m_ref.ref ();
+}
+void 
+GeneratorListener::unref (void)
+{
+	m_ref.unref ();
+}
+
 
 
 class PeriodicGeneratorEvent : public Event {
 public:
 	PeriodicGeneratorEvent (PeriodicGenerator *source);
-	virtual ~PeriodicGeneratorEvent ();
+	~PeriodicGeneratorEvent ();
 
 	virtual void notify (void);
-	virtual void notify_canceled (void);
 private:
 	PeriodicGenerator *m_source;
 };
@@ -49,36 +65,21 @@ PeriodicGeneratorEvent::notify (void)
 	m_source->send_next_packet ();
 	delete this;
 }
-void 
-PeriodicGeneratorEvent::notify_canceled (void)
-{}
-
 
 PeriodicGenerator::PeriodicGenerator ()
-	: m_ref (this)
 {}
 
 PeriodicGenerator::~PeriodicGenerator ()
 {
-	m_source->unref ();
+	m_listener->unref ();
 }
 
-void
-PeriodicGenerator::ref (void)
-{
-	m_ref.ref ();
-}
-void
-PeriodicGenerator::unref (void)
-{
-	m_ref.unref ();
-}
 
 void 
-PeriodicGenerator::set_source (Source *source)
+PeriodicGenerator::set_listener (GeneratorListener *listener)
 {
-	source->ref ();
-	m_source = source;
+	listener->ref ();
+	m_listener = listener;
 }
 
 void 
@@ -117,6 +118,6 @@ PeriodicGenerator::send_next_packet (void)
 	Packet *packet = new Packet ();
 	ChunkFakeData *data = new ChunkFakeData (m_size);
 	packet->add_header (data);
-	m_source->send (packet);
+	m_listener->send (packet);
 	packet->unref ();
 }

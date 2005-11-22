@@ -25,16 +25,25 @@
 #include <stdint.h>
 #include "ref-count.tcc"
 
-class Source;
+class Packet;
+
+class GeneratorListener {
+public:
+	GeneratorListener ();
+	virtual ~GeneratorListener () = 0;
+	void ref (void);
+	void unref (void);
+	virtual void send (Packet *packet) = 0;
+private:
+	RefCount<GeneratorListener> m_ref;
+};
 
 class PeriodicGenerator {
 public:
 	PeriodicGenerator ();
 	~PeriodicGenerator ();
-	void ref (void);
-	void unref (void);
 
-	void set_source (Source *source);
+	void set_listener (GeneratorListener *listener);
 
 	void set_packet_interval (double interval);
 	void set_packet_size (uint16_t size);
@@ -46,11 +55,10 @@ private:
 	friend class PeriodicGeneratorEvent;
 	void send_next_packet (void);
 
-	Source *m_source;
+	GeneratorListener *m_listener;
 	double m_interval;
 	uint16_t m_size;
 	double m_stop_at;
-	RefCount<PeriodicGenerator> m_ref;
 };
 
 

@@ -65,8 +65,8 @@ EventHeap::remove_next (void)
 void 
 EventHeap::clear (void)
 {
-	for (EventsI i = m_events.begin (); i != m_events.end (); i++) {
-		(*i).first->notify_canceled ();
-	}
+	/* We cannot really delete the items left in the event heap.
+	 * Items are left only when the user calls Simulator::stop ()
+	 */
 	m_events.erase (m_events.begin (), m_events.end ());
 }

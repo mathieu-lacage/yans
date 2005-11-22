@@ -24,22 +24,20 @@
 
 #include <stdint.h>
 #include "ipv4-address.h"
-#include "ref-count.tcc"
 
 class Host;
 class Packet;
 class Ipv4EndPoint;
 class UdpSinkListener;
-class TrafficAnalyzer;
+class ReceptionListener;
+
 
 class UdpSink {
 public:
 	UdpSink (Host *host);
 	~UdpSink ();
-	void ref (void);
-	void unref (void);
 
-	void set_analyzer (TrafficAnalyzer *analyzer);
+	void set_listener (ReceptionListener *listener);
 
 	bool bind (Ipv4Address address, uint16_t port);
 private:
@@ -48,8 +46,7 @@ private:
 	Host *m_host;
 	Ipv4EndPoint *m_end_point;
 	UdpSinkListener *m_listener;
-	TrafficAnalyzer *m_analyzer;
-	RefCount<UdpSink> m_ref;
+	ReceptionListener *m_reception_listener;
 };
 
 
