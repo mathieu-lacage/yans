@@ -42,13 +42,13 @@ public:
 	static void stop (void);
 
 	/* in microseconds. */
-	static void insert_in_us (Event *event, uint64_t delta);
-	static void insert_at_us (Event *event, uint64_t time);
+	static void insert_in_us (uint64_t delta, Event *event);
+	static void insert_at_us (uint64_t time, Event *event);
 	static uint64_t now_us (void);
 
 	/* in seconds. */
-	static void insert_in_s (Event *event, double delta);
-	static void insert_at_s (Event *event, double time);
+	static void insert_in_s (double delta, Event *event);
+	static void insert_at_s (double time, Event *event);
 	static double now_s (void);
 private:
 	Simulator ();

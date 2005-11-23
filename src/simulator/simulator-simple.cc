@@ -155,12 +155,12 @@ Simulator::stop (void)
 	get_priv ()->stop ();
 }
 void 
-Simulator::insert_in_us (Event *event, uint64_t delta)
+Simulator::insert_in_us (uint64_t delta, Event *event)
 {
 	get_priv ()->insert_in_us (event, delta);
 }
 void 
-Simulator::insert_at_us (Event *event, uint64_t time)
+Simulator::insert_at_us (uint64_t time, Event *event)
 {
 	get_priv ()->insert_at_us (event, time);
 }
@@ -170,12 +170,12 @@ Simulator::now_us (void)
 	return get_priv ()->now_us ();
 }
 void 
-Simulator::insert_in_s (Event *event, double delta)
+Simulator::insert_in_s (double delta, Event *event)
 {
 	get_priv ()->insert_in_s (event, delta);
 }
 void 
-Simulator::insert_at_s (Event *event, double time)
+Simulator::insert_at_s (double time, Event *event)
 {
 	get_priv ()->insert_at_s (event, time);
 }

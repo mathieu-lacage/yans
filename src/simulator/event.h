@@ -56,7 +56,7 @@ class EventCallback : public Event {
 };
 
 template<typename T>
-EventCallback<T> *make_event(T* t, void (T::*f) (void)) {
+EventCallback<T> *make_event(void (T::*f) (void), T* t) {
   return new EventCallback<T>(t, f);
 }
 
