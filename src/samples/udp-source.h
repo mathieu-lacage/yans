@@ -50,7 +50,7 @@ private:
 	Ipv4Address m_peer_address;
 	uint16_t m_peer_port;
 	UdpSourceListener *m_listener;
-	UdpGeneratorListener *m_generator_listener;
+	GeneratorListener *m_generator_listener;
 };
 
 #endif /* UDP_SOURCE_H */
