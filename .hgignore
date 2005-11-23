@@ -3,5 +3,6 @@
 src/test/main-test
 src/samples/main-simple
 src/samples/main-router
+src/samples/main-tcp
 src/patch
 patch
