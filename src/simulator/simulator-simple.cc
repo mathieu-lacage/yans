@@ -26,8 +26,6 @@
 #include "event.h"
 #include <math.h>
 
-Simulator *Simulator::m_instance = 0;
-
 class SimulatorPrivate {
 public:
 	SimulatorPrivate ();
@@ -120,71 +118,70 @@ SimulatorPrivate::now_s (void)
 }
 
 
-Simulator *
-Simulator::instance (void)
+
+
+
+
+
+
+
+
+bool Simulator::m_destroyed = false;
+
+
+SimulatorPrivate *
+Simulator::get_priv (void)
 {
-	if (m_instance == 0) {
-		m_instance = new Simulator ();
-	}
-	return m_instance;
+	assert (!m_destroyed);
+	static SimulatorPrivate *priv = new SimulatorPrivate ();
+	return priv;
 }
 
 void
 Simulator::destroy (void)
 {
-	delete m_instance;
-	m_instance = 0;
-}
-
-Simulator::Simulator ()
-{
-	m_priv = new SimulatorPrivate ();
-}
-
-Simulator::~Simulator ()
-{
-	delete m_priv;
-	m_priv = (SimulatorPrivate *)0xdeadbeaf;
+	delete get_priv ();
+	m_destroyed = true;
 }
 
 void 
 Simulator::run (void)
 {
-	m_priv->run ();
+	get_priv ()->run ();
 }
 void 
 Simulator::stop (void)
 {
-	m_priv->stop ();
+	get_priv ()->stop ();
 }
 void 
 Simulator::insert_in_us (Event *event, uint64_t delta)
 {
-	m_priv->insert_in_us (event, delta);
+	get_priv ()->insert_in_us (event, delta);
 }
 void 
 Simulator::insert_at_us (Event *event, uint64_t time)
 {
-	m_priv->insert_at_us (event, time);
+	get_priv ()->insert_at_us (event, time);
 }
 uint64_t 
 Simulator::now_us (void)
 {
-	return m_priv->now_us ();
+	return get_priv ()->now_us ();
 }
 void 
 Simulator::insert_in_s (Event *event, double delta)
 {
-	m_priv->insert_in_s (event, delta);
+	get_priv ()->insert_in_s (event, delta);
 }
 void 
 Simulator::insert_at_s (Event *event, double time)
 {
-	m_priv->insert_at_s (event, time);
+	get_priv ()->insert_at_s (event, time);
 }
 double 
 Simulator::now_s (void)
 {
-	return m_priv->now_s ();
+	return get_priv ()->now_s ();
 }
 

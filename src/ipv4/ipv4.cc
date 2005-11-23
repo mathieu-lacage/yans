@@ -39,7 +39,7 @@
 #include <iostream>
 #include "simulator.h"
 # define TRACE(x) \
-std::cout << "IPV4 TRACE " << Simulator::instance ()->now_s () << " " << x << std::endl;
+std::cout << "IPV4 TRACE " << Simulator::now_s () << " " << x << std::endl;
 #else /* TRACE_IPV4 */
 # define TRACE(format,...)
 #endif /* TRACE_IPV4 */

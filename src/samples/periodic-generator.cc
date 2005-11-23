@@ -96,7 +96,7 @@ PeriodicGenerator::set_packet_size (uint16_t size)
 void 
 PeriodicGenerator::start_at (double start)
 {
-	Simulator::instance ()->insert_at_s (new PeriodicGeneratorEvent (this), start);
+	Simulator::insert_at_s (new PeriodicGeneratorEvent (this), start);
 }
 void 
 PeriodicGenerator::stop_at (double end)
@@ -109,11 +109,11 @@ void
 PeriodicGenerator::send_next_packet (void)
 {
 	/* stop packet transmissions.*/
-	if (m_stop_at > 0.0 && Simulator::instance ()->now_s () >= m_stop_at) {
+	if (m_stop_at > 0.0 && Simulator::now_s () >= m_stop_at) {
 		return;
 	}
 	/* schedule next packet transmission. */
-	Simulator::instance ()->insert_in_s (new PeriodicGeneratorEvent (this), m_interval);
+	Simulator::insert_in_s (new PeriodicGeneratorEvent (this), m_interval);
 	/* create packet. */
 	Packet *packet = new Packet ();
 	ChunkFakeData *data = new ChunkFakeData (m_size);

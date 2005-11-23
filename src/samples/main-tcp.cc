@@ -30,6 +30,7 @@
 #include "network-interface-tracer.h"
 #include "periodic-generator.h"
 #include "traffic-analyzer.h"
+#include "event.h"
 
 int main (int argc, char *argv[])
 {
@@ -69,11 +70,14 @@ int main (int argc, char *argv[])
 	hserver->get_routing_table ()->set_default_route (Ipv4Address ("192.168.0.3"),
 							  eth_server);
 
-#if 0
 	TcpSource *source = new TcpSource (hclient);
 	source->bind (Ipv4Address ("192.168.0.3"), 1025);
 	source->set_peer (Ipv4Address ("192.168.0.2"), 1026);
+	Simulator::insert_at_s (make_event (source, &TcpSource::start_connect),
+				1.0);
+	
 
+#if 0
 	TcpSink *sink = new TcpSink (hserver);
 	sink->bind (Ipv4Address ("192.168.0.2"), 1026);
 #endif
@@ -93,7 +97,7 @@ int main (int argc, char *argv[])
 
 
 	/* run simulation */
-	Simulator::instance ()->run ();
+	Simulator::run ();
 
 	analyzer->print_stats ();
 
@@ -105,7 +109,7 @@ int main (int argc, char *argv[])
 	delete analyzer;
 	delete hclient;
 	delete hserver;
-	Simulator::instance ()->destroy ();
+	Simulator::destroy ();
 
 	return 0;
 }

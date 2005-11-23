@@ -120,7 +120,7 @@ int main (int argc, char *argv[])
 	sink->set_listener (analyzer->peek_listener ());
 
 	/* run simulation */
-	Simulator::instance ()->run ();
+	Simulator::run ();
 
 	analyzer->print_stats ();
 
@@ -134,7 +134,7 @@ int main (int argc, char *argv[])
 	delete hclient;
 	delete hserver;
 	delete hrouter;
-	Simulator::instance ()->destroy ();
+	Simulator::destroy ();
 
 	return 0;
 }

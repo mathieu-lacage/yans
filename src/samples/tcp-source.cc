@@ -56,15 +56,8 @@ TcpSource::~TcpSource ()
 	}
 }
 void 
-TcpSource::ref (void)
-{
-	m_ref.ref ();
-}
-void 
-TcpSource::unref (void)
-{
-	m_ref.unref ();
-}
+TcpSource::start_connect (void)
+{}
 void 
 TcpSource::send (Packet *packet)
 {}

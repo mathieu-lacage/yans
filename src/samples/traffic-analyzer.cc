@@ -74,7 +74,7 @@ void
 TrafficAnalyzer::receive (Packet *packet)
 {
 	m_data->add_term (packet->get_size ());
-	double now = Simulator::instance ()->now_s ();
+	double now = Simulator::now_s ();
 	if (m_previous_arrival >= 0.0) {
 		m_inter_arrival_time->add_term (now - m_previous_arrival);
 	}

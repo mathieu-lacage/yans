@@ -29,7 +29,7 @@
 
 DefragState::DefragState ()
 {
-	m_defrag_start = Simulator::instance ()->now_s ();
+	m_defrag_start = Simulator::now_s ();
 }
 DefragState::~DefragState ()
 {
@@ -92,7 +92,7 @@ DefragState::get_complete (void)
 bool 
 DefragState::is_too_old (void)
 {
-	double now = Simulator::instance ()->now_s ();
+	double now = Simulator::now_s ();
 	if (now - m_defrag_start > get_reassembly_timeout ()) {
 		return true;
 	} else {

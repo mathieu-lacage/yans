@@ -91,7 +91,7 @@ int main (int argc, char *argv[])
 
 
 	/* run simulation */
-	Simulator::instance ()->run ();
+	Simulator::run ();
 
 	analyzer->print_stats ();
 
@@ -103,7 +103,7 @@ int main (int argc, char *argv[])
 	delete analyzer;
 	delete hclient;
 	delete hserver;
-	Simulator::instance ()->destroy ();
+	Simulator::destroy ();
 
 	return 0;
 }

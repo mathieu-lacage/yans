@@ -17,6 +17,7 @@ SOURCE= \
 	samples/traffic-analyzer.cc \
 	samples/udp-source.cc \
 	samples/udp-sink.cc \
+	samples/tcp-source.cc \
 	host/mac-address.cc \
 	host/network-interface.cc \
 	host/loopback-interface.cc \

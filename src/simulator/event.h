@@ -42,4 +42,24 @@ public:
 };
 
 
+template<typename T>
+class EventCallback : public Event {
+ public:
+  typedef void (T::*F)(void);
+
+  EventCallback(T *t, F f) : t_(t), f_(f) { }
+  virtual void notify (void)
+    { (t_->*f_)(); delete this;}
+ private:
+  T* t_;
+  F f_;
+};
+
+template<typename T>
+EventCallback<T> *make_event(T* t, void (T::*f) (void)) {
+  return new EventCallback<T>(t, f);
+}
+
+
+
 #endif /* EVENT_H */

@@ -134,5 +134,5 @@ ArpCacheEntry::update_seen (void)
 double 
 ArpCacheEntry::now (void)
 {
-	return Simulator::instance ()->now_s ();
+	return Simulator::now_s ();
 }

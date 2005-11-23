@@ -75,7 +75,7 @@ NetworkInterfaceTracer::write_pcap_header (void)
 void
 NetworkInterfaceTracer::write_packet_header (uint32_t size)
 {
-	uint64_t current = Simulator::instance ()->now_us ();
+	uint64_t current = Simulator::now_us ();
 	write_32 ((current >> 32) & 0xffffffff);
 	write_32 (current & 0xffffffff);
 	write_32 (size);
