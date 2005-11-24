@@ -23,48 +23,55 @@
 #define CALLBACK_H
 
 template<typename R>
-class FunctorCallerBase0
-{
-	virtual ~FunctorCallerBase0 () {}
+class CallbackBase0 {
+public:
+	virtual ~CallbackBase0 () {}
 	virtual R operator() (void) = 0;
 };
 
-template< typename F, typename R >
-class FunctorCaller0 : FunctorCallerBase0<R>
-{
-	FunctorCaller0( F f ) : m_functor (f) {}
-	virtual R operator() (void) { return m_functor (); }
+template<typename T, typename R>
+class Callback0 : public CallbackBase0 {
+public:
+	typedef void (T::*F) (void);
+
+	CallbackBase0 (T *obj, F function) 
+		: m_obj (obj), 
+		  m_function (function) 
+	{}
+	virtual ~CallbackBase0 () {}
+	virtual R operator() (void) {
+		(m_obj->*m_function) ();
+	}
 private:
-	F m_functor;
+	T *m_obj;
+	F m_function;
 };
+
 
 template< typename R, typename T1 = void, typename T2 = void>
 class Callback;
 
 
-template< typename R, typename T1, typename T2 >
+template< typename R, typename T1, typename T2>
 class Callback
 {
 	typedef void (T::*F)(void);
-	typedef FunctorCallerBase0<R> caller;
     
-	template< typename F >
-	Callback (F f) : m_functor (0) {
-		typedef FunctorCaller0<F,R> caller_spec;
-		m_functor = new caller_spec(f);
-	}
+	template< typename T>
+	Callback (T * obj, F function) 
+		: m_callback (obj, function) {}
 	R operator() (void) { 
-		return (*m_functor)(); 
+		return m_callback (); 
 	}
 
 private:
-	caller *m_functor;
+	Callback0<R> m_callback;
 };
 
 
 template<typename T>
-Callback<T> *make_callback(void (T::*f) (void), T* t) {
-	return new Callback<T>(t, f);
+Callback0<T,R> *make_callback(R (T::*f) (void), T* t) {
+	return new Callback0<T, R>(t, f);
 }
 
 #endif /* CALLBACK_H */
