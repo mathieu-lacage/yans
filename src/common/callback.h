@@ -59,7 +59,7 @@ public:
 		  m_function (function) 
 	{}
 	virtual R operator() (void) {
-		(m_obj->*m_function) ();
+		return (m_obj->*m_function) ();
 	}
 private:
 	T *m_obj;
@@ -76,7 +76,7 @@ public:
 		  m_function (function) 
 	{}
 	virtual R operator() (T1 a1) {
-		(m_obj->*m_function) (a1);
+		return (m_obj->*m_function) (a1);
 	}
 private:
 	T *m_obj;
@@ -93,7 +93,7 @@ public:
 		  m_function (function) 
 	{}
 	virtual R operator() (T1 a1, T2 a2) {
-		(m_obj->*m_function) (a1, a2);
+		return (m_obj->*m_function) (a1, a2);
 	}
 private:
 	T *m_obj;
