@@ -22,12 +22,14 @@
 #ifndef CALLBACK_H
 #define CALLBACK_H
 
-template<typename R, typename T1 = void, typename T2 = void>
+class empty {};
+
+template<typename R, typename T1 = empty, typename T2 = empty>
 class Callback;
 
 
 template<typename R>
-class Callback<R> {
+class Callback<R ()> {
 public:
 	virtual ~Callback () {}
 	virtual R operator() (void) = 0;
@@ -50,7 +52,7 @@ class Callback<R (T1, T2)> {
 
 
 template<typename T, typename R>
-class Callback0 : public Callback<R> {
+class Callback0 : public Callback<R (void)> {
 public:
 	typedef R (T::*F) (void);
 
