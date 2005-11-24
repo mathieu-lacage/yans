@@ -22,44 +22,29 @@
 #ifndef CALLBACK_H
 #define CALLBACK_H
 
-template<typename R>
-class CallbackBase0 {
-public:
-	virtual ~CallbackBase0 () {}
-	virtual R operator() (void) = 0;
-};
-
-template<typename R, typename T1>
-class CallbackBase1 {
-public:
-	virtual ~CallbackBase1 () {}
-	virtual R operator() (T1 a1) = 0;
-};
-
-template<typename R, typename T1, typename T2>
-class CallbackBase2 {
-public:
-	virtual ~CallbackBase2 () {}
-	virtual R operator() (T1 a1, T2 a2) = 0;
-};
-
 template< typename R, typename T1 = void, typename T2 = void>
 class Callback;
 
 
 template< typename R>
-class Callback<R> : public CallbackBase0<R>
-{
+class Callback<R> {
+public:
+	virtual ~Callback () {}
+	virtual R operator() (void) = 0;
 };
 
 template< typename R, typename T1>
-class Callback<R (T1)> : public CallbackBase1<R, T1>
-{
+class Callback<R (T1)> {
+ public:
+	virtual ~Callback () {}
+	virtual R operator() (T1) = 0;
 };
 
 template< typename R, typename T1, typename T2>
-class Callback<R (T1, T2)> : public CallbackBase2<R, T1, T2>
-{
+class Callback<R (T1, T2)> {
+ public:
+	virtual ~Callback () {}
+	virtual R operator() (T1, T2) = 0;
 };
 
 
