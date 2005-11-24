@@ -22,23 +22,45 @@
 #ifndef CALLBACK_H
 #define CALLBACK_H
 
-class CallbackBase {
-public:
-	virtual void operator () (void) = 0;
+template<typename R>
+class FunctorCallerBase0
+{
+	virtual ~FunctorCallerBase0 () {}
+	virtual R operator() (void) = 0;
 };
 
-template<typename T>
-class Callback : public CallbackBase {
-public:
-	typedef void (T::*F)(void);
-
-	Callback(T *t, F f) : t_(t), f_(f) { }
-	virtual void operator () (void)
-	{ (t_->*f_)(); delete this;}
+template< typename F, typename R >
+class FunctorCaller0 : FunctorCallerBase0<R>
+{
+	FunctorCaller0( F f ) : m_functor (f) {}
+	virtual R operator() (void) { return m_functor (); }
 private:
-	T* t_;
-	F f_;
+	F m_functor;
 };
+
+template< typename R, typename T1 = void, typename T2 = void>
+class Callback;
+
+
+template< typename R, typename T1, typename T2 >
+class Callback
+{
+	typedef void (T::*F)(void);
+	typedef FunctorCallerBase0<R> caller;
+    
+	template< typename F >
+	Callback (F f) : m_functor (0) {
+		typedef FunctorCaller0<F,R> caller_spec;
+		m_functor = new caller_spec(f);
+	}
+	R operator() (void) { 
+		return (*m_functor)(); 
+	}
+
+private:
+	caller *m_functor;
+};
+
 
 template<typename T>
 Callback<T> *make_callback(void (T::*f) (void), T* t) {
