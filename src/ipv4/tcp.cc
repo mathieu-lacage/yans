@@ -58,3 +58,91 @@ Tcp::get_end_points (void)
 {
 	return m_end_points;
 }
+
+
+
+
+TcpConnectionListener::~TcpConnectionListener ()
+{}
+TcpReceptionListener::~TcpReceptionListener ()
+{}
+TcpTransmissionListener::~TcpTransmissionListener ()
+{}
+
+
+
+
+class TcpIpv4EndPointListener : public Ipv4EndPointListener {
+public:
+	TcpIpv4EndPointListener (TcpEndPoint *tcp);
+	virtual ~TcpIpv4EndPointListener ();
+	virtual void receive (Packet *packet);
+private:
+	TcpEndPoint *m_tcp;
+};
+
+TcpIpv4EndPointListener::TcpIpv4EndPointListener (TcpEndPoint *tcp)
+	: m_tcp (tcp)
+{}
+TcpIpv4EndPointListener::~TcpIpv4EndPointListener ()
+{}
+void 
+TcpIpv4EndPointListener::receive (Packet *packet)
+{
+	m_tcp->receive (packet);
+}
+
+
+
+
+
+TcpEndPoint::TcpEndPoint ()
+{}
+TcpEndPoint::~TcpEndPoint ()
+{}
+
+Ipv4EndPointListener *
+TcpEndPoint::get_ipv4_listener (void)
+{
+        return m_ipv4_listener;
+}
+
+void
+TcpEndPoint::set_peer (Ipv4Address dest, uint16_t port)
+{
+	m_peer = dest;
+	m_peer_port = port;
+}
+void
+TcpEndPoint::set_connection_listener (TcpConnectionListener *listener)
+{
+	m_connection_listener = listener;
+}
+void
+TcpEndPoint::set_reception_listener (TcpReceptionListener *listener)
+{
+	m_reception_listener = listener;
+}
+void
+TcpEndPoint::set_transmission_listener (TcpTransmissionListener *listener)
+{
+	m_transmission_listener = listener;
+}
+
+
+void
+TcpEndPoint::start_connect (void)
+{}
+
+void
+TcpEndPoint::send (Packet *packet)
+{}
+
+
+void
+TcpEndPoint::receive (Packet *packet)
+{
+	
+}
+
+

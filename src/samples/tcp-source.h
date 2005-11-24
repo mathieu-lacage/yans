@@ -25,11 +25,10 @@
 #include <stdint.h>
 #include "ipv4-address.h"
 #include "ipv4-endpoint.h"
-#include "ref-count.tcc"
 
 class Host;
 class Ipv4EndPoint;
-class TcpSourceListener;
+class TcpEndPoint;
 
 class TcpSource {
  public:
@@ -41,13 +40,20 @@ class TcpSource {
 	void set_peer (Ipv4Address address, uint16_t port);
 	void start_connect (void);
  private:
+	friend class MyTcpTransmissionListener;
+	friend class MyTcpReceptionListener;
+	friend class MyTcpConnectionListener;
 	void send (Packet *packet);
+	bool should_accept (Ipv4Address from, uint16_t from_port);
+	bool completed (void);
+	void receive (Packet *packet);
+	void got_ack (Packet *packet);
+
 	Host *m_host;
 	Ipv4EndPoint *m_end_point;
-	TcpSourceListener *m_listener;
 	Ipv4Address m_peer_address;
 	uint16_t m_peer_port;
-	RefCount<TcpSource> m_ref;
+	TcpEndPoint *m_tcp_end_point;
 };
 
 #endif /* TCP_SOURCE */

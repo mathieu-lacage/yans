@@ -76,6 +76,7 @@ public:
 class TcpEndPoint {
 public:
 	TcpEndPoint ();
+	~TcpEndPoint ();
 
 	Ipv4EndPointListener *get_ipv4_listener (void);
 
@@ -88,6 +89,14 @@ public:
 
 	void send (Packet *packet);
 private:
+	friend class TcpIpv4EndPointListener;
+	void receive (Packet *packet);
+	Ipv4EndPointListener *m_ipv4_listener;
+	Ipv4Address m_peer;
+	uint16_t m_peer_port;
+	TcpConnectionListener *m_connection_listener;
+	TcpReceptionListener *m_reception_listener;
+	TcpTransmissionListener *m_transmission_listener;
 };
 
 
