@@ -23,15 +23,15 @@
 #ifndef TCP_H
 #define TCP_H
 
-#include "transport-protocol.h"
 #include "ipv4-address.h"
 
 class Ipv4;
 class Host;
 class Ipv4EndPoints;
 class Ipv4EndPointListener;
+class Packet;
 
-class Tcp : public TransportProtocol {
+class Tcp {
  public:
 	Tcp ();
 	virtual ~Tcp ();
@@ -39,14 +39,12 @@ class Tcp : public TransportProtocol {
 	void set_host (Host *host);
 	void set_ipv4 (Ipv4 *ipv4);
 
-
-	virtual uint8_t get_protocol (void);
-	virtual void receive (Packet *packet);
-
 	Ipv4EndPoints *get_end_points (void);
 
 	void send (Packet *packet);
 private:
+	void receive (Packet *packet);
+
 	static const uint8_t TCP_PROTOCOL;
 	Ipv4EndPoints *m_end_points;
 	Host *m_host;
@@ -90,13 +88,29 @@ public:
 	void send (Packet *packet);
 private:
 	friend class TcpIpv4EndPointListener;
+	enum TcpState_e {
+		CLOSED,
+		LISTEN,
+		SYN_SENT,
+		SYN_RCVD,
+		ESTABLISHED,
+		CLOSE_WAIT,
+		LAST_ACK,
+		FIN_WAIT_1,
+		CLOSING,
+		TIME_WAIT,
+		FIN_WAIT_2
+	};
 	void receive (Packet *packet);
+	void set_state (enum TcpState_e new_state);
+
 	Ipv4EndPointListener *m_ipv4_listener;
 	Ipv4Address m_peer;
 	uint16_t m_peer_port;
 	TcpConnectionListener *m_connection_listener;
 	TcpReceptionListener *m_reception_listener;
 	TcpTransmissionListener *m_transmission_listener;
+	enum TcpState_e m_state;
 };
 
 

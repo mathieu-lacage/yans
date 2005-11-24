@@ -21,6 +21,7 @@
 
 #include "tcp.h"
 #include "ipv4-endpoint.h"
+#include "ipv4.h"
 
 /* see http://www.iana.org/assignments/protocol-numbers */
 const uint8_t Tcp::TCP_PROTOCOL = 6;
@@ -41,14 +42,11 @@ void
 Tcp::set_ipv4 (Ipv4 *ipv4)
 {
 	m_ipv4 = ipv4;
+	m_ipv4->register_transport_protocol (make_callback (&Tcp::receive, this), 
+					     TCP_PROTOCOL);
 }
 
 
-uint8_t 
-Tcp::get_protocol (void)
-{
-  return TCP_PROTOCOL;
-}
 void 
 Tcp::receive (Packet *packet)
 {}
@@ -97,7 +95,9 @@ TcpIpv4EndPointListener::receive (Packet *packet)
 
 
 TcpEndPoint::TcpEndPoint ()
-{}
+{
+	m_state = LISTEN;
+}
 TcpEndPoint::~TcpEndPoint ()
 {}
 
@@ -129,10 +129,19 @@ TcpEndPoint::set_transmission_listener (TcpTransmissionListener *listener)
 	m_transmission_listener = listener;
 }
 
+void 
+TcpEndPoint::set_state (enum TcpState_e new_state)
+{
+	m_state = new_state;
+}
+
 
 void
 TcpEndPoint::start_connect (void)
-{}
+{
+	
+	set_state (SYN_SENT);
+}
 
 void
 TcpEndPoint::send (Packet *packet)

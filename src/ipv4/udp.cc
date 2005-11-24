@@ -50,13 +50,10 @@ void
 Udp::set_ipv4 (Ipv4 *ipv4)
 {
 	m_ipv4 = ipv4;
+	m_ipv4->register_transport_protocol (make_callback (&Udp::receive, this), 
+					     UDP_PROTOCOL);
 }
 
-uint8_t 
-Udp::get_protocol (void)
-{
-	return UDP_PROTOCOL;
-}
 
 Ipv4EndPoints *
 Udp::get_end_points (void)

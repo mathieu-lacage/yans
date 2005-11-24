@@ -44,37 +44,13 @@ std::cout << "IPV4 TRACE " << Simulator::now_s () << " " << x << std::endl;
 # define TRACE(format,...)
 #endif /* TRACE_IPV4 */
 
-
-class IcmpTransportProtocol : public TransportProtocol {
-public:
-	IcmpTransportProtocol ();
-	virtual ~IcmpTransportProtocol ();
-
-	virtual uint8_t get_protocol (void);
-	virtual void receive (Packet *packet);
-};
-
-IcmpTransportProtocol::IcmpTransportProtocol ()
-{}
-IcmpTransportProtocol::~IcmpTransportProtocol ()
-{}
-uint8_t 
-IcmpTransportProtocol::get_protocol (void)
-{
-	return 1;
-}
-void 
-IcmpTransportProtocol::receive (Packet *packet)
-{
-
-}
-
+const uint8_t Ipv4::ICMP_PROTOCOL = 1;
 
 
 Ipv4::Ipv4 ()
 {
-	m_icmp = new IcmpTransportProtocol ();
-	register_transport_protocol (m_icmp);
+	m_icmp_callback = make_callback (&Ipv4::receive_icmp, this);
+	register_transport_protocol (m_icmp_callback, ICMP_PROTOCOL);
 	/* this is recommended by rfc 1700 */
 	m_default_ttl = 64;
 	m_defrag_states = new DefragStates ();
@@ -82,8 +58,8 @@ Ipv4::Ipv4 ()
 }
 Ipv4::~Ipv4 ()
 {
-	delete m_icmp;
-	m_icmp = (IcmpTransportProtocol *)0xdeadbeaf;
+	delete m_icmp_callback;
+	m_icmp_callback = (TransportProtocolCallback *)0xdeadbeaf;
 	delete m_defrag_states;
 	m_defrag_states = (DefragStates *)0xdeadbeaf;
 }
@@ -133,13 +109,13 @@ Ipv4::send (Packet *packet)
 }
 
 void 
-Ipv4::register_transport_protocol (TransportProtocol *protocol)
+Ipv4::register_transport_protocol (TransportProtocolCallback *callback, uint8_t protocol)
 {
-	assert (lookup_protocol (protocol->get_protocol ()) == 0);
-	m_protocols.push_back (std::make_pair (protocol->get_protocol (), protocol));
+	assert (lookup_protocol (protocol) == 0);
+	m_protocols.push_back (std::make_pair (protocol, callback));
 }
 
-TransportProtocol *
+Ipv4::TransportProtocolCallback *
 Ipv4::lookup_protocol (uint8_t protocol)
 {
 	for (ProtocolsI i = m_protocols.begin (); i != m_protocols.end (); i++) {
@@ -266,7 +242,7 @@ Ipv4::send_icmp_time_exceeded_ttl (Packet *original, NetworkInterface *interface
 	ip_real->set_destination (ip_header->get_source ());
 	ip_real->set_source (interface->get_ipv4_address ());
 	ip_real->set_payload_size (packet->get_size ());
-	ip_real->set_protocol (m_icmp->get_protocol ());
+	ip_real->set_protocol (ICMP_PROTOCOL);
 	ip_real->set_ttl (m_default_ttl);
 	packet->add_header (ip_real);
 
@@ -348,9 +324,9 @@ Ipv4::receive_packet (Packet *packet, ChunkIpv4 *ip, NetworkInterface *interface
 	TagInIpv4 *tag = new TagInIpv4 (interface);
 	packet->add_tag (TagInIpv4::get_tag (), tag);
 	tag->set_daddress (ip->get_destination ());
-	TransportProtocol *protocol = lookup_protocol (ip->get_protocol ());
+	TransportProtocolCallback *protocol = lookup_protocol (ip->get_protocol ());
 	if (protocol != 0) {
-		protocol->receive (packet);
+		(*protocol) (packet);
 	}
 }
 
@@ -384,3 +360,8 @@ Ipv4::receive (Packet *packet, NetworkInterface *interface)
 	receive_packet (packet, ip_header, interface);
 	delete ip_header;
 }
+
+
+void 
+Ipv4::receive_icmp (Packet *packet)
+{}

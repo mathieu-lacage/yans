@@ -34,12 +34,10 @@ Host::Host (char const *path)
 	m_ipv4->set_host (this);
 
 	m_udp = new Udp ();
-	m_ipv4->register_transport_protocol (m_udp);
 	m_udp->set_host (this);
 	m_udp->set_ipv4 (m_ipv4);
 
 	m_tcp = new Tcp ();
-	m_ipv4->register_transport_protocol (m_tcp);
 	m_tcp->set_host (this);
 	m_tcp->set_ipv4 (m_ipv4);
 
