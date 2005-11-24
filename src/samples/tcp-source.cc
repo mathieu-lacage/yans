@@ -25,82 +25,16 @@
 #include "host.h"
 #include "tcp.h"
 
-class MyTcpConnectionListener : public TcpConnectionListener {
-public:
-	MyTcpConnectionListener (TcpSource *tcp);
-	virtual ~MyTcpConnectionListener ();
-
-	virtual bool should_accept (Ipv4Address from, uint16_t from_port);
-	virtual bool completed (void);
-private:
-	TcpSource *m_tcp;
-};
-class MyTcpReceptionListener : public TcpReceptionListener {
-public:
-	MyTcpReceptionListener (TcpSource *tcp);
-	virtual ~MyTcpReceptionListener ();
-
-	virtual void receive (Packet *packet);
-private:
-	TcpSource *m_tcp;
-};
-class MyTcpTransmissionListener : public TcpTransmissionListener {
-public:
-	MyTcpTransmissionListener (TcpSource *tcp);
-	virtual ~MyTcpTransmissionListener ();
-
-	virtual void got_ack (Packet *packet);
-private:
-	TcpSource *m_tcp;
-};
-
-MyTcpConnectionListener::MyTcpConnectionListener (TcpSource *tcp)
-	: m_tcp (tcp)
-{}
-MyTcpConnectionListener::~MyTcpConnectionListener ()
-{}
-bool 
-MyTcpConnectionListener::should_accept (Ipv4Address from, uint16_t from_port)
-{
-	return m_tcp->should_accept (from, from_port);
-}
-bool 
-MyTcpConnectionListener::completed (void)
-{
-	return m_tcp->completed ();
-}
-
-MyTcpReceptionListener::MyTcpReceptionListener (TcpSource *tcp)
-{}
-MyTcpReceptionListener::~MyTcpReceptionListener ()
-{}
-void MyTcpReceptionListener::receive (Packet *packet)
-{
-	m_tcp->receive (packet);
-}
-
-
-MyTcpTransmissionListener::MyTcpTransmissionListener (TcpSource *tcp)
-{}
-MyTcpTransmissionListener::~MyTcpTransmissionListener ()
-{}
-void MyTcpTransmissionListener::got_ack (Packet *packet)
-{
-	m_tcp->got_ack (packet);
-}
-
-
-
-
 
 TcpSource::TcpSource (Host *host)
 	: m_host (host),
 	  m_end_point (0)
 {
 	m_tcp_end_point = new TcpEndPoint ();
-	m_tcp_end_point->set_connection_listener (new MyTcpConnectionListener (this));
-	m_tcp_end_point->set_reception_listener (new MyTcpReceptionListener (this));
-	m_tcp_end_point->set_transmission_listener (new MyTcpTransmissionListener (this));
+	m_tcp_end_point->set_callbacks (make_callback (&TcpSource::should_accept, this),
+					make_callback (&TcpSource::completed, this),
+					make_callback (&TcpSource::receive, this),
+					make_callback (&TcpSource::got_ack, this));
 }
 TcpSource::~TcpSource ()
 {
@@ -145,11 +79,9 @@ TcpSource::should_accept (Ipv4Address from, uint16_t from_port)
 {
 	return false;
 }
-bool 
+void
 TcpSource::completed (void)
-{
-	return false;
-}
+{}
 void 
 TcpSource::receive (Packet *packet)
 {}

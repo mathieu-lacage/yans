@@ -24,6 +24,7 @@
 #define TCP_H
 
 #include "ipv4-address.h"
+#include "callback.h"
 
 class Ipv4;
 class Host;
@@ -51,39 +52,32 @@ private:
 	Ipv4 *m_ipv4;
 };
 
-class TcpConnectionListener {
-public:
-	virtual ~TcpConnectionListener () = 0;
-
-	virtual bool should_accept (Ipv4Address from, uint16_t from_port) = 0;
-	virtual bool completed (void) = 0;
-};
-class TcpReceptionListener {
-public:
-	virtual ~TcpReceptionListener () = 0;
-
-	virtual void receive (Packet *packet) = 0;
-};
-class TcpTransmissionListener {
-public:
-	virtual ~TcpTransmissionListener () = 0;
-
-	virtual void got_ack (Packet *packet) = 0;
-};
 
 class TcpEndPoint {
 public:
+	typedef Callback<bool (Ipv4Address, uint16_t)> ConnectionAcceptionCallback;
+	typedef Callback<void (void)> ConnectionCompletedCallback;
+	typedef Callback<void (Packet *)> PacketReceivedCallback;
+	typedef Callback<void (Packet *)> AckReceivedCallback;
+
 	TcpEndPoint ();
 	~TcpEndPoint ();
 
 	Ipv4EndPointListener *get_ipv4_listener (void);
 
 	void set_peer (Ipv4Address dest, uint16_t port);
-	void set_connection_listener (TcpConnectionListener *listener);
+#if 0
+	void set_callbacks (ConnectionAcceptionCallback *connection_acception,
+			    ConnectionCompletedCallback *connection_completed,
+			    PacketReceivedCallback *packet_received,
+			    AckReceivedCallback *ack_received);
+#else
+	void set_callbacks (Callback<bool (Ipv4Address, uint16_t)> *connection_acception,
+			    Callback<void (void)> *connection_completed,
+			    Callback<void (Packet *)> *packet_received,
+			    Callback<void (Packet *)> *ack_received);
+#endif
 	void start_connect (void);
-
-	void set_reception_listener (TcpReceptionListener *listener);
-	void set_transmission_listener (TcpTransmissionListener *listener);
 
 	void send (Packet *packet);
 private:
@@ -107,9 +101,10 @@ private:
 	Ipv4EndPointListener *m_ipv4_listener;
 	Ipv4Address m_peer;
 	uint16_t m_peer_port;
-	TcpConnectionListener *m_connection_listener;
-	TcpReceptionListener *m_reception_listener;
-	TcpTransmissionListener *m_transmission_listener;
+	ConnectionAcceptionCallback *m_connection_acception;
+	ConnectionCompletedCallback *m_connection_completed;
+	PacketReceivedCallback *m_packet_received;
+	AckReceivedCallback *m_ack_received;
 	enum TcpState_e m_state;
 };
 

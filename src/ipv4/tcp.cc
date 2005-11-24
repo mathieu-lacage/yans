@@ -60,16 +60,6 @@ Tcp::get_end_points (void)
 
 
 
-TcpConnectionListener::~TcpConnectionListener ()
-{}
-TcpReceptionListener::~TcpReceptionListener ()
-{}
-TcpTransmissionListener::~TcpTransmissionListener ()
-{}
-
-
-
-
 class TcpIpv4EndPointListener : public Ipv4EndPointListener {
 public:
 	TcpIpv4EndPointListener (TcpEndPoint *tcp);
@@ -99,7 +89,12 @@ TcpEndPoint::TcpEndPoint ()
 	m_state = LISTEN;
 }
 TcpEndPoint::~TcpEndPoint ()
-{}
+{
+	delete m_connection_acception;
+	delete m_connection_completed;
+	delete m_packet_received;
+	delete m_ack_received;
+}
 
 Ipv4EndPointListener *
 TcpEndPoint::get_ipv4_listener (void)
@@ -113,21 +108,18 @@ TcpEndPoint::set_peer (Ipv4Address dest, uint16_t port)
 	m_peer = dest;
 	m_peer_port = port;
 }
-void
-TcpEndPoint::set_connection_listener (TcpConnectionListener *listener)
+void 
+TcpEndPoint::set_callbacks (ConnectionAcceptionCallback *connection_acception,
+			    ConnectionCompletedCallback *connection_completed,
+			    PacketReceivedCallback *packet_received,
+			    AckReceivedCallback *ack_received)
 {
-	m_connection_listener = listener;
+	m_connection_acception = connection_acception;
+	m_connection_completed = connection_completed;
+	m_packet_received = packet_received;
+	m_ack_received = ack_received;
 }
-void
-TcpEndPoint::set_reception_listener (TcpReceptionListener *listener)
-{
-	m_reception_listener = listener;
-}
-void
-TcpEndPoint::set_transmission_listener (TcpTransmissionListener *listener)
-{
-	m_transmission_listener = listener;
-}
+
 
 void 
 TcpEndPoint::set_state (enum TcpState_e new_state)

@@ -45,7 +45,7 @@ class TcpSource {
 	friend class MyTcpConnectionListener;
 	void send (Packet *packet);
 	bool should_accept (Ipv4Address from, uint16_t from_port);
-	bool completed (void);
+	void completed (void);
 	void receive (Packet *packet);
 	void got_ack (Packet *packet);
 
