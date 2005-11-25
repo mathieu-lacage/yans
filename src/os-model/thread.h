@@ -48,10 +48,10 @@ public:
 	//static Thread *current (void);
 private:
 	virtual void run (void) = 0;
+	void sleep_finished (void);
 	
 	Fiber *m_fiber;
 	Semaphore *m_sleep_sem;
-	SleepEvent *m_sleep;
 };
 
 #endif /* THREAD_H */
