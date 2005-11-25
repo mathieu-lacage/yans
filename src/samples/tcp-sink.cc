@@ -26,74 +26,64 @@
 #include "traffic-analyzer.h"
 
 
-class TcpSinkListener : public Ipv4EndPointListener {
-public:
-	TcpSinkListener (TcpSink *sink);
-	virtual ~TcpSinkListener ();
-	virtual void receive (Packet *packet);
-private:
-	TcpSink *m_sink;
-};
-TcpSinkListener::TcpSinkListener (TcpSink *sink)
-	: m_sink (sink)
-{}
-TcpSinkListener::~TcpSinkListener ()
-{}
-void TcpSinkListener::receive (Packet *packet)
-{
-	m_sink->receive (packet);
-}
-
-
 TcpSink::TcpSink (Host *host)
-	: m_ref (this)
+	: m_host (host),
+	  m_end_point (0),
+	  m_callback (0)
 {
 	m_host = host;
 }
 TcpSink::~TcpSink ()
 {
 	if (m_end_point != 0) {
-		Ipv4EndPoints *end_points = m_host->get_tcp ()->get_end_points ();
-		end_points->destroy (m_end_point);
+		delete m_end_point;
 	}
-	m_end_point = (Ipv4EndPoint *) 0xdeadbeaf;
+	m_end_point = (TcpEndPoint *) 0xdeadbeaf;
 	m_host = (Host *)0xdeadbeaf;
-	delete m_listener;
-	m_listener = (TcpSinkListener *)0xdeadbeaf;
-	if (m_analyzer != 0) {
-		m_analyzer->unref ();
-	}
-}
-void 
-TcpSink::ref (void)
-{
-	m_ref.ref ();
-}
-void 
-TcpSink::unref (void)
-{
-	m_ref.unref ();
+	delete m_callback;
+	m_callback = (TcpSinkCallback *)0xdeadbeaf;
 }
 
 void
 TcpSink::receive (Packet *packet)
 {
+	if (m_callback != 0) {
+		(*m_callback) (packet);
+	}
 }
 
-void 
-TcpSink::set_analyzer (TrafficAnalyzer *analyzer)
+void
+TcpSink::got_ack (Packet *packet)
+{}
+
+bool
+TcpSink::should_accept (Ipv4Address address, uint16_t port)
 {
-	m_analyzer = analyzer;
+	return false;
 }
+
+void
+TcpSink::completed (void)
+{}
+
+void 
+TcpSink::set_receive_callback (TcpSinkCallback *callback)
+{
+	m_callback = callback;
+}
+
 
 bool 
 TcpSink::bind (Ipv4Address address, uint16_t port)
 {
-	assert (m_end_point == 0);
-	Ipv4EndPoints *end_points = m_host->get_tcp ()->get_end_points ();
-	m_end_point = end_points->allocate (m_listener, address, port);
+	Tcp *tcp = m_host->get_tcp ();
+	m_end_point = tcp->allocate (address, port);
 	if (m_end_point == 0) {
 		return false;
 	}
+	m_end_point->set_callbacks (make_callback (&TcpSink::should_accept, this),
+				    make_callback (&TcpSink::completed, this),
+				    make_callback (&TcpSink::receive, this),
+				    make_callback (&TcpSink::got_ack, this));
 	return true;
 }

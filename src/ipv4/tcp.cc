@@ -297,8 +297,9 @@ TcpEndPoint::send_syn_ack (Packet *packet)
 
 	ChunkTcp *tcp_chunk = static_cast <ChunkTcp *> (packet->peek_header ());
 	tcp_chunk->set_sequence_number (get_isn ());
+	tcp_chunk->enable_flag_syn ();
 
-	TRACE ("send SYN+ACK to " << static_cast <TagOutIpv4 *> (packet->remove_tag (TagOutIpv4::get_tag ()))->get_daddress ());
+	TRACE ("send SYN+ACK to " << static_cast <TagOutIpv4 *> (packet->get_tag (TagOutIpv4::get_tag ()))->get_daddress ());
 	m_ipv4->set_protocol (TCP_PROTOCOL);
 	m_ipv4->send (packet);
 

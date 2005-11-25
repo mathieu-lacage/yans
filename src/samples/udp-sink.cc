@@ -34,7 +34,7 @@
 UdpSink::UdpSink (Host *host)
 	: m_host (host),
 	  m_end_point (0),
-	  m_callback ()
+	  m_callback (0)
 {}
 
 UdpSink::~UdpSink ()

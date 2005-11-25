@@ -1,4 +1,5 @@
 SIMULATOR=simple
+#SIMULATOR=fiber
 
 RUN_SELF_TESTS=-DRUN_SELF_TESTS=1
 INCLUDES=-I./fiber -I./simulator -I./ -I./arp -I./common -I./ipv4 -I./ethernet -I./test -I./host -I./os-model
@@ -18,6 +19,7 @@ SOURCE= \
 	samples/udp-source.cc \
 	samples/udp-sink.cc \
 	samples/tcp-source.cc \
+	samples/tcp-sink.cc \
 	host/mac-address.cc \
 	host/network-interface.cc \
 	host/loopback-interface.cc \

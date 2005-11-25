@@ -25,33 +25,31 @@
 
 #include <stdint.h>
 #include "ipv4-address.h"
-#include "ref-count.tcc"
+#include "callback.h"
 
-class TrafficAnalyzer;
 class Host;
-class Ipv4EndPoint;
-class TcpSinkListener;
 class Packet;
+class TcpEndPoint;
 
 class TcpSink {
 public:
+	typedef Callback<void (Packet *)> TcpSinkCallback;
+
 	TcpSink (Host *host);
 	~TcpSink ();
-	void ref (void);
-	void unref (void);
 
-	void set_analyzer (TrafficAnalyzer *analyzer);
+	void set_receive_callback (TcpSinkCallback *callback);
 
 	bool bind (Ipv4Address address, uint16_t port);
 private:
-	friend class TcpSinkListener;
+	bool should_accept (Ipv4Address from, uint16_t from_port);
+	void completed (void);
 	void receive (Packet *packet);
+	void got_ack (Packet *packet);
 
 	Host *m_host;
-	Ipv4EndPoint *m_end_point;
-	TrafficAnalyzer *m_analyzer;
-	TcpSinkListener *m_listener;
-	RefCount<TcpSink> m_ref;
+	TcpEndPoint *m_end_point;
+	TcpSinkCallback *m_callback;
 };
 
 #endif /* TCP_SINK */

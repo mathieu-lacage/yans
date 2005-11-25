@@ -40,9 +40,6 @@ class TcpSource {
 	void start_connect (Ipv4Address address, uint16_t port);
 	void send (Packet *packet);
  private:
-	friend class MyTcpTransmissionListener;
-	friend class MyTcpReceptionListener;
-	friend class MyTcpConnectionListener;
 	bool should_accept (Ipv4Address from, uint16_t from_port);
 	void completed (void);
 	void receive (Packet *packet);
