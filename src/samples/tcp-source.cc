@@ -24,6 +24,7 @@
 #include "packet.h"
 #include "host.h"
 #include "tcp.h"
+#include "ipv4-route.h"
 
 
 TcpSource::TcpSource (Host *host)
@@ -68,7 +69,11 @@ TcpSource::bind (Ipv4Address address, uint16_t port)
 void 
 TcpSource::set_peer (Ipv4Address address, uint16_t port)
 {
-	m_tcp_end_point->set_peer (address, port);
+	Route *route = m_host->get_routing_table ()->lookup (address);
+	if (route == 0) {
+		return;
+	}
+	m_tcp_end_point->set_peer (address, port, route);
 }
 
 bool 

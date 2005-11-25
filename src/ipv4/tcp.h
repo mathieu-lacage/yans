@@ -32,6 +32,12 @@ class Ipv4EndPoints;
 class Ipv4EndPoint;
 class Packet;
 class TcpEndPoint;
+class Route;
+
+enum {
+/* see http://www.iana.org/assignments/protocol-numbers */
+	TCP_PROTOCOL = 6
+};
 
 class Tcp {
  public:
@@ -49,7 +55,6 @@ private:
 	void receive (Packet *packet);
 	void send_reset (Packet *packet);
 
-	static const uint8_t TCP_PROTOCOL;
 	Ipv4EndPoints *m_end_points;
 	Host *m_host;
 	Ipv4 *m_ipv4;
@@ -69,7 +74,7 @@ public:
 	void set_ipv4 (Ipv4 *ipv4);
 	void set_ipv4_end_point (Ipv4EndPoint *end_point);
 
-	void set_peer (Ipv4Address dest, uint16_t port);
+	void set_peer (Ipv4Address dest, uint16_t port, Route *route);
 	void set_callbacks (ConnectionAcceptionCallback *connection_acception,
 			    ConnectionCompletedCallback *connection_completed,
 			    PacketReceivedCallback *packet_received,
@@ -96,6 +101,7 @@ private:
 
 	Ipv4Address m_peer;
 	uint16_t m_peer_port;
+	Route *m_route;
 	ConnectionAcceptionCallback *m_connection_acception;
 	ConnectionCompletedCallback *m_connection_completed;
 	PacketReceivedCallback *m_packet_received;
@@ -103,6 +109,7 @@ private:
 	enum TcpState_e m_state;
 	Ipv4EndPoint *m_ipv4_end_point;
 	Ipv4 *m_ipv4;
+	Host *m_host;
 };
 
 

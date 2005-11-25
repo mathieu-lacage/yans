@@ -39,8 +39,6 @@ std::cout << "TCP TRACE " << Simulator::now_s () << " " << x << std::endl;
 #endif /* TRACE_TCP */
 
 
-/* see http://www.iana.org/assignments/protocol-numbers */
-const uint8_t Tcp::TCP_PROTOCOL = 6;
 
 Tcp::Tcp ()
 {
@@ -96,7 +94,7 @@ Tcp::send_reset (Packet *packet)
 	TagInIpv4 *in_tag = static_cast <TagInIpv4 *> (packet->remove_tag (TagInIpv4::get_tag ()));
 	Route *route = m_host->get_routing_table ()->lookup (in_tag->get_saddress ());
 	if (route == 0) {
-		TRACE ("cannot send back rst to " << in_tag->get_saddress ());
+		TRACE ("cannot send back RST to " << in_tag->get_saddress ());
 		return;
 	}
 	TagOutIpv4 *out_tag = new TagOutIpv4 (route);
@@ -120,7 +118,8 @@ Tcp::send_reset (Packet *packet)
 	tcp_chunk->set_ack_number (old_seq + old_payload_size + 1);
 	tcp_chunk->set_sequence_number (0);
 
-	TRACE ("send back rst to " << in_tag->get_saddress ());
+	TRACE ("send back RST to " << in_tag->get_saddress ());
+	m_ipv4->set_protocol (TCP_PROTOCOL);
 	m_ipv4->send (packet);
 }
 
@@ -180,10 +179,11 @@ TcpEndPoint::set_ipv4_end_point (Ipv4EndPoint *end_point)
 }
 
 void
-TcpEndPoint::set_peer (Ipv4Address dest, uint16_t port)
+TcpEndPoint::set_peer (Ipv4Address dest, uint16_t port, Route *route)
 {
 	m_peer = dest;
 	m_peer_port = port;
+	m_route = route;
 }
 void 
 TcpEndPoint::set_callbacks (ConnectionAcceptionCallback *connection_acception,
@@ -208,6 +208,31 @@ TcpEndPoint::set_state (enum TcpState_e new_state)
 void
 TcpEndPoint::start_connect (void)
 {
+	uint16_t sport = m_ipv4_end_point->get_port ();
+	uint16_t dport = m_peer_port;
+	Ipv4Address daddress = m_peer;
+	Ipv4Address saddress = m_ipv4_end_point->get_address ();
+	TagOutIpv4 *out_tag = new TagOutIpv4 (m_route);
+	out_tag->set_daddress (daddress);
+	out_tag->set_saddress (saddress);
+	out_tag->set_dport (dport);
+	out_tag->set_sport (sport);
+
+	ChunkTcp *tcp_chunk = new ChunkTcp ();		
+	tcp_chunk->enable_flag_syn ();
+	tcp_chunk->set_source_port (sport);
+	tcp_chunk->set_destination_port (dport);
+	tcp_chunk->set_ack_number (0);
+	tcp_chunk->set_sequence_number ((uint32_t)(Simulator::now_us () & 0xffffffff));
+
+	Packet *packet = new Packet ();
+	packet->add_tag (TagOutIpv4::get_tag (), out_tag);
+	packet->add_header (tcp_chunk);
+
+
+	TRACE ("send SYN to " << daddress);
+	m_ipv4->set_protocol (TCP_PROTOCOL);
+	m_ipv4->send (packet);
 	
 	set_state (SYN_SENT);
 }
