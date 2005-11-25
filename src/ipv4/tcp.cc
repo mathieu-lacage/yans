@@ -22,6 +22,9 @@
 #include "tcp.h"
 #include "ipv4-endpoint.h"
 #include "ipv4.h"
+#include "tag-ipv4.h"
+#include "packet.h"
+#include "chunk-tcp.h"
 
 /* see http://www.iana.org/assignments/protocol-numbers */
 const uint8_t Tcp::TCP_PROTOCOL = 6;
@@ -78,7 +81,18 @@ Tcp::allocate (Ipv4Address address, uint16_t port)
 
 void 
 Tcp::receive (Packet *packet)
-{}
+{
+	TagInIpv4 *tag = static_cast <TagInIpv4 *> (packet->get_tag (TagInIpv4::get_tag ()));
+	assert (tag != 0);
+	ChunkTcp *tcp_chunk = static_cast <ChunkTcp *> (packet->peek_header ());
+	tag->set_dport (tcp_chunk->get_destination_port ());
+	tag->set_sport (tcp_chunk->get_source_port ());
+	Ipv4EndPoint *end_point = m_end_points->lookup (tag->get_daddress (), tag->get_dport ());
+	if (end_point == 0) {
+		return;
+	}
+	(*end_point->peek_callback ()) (packet);
+}
 
 
 
