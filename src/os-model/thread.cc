@@ -27,46 +27,21 @@
 #include "fiber-scheduler.h"
 
 
-class SleepEvent : public Event {
-public:
-	SleepEvent (Semaphore *sem);
-	virtual ~SleepEvent ();
-
-	virtual void notify (void);
-private:
-	Semaphore *m_sem;
-};
-
-SleepEvent::SleepEvent (Semaphore *sem) 
-	: m_sem (sem)
-{}
-
-SleepEvent::~SleepEvent () 
-{}
-
-void 
-SleepEvent::notify (void)
-{
-	m_sem->up ();
-}
 
 Thread::Thread (char const *name)
 {
 	m_sleep_sem = new Semaphore (0);
-	m_sleep = new SleepEvent (m_sleep_sem);
 	m_fiber = new Fiber (this, name);
 }
 Thread::Thread (Host *host, char const *name)
 {
 	m_sleep_sem = new Semaphore (0);
-	m_sleep = new SleepEvent (m_sleep_sem);
 	m_fiber = new Fiber (host, this, name);
 }
 
 Thread::~Thread ()
 {
 	delete m_sleep_sem;
-	delete m_sleep;
 	delete m_fiber;
 }
 
@@ -79,13 +54,13 @@ Thread::yield (void)
 void 
 Thread::sleep_s (double delta)
 {
-	Simulator::instance ()->insert_in_s (m_sleep, delta);
+	Simulator::insert_in_s (delta, make_event (&Thread::sleep_finished, this));
 	m_sleep_sem->down ();
 }
 void 
 Thread::sleep_us (uint64_t delta)
 {
-	Simulator::instance ()->insert_in_us (m_sleep, delta);
+	Simulator::insert_in_us (delta, make_event (&Thread::sleep_finished, this));
 	m_sleep_sem->down ();
 }
 
@@ -96,3 +71,9 @@ void
 Thread::notify (void)
 {}
 
+
+void 
+Thread::sleep_finished (void)
+{
+	m_sleep_sem->up ();
+}
