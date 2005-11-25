@@ -22,41 +22,62 @@
 #include "cable.h"
 #include "packet.h"
 #include "ethernet-network-interface.h"
+#include "event.h"
+#include "simulator.h"
+
+const double Cable::SPEED_OF_LIGHT = 300000000;
 
 Cable::Cable ()
-	: m_ref (1)
+	: m_ref (this),
+	  m_length (100.0),
+	  m_bandwidth (1000000)
+{}
+
+Cable::Cable (double length, double bandwidth)
+	: m_ref (this),
+	  m_length (length),
+	  m_bandwidth (bandwidth)
 {}
 
 void
 Cable::ref (void)
 {
-	m_ref++;
+	m_ref.ref ();
 }
 void
 Cable::unref (void)
 {
-	m_ref--;
-	if (m_ref == 0) {
-		delete this;
-	}
+	m_ref.unref ();
 }
 
 void 
-Cable::connect_to (EthernetNetworkInterface *interface)
+Cable::connect_to (EthernetNetworkInterface *a,
+		   EthernetNetworkInterface *b)
 {
-	m_interfaces.push_back (interface);
-	interface->connect_to (this);
+	m_a = a;
+	m_b = b;
+	a->connect_to (this);
+	b->connect_to (this);
+}
+
+void
+Cable::recv (Packet *packet, EthernetNetworkInterface *to)
+{
+	to->recv (packet);
+	packet->unref ();
 }
 
 void 
 Cable::send (Packet *packet, EthernetNetworkInterface *sender)
 {
-	for (EthernetNetworkInterfacesI i = m_interfaces.begin ();
-	     i != m_interfaces.end (); i++) {
-		if ((*i) != sender) {
-			Packet *copy = packet->copy ();
-			(*i)->recv (copy);
-			copy->unref ();
-		}
+	double delay = packet->get_size () * 8 / m_bandwidth + m_length / SPEED_OF_LIGHT;
+	EthernetNetworkInterface *rx;
+	if (sender == m_a) {
+		rx = m_b;
+	} else if (sender == m_b) {
+		rx = m_a;
 	}
+	packet->ref ();
+	Simulator::insert_in_s (delay, make_event (&Cable::recv, this, packet, rx));
 }
+

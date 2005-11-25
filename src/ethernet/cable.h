@@ -23,27 +23,39 @@
 #define CABLE_H
 
 #include <list>
+#include "ref-count.tcc"
 
 class Packet;
 class EthernetNetworkInterface;
 
 class Cable {
 public:
+	/* The default is:
+	 * 100m+Mb/s
+	 */
 	Cable ();
+	/* 
+	 * @length: meters
+	 * @bandwidth: bits/second
+	 */
+	Cable (double length, double bandwidth);
 
 	void ref (void);
 	void unref (void);
 
-	void connect_to (EthernetNetworkInterface *interface);
+	void connect_to (EthernetNetworkInterface *a,
+			 EthernetNetworkInterface *b);
 
 	void send (Packet *packet, EthernetNetworkInterface *sender);
 
 private:
-	typedef std::list<EthernetNetworkInterface *> EthernetNetworkInterfaces;
-	typedef std::list<EthernetNetworkInterface *>::iterator EthernetNetworkInterfacesI;
-
-	EthernetNetworkInterfaces m_interfaces;
-	uint32_t m_ref;
+	void recv (Packet *packet, EthernetNetworkInterface *sender);
+	static const double SPEED_OF_LIGHT;
+	EthernetNetworkInterface *m_a;
+	EthernetNetworkInterface *m_b;
+	RefCount<Cable> m_ref;
+	double m_length;
+	double m_bandwidth;
 };
 
 
