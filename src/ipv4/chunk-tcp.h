@@ -32,7 +32,6 @@ public:
 	void set_source_port (uint16_t port);
 	void set_destination_port (uint16_t port);
 	void set_sequence_number (uint32_t sequence);
-	void set_ack_number (uint32_t ack);
 	void set_window_size (uint16_t size);
 
 	uint16_t get_source_port (void);
@@ -51,6 +50,7 @@ public:
 	void enable_flag_psh (void);
 	void enable_option_mss (uint16_t mss);
 
+	void disable_flags (void);
 	void disable_flag_syn (void);
 	void disable_flag_fin (void);
 	void disable_flag_rst (void);

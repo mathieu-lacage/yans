@@ -72,8 +72,10 @@ int main (int argc, char *argv[])
 
 	TcpSource *source = new TcpSource (hclient);
 	source->bind (Ipv4Address ("192.168.0.3"), 1025);
-	source->set_peer (Ipv4Address ("192.168.0.2"), 1026);
-	Simulator::insert_at_s (1.0, make_event (&TcpSource::start_connect, source));
+	Simulator::insert_at_s (1.0, make_event (&TcpSource::start_connect, 
+						 source, 
+						 Ipv4Address ("192.168.0.2"), 
+						 (uint16_t)1026));
 	
 
 #if 0

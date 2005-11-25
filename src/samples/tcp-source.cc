@@ -38,9 +38,9 @@ TcpSource::~TcpSource ()
 	}
 }
 void 
-TcpSource::start_connect (void)
+TcpSource::start_connect (Ipv4Address address, uint16_t port)
 {
-	m_tcp_end_point->start_connect ();
+	m_tcp_end_point->start_connect (address, port);
 }
 void 
 TcpSource::send (Packet *packet)
@@ -64,16 +64,6 @@ TcpSource::bind (Ipv4Address address, uint16_t port)
 				      make_callback (&TcpSource::got_ack, this));
 	m_tcp_end_point = tcp_end_point;
 	return true;
-}
-
-void 
-TcpSource::set_peer (Ipv4Address address, uint16_t port)
-{
-	Route *route = m_host->get_routing_table ()->lookup (address);
-	if (route == 0) {
-		return;
-	}
-	m_tcp_end_point->set_peer (address, port, route);
 }
 
 bool 

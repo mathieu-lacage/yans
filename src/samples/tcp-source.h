@@ -37,8 +37,7 @@ class TcpSource {
 
 	/* return true on success. */
 	bool bind (Ipv4Address address, uint16_t port);
-	void set_peer (Ipv4Address address, uint16_t port);
-	void start_connect (void);
+	void start_connect (Ipv4Address address, uint16_t port);
 	void send (Packet *packet);
  private:
 	friend class MyTcpTransmissionListener;

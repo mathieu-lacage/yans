@@ -43,23 +43,78 @@ public:
 
 
 template<typename T>
-class EventCallback : public Event {
- public:
-  typedef void (T::*F)(void);
+class EventCallback0 : public Event {
+public:
+	typedef void (T::*F)(void);
 
-  EventCallback(T *t, F f) : t_(t), f_(f) { }
-  virtual void notify (void)
-    { (t_->*f_)(); delete this;}
- private:
-  T* t_;
-  F f_;
+	EventCallback0 (T *obj, F function) 
+		: m_obj (obj), 
+		  m_function (function)
+	{ }
+	virtual void notify (void) { 
+		(m_obj->*m_function) (); 
+		delete this;
+	}
+private:
+	T* m_obj;
+	F m_function;
 };
 
-template<typename T>
-EventCallback<T> *make_event(void (T::*f) (void), T* t) {
-  return new EventCallback<T>(t, f);
-}
+template<typename T, typename T1>
+class EventCallback1 : public Event {
+public:
+	typedef void (T::*F)(T1);
 
+	EventCallback1 (T *obj, F function, T1 a1) 
+		: m_obj (obj), 
+		  m_function (function),
+		  m_a1 (a1)
+	{ }
+	virtual void notify (void) { 
+		(m_obj->*m_function) (m_a1); 
+		delete this;
+	}
+private:
+	T* m_obj;
+	F m_function;
+	T1 m_a1;
+};
+
+template<typename T, typename T1, typename T2>
+class EventCallback2 : public Event {
+public:
+	typedef void (T::*F)(T1, T2);
+
+	EventCallback2 (T *obj, F function, T1 a1, T2 a2) 
+		: m_obj (obj), 
+		  m_function (function),
+		  m_a1 (a1),
+		  m_a2 (a2)
+	{ }
+	virtual void notify (void) { 
+		(m_obj->*m_function) (m_a1, m_a2);
+		delete this;
+	}
+private:
+	T* m_obj;
+	F m_function;
+	T1 m_a1;
+	T2 m_a2;
+};
+
+
+template<typename T>
+EventCallback0<T> *make_event(void (T::*f) (void), T* t) {
+	return new EventCallback0<T>(t, f);
+}
+template<typename T, typename T1>
+EventCallback1<T, T1> *make_event(void (T::*f) (T1), T* t, T1 a1) {
+	return new EventCallback1<T, T1>(t, f, a1);
+}
+template<typename T, typename T1, typename T2>
+EventCallback2<T, T1, T2> *make_event(void (T::*f) (T1, T2), T* t, T1 a1, T2 a2) {
+	return new EventCallback2<T, T1, T2>(t, f, a1, a2);
+}
 
 
 #endif /* EVENT_H */

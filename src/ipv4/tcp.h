@@ -73,13 +73,13 @@ public:
 
 	void set_ipv4 (Ipv4 *ipv4);
 	void set_ipv4_end_point (Ipv4EndPoint *end_point);
+	void set_host (Host *host);
 
-	void set_peer (Ipv4Address dest, uint16_t port, Route *route);
 	void set_callbacks (ConnectionAcceptionCallback *connection_acception,
 			    ConnectionCompletedCallback *connection_completed,
 			    PacketReceivedCallback *packet_received,
 			    AckReceivedCallback *ack_received);
-	void start_connect (void);
+	void start_connect (Ipv4Address dest, uint16_t port);
 
 	void send (Packet *packet);
 private:
@@ -98,10 +98,14 @@ private:
 	};
 	void receive (Packet *packet);
 	void set_state (enum TcpState_e new_state);
+	Route *lookup_route (Ipv4Address dest);
+	bool invert_packet (Packet *packet);
+	uint32_t get_isn (void);
+	void send_syn_ack (Packet *packet);
 
 	Ipv4Address m_peer;
 	uint16_t m_peer_port;
-	Route *m_route;
+	Route *m_peer_route;
 	ConnectionAcceptionCallback *m_connection_acception;
 	ConnectionCompletedCallback *m_connection_completed;
 	PacketReceivedCallback *m_packet_received;

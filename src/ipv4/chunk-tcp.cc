@@ -54,11 +54,6 @@ ChunkTcp::set_sequence_number (uint32_t sequence)
 {
 	m_sequence_number = utils_hton_32 (sequence);
 }
-void 
-ChunkTcp::set_ack_number (uint32_t ack)
-{
-	m_ack_number = utils_hton_32 (ack);
-}
 void ChunkTcp::set_window_size (uint16_t size)
 {
 	m_window_size = utils_hton_16 (size);
@@ -139,6 +134,11 @@ ChunkTcp::enable_option_mss (uint16_t mss)
 	m_mss = utils_hton_32 (real);
 }
 
+void 
+ChunkTcp::disable_flags (void)
+{
+	m_flags = 0;
+}
 void 
 ChunkTcp::disable_flag_syn (void)
 {

@@ -67,6 +67,7 @@ Tcp::allocate (void)
 	tcp_end_point->set_ipv4 (m_ipv4);
 	Ipv4EndPoint *ipv4_end_point = m_end_points->allocate ();
 	tcp_end_point->set_ipv4_end_point (ipv4_end_point);
+	tcp_end_point->set_host (m_host);
 	return tcp_end_point;
 }
 TcpEndPoint *
@@ -76,6 +77,7 @@ Tcp::allocate (Ipv4Address address)
 	tcp_end_point->set_ipv4 (m_ipv4);
 	Ipv4EndPoint *ipv4_end_point = m_end_points->allocate (address);
 	tcp_end_point->set_ipv4_end_point (ipv4_end_point);
+	tcp_end_point->set_host (m_host);
 	return tcp_end_point;
 }
 TcpEndPoint *
@@ -85,6 +87,7 @@ Tcp::allocate (Ipv4Address address, uint16_t port)
 	tcp_end_point->set_ipv4 (m_ipv4);
 	Ipv4EndPoint *ipv4_end_point = m_end_points->allocate (address, port);
 	tcp_end_point->set_ipv4_end_point (ipv4_end_point);
+	tcp_end_point->set_host (m_host);
 	return tcp_end_point;
 }
 
@@ -115,7 +118,7 @@ Tcp::send_reset (Packet *packet)
 	old_payload_size = packet->get_size () - tcp_chunk->get_size ();
 	tcp_chunk->set_source_port (old_dp);
 	tcp_chunk->set_destination_port (old_sp);
-	tcp_chunk->set_ack_number (old_seq + old_payload_size + 1);
+	tcp_chunk->enable_flag_ack (old_seq + old_payload_size + 1);
 	tcp_chunk->set_sequence_number (0);
 
 	TRACE ("send back RST to " << in_tag->get_saddress ());
@@ -177,14 +180,12 @@ TcpEndPoint::set_ipv4_end_point (Ipv4EndPoint *end_point)
 	end_point->set_callback (make_callback (&TcpEndPoint::receive, this));
 	m_ipv4_end_point = end_point;
 }
-
-void
-TcpEndPoint::set_peer (Ipv4Address dest, uint16_t port, Route *route)
+void 
+TcpEndPoint::set_host (Host *host)
 {
-	m_peer = dest;
-	m_peer_port = port;
-	m_route = route;
+	m_host = host;
 }
+
 void 
 TcpEndPoint::set_callbacks (ConnectionAcceptionCallback *connection_acception,
 			    ConnectionCompletedCallback *connection_completed,
@@ -204,15 +205,66 @@ TcpEndPoint::set_state (enum TcpState_e new_state)
 	m_state = new_state;
 }
 
+Route *
+TcpEndPoint::lookup_route (Ipv4Address dest)
+{
+	return m_host->get_routing_table ()->lookup (dest);
+}
+
+bool
+TcpEndPoint::invert_packet (Packet *packet)
+{
+	TagInIpv4 *in_tag = static_cast <TagInIpv4 *> (packet->remove_tag (TagInIpv4::get_tag ()));
+	Route *route = lookup_route (in_tag->get_saddress ());
+	if (route == 0) {
+		TRACE ("cannot determine route to " << in_tag->get_saddress ());
+		return false;
+	}
+	TagOutIpv4 *out_tag = new TagOutIpv4 (route);
+	out_tag->set_daddress (in_tag->get_saddress ());
+	out_tag->set_saddress (in_tag->get_daddress ());
+	out_tag->set_dport (in_tag->get_sport ());
+	out_tag->set_sport (in_tag->get_dport ());
+	packet->add_tag (TagOutIpv4::get_tag (), out_tag);
+
+	ChunkTcp *tcp_chunk = static_cast <ChunkTcp *> (packet->peek_header ());
+	tcp_chunk->disable_flags ();
+	uint16_t old_sp, old_dp;
+	uint32_t old_seq, old_payload_size;
+	old_sp = tcp_chunk->get_source_port ();
+	old_dp = tcp_chunk->get_destination_port ();
+	old_seq = tcp_chunk->get_sequence_number ();
+	old_payload_size = packet->get_size () - tcp_chunk->get_size ();
+	tcp_chunk->set_source_port (old_dp);
+	tcp_chunk->set_destination_port (old_sp);
+	tcp_chunk->enable_flag_ack (old_seq + old_payload_size + 1);
+
+	return true;
+}
+
+uint32_t
+TcpEndPoint::get_isn (void)
+{
+	uint32_t isn = Simulator::now_us () & 0xffffffff;
+	return isn;
+}
+
 
 void
-TcpEndPoint::start_connect (void)
+TcpEndPoint::start_connect (Ipv4Address dest, uint16_t port)
 {
+	m_peer = dest;
+	m_peer_port = port;
+	m_peer_route = lookup_route (dest);
+	if (m_peer_route == 0) {
+		return;
+	}
+
 	uint16_t sport = m_ipv4_end_point->get_port ();
 	uint16_t dport = m_peer_port;
 	Ipv4Address daddress = m_peer;
 	Ipv4Address saddress = m_ipv4_end_point->get_address ();
-	TagOutIpv4 *out_tag = new TagOutIpv4 (m_route);
+	TagOutIpv4 *out_tag = new TagOutIpv4 (m_peer_route);
 	out_tag->set_daddress (daddress);
 	out_tag->set_saddress (saddress);
 	out_tag->set_dport (dport);
@@ -222,8 +274,7 @@ TcpEndPoint::start_connect (void)
 	tcp_chunk->enable_flag_syn ();
 	tcp_chunk->set_source_port (sport);
 	tcp_chunk->set_destination_port (dport);
-	tcp_chunk->set_ack_number (0);
-	tcp_chunk->set_sequence_number ((uint32_t)(Simulator::now_us () & 0xffffffff));
+	tcp_chunk->set_sequence_number (get_isn ());
 
 	Packet *packet = new Packet ();
 	packet->add_tag (TagOutIpv4::get_tag (), out_tag);
@@ -237,6 +288,23 @@ TcpEndPoint::start_connect (void)
 	set_state (SYN_SENT);
 }
 
+void 
+TcpEndPoint::send_syn_ack (Packet *packet)
+{
+	if (!invert_packet (packet)) {
+		return;
+	}
+
+	ChunkTcp *tcp_chunk = static_cast <ChunkTcp *> (packet->peek_header ());
+	tcp_chunk->set_sequence_number (get_isn ());
+
+	TRACE ("send SYN+ACK to " << static_cast <TagOutIpv4 *> (packet->remove_tag (TagOutIpv4::get_tag ()))->get_daddress ());
+	m_ipv4->set_protocol (TCP_PROTOCOL);
+	m_ipv4->send (packet);
+
+	set_state (SYN_RCVD);
+}
+
 void
 TcpEndPoint::send (Packet *packet)
 {}
@@ -245,7 +313,36 @@ TcpEndPoint::send (Packet *packet)
 void
 TcpEndPoint::receive (Packet *packet)
 {
-	
+	ChunkTcp *tcp_chunk = static_cast <ChunkTcp *> (packet->peek_header ());
+	switch (m_state) {
+	case LISTEN:
+		if (tcp_chunk->is_flag_syn () &&
+		    !tcp_chunk->is_flag_ack ()) {
+			/* this is a connection request. */
+			send_syn_ack (packet);
+		}
+		break;
+	case SYN_SENT:
+		break;
+	case SYN_RCVD:
+		break;
+	case ESTABLISHED:
+		break;
+	case CLOSE_WAIT:
+		break;
+	case LAST_ACK:
+		break;
+	case FIN_WAIT_1:
+		break;
+	case CLOSING:
+		break;
+	case TIME_WAIT:
+		break;
+	case FIN_WAIT_2:
+		break;
+	case CLOSED:
+		break;
+	}
 }
 
 

@@ -107,7 +107,7 @@ void
 SimulatorPrivate::insert_at_s (Event *event, double time)
 {
 	assert (time > 0);
-	long int us = lrint (time * 1000000);
+	long int us = lrint (time * 1000000.0);
 	assert (us > 0);
 	m_event_heap->insert_at_us (event, (uint64_t)us);
 }
