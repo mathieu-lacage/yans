@@ -104,6 +104,12 @@ TagInIpv4::get_daddress (void)
 {
 	return m_daddress;
 }
+Ipv4Address
+TagInIpv4::get_saddress (void)
+{
+	return m_saddress;
+}
+
 void 
 TagInIpv4::set_dport (uint16_t dport)
 {
@@ -118,6 +124,11 @@ void
 TagInIpv4::set_daddress (Ipv4Address daddress)
 {
 	m_daddress = daddress;
+}
+void 
+TagInIpv4::set_saddress (Ipv4Address saddress)
+{
+	m_saddress = saddress;
 }
 NetworkInterface *
 TagInIpv4::get_interface (void)

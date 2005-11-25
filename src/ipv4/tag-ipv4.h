@@ -62,15 +62,18 @@ public:
 	uint16_t get_dport (void);
 	uint16_t get_sport (void);
 	Ipv4Address get_daddress (void);
+	Ipv4Address get_saddress (void);
 
 	void set_dport (uint16_t dport);
 	void set_sport (uint16_t sport);
 	void set_daddress (Ipv4Address daddress);
+	void set_saddress (Ipv4Address saddress);
 
 	static uint32_t get_tag (void);
 public:	
 	NetworkInterface *m_interface;
 	Ipv4Address m_daddress;
+	Ipv4Address m_saddress;
 	uint16_t m_sport;
 	uint16_t m_dport;
 	static uint32_t m_tag;

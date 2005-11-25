@@ -54,6 +54,11 @@ ChunkTcp::set_sequence_number (uint32_t sequence)
 {
 	m_sequence_number = utils_hton_32 (sequence);
 }
+void 
+ChunkTcp::set_ack_number (uint32_t ack)
+{
+	m_ack_number = utils_hton_32 (ack);
+}
 void ChunkTcp::set_window_size (uint16_t size)
 {
 	m_window_size = utils_hton_16 (size);

@@ -47,6 +47,7 @@ class Tcp {
 	void destroy (TcpEndPoint *end_point);
 private:
 	void receive (Packet *packet);
+	void send_reset (Packet *packet);
 
 	static const uint8_t TCP_PROTOCOL;
 	Ipv4EndPoints *m_end_points;

@@ -33,7 +33,7 @@
 #include "defrag-state.h"
 
 
-#define TRACE_IPV4 1
+#define noTRACE_IPV4 1
 
 #ifdef TRACE_IPV4
 #include <iostream>
@@ -324,6 +324,7 @@ Ipv4::receive_packet (Packet *packet, ChunkIpv4 *ip, NetworkInterface *interface
 	TagInIpv4 *tag = new TagInIpv4 (interface);
 	packet->add_tag (TagInIpv4::get_tag (), tag);
 	tag->set_daddress (ip->get_destination ());
+	tag->set_saddress (ip->get_source ());
 	TransportProtocolCallback *protocol = lookup_protocol (ip->get_protocol ());
 	if (protocol != 0) {
 		(*protocol) (packet);

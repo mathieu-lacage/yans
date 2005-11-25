@@ -32,6 +32,7 @@ public:
 	void set_source_port (uint16_t port);
 	void set_destination_port (uint16_t port);
 	void set_sequence_number (uint32_t sequence);
+	void set_ack_number (uint32_t ack);
 	void set_window_size (uint16_t size);
 
 	uint16_t get_source_port (void);

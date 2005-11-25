@@ -25,6 +25,19 @@
 #include "tag-ipv4.h"
 #include "packet.h"
 #include "chunk-tcp.h"
+#include "host.h"
+
+#define TRACE_TCP 1
+
+#ifdef TRACE_TCP
+#include <iostream>
+#include "simulator.h"
+# define TRACE(x) \
+std::cout << "TCP TRACE " << Simulator::now_s () << " " << x << std::endl;
+#else /* TRACE_TCP */
+# define TRACE(format,...)
+#endif /* TRACE_TCP */
+
 
 /* see http://www.iana.org/assignments/protocol-numbers */
 const uint8_t Tcp::TCP_PROTOCOL = 6;
@@ -77,6 +90,40 @@ Tcp::allocate (Ipv4Address address, uint16_t port)
 	return tcp_end_point;
 }
 
+void
+Tcp::send_reset (Packet *packet)
+{
+	TagInIpv4 *in_tag = static_cast <TagInIpv4 *> (packet->remove_tag (TagInIpv4::get_tag ()));
+	Route *route = m_host->get_routing_table ()->lookup (in_tag->get_saddress ());
+	if (route == 0) {
+		TRACE ("cannot send back rst to " << in_tag->get_saddress ());
+		return;
+	}
+	TagOutIpv4 *out_tag = new TagOutIpv4 (route);
+	out_tag->set_daddress (in_tag->get_saddress ());
+	out_tag->set_saddress (in_tag->get_daddress ());
+	out_tag->set_dport (in_tag->get_sport ());
+	out_tag->set_sport (in_tag->get_dport ());
+	packet->add_tag (TagOutIpv4::get_tag (), out_tag);
+
+	ChunkTcp *tcp_chunk = static_cast <ChunkTcp *> (packet->peek_header ());
+	tcp_chunk->disable_flag_syn ();
+	tcp_chunk->enable_flag_rst ();
+	uint16_t old_sp, old_dp;
+	uint32_t old_seq, old_payload_size;
+	old_sp = tcp_chunk->get_source_port ();
+	old_dp = tcp_chunk->get_destination_port ();
+	old_seq = tcp_chunk->get_sequence_number ();
+	old_payload_size = packet->get_size () - tcp_chunk->get_size ();
+	tcp_chunk->set_source_port (old_dp);
+	tcp_chunk->set_destination_port (old_sp);
+	tcp_chunk->set_ack_number (old_seq + old_payload_size + 1);
+	tcp_chunk->set_sequence_number (0);
+
+	TRACE ("send back rst to " << in_tag->get_saddress ());
+	m_ipv4->send (packet);
+}
+
 
 
 void 
@@ -89,6 +136,14 @@ Tcp::receive (Packet *packet)
 	tag->set_sport (tcp_chunk->get_source_port ());
 	Ipv4EndPoint *end_point = m_end_points->lookup (tag->get_daddress (), tag->get_dport ());
 	if (end_point == 0) {
+		if (tcp_chunk->is_flag_syn () &&
+		    !tcp_chunk->is_flag_ack ()) {
+			/* This is the first SYN packet to open a connection
+			 * but no one is expecting this connection to be
+			 * opened so we close it with a RST packet.
+			 */
+			send_reset (packet);
+		}
 		return;
 	}
 	(*end_point->peek_callback ()) (packet);
