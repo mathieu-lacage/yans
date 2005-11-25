@@ -24,6 +24,16 @@
 #include "event.h"
 #include <utility>
 
+#define noTRACE_EVENT_HEAP 1
+
+#ifdef TRACE_EVENT_HEAP
+#include <iostream>
+# define TRACE(x) \
+std::cout << "HEAP TRACE " << x << std::endl;
+#else /* TRACE_EVENT_HEAP */
+# define TRACE(format,...)
+#endif /* TRACE_EVENT_HEAP */
+
 EventHeap::EventHeap ()
 {}
 EventHeap::~EventHeap ()
@@ -34,10 +44,12 @@ EventHeap::insert_at_us (Event *event, uint64_t time)
 	for (EventsI i = m_events.begin (); i != m_events.end (); i++) {
 		if ((*i).second > time) {
 			m_events.insert (i, std::make_pair (event, time));
-			break;
+			return;
 		}
 	}
 	m_events.push_back (std::make_pair (event, time));
+	TRACE ("inserted " << time);
+	print_debug ();
 }
 Event *
 EventHeap::peek_next (void)
@@ -69,4 +81,13 @@ EventHeap::clear (void)
 	 * Items are left only when the user calls Simulator::stop ()
 	 */
 	m_events.erase (m_events.begin (), m_events.end ());
+}
+
+void 
+EventHeap::print_debug (void)
+{
+	for (EventsI i = m_events.begin (); i != m_events.end (); i++) {
+		TRACE ("time: " << (*i).second);
+	}
+	TRACE ("end");
 }
