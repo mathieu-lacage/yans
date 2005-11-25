@@ -24,29 +24,28 @@
 
 #include <stdint.h>
 #include "ipv4-address.h"
+#include "callback.h"
 
 class Host;
 class Packet;
 class Ipv4EndPoint;
-class UdpSinkListener;
-class ReceptionListener;
 
 
 class UdpSink {
 public:
+	typedef Callback<void (Packet *)> UdpSinkCallback;
+
 	UdpSink (Host *host);
 	~UdpSink ();
 
-	void set_listener (ReceptionListener *listener);
+	void set_receive_callback (UdpSinkCallback *callback);
 
 	bool bind (Ipv4Address address, uint16_t port);
 private:
-	friend class UdpSinkListener;
 	void receive (Packet *packet);
 	Host *m_host;
 	Ipv4EndPoint *m_end_point;
-	UdpSinkListener *m_listener;
-	ReceptionListener *m_reception_listener;
+	UdpSinkCallback *m_callback;
 };
 
 

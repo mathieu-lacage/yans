@@ -24,30 +24,8 @@
 #include "population-analysis.h"
 #include "packet.h"
 #include "simulator.h"
-#include "reception-listener.h"
+#include "callback.h"
 #include <iostream>
-
-class TrafficReceptionListener : public ReceptionListener {
-public:
-	TrafficReceptionListener (TrafficAnalyzer *traffic);
-	virtual ~TrafficReceptionListener ();
-	virtual void receive (Packet *packet);
-private:
-	TrafficAnalyzer *m_traffic;
-
-};
-
-TrafficReceptionListener::TrafficReceptionListener (TrafficAnalyzer *traffic)
-	: m_traffic (traffic)
-{}
-TrafficReceptionListener::~TrafficReceptionListener ()
-{}
-void 
-TrafficReceptionListener::receive (Packet *packet)
-{
-	m_traffic->receive (packet);
-}
-
 
 
 TrafficAnalyzer::TrafficAnalyzer ()
@@ -55,7 +33,6 @@ TrafficAnalyzer::TrafficAnalyzer ()
 	m_previous_arrival = -1.0;
 	m_data = new PopulationAnalysis ();
 	m_inter_arrival_time = new PopulationAnalysis ();
-	m_listener = new TrafficReceptionListener (this);
 }
 TrafficAnalyzer::~TrafficAnalyzer ()
 {
@@ -63,12 +40,6 @@ TrafficAnalyzer::~TrafficAnalyzer ()
 	delete m_inter_arrival_time;
 }
 
-
-ReceptionListener *
-TrafficAnalyzer::peek_listener (void)
-{
-	return m_listener;
-}
 
 void 
 TrafficAnalyzer::receive (Packet *packet)

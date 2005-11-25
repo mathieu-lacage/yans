@@ -28,20 +28,12 @@
 
 TcpSource::TcpSource (Host *host)
 	: m_host (host),
-	  m_end_point (0)
-{
-	m_tcp_end_point = new TcpEndPoint ();
-	m_tcp_end_point->set_callbacks (make_callback (&TcpSource::should_accept, this),
-					make_callback (&TcpSource::completed, this),
-					make_callback (&TcpSource::receive, this),
-					make_callback (&TcpSource::got_ack, this));
-}
+	  m_tcp_end_point (0)
+{}
 TcpSource::~TcpSource ()
 {
-	delete m_tcp_end_point;
-	if (m_end_point != 0) {
-		Ipv4EndPoints *end_points = m_host->get_tcp ()->get_end_points ();
-		end_points->destroy (m_end_point);
+	if (m_tcp_end_point != 0) {
+		delete m_tcp_end_point;
 	}
 }
 void 
@@ -55,16 +47,21 @@ TcpSource::send (Packet *packet)
 	m_tcp_end_point->send (packet);
 }
 
+
 /* return true on success. */
 bool 
 TcpSource::bind (Ipv4Address address, uint16_t port)
 {
-	Ipv4EndPoints *end_points = m_host->get_tcp ()->get_end_points ();
-	m_end_point = end_points->allocate (m_tcp_end_point->get_ipv4_listener (), 
-					    address, port);
-	if (m_end_point == 0) {
+	Tcp *tcp = m_host->get_tcp ();
+	TcpEndPoint *tcp_end_point = tcp->allocate (address, port);
+	if (tcp_end_point == 0) {
 		return false;
 	}
+	tcp_end_point->set_callbacks (make_callback (&TcpSource::should_accept, this),
+				      make_callback (&TcpSource::completed, this),
+				      make_callback (&TcpSource::receive, this),
+				      make_callback (&TcpSource::got_ack, this));
+	m_tcp_end_point = tcp_end_point;
 	return true;
 }
 

@@ -23,27 +23,19 @@
 #define PERIODIC_GENERATOR_H
 
 #include <stdint.h>
-#include "ref-count.tcc"
+#include "callback.h"
 
 class Packet;
 
-class GeneratorListener {
-public:
-	GeneratorListener ();
-	virtual ~GeneratorListener () = 0;
-	void ref (void);
-	void unref (void);
-	virtual void send (Packet *packet) = 0;
-private:
-	RefCount<GeneratorListener> m_ref;
-};
 
 class PeriodicGenerator {
 public:
+	typedef Callback<void (Packet *)> GeneratorCallback;
+
 	PeriodicGenerator ();
 	~PeriodicGenerator ();
 
-	void set_listener (GeneratorListener *listener);
+	void set_send_callback (GeneratorCallback *callback);
 
 	void set_packet_interval (double interval);
 	void set_packet_size (uint16_t size);
@@ -55,7 +47,7 @@ private:
 	friend class PeriodicGeneratorEvent;
 	void send_next_packet (void);
 
-	GeneratorListener *m_listener;
+	GeneratorCallback *m_callback;
 	double m_interval;
 	uint16_t m_size;
 	double m_stop_at;

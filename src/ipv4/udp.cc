@@ -75,7 +75,7 @@ Udp::receive (Packet *packet)
 	if (end_point == 0) {
 		return;
 	}
-	end_point->get_listener ()->receive (packet);
+	(*end_point->peek_callback ()) (packet);
 }
 
 void

@@ -27,25 +27,20 @@
 
 class Packet;
 class PopulationAnalysis;
-class ReceptionListener;
-class TrafficReceptionListener;
 
 class TrafficAnalyzer {
 public:
 	TrafficAnalyzer ();
 	~TrafficAnalyzer ();
 
-	ReceptionListener *peek_listener (void);
+	void receive (Packet *packet);
 
 	void print_stats (void);
 
 private:
-	friend class TrafficReceptionListener;
-	void receive (Packet *packet);
 	PopulationAnalysis *m_data;
 	PopulationAnalysis *m_inter_arrival_time;
 	double m_previous_arrival;
-	TrafficReceptionListener *m_listener;
 };
 
 

@@ -29,8 +29,9 @@
 class Ipv4;
 class Host;
 class Ipv4EndPoints;
-class Ipv4EndPointListener;
+class Ipv4EndPoint;
 class Packet;
+class TcpEndPoint;
 
 class Tcp {
  public:
@@ -40,9 +41,10 @@ class Tcp {
 	void set_host (Host *host);
 	void set_ipv4 (Ipv4 *ipv4);
 
-	Ipv4EndPoints *get_end_points (void);
-
-	void send (Packet *packet);
+	TcpEndPoint *allocate (void);
+	TcpEndPoint *allocate (Ipv4Address address);
+	TcpEndPoint *allocate (Ipv4Address address, uint16_t port);
+	void destroy (TcpEndPoint *end_point);
 private:
 	void receive (Packet *packet);
 
@@ -63,25 +65,18 @@ public:
 	TcpEndPoint ();
 	~TcpEndPoint ();
 
-	Ipv4EndPointListener *get_ipv4_listener (void);
+	void set_ipv4 (Ipv4 *ipv4);
+	void set_ipv4_end_point (Ipv4EndPoint *end_point);
 
 	void set_peer (Ipv4Address dest, uint16_t port);
-#if 0
 	void set_callbacks (ConnectionAcceptionCallback *connection_acception,
 			    ConnectionCompletedCallback *connection_completed,
 			    PacketReceivedCallback *packet_received,
 			    AckReceivedCallback *ack_received);
-#else
-	void set_callbacks (Callback<bool (Ipv4Address, uint16_t)> *connection_acception,
-			    Callback<void (void)> *connection_completed,
-			    Callback<void (Packet *)> *packet_received,
-			    Callback<void (Packet *)> *ack_received);
-#endif
 	void start_connect (void);
 
 	void send (Packet *packet);
 private:
-	friend class TcpIpv4EndPointListener;
 	enum TcpState_e {
 		CLOSED,
 		LISTEN,
@@ -98,7 +93,6 @@ private:
 	void receive (Packet *packet);
 	void set_state (enum TcpState_e new_state);
 
-	Ipv4EndPointListener *m_ipv4_listener;
 	Ipv4Address m_peer;
 	uint16_t m_peer_port;
 	ConnectionAcceptionCallback *m_connection_acception;
@@ -106,6 +100,8 @@ private:
 	PacketReceivedCallback *m_packet_received;
 	AckReceivedCallback *m_ack_received;
 	enum TcpState_e m_state;
+	Ipv4EndPoint *m_ipv4_end_point;
+	Ipv4 *m_ipv4;
 };
 
 

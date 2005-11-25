@@ -50,9 +50,6 @@ class TcpSource {
 	void got_ack (Packet *packet);
 
 	Host *m_host;
-	Ipv4EndPoint *m_end_point;
-	Ipv4Address m_peer_address;
-	uint16_t m_peer_port;
 	TcpEndPoint *m_tcp_end_point;
 };
 

@@ -27,74 +27,18 @@
 #include "udp.h"
 #include "tag-ipv4.h"
 #include "host-tracer.h"
-#include "periodic-generator.h"
-
-class UdpGeneratorListener : public GeneratorListener {
-public:
-	UdpGeneratorListener (UdpSource *source);
-	virtual ~UdpGeneratorListener ();
-	virtual void send (Packet *packet);
-private:
-	UdpSource *m_source;
-};
-
-UdpGeneratorListener::UdpGeneratorListener (UdpSource *source)
-	: m_source (source)
-{}
-UdpGeneratorListener::~UdpGeneratorListener ()
-{}
-void 
-UdpGeneratorListener::send (Packet *packet)
-{
-	m_source->send (packet);
-}
-
-
-
-
-class UdpSourceListener : public Ipv4EndPointListener {
-public:
-	UdpSourceListener ();
-	virtual ~UdpSourceListener ();
-	virtual void receive (Packet *packet);
-};
-UdpSourceListener::UdpSourceListener ()
-{}
-UdpSourceListener::~UdpSourceListener ()
-{}
-void UdpSourceListener::receive (Packet *packet)
-{
-	packet->unref ();
-}
-
-
-
 
 UdpSource::UdpSource (Host *host)
 	: m_host (host),
-	  m_end_point (0),
-	  m_listener (new UdpSourceListener ())
-{
-	m_generator_listener = new UdpGeneratorListener (this);
-}
+	  m_end_point (0)
+{}
 UdpSource::~UdpSource ()
 {
 	if (m_end_point != 0) {
-		Ipv4EndPoints *end_points = m_host->get_udp ()->get_end_points ();
-		end_points->destroy (m_end_point);
+		delete m_end_point;
 	}
 	m_end_point = (Ipv4EndPoint *) 0xdeadbeaf;
 	m_host = (Host *)0xdeadbeaf;
-	delete m_listener;
-	m_listener = (UdpSourceListener *)0xdeadbeaf;
-	m_generator_listener->unref ();
-	m_generator_listener = (UdpGeneratorListener *)0xdeadbeaf;
-}
-
-GeneratorListener *
-UdpSource::peek_listener (void)
-{
-	return m_generator_listener;
 }
 
 
@@ -102,7 +46,8 @@ bool
 UdpSource::bind (Ipv4Address address, uint16_t port)
 {
 	Ipv4EndPoints *end_points = m_host->get_udp ()->get_end_points ();
-	m_end_point = end_points->allocate (m_listener, address, port);
+	m_end_point = end_points->allocate (address, port);
+	m_end_point->set_callback (make_callback (&UdpSource::receive, this));
 	if (m_end_point == 0) {
 		return false;
 	}
@@ -131,3 +76,7 @@ UdpSource::send (Packet *packet)
 	m_host->get_tracer ()->trace_tx_app (packet);
 	m_host->get_udp ()->send (packet);
 }
+
+void 
+UdpSource::receive (Packet *packet)
+{}

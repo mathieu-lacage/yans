@@ -46,39 +46,40 @@ Tcp::set_ipv4 (Ipv4 *ipv4)
 					     TCP_PROTOCOL);
 }
 
+TcpEndPoint *
+Tcp::allocate (void)
+{
+	TcpEndPoint *tcp_end_point = new TcpEndPoint ();
+	tcp_end_point->set_ipv4 (m_ipv4);
+	Ipv4EndPoint *ipv4_end_point = m_end_points->allocate ();
+	tcp_end_point->set_ipv4_end_point (ipv4_end_point);
+	return tcp_end_point;
+}
+TcpEndPoint *
+Tcp::allocate (Ipv4Address address)
+{
+	TcpEndPoint *tcp_end_point = new TcpEndPoint ();
+	tcp_end_point->set_ipv4 (m_ipv4);
+	Ipv4EndPoint *ipv4_end_point = m_end_points->allocate (address);
+	tcp_end_point->set_ipv4_end_point (ipv4_end_point);
+	return tcp_end_point;
+}
+TcpEndPoint *
+Tcp::allocate (Ipv4Address address, uint16_t port)
+{
+	TcpEndPoint *tcp_end_point = new TcpEndPoint ();
+	tcp_end_point->set_ipv4 (m_ipv4);
+	Ipv4EndPoint *ipv4_end_point = m_end_points->allocate (address, port);
+	tcp_end_point->set_ipv4_end_point (ipv4_end_point);
+	return tcp_end_point;
+}
+
+
 
 void 
 Tcp::receive (Packet *packet)
 {}
 
-Ipv4EndPoints *
-Tcp::get_end_points (void)
-{
-	return m_end_points;
-}
-
-
-
-
-class TcpIpv4EndPointListener : public Ipv4EndPointListener {
-public:
-	TcpIpv4EndPointListener (TcpEndPoint *tcp);
-	virtual ~TcpIpv4EndPointListener ();
-	virtual void receive (Packet *packet);
-private:
-	TcpEndPoint *m_tcp;
-};
-
-TcpIpv4EndPointListener::TcpIpv4EndPointListener (TcpEndPoint *tcp)
-	: m_tcp (tcp)
-{}
-TcpIpv4EndPointListener::~TcpIpv4EndPointListener ()
-{}
-void 
-TcpIpv4EndPointListener::receive (Packet *packet)
-{
-	m_tcp->receive (packet);
-}
 
 
 
@@ -90,16 +91,23 @@ TcpEndPoint::TcpEndPoint ()
 }
 TcpEndPoint::~TcpEndPoint ()
 {
+	delete m_ipv4_end_point;
 	delete m_connection_acception;
 	delete m_connection_completed;
 	delete m_packet_received;
 	delete m_ack_received;
 }
 
-Ipv4EndPointListener *
-TcpEndPoint::get_ipv4_listener (void)
+void 
+TcpEndPoint::set_ipv4 (Ipv4 *ipv4)
 {
-        return m_ipv4_listener;
+	m_ipv4 = ipv4;
+}
+void 
+TcpEndPoint::set_ipv4_end_point (Ipv4EndPoint *end_point)
+{
+	end_point->set_callback (make_callback (&TcpEndPoint::receive, this));
+	m_ipv4_end_point = end_point;
 }
 
 void

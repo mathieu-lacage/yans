@@ -24,28 +24,28 @@
 
 #include <stdint.h>
 #include "ipv4-address.h"
+#include "callback.h"
 #include <list>
 
 class Packet;
-
-class Ipv4EndPointListener {
-public:
-	virtual ~Ipv4EndPointListener () = 0;
-	virtual void receive (Packet *packet) = 0;
-};
+class Ipv4EndPoints;
 
 class Ipv4EndPoint {
 public:
+	typedef Callback<void (Packet *)> Ipv4EndPointListener;
+
 	~Ipv4EndPoint ();
 	uint16_t get_port (void);
 	Ipv4Address get_address (void);
-	Ipv4EndPointListener *get_listener (void);
+	void set_callback (Ipv4EndPointListener *callback);
+	Ipv4EndPointListener *peek_callback (void);
 private:
 	friend class Ipv4EndPoints;
-	Ipv4EndPoint (Ipv4EndPointListener *listener,
+	Ipv4EndPoint (Ipv4EndPoints *end_points,
 		      Ipv4Address address,
 		      uint16_t port);
-	Ipv4EndPointListener *m_listener;
+	Ipv4EndPoints *m_end_points;
+	Ipv4EndPointListener *m_callback;
 	Ipv4Address m_address;
 	uint16_t m_port;
 };
@@ -55,17 +55,15 @@ public:
 	Ipv4EndPoints ();
 	~Ipv4EndPoints ();
 
-	Ipv4EndPoint *allocate (Ipv4EndPointListener *listener);
-	Ipv4EndPoint *allocate (Ipv4EndPointListener *listener,
-				Ipv4Address address);
-	Ipv4EndPoint *allocate (Ipv4EndPointListener *listener,
-				Ipv4Address address, uint16_t port);
-	void destroy (Ipv4EndPoint *end_point);
+	Ipv4EndPoint *allocate (void);
+	Ipv4EndPoint *allocate (Ipv4Address address);
+	Ipv4EndPoint *allocate (Ipv4Address address, uint16_t port);
 
 	Ipv4EndPoint *lookup (Ipv4Address address, uint16_t port);
 private:
-	Ipv4EndPoint *insert (Ipv4EndPointListener *listener,
-			      Ipv4Address address, uint16_t port);
+	friend class Ipv4EndPoint;
+	Ipv4EndPoint *insert (Ipv4Address address, uint16_t port);
+	void destroy (Ipv4EndPoint *end_point);
 
 	static const uint16_t PORT_RESERVED;
 

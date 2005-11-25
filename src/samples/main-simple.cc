@@ -30,6 +30,7 @@
 #include "network-interface-tracer.h"
 #include "periodic-generator.h"
 #include "traffic-analyzer.h"
+#include "callback.h"
 
 int main (int argc, char *argv[])
 {
@@ -83,12 +84,10 @@ int main (int argc, char *argv[])
 	generator->set_packet_size (100);
 	generator->start_at (1.0);
 	generator->stop_at (10.0);
-
-	generator->set_listener (source->peek_listener ());
+	generator->set_send_callback (make_callback (&UdpSource::send, source));
 
 	TrafficAnalyzer *analyzer = new TrafficAnalyzer ();
-	sink->set_listener (analyzer->peek_listener ());
-
+	sink->set_receive_callback (make_callback (&TrafficAnalyzer::receive, analyzer));
 
 	/* run simulation */
 	Simulator::run ();

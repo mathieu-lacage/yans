@@ -26,60 +26,18 @@
 #include "event.h"
 
 
-GeneratorListener::GeneratorListener ()
-	: m_ref (this)
-{}
-GeneratorListener::~GeneratorListener ()
-{}
-void 
-GeneratorListener::ref (void)
-{
-	m_ref.ref ();
-}
-void 
-GeneratorListener::unref (void)
-{
-	m_ref.unref ();
-}
-
-
-
-class PeriodicGeneratorEvent : public Event {
-public:
-	PeriodicGeneratorEvent (PeriodicGenerator *source);
-	~PeriodicGeneratorEvent ();
-
-	virtual void notify (void);
-private:
-	PeriodicGenerator *m_source;
-};
-
-PeriodicGeneratorEvent::PeriodicGeneratorEvent (PeriodicGenerator *source)
-	: m_source (source)
-{}
-PeriodicGeneratorEvent::~PeriodicGeneratorEvent ()
-{}
-void 
-PeriodicGeneratorEvent::notify (void)
-{
-	m_source->send_next_packet ();
-	delete this;
-}
-
 PeriodicGenerator::PeriodicGenerator ()
 {}
 
 PeriodicGenerator::~PeriodicGenerator ()
 {
-	m_listener->unref ();
+	delete m_callback;
 }
 
-
 void 
-PeriodicGenerator::set_listener (GeneratorListener *listener)
+PeriodicGenerator::set_send_callback (GeneratorCallback *callback)
 {
-	listener->ref ();
-	m_listener = listener;
+	m_callback = callback;
 }
 
 void 
@@ -96,7 +54,7 @@ PeriodicGenerator::set_packet_size (uint16_t size)
 void 
 PeriodicGenerator::start_at (double start)
 {
-	Simulator::insert_at_s (start, new PeriodicGeneratorEvent (this));
+	Simulator::insert_at_s (start, make_event (&PeriodicGenerator::send_next_packet, this));
 }
 void 
 PeriodicGenerator::stop_at (double end)
@@ -113,11 +71,11 @@ PeriodicGenerator::send_next_packet (void)
 		return;
 	}
 	/* schedule next packet transmission. */
-	Simulator::insert_in_s (m_interval, new PeriodicGeneratorEvent (this));
+	Simulator::insert_in_s (m_interval, make_event (&PeriodicGenerator::send_next_packet, this));
 	/* create packet. */
 	Packet *packet = new Packet ();
 	ChunkFakeData *data = new ChunkFakeData (m_size);
 	packet->add_header (data);
-	m_listener->send (packet);
+	(*m_callback) (packet);
 	packet->unref ();
 }

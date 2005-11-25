@@ -113,17 +113,15 @@ int main (int argc, char *argv[])
 	generator->set_packet_size (981);
 	generator->start_at (1.0);
 	generator->stop_at (10.0);
-
-	generator->set_listener (source->peek_listener ());
+	generator->set_send_callback (make_callback (&UdpSource::send, source));
 
 	TrafficAnalyzer *analyzer = new TrafficAnalyzer ();
-	sink->set_listener (analyzer->peek_listener ());
+	sink->set_receive_callback (make_callback (&TrafficAnalyzer::receive, analyzer));
 
 	/* run simulation */
 	Simulator::run ();
 
 	analyzer->print_stats ();
-
 
 
 	/* destroy network */
