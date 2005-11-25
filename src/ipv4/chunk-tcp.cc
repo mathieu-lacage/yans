@@ -137,7 +137,6 @@ ChunkTcp::enable_option_mss (uint16_t mss)
 	uint32_t real = 0;
 	real = (2) | (4 << 8) | (mss << 16);
 	m_mss = utils_hton_32 (real);
-	m_header_length = 6;
 }
 
 void 
@@ -204,7 +203,6 @@ ChunkTcp::is_flag_psh (void) const
 bool 
 ChunkTcp::is_option_mss (void) const
 {
-	assert ((m_mss != 0)?m_header_length == 6:m_header_length == 5);
 	return (m_mss != 0)?true:false;
 }
 
@@ -241,6 +239,7 @@ ChunkTcp::copy (void)
 void
 ChunkTcp::serialize (WriteBuffer *buffer)
 {
+	m_header_length = ((get_size () / 4) & 0x0f) << 4;
 	// XXX 
 	uint16_t checksum = calculate_checksum ((uint8_t *)&m_source_port, 
 						get_size ());

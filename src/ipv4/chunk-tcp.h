@@ -75,12 +75,12 @@ public:
 	virtual void print (std::ostream *os) const;
 private:
 	enum {
-		URG = 2,
-		ACK = 3,
-		PSH = 4,
-		RST = 5,
-		SYN = 6,
-		FIN = 7
+		URG = 5,
+		ACK = 4,
+		PSH = 3,
+		RST = 2,
+		SYN = 1,
+		FIN = 0
 	};
 	bool is_flag (uint8_t n) const;
 	void enable_flag (uint8_t n);
