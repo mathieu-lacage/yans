@@ -39,11 +39,11 @@ class TcpSource {
 	bool bind (Ipv4Address address, uint16_t port);
 	void set_peer (Ipv4Address address, uint16_t port);
 	void start_connect (void);
+	void send (Packet *packet);
  private:
 	friend class MyTcpTransmissionListener;
 	friend class MyTcpReceptionListener;
 	friend class MyTcpConnectionListener;
-	void send (Packet *packet);
 	bool should_accept (Ipv4Address from, uint16_t from_port);
 	void completed (void);
 	void receive (Packet *packet);

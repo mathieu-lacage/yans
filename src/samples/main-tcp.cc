@@ -84,8 +84,9 @@ int main (int argc, char *argv[])
 	PeriodicGenerator *generator = new PeriodicGenerator ();
 	generator->set_packet_interval (0.01);
 	generator->set_packet_size (100);
-	generator->start_at (1.0);
+	generator->start_at (2.0);
 	generator->stop_at (10.0);
+	generator->set_send_callback (make_callback (&TcpSource::send, source));
 
 #if 0
 	generator->set_source (source);
