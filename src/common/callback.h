@@ -22,6 +22,11 @@
 #ifndef CALLBACK_H
 #define CALLBACK_H
 
+/***
+ * This code is unreadable. It was inspired by the techniques described in:
+ * http://www.codeproject.com/cpp/TTLFunction.asp
+ */
+
 class empty {};
 
 template<typename R, typename T1 = empty, typename T2 = empty>

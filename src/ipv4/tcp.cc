@@ -228,16 +228,24 @@ TcpEndPoint::invert_packet (Packet *packet)
 	packet->add_tag (TagOutIpv4::get_tag (), out_tag);
 
 	ChunkTcp *tcp_chunk = static_cast <ChunkTcp *> (packet->peek_header ());
+	uint8_t syn;
+	if (tcp_chunk->is_flag_syn ()) {
+		syn = 1;
+	} else {
+		syn = 0;
+	}
 	tcp_chunk->disable_flags ();
 	uint16_t old_sp, old_dp;
 	uint32_t old_seq, old_payload_size;
 	old_sp = tcp_chunk->get_source_port ();
 	old_dp = tcp_chunk->get_destination_port ();
 	old_seq = tcp_chunk->get_sequence_number ();
+	uint32_t old_ack = tcp_chunk->get_ack_number ();
 	old_payload_size = packet->get_size () - tcp_chunk->get_size ();
 	tcp_chunk->set_source_port (old_dp);
 	tcp_chunk->set_destination_port (old_sp);
-	tcp_chunk->enable_flag_ack (old_seq + old_payload_size + 1);
+	tcp_chunk->enable_flag_ack (old_seq + old_payload_size + syn);
+	tcp_chunk->set_sequence_number (old_ack);
 
 	return true;
 }
@@ -288,11 +296,11 @@ TcpEndPoint::start_connect (Ipv4Address dest, uint16_t port)
 	set_state (SYN_SENT);
 }
 
-void 
+bool
 TcpEndPoint::send_syn_ack (Packet *packet)
 {
 	if (!invert_packet (packet)) {
-		return;
+		return false;
 	}
 
 	ChunkTcp *tcp_chunk = static_cast <ChunkTcp *> (packet->peek_header ());
@@ -303,7 +311,21 @@ TcpEndPoint::send_syn_ack (Packet *packet)
 	m_ipv4->set_protocol (TCP_PROTOCOL);
 	m_ipv4->send (packet);
 
-	set_state (SYN_RCVD);
+	return true;
+}
+
+bool
+TcpEndPoint::send_ack (Packet *packet)
+{
+	if (!invert_packet (packet)) {
+		return false;
+	}
+
+	TRACE ("send ACK to " << static_cast <TagOutIpv4 *> (packet->get_tag (TagOutIpv4::get_tag ()))->get_daddress ());
+	m_ipv4->set_protocol (TCP_PROTOCOL);
+	m_ipv4->send (packet);
+
+	return true;
 }
 
 void
@@ -320,12 +342,27 @@ TcpEndPoint::receive (Packet *packet)
 		if (tcp_chunk->is_flag_syn () &&
 		    !tcp_chunk->is_flag_ack ()) {
 			/* this is a connection request. */
-			send_syn_ack (packet);
+			if (send_syn_ack (packet)) {
+				set_state (SYN_RCVD);
+			}
 		}
 		break;
 	case SYN_SENT:
+		if (tcp_chunk->is_flag_syn () &&
+		    tcp_chunk->is_flag_ack ()) {
+			/* this is the ack of a connection request. */
+			if (send_ack (packet)) {
+				set_state (ESTABLISHED);
+			}
+		}
 		break;
 	case SYN_RCVD:
+		if (tcp_chunk->is_flag_ack ()) {
+			/* this is the third packet for connection
+			 * establishment handshake. 
+			 */
+			set_state (ESTABLISHED);
+		}
 		break;
 	case ESTABLISHED:
 		break;

@@ -101,7 +101,8 @@ private:
 	Route *lookup_route (Ipv4Address dest);
 	bool invert_packet (Packet *packet);
 	uint32_t get_isn (void);
-	void send_syn_ack (Packet *packet);
+	bool send_syn_ack (Packet *packet);
+	bool send_ack (Packet *packet);
 
 	Ipv4Address m_peer;
 	uint16_t m_peer_port;
