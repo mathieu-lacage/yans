@@ -141,13 +141,12 @@ MacAddress::print (std::ostream *os) const
 
 
 
-MacAddress
-MacAddress::m_broadcast = MacAddress ("ff:ff:ff:ff:ff:ff");
 
 MacAddress
 MacAddress::get_broadcast (void)
 {
-	return m_broadcast;
+	static MacAddress broadcast = MacAddress ("ff:ff:ff:ff:ff:ff");
+	return broadcast;
 }
 
 

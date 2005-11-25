@@ -23,9 +23,6 @@
 #include "ipv4-address.h"
 #include "buffer.h"
 
-Ipv4Mask Ipv4Mask::m_loopback = Ipv4Mask ("255.0.0.0");
-Ipv4Mask Ipv4Mask::m_zero = Ipv4Mask ("0.0.0.0");
-
 Ipv4Mask::Ipv4Mask ()
 	: m_mask (0x66666666)
 {}
@@ -78,12 +75,14 @@ Ipv4Mask::print (std::ostream *os) const
 Ipv4Mask
 Ipv4Mask::get_loopback (void)
 {
-	return m_loopback;
+	static Ipv4Mask loopback = Ipv4Mask ("255.0.0.0");
+	return loopback;
 }
 Ipv4Mask
 Ipv4Mask::get_zero (void)
 {
-	return m_zero;
+	static Ipv4Mask zero = Ipv4Mask ("0.0.0.0");
+	return zero;
 }
 
 Ipv4Address::Ipv4Address ()
@@ -134,29 +133,30 @@ Ipv4Address::print (std::ostream *os) const
 }
 
 
-Ipv4Address Ipv4Address::m_zero ("0.0.0.0");
-Ipv4Address Ipv4Address::m_broadcast ("255.255.255.255");
-Ipv4Address Ipv4Address::m_loopback ("127.0.0.1");
 
 Ipv4Address 
 Ipv4Address::get_zero (void)
 {
-	return m_zero;
+	static Ipv4Address zero ("0.0.0.0");
+	return zero;
 }
 Ipv4Address 
 Ipv4Address::get_any (void)
 {
-	return m_zero;
+	static Ipv4Address any ("0.0.0.0");
+	return any;
 }
 Ipv4Address 
 Ipv4Address::get_broadcast (void)
 {
-	return m_broadcast;
+	static Ipv4Address broadcast ("255.255.255.255");
+	return broadcast;
 }
 Ipv4Address 
 Ipv4Address::get_loopback (void)
 {
-	return m_broadcast;
+	Ipv4Address loopback ("127.0.0.1");
+	return loopback;
 }
 
 bool operator == (Ipv4Address const &a, Ipv4Address const &b)

@@ -62,9 +62,6 @@ public:
 	static Ipv4Address get_loopback (void);
 private:
 	uint32_t m_address;
-	static Ipv4Address m_zero;
-	static Ipv4Address m_broadcast;
-	static Ipv4Address m_loopback;
 };
 
 
@@ -89,8 +86,6 @@ public:
 	static Ipv4Mask get_loopback (void);
 	static Ipv4Mask get_zero (void);
 private:
-	static Ipv4Mask m_loopback;
-	static Ipv4Mask m_zero;
 	uint32_t m_mask;
 };
 
