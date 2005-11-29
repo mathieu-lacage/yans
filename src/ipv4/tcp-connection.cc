@@ -37,7 +37,7 @@
 #include <iostream>
 #include "simulator.h"
 # define TRACE(x) \
-std::cout << "TCP CONN TRACE " << Simulator::now_s () << " " << x << std::endl;
+std::cout << "TCP CONN " << Simulator::now_s () << " " << x << std::endl;
 #else /* TRACE_TCP_CONNECTION */
 # define TRACE(format,...)
 #endif /* TRACE_TCP_CONNECTION */
