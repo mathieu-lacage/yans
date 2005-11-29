@@ -127,6 +127,7 @@ TcpConnection::invert_packet (Packet *packet)
 	tcp_chunk->enable_flag_ack (old_seq + old_payload_size + syn);
 	tcp_chunk->set_sequence_number (old_ack);
 
+	delete in_tag;
 	return true;
 }
 

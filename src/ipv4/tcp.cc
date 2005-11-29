@@ -164,6 +164,7 @@ Tcp::send_reset (Packet *packet)
 	Route *route = m_host->get_routing_table ()->lookup (in_tag->get_saddress ());
 	if (route == 0) {
 		TRACE ("cannot send back RST to " << in_tag->get_saddress ());
+		delete in_tag;
 		return;
 	}
 	TagOutIpv4 *out_tag = new TagOutIpv4 (route);
@@ -190,6 +191,8 @@ Tcp::send_reset (Packet *packet)
 	TRACE ("send back RST to " << in_tag->get_saddress ());
 	m_ipv4->set_protocol (TCP_PROTOCOL);
 	m_ipv4->send (packet);
+
+	delete in_tag;
 }
 
 /*
