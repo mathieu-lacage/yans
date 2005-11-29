@@ -45,13 +45,14 @@ public:
 	bool bind (Ipv4Address address, uint16_t port);
 private:
 	bool should_accept (Ipv4Address from, uint16_t from_port);
-	void connection_created (TcpConnection *connection);
+	void connection_created (TcpConnection *connection, TcpEndPoint *end_point);
 	void completed (void);
 	void receive (Packet *packet);
 	void got_ack (Packet *packet);
 
 	Host *m_host;
 	TcpEndPoint *m_end_point;
+	TcpEndPoint *m_real_end_point;
 	TcpConnectionListener *m_connections;
 	TcpConnection *m_connection;
 	TcpSinkCallback *m_callback;

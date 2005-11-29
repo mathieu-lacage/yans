@@ -73,7 +73,7 @@ TcpConnectionListener::receive (Packet *packet)
 			connection->set_ipv4 (m_ipv4);
 			connection->set_end_point (end_point);
 			connection->set_route (route);
-			(*m_creation) (connection);
+			(*m_creation) (connection, end_point);
 			end_point->receive (packet);
 		}
 	}

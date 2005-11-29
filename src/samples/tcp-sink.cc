@@ -43,6 +43,7 @@ std::cout << "TCP SINK TRACE " << Simulator::now_s () << " " << x << std::endl;
 TcpSink::TcpSink (Host *host)
 	: m_host (host),
 	  m_end_point (0),
+	  m_real_end_point (0),
 	  m_connection (0),
 	  m_callback (0)
 {
@@ -59,6 +60,7 @@ TcpSink::~TcpSink ()
 	m_callback = (TcpSinkCallback *)0xdeadbeaf;
 	delete m_connections;
 	delete m_connection;
+	delete m_real_end_point;
 }
 
 void
@@ -90,10 +92,11 @@ TcpSink::should_accept (Ipv4Address address, uint16_t port)
 }
 
 void
-TcpSink::connection_created (TcpConnection *connection)
+TcpSink::connection_created (TcpConnection *connection, TcpEndPoint *end_point)
 {
 	TRACE ("connection created");
 	m_connection = connection;
+	m_real_end_point = end_point;
 	connection->set_callbacks (make_callback (&TcpSink::completed, this),
 				   make_callback (&TcpSink::got_ack, this),
 				   make_callback (&TcpSink::receive, this));
