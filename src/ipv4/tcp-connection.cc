@@ -68,6 +68,7 @@ void
 TcpConnection::set_end_point (TcpEndPoint *end_point)
 {
 	m_end_point = end_point;
+	m_end_point->set_callback (make_callback (&TcpConnection::receive, this));
 }
 void 
 TcpConnection::set_route (Route *route)
