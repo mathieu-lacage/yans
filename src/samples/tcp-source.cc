@@ -38,6 +38,7 @@ TcpSource::~TcpSource ()
 	if (m_end_point != 0) {
 		delete m_end_point;
 	}
+	delete m_connection;
 }
 void 
 TcpSource::start_connect (Ipv4Address address, uint16_t port)
