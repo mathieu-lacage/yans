@@ -27,6 +27,18 @@
 #include "host.h"
 #include "traffic-analyzer.h"
 
+#define TRACE_TCP_SINK 1
+
+#ifdef TRACE_TCP_SINK
+#include <iostream>
+#include "simulator.h"
+# define TRACE(x) \
+std::cout << "TCP SINK TRACE " << Simulator::now_s () << " " << x << std::endl;
+#else /* TRACE_TCP_SINK */
+# define TRACE(format,...)
+#endif /* TRACE_TCP_SINK */
+
+
 
 TcpSink::TcpSink (Host *host)
 	: m_host (host),
@@ -68,6 +80,7 @@ TcpSink::completed (void)
 bool
 TcpSink::should_accept (Ipv4Address address, uint16_t port)
 {
+	TRACE ("connection request from " << address << ":" << port);
 	if (m_connection == 0) {
 		return true;
 	} else {
@@ -78,6 +91,7 @@ TcpSink::should_accept (Ipv4Address address, uint16_t port)
 void
 TcpSink::connection_created (TcpConnection *connection)
 {
+	TRACE ("connection created");
 	m_connection = connection;
 	connection->set_callbacks (make_callback (&TcpSink::completed, this),
 				   make_callback (&TcpSink::got_ack, this),
