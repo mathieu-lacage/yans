@@ -49,8 +49,8 @@ const uint8_t Ipv4::ICMP_PROTOCOL = 1;
 
 Ipv4::Ipv4 ()
 {
-	m_icmp_callback = make_callback (&Ipv4::receive_icmp, this);
-	register_transport_protocol (m_icmp_callback, ICMP_PROTOCOL);
+	register_transport_protocol (make_callback (&Ipv4::receive_icmp, this), 
+				     ICMP_PROTOCOL);
 	/* this is recommended by rfc 1700 */
 	m_default_ttl = 64;
 	m_defrag_states = new DefragStates ();
@@ -58,10 +58,13 @@ Ipv4::Ipv4 ()
 }
 Ipv4::~Ipv4 ()
 {
-	delete m_icmp_callback;
 	m_icmp_callback = (TransportProtocolCallback *)0xdeadbeaf;
 	delete m_defrag_states;
 	m_defrag_states = (DefragStates *)0xdeadbeaf;
+	for (ProtocolsI i = m_protocols.begin (); i != m_protocols.end (); i++) {
+		delete (*i).second;
+	}
+	m_protocols.erase (m_protocols.begin (), m_protocols.end ());
 }
 
 void 
