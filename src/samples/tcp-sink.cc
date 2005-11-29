@@ -43,6 +43,7 @@ std::cout << "TCP SINK TRACE " << Simulator::now_s () << " " << x << std::endl;
 TcpSink::TcpSink (Host *host)
 	: m_host (host),
 	  m_end_point (0),
+	  m_connection (0),
 	  m_callback (0)
 {
 	m_host = host;
