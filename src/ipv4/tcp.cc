@@ -259,7 +259,12 @@ Tcp::create_connection (TcpEndPoint *end_p)
 TcpConnectionListener *
 Tcp::create_connection_listener (TcpEndPoint *end_p)
 {
-	return 0;
+	TcpConnectionListener *connection = new TcpConnectionListener ();
+	connection->set_host (m_host);
+	connection->set_ipv4 (m_ipv4);
+	connection->set_end_point (end_p);
+	connection->set_tcp (this);
+	return connection;
 }
 
 
