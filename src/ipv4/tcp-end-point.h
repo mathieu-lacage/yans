@@ -19,36 +19,41 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#ifndef TCP_SOURCE_H
-#define TCP_SOURCE_H
+#ifndef TCP_END_POINT_H
+#define TCP_END_POINT_H
 
-#include <stdint.h>
+#include "callback.h"
 #include "ipv4-address.h"
-#include "ipv4-endpoint.h"
+#include <stdint.h>
 
-class Host;
-class Ipv4EndPoint;
-class TcpEndPoint;
-class TcpConnection;
+class Packet;
 
-class TcpSource {
- public:
-	TcpSource (Host *host);
-	~TcpSource ();
+class TcpEndPoint {
+public:
+	typedef Callback<void (Packet *)> TcpEndPointReceptionCallback;
+	typedef Callback <void (TcpEndPoint *)> TcpEndPointDestroyCallback;
 
-	/* return true on success. */
-	bool bind (Ipv4Address address, uint16_t port);
-	void start_connect (Ipv4Address address, uint16_t port);
-	void send (Packet *packet);
- private:
-	bool should_accept (Ipv4Address from, uint16_t from_port);
-	void completed (void);
+	TcpEndPoint (Ipv4Address address, uint16_t port);
+	~TcpEndPoint ();
+
+	Ipv4Address get_local_address (void);
+	uint16_t get_local_port (void);
+	Ipv4Address get_peer_address (void);
+	uint16_t get_peer_port (void);
+
+	void set_peer (Ipv4Address address, uint16_t port);
+
 	void receive (Packet *packet);
-	void got_ack (Packet *packet);
-
-	Host *m_host;
-	TcpEndPoint *m_end_point;
-	TcpConnection *m_connection;
+	void set_callback (TcpEndPointReceptionCallback *reception);
+	void set_destroy_callback (TcpEndPointDestroyCallback *destroy);
+private:
+	Ipv4Address m_local_addr;
+	uint16_t m_local_port;
+	Ipv4Address m_peer_addr;
+	uint16_t m_peer_port;
+	TcpEndPointReceptionCallback *m_reception;
+	TcpEndPointDestroyCallback *m_destroy;
 };
 
-#endif /* TCP_SOURCE */
+
+#endif /* TCP_END_POINT_H */

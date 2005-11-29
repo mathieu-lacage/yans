@@ -163,6 +163,10 @@ bool operator == (Ipv4Address const &a, Ipv4Address const &b)
 {
 	return a.is_equal (b);
 }
+bool operator != (Ipv4Address const &a, Ipv4Address const &b)
+{
+	return !a.is_equal (b);
+}
 size_t Ipv4AddressHash::operator()(Ipv4Address const &x) const 
 { 
 	return x.get_host_order ();

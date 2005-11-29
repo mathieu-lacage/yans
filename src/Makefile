@@ -36,6 +36,9 @@ SOURCE= \
 	common/population-analysis.cc \
 	ipv4/udp.cc \
 	ipv4/tcp.cc \
+	ipv4/tcp-end-point.cc \
+	ipv4/tcp-connection.cc \
+	ipv4/tcp-connection-listener.cc \
 	ipv4/chunk-tcp.cc \
 	ipv4/chunk-udp.cc \
 	ipv4/chunk-ipv4.cc \

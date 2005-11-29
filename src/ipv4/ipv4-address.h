@@ -93,9 +93,11 @@ std::ostream& operator<< (std::ostream& os, Ipv4Address const& address);
 std::ostream& operator<< (std::ostream& os, Ipv4Mask const& mask);
 
 bool operator == (Ipv4Address const &a, Ipv4Address const &b);
+bool operator != (Ipv4Address const &a, Ipv4Address const &b);
 class Ipv4AddressHash : public std::unary_function<Ipv4Address, size_t> {
 public:
 	size_t operator()(Ipv4Address const &x) const;
 };
+bool operator != (Ipv4Address const &a, Ipv4Address const &b);
 
 #endif /* IPV4_ADDRESS_H */

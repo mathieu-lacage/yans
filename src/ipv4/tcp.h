@@ -25,14 +25,16 @@
 
 #include "ipv4-address.h"
 #include "callback.h"
+#include <list>
 
 class Ipv4;
 class Host;
-class Ipv4EndPoints;
-class Ipv4EndPoint;
 class Packet;
 class TcpEndPoint;
-class Route;
+class TcpConnectionListener;
+class TcpConnection;
+
+
 
 enum {
 /* see http://www.iana.org/assignments/protocol-numbers */
@@ -50,73 +52,29 @@ class Tcp {
 	TcpEndPoint *allocate (void);
 	TcpEndPoint *allocate (Ipv4Address address);
 	TcpEndPoint *allocate (Ipv4Address address, uint16_t port);
-	void destroy (TcpEndPoint *end_point);
+	TcpEndPoint *allocate (Ipv4Address local_address, uint16_t local_port,
+			       Ipv4Address peer_address, uint16_t peer_port);
+
+	TcpConnection *create_connection (TcpEndPoint *end_p);
+	TcpConnectionListener *create_connection_listener (TcpEndPoint *end_p);
 private:
+	typedef std::list<TcpEndPoint *> TcpEndPoints;
+	typedef std::list<TcpEndPoint *>::iterator TcpEndPointsI;
+	bool lookup_port_local (uint16_t port);
+	bool lookup_local (Ipv4Address addr, uint16_t port);
+	uint16_t allocate_ephemeral_port (void);
+	TcpEndPoint *lookup (Ipv4Address daddr, 
+			     uint16_t dport, 
+			     Ipv4Address saddr, 
+			     uint16_t sport);
 	void receive (Packet *packet);
 	void send_reset (Packet *packet);
+	void destroy_end_point (TcpEndPoint *end_point);
 
-	Ipv4EndPoints *m_end_points;
 	Host *m_host;
 	Ipv4 *m_ipv4;
+	TcpEndPoints m_end_p;
+	uint16_t m_ephemeral;
 };
-
-
-class TcpEndPoint {
-public:
-	typedef Callback<bool (Ipv4Address, uint16_t)> ConnectionAcceptionCallback;
-	typedef Callback<void (void)> ConnectionCompletedCallback;
-	typedef Callback<void (Packet *)> PacketReceivedCallback;
-	typedef Callback<void (Packet *)> AckReceivedCallback;
-
-	TcpEndPoint ();
-	~TcpEndPoint ();
-
-	void set_ipv4 (Ipv4 *ipv4);
-	void set_ipv4_end_point (Ipv4EndPoint *end_point);
-	void set_host (Host *host);
-
-	void set_callbacks (ConnectionAcceptionCallback *connection_acception,
-			    ConnectionCompletedCallback *connection_completed,
-			    PacketReceivedCallback *packet_received,
-			    AckReceivedCallback *ack_received);
-	void start_connect (Ipv4Address dest, uint16_t port);
-
-	void send (Packet *packet);
-private:
-	enum TcpState_e {
-		CLOSED,
-		LISTEN,
-		SYN_SENT,
-		SYN_RCVD,
-		ESTABLISHED,
-		CLOSE_WAIT,
-		LAST_ACK,
-		FIN_WAIT_1,
-		CLOSING,
-		TIME_WAIT,
-		FIN_WAIT_2
-	};
-	void receive (Packet *packet);
-	void set_state (enum TcpState_e new_state);
-	Route *lookup_route (Ipv4Address dest);
-	bool invert_packet (Packet *packet);
-	uint32_t get_isn (void);
-	bool send_syn_ack (Packet *packet);
-	bool send_ack (Packet *packet);
-
-	Ipv4Address m_peer;
-	uint16_t m_peer_port;
-	Route *m_peer_route;
-	ConnectionAcceptionCallback *m_connection_acception;
-	ConnectionCompletedCallback *m_connection_completed;
-	PacketReceivedCallback *m_packet_received;
-	AckReceivedCallback *m_ack_received;
-	enum TcpState_e m_state;
-	Ipv4EndPoint *m_ipv4_end_point;
-	Ipv4 *m_ipv4;
-	Host *m_host;
-};
-
-
 
 #endif /* TCP_H */

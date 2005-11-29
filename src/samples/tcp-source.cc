@@ -25,27 +25,35 @@
 #include "host.h"
 #include "tcp.h"
 #include "ipv4-route.h"
+#include "tcp-end-point.h"
+#include "tcp-connection.h"
 
 
 TcpSource::TcpSource (Host *host)
 	: m_host (host),
-	  m_tcp_end_point (0)
+	  m_end_point (0)
 {}
 TcpSource::~TcpSource ()
 {
-	if (m_tcp_end_point != 0) {
-		delete m_tcp_end_point;
+	if (m_end_point != 0) {
+		delete m_end_point;
 	}
 }
 void 
 TcpSource::start_connect (Ipv4Address address, uint16_t port)
 {
-	m_tcp_end_point->start_connect (address, port);
+	m_end_point->set_peer (address, port);
+	m_connection = m_host->get_tcp ()->create_connection (m_end_point);
+	m_connection->set_callbacks (make_callback (&TcpSource::completed, this),
+				     make_callback (&TcpSource::receive, this),
+				     make_callback (&TcpSource::got_ack, this));
+
+	m_connection->start_connect ();
 }
 void 
 TcpSource::send (Packet *packet)
 {
-	m_tcp_end_point->send (packet);
+	m_connection->send (packet);
 }
 
 
@@ -54,15 +62,10 @@ bool
 TcpSource::bind (Ipv4Address address, uint16_t port)
 {
 	Tcp *tcp = m_host->get_tcp ();
-	TcpEndPoint *tcp_end_point = tcp->allocate (address, port);
-	if (tcp_end_point == 0) {
+	m_end_point = tcp->allocate (address, port);
+	if (m_end_point == 0) {
 		return false;
 	}
-	tcp_end_point->set_callbacks (make_callback (&TcpSource::should_accept, this),
-				      make_callback (&TcpSource::completed, this),
-				      make_callback (&TcpSource::receive, this),
-				      make_callback (&TcpSource::got_ack, this));
-	m_tcp_end_point = tcp_end_point;
 	return true;
 }
 

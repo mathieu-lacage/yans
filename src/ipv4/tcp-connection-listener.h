@@ -19,36 +19,46 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#ifndef TCP_SOURCE_H
-#define TCP_SOURCE_H
+#ifndef TCP_CONNECTION_LISTENER_H
+#define TCP_CONNECTION_LISTENER_H
 
-#include <stdint.h>
+#include "callback.h"
 #include "ipv4-address.h"
-#include "ipv4-endpoint.h"
+#include <stdint.h>
 
+class Packet;
 class Host;
-class Ipv4EndPoint;
+class Ipv4;
+class Tcp;
 class TcpEndPoint;
 class TcpConnection;
 
-class TcpSource {
- public:
-	TcpSource (Host *host);
-	~TcpSource ();
+class TcpConnectionListener {
+public:
+	typedef Callback<bool (Ipv4Address, uint16_t)> ConnectionAcception;
+	typedef Callback<void (TcpConnection *)> ConnectionCreated;
 
-	/* return true on success. */
-	bool bind (Ipv4Address address, uint16_t port);
-	void start_connect (Ipv4Address address, uint16_t port);
-	void send (Packet *packet);
- private:
-	bool should_accept (Ipv4Address from, uint16_t from_port);
-	void completed (void);
+	TcpConnectionListener ();
+	~TcpConnectionListener ();
+
+	void set_host (Host *host);
+	void set_ipv4 (Ipv4 *ipv4);
+	void set_tcp (Tcp *tcp);
+	void set_end_point (TcpEndPoint *end_point);
+
 	void receive (Packet *packet);
-	void got_ack (Packet *packet);
 
+	void set_callbacks (ConnectionAcception *connection_acception,
+			    ConnectionCreated *connection_created);
+private:
+	ConnectionAcception *m_acception;
+	ConnectionCreated *m_creation;
 	Host *m_host;
+	Ipv4 *m_ipv4;
+	Tcp *m_tcp;
 	TcpEndPoint *m_end_point;
-	TcpConnection *m_connection;
+	
 };
 
-#endif /* TCP_SOURCE */
+
+#endif /* TCP_CONNECTION_LISTENER_H */

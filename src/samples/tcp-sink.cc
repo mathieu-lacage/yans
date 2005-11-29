@@ -20,7 +20,9 @@
  */
 
 #include "tcp-sink.h"
-#include "ipv4-endpoint.h"
+#include "tcp-end-point.h"
+#include "tcp-connection.h"
+#include "tcp-connection-listener.h"
 #include "tcp.h"
 #include "host.h"
 #include "traffic-analyzer.h"
@@ -42,6 +44,8 @@ TcpSink::~TcpSink ()
 	m_host = (Host *)0xdeadbeaf;
 	delete m_callback;
 	m_callback = (TcpSinkCallback *)0xdeadbeaf;
+	delete m_connections;
+	delete m_connection;
 }
 
 void
@@ -56,15 +60,30 @@ void
 TcpSink::got_ack (Packet *packet)
 {}
 
-bool
-TcpSink::should_accept (Ipv4Address address, uint16_t port)
-{
-	return false;
-}
-
 void
 TcpSink::completed (void)
 {}
+
+
+bool
+TcpSink::should_accept (Ipv4Address address, uint16_t port)
+{
+	if (m_connection == 0) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+void
+TcpSink::connection_created (TcpConnection *connection)
+{
+	m_connection = connection;
+	connection->set_callbacks (make_callback (&TcpSink::completed, this),
+				   make_callback (&TcpSink::got_ack, this),
+				   make_callback (&TcpSink::receive, this));
+}
+
 
 void 
 TcpSink::set_receive_callback (TcpSinkCallback *callback)
@@ -81,9 +100,8 @@ TcpSink::bind (Ipv4Address address, uint16_t port)
 	if (m_end_point == 0) {
 		return false;
 	}
-	m_end_point->set_callbacks (make_callback (&TcpSink::should_accept, this),
-				    make_callback (&TcpSink::completed, this),
-				    make_callback (&TcpSink::receive, this),
-				    make_callback (&TcpSink::got_ack, this));
+	m_connections = tcp->create_connection_listener (m_end_point);
+	m_connections->set_callbacks (make_callback (&TcpSink::should_accept, this),
+				      make_callback (&TcpSink::connection_created, this));
 	return true;
 }
