@@ -32,7 +32,10 @@
 TcpConnectionListener::TcpConnectionListener ()
 {}
 TcpConnectionListener::~TcpConnectionListener ()
-{}
+{
+	delete m_acception;
+	delete m_creation;
+}
 
 void 
 TcpConnectionListener::receive (Packet *packet)
