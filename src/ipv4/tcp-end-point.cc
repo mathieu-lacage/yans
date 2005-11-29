@@ -23,7 +23,9 @@
 
 TcpEndPoint::TcpEndPoint (Ipv4Address address, uint16_t port)
 	: m_local_addr (address), 
-	  m_local_port (port)
+	  m_local_port (port),
+	  m_reception (0),
+	  m_destroy (0)
 {}
 TcpEndPoint::~TcpEndPoint ()
 {
