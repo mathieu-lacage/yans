@@ -200,8 +200,20 @@ Tcp::send_reset (Packet *packet)
 TcpEndPoint *
 Tcp::lookup (Ipv4Address daddr, uint16_t dport, Ipv4Address saddr, uint16_t sport)
 {
+	uint32_t genericity = 3;
 	TcpEndPoint *generic = 0;
+	//TRACE ("lookup " << daddr << ":" << dport << " " << saddr << ":" << sport);
 	for (TcpEndPointsI i = m_end_p.begin (); i != m_end_p.end (); i++) {
+#if 0
+		TRACE ("against " << 
+		       (*i)->get_local_address ()
+		       << ":" << 
+		       (*i)->get_local_port () 
+		       << " " << 
+		       (*i)->get_peer_address () 
+		       << ":" 
+		       << (*i)->get_peer_port ());
+#endif
 		if ((*i)->get_local_port () != dport) {
 			continue;
 		}
@@ -211,10 +223,17 @@ Tcp::lookup (Ipv4Address daddr, uint16_t dport, Ipv4Address saddr, uint16_t spor
 			/* this is an exact match. */
 			return *i;
 		}
-		if ((*i)->get_local_address () != Ipv4Address::get_any ()) {
-			continue;
+		uint32_t tmp = 0;
+		if ((*i)->get_local_address () == Ipv4Address::get_any ()) {
+			tmp ++;
 		}
-		generic = (*i);
+		if ((*i)->get_peer_address () == Ipv4Address::get_any ()) {
+			tmp ++;
+		}
+		if (tmp < genericity) {
+			generic = (*i);
+			genericity = tmp;
+		}
 	}
 	return generic;
 }
