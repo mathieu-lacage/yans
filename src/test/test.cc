@@ -26,6 +26,7 @@
 #include "buffer.h"
 #include "utils.h"
 #include "fiber-scheduler.h"
+#include "callback-test.h"
 
 
 #define ADD_TEST(klass, name) 	m_tests.push_back (std::make_pair (new klass (this), new std::string (name)));
@@ -38,6 +39,7 @@ TestManager::TestManager ()
 #ifdef SIMULATOR_FIBER
 	ADD_TEST (TestFiberScheduler, "FiberScheduler");
 #endif
+	ADD_TEST (CallbackTest, "Callback");
 }
 
 TestManager::~TestManager ()

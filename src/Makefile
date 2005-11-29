@@ -34,6 +34,7 @@ SOURCE= \
 	common/packet.cc \
 	common/utils.cc \
 	common/population-analysis.cc \
+	common/callback-test.cc \
 	ipv4/udp.cc \
 	ipv4/tcp.cc \
 	ipv4/tcp-end-point.cc \
