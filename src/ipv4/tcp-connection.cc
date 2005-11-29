@@ -158,7 +158,7 @@ TcpConnection::start_connect (void)
 	tcp_chunk->set_source_port (sport);
 	tcp_chunk->set_destination_port (dport);
 	tcp_chunk->set_sequence_number (get_isn ());
-
+	
 	Packet *packet = new Packet ();
 	packet->add_tag (TagOutIpv4::get_tag (), out_tag);
 	packet->add_header (tcp_chunk);
@@ -167,6 +167,8 @@ TcpConnection::start_connect (void)
 	TRACE ("send SYN to " << daddress);
 	m_ipv4->set_protocol (TCP_PROTOCOL);
 	m_ipv4->send (packet);
+
+	packet->unref ();
 	
 	set_state (SYN_SENT);
 }
