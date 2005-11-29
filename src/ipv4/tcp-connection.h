@@ -38,6 +38,7 @@ public:
 	typedef Callback<void (void)> ConnectionCompletedCallback;
 	typedef Callback<void (Packet *)> PacketReceivedCallback;
 	typedef Callback<void (Packet *)> AckReceivedCallback;
+	typedef Callback<void (TcpConnection *)> TcpConnectionDestroy;
 
 	TcpConnection ();
 	~TcpConnection ();
@@ -46,6 +47,7 @@ public:
 	void set_host (Host *host);
 	void set_end_point (TcpEndPoint *end_point);
 	void set_route (Route *route);
+	void set_destroy_handler (TcpConnectionDestroy *handler);
 
 	void set_callbacks (ConnectionCompletedCallback *connection_completed,
 			    PacketReceivedCallback *packet_received,
@@ -53,6 +55,9 @@ public:
 	void start_connect (void);
 
 	void send (Packet *packet);
+
+	void slow_timer (void);
+	void fast_timer (void);
 private:
 	enum TcpState_e {
 		CLOSED,
@@ -82,6 +87,7 @@ private:
 	enum TcpState_e m_state;
 	Ipv4 *m_ipv4;
 	Host *m_host;
+	TcpConnectionDestroy *m_destroy;
 };
 
 

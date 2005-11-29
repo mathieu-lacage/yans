@@ -37,6 +37,7 @@ class TcpConnectionListener {
 public:
 	typedef Callback<bool (Ipv4Address, uint16_t)> ConnectionAcception;
 	typedef Callback<void (TcpConnection *, TcpEndPoint *)> ConnectionCreated;
+	typedef Callback<void (TcpConnectionListener *)> TcpConnectionListenerDestroy;
 
 	TcpConnectionListener ();
 	~TcpConnectionListener ();
@@ -57,7 +58,6 @@ private:
 	Ipv4 *m_ipv4;
 	Tcp *m_tcp;
 	TcpEndPoint *m_end_point;
-	
 };
 
 

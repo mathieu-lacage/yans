@@ -52,6 +52,10 @@ TcpConnection::~TcpConnection ()
 	delete m_connection_completed;
 	delete m_packet_received;
 	delete m_ack_received;
+	if (m_destroy != 0) {
+		(*m_destroy) (this);
+	}
+	delete m_destroy;
 }
 
 void 
@@ -75,7 +79,11 @@ TcpConnection::set_route (Route *route)
 {
 	m_route = route;
 }
-
+void 
+TcpConnection::set_destroy_handler (TcpConnectionDestroy *handler)
+{
+	m_destroy = handler;
+}
 
 void 
 TcpConnection::set_callbacks (ConnectionCompletedCallback *connection_completed,
@@ -261,3 +269,10 @@ TcpConnection::receive (Packet *packet)
 }
 
 
+
+void 
+TcpConnection::slow_timer (void)
+{}
+void 
+TcpConnection::fast_timer (void)
+{}

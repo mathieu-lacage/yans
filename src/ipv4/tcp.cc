@@ -28,6 +28,7 @@
 #include "tcp-end-point.h"
 #include "tcp-connection.h"
 #include "tcp-connection-listener.h"
+#include "event.h"
 
 #define TRACE_TCP 1
 
@@ -40,12 +41,23 @@ std::cout << "TCP " << Simulator::now_s () << " " << x << std::endl;
 # define TRACE(format,...)
 #endif /* TRACE_TCP */
 
+const uint64_t Tcp::FAST_TIMER_DELAY_US = 200000; /* 200ms */
+const uint64_t Tcp::SLOW_TIMER_DELAY_US = 500000; /* 500ms */
+
+
 
 
 Tcp::Tcp ()
-{}
+{
+	m_fast_timer = make_static_event (&Tcp::fast_timer, this);
+	m_slow_timer = make_static_event (&Tcp::slow_timer, this);
+	m_running = false;
+}
 Tcp::~Tcp ()
-{}
+{
+	delete m_slow_timer;
+	delete m_fast_timer;
+}
 
 void 
 Tcp::set_host (Host *host)
@@ -276,6 +288,11 @@ Tcp::create_connection (TcpEndPoint *end_p)
 	connection->set_end_point (end_p);
 	Route *route = m_host->get_routing_table ()->lookup (end_p->get_peer_address ());
 	connection->set_route (route);
+	connection->set_destroy_handler (make_callback (&Tcp::destroy_connection, this));
+	if (!m_running) {
+		Simulator::insert_in_us (FAST_TIMER_DELAY_US, m_fast_timer);
+		Simulator::insert_in_us (SLOW_TIMER_DELAY_US, m_slow_timer);
+	}
 	return connection;
 }
 TcpConnectionListener *
@@ -289,9 +306,47 @@ Tcp::create_connection_listener (TcpEndPoint *end_p)
 	return connection;
 }
 
+void
+Tcp::slow_timer (void)
+{
+	if (m_connections.empty ()) {
+		m_running = false;
+		return;
+	}
+
+	for (ConnectionsI i = m_connections.begin (); i != m_connections.end (); i++) {
+		(*i)->slow_timer ();
+	}
+
+	Simulator::insert_in_us (SLOW_TIMER_DELAY_US, m_slow_timer);
+	
+}
+void
+Tcp::fast_timer (void)
+{
+	if (m_connections.empty ()) {
+		m_running = false;
+		return;
+	}
+
+	for (ConnectionsI i = m_connections.begin (); i != m_connections.end (); i++) {
+		(*i)->fast_timer ();
+	}
+
+	Simulator::insert_in_us (FAST_TIMER_DELAY_US, m_fast_timer);
+}
 
 
-
+void 
+Tcp::destroy_connection (TcpConnection *connection)
+{
+	for (ConnectionsI i = m_connections.begin (); i != m_connections.end (); i++) {
+		if ((*i) == connection) {
+			m_connections.erase (i);
+			return;
+		}
+	}
+}
 
 void 
 Tcp::destroy_end_point (TcpEndPoint *end_point)

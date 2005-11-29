@@ -33,7 +33,7 @@ class Packet;
 class TcpEndPoint;
 class TcpConnectionListener;
 class TcpConnection;
-
+class Event;
 
 
 enum {
@@ -43,6 +43,8 @@ enum {
 
 class Tcp {
  public:
+	typedef Callback <void (void)> TcpFastTimerCallback;
+	typedef Callback <void (void)> TcpSlowTimerCallback;
 	Tcp ();
 	virtual ~Tcp ();
 
@@ -57,9 +59,18 @@ class Tcp {
 
 	TcpConnection *create_connection (TcpEndPoint *end_p);
 	TcpConnectionListener *create_connection_listener (TcpEndPoint *end_p);
+
 private:
+	static const uint64_t FAST_TIMER_DELAY_US;
+	static const uint64_t SLOW_TIMER_DELAY_US;
+
 	typedef std::list<TcpEndPoint *> TcpEndPoints;
 	typedef std::list<TcpEndPoint *>::iterator TcpEndPointsI;
+	typedef std::list<TcpConnection *> Connections;
+	typedef std::list<TcpConnection *>::iterator ConnectionsI;
+
+	void slow_timer (void);
+	void fast_timer (void);
 	bool lookup_port_local (uint16_t port);
 	bool lookup_local (Ipv4Address addr, uint16_t port);
 	uint16_t allocate_ephemeral_port (void);
@@ -70,11 +81,16 @@ private:
 	void receive (Packet *packet);
 	void send_reset (Packet *packet);
 	void destroy_end_point (TcpEndPoint *end_point);
+	void destroy_connection (TcpConnection *listener);
 
 	Host *m_host;
 	Ipv4 *m_ipv4;
 	TcpEndPoints m_end_p;
 	uint16_t m_ephemeral;
+	Connections m_connections;
+	Event *m_slow_timer;
+	Event *m_fast_timer;
+	bool m_running;
 };
 
 #endif /* TCP_H */
