@@ -105,5 +105,6 @@ void
 TcpConnectionListener::set_end_point (TcpEndPoint *end_point)
 {
 	m_end_point = end_point;
+	end_point->set_callback (make_callback (&TcpConnectionListener::receive, this));
 }
  
