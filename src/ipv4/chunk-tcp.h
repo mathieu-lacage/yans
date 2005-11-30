@@ -41,6 +41,8 @@ public:
 	uint16_t get_window_size (void);
 	uint16_t get_urgent_pointer (void);
 	uint16_t get_option_mss (void);
+	uint32_t get_option_timestamp_value (void);
+	uint32_t get_option_timestamp_reply (void);
 
 	void enable_flag_syn (void);
 	void enable_flag_fin (void);
@@ -49,6 +51,7 @@ public:
 	void enable_flag_urg (uint16_t ptr);
 	void enable_flag_psh (void);
 	void enable_option_mss (uint16_t mss);
+	void enable_option_timestamp (uint32_t value, uint32_t reply);
 
 	void disable_flags (void);
 	void disable_flag_syn (void);
@@ -65,6 +68,7 @@ public:
 	bool is_flag_urg (void) const;
 	bool is_flag_psh (void) const;
 	bool is_option_mss (void) const;
+	bool is_option_timestamp (void) const;
 
 	bool is_checksum_ok (void);
 
