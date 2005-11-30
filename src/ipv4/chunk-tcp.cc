@@ -58,6 +58,11 @@ void ChunkTcp::set_window_size (uint16_t size)
 {
 	m_window_size = utils_hton_16 (size);
 }
+void 
+ChunkTcp::set_ack_number (uint32_t ack)
+{
+	m_ack_number = utils_hton_32 (ack);	
+}
 
 uint16_t 
 ChunkTcp::get_source_port (void)
@@ -110,10 +115,9 @@ ChunkTcp::enable_flag_rst (void)
 	enable_flag (RST);
 }
 void 
-ChunkTcp::enable_flag_ack (uint32_t ack)
+ChunkTcp::enable_flag_ack ()
 {
 	enable_flag (ACK);
-	m_ack_number = utils_hton_32 (ack);
 }
 void 
 ChunkTcp::enable_flag_urg (uint16_t ptr)

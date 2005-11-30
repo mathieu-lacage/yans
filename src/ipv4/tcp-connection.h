@@ -78,6 +78,9 @@ private:
 	uint32_t get_isn (void);
 	bool send_syn_ack (Packet *packet);
 	bool send_ack (Packet *packet);
+	void send_out (Packet *packet);
+	void retransmission_timeout (void);
+	void start_retransmission_timer (void);
 
 	TcpEndPoint *m_end_point;
 	Route *m_route;
@@ -88,6 +91,36 @@ private:
 	Ipv4 *m_ipv4;
 	Host *m_host;
 	TcpConnectionDestroy *m_destroy;
+
+	/* The variables below are best explained with the rfc 793 diagrams
+	 * reproduced below for the sake of clarity:
+	 *                   1         2          3          4      
+	 *              ----------|----------|----------|---------- 
+	 *                     SND.UNA    SND.NXT    SND.UNA        
+	 *                                          +SND.WND        
+	 *
+	 *        1 - old sequence numbers which have been acknowledged  
+	 *        2 - sequence numbers of unacknowledged data            
+	 *        3 - sequence numbers allowed for new data transmission 
+	 *        4 - future sequence numbers which are not yet allowed  
+	 *
+	 *                        1          2          3      
+	 *                   ----------|----------|---------- 
+	 *                          RCV.NXT    RCV.NXT        
+	 *                                    +RCV.WND        
+	 *
+	 *        1 - old sequence numbers which have been acknowledged  
+	 *        2 - sequence numbers allowed for new reception         
+	 *        3 - future sequence numbers which are not yet allowed  
+	 *
+	 */
+	uint32_t m_snd_una;
+	uint32_t m_snd_nxt;
+	uint32_t m_snd_wnd;
+	uint32_t m_rcv_nxt;
+	uint32_t m_rcv_wnd;
+
+	uint32_t m_retransmission_timer;
 };
 
 

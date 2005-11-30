@@ -197,7 +197,8 @@ Tcp::send_reset (Packet *packet)
 	old_payload_size = packet->get_size () - tcp_chunk->get_size ();
 	tcp_chunk->set_source_port (old_dp);
 	tcp_chunk->set_destination_port (old_sp);
-	tcp_chunk->enable_flag_ack (old_seq + old_payload_size + 1);
+	tcp_chunk->set_ack_number (old_seq + old_payload_size + 1);
+	tcp_chunk->enable_flag_ack ();
 	tcp_chunk->set_sequence_number (0);
 
 	TRACE ("send back RST to " << in_tag->get_saddress ());

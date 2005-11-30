@@ -46,6 +46,9 @@ std::cout << "TCP CONN " << Simulator::now_s () << " " << x << std::endl;
 TcpConnection::TcpConnection ()
 {
 	m_state = LISTEN;
+	m_snd_una = get_isn ();
+	m_snd_nxt = m_snd_una;
+	m_rcv_nxt = 0;
 }
 TcpConnection::~TcpConnection ()
 {
@@ -116,24 +119,13 @@ TcpConnection::invert_packet (Packet *packet)
 	packet->add_tag (TagOutIpv4::get_tag (), out_tag);
 
 	ChunkTcp *tcp_chunk = static_cast <ChunkTcp *> (packet->peek_header ());
-	uint8_t syn;
-	if (tcp_chunk->is_flag_syn ()) {
-		syn = 1;
-	} else {
-		syn = 0;
-	}
 	tcp_chunk->disable_flags ();
 	uint16_t old_sp, old_dp;
-	uint32_t old_seq, old_payload_size;
 	old_sp = tcp_chunk->get_source_port ();
 	old_dp = tcp_chunk->get_destination_port ();
-	old_seq = tcp_chunk->get_sequence_number ();
-	uint32_t old_ack = tcp_chunk->get_ack_number ();
-	old_payload_size = packet->get_size () - tcp_chunk->get_size ();
 	tcp_chunk->set_source_port (old_dp);
 	tcp_chunk->set_destination_port (old_sp);
-	tcp_chunk->enable_flag_ack (old_seq + old_payload_size + syn);
-	tcp_chunk->set_sequence_number (old_ack);
+	tcp_chunk->enable_flag_ack ();
 
 	delete in_tag;
 	return true;
@@ -165,7 +157,6 @@ TcpConnection::start_connect (void)
 	tcp_chunk->enable_flag_syn ();
 	tcp_chunk->set_source_port (sport);
 	tcp_chunk->set_destination_port (dport);
-	tcp_chunk->set_sequence_number (get_isn ());
 	
 	Packet *packet = new Packet ();
 	packet->add_tag (TagOutIpv4::get_tag (), out_tag);
@@ -173,13 +164,48 @@ TcpConnection::start_connect (void)
 
 
 	TRACE ("send SYN to " << daddress);
-	m_ipv4->set_protocol (TCP_PROTOCOL);
-	m_ipv4->send (packet);
+	send_out (packet);
 
 	packet->unref ();
 	
 	set_state (SYN_SENT);
 }
+
+void
+TcpConnection::start_retransmission_timer (void)
+{
+	m_retransmission_timer = 10;
+}
+void
+TcpConnection::retransmission_timeout (void)
+{
+	m_snd_nxt = m_snd_una;
+	// XXX retransmit whatever we can.
+}
+
+void
+TcpConnection::send_out (Packet *packet)
+{
+	ChunkTcp *tcp_chunk = static_cast <ChunkTcp *> (packet->peek_header ());
+	uint8_t n_seq = 0;
+	if (tcp_chunk->is_flag_syn ()) {
+		n_seq++;
+	}
+	if (tcp_chunk->is_flag_fin ()) {
+		n_seq++;
+	}
+	n_seq += packet->get_size () - tcp_chunk->get_size ();
+	tcp_chunk->set_sequence_number (m_snd_nxt);
+	m_snd_nxt += n_seq;
+
+	tcp_chunk->set_ack_number (m_rcv_nxt);
+
+	start_retransmission_timer ();
+
+	m_ipv4->set_protocol (TCP_PROTOCOL);
+	m_ipv4->send (packet);
+}
+
 
 bool
 TcpConnection::send_syn_ack (Packet *packet)
@@ -189,12 +215,10 @@ TcpConnection::send_syn_ack (Packet *packet)
 	}
 
 	ChunkTcp *tcp_chunk = static_cast <ChunkTcp *> (packet->peek_header ());
-	tcp_chunk->set_sequence_number (get_isn ());
 	tcp_chunk->enable_flag_syn ();
 
 	TRACE ("send SYN+ACK to " << static_cast <TagOutIpv4 *> (packet->get_tag (TagOutIpv4::get_tag ()))->get_daddress ());
-	m_ipv4->set_protocol (TCP_PROTOCOL);
-	m_ipv4->send (packet);
+	send_out (packet);
 
 	return true;
 }
@@ -207,8 +231,7 @@ TcpConnection::send_ack (Packet *packet)
 	}
 
 	TRACE ("send ACK to " << static_cast <TagOutIpv4 *> (packet->get_tag (TagOutIpv4::get_tag ()))->get_daddress ());
-	m_ipv4->set_protocol (TCP_PROTOCOL);
-	m_ipv4->send (packet);
+	send_out (packet);
 
 	return true;
 }
@@ -272,7 +295,14 @@ TcpConnection::receive (Packet *packet)
 
 void 
 TcpConnection::slow_timer (void)
-{}
+{
+	if (m_retransmission_timer > 0) {
+		m_retransmission_timer--;
+		if (m_retransmission_timer == 0) {
+			retransmission_timeout ();
+		}
+	}
+}
 void 
 TcpConnection::fast_timer (void)
 {}
