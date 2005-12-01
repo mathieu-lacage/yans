@@ -25,6 +25,7 @@
 #include <stdint.h>
 #include <ostream>
 #include <vector>
+#include <list>
 
 #include "sgi-hashmap.h"
 #include "tag-manager.h"
@@ -70,18 +71,14 @@ public:
 
 	Packet *copy (void);
  private:
-	typedef std::vector<Chunk *> Headers;
-	typedef std::vector<Chunk *>::const_iterator HeadersCI;
-	typedef std::vector<Chunk *>::const_reverse_iterator HeadersRCI;
-	typedef std::vector<Chunk *> Trailers;
-	typedef std::vector<Chunk *>::const_iterator TrailersCI;
+	typedef std::list<Chunk *> Chunks;
+	typedef std::list<Chunk *>::const_iterator ChunksCI;
 	typedef std::vector<PacketDestroyNotifier *> PacketDestroyNotifiers;
 	typedef std::vector<PacketDestroyNotifier *>::const_iterator PacketDestroyNotifiersCI;
 	typedef Sgi::hash_map<uint32_t, Tag *> Tags;
 	typedef Sgi::hash_map<uint32_t, Tag *>::iterator TagsI;
 	PacketDestroyNotifiers m_destroy_notifiers;
-	Headers m_headers;
-	Trailers m_trailers;
+	Chunks m_chunks;
 	Tags m_tags;
 	RefCount<Packet> m_ref;
 };

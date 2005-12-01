@@ -38,14 +38,10 @@ Packet::~Packet ()
 	}
 	m_destroy_notifiers.erase (m_destroy_notifiers.begin (),
 				   m_destroy_notifiers.end ());
-	for (HeadersCI i = m_headers.begin (); i != m_headers.end (); i++) {
+	for (ChunksCI i = m_chunks.begin (); i != m_chunks.end (); i++) {
 		delete (*i);
 	}
-	m_headers.erase (m_headers.begin (), m_headers.end ());
-	for (TrailersCI j = m_trailers.begin (); j != m_trailers.end (); j++) {
-		delete (*j);
-	}
-	m_trailers.erase (m_trailers.begin (), m_trailers.end ());
+	m_chunks.erase (m_chunks.begin (), m_chunks.end ());
 	for (TagsI k = m_tags.begin (); k != m_tags.end (); k++) {
 		delete (*k).second;
 	}
@@ -101,47 +97,44 @@ Packet::remove_tag (uint32_t tag_id)
 void 
 Packet::add_header (Chunk *header)
 {
-	m_headers.push_back (header);
+	m_chunks.push_front (header);
 }
 void 
 Packet::add_trailer (Chunk *trailer)
 {
-	m_trailers.push_back (trailer);
+	m_chunks.push_back (trailer);
 }
 Chunk *
 Packet::remove_header (void)
 {
-	Chunk *header = m_headers.back ();
-	m_headers.pop_back ();
+	Chunk *header = m_chunks.front ();
+	m_chunks.pop_front ();
 	return header;
 }
 Chunk *
 Packet::remove_trailer (void)
 {
-	Chunk *trailer = m_trailers.back ();
-	m_trailers.pop_back ();
+	Chunk *trailer = m_chunks.back ();
+	m_chunks.pop_back ();
 	return trailer;
 }
 Chunk *
 Packet::peek_header (void)
 {
-	return m_headers.back ();
+	return m_chunks.front ();
 }
 Chunk *
 Packet::peek_trailer (void)
 {
-	return m_trailers.back ();
+	return m_chunks.back ();
 }
 
 uint32_t 
 Packet::get_size (void)
 {
 	uint32_t size = 0;
-	for (HeadersCI i = m_headers.begin (); i != m_headers.end (); i++) {
+	for (ChunksCI i = m_chunks.begin (); i != m_chunks.end (); i++) {
 		size += (*i)->get_size ();
-	}
-	for (TrailersCI j = m_trailers.begin (); j != m_trailers.end (); j++) {
-		size += (*j)->get_size ();
 	}
 	return size;
 }
@@ -149,30 +142,21 @@ Packet::get_size (void)
 void 
 Packet::serialize (WriteBuffer *buffer) const
 {
-	for (HeadersRCI i = m_headers.rbegin (); i != m_headers.rend (); i++) {
+	for (ChunksCI i = m_chunks.begin (); i != m_chunks.end (); i++) {
 		(*i)->serialize (buffer);
-	}
-	for (TrailersCI j = m_trailers.begin (); j != m_trailers.end (); j++) {
-		(*j)->serialize (buffer);
 	}
 }
 
 void 
 Packet::print (std::ostream *os) const
 {
-	Headers::size_type k = 0;
-	for (HeadersRCI i = m_headers.rbegin (); i != m_headers.rend (); i++) {
+	Chunks::size_type k = 0;
+	for (ChunksCI i = m_chunks.begin (); i != m_chunks.end (); i++) {
 		(*i)->print (os);
 		k++;
-		if (k < m_headers.size ()) {
+		if (k < m_chunks.size ()) {
 			*os << " | ";
 		}
-	}
-	Trailers::size_type l = 0;
-	for (TrailersCI j = m_trailers.begin (); j != m_trailers.end (); j++) {
-		*os << " | ";
-		(*j)->print (os);
-		l++;
 	}
 }
 
@@ -180,13 +164,9 @@ Packet *
 Packet::copy (void)
 {
 	Packet *other = new Packet ();
-	for (HeadersCI i = m_headers.begin (); i != m_headers.end (); i++) {
+	for (ChunksCI i = m_chunks.begin (); i != m_chunks.end (); i++) {
 		Chunk *new_chunk = (*i)->copy ();
 		other->add_header (new_chunk);
-	}
-	for (TrailersCI j = m_trailers.begin (); j != m_trailers.end (); j++) {
-		Chunk *new_chunk = (*j)->copy ();
-		other->add_trailer (new_chunk);
 	}
 	return other;
 }
