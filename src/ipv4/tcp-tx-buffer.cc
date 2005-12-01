@@ -25,6 +25,9 @@
 
 
 TcpTxBuffer::TcpTxBuffer ()
+	: m_chunk_start (0),
+	  m_size (0), 
+	  m_used (0)
 {}
 
 void 
