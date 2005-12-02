@@ -33,6 +33,8 @@ public:
 
 	Packet *get_original (void);
 	void set_original (Packet *original, uint32_t offset, uint32_t size);
+	void trim_start (uint32_t delta);
+	void trim_end (uint32_t delta);
 	
 
 	virtual uint32_t get_size (void) const;

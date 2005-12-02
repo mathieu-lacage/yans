@@ -49,6 +49,23 @@ ChunkPiece::set_original (Packet *original, uint32_t offset, uint32_t size)
 	m_size = size;
 	m_offset = offset;
 }
+
+void 
+ChunkPiece::trim_start (uint32_t delta)
+{
+	assert (m_original->get_size () > delta);
+	assert (m_size > delta);
+	m_size -= delta;
+	m_offset += delta;
+}
+void 
+ChunkPiece::trim_end (uint32_t delta)
+{
+	assert (m_original->get_size () > delta);
+	assert (m_size > delta);
+	m_size -= delta;
+}
+
 	
 
 uint32_t 
