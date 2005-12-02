@@ -5,4 +5,6 @@ src/samples/main-simple
 src/samples/main-router
 src/samples/main-tcp
 src/patch
+src/tmp
+src/samples/tmp
 patch
