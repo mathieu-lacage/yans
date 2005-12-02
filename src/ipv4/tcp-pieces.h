@@ -36,17 +36,22 @@ public:
 
 	void set_size (uint32_t size);
 
-	/* These functions will trim the input piece
-	 * if it overlaps with existing pieces or
-	 * it is out of the size bounds.
+	/* These functions copy the input piece, store
+	 * the copy internally, and return the copy.
+	 * If no data could be copied internally,
+	 * they return 0.
 	 */
-	void add_at_back (ChunkPiece *piece);
-	void add_at (ChunkPiece *piece, uint32_t offset);
+	ChunkPiece *add_at_back (ChunkPiece *piece);
+	ChunkPiece *add_at (ChunkPiece *piece, uint32_t offset);
 
+	/* Returns 0 if no data could be found at the front
+	 * of the buffer.
+	 */
+	Packet *get_at_front (uint32_t size);
 
 	void remove_at_front (uint32_t size);
 	uint32_t get_data_at_front (void);
-	Packet *get_at_front (uint32_t size);
+	uint32_t get_empty_at_back (void);
 
 private:
 	typedef std::pair<ChunkPiece *, uint32_t> Piece;
@@ -54,6 +59,7 @@ private:
 	typedef std::list<Piece>::iterator PiecesI;
 
 	void insert_piece_at_back (ChunkPiece *piece, uint32_t offset);
+	void insert_piece_at (PiecesI i, ChunkPiece *piece, uint32_t offset);
 	
 	Pieces m_pieces;
 	uint32_t m_size;

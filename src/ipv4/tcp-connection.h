@@ -31,12 +31,13 @@ class Ipv4;
 class Host;
 class TcpEndPoint;
 class Route;
+class TcpPieces;
 
 
 class TcpConnection {
 public:
 	typedef Callback<void (void)> ConnectionCompletedCallback;
-	typedef Callback<void (Packet *)> PacketReceivedCallback;
+	typedef Callback<void (void)> DataReceivedCallback;
 	typedef Callback<void (Packet *)> AckReceivedCallback;
 	typedef Callback<void (TcpConnection *)> TcpConnectionDestroy;
 
@@ -50,11 +51,14 @@ public:
 	void set_destroy_handler (TcpConnectionDestroy *handler);
 
 	void set_callbacks (ConnectionCompletedCallback *connection_completed,
-			    PacketReceivedCallback *packet_received,
+			    DataReceivedCallback *data_received,
 			    AckReceivedCallback *ack_received);
 	void start_connect (void);
 
-	void send (Packet *packet);
+	uint32_t get_room_left (void);
+	uint32_t get_data_ready (void);
+	uint32_t send (Packet *packet);
+	Packet *recv (uint32_t size);
 
 	void slow_timer (void);
 	void fast_timer (void);
@@ -81,16 +85,21 @@ private:
 	void send_out (Packet *packet);
 	void retransmission_timeout (void);
 	void start_retransmission_timer (void);
+	void notify_data_ready_to_send (void);
+	void notify_room_ready_to_receive (void);
 
 	TcpEndPoint *m_end_point;
 	Route *m_route;
 	ConnectionCompletedCallback *m_connection_completed;
-	PacketReceivedCallback *m_packet_received;
+	DataReceivedCallback *m_data_received;
 	AckReceivedCallback *m_ack_received;
 	enum TcpState_e m_state;
 	Ipv4 *m_ipv4;
 	Host *m_host;
 	TcpConnectionDestroy *m_destroy;
+
+	TcpPieces *m_send;
+	TcpPieces *m_recv;
 
 	/* The variables below are best explained with the rfc 793 diagrams
 	 * reproduced below for the sake of clarity:
@@ -112,15 +121,34 @@ private:
 	 *        1 - old sequence numbers which have been acknowledged  
 	 *        2 - sequence numbers allowed for new reception         
 	 *        3 - future sequence numbers which are not yet allowed  
-	 *
 	 */
 	uint32_t m_snd_una;
 	uint32_t m_snd_nxt;
 	uint32_t m_snd_wnd;
 	uint32_t m_rcv_nxt;
 	uint32_t m_rcv_wnd;
+	/* We have also these:
+	 * SND.WL1 - segment sequence number used for last window update
+	 * SND.WL2 - segment acknowledgment number used for last window
+	 *           update
+	 */
+	uint32_t m_snd_wl1;
+	uint32_t m_snd_wl2;
+	/* The following variables are also needed although not described
+	 * in the tcp rfc. I have choosen to use the same names as the BSD
+	 * implementation for the sake of clarity.
+	 */
+	uint32_t m_rcv_adv;  /* receive window advertised by other end. */
+	uint32_t m_snd_cwnd; /* congestion window. */
+	uint32_t m_snd_ssthresh; /* snd_cwnd threshold for slow start. */
 
 	uint32_t m_retransmission_timer;
+	uint32_t m_snd_mss; /* maximum segment size to send */
+
+	/* tcp receive and transmission buffers where packets to send 
+	 * and receive are accumulated.
+	 */
+	
 };
 
 

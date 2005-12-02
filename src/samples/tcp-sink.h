@@ -47,7 +47,7 @@ private:
 	bool should_accept (Ipv4Address from, uint16_t from_port);
 	void connection_created (TcpConnection *connection, TcpEndPoint *end_point);
 	void completed (void);
-	void receive (Packet *packet);
+	void receive (void);
 	void got_ack (Packet *packet);
 
 	Host *m_host;

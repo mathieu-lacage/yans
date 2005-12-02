@@ -27,6 +27,7 @@
 #include "ipv4-route.h"
 #include "tcp-end-point.h"
 #include "tcp-connection.h"
+#include "chunk-piece.h"
 
 
 TcpSource::TcpSource (Host *host)
@@ -54,7 +55,12 @@ TcpSource::start_connect (Ipv4Address address, uint16_t port)
 void 
 TcpSource::send (Packet *packet)
 {
-	m_connection->send (packet);
+	Packet *new_packet = new Packet ();
+	ChunkPiece *piece = new ChunkPiece ();
+	new_packet->add_header (piece);
+	piece->set_original (packet, 0, packet->get_size ());
+	m_connection->send (new_packet);
+	new_packet->unref ();
 }
 
 
@@ -79,7 +85,7 @@ void
 TcpSource::completed (void)
 {}
 void 
-TcpSource::receive (Packet *packet)
+TcpSource::receive (void)
 {}
 void 
 TcpSource::got_ack (Packet *packet)

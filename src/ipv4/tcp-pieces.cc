@@ -28,6 +28,14 @@ TcpPieces::TcpPieces ()
 {}
 
 void
+TcpPieces::insert_piece_at (PiecesI i, ChunkPiece *piece, uint32_t offset)
+{
+	if (piece->get_size () > 0) {
+		m_pieces.insert (i, std::make_pair (piece, offset));
+	}
+}
+
+void
 TcpPieces::insert_piece_at_back (ChunkPiece *piece, uint32_t offset)
 {
 	if (offset + piece->get_size () > m_size) {
@@ -37,14 +45,17 @@ TcpPieces::insert_piece_at_back (ChunkPiece *piece, uint32_t offset)
 		piece->trim_end (offset + piece->get_size () - m_size);
 		assert (piece->get_size () > 0);
 	}
-	m_pieces.push_back (std::make_pair (piece, offset));
+	insert_piece_at (m_pieces.end (), piece, offset);
 }
 
 
-void
+ChunkPiece *
 TcpPieces::add_at_back (ChunkPiece *piece)
 {
 	assert (piece->get_size () > 0);
+	if (get_empty_at_back () == 0) {
+		return 0;
+	}
 
 	uint32_t offset;
 	if (m_pieces.empty ()) {
@@ -52,31 +63,36 @@ TcpPieces::add_at_back (ChunkPiece *piece)
 	} else {
 		Piece end = m_pieces.back ();
 		offset = end.second + end.first->get_size ();
-		assert (offset < m_size);
 	}
-	insert_piece_at_back (piece, offset);
+	assert (offset < m_size);
+	ChunkPiece *new_piece = static_cast <ChunkPiece *> (piece->copy ());
+	insert_piece_at_back (new_piece, offset);
+	return new_piece;
 }
-void
-TcpPieces::add_at (ChunkPiece *piece, uint32_t offset)
+ChunkPiece *
+TcpPieces::add_at (ChunkPiece *org, uint32_t offset)
 {
-	assert (piece->get_size () > 0);
+	assert (org->get_size () > 0);
+	assert (offset < m_size);
 
+	ChunkPiece *piece = static_cast <ChunkPiece *> (org->copy ());
 	if (m_pieces.empty ()) {
 		insert_piece_at_back (piece, offset);
-		return;
+		return piece;
 	}
 	for (PiecesI i = m_pieces.begin (); i != m_pieces.end (); i++) {
 		if ((*i).second > offset) {
 			if (offset + piece->get_size () <= (*i).second) {
 				/* we fit perfectly well right before the current chunk. */
-				m_pieces.insert (i, std::make_pair (piece, offset));
+				insert_piece_at (i, piece, offset);
 			} else {
 				/* we need to trim the end of this piece because it
 				 * overlaps the current chunk. 
 				 */
 				piece->trim_end (offset + piece->get_size () - (*i).second);
-				m_pieces.insert (i, std::make_pair (piece, offset));
+				insert_piece_at (i, piece, offset);
 			}
+			break;
 		} else {
 			/* We should be located after the current chunk.
 			 * Verify whether or not we overlap the current chunk.
@@ -87,7 +103,11 @@ TcpPieces::add_at (ChunkPiece *piece, uint32_t offset)
 			}
 		}
 	}
-	return;
+	if (piece->get_size () == 0) {
+		delete piece;
+		return 0;
+	}
+	return piece;
 }
 
 void
@@ -143,12 +163,20 @@ TcpPieces::get_data_at_front (void)
 	return expected_offset;
 }
 
+uint32_t 
+TcpPieces::get_empty_at_back (void)
+{
+	Piece end = m_pieces.back ();
+	uint32_t offset = end.second + end.first->get_size ();	
+	assert (offset <= m_size);
+	return m_size - offset;
+}
+
 
 Packet *
 TcpPieces::get_at_front (uint32_t size)
 {
 	assert (size > 0);
-	assert (get_data_at_front () > 0);
 	Packet *packet = new Packet ();
 	uint32_t expected_offset = 0;
 	uint32_t found = 0;
@@ -168,6 +196,10 @@ TcpPieces::get_at_front (uint32_t size)
 			found += piece->get_size ();
 			expected_offset = (*i).second + piece->get_size ();
 		}
+	}
+	if (packet->get_size () == 0) {
+		delete packet;
+		return 0;
 	}
 	return packet;
 }

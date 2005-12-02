@@ -25,7 +25,7 @@
 #include "tcp-connection-listener.h"
 #include "tcp.h"
 #include "host.h"
-#include "traffic-analyzer.h"
+#include "packet.h"
 
 #define TRACE_TCP_SINK 1
 
@@ -64,11 +64,13 @@ TcpSink::~TcpSink ()
 }
 
 void
-TcpSink::receive (Packet *packet)
-{
+TcpSink::receive (void)
+{	
+	Packet *packet = m_connection->recv (m_connection->get_data_ready ());
 	if (m_callback != 0) {
 		(*m_callback) (packet);
 	}
+	packet->unref ();
 }
 
 void
@@ -98,8 +100,8 @@ TcpSink::connection_created (TcpConnection *connection, TcpEndPoint *end_point)
 	m_connection = connection;
 	m_real_end_point = end_point;
 	connection->set_callbacks (make_callback (&TcpSink::completed, this),
-				   make_callback (&TcpSink::got_ack, this),
-				   make_callback (&TcpSink::receive, this));
+				   make_callback (&TcpSink::receive, this),
+				   make_callback (&TcpSink::got_ack, this));
 }
 
 

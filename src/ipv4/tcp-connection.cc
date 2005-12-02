@@ -29,6 +29,8 @@
 #include "simulator.h"
 #include "tcp.h"
 #include "ipv4.h"
+#include "tcp-pieces.h"
+#include "chunk-piece.h"
 
 
 #define TRACE_TCP_CONNECTION 1
@@ -42,18 +44,21 @@ std::cout << "TCP CONN " << Simulator::now_s () << " " << x << std::endl;
 # define TRACE(format,...)
 #endif /* TRACE_TCP_CONNECTION */
 
+#define TCP_DEFAULT_WINDOW_SIZE (4096)
+
 
 TcpConnection::TcpConnection ()
 {
 	m_state = LISTEN;
 	m_snd_una = get_isn ();
 	m_snd_nxt = m_snd_una;
+	m_snd_wnd = TCP_DEFAULT_WINDOW_SIZE;
 	m_rcv_nxt = 0;
 }
 TcpConnection::~TcpConnection ()
 {
 	delete m_connection_completed;
-	delete m_packet_received;
+	delete m_data_received;
 	delete m_ack_received;
 	if (m_destroy != 0) {
 		(*m_destroy) (this);
@@ -90,13 +95,75 @@ TcpConnection::set_destroy_handler (TcpConnectionDestroy *handler)
 
 void 
 TcpConnection::set_callbacks (ConnectionCompletedCallback *connection_completed,
-			      PacketReceivedCallback *packet_received,
+			      DataReceivedCallback *data_received,
 			      AckReceivedCallback *ack_received)
 {
 	m_connection_completed = connection_completed;
-	m_packet_received = packet_received;
+	m_data_received = data_received;
 	m_ack_received = ack_received;
 }
+
+uint32_t 
+TcpConnection::get_room_left (void)
+{
+	return m_send->get_empty_at_back ();
+}
+
+uint32_t 
+TcpConnection::get_data_ready (void)
+{
+	return m_recv->get_data_at_front ();
+}
+
+
+uint32_t
+TcpConnection::send (Packet *packet)
+{
+	uint32_t sent = 0;
+	ChunkPiece *piece = static_cast <ChunkPiece *> (packet->remove_header ());
+	while (piece != 0) {
+		ChunkPiece *copy = m_send->add_at_back (piece);
+		if (copy == 0) {
+			/* there was no room at all to put this piece
+			 * in the buffer. */
+			packet->add_header (piece);
+			break;
+		}
+		sent += copy->get_size ();
+		assert (copy->get_size () <= piece->get_size ());
+		if (copy->get_size () < piece->get_size ()) {
+			/* there was not enough room to put this
+			 * piece entirely in the buffer. */
+			piece->trim_start (copy->get_size ());
+			packet->add_header (piece);
+			break;
+		}
+		delete piece;
+		piece = static_cast <ChunkPiece *> (packet->remove_header ());
+	}
+	notify_data_ready_to_send ();
+	return sent;
+}
+Packet *
+TcpConnection::recv (uint32_t size)
+{
+	Packet *packet = m_recv->get_at_front (size);
+	if (packet == 0) {
+		return 0;
+	}
+	m_recv->remove_at_front (packet->get_size ());
+	notify_room_ready_to_receive ();
+	return packet;
+}
+
+void
+TcpConnection::notify_data_ready_to_send (void)
+{}
+
+void
+TcpConnection::notify_room_ready_to_receive (void)
+{}
+
 
 
 void 
@@ -187,6 +254,10 @@ void
 TcpConnection::send_out (Packet *packet)
 {
 	ChunkTcp *tcp_chunk = static_cast <ChunkTcp *> (packet->peek_header ());
+	tcp_chunk->set_sequence_number (m_snd_nxt);
+	tcp_chunk->set_ack_number (m_rcv_nxt);
+	tcp_chunk->set_window_size (m_rcv_wnd);
+
 	uint8_t n_seq = 0;
 	if (tcp_chunk->is_flag_syn ()) {
 		n_seq++;
@@ -195,10 +266,7 @@ TcpConnection::send_out (Packet *packet)
 		n_seq++;
 	}
 	n_seq += packet->get_size () - tcp_chunk->get_size ();
-	tcp_chunk->set_sequence_number (m_snd_nxt);
 	m_snd_nxt += n_seq;
-
-	tcp_chunk->set_ack_number (m_rcv_nxt);
 
 	start_retransmission_timer ();
 
@@ -236,15 +304,17 @@ TcpConnection::send_ack (Packet *packet)
 	return true;
 }
 
-void
-TcpConnection::send (Packet *packet)
-{}
-
 
 void
 TcpConnection::receive (Packet *packet)
 {
 	ChunkTcp *tcp_chunk = static_cast <ChunkTcp *> (packet->peek_header ());
+
+
+	if (m_state == LISTEN) {
+	} else if (m_state == SYN_SENT) {
+	}
+
 	switch (m_state) {
 	case LISTEN:
 		if (tcp_chunk->is_flag_syn () &&
