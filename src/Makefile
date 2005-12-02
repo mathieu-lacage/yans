@@ -37,6 +37,7 @@ SOURCE= \
 	common/callback-test.cc \
 	ipv4/udp.cc \
 	ipv4/tcp.cc \
+	ipv4/tcp-pieces.cc \
 	ipv4/tcp-end-point.cc \
 	ipv4/tcp-connection.cc \
 	ipv4/tcp-connection-listener.cc \
