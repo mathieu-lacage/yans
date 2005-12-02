@@ -1,0 +1,63 @@
+/* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
+/*
+ * Copyright (c) 2005 INRIA
+ * All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation;
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
+ */
+
+#ifndef TCP_PIECES_H
+#define TCP_PIECES_H
+
+#include <stdint.h>
+#include <list>
+#include <utility>
+
+class Packet;
+class ChunkPiece;
+
+class TcpPieces {
+public:
+	TcpPieces ();
+	~TcpPieces ();
+
+	void set_size (uint32_t size);
+
+	/* These functions will trim the input piece
+	 * if it overlaps with existing pieces or
+	 * it is out of the size bounds.
+	 */
+	void add_at_back (ChunkPiece *piece);
+	void add_at (ChunkPiece *piece, uint32_t offset);
+
+
+	void remove_at_front (uint32_t size);
+	uint32_t get_data_at_front (void);
+	Packet *get_at_front (uint32_t size);
+
+private:
+	typedef std::pair<ChunkPiece *, uint32_t> Piece;
+	typedef std::list<Piece> Pieces;
+	typedef std::list<Piece>::iterator PiecesI;
+
+	void insert_piece_at_back (ChunkPiece *piece, uint32_t offset);
+	
+	Pieces m_pieces;
+	uint32_t m_size;
+};
+
+
+#endif /* TCP_PIECES_H */
