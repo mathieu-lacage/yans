@@ -157,8 +157,27 @@ TcpConnection::recv (uint32_t size)
 }
 
 void
+TcpConnection::send_data (void)
+{
+	uint32_t max_length = min (m_snd_wnd, m_snd_mss);
+	uint32_t length = min (m_snd_una+m_snd_wnd-m_snd_nxt, max_length);
+	//m_send->get_at ();
+}
+
+void
 TcpConnection::notify_data_ready_to_send (void)
-{}
+{
+	if (m_send->get_data_at_front () >= m_snd_mss) {
+		/* we can send a full mss. */
+		send_data ();
+	} else if (m_send->get_data_at_front () >= m_max_sndwnd / 2) {
+		/* we can send at least half of the other end's window */
+		send_data ();
+	} else if (m_snd_una == m_snd_nxt && m_send->get_data_at_front () > 0) {
+		/* we are not waiting for an ack. see rfc 896. */
+		send_data ();
+	}
+}
 
 void
 TcpConnection::notify_room_ready_to_receive (void)

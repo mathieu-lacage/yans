@@ -48,8 +48,9 @@ public:
 	 * of the buffer.
 	 */
 	Packet *get_at_front (uint32_t size);
-
 	void remove_at_front (uint32_t size);
+
+
 	uint32_t get_data_at_front (void);
 	uint32_t get_empty_at_back (void);
 

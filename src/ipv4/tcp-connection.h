@@ -87,6 +87,7 @@ private:
 	void start_retransmission_timer (void);
 	void notify_data_ready_to_send (void);
 	void notify_room_ready_to_receive (void);
+	void send_data (void);
 
 	TcpEndPoint *m_end_point;
 	Route *m_route;
@@ -141,9 +142,13 @@ private:
 	uint32_t m_rcv_adv;  /* receive window advertised by other end. */
 	uint32_t m_snd_cwnd; /* congestion window. */
 	uint32_t m_snd_ssthresh; /* snd_cwnd threshold for slow start. */
+	uint32_t m_snd_max; /* the largest sequence number of packets sent. */
+	uint32_t m_max_sndwnd; /* largest window ever offered by other end. */
+
+	uint32_t m_snd_mss; /* maximum segment size to send */
+
 
 	uint32_t m_retransmission_timer;
-	uint32_t m_snd_mss; /* maximum segment size to send */
 
 	/* tcp receive and transmission buffers where packets to send 
 	 * and receive are accumulated.
