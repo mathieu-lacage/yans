@@ -161,7 +161,14 @@ TcpConnection::send_data (void)
 {
 	uint32_t max_length = min (m_snd_wnd, m_snd_mss);
 	uint32_t length = min (m_snd_una+m_snd_wnd-m_snd_nxt, max_length);
-	//m_send->get_at ();
+	Packet *packet = m_send->get_at (m_snd_nxt, length);
+	ChunkTcp *tcp = ChunkTcp ();
+	tcp->set_source_port (m_end_point->get_local_port ());
+	tcp->set_destination_port (m_end_point->get_peer_port ());
+	tcp->enable_flag_ack ();
+	packet->add_header (tcp);
+	add_out_tag (packet);
+	send_out (packet);
 }
 
 void
@@ -197,12 +204,7 @@ TcpConnection::invert_packet (Packet *packet)
 	TagInIpv4 *in_tag = static_cast <TagInIpv4 *> (packet->remove_tag (TagInIpv4::get_tag ()));
 	assert (in_tag->get_saddress () == m_end_point->get_peer_address ());
 	assert (in_tag->get_sport () == m_end_point->get_peer_port ());
-	TagOutIpv4 *out_tag = new TagOutIpv4 (m_route);
-	out_tag->set_daddress (in_tag->get_saddress ());
-	out_tag->set_saddress (in_tag->get_daddress ());
-	out_tag->set_dport (in_tag->get_sport ());
-	out_tag->set_sport (in_tag->get_dport ());
-	packet->add_tag (TagOutIpv4::get_tag (), out_tag);
+	add_out_tag (packet);
 
 	ChunkTcp *tcp_chunk = static_cast <ChunkTcp *> (packet->peek_header ());
 	tcp_chunk->disable_flags ();
@@ -224,11 +226,9 @@ TcpConnection::get_isn (void)
 	return isn;
 }
 
-
 void
-TcpConnection::start_connect (void)
+add_out_tag (Packet *packet)
 {
-
 	uint16_t sport = m_end_point->get_local_port ();
 	uint16_t dport = m_end_point->get_peer_port ();
 	Ipv4Address saddress = m_end_point->get_local_address ();
@@ -238,6 +238,16 @@ TcpConnection::start_connect (void)
 	out_tag->set_saddress (saddress);
 	out_tag->set_dport (dport);
 	out_tag->set_sport (sport);
+	packet->add_tag (TagOutIpv4::get_tag (), out_tag);
+}
+
+
+void
+TcpConnection::start_connect (void)
+{
+
+	uint16_t sport = m_end_point->get_local_port ();
+	uint16_t dport = m_end_point->get_peer_port ();
 
 	ChunkTcp *tcp_chunk = new ChunkTcp ();		
 	tcp_chunk->enable_flag_syn ();
@@ -245,7 +255,7 @@ TcpConnection::start_connect (void)
 	tcp_chunk->set_destination_port (dport);
 	
 	Packet *packet = new Packet ();
-	packet->add_tag (TagOutIpv4::get_tag (), out_tag);
+	add_out_tag (packet);
 	packet->add_header (tcp_chunk);
 
 
