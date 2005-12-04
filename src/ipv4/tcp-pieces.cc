@@ -176,30 +176,43 @@ TcpPieces::get_empty_at_back (void)
 Packet *
 TcpPieces::get_at_front (uint32_t size)
 {
+	return get_at (0, size);
+}
+
+
+Packet *
+TcpPieces::get_at (uint32_t offset, uint32_t size)
+{
 	assert (size > 0);
 	Packet *packet = new Packet ();
 	uint32_t expected_offset = 0;
 	uint32_t found = 0;
+	uint32_t end = offset + size;
+	/* this assert checks to see if we are not overflowing the uint32_t */
+	assert (end > offset + size);
 	for (PiecesI i = m_pieces.begin (); i != m_pieces.end (); i++) {
 		if ((*i).second != expected_offset) {
-			assert (expected_offset != 0);
-			assert (packet->get_size () == get_data_at_front ());
 			break;
 		}
+		expected_offset = (*i).second + (*i).first->get_size ();
+		if ((*i).second < offset &&
+		    (*i).second + (*i).first->get_fize () < offset) {
+			/* the current piece does not overlap our target area. */
+			continue;
+		}
 		ChunkPiece *piece = static_cast <ChunkPiece *> ((*i).first->copy ());
-		if (found + piece->get_size () > size) {
-			piece->trim_end (found + piece->get_size () - size);
+		if (found + piece->get_size () > end) {
+			piece->trim_end (found + piece->get_size () - end);
 			packet->add_trailer (piece);
 			break;
 		} else {
 			packet->add_trailer (piece);
 			found += piece->get_size ();
-			expected_offset = (*i).second + piece->get_size ();
 		}
 	}
 	if (packet->get_size () == 0) {
 		delete packet;
 		return 0;
 	}
-	return packet;
+	return packet;	
 }
