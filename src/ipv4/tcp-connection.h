@@ -32,6 +32,7 @@ class Host;
 class TcpEndPoint;
 class Route;
 class TcpPieces;
+class ChunkTcp;
 
 
 class TcpConnection {
@@ -88,6 +89,11 @@ private:
 	void notify_data_ready_to_send (void);
 	void notify_room_ready_to_receive (void);
 	void send_data (void);
+	ChunkTcp *create_chunk_tcp (void);
+	void add_out_tag (Packet *packet);
+	bool seq_gs (uint32_t a, uint32_t b);
+	bool seq_le (uint32_t a, uint32_t b);
+	bool seq_ls (uint32_t a, uint32_t b);
 
 	TcpEndPoint *m_end_point;
 	Route *m_route;

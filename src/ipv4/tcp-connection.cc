@@ -33,6 +33,10 @@
 #include "chunk-piece.h"
 
 
+#define min(a,b) (((a)<(b))?(a):(b))
+#define max(a,b) (((a)>(b))?(a):(b))
+
+
 #define TRACE_TCP_CONNECTION 1
 
 #ifdef TRACE_TCP_CONNECTION
@@ -156,15 +160,67 @@ TcpConnection::recv (uint32_t size)
 	return packet;
 }
 
+ChunkTcp *
+TcpConnection::create_chunk_tcp (void)
+{
+	ChunkTcp *tcp = new ChunkTcp ();
+	tcp->set_source_port (m_end_point->get_local_port ());
+	tcp->set_destination_port (m_end_point->get_peer_port ());
+	return tcp;
+}
+
+bool
+TcpConnection::invert_packet (Packet *packet)
+{
+	TagInIpv4 *in_tag = static_cast <TagInIpv4 *> (packet->remove_tag (TagInIpv4::get_tag ()));
+	assert (in_tag->get_saddress () == m_end_point->get_peer_address ());
+	assert (in_tag->get_sport () == m_end_point->get_peer_port ());
+	add_out_tag (packet);
+
+	ChunkTcp *tcp_chunk = static_cast <ChunkTcp *> (packet->peek_header ());
+	tcp_chunk->disable_flags ();
+	uint16_t old_sp, old_dp;
+	old_sp = tcp_chunk->get_source_port ();
+	old_dp = tcp_chunk->get_destination_port ();
+	tcp_chunk->set_source_port (old_dp);
+	tcp_chunk->set_destination_port (old_sp);
+	tcp_chunk->enable_flag_ack ();
+
+	delete in_tag;
+	return true;
+}
+
+uint32_t
+TcpConnection::get_isn (void)
+{
+	uint32_t isn = Simulator::now_us () & 0xffffffff;
+	return isn;
+}
+
+void
+TcpConnection::add_out_tag (Packet *packet)
+{
+	uint16_t sport = m_end_point->get_local_port ();
+	uint16_t dport = m_end_point->get_peer_port ();
+	Ipv4Address saddress = m_end_point->get_local_address ();
+	Ipv4Address daddress = m_end_point->get_peer_address ();
+	TagOutIpv4 *out_tag = new TagOutIpv4 (m_route);
+	out_tag->set_daddress (daddress);
+	out_tag->set_saddress (saddress);
+	out_tag->set_dport (dport);
+	out_tag->set_sport (sport);
+	packet->add_tag (TagOutIpv4::get_tag (), out_tag);
+}
+
+
+
 void
 TcpConnection::send_data (void)
 {
 	uint32_t max_length = min (m_snd_wnd, m_snd_mss);
 	uint32_t length = min (m_snd_una+m_snd_wnd-m_snd_nxt, max_length);
 	Packet *packet = m_send->get_at (m_snd_nxt, length);
-	ChunkTcp *tcp = ChunkTcp ();
-	tcp->set_source_port (m_end_point->get_local_port ());
-	tcp->set_destination_port (m_end_point->get_peer_port ());
+	ChunkTcp *tcp = create_chunk_tcp ();
 	tcp->enable_flag_ack ();
 	packet->add_header (tcp);
 	add_out_tag (packet);
@@ -198,72 +254,20 @@ TcpConnection::set_state (enum TcpState_e new_state)
 	m_state = new_state;
 }
 
-bool
-TcpConnection::invert_packet (Packet *packet)
-{
-	TagInIpv4 *in_tag = static_cast <TagInIpv4 *> (packet->remove_tag (TagInIpv4::get_tag ()));
-	assert (in_tag->get_saddress () == m_end_point->get_peer_address ());
-	assert (in_tag->get_sport () == m_end_point->get_peer_port ());
-	add_out_tag (packet);
-
-	ChunkTcp *tcp_chunk = static_cast <ChunkTcp *> (packet->peek_header ());
-	tcp_chunk->disable_flags ();
-	uint16_t old_sp, old_dp;
-	old_sp = tcp_chunk->get_source_port ();
-	old_dp = tcp_chunk->get_destination_port ();
-	tcp_chunk->set_source_port (old_dp);
-	tcp_chunk->set_destination_port (old_sp);
-	tcp_chunk->enable_flag_ack ();
-
-	delete in_tag;
-	return true;
-}
-
-uint32_t
-TcpConnection::get_isn (void)
-{
-	uint32_t isn = Simulator::now_us () & 0xffffffff;
-	return isn;
-}
-
-void
-add_out_tag (Packet *packet)
-{
-	uint16_t sport = m_end_point->get_local_port ();
-	uint16_t dport = m_end_point->get_peer_port ();
-	Ipv4Address saddress = m_end_point->get_local_address ();
-	Ipv4Address daddress = m_end_point->get_peer_address ();
-	TagOutIpv4 *out_tag = new TagOutIpv4 (m_route);
-	out_tag->set_daddress (daddress);
-	out_tag->set_saddress (saddress);
-	out_tag->set_dport (dport);
-	out_tag->set_sport (sport);
-	packet->add_tag (TagOutIpv4::get_tag (), out_tag);
-}
-
 
 void
 TcpConnection::start_connect (void)
 {
-
-	uint16_t sport = m_end_point->get_local_port ();
-	uint16_t dport = m_end_point->get_peer_port ();
-
-	ChunkTcp *tcp_chunk = new ChunkTcp ();		
-	tcp_chunk->enable_flag_syn ();
-	tcp_chunk->set_source_port (sport);
-	tcp_chunk->set_destination_port (dport);
-	
 	Packet *packet = new Packet ();
 	add_out_tag (packet);
-	packet->add_header (tcp_chunk);
+	ChunkTcp *tcp = create_chunk_tcp ();
+	tcp->enable_flag_syn ();
+	packet->add_header (tcp);
 
 
-	TRACE ("send SYN to " << daddress);
+	TRACE ("send SYN to " << m_end_point->get_peer_address ());
 	send_out (packet);
-
-	packet->unref ();
-	
+	packet->unref ();	
 	set_state (SYN_SENT);
 }
 
@@ -333,60 +337,66 @@ TcpConnection::send_ack (Packet *packet)
 	return true;
 }
 
-
 void
 TcpConnection::receive (Packet *packet)
 {
-	ChunkTcp *tcp_chunk = static_cast <ChunkTcp *> (packet->peek_header ());
+	ChunkTcp *tcp = static_cast <ChunkTcp *> (packet->peek_header ());
 
 
 	if (m_state == LISTEN) {
-	} else if (m_state == SYN_SENT) {
-	}
-
-	switch (m_state) {
-	case LISTEN:
-		if (tcp_chunk->is_flag_syn () &&
-		    !tcp_chunk->is_flag_ack ()) {
+		if (tcp->is_flag_syn () &&
+		    !tcp->is_flag_ack ()) {
 			/* this is a connection request. */
 			if (send_syn_ack (packet)) {
 				set_state (SYN_RCVD);
 			}
 		}
-		break;
-	case SYN_SENT:
-		if (tcp_chunk->is_flag_syn () &&
-		    tcp_chunk->is_flag_ack ()) {
+	} 
+
+	/* Deal with ACK. */
+	if (tcp->is_flag_ack ()) {
+		if (seq_gs (tcp->get_ack_number (), m_snd_una) &&
+		    seq_le (tcp->get_ack_number (), m_snd_max)) {
+			uint32_t acked = tcp->get_ack_number () - m_snd_una;
+			m_snd_una = tcp->get_ack_number ();
+			if (seq_ls (m_snd_nxt, tcp->get_ack_number ())) {
+				/* this is an ack for data not sent yet. */
+				m_snd_nxt = m_snd_una;
+				// XXX we should send an ack and drop the segment here.
+			}
+			/* remove the acked bytes from the front buffer. */
+			m_send->remove_at_front (acked);
+
+			/* update window. */
+			if (seq_ls (m_snd_wl1, tcp->get_sequence_number ()) ||
+			    (m_snd_wl1 == tcp->get_sequence_number () &&
+			     seq_ls (m_snd_wl2, tcp->get_ack_number ())) ||
+			    (m_snd_wl2 == tcp->get_ack_number () &&
+			     m_snd_wnd < tcp->get_window_size ())) {
+				m_snd_wnd = tcp->get_window_size ();
+				m_snd_wl1 = tcp->get_sequence_number ();
+				m_snd_wl2 = tcp->get_ack_number ();
+			}
+		}
+		// XXX : detect duplicate acks for fast recovery. 
+	}
+
+	if (m_state == SYN_SENT) {
+		if (tcp->is_flag_syn () &&
+		    tcp->is_flag_ack ()) {
 			/* this is the ack of a connection request. */
 			if (send_ack (packet)) {
 				set_state (ESTABLISHED);
 			}
 		}
-		break;
-	case SYN_RCVD:
-		if (tcp_chunk->is_flag_ack ()) {
+	} else if (m_state == SYN_RCVD) {
+		if (tcp->is_flag_ack ()) {
 			/* this is the third packet for connection
 			 * establishment handshake. 
 			 */
 			set_state (ESTABLISHED);
 		}
-		break;
-	case ESTABLISHED:
-		break;
-	case CLOSE_WAIT:
-		break;
-	case LAST_ACK:
-		break;
-	case FIN_WAIT_1:
-		break;
-	case CLOSING:
-		break;
-	case TIME_WAIT:
-		break;
-	case FIN_WAIT_2:
-		break;
-	case CLOSED:
-		break;
+	} else if (m_state == ESTABLISHED) {
 	}
 }
 
@@ -405,3 +415,30 @@ TcpConnection::slow_timer (void)
 void 
 TcpConnection::fast_timer (void)
 {}
+
+
+
+
+bool
+TcpConnection::seq_gs (uint32_t a, uint32_t b)
+{
+	int64_t delta = a - b;
+	if (delta < 0) {
+		delta = -delta;
+	}
+	if (delta < (1<<31)) {
+		return (a > b);
+	} else {
+		return (a < b);
+	}
+}
+bool
+TcpConnection::seq_le (uint32_t a, uint32_t b)
+{
+	return !seq_gs (a, b);
+}
+bool
+TcpConnection::seq_ls (uint32_t a, uint32_t b)
+{
+	return seq_gs (b, a);
+}

@@ -196,7 +196,7 @@ TcpPieces::get_at (uint32_t offset, uint32_t size)
 		}
 		expected_offset = (*i).second + (*i).first->get_size ();
 		if ((*i).second < offset &&
-		    (*i).second + (*i).first->get_fize () < offset) {
+		    (*i).second + (*i).first->get_size () < offset) {
 			/* the current piece does not overlap our target area. */
 			continue;
 		}
