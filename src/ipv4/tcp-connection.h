@@ -39,6 +39,7 @@ class TcpConnection {
 public:
 	typedef Callback<void (void)> ConnectionCompletedCallback;
 	typedef Callback<void (void)> DataReceivedCallback;
+	typedef Callback<void (void)> DataTransmittedCallback;
 	typedef Callback<void (Packet *)> AckReceivedCallback;
 	typedef Callback<void (TcpConnection *)> TcpConnectionDestroy;
 
@@ -52,6 +53,7 @@ public:
 	void set_destroy_handler (TcpConnectionDestroy *handler);
 
 	void set_callbacks (ConnectionCompletedCallback *connection_completed,
+			    DataTransmittedCallback *data_transmitted,
 			    DataReceivedCallback *data_received,
 			    AckReceivedCallback *ack_received);
 	void start_connect (void);
@@ -99,6 +101,7 @@ private:
 	Route *m_route;
 	ConnectionCompletedCallback *m_connection_completed;
 	DataReceivedCallback *m_data_received;
+	DataTransmittedCallback *m_data_transmitted;
 	AckReceivedCallback *m_ack_received;
 	enum TcpState_e m_state;
 	Ipv4 *m_ipv4;
@@ -108,39 +111,14 @@ private:
 	TcpPieces *m_send;
 	TcpPieces *m_recv;
 
-	/* The variables below are best explained with the rfc 793 diagrams
-	 * reproduced below for the sake of clarity:
-	 *                   1         2          3          4      
-	 *              ----------|----------|----------|---------- 
-	 *                     SND.UNA    SND.NXT    SND.UNA        
-	 *                                          +SND.WND        
-	 *
-	 *        1 - old sequence numbers which have been acknowledged  
-	 *        2 - sequence numbers of unacknowledged data            
-	 *        3 - sequence numbers allowed for new data transmission 
-	 *        4 - future sequence numbers which are not yet allowed  
-	 *
-	 *                        1          2          3      
-	 *                   ----------|----------|---------- 
-	 *                          RCV.NXT    RCV.NXT        
-	 *                                    +RCV.WND        
-	 *
-	 *        1 - old sequence numbers which have been acknowledged  
-	 *        2 - sequence numbers allowed for new reception         
-	 *        3 - future sequence numbers which are not yet allowed  
-	 */
 	uint32_t m_snd_una;
 	uint32_t m_snd_nxt;
 	uint32_t m_snd_wnd;
 	uint32_t m_rcv_nxt;
 	uint32_t m_rcv_wnd;
-	/* We have also these:
-	 * SND.WL1 - segment sequence number used for last window update
-	 * SND.WL2 - segment acknowledgment number used for last window
-	 *           update
-	 */
 	uint32_t m_snd_wl1;
 	uint32_t m_snd_wl2;
+	uint32_t m_irs;
 	/* The following variables are also needed although not described
 	 * in the tcp rfc. I have choosen to use the same names as the BSD
 	 * implementation for the sake of clarity.

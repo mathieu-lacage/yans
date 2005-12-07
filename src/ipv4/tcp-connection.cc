@@ -54,8 +54,8 @@ std::cout << "TCP CONN " << Simulator::now_s () << " " << x << std::endl;
 TcpConnection::TcpConnection ()
 {
 	m_state = LISTEN;
-	m_snd_una = get_isn ();
-	m_snd_nxt = m_snd_una;
+	m_snd_una = 0;
+	m_snd_nxt = 0;
 	m_snd_wnd = TCP_DEFAULT_WINDOW_SIZE;
 	m_rcv_nxt = 0;
 }
@@ -169,25 +169,19 @@ TcpConnection::create_chunk_tcp (void)
 	return tcp;
 }
 
-bool
+void
 TcpConnection::invert_packet (Packet *packet)
 {
 	TagInIpv4 *in_tag = static_cast <TagInIpv4 *> (packet->remove_tag (TagInIpv4::get_tag ()));
 	assert (in_tag->get_saddress () == m_end_point->get_peer_address ());
 	assert (in_tag->get_sport () == m_end_point->get_peer_port ());
-	add_out_tag (packet);
+	delete in_tag;
 
+	add_out_tag (packet);
 	ChunkTcp *tcp_chunk = static_cast <ChunkTcp *> (packet->peek_header ());
 	tcp_chunk->disable_flags ();
-	uint16_t old_sp, old_dp;
-	old_sp = tcp_chunk->get_source_port ();
-	old_dp = tcp_chunk->get_destination_port ();
-	tcp_chunk->set_source_port (old_dp);
-	tcp_chunk->set_destination_port (old_sp);
-	tcp_chunk->enable_flag_ack ();
-
-	delete in_tag;
-	return true;
+	tcp_chunk->set_source_port (m_end_point->get_local_port ());
+	tcp_chunk->set_destination_port (m_end_point->get_peer_port ());
 }
 
 uint32_t
@@ -311,14 +305,11 @@ TcpConnection::send_out (Packet *packet)
 bool
 TcpConnection::send_syn_ack (Packet *packet)
 {
-	if (!invert_packet (packet)) {
-		return false;
-	}
-
-	ChunkTcp *tcp_chunk = static_cast <ChunkTcp *> (packet->peek_header ());
-	tcp_chunk->enable_flag_syn ();
-
 	TRACE ("send SYN+ACK to " << static_cast <TagOutIpv4 *> (packet->get_tag (TagOutIpv4::get_tag ()))->get_daddress ());
+
+	invert_packet (packet);
+	ChunkTcp *tcp = static_cast <ChunkTcp *> (packet->peek_header ());
+	tcp->enable_flag_syn ();
 	send_out (packet);
 
 	return true;
@@ -327,14 +318,28 @@ TcpConnection::send_syn_ack (Packet *packet)
 bool
 TcpConnection::send_ack (Packet *packet)
 {
-	if (!invert_packet (packet)) {
-		return false;
-	}
-
 	TRACE ("send ACK to " << static_cast <TagOutIpv4 *> (packet->get_tag (TagOutIpv4::get_tag ()))->get_daddress ());
+
+	invert_packet (packet);
 	send_out (packet);
 
 	return true;
+}
+
+void
+TcpConnection::send_rst (Packet *packet)
+{
+	invert_packet (packet);
+	ChunkTcp *tcp = static_cast <ChunkTcp *> (packet->peek_header ());
+	tcp->enable_flag_rst ();
+	send_out (packet);
+}
+
+void
+TcpConnection::cancel_timers (void)
+{
+	m_retransmission_timer = 0;
+	m_2msl_timer = 0;
 }
 
 void
@@ -342,61 +347,327 @@ TcpConnection::receive (Packet *packet)
 {
 	ChunkTcp *tcp = static_cast <ChunkTcp *> (packet->peek_header ());
 
-
-	if (m_state == LISTEN) {
-		if (tcp->is_flag_syn () &&
-		    !tcp->is_flag_ack ()) {
-			/* this is a connection request. */
-			if (send_syn_ack (packet)) {
+	if (m_state == CLOSED) {
+		if (!tcp->is_flag_rst ()) {
+			send_rst (packet);
+		}
+		return;
+	} else if (m_state == LISTEN) {
+		if (tcp->is_flag_rst ()) {
+			return;
+		} 
+		if (tcp->is_flag_ack ()) {
+			send_rst (packet);
+			return;
+		} 
+		if (!tcp->is_flag_syn ()) {
+			return;
+		}
+		m_rcv_nxt = tcp->get_sequence_number () + 1;
+		m_irs = tcp->get_sequence_number ();
+		m_iss = get_isn ();
+		m_snd_nxt = m_iss;
+		send_syn_ack (packet);
+		set_state (SYN_RCVD);
+	}  else if (m_state == SYN_SENT) {
+		bool ack_ok = false;
+		if (tcp->is_flag_ack ()) {
+			if (seq_le (tcp->get_ack_number (), m_iss) ||
+			    seq_gs (tcp->get_ack_number (), m_snd_nxt)) {
+				if (!tcp->is_flag_rst ()) {
+					send_rst (packet);
+				}
+				return;
+			}
+			if (seq_le (m_snd_una, tcp->get_ack_number ()) &&
+			    seq_le (tcp->get_ack_number (), m_snd_nxt)) {
+				ack_ok = true;
+			}
+		}
+		if (tcp->is_flag_rst ()) {
+			if (ack_ok) {
+				// signal "connection reset" error.
+				set_state (CLOSED);
+			}
+			return;
+		}
+		assert (ack_ok || (!tcp->if_flag_ack () && tcp->is_flag_rst ()));
+		if (tcp->is_flag_syn ()) {
+			m_rcv_nxt = tcp->get_sequence_number () + 1;
+			m_irs = tcp->get_sequence_number ();
+			if (tcp->is_flag_ack ()) {
+				uint32_t acked = tcp->get_ack_number () - m_snd_una;
+				m_snd_una = tcp->get_ack_number ();
+				m_send->remove_from_front (acked);
+			}
+			// XXX: we should deal with data associated to SYN or 
+			// SYN+ACK packets.
+			if (m_snd_una > m_iss) {
+				set_state (ESTABLISHED);
+				send_ack (packet);
+			} else {
 				set_state (SYN_RCVD);
+				m_snd_nxt = m_iss;
+				send_syn_ack (packet);
 			}
+			return;
 		}
-	} 
-
-	/* Deal with ACK. */
-	if (tcp->is_flag_ack ()) {
-		if (seq_gs (tcp->get_ack_number (), m_snd_una) &&
-		    seq_le (tcp->get_ack_number (), m_snd_max)) {
-			uint32_t acked = tcp->get_ack_number () - m_snd_una;
-			m_snd_una = tcp->get_ack_number ();
-			if (seq_ls (m_snd_nxt, tcp->get_ack_number ())) {
-				/* this is an ack for data not sent yet. */
-				m_snd_nxt = m_snd_una;
-				// XXX we should send an ack and drop the segment here.
-			}
-			/* remove the acked bytes from the front buffer. */
-			m_send->remove_at_front (acked);
-
-			/* update window. */
-			if (seq_ls (m_snd_wl1, tcp->get_sequence_number ()) ||
-			    (m_snd_wl1 == tcp->get_sequence_number () &&
-			     seq_ls (m_snd_wl2, tcp->get_ack_number ())) ||
-			    (m_snd_wl2 == tcp->get_ack_number () &&
-			     m_snd_wnd < tcp->get_window_size ())) {
-				m_snd_wnd = tcp->get_window_size ();
-				m_snd_wl1 = tcp->get_sequence_number ();
-				m_snd_wl2 = tcp->get_ack_number ();
-			}
+		if (!tcp->is_flag_syn () && !tcp->is_flag_rst ()) {
+			return;
 		}
-		// XXX : detect duplicate acks for fast recovery. 
 	}
 
-	if (m_state == SYN_SENT) {
-		if (tcp->is_flag_syn () &&
-		    tcp->is_flag_ack ()) {
-			/* this is the ack of a connection request. */
-			if (send_ack (packet)) {
-				set_state (ESTABLISHED);
-			}
+ step1:
+	/* check whether the segment is acceptable */
+	bool acceptable;
+	uint32_t seq_len = packet->get_size () - tcp->get_size ();
+	uint32_t tmp1 = seq_add (m_rcv_nxt, m_rcv_wnd);
+	uint32_t tmp2 = seq_add (tcp->get_sequence_number (), seq_len - 1);
+	if (seq_len == 0 && 
+	    m_rcv_wnd == 0 &&
+	    m_rcv_nxt == tcp->get_sequence_number ()) {
+		acceptable = true;
+	} else if (seq_len == 0 && 
+		   m_rcv_wnd > 0 &&
+		   seq_le (m_rcv_nxt, tcp->get_sequence_number ()) &&
+		   seq_ls (tcp->get_sequence_number (), tmp1)) {
+		acceptable = true;
+	} else if (seq_len > 0 && 
+		   m_rcv_wnd > 0) {
+		if (seq_le (m_rcv_nxt, tcp->get_sequence_number ()) &&
+		    seq_ls (tcp->get_sequence_number (), )) {
+			acceptable = true;
+		} else if (seq_le (m_rcv_nxt, tmp2) &&
+			   seq_ls (tmp2, tmp1)) {
+			acceptable = true;
+		} else {
+			acceptable = false;
 		}
-	} else if (m_state == SYN_RCVD) {
-		if (tcp->is_flag_ack ()) {
-			/* this is the third packet for connection
-			 * establishment handshake. 
-			 */
+	} else {
+		acceptable = false;
+	}
+
+	if (!acceptable) {
+		if (tcp->is_flag_rst ()) {
+			return;
+		}
+		send_ack (packet);
+		return;
+	}
+
+	/* trim segment to window. */
+	tcp = static_cast <ChunkTcp *> (packet->remove_header ());
+	ChunkPiece *piece = ChunkPiece ();
+	piece->set_original (packet, 0, packet->get_size ());
+	if (packet->get_size () > 0) {
+		uint32_t start_trim = 0;
+		uint32_t end_trim = 0;
+		if (seq_ls (tcp->get_sequence_number (), m_rcv_nxt)) {
+			start_trim = seq_sub (m_rcv_nxt, tcp->get_sequence_number ());
+		}
+		if (seq_ge (tcp->get_sequence_number (), seq_add (m_rcv_nxt, m_rcv_wnd))) {
+			end_trim = seq_sub (seq_add (m_rcv_nxt, m_rcv_wnd), tcp->get_sequence_number ());
+		}
+		piece->trim_start (start_trim);
+		piece->trim_end (end_trim);
+		tcp->set_sequence_number (seq_add (tcp->get_sequence_number (), start_trim));
+	}
+
+	assert (seq_ge (tcp->get_sequence_number (), m_rcv_nxt));
+	if (seq_gs (tcp->get_sequence_number (), m_rcv_nxt)) {
+		m_recv->add_at (piece, seq_sub (tcp->get_sequence_number (), m_rcv_nxt));
+		delete tcp;
+		return;
+	}
+
+ step2: /* check the rst bit */
+	if (tcp->is_flag_rst ()) {
+		switch (m_state) {
+		case SYN_RCVD:
+			// XXX notify connection refused
+			set_state (CLOSED);
+			break;
+		case ESTABLISHED:
+		case FIN_WAIT1:
+		case FIN_WAIT2:
+		case CLOSE_WAIT:
+			// XXX notify connection reset
+			set_state (CLOSED);
+			break;
+		case CLOSING:
+		case TIME_WAIT:
+		case LAST_ACK:
+			set_state (CLOSED);
+			break;
+		}
+		delete piece;
+		return;
+	}
+ step4: /* check syn bit */
+	if (tcp->is_flag_syn ()) {
+		// XXX notify "connection reset"
+		set_state (CLOSED);
+		delete piece;
+		return;
+	}
+ step5: /* check ack bit */
+	if (!tcp->is_flag_ack ()) {
+		delete piece;
+		return;
+	}
+	if (m_state == SYN_RCVD) {
+		if (seq_le (m_snd_una, tcp->get_ack_number ()) &&
+		    seq_le (tcp->get_ack_number (), m_snd_nxt)) {
+			m_snd_wl1 = tcp->get_sequence_number () - 1;
 			set_state (ESTABLISHED);
+			// XXX maybe reass
+		} else {
+			send_rst (packet);
+			delete piece;
+			return;
 		}
-	} else if (m_state == ESTABLISHED) {
+	} else {
+		if (seq_le (tcp->get_ack_number (), m_snd_una) &&
+		    piece->get_size () == 0 && 
+		    tcp->get_window_size () == m_snd_wnd &&
+		    m_retransmission_timer > 0 && 
+		    tcp->get_ack_number () == m_snd_una) {
+			/* this is a duplicate ack */
+			m_dupacks ++;
+			if (m_dup_acks == m_rexmtthresh) {
+				uint32_t win = min (m_snd_wnd, m_snd_cwnd) / 2 / m_maxseg;
+				if (win < 2) {
+					win = 2;
+				}
+				m_snd_ssthresh = win * m_maxseg;
+				m_retransmission_timer = 0;
+				m_rtt = 0;
+				m_snd_nxt = seq_min (tcp->get_ack_number (), m_snd_nxt);
+				m_snd_cwnd = m_maxseg;
+				// XXX tcp_output ?
+				m_snd_cwnd = m_snd_ssthresh + m_maxseg * m_dupacks;
+				return;
+			} else if (m_dup_acks > m_rexmtthresh) {
+				m_snd_cwnd += m_mss;
+				// XXX tcp_output ?
+				return;
+			}
+		} else {
+			m_dupacks = 0;
+		}
+	}
+	if (m_dupacks > m_rexmtthresh &&
+	    m_snd_cwnd > m_snd_ssthresh) {
+		m_snd_cwnd = m_snd_ssthresh;
+	}
+	m_dupacks = 0;
+
+	// XXX
+	uint32_t acked = seq_sub (tcp->get_ack_number () - m_snd_una);
+	// XXX
+	
+
+	bool fin_acked;
+	if (acked > m_send->get_data_at_front ()) {
+		fin_acked = true;
+		m_send->remove_at_front (m_send->get_data_at_front ());
+		m_snd_wnd -= m_send->get_data_at_front ();
+	} else {
+		fin_acked = false;
+		m_send->remove_at_front (acked);
+		m_snd_wnd -= acked;
+	}
+	(*m_data_transmitted) ();
+	
+	m_snd_una = tcp->get_ack_number ();
+	m_snd_nxt = seq_max (m_snd_nxt, m_snd_una);
+
+	
+	switch (m_state) {
+	case FIN_WAIT1:
+		if (fin_acked) {
+			set_state (FIN_WAIT_2);
+		}
+		break;
+	case CLOSING:
+		if (fin_acked) {
+			// timers ?
+			set_state (TIME_WAIT);
+		}
+		break;
+	case LAST_ACK:
+		if (fin_acked) {
+			set_state (CLOSED);
+			return;
+		}
+		break;
+	case TIME_WAIT:
+		// finack timer ? XXX
+		return;
+		break;
+	}
+
+	/* update window. */
+	if (seq_ls (m_snd_wl1, tcp->get_sequence_number ()) ||
+	    (m_snd_wl1 == tcp->get_sequence_number () &&
+	     seq_ls (m_snd_wl2, tcp->get_ack_number ())) ||
+	    (m_snd_wl2 == tcp->get_ack_number () &&
+	     m_snd_wnd < tcp->get_window_size ())) {
+		m_snd_wnd = tcp->get_window_size ();
+		m_snd_wl1 = tcp->get_sequence_number ();
+		m_snd_wl2 = tcp->get_ack_number ();
+		m_snd_maxwnd = max (m_snd_wnd, m_snd_maxwnd);
+	}
+
+ step6: /* URG bit */
+ step7:
+	switch (m_state) {
+	case ESTABLISHED:
+	case FIN_WAIT1:
+	case FIN_WAIT2:
+		// XXX reass
+		m_recv->add_at_front (piece);
+		break;
+	default:
+		break;
+	}
+
+ step8: /* FIN flag */
+	switch (m_state) {
+	case CLOSED:
+	case LISTEN:
+	case SYN_SENT:
+		delete piece;
+		break;
+	default:
+		break;
+	}
+	if (tcp->is_flag_fin ()) {
+		// signal "connection closing" XXX
+		m_rcv_nxt ++;
+		send_ack (packet);
+		switch (m_state) {
+		case SYN_RCVD:
+		case ESTABLISHED:
+			set_state (CLOSE_WAIT);
+			break;
+		case FIN_WAIT1:
+			set_state (CLOSING);
+			break;
+		case FIN_WAIT2:
+			cancel_timers ();
+			m_2msl_timer = 2 * m_msl;
+			set_state (TIME_WAIT);
+			break;
+		case CLOSE_WAIT:
+		case CLOSING:
+		case LAST_ACK:
+			/* remain in state. */
+			break;
+		case TIME_WAIT:
+			m_2msl_timer = 2 * m_msl;
+			break;
+		}
 	}
 }
 
