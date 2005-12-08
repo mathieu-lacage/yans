@@ -29,7 +29,7 @@
 class Host;
 class Ipv4EndPoint;
 class TcpEndPoint;
-class TcpConnection;
+class TcpBsdConnection;
 
 class TcpSource {
  public:
@@ -44,11 +44,12 @@ class TcpSource {
 	bool should_accept (Ipv4Address from, uint16_t from_port);
 	void completed (void);
 	void receive (void);
+	void transmitted (void);
 	void got_ack (Packet *packet);
 
 	Host *m_host;
 	TcpEndPoint *m_end_point;
-	TcpConnection *m_connection;
+	TcpBsdConnection *m_connection;
 };
 
 #endif /* TCP_SOURCE */

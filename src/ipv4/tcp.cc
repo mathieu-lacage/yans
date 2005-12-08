@@ -26,7 +26,7 @@
 #include "chunk-tcp.h"
 #include "host.h"
 #include "tcp-end-point.h"
-#include "tcp-connection.h"
+#include "tcp-bsd-connection.h"
 #include "tcp-connection-listener.h"
 #include "event.h"
 
@@ -280,10 +280,10 @@ Tcp::receive (Packet *packet)
 	end_p->receive (packet);
 }
 
-TcpConnection *
+TcpBsdConnection *
 Tcp::create_connection (TcpEndPoint *end_p)
 {
-	TcpConnection *connection = new TcpConnection ();
+	TcpBsdConnection *connection = new TcpBsdConnection ();
 	connection->set_host (m_host);
 	connection->set_ipv4 (m_ipv4);
 	connection->set_end_point (end_p);
@@ -339,7 +339,7 @@ Tcp::fast_timer (void)
 
 
 void 
-Tcp::destroy_connection (TcpConnection *connection)
+Tcp::destroy_connection (TcpBsdConnection *connection)
 {
 	for (ConnectionsI i = m_connections.begin (); i != m_connections.end (); i++) {
 		if ((*i) == connection) {

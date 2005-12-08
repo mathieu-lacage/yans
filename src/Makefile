@@ -39,7 +39,7 @@ SOURCE= \
 	ipv4/tcp.cc \
 	ipv4/tcp-pieces.cc \
 	ipv4/tcp-end-point.cc \
-	ipv4/tcp-connection.cc \
+	ipv4/tcp-bsd-connection.cc \
 	ipv4/tcp-connection-listener.cc \
 	ipv4/chunk-tcp.cc \
 	ipv4/chunk-udp.cc \

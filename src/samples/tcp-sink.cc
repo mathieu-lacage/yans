@@ -21,7 +21,7 @@
 
 #include "tcp-sink.h"
 #include "tcp-end-point.h"
-#include "tcp-connection.h"
+#include "tcp-bsd-connection.h"
 #include "tcp-connection-listener.h"
 #include "tcp.h"
 #include "host.h"
@@ -74,6 +74,10 @@ TcpSink::receive (void)
 }
 
 void
+TcpSink::transmitted (void)
+{}
+
+void
 TcpSink::got_ack (Packet *packet)
 {}
 
@@ -94,12 +98,13 @@ TcpSink::should_accept (Ipv4Address address, uint16_t port)
 }
 
 void
-TcpSink::connection_created (TcpConnection *connection, TcpEndPoint *end_point)
+TcpSink::connection_created (TcpBsdConnection *connection, TcpEndPoint *end_point)
 {
 	TRACE ("connection created");
 	m_connection = connection;
 	m_real_end_point = end_point;
 	connection->set_callbacks (make_callback (&TcpSink::completed, this),
+				   make_callback (&TcpSink::transmitted, this), 
 				   make_callback (&TcpSink::receive, this),
 				   make_callback (&TcpSink::got_ack, this));
 }
