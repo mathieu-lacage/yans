@@ -133,6 +133,7 @@ private:
 
 
 	uint32_t m_retransmission_timer;
+	uint32_t m_2msl_timer;
 
 	/* tcp receive and transmission buffers where packets to send 
 	 * and receive are accumulated.

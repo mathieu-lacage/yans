@@ -302,7 +302,7 @@ TcpConnection::send_out (Packet *packet)
 }
 
 
-bool
+void
 TcpConnection::send_syn_ack (Packet *packet)
 {
 	TRACE ("send SYN+ACK to " << static_cast <TagOutIpv4 *> (packet->get_tag (TagOutIpv4::get_tag ()))->get_daddress ());
@@ -311,19 +311,14 @@ TcpConnection::send_syn_ack (Packet *packet)
 	ChunkTcp *tcp = static_cast <ChunkTcp *> (packet->peek_header ());
 	tcp->enable_flag_syn ();
 	send_out (packet);
-
-	return true;
 }
 
-bool
+void
 TcpConnection::send_ack (Packet *packet)
 {
 	TRACE ("send ACK to " << static_cast <TagOutIpv4 *> (packet->get_tag (TagOutIpv4::get_tag ()))->get_daddress ());
-
 	invert_packet (packet);
 	send_out (packet);
-
-	return true;
 }
 
 void
@@ -340,6 +335,74 @@ TcpConnection::cancel_timers (void)
 {
 	m_retransmission_timer = 0;
 	m_2msl_timer = 0;
+}
+
+bool 
+TcpConnection::is_waiting_ack (void)
+{
+	if (m_snd_una == m_snd_max) {
+		return false;
+	} else {
+		return true;
+	}
+}
+
+void
+TcpConnection::get_state_flags (bool *send_syn, bool *send_rst, bool *send_ack)
+{
+	*send_rst = false;
+	*send_ack = true;
+	*send_syn = false;
+	switch (m_state) {
+	case CLOSED:
+		*send_rst = true;
+		break;
+	case LISTEN:
+		*send_rst = false;
+		*send_ack = false;
+		break;
+	case SYN_SNT:
+		*send_syn = true;
+		*send_ack = false;
+		break;
+	case ESTABLISHED:
+	case CLOSE_WAIT:
+	case FIN_WAIT2:
+	case TIME_WAIT:
+		break;
+	case SYNC_RCVD:
+	case FIN_WAIT1:
+	case CLOSING:
+	case LAST_ACK:
+		*send_syn = true;
+		break;
+	}
+}
+
+
+void
+TcpConnection::maybe_segments (void)
+{
+	bool send_syn, send_rst, send_ack;
+	bool sendalot, idle;
+
+	idle = !is_waiting_ack ();
+	if (idle && (m_idle_timer > m_rxtcur)) {
+		m_snd_cwnd = m_maxseg;
+	}
+
+ again:
+	sendalot = false;
+	get_state_flags (&send_syn, &send_rst, &send_ack);	
+
+
+	return;
+
+ send:
+	if (sendalot) {
+		goto again;
+	}
+	return;
 }
 
 void
@@ -418,67 +481,57 @@ TcpConnection::receive (Packet *packet)
 	}
 
  step1:
-	/* check whether the segment is acceptable */
-	bool acceptable;
-	uint32_t seq_len = packet->get_size () - tcp->get_size ();
-	uint32_t tmp1 = seq_add (m_rcv_nxt, m_rcv_wnd);
-	uint32_t tmp2 = seq_add (tcp->get_sequence_number (), seq_len - 1);
-	if (seq_len == 0 && 
-	    m_rcv_wnd == 0 &&
-	    m_rcv_nxt == tcp->get_sequence_number ()) {
-		acceptable = true;
-	} else if (seq_len == 0 && 
-		   m_rcv_wnd > 0 &&
-		   seq_le (m_rcv_nxt, tcp->get_sequence_number ()) &&
-		   seq_ls (tcp->get_sequence_number (), tmp1)) {
-		acceptable = true;
-	} else if (seq_len > 0 && 
-		   m_rcv_wnd > 0) {
-		if (seq_le (m_rcv_nxt, tcp->get_sequence_number ()) &&
-		    seq_ls (tcp->get_sequence_number (), )) {
-			acceptable = true;
-		} else if (seq_le (m_rcv_nxt, tmp2) &&
-			   seq_ls (tmp2, tmp1)) {
-			acceptable = true;
+	uint32_t len = packet->get_size () - tcp->get_size ();
+	uint32_t start_trim = 0;
+	uint32_t end_trim = 0;
+	
+	/* trim duplicate data at start of window */
+	if (seq_ls (tcp->get_sequence_number (), m_rcv_nxt)) {
+		/* remove duplicate syn. */
+		if (tcp->is_flag_syn ()) {
+			tcp->disable_flag_syn ();
+			tcp->set_sequence_number (tcp->get_sequence_number () + 1);
+		}
+		/* remove duplicate fin. */
+		uint32_t fin;
+		if (tcp->is_flag_fin ()) {
+			fin = 1;
 		} else {
-			acceptable = false;
+			fin = 0;
 		}
-	} else {
-		acceptable = false;
-	}
-
-	if (!acceptable) {
-		if (tcp->is_flag_rst ()) {
-			return;
+		if (seq_ls (seq_add (tcp->get_sequence_number (), len + fin),
+			    m_rcv_nxt)) {
+			tcp->disable_flag_fin ();
+			// XXX make sure an ACK is sent.
 		}
-		send_ack (packet);
-		return;
+		start_trim = seq_sub (m_rcv_nxt, tcp->get_sequence_number ());
 	}
+	/* trim data at end of window. */
+	if (seq_gs (seq_add (tcp->get_sequence_number (), len),
+		    seq_add (m_rcv_nxt, m_rcv_wnd))) {
 
-	/* trim segment to window. */
+		if (seq_ge (tcp->get_sequence_number (),
+			    seq_add (m_rcv_nxt, m_rcv_wnd))) {
+			/* segment is entirely out of reception window */
+			if (m_rcv_wnd == 0 &&
+			    tcp->get_sequence_number () == m_rcv_nxt) {
+				/* the window is closed. This is probably a window probe. */
+				// XXX force ACK to be sent. 
+			} else {
+				send_ack (packet);
+				return;
+			}
+		}
+		uint32_t end_trim = seq_sub (seq_add (tcp->get_sequence_number (), len),
+					     seq_add (m_rcv_nxt, m_rcv_wnd));
+		tcp->disable_flag_fin ();
+	}
+	/* really trim segment to window. */
 	tcp = static_cast <ChunkTcp *> (packet->remove_header ());
 	ChunkPiece *piece = ChunkPiece ();
 	piece->set_original (packet, 0, packet->get_size ());
-	if (packet->get_size () > 0) {
-		uint32_t start_trim = 0;
-		uint32_t end_trim = 0;
-		if (seq_ls (tcp->get_sequence_number (), m_rcv_nxt)) {
-			start_trim = seq_sub (m_rcv_nxt, tcp->get_sequence_number ());
-		}
-		if (seq_ge (tcp->get_sequence_number (), seq_add (m_rcv_nxt, m_rcv_wnd))) {
-			end_trim = seq_sub (seq_add (m_rcv_nxt, m_rcv_wnd), tcp->get_sequence_number ());
-		}
-		piece->trim_start (start_trim);
-		piece->trim_end (end_trim);
-		tcp->set_sequence_number (seq_add (tcp->get_sequence_number (), start_trim));
-	}
-
-	assert (seq_ge (tcp->get_sequence_number (), m_rcv_nxt));
-	if (seq_gs (tcp->get_sequence_number (), m_rcv_nxt)) {
-		m_recv->add_at (piece, seq_sub (tcp->get_sequence_number (), m_rcv_nxt));
-		delete tcp;
-		return;
-	}
+	piece->trim_start (start_trim);
+	piece->trim_end (end_trim);
 
  step2: /* check the rst bit */
 	if (tcp->is_flag_rst ()) {
@@ -626,6 +679,7 @@ TcpConnection::receive (Packet *packet)
 	case FIN_WAIT1:
 	case FIN_WAIT2:
 		// XXX reass
+		
 		m_recv->add_at_front (piece);
 		break;
 	default:
