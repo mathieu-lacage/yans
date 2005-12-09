@@ -60,6 +60,12 @@ class Tcp {
 	TcpBsdConnection *create_connection (TcpEndPoint *end_p);
 	TcpConnectionListener *create_connection_listener (TcpEndPoint *end_p);
 
+
+	// XXX
+	int get_new_iss (void);
+	int now (void); // tcp_now 
+	int get_rexmtthresh (void); // tcp_rexmtthresh
+
 private:
 	static const uint64_t FAST_TIMER_DELAY_US;
 	static const uint64_t SLOW_TIMER_DELAY_US;

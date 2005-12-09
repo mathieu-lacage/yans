@@ -307,6 +307,12 @@ Tcp::create_connection_listener (TcpEndPoint *end_p)
 	return connection;
 }
 
+int
+Tcp::get_new_iss (void)
+{
+	return (int)Simulator::now_us ();
+}
+
 void
 Tcp::slow_timer (void)
 {

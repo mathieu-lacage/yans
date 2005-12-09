@@ -174,6 +174,11 @@ ChunkTcp::disable_flag_psh (void)
 	disable_flag (PSH);
 }
 
+uint8_t 
+ChunkTcp::get_flags (void) const
+{
+	return m_flags;
+}
 bool 
 ChunkTcp::is_flag_syn (void) const
 {

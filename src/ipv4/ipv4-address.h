@@ -56,6 +56,9 @@ public:
 	void deserialize (ReadBuffer *buffer);
 	void print (std::ostream *os) const;
 
+	bool is_broadcast (void);
+	bool is_multicast (void);
+
 	static Ipv4Address get_zero (void);
 	static Ipv4Address get_any (void);
 	static Ipv4Address get_broadcast (void);

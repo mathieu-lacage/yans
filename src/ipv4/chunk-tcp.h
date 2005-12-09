@@ -45,6 +45,7 @@ public:
 	uint32_t get_option_timestamp_value (void);
 	uint32_t get_option_timestamp_reply (void);
 
+	uint8_t get_flags (void);
 	void enable_flag_syn (void);
 	void enable_flag_fin (void);
 	void enable_flag_rst (void);
