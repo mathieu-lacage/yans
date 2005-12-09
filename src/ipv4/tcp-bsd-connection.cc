@@ -31,8 +31,11 @@
 #include "ipv4.h"
 #include "tcp-pieces.h"
 #include "chunk-piece.h"
-#include "tcp-bsd-fsm.h"
 #include "tcp-bsd.h"
+#define MAX_TCPOPTLEN	32	/* max # bytes that go in options */
+#define TCPOUTFLAGS 1
+#include "tcp-bsd-fsm.h"
+#undef TCPOUTFLAGS
 #include "tcp-bsd-seq.h"
 
 
@@ -88,7 +91,7 @@ void
 TcpBsdConnection::set_end_point (TcpEndPoint *end_point)
 {
 	m_end_point = end_point;
-	m_end_point->set_callback (make_callback (&TcpBsdConnection::receive, this));
+	m_end_point->set_callback (make_callback (&TcpBsdConnection::input, this));
 }
 void 
 TcpBsdConnection::set_route (Route *route)
@@ -261,10 +264,202 @@ TcpBsdConnection::canceltimers (void)
 		m_t_timer[i] = 0;
 }
 
+int
+TcpBsdConnection::output (void)
+{
+	register long len, win;
+	int off, flags, error;
+	u_char opt[MAX_TCPOPTLEN];
+	unsigned optlen, hdrlen;
+	int idle, sendalot;
 
+	/*
+	 * Determine length of data that should be transmitted,
+	 * and flags that will be used.
+	 * If there is some data or critical controls (SYN, RST)
+	 * to send, then transmit; otherwise, investigate further.
+	 */
+	idle = (m_snd_max == m_snd_una);
+	if (idle && m_t_idle >= m_t_rxtcur)
+		/*
+		 * We have been idle for "a while" and no acks are
+		 * expected to clock out any data we send --
+		 * slow start to get ack "clock" running again.
+		 */
+		m_snd_cwnd = m_t_maxseg;
+
+again:
+	sendalot = 0;
+	off = m_snd_nxt - m_snd_una;
+	win = min(m_snd_wnd, m_snd_cwnd);
+
+	flags = tcp_outflags[m_t_state];
+	/*
+	 * If in persist timeout with window of 0, send 1 byte.
+	 * Otherwise, if window is small but nonzero
+	 * and timer expired, we will send what we can
+	 * and go to transmit state.
+	 */
+	if (m_t_force) {
+		if (win == 0) {
+			/*
+			 * If we still have some data to send, then
+			 * clear the FIN bit.  Usually this would
+			 * happen below when it realizes that we
+			 * aren't sending all the data.  However,
+			 * if we have exactly 1 byte of unset data,
+			 * then it won't clear the FIN bit below,
+			 * and if we are in persist state, we wind
+			 * up sending the packet without recording
+			 * that we sent the FIN bit.
+			 *
+			 * We can't just blindly clear the FIN bit,
+			 * because if we don't have any more data
+			 * to send then the probe will be the FIN
+			 * itself.
+			 */
+			if (off < ((int)m_send->get_data_at_front ()))
+				flags &= ~TH_FIN;
+			win = 1;
+		} else {
+			m_t_timer[TCPT_PERSIST] = 0;
+			m_t_rxtshift = 0;
+		}
+	}
+	len = min(((int)m_send->get_data_at_front ()), win) - off;
+
+	if (len < 0) {
+		/*
+		 * If FIN has been sent but not acked,
+		 * but we haven't been called to retransmit,
+		 * len will be -1.  Otherwise, window shrank
+		 * after we sent into it.  If window shrank to 0,
+		 * cancel pending retransmit and pull snd_nxt
+		 * back to (closed) window.  We will enter persist
+		 * state below.  If the window didn't close completely,
+		 * just wait for an ACK.
+		 */
+		len = 0;
+		if (win == 0) {
+			m_t_timer[TCPT_REXMT] = 0;
+			m_snd_nxt = m_snd_una;
+		}
+	}
+	if (len > m_t_maxseg) {
+		len = m_t_maxseg;
+		sendalot = 1;
+	}
+	if (SEQ_LT(m_snd_nxt + len, m_snd_una + m_send->get_data_at_front ()))
+		flags &= ~TH_FIN;
+
+	win = m_recv->get_empty_at_back ();
+
+	/*
+	 * Sender silly window avoidance.  If connection is idle
+	 * and can send all data, a maximum segment,
+	 * at least a maximum default-size segment do it,
+	 * or are forced, do it; otherwise don't bother.
+	 * If peer's buffer is tiny, then send
+	 * when window is at least half open.
+	 * If retransmitting (possibly after persist timer forced us
+	 * to send into a small window), then must resend.
+	 */
+	if (len) {
+		if (len == m_t_maxseg)
+			goto send;
+		if ((idle || m_t_flags & TF_NODELAY) &&
+		    len + off >= ((int)m_send->get_data_at_front ()))
+			goto send;
+		if (m_t_force)
+			goto send;
+		if (len >= ((long)m_max_sndwnd) / 2)
+			goto send;
+		if (SEQ_LT(m_snd_nxt, m_snd_max))
+			goto send;
+	}
+
+	/*
+	 * Compare available window to amount of window
+	 * known to peer (as advertised window less
+	 * next expected input).  If the difference is at least two
+	 * max size segments, or at least 50% of the maximum possible
+	 * window, then want to send a window update to peer.
+	 */
+	if (win > 0) {
+		/* 
+		 * "adv" is the amount we can increase the window,
+		 * taking into account that we are limited by
+		 * TCP_MAXWIN << tp->rcv_scale.
+		 */
+		long adv = min(win, (long)TCP_MAXWIN << m_rcv_scale) -
+			(m_rcv_adv - m_rcv_nxt);
+
+		if (adv >= (long) (2 * m_t_maxseg))
+			goto send;
+#if 0
+		if (2 * adv >= (long) so->so_rcv.sb_hiwat)
+			goto send;
+#endif
+	}
+
+	/*
+	 * Send if we owe peer an ACK.
+	 */
+	if (m_t_flags & TF_ACKNOW)
+		goto send;
+	if (flags & (TH_SYN|TH_RST))
+		goto send;
+	if (SEQ_GT(m_snd_up, m_snd_una))
+		goto send;
+	/*
+	 * If our state indicates that FIN should be sent
+	 * and we have not yet done so, or we're retransmitting the FIN,
+	 * then we need to send.
+	 */
+	if (flags & TH_FIN &&
+	    ((m_t_flags & TF_SENTFIN) == 0 || m_snd_nxt == m_snd_una))
+		goto send;
+
+	/*
+	 * TCP window updates are not reliable, rather a polling protocol
+	 * using ``persist'' packets is used to insure receipt of window
+	 * updates.  The three ``states'' for the output side are:
+	 *	idle			not doing retransmits or persists
+	 *	persisting		to move a small or zero window
+	 *	(re)transmitting	and thereby not persisting
+	 *
+	 * tp->t_timer[TCPT_PERSIST]
+	 *	is set when we are in persist state.
+	 * tp->t_force
+	 *	is set when we are called to send a persist packet.
+	 * tp->t_timer[TCPT_REXMT]
+	 *	is set when we are retransmitting
+	 * The output side is idle when both timers are zero.
+	 *
+	 * If send window is too small, there is data to transmit, and no
+	 * retransmit or persist is pending, then go to persist state.
+	 * If nothing happens soon, send when timer expires:
+	 * if window is nonzero, transmit what we can,
+	 * otherwise force out a byte.
+	 */
+	if (m_send->get_data_at_front () && m_t_timer[TCPT_REXMT] == 0 &&
+	    m_t_timer[TCPT_PERSIST] == 0) {
+		m_t_rxtshift = 0;
+		//tcp_setpersist(tp);
+		//XXX
+	}
+
+	/*
+	 * No reason to send a segment, just return.
+	 */
+	return (0);
+
+ send:
+	return -1;
+}
 
 void
-TcpBsdConnection::receive (Packet *packet)
+TcpBsdConnection::input (Packet *packet)
 {
 	caddr_t optp = NULL;
 	int optlen;
@@ -329,10 +524,10 @@ TcpBsdConnection::receive (Packet *packet)
 	 * If the segment contains an ACK then it is bad and send a RST.
 	 * If it does not contain a SYN then it is not interesting; drop it.
 	 * Don't bother responding if the destination was a broadcast.
-	 * Otherwise initialize tp->rcv_nxt, and tp->irs, select an initial
-	 * tp->iss, and send a segment:
+	 * Otherwise initialize m_rcv_nxt, and m_irs, select an initial
+	 * m_iss, and send a segment:
 	 *     <SEQ=ISS><ACK=RCV_NXT><CTL=SYN,ACK>
-	 * Also initialize tp->snd_nxt to tp->iss+1 and tp->snd_una to tp->iss.
+	 * Also initialize m_snd_nxt to m_iss+1 and m_snd_una to m_iss.
 	 * Fill in remote peer address fields if not previously specified.
 	 * Enter SYN_RECEIVED state, and process any other fields of this
 	 * segment in this state.
@@ -377,8 +572,8 @@ TcpBsdConnection::receive (Packet *packet)
 	 *	if seg contains a RST, then drop the connection.
 	 *	if seg does not contain SYN, then drop it.
 	 * Otherwise this is an acceptable SYN segment
-	 *	initialize tp->rcv_nxt and tp->irs
-	 *	if seg contains ack then advance tp->snd_una
+	 *	initialize m_rcv_nxt and m_irs
+	 *	if seg contains ack then advance m_snd_una
 	 *	if SYN has been acked change to ESTABLISHED else SYN_RCVD state
 	 *	arrange for segment to be acked (eventually)
 	 *	continue processing rest of data/controls, beginning with URG
@@ -625,8 +820,8 @@ trimthenstep6:
 	/*
 	 * In ESTABLISHED state: drop duplicate ACKs; ACK out of range
 	 * ACKs.  If the ack is in the range
-	 *	tp->snd_una < ti->ti_ack <= tp->snd_max
-	 * then advance tp->snd_una to ti->ti_ack and drop
+	 *	m_snd_una < ti->ti_ack <= m_snd_max
+	 * then advance m_snd_una to ti->ti_ack and drop
 	 * data from the retransmission queue.  If this ACK reflects
 	 * more up to date window information we update our window information.
 	 */
@@ -854,7 +1049,7 @@ dodata:							/* XXX */
 	/*
 	 * Process the segment text, merging it into the TCP sequencing queue,
 	 * and arranging for acknowledgment of receipt if necessary.
-	 * This process logically involves adjusting tp->rcv_wnd as data
+	 * This process logically involves adjusting m_rcv_wnd as data
 	 * is presented to the user (this happens in tcp_usrreq.c,
 	 * case PRU_RCVD).  If a FIN has already been received on this
 	 * connection then we just ignore the text.

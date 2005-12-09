@@ -69,7 +69,8 @@ public:
 private:
 	void notify_data_ready_to_send (void);
 	void notify_room_ready_to_receive (void);
-	void receive (Packet *packet);
+	void input (Packet *packet);
+	int output (void);
 	void drop (int errno);
 	void xmit_timer (short rtt);
 	void canceltimers (void);
