@@ -41,19 +41,25 @@ public:
 	uint32_t get_ack_number (void);
 	uint16_t get_window_size (void);
 	uint16_t get_urgent_pointer (void);
-	uint16_t get_option_mss (void);
-	uint32_t get_option_timestamp_value (void);
-	uint32_t get_option_timestamp_reply (void);
 
-	uint8_t get_flags (void);
+	uint16_t get_option_mss (void) const;
+	uint32_t get_option_timestamp_value (void) const;
+	uint32_t get_option_timestamp_reply (void) const;
+	uint8_t  get_option_windowscale (void) const;
+	void enable_option_mss (uint16_t mss);
+	void enable_option_timestamp (uint32_t value, uint32_t reply);
+	void enable_option_windowscale (uint8_t log_scale);
+	bool is_option_mss (void) const;
+	bool is_option_timestamp (void) const;
+	bool is_option_windowscale (void) const;
+
+
 	void enable_flag_syn (void);
 	void enable_flag_fin (void);
 	void enable_flag_rst (void);
 	void enable_flag_ack (void);
 	void enable_flag_urg (uint16_t ptr);
 	void enable_flag_psh (void);
-	void enable_option_mss (uint16_t mss);
-	void enable_option_timestamp (uint32_t value, uint32_t reply);
 
 	void disable_flags (void);
 	void disable_flag_syn (void);
@@ -69,8 +75,6 @@ public:
 	bool is_flag_ack (void) const;
 	bool is_flag_urg (void) const;
 	bool is_flag_psh (void) const;
-	bool is_option_mss (void) const;
-	bool is_option_timestamp (void) const;
 
 	bool is_checksum_ok (void);
 
@@ -100,7 +104,13 @@ private:
 	uint16_t m_window_size;
 	uint16_t m_checksum;
 	uint16_t m_urgent_pointer;
-	uint32_t m_mss;
+	bool m_has_option_mss;
+	bool m_has_option_timestamp;
+	bool m_has_option_windowscale;
+	uint16_t m_option_mss;
+	uint8_t m_option_windowscale;
+	uint32_t m_option_timestamp_value;
+	uint32_t m_option_timestamp_reply;
 };
 
 #endif /* CHUNK_TCP_H */

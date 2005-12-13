@@ -33,7 +33,9 @@ ChunkTcp::ChunkTcp ()
 	  m_window_size (0),
 	  m_checksum (0),
 	  m_urgent_pointer (0),
-	  m_mss (0)
+	  m_has_option_mss (false),
+	  m_has_option_timestamp (false),
+	  m_has_option_windowscale (false)
 {}
 
 ChunkTcp::~ChunkTcp ()
@@ -94,11 +96,6 @@ ChunkTcp::get_urgent_pointer (void)
 {
 	return utils_ntoh_16 (m_urgent_pointer);
 }
-uint16_t 
-ChunkTcp::get_option_mss (void)
-{
-	return (m_mss >> 16) & 0xffff;
-}
 void 
 ChunkTcp::enable_flag_syn (void)
 {
@@ -129,13 +126,6 @@ void
 ChunkTcp::enable_flag_psh (void)
 {
 	enable_flag (PSH);
-}
-void 
-ChunkTcp::enable_option_mss (uint16_t mss)
-{
-	uint32_t real = 0;
-	real = (2) | (4 << 8) | (mss << 16);
-	m_mss = utils_hton_32 (real);
 }
 
 void 
@@ -174,11 +164,6 @@ ChunkTcp::disable_flag_psh (void)
 	disable_flag (PSH);
 }
 
-uint8_t 
-ChunkTcp::get_flags (void) const
-{
-	return m_flags;
-}
 bool 
 ChunkTcp::is_flag_syn (void) const
 {
@@ -209,11 +194,68 @@ ChunkTcp::is_flag_psh (void) const
 {
 	return is_flag (PSH);
 }
+
+
+
+uint16_t 
+ChunkTcp::get_option_mss (void) const
+{
+	assert (is_option_mss ());
+	return m_option_mss;
+}
+uint32_t 
+ChunkTcp::get_option_timestamp_value (void) const
+{
+	assert (is_option_timestamp ());
+	return m_option_timestamp_value;
+}
+uint32_t 
+ChunkTcp::get_option_timestamp_reply (void) const
+{
+	assert (is_option_timestamp ());
+	return m_option_timestamp_reply;
+}
+uint8_t  
+ChunkTcp::get_option_windowscale (void) const
+{
+	assert (is_option_windowscale ());
+	return m_option_windowscale;
+}
+void 
+ChunkTcp::enable_option_mss (uint16_t mss)
+{
+	m_has_option_mss = true;
+	m_option_mss = mss;
+}
+void 
+ChunkTcp::enable_option_timestamp (uint32_t value, uint32_t reply)
+{
+	m_has_option_timestamp = true;
+	m_option_timestamp_value = value;
+	m_option_timestamp_reply = reply;
+}
+void 
+ChunkTcp::enable_option_windowscale (uint8_t log_scale)
+{
+	m_has_option_windowscale = true;
+	m_option_windowscale = log_scale;
+}
 bool 
 ChunkTcp::is_option_mss (void) const
 {
-	return (m_mss != 0)?true:false;
+	return m_has_option_mss;
 }
+bool 
+ChunkTcp::is_option_timestamp (void) const
+{
+	return m_has_option_timestamp;
+}
+bool 
+ChunkTcp::is_option_windowscale (void) const
+{
+	return m_has_option_windowscale;
+}
+
 
 bool 
 ChunkTcp::is_checksum_ok (void)
@@ -262,7 +304,23 @@ ChunkTcp::serialize (WriteBuffer *buffer)
 	buffer->write ((uint8_t *)&checksum, 2);
 	buffer->write ((uint8_t *)&m_urgent_pointer, 2);
 	if (is_option_mss ()) {
-		buffer->write ((uint8_t *)&m_mss, 4);
+		buffer->write_u8 (2);
+		buffer->write_u8 (4);
+		buffer->write_hton_u16 (m_option_mss);
+	}
+	if (is_option_windowscale ()) {
+		buffer->write_u8 (0);
+		buffer->write_u8 (3);
+		buffer->write_u8 (3);
+		buffer->write_u8 (m_option_windowscale);
+	}
+	if (is_option_timestamp ()) {
+		buffer->write_u8 (0);
+		buffer->write_u8 (0);
+		buffer->write_u8 (8);
+		buffer->write_u8 (10);
+		buffer->write_hton_u32 (m_option_timestamp_value);
+		buffer->write_hton_u32 (m_option_timestamp_reply);
 	}
 }
 
@@ -278,9 +336,6 @@ ChunkTcp::deserialize (ReadBuffer *buffer)
 	buffer->read ((uint8_t *)&m_window_size, 2);
 	buffer->read ((uint8_t *)&m_checksum, 2);
 	buffer->read ((uint8_t *)&m_urgent_pointer, 2);
-	if (get_size () == 24) {
-		buffer->read ((uint8_t *)&m_mss, 4);
-	}
 }
 
 void
@@ -323,7 +378,14 @@ ChunkTcp::print (std::ostream *os) const
 		*os << " urgent pointer: " << m_urgent_pointer;
 	}
 	if (is_option_mss ()) {
-		*os << " mss: " << (m_mss >> 16);
+		*os << " mss: " << m_option_mss;
+	}
+	if (is_option_timestamp ()) {
+		*os << " tsval: " << m_option_timestamp_value
+		    << " tsecho: " << m_option_timestamp_reply;
+	}
+	if (is_option_windowscale ()) {
+		*os << " windowscale: " << m_option_windowscale;
 	}
 }
 
