@@ -67,27 +67,6 @@ public:
 	void slow_timer (void);
 	void fast_timer (void);
 private:
-	void notify_data_ready_to_send (void);
-	void notify_room_ready_to_receive (void);
-	void input (Packet *packet);
-	int output (void);
-	void drop (int errno);
-	void xmit_timer (short rtt);
-	void canceltimers (void);
-
-	TcpEndPoint *m_end_point;
-	Route *m_route;
-	ConnectionCompletedCallback *m_connection_completed;
-	DataReceivedCallback *m_data_received;
-	DataTransmittedCallback *m_data_transmitted;
-	AckReceivedCallback *m_ack_received;
-	TcpBsdConnectionDestroy *m_destroy;
-	Ipv4 *m_ipv4;
-	Host *m_host;
-	TcpPieces *m_send;
-	TcpPieces *m_recv;
-
-
 	typedef unsigned char u_char;
 	typedef unsigned short u_short;
 	typedef unsigned int u_int;
@@ -100,6 +79,30 @@ private:
 	typedef uint8_t u_int8_t;
 	typedef uint16_t u_int16_t;
 	typedef uint32_t u_int32_t;
+
+
+	void notify_data_ready_to_send (void);
+	void notify_room_ready_to_receive (void);
+	void input (Packet *packet);
+	int output (void);
+	void drop (int errno);
+	void xmit_timer (short rtt);
+	void canceltimers (void);
+	u_int mss (u_int offer);
+	void dooptions (ChunkTcp *tcp, int *ts_present, u_long *ts_val, u_long *ts_ecr);
+	void setpersist (void);
+
+	TcpEndPoint *m_end_point;
+	Route *m_route;
+	ConnectionCompletedCallback *m_connection_completed;
+	DataReceivedCallback *m_data_received;
+	DataTransmittedCallback *m_data_transmitted;
+	AckReceivedCallback *m_ack_received;
+	TcpBsdConnectionDestroy *m_destroy;
+	Ipv4 *m_ipv4;
+	Host *m_host;
+	TcpPieces *m_send;
+	TcpPieces *m_recv;
 
 
 	short	m_t_state;		/* state of this connection */

@@ -37,11 +37,17 @@
 #include "tcp-bsd-fsm.h"
 #undef TCPOUTFLAGS
 #include "tcp-bsd-seq.h"
+#include "network-interface.h"
 
 
 #define min(a,b) (((a)<(b))?(a):(b))
 #define max(a,b) (((a)>(b))?(a):(b))
+#define panic(x)
 
+#define TCPIPHDRLEN (32)
+#define IPHDRLEN (16)
+#define    MCLBYTES        (1024)
+#define    MCLOFSET        (MCLBYTES - 1)
 #define TSTMP_GEQ(a,b)	((int)((a)-(b)) >= 0)
 #define TSTMP_LT(a,b)       ((int)((a)-(b)) < 0)
 #define TCP_PAWS_IDLE       (24 * 24 * 60 * 60 * PR_SLOWHZ)
@@ -58,6 +64,8 @@ std::cout << "TCP CONN " << Simulator::now_s () << " " << x << std::endl;
 # define TRACE(format,...)
 #endif /* TRACE_TCP_BSD_CONNECTION */
 
+int     tcp_backoff[TCP_MAXRXTSHIFT + 1] =
+	{ 1, 2, 4, 8, 16, 32, 64, 64, 64, 64, 64, 64, 64 };
 
 
 TcpBsdConnection::TcpBsdConnection ()
@@ -184,6 +192,83 @@ TcpBsdConnection::drop (int errno)
         m_so_error = errno;
 }
 
+u_int
+TcpBsdConnection::mss (u_int offer)
+{
+	register int mss;
+	u_long bufsize;
+	//extern int tcp_mssdflt;
+
+	
+
+	{
+		mss = m_route->get_interface ()->get_mtu () - TCPIPHDRLEN;
+#if	(MCLBYTES & (MCLBYTES - 1)) == 0
+		if (mss > MCLBYTES)
+			mss &= ~(MCLBYTES-1);
+#else
+		if (mss > MCLBYTES)
+			mss = mss / MCLBYTES * MCLBYTES;
+#endif
+#if 0
+		if (!in_localaddr(inp->inp_faddr))
+			mss = min(mss, tcp_mssdflt);
+#endif
+	}
+	/*
+	 * The current mss, t_maxseg, is initialized to the default value.
+	 * If we compute a smaller value, reduce the current mss.
+	 * If we compute a larger value, return it for use in sending
+	 * a max seg size option, but don't store it for use
+	 * unless we received an offer at least that large from peer.
+	 * However, do not accept offers under 32 bytes.
+	 */
+	if (offer)
+		mss = min(mss, ((int)offer));
+	mss = max(mss, 32);		/* sanity */
+	if (mss < m_t_maxseg || offer != 0) {
+		/*
+		 * If there's a pipesize, change the socket buffer
+		 * to that size.  Make the socket buffers an integral
+		 * number of mss units; if the mss is larger than
+		 * the socket buffer, decrease the mss.
+		 */
+		bufsize = m_send->get_size ();
+		if (((int)bufsize) < mss)
+			mss = bufsize;
+		m_t_maxseg = mss;
+
+	}
+	m_snd_cwnd = mss;
+
+	return (mss);
+}
+
+void
+TcpBsdConnection::dooptions(ChunkTcp *tcp, int *ts_present, u_long *ts_val, u_long *ts_ecr)
+{
+	if (tcp->is_option_mss () && 
+	    tcp->is_flag_syn ()) {
+		mss (tcp->get_option_mss ());
+	}
+	if (tcp->is_option_windowscale () &&
+	    tcp->is_flag_syn ()) {
+		m_t_flags |= TF_RCVD_SCALE;
+		m_requested_s_scale = min(tcp->get_option_windowscale (), TCP_MAX_WINSHIFT);
+	}
+	if (tcp->is_option_timestamp ()) {
+		*ts_present = 1;
+		*ts_val = tcp->get_option_timestamp_value ();
+		*ts_ecr = tcp->get_option_timestamp_reply ();
+		if (tcp->is_flag_syn ()) {
+			m_t_flags |= TF_RCVD_TSTMP;
+			m_ts_recent = *ts_val;
+			m_ts_recent_age = m_host->get_tcp ()->now ();
+		}
+	}
+}
+
+
 /*
  * Collect new round-trip time estimate
  * and update averages and current timeout.
@@ -264,13 +349,29 @@ TcpBsdConnection::canceltimers (void)
 		m_t_timer[i] = 0;
 }
 
+void
+TcpBsdConnection::setpersist (void)
+{
+	register int t = ((m_t_srtt >> 2) + m_t_rttvar) >> 1;
+
+	if (m_t_timer[TCPT_REXMT])
+		panic("tcp_output REXMT");
+	/*
+	 * Start/restart persistance timer.
+	 */
+	TCPT_RANGESET(m_t_timer[TCPT_PERSIST],
+		      t * ::tcp_backoff[m_t_rxtshift],
+		      TCPTV_PERSMIN, TCPTV_PERSMAX);
+	if (m_t_rxtshift < TCP_MAXRXTSHIFT)
+		m_t_rxtshift++;
+}
+
+
 int
 TcpBsdConnection::output (void)
 {
 	register long len, win;
-	int off, flags, error;
-	u_char opt[MAX_TCPOPTLEN];
-	unsigned optlen, hdrlen;
+	int off, flags;
 	int idle, sendalot;
 
 	/*
@@ -445,7 +546,7 @@ again:
 	if (m_send->get_data_at_front () && m_t_timer[TCPT_REXMT] == 0 &&
 	    m_t_timer[TCPT_PERSIST] == 0) {
 		m_t_rxtshift = 0;
-		//tcp_setpersist(tp);
+		setpersist();
 		//XXX
 	}
 
@@ -455,18 +556,208 @@ again:
 	return (0);
 
  send:
-	return -1;
+	ChunkTcp *tcp = new ChunkTcp ();
+	/*
+	 * Before ESTABLISHED, force sending of initial options
+	 * unless TCP set not to do any options.
+	 * NOTE: we assume that the IP/TCP header plus TCP options
+	 * always fit in a single mbuf, leaving room for a maximum
+	 * link header, i.e.
+	 *	max_linkhdr + sizeof (struct tcpiphdr) + optlen <= MHLEN
+	 */
+	if (flags & TH_SYN) {
+		m_snd_nxt = m_iss;
+		if ((m_t_flags & TF_NOOPT) == 0) {
+			tcp->enable_option_mss (mss (0));
+
+			if ((m_t_flags & TF_REQ_SCALE) &&
+			    ((flags & TH_ACK) == 0 ||
+			    (m_t_flags & TF_RCVD_SCALE))) {
+				tcp->enable_option_windowscale (m_request_r_scale);
+			}
+		}
+ 	}
+ 
+ 	/*
+	 * Send a timestamp and echo-reply if this is a SYN and our side 
+	 * wants to use timestamps (TF_REQ_TSTMP is set) or both our side
+	 * and our peer have sent timestamps in our SYN's.
+ 	 */
+ 	if ((m_t_flags & (TF_REQ_TSTMP|TF_NOOPT)) == TF_REQ_TSTMP &&
+ 	     (flags & TH_RST) == 0 &&
+ 	    ((flags & (TH_SYN|TH_ACK)) == TH_SYN ||
+	     (m_t_flags & TF_RCVD_TSTMP))) {
+		tcp->enable_option_timestamp (m_host->get_tcp ()->now (), m_ts_recent);
+ 	}
+ 
+	/*
+	 * Adjust data length if insertion of options will
+	 * bump the packet length beyond the t_maxseg length.
+	 */
+	if (len > m_t_maxseg - ((int)tcp->get_size ()) - IPHDRLEN) {
+		len = m_t_maxseg - tcp->get_size () - IPHDRLEN;
+		sendalot = 1;
+	}
+
+	/*
+	 * Grab a header mbuf, attaching a copy of data to
+	 * be transmitted, and initialize the header from
+	 * the template for sends on this connection.
+	 */
+	Packet *packet;
+	if (len) {
+		packet = m_send->get_at_front (len);
+		/*
+		 * If we're sending everything we've got, set PUSH.
+		 * (This will keep happy those implementations which only
+		 * give data to the user when a buffer fills or
+		 * a PUSH comes in.)
+		 */
+		if (off + len == ((int)m_send->get_data_at_front ()))
+			flags |= TH_PUSH;
+	} else {
+		packet = new Packet ();
+	}
+	packet->add_header (tcp);
+
+	/*
+	 * Fill in fields, remembering maximum advertised
+	 * window for use in delaying messages about window sizes.
+	 * If resending a FIN, be sure not to use a new sequence number.
+	 */
+	if (flags & TH_FIN && m_t_flags & TF_SENTFIN && 
+	    m_snd_nxt == m_snd_max)
+		m_snd_nxt--;
+	/*
+	 * If we are doing retransmissions, then snd_nxt will
+	 * not reflect the first unsent octet.  For ACK only
+	 * packets, we do not want the sequence number of the
+	 * retransmitted packet, we want the sequence number
+	 * of the next unsent octet.  So, if there is no data
+	 * (and no SYN or FIN), use snd_max instead of snd_nxt
+	 * when filling in ti_seq.  But if we are in persist
+	 * state, snd_max might reflect one byte beyond the
+	 * right edge of the window, so use snd_nxt in that
+	 * case, since we know we aren't doing a retransmission.
+	 * (retransmit and persist are mutually exclusive...)
+	 */
+	if (len || (flags & (TH_SYN|TH_FIN)) || m_t_timer[TCPT_PERSIST])
+		tcp->set_sequence_number (m_snd_nxt);
+	else
+		tcp->set_sequence_number (m_snd_max);
+	tcp->set_ack_number (m_rcv_nxt);
+	if (flags & TH_SYN) {
+		tcp->enable_flag_syn ();
+	}
+	if (flags & TH_FIN) {
+		tcp->enable_flag_fin ();
+	}
+	if (flags & TH_RST) {
+		tcp->enable_flag_rst ();
+	}
+	if (flags & TH_ACK) {
+		tcp->enable_flag_ack ();
+	}
+	if (flags & TH_PUSH) {
+		tcp->enable_flag_psh ();
+	}
+	/*
+	 * Calculate receive window.  Don't shrink window,
+	 * but avoid silly window syndrome.
+	 */
+	if (win < (long)(m_recv->get_size () / 4) && win < (long)m_t_maxseg)
+		win = 0;
+	if (win > (long)TCP_MAXWIN << m_rcv_scale)
+		win = (long)TCP_MAXWIN << m_rcv_scale;
+	if (win < (long)(m_rcv_adv - m_rcv_nxt))
+		win = (long)(m_rcv_adv - m_rcv_nxt);
+	tcp->set_window_size (win>>m_rcv_scale);
+	if (SEQ_GT(m_snd_up, m_snd_nxt)) {
+		tcp->enable_flag_urg ((u_short)(m_snd_up - m_snd_nxt));
+	} else
+		/*
+		 * If no urgent pointer to send, then we pull
+		 * the urgent pointer to the left edge of the send window
+		 * so that it doesn't drift into the send window on sequence
+		 * number wraparound.
+		 */
+		m_snd_up = m_snd_una;		/* drag it along */
+
+	/*
+	 * In transmit state, time the transmission and arrange for
+	 * the retransmit.  In persist state, just set snd_max.
+	 */
+	if (m_t_force == 0 || m_t_timer[TCPT_PERSIST] == 0) {
+		tcp_seq startseq = m_snd_nxt;
+
+		/*
+		 * Advance snd_nxt over sequence space of this segment.
+		 */
+		if (flags & (TH_SYN|TH_FIN)) {
+			if (flags & TH_SYN)
+				m_snd_nxt++;
+			if (flags & TH_FIN) {
+				m_snd_nxt++;
+				m_t_flags |= TF_SENTFIN;
+			}
+		}
+		m_snd_nxt += len;
+		if (SEQ_GT(m_snd_nxt, m_snd_max)) {
+			m_snd_max = m_snd_nxt;
+			/*
+			 * Time this transmission if not a retransmission and
+			 * not currently timing anything.
+			 */
+			if (m_t_rtt == 0) {
+				m_t_rtt = 1;
+				m_t_rtseq = startseq;
+			}
+		}
+
+		/*
+		 * Set retransmit timer if not currently set,
+		 * and not doing an ack or a keep-alive probe.
+		 * Initial value for retransmit timer is smoothed
+		 * round-trip time + 2 * round-trip time variance.
+		 * Initialize shift counter which is used for backoff
+		 * of retransmit time.
+		 */
+		if (m_t_timer[TCPT_REXMT] == 0 &&
+		    m_snd_nxt != m_snd_una) {
+			m_t_timer[TCPT_REXMT] = m_t_rxtcur;
+			if (m_t_timer[TCPT_PERSIST]) {
+				m_t_timer[TCPT_PERSIST] = 0;
+				m_t_rxtshift = 0;
+			}
+		}
+	} else
+		if (SEQ_GT(m_snd_nxt + len, m_snd_max))
+			m_snd_max = m_snd_nxt + len;
+
+	m_ipv4->set_protocol (TCP_PROTOCOL);
+	m_ipv4->send (packet);
+
+	/*
+	 * Data sent (as far as we can tell).
+	 * If this advertises a larger window than any other segment,
+	 * then remember the size of the advertised window.
+	 * Any pending ACK has now been sent.
+	 */
+	if (win > 0 && SEQ_GT(m_rcv_nxt+win, m_rcv_adv))
+		m_rcv_adv = m_rcv_nxt + win;
+	m_last_ack_sent = m_rcv_nxt;
+	m_t_flags &= ~(TF_ACKNOW|TF_DELACK);
+	if (sendalot)
+		goto again;
+	return 0;
 }
 
 void
 TcpBsdConnection::input (Packet *packet)
 {
 	caddr_t optp = NULL;
-	int optlen;
-	int len, tlen, off;
 	int tiflags;
 	int todrop, acked, ourfinisacked, needoutput = 0;
-	short ostate;
 	int dropsocket = 0;
 	int iss = 0;
 	u_long tiwin, ts_val, ts_ecr;
@@ -476,8 +767,6 @@ TcpBsdConnection::input (Packet *packet)
 	ChunkPiece *piece = new ChunkPiece ();
 	piece->set_original (packet, 0, packet->get_size ());
 
-	off = tcp->get_size ();
-	tlen = packet->get_size ();
 	tiflags = tcp->get_flags ();
 	
 	if (m_t_state == TCPS_CLOSED)
@@ -492,15 +781,12 @@ TcpBsdConnection::input (Packet *packet)
 	m_t_idle = 0;
 	m_t_timer[TCPT_KEEP] = m_tcp_keepidle;
 
-#if 0
 	/*
 	 * Process options if not in LISTEN state,
 	 * else do it below (after getting remote address).
 	 */
 	if (optp && m_t_state != TCPS_LISTEN)
-		tcp_dooptions(tp, optp, optlen, ti,
-			&ts_present, &ts_val, &ts_ecr);
-#endif
+		dooptions(tcp, &ts_present, &ts_val, &ts_ecr);
 
 
 	/*
@@ -547,11 +833,8 @@ TcpBsdConnection::input (Packet *packet)
 		Ipv4Address ad = m_end_point->get_peer_address ();
 		if (ad.is_multicast ())
 			goto drop;
-#if 0
 		if (optp)
-			tcp_dooptions(tp, optp, optlen, ti,
-				&ts_present, &ts_val, &ts_ecr);
-#endif
+			dooptions(tcp, &ts_present, &ts_val, &ts_ecr);
 		if (iss)
 			m_iss = iss;
 		else
@@ -1044,7 +1327,7 @@ step6:
 		m_rcv_up = m_rcv_nxt;
 
 
-dodata:							/* XXX */
+
 	
 	/*
 	 * Process the segment text, merging it into the TCP sequencing queue,
