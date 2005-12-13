@@ -185,7 +185,7 @@ TcpBsdConnection::drop (int errno)
 {
         if (TCPS_HAVERCVDSYN(m_t_state)) {
                 m_t_state = TCPS_CLOSED;
-                // XXX (void) output(tp);
+                output ();
         }
         if (errno == ETIMEDOUT && m_t_softerror)
                 errno = m_t_softerror;
@@ -365,6 +365,61 @@ TcpBsdConnection::setpersist (void)
 	if (m_t_rxtshift < TCP_MAXRXTSHIFT)
 		m_t_rxtshift++;
 }
+
+/*
+ * Insert segment ti into reassembly queue of tcp with
+ * control block tp.  Return TH_FIN if reassembly now includes
+ * a segment with FIN.  The macro form does the common case inline
+ * (segment is the next to be received on an established connection,
+ * and the queue is empty), avoiding linkage into and removal
+ * from the queue and repetition of various conversions.
+ * Set DELACK for segments received in order, but ack immediately
+ * when segments are out of order (so fast retransmit can work).
+ */
+#define	REASS(tcp, packet, flags) { \
+	if (tcp->get_sequence_number () == m_rcv_nxt && \
+            m_recv->is_empty () && \
+	    m_t_state == TCPS_ESTABLISHED) { \
+		m_t_flags |= TF_DELACK; \
+		m_rcv_nxt += packet->get_size (); \
+                if (tcp->is_flag_fin ()) { \
+			flags = TH_FIN; \
+		}  else { \
+			flags = 0; \
+		} \
+                ChunkPiece * piece = static_cast <ChunkPiece *> (packet->remove_header ()); \
+	        m_recv->add_at_back (piece); \
+		(*m_data_received) (); \
+	} else { \
+		(flags) = reass(tcp, packet); \
+		m_t_flags |= TF_ACKNOW; \
+	} \
+}
+
+int
+TcpBsdConnection::reass(ChunkTcp *tcp, Packet *packet)
+{
+	if (tcp == 0 || packet == 0) {
+		if (m_recv->get_data_at_front () != 0) {
+			(*m_data_received) ();
+			return 0;
+		}
+	}
+	ChunkPiece *piece = static_cast <ChunkPiece *> (packet->remove_header ());
+	uint32_t prev_available = m_recv->get_data_at_front ();
+	m_recv->add_at (piece, tcp->get_sequence_number ());
+	uint32_t completed = m_recv->get_data_at_front () - prev_available;
+	/*
+	 * Present data to user, advancing rcv_nxt through
+	 * completed sequence space.
+	 */
+	if (TCPS_HAVERCVDSYN(m_t_state) == 0)
+		return (0);
+	m_rcv_nxt += completed;
+	(*m_data_received) ();
+	return 0;
+}
+
 
 
 int
@@ -547,7 +602,6 @@ again:
 	    m_t_timer[TCPT_PERSIST] == 0) {
 		m_t_rxtshift = 0;
 		setpersist();
-		//XXX
 	}
 
 	/*
@@ -899,16 +953,13 @@ TcpBsdConnection::input (Packet *packet)
 		m_t_flags |= TF_ACKNOW;
 		if (tiflags & TH_ACK && SEQ_GT(m_snd_una, m_iss)) {
 			m_t_state = TCPS_ESTABLISHED;
-#if 0
 			/* Do window scaling on this connection? */
 			if ((m_t_flags & (TF_RCVD_SCALE|TF_REQ_SCALE)) ==
 				(TF_RCVD_SCALE|TF_REQ_SCALE)) {
 				m_snd_scale = m_requested_s_scale;
 				m_rcv_scale = m_request_r_scale;
 			}
-			(void) tcp_reass(tp, (struct tcpiphdr *)0,
-				(struct mbuf *)0);
-#endif
+			reass(0, 0);
 			/*
 			 * if we didn't have to retransmit the SYN,
 			 * use its rtt as our initial srtt & rtt var.
@@ -1110,8 +1161,7 @@ trimthenstep6:
 			m_snd_scale = m_requested_s_scale;
 			m_rcv_scale = m_request_r_scale;
 		}
-		// XXX
-		//(void) tcp_reass(tp, (struct tcpiphdr *)0, (struct mbuf *)0);
+		reass(0, 0);
 		m_snd_wl1 = tcp->get_sequence_number () - 1;
 		/* fall into ... */
 
@@ -1173,8 +1223,7 @@ trimthenstep6:
 					m_t_rtt = 0;
 					m_snd_nxt = tcp->get_ack_number ();
 					m_snd_cwnd = m_t_maxseg;
-					// XXX
-					//(void) tcp_output(tp);
+					output();
 					m_snd_cwnd = m_snd_ssthresh +
 					       m_t_maxseg * m_t_dupacks;
 					if (SEQ_GT(onxt, m_snd_nxt))
@@ -1182,8 +1231,7 @@ trimthenstep6:
 					goto drop;
 				} else if (m_t_dupacks > m_host->get_tcp ()->get_rexmtthresh ()) {
 					m_snd_cwnd += m_t_maxseg;
-					//XXX
-					//(void) tcp_output(tp);
+					output();
 					goto drop;
 				}
 			} else
@@ -1354,7 +1402,7 @@ step6:
 	 */
 	if ((piece->get_size () || (tiflags&TH_FIN)) &&
 	    TCPS_HAVERCVDFIN(m_t_state) == 0) {
-		//TCP_REASS(tp, ti, m, so, tiflags);
+		REASS(tcp, packet, tiflags);
 		/*
 		 * Note the amount of data that peer has sent into
 		 * our window, in order to estimate the sender's
@@ -1419,7 +1467,7 @@ step6:
 	 * Return any desired output.
 	 */
 	if (needoutput || (m_t_flags & TF_ACKNOW))
-		//XXX(void) tcp_output(tp);
+		output();
 	return;
 
 dropafterack:
@@ -1429,10 +1477,8 @@ dropafterack:
 	 */
 	if (tiflags & TH_RST)
 		goto drop;
-	//m_freem(m);
 	m_t_flags |= TF_ACKNOW;
-	//(void) tcp_output(tp);
-	//XXX
+	output();
 	return;
 
 dropwithreset:
@@ -1460,11 +1506,10 @@ dropwithreset:
 	return;
 
 drop:
-#if 0
 	/*
 	 * Drop space held by incoming segment and return.
 	 */
-	m_freem(m);
+#if 0
 	/* destroy temporarily created socket */
 	if (dropsocket)
 		(void) soabort(so);

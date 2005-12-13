@@ -91,6 +91,7 @@ private:
 	u_int mss (u_int offer);
 	void dooptions (ChunkTcp *tcp, int *ts_present, u_long *ts_val, u_long *ts_ecr);
 	void setpersist (void);
+	int reass(ChunkTcp *tcp, Packet *packet);
 
 	TcpEndPoint *m_end_point;
 	Route *m_route;
