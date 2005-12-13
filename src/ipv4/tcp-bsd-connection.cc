@@ -767,7 +767,22 @@ TcpBsdConnection::input (Packet *packet)
 	ChunkPiece *piece = new ChunkPiece ();
 	piece->set_original (packet, 0, packet->get_size ());
 
-	tiflags = tcp->get_flags ();
+	tiflags = 0;
+	if (tcp->is_flag_syn ()) {
+		tiflags |= TH_SYN;
+	}
+	if (tcp->is_flag_fin ()) {
+		tiflags |= TH_FIN;
+	}
+	if (tcp->is_flag_rst ()) {
+		tiflags |= TH_RST;
+	}
+	if (tcp->is_flag_ack ()) {
+		tiflags |= TH_ACK;
+	}
+	if (tcp->is_flag_psh ()) {
+		tiflags |= TH_PUSH;
+	}
 	
 	if (m_t_state == TCPS_CLOSED)
 		goto drop;
