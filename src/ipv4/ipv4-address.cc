@@ -107,6 +107,13 @@ Ipv4Address::is_equal (Ipv4Address other) const
 	}
 }
 
+bool 
+Ipv4Address::is_multicast (void)
+{
+	// XXX
+	return false;
+}
+
 uint32_t
 Ipv4Address::get_host_order (void) const
 {

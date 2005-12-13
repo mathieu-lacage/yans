@@ -97,6 +97,7 @@ private:
 	Event *m_slow_timer;
 	Event *m_fast_timer;
 	bool m_running;
+	int m_now;
 };
 
 #endif /* TCP_H */

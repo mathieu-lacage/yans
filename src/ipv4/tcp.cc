@@ -52,6 +52,7 @@ Tcp::Tcp ()
 	m_fast_timer = make_static_event (&Tcp::fast_timer, this);
 	m_slow_timer = make_static_event (&Tcp::slow_timer, this);
 	m_running = false;
+	m_now = 0;
 }
 Tcp::~Tcp ()
 {
@@ -312,6 +313,11 @@ Tcp::get_new_iss (void)
 {
 	return (int)Simulator::now_us ();
 }
+int 
+Tcp::get_rexmtthresh (void)
+{
+	return 3;
+}
 
 void
 Tcp::slow_timer (void)
@@ -326,7 +332,7 @@ Tcp::slow_timer (void)
 	}
 
 	Simulator::insert_in_us (SLOW_TIMER_DELAY_US, m_slow_timer);
-	
+	m_now ++;
 }
 void
 Tcp::fast_timer (void)
@@ -341,6 +347,12 @@ Tcp::fast_timer (void)
 	}
 
 	Simulator::insert_in_us (FAST_TIMER_DELAY_US, m_fast_timer);
+}
+
+int 
+Tcp::now (void)
+{
+	return m_now;
 }
 
 
