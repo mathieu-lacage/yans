@@ -211,6 +211,7 @@ TcpPieces::get_at (uint32_t offset, uint32_t size)
 	/* this assert checks to see if we are not overflowing the uint32_t */
 	assert (end > offset + size);
 	for (PiecesI i = m_pieces.begin (); i != m_pieces.end (); i++) {
+		// XXX baad.
 		if ((*i).second != expected_offset) {
 			break;
 		}
