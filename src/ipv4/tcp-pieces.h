@@ -35,6 +35,7 @@ public:
 	~TcpPieces ();
 
 	void set_size (uint32_t size);
+	uint32_t get_size (void);
 
 	/* These functions copy the input piece, store
 	 * the copy internally, and return the copy.

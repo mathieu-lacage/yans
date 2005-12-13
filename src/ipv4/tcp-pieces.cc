@@ -26,6 +26,20 @@
 
 TcpPieces::TcpPieces ()
 {}
+TcpPieces::~TcpPieces ()
+{}
+
+void 
+TcpPieces::set_size (uint32_t size)
+{
+	m_size = size;
+}
+uint32_t 
+TcpPieces::get_size (void)
+{
+	return m_size;
+}
+
 
 void
 TcpPieces::insert_piece_at (PiecesI i, ChunkPiece *piece, uint32_t offset)
