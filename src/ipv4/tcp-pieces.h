@@ -56,6 +56,7 @@ public:
 
 	uint32_t get_data_at_front (void);
 	uint32_t get_empty_at_back (void);
+	bool is_empty (void);
 
 private:
 	typedef std::pair<ChunkPiece *, uint32_t> Piece;

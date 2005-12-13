@@ -40,6 +40,12 @@ TcpPieces::get_size (void)
 	return m_size;
 }
 
+bool
+TcpPieces::is_empty (void)
+{
+	return m_pieces.empty ();
+}
+
 
 void
 TcpPieces::insert_piece_at (PiecesI i, ChunkPiece *piece, uint32_t offset)
