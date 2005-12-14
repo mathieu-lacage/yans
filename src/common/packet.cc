@@ -107,6 +107,9 @@ Packet::add_trailer (Chunk *trailer)
 Chunk *
 Packet::remove_header (void)
 {
+	if (m_chunks.empty ()) {
+		return 0;
+	}
 	Chunk *header = m_chunks.front ();
 	m_chunks.pop_front ();
 	return header;
@@ -114,6 +117,9 @@ Packet::remove_header (void)
 Chunk *
 Packet::remove_trailer (void)
 {
+	if (m_chunks.empty ()) {
+		return 0;
+	}
 	Chunk *trailer = m_chunks.back ();
 	m_chunks.pop_back ();
 	return trailer;
@@ -121,11 +127,17 @@ Packet::remove_trailer (void)
 Chunk *
 Packet::peek_header (void)
 {
+	if (m_chunks.empty ()) {
+		return 0;
+	}
 	return m_chunks.front ();
 }
 Chunk *
 Packet::peek_trailer (void)
 {
+	if (m_chunks.empty ()) {
+		return 0;
+	}
 	return m_chunks.back ();
 }
 
