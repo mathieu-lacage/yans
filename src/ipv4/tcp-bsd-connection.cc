@@ -816,6 +816,8 @@ again:
 	tag->set_daddress (m_end_point->get_peer_address ());
 	tag->set_saddress (m_end_point->get_local_address ());
 	packet->add_tag (TagOutIpv4::get_tag (), tag);
+	tcp->set_source_port (m_end_point->get_local_port ());
+	tcp->set_destination_port (m_end_point->get_peer_port ());
 	m_ipv4->set_protocol (TCP_PROTOCOL);
 	m_ipv4->send (packet);
 
