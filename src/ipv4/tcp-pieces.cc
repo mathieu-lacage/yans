@@ -228,9 +228,9 @@ TcpPieces::get_at (uint32_t start, uint32_t size)
 		}
 		ChunkPiece *piece = static_cast <ChunkPiece *> ((*i).first->copy ());
 		packet->add_trailer (piece);
+		adding = true;
 		if (cur_start < start) {
 			piece->trim_start (start - cur_start);
-			adding = true;
 		}
 		if (cur_end > end) {
 			piece->trim_end (cur_end - end);
