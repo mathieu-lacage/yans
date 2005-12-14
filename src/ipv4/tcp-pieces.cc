@@ -133,38 +133,38 @@ TcpPieces::add_at (ChunkPiece *org, uint32_t offset)
 void
 TcpPieces::remove_at_front (uint32_t size)
 {
-	assert (size > 0);
-	assert (!m_pieces.empty ());
 	assert (get_data_at_front () >= size);
-	uint32_t expected_offset = 0;
-	uint32_t found = 0;
-	PiecesI end = m_pieces.begin ();
+	if (size == 0) {
+		return;
+	}
+	uint32_t expected_start = 0;
+	PiecesI last = m_pieces.begin ();
 	for (PiecesI i = m_pieces.begin (); i != m_pieces.end (); i++) {
-		end = i;
-		if ((*i).second != expected_offset) {
-			assert (expected_offset != 0);
-			assert (size == get_data_at_front ());
+		uint32_t cur_start = (*i).second;
+		uint32_t cur_size = (*i).first->get_size ();
+		uint32_t cur_end = (*i).second + cur_size;
+
+		assert (cur_start == expected_start);
+		if (cur_start >= size) {
 			break;
 		}
 		ChunkPiece *piece = (*i).first;
-		if (found + piece->get_size () > size) {
-			assert (found < size);
-			piece->trim_start (size - found);
-			found = size;
+		if (cur_end > size) {
+			assert (cur_start < size);
+			piece->trim_start (cur_size - (cur_end - size));
 			break;
-		} else {
-			found += piece->get_size ();
-			expected_offset = (*i).second + piece->get_size ();
-			delete piece;
 		}
+		expected_start = cur_end;
+		delete piece;
+		last = i;
+		last++;
 	}
-	m_pieces.erase (m_pieces.begin (), end);
+	m_pieces.erase (m_pieces.begin (), last);
 
 	/* Now, we need to fix the offsets recorded in the list to 
 	 * account for the data removed.
 	 * The amount of data removed is located in found == size.
 	 */
-	assert (found == size);
 	for (PiecesI j = m_pieces.begin (); j != m_pieces.end (); j++) {
 		(*j).second -= size;
 	}
@@ -207,35 +207,37 @@ TcpPieces::get_at_front (uint32_t size)
 
 
 Packet *
-TcpPieces::get_at (uint32_t offset, uint32_t size)
+TcpPieces::get_at (uint32_t start, uint32_t size)
 {
 	assert (size > 0);
 	Packet *packet = new Packet ();
-	uint32_t expected_offset = 0;
-	uint32_t found = 0;
-	uint32_t end = offset + size;
+	uint32_t expected_start = 0;
+	uint32_t end = start + size;
+	bool adding = false;
 	/* this assert checks to see if we are not overflowing the uint32_t */
-	assert (end > offset + size);
+	assert (end >= start + size);
 	for (PiecesI i = m_pieces.begin (); i != m_pieces.end (); i++) {
-		// XXX baad.
-		if ((*i).second != expected_offset) {
+		uint32_t cur_start = (*i).second;
+		uint32_t cur_end = (*i).second + (*i).first->get_size ();
+		if (adding && expected_start != cur_start) {
 			break;
 		}
-		expected_offset = (*i).second + (*i).first->get_size ();
-		if ((*i).second < offset &&
-		    (*i).second + (*i).first->get_size () < offset) {
+		if (cur_end <= start || cur_start >= end) {
 			/* the current piece does not overlap our target area. */
 			continue;
 		}
 		ChunkPiece *piece = static_cast <ChunkPiece *> ((*i).first->copy ());
-		if (found + piece->get_size () > end) {
-			piece->trim_end (found + piece->get_size () - end);
-			packet->add_trailer (piece);
-			break;
-		} else {
-			packet->add_trailer (piece);
-			found += piece->get_size ();
+		packet->add_trailer (piece);
+		if (cur_start < start) {
+			piece->trim_start (start - cur_start);
+			adding = true;
 		}
+		if (cur_end > end) {
+			piece->trim_end (cur_end - end);
+			adding = false;
+			break;
+		}
+		expected_start = cur_end;
 	}
 	if (packet->get_size () == 0) {
 		delete packet;

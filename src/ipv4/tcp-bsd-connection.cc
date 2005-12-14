@@ -91,6 +91,8 @@ TcpBsdConnection::TcpBsdConnection ()
 		      TCPTV_MIN, TCPTV_REXMTMAX);
         m_snd_cwnd = TCP_MAXWIN << TCP_MAX_WINSHIFT;
         m_snd_ssthresh = TCP_MAXWIN << TCP_MAX_WINSHIFT;
+
+	m_t_state = TCPS_LISTEN;
 }
 TcpBsdConnection::~TcpBsdConnection ()
 {
@@ -184,7 +186,7 @@ TcpBsdConnection::send (Packet *packet)
 		delete piece;
 		piece = static_cast <ChunkPiece *> (packet->remove_header ());
 	}
-	notify_data_ready_to_send ();
+	output ();
 	return sent;
 }
 Packet *
@@ -424,8 +426,8 @@ TcpBsdConnection::reass(ChunkTcp *tcp, Packet *packet)
 	if (tcp == 0 || packet == 0) {
 		if (m_recv->get_data_at_front () != 0) {
 			(*m_data_received) ();
-			return 0;
 		}
+		return 0;
 	}
 	ChunkPiece *piece = static_cast <ChunkPiece *> (packet->remove_header ());
 	uint32_t prev_available = m_recv->get_data_at_front ();
@@ -810,6 +812,9 @@ again:
 		if (SEQ_GT(m_snd_nxt + len, m_snd_max))
 			m_snd_max = m_snd_nxt + len;
 
+	TRACE ("send " << (packet->get_size () - tcp->get_size ()) << " bytes from " 
+	       << m_end_point->get_local_address () << ":" << m_end_point->get_local_port () << " to "
+	       << m_end_point->get_peer_address () << ":" << m_end_point->get_peer_port ());
 	TagOutIpv4 *tag = new TagOutIpv4 (m_route);
 	tag->set_dport (m_end_point->get_peer_port ());
 	tag->set_sport (m_end_point->get_local_port ());
