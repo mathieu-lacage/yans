@@ -48,11 +48,11 @@
  * send and receive from initial send and receive
  * sequence numbers.
  */
-#define	tcp_rcvseqinit(tp) \
-	(tp)->m_rcv_adv = (tp)->m_rcv_nxt = (tp)->m_irs + 1
+#define	rcvseqinit() \
+	m_rcv_adv = m_rcv_nxt = m_irs + 1
 
-#define	tcp_sendseqinit(tp) \
-	(tp)->m_snd_una = (tp)->m_snd_nxt = (tp)->m_snd_max = (tp)->m_snd_up = \
-	    (tp)->m_iss
+#define	sendseqinit() \
+	m_snd_una = m_snd_nxt = m_snd_max = m_snd_up = \
+	    m_iss
 
 #define	TCP_ISSINCR	(125*1024)	/* increment for tcp_iss each second */

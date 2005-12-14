@@ -915,8 +915,8 @@ TcpBsdConnection::input (Packet *packet)
 		else
 			m_iss = m_host->get_tcp ()->get_new_iss ();
 		m_irs = tcp->get_sequence_number ();
-		tcp_sendseqinit(this);
-		tcp_rcvseqinit(this);
+		sendseqinit ();
+		rcvseqinit ();
 		m_t_flags |= TF_ACKNOW;
 		m_t_state = TCPS_SYN_RECEIVED;
 		m_t_timer[TCPT_KEEP] = TCPTV_KEEP_INIT;
@@ -955,7 +955,7 @@ TcpBsdConnection::input (Packet *packet)
 		}
 		m_t_timer[TCPT_REXMT] = 0;
 		m_irs = tcp->get_sequence_number ();
-		tcp_rcvseqinit(this);
+		rcvseqinit();
 		m_t_flags |= TF_ACKNOW;
 		if (tiflags & TH_ACK && SEQ_GT(m_snd_una, m_iss)) {
 			m_t_state = TCPS_ESTABLISHED;
@@ -1526,7 +1526,43 @@ drop:
 
 void
 TcpBsdConnection::start_connect (void)
-{}
+{
+	/* Compute window scaling to request.  */
+	while (m_request_r_scale < TCP_MAX_WINSHIFT &&
+	       (TCP_MAXWIN << m_request_r_scale) < ((int)m_recv->get_size ()))
+		m_request_r_scale++;
+	m_t_state = TCPS_SYN_SENT;
+	m_t_timer[TCPT_KEEP] = TCPTV_KEEP_INIT;
+	m_iss = m_host->get_tcp ()->get_new_iss ();
+	sendseqinit();
+	output();
+}
+
+void
+TcpBsdConnection::start_disconnect (void)
+{
+	if (m_t_state >= TCPS_ESTABLISHED) {
+		switch (m_t_state) {
+
+		case TCPS_CLOSED:
+		case TCPS_LISTEN:
+		case TCPS_SYN_SENT:
+			m_t_state = TCPS_CLOSED;
+			//close();
+			break;
+
+		case TCPS_SYN_RECEIVED:
+		case TCPS_ESTABLISHED:
+			m_t_state = TCPS_FIN_WAIT_1;
+			break;
+
+		case TCPS_CLOSE_WAIT:
+			m_t_state = TCPS_LAST_ACK;
+			break;
+		}
+		output();
+	}
+}
 
 void 
 TcpBsdConnection::slow_timer (void)

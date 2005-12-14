@@ -58,6 +58,7 @@ public:
 			    DataReceivedCallback *data_received,
 			    AckReceivedCallback *ack_received);
 	void start_connect (void);
+	void start_disconnect (void);
 
 	uint32_t get_room_left (void);
 	uint32_t get_data_ready (void);
