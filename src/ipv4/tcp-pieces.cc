@@ -173,6 +173,9 @@ TcpPieces::remove_at_front (uint32_t size)
 uint32_t
 TcpPieces::get_data_at_front (void)
 {
+	if (m_pieces.empty ()) {
+		return 0;
+	}
 	uint32_t expected_offset = 0;
 	for (PiecesI i = m_pieces.begin (); i != m_pieces.end (); i++) {
 		if ((*i).second != expected_offset) {
@@ -186,6 +189,9 @@ TcpPieces::get_data_at_front (void)
 uint32_t 
 TcpPieces::get_empty_at_back (void)
 {
+	if (m_pieces.empty ()) {
+		return m_size;
+	}
 	Piece end = m_pieces.back ();
 	uint32_t offset = end.second + end.first->get_size ();	
 	assert (offset <= m_size);
