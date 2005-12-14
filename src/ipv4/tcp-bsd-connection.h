@@ -82,7 +82,6 @@ private:
 	typedef uint32_t u_int32_t;
 
 
-	void notify_data_ready_to_send (void);
 	void notify_room_ready_to_receive (void);
 	void input (Packet *packet);
 	int output (void);

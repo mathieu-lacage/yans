@@ -390,35 +390,6 @@ TcpBsdConnection::setpersist (void)
 		m_t_rxtshift++;
 }
 
-/*
- * Insert segment ti into reassembly queue of tcp with
- * control block tp.  Return TH_FIN if reassembly now includes
- * a segment with FIN.  The macro form does the common case inline
- * (segment is the next to be received on an established connection,
- * and the queue is empty), avoiding linkage into and removal
- * from the queue and repetition of various conversions.
- * Set DELACK for segments received in order, but ack immediately
- * when segments are out of order (so fast retransmit can work).
- */
-#define	REASS(tcp, packet, flags) { \
-	if (tcp->get_sequence_number () == m_rcv_nxt && \
-            m_recv->is_empty () && \
-	    m_t_state == TCPS_ESTABLISHED) { \
-		m_t_flags |= TF_DELACK; \
-		m_rcv_nxt += packet->get_size (); \
-                if (tcp->is_flag_fin ()) { \
-			flags = TH_FIN; \
-		}  else { \
-			flags = 0; \
-		} \
-                ChunkPiece * piece = static_cast <ChunkPiece *> (packet->remove_header ()); \
-	        m_recv->add_at_back (piece); \
-		(*m_data_received) (); \
-	} else { \
-		(flags) = reass(tcp, packet); \
-		m_t_flags |= TF_ACKNOW; \
-	} \
-}
 
 int
 TcpBsdConnection::reass(ChunkTcp *tcp, Packet *packet)
@@ -1437,7 +1408,33 @@ step6:
 	 */
 	if ((piece->get_size () || (tiflags&TH_FIN)) &&
 	    TCPS_HAVERCVDFIN(m_t_state) == 0) {
-		REASS(tcp, packet, tiflags);
+		/*
+		 * Insert segment ti into reassembly queue of tcp with
+		 * control block tp.  Return TH_FIN if reassembly now includes
+		 * a segment with FIN.  The macro form does the common case inline
+		 * (segment is the next to be received on an established connection,
+		 * and the queue is empty), avoiding linkage into and removal
+		 * from the queue and repetition of various conversions.
+		 * Set DELACK for segments received in order, but ack immediately
+		 * when segments are out of order (so fast retransmit can work).
+		 */
+		if (tcp->get_sequence_number () == m_rcv_nxt && 
+		    m_recv->is_empty () && 
+		    m_t_state == TCPS_ESTABLISHED) { 
+			m_t_flags |= TF_DELACK; 
+			m_rcv_nxt += packet->get_size (); 
+			if (tcp->is_flag_fin ()) { 
+				tiflags = TH_FIN; 
+			}  else { 
+				tiflags = 0; 
+			} 
+			ChunkPiece * piece = static_cast <ChunkPiece *> (packet->remove_header ()); 
+			m_recv->add_at_back (piece); 
+			(*m_data_received) ();
+		} else { 
+			tiflags = reass(tcp, packet); 
+			m_t_flags |= TF_ACKNOW; 
+		} 
 		/*
 		 * Note the amount of data that peer has sent into
 		 * our window, in order to estimate the sender's
@@ -1601,10 +1598,6 @@ TcpBsdConnection::fast_timer (void)
 {}
 
 
-
-void
-TcpBsdConnection::notify_data_ready_to_send (void)
-{}
 
 void
 TcpBsdConnection::notify_room_ready_to_receive (void)
