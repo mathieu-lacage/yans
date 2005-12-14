@@ -72,6 +72,10 @@ TcpBsdConnection::TcpBsdConnection ()
 {
 	m_tcp_keepidle = TCPTV_KEEP_IDLE;
 	m_tcp_keepintvl = TCPTV_KEEPINTVL;
+	m_send = new TcpPieces ();
+	m_send->set_size (4096);
+	m_recv = new TcpPieces ();
+	m_recv->set_size (4096);
 }
 TcpBsdConnection::~TcpBsdConnection ()
 {
@@ -79,6 +83,8 @@ TcpBsdConnection::~TcpBsdConnection ()
 	delete m_data_received;
 	delete m_data_transmitted;
 	delete m_ack_received;
+	delete m_send;
+	delete m_recv;
 	if (m_destroy != 0) {
 		(*m_destroy) (this);
 	}
