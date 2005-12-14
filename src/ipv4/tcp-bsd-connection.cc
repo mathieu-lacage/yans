@@ -76,6 +76,21 @@ TcpBsdConnection::TcpBsdConnection ()
 	m_send->set_size (4096);
 	m_recv = new TcpPieces ();
 	m_recv->set_size (4096);
+
+        m_t_maxseg = TCP_MSS;
+        /*
+         * Init srtt to TCPTV_SRTTBASE (0), so we can tell that we have no
+         * rtt estimate.  Set rttvar so that srtt + 2 * rttvar gives
+         * reasonable initial retransmit time.
+         */
+        m_t_srtt = TCPTV_SRTTBASE;
+        m_t_rttvar = (TCPTV_SRTTDFLT / PR_SLOWHZ) * PR_SLOWHZ << 2;
+        m_t_rttmin = TCPTV_MIN;
+        TCPT_RANGESET(m_t_rxtcur,
+		      ((TCPTV_SRTTBASE >> 2) + (TCPTV_SRTTDFLT << 2)) >> 1,
+		      TCPTV_MIN, TCPTV_REXMTMAX);
+        m_snd_cwnd = TCP_MAXWIN << TCP_MAX_WINSHIFT;
+        m_snd_ssthresh = TCP_MAXWIN << TCP_MAX_WINSHIFT;
 }
 TcpBsdConnection::~TcpBsdConnection ()
 {
@@ -100,6 +115,7 @@ void
 TcpBsdConnection::set_host (Host *host)
 {
 	m_host = host;
+        m_t_flags = m_host->get_tcp ()->is_rfc1323 () ? (TF_REQ_SCALE|TF_REQ_TSTMP) : 0;
 }
 void 
 TcpBsdConnection::set_end_point (TcpEndPoint *end_point)
@@ -655,7 +671,7 @@ again:
 	 * bump the packet length beyond the t_maxseg length.
 	 */
 	if (len > m_t_maxseg - ((int)tcp->get_size ()) - IPHDRLEN) {
-		len = m_t_maxseg - tcp->get_size () - IPHDRLEN;
+		len = m_t_maxseg - ((int)tcp->get_size ()) - IPHDRLEN;
 		sendalot = 1;
 	}
 
@@ -794,6 +810,12 @@ again:
 		if (SEQ_GT(m_snd_nxt + len, m_snd_max))
 			m_snd_max = m_snd_nxt + len;
 
+	TagOutIpv4 *tag = new TagOutIpv4 (m_route);
+	tag->set_dport (m_end_point->get_peer_port ());
+	tag->set_sport (m_end_point->get_local_port ());
+	tag->set_daddress (m_end_point->get_peer_address ());
+	tag->set_saddress (m_end_point->get_local_address ());
+	packet->add_tag (TagOutIpv4::get_tag (), tag);
 	m_ipv4->set_protocol (TCP_PROTOCOL);
 	m_ipv4->send (packet);
 

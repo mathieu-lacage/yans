@@ -65,6 +65,7 @@ class Tcp {
 	int get_new_iss (void);
 	int now (void); // tcp_now 
 	int get_rexmtthresh (void); // tcp_rexmtthresh
+	bool is_rfc1323 (void);
 
 private:
 	static const uint64_t FAST_TIMER_DELAY_US;

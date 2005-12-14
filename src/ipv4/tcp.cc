@@ -319,6 +319,12 @@ Tcp::get_rexmtthresh (void)
 	return 3;
 }
 
+bool
+Tcp::is_rfc1323 (void)
+{
+	return true;
+}
+
 void
 Tcp::slow_timer (void)
 {
