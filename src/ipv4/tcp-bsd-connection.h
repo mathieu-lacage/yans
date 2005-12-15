@@ -51,7 +51,9 @@ class ChunkTcp;
 
 class TcpBsdConnection {
 public:
-	typedef Callback<void (void)> ConnectionCompletedCallback;
+	typedef Callback<void (void)> ConnectCompletedCallback;
+	typedef Callback<void (void)> DisConnectRequestedCallback;
+	typedef Callback<void (void)> DisConnectCompletedCallback;
 	typedef Callback<void (void)> DataReceivedCallback;
 	typedef Callback<void (void)> DataTransmittedCallback;
 	typedef Callback<void (Packet *)> AckReceivedCallback;
@@ -66,7 +68,9 @@ public:
 	void set_route (Route *route);
 	void set_destroy_handler (TcpBsdConnectionDestroy *handler);
 
-	void set_callbacks (ConnectionCompletedCallback *connection_completed,
+	void set_callbacks (ConnectCompletedCallback *connect_completed,
+			    DisConnectRequestedCallback *disconnect_requested,
+			    DisConnectCompletedCallback *disconnect_completed,
 			    DataTransmittedCallback *data_transmitted,
 			    DataReceivedCallback *data_received,
 			    AckReceivedCallback *ack_received);
@@ -95,9 +99,10 @@ private:
 	typedef uint32_t u_int32_t;
 
 
+	void trigger_events (void);
+	void set_state (int new_state);
 	void respond(tcp_seq ack, tcp_seq seq, int flags);
-	void timers (int tmier);
-	void notify_room_ready_to_receive (void);
+	void timers (int timer);
 	void input (Packet *packet);
 	int output (void);
 	void drop (int errno);
@@ -110,7 +115,9 @@ private:
 
 	TcpEndPoint *m_end_point;
 	Route *m_route;
-	ConnectionCompletedCallback *m_connection_completed;
+	ConnectCompletedCallback *m_connect_completed;
+	DisConnectCompletedCallback *m_disconnect_completed;
+	DisConnectRequestedCallback *m_disconnect_requested;
 	DataReceivedCallback *m_data_received;
 	DataTransmittedCallback *m_data_transmitted;
 	AckReceivedCallback *m_ack_received;

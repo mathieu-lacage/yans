@@ -59,8 +59,12 @@ TcpSink::~TcpSink ()
 	delete m_callback;
 	m_callback = (TcpSinkCallback *)0xdeadbeaf;
 	delete m_connections;
-	delete m_connection;
-	delete m_real_end_point;
+	if (m_connection != 0) {
+		delete m_connection;
+	}
+	if (m_real_end_point != 0) {
+		delete m_real_end_point;
+	}
 }
 
 void
@@ -82,8 +86,21 @@ TcpSink::got_ack (Packet *packet)
 {}
 
 void
-TcpSink::completed (void)
+TcpSink::connect_completed (void)
 {}
+void
+TcpSink::disconnect_requested (void)
+{
+	m_connection->start_disconnect ();
+}
+void
+TcpSink::disconnect_completed (void)
+{
+	delete m_connection;
+	m_connection = 0;
+	delete m_real_end_point;
+	m_real_end_point = 0;
+}
 
 
 bool
@@ -103,7 +120,9 @@ TcpSink::connection_created (TcpBsdConnection *connection, TcpEndPoint *end_poin
 	TRACE ("connection created");
 	m_connection = connection;
 	m_real_end_point = end_point;
-	connection->set_callbacks (make_callback (&TcpSink::completed, this),
+	connection->set_callbacks (make_callback (&TcpSink::connect_completed, this),
+				   make_callback (&TcpSink::disconnect_requested, this),
+				   make_callback (&TcpSink::disconnect_completed, this),
 				   make_callback (&TcpSink::transmitted, this), 
 				   make_callback (&TcpSink::receive, this),
 				   make_callback (&TcpSink::got_ack, this));

@@ -75,8 +75,8 @@ int main (int argc, char *argv[])
 						 source, 
 						 Ipv4Address ("192.168.0.2"), 
 						 (uint16_t)1026));
-	
-
+	Simulator::insert_at_s (11.0, make_event (&TcpSource::start_disconnect, 
+						  source));
 
 	TcpSink *sink = new TcpSink (hserver);
 	sink->bind (Ipv4Address ("192.168.0.2"), 1026);

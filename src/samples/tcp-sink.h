@@ -46,7 +46,9 @@ public:
 private:
 	bool should_accept (Ipv4Address from, uint16_t from_port);
 	void connection_created (TcpBsdConnection *connection, TcpEndPoint *end_point);
-	void completed (void);
+	void connect_completed (void);
+	void disconnect_requested (void);
+	void disconnect_completed (void);
 	void receive (void);
 	void transmitted (void);
 	void got_ack (Packet *packet);

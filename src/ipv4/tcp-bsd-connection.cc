@@ -52,6 +52,13 @@
 #include "tcp-bsd-seq.h"
 #include "network-interface.h"
 
+static char *tcpstates[] = {
+	"CLOSED",	"LISTEN",	"SYN_SENT",	"SYN_RCVD",
+	"ESTABLISHED",	"CLOSE_WAIT",	"FIN_WAIT_1",	"CLOSING",
+	"LAST_ACK",	"FIN_WAIT_2",	"TIME_WAIT",
+};
+
+
 
 #define min(a,b) (((a)<(b))?(a):(b))
 #define max(a,b) (((a)>(b))?(a):(b))
@@ -76,7 +83,8 @@ int	tcp_maxidle;
 #include <iostream>
 #include "simulator.h"
 # define TRACE(x) \
-std::cout << "TCP CONN " << Simulator::now_s () << " " << x << std::endl;
+std::cout << "TCP CONN " << m_end_point->get_local_address () << ":" << m_end_point->get_local_port () << " " << \
+Simulator::now_s () << " " << x << std::endl;
 #else /* TRACE_TCP_BSD_CONNECTION */
 # define TRACE(format,...)
 #endif /* TRACE_TCP_BSD_CONNECTION */
@@ -120,7 +128,10 @@ TcpBsdConnection::TcpBsdConnection ()
 }
 TcpBsdConnection::~TcpBsdConnection ()
 {
-	delete m_connection_completed;
+	delete m_connect_completed;
+	delete m_disconnect_completed;
+	m_disconnect_completed = 0;
+	delete m_disconnect_requested;
 	delete m_data_received;
 	delete m_data_transmitted;
 	delete m_ack_received;
@@ -130,6 +141,26 @@ TcpBsdConnection::~TcpBsdConnection ()
 		(*m_destroy) (this);
 	}
 	delete m_destroy;
+}
+void
+TcpBsdConnection::set_state (int new_state)
+{
+	TRACE ("from " << tcpstates[m_t_state] << " to " << tcpstates[new_state]);
+	m_t_state = new_state;
+}
+
+void
+TcpBsdConnection::trigger_events (void)
+{
+	if (m_t_state == TCPS_ESTABLISHED) {
+		(*m_connect_completed) ();
+	} else if (m_t_state == TCPS_CLOSE_WAIT) {
+		(*m_disconnect_requested) ();
+	} else if (m_t_state == TCPS_CLOSED) {
+		(*m_disconnect_completed) ();
+	} else if (m_t_state == TCPS_TIME_WAIT) {
+		(*m_disconnect_completed) ();
+	}
 }
 
 void 
@@ -161,12 +192,16 @@ TcpBsdConnection::set_destroy_handler (TcpBsdConnectionDestroy *handler)
 }
 
 void 
-TcpBsdConnection::set_callbacks (ConnectionCompletedCallback *connection_completed,
-			      DataTransmittedCallback *data_transmitted,
-			      DataReceivedCallback *data_received,
-			      AckReceivedCallback *ack_received)
+TcpBsdConnection::set_callbacks (ConnectCompletedCallback *connect_completed,
+				 DisConnectRequestedCallback *disconnect_requested,
+				 DisConnectCompletedCallback *disconnect_completed,
+				 DataTransmittedCallback *data_transmitted,
+				 DataReceivedCallback *data_received,
+				 AckReceivedCallback *ack_received)
 {
-	m_connection_completed = connection_completed;
+	m_connect_completed = connect_completed;
+	m_disconnect_requested = disconnect_requested;
+	m_disconnect_completed = disconnect_completed;
 	m_data_received = data_received;
 	m_data_transmitted = data_transmitted;
 	m_ack_received = ack_received;
@@ -226,13 +261,11 @@ TcpBsdConnection::recv (uint32_t size)
 }
 
 
-
-
 void
 TcpBsdConnection::drop (int errno)
 {
         if (TCPS_HAVERCVDSYN(m_t_state)) {
-                m_t_state = TCPS_CLOSED;
+                set_state (TCPS_CLOSED);
                 output ();
         }
         if (errno == ETIMEDOUT && m_t_softerror)
@@ -425,6 +458,12 @@ TcpBsdConnection::reass(ChunkTcp *tcp, Packet *packet)
 		return 0;
 	}
 	ChunkPiece *piece = static_cast <ChunkPiece *> (packet->remove_header ());
+	if (piece == 0) {
+		if (TCPS_HAVERCVDSYN(m_t_state) == 0)
+			return (0);
+		else
+			return TH_FIN;
+	}
 	uint32_t prev_available = m_recv->get_data_at_front ();
 	m_recv->add_at (piece, tcp->get_sequence_number ());
 	uint32_t completed = m_recv->get_data_at_front () - prev_available;
@@ -436,7 +475,7 @@ TcpBsdConnection::reass(ChunkTcp *tcp, Packet *packet)
 		return (0);
 	m_rcv_nxt += completed;
 	(*m_data_received) ();
-	return 0;
+	return TH_FIN;
 }
 
 
@@ -944,7 +983,7 @@ TcpBsdConnection::input (Packet *packet)
 		sendseqinit ();
 		rcvseqinit ();
 		m_t_flags |= TF_ACKNOW;
-		m_t_state = TCPS_SYN_RECEIVED;
+		set_state (TCPS_SYN_RECEIVED);
 		m_t_timer[TCPT_KEEP] = TCPTV_KEEP_INIT;
 		dropsocket = 0;		/* committed to socket */
 		goto trimthenstep6;
@@ -984,7 +1023,7 @@ TcpBsdConnection::input (Packet *packet)
 		rcvseqinit();
 		m_t_flags |= TF_ACKNOW;
 		if (tiflags & TH_ACK && SEQ_GT(m_snd_una, m_iss)) {
-			m_t_state = TCPS_ESTABLISHED;
+			set_state (TCPS_ESTABLISHED);
 			/* Do window scaling on this connection? */
 			if ((m_t_flags & (TF_RCVD_SCALE|TF_REQ_SCALE)) ==
 				(TF_RCVD_SCALE|TF_REQ_SCALE)) {
@@ -999,7 +1038,7 @@ TcpBsdConnection::input (Packet *packet)
 			if (m_t_rtt)
 				xmit_timer (m_t_rtt);
 		} else
-			m_t_state = TCPS_SYN_RECEIVED;
+			set_state (TCPS_SYN_RECEIVED);
 
 trimthenstep6:
 		/*
@@ -1147,7 +1186,7 @@ trimthenstep6:
 	case TCPS_CLOSE_WAIT:
 		m_so_error = ECONNRESET;
 	close:
-		m_t_state = TCPS_CLOSED;
+		set_state (TCPS_CLOSED);
 		goto drop;
 
 	case TCPS_CLOSING:
@@ -1186,7 +1225,7 @@ trimthenstep6:
 		if (SEQ_GT(m_snd_una, tcp->get_ack_number ()) ||
 		    SEQ_GT(tcp->get_ack_number (), m_snd_max))
 			goto dropwithreset;
-		m_t_state = TCPS_ESTABLISHED;
+		set_state (TCPS_ESTABLISHED);
 		/* Do window scaling? */
 		if ((m_t_flags & (TF_RCVD_SCALE|TF_REQ_SCALE)) ==
 			(TF_RCVD_SCALE|TF_REQ_SCALE)) {
@@ -1325,6 +1364,7 @@ trimthenstep6:
 			incr = incr * incr / cw + incr / 8;
 		m_snd_cwnd = min(cw + incr, (u_int)TCP_MAXWIN<<m_snd_scale);
 		}
+
 		if (acked > ((int)m_send->get_data_at_front ())) {
 			m_send->remove_at_front (m_send->get_data_at_front ());
 			ourfinisacked = 1;
@@ -1354,7 +1394,7 @@ trimthenstep6:
 				 * specification, but if we don't get a FIN
 				 * we'll hang forever.
 				 */
-				m_t_state = TCPS_FIN_WAIT_2;
+				set_state (TCPS_FIN_WAIT_2);
 			}
 			break;
 
@@ -1366,7 +1406,7 @@ trimthenstep6:
 		 */
 		case TCPS_CLOSING:
 			if (ourfinisacked) {
-				m_t_state = TCPS_TIME_WAIT;
+				set_state (TCPS_TIME_WAIT);
 				canceltimers ();
 				m_t_timer[TCPT_2MSL] = 2 * TCPTV_MSL;
 			}
@@ -1455,19 +1495,14 @@ step6:
 				tiflags = 0; 
 			} 
 			ChunkPiece * piece = static_cast <ChunkPiece *> (packet->remove_header ()); 
-			m_recv->add_at_back (piece); 
-			(*m_data_received) ();
+			if (piece != 0) {
+				m_recv->add_at_back (piece); 
+				(*m_data_received) ();
+			}
 		} else { 
 			tiflags = reass(tcp, packet); 
 			m_t_flags |= TF_ACKNOW; 
-		} 
-		/*
-		 * Note the amount of data that peer has sent into
-		 * our window, in order to estimate the sender's
-		 * buffer size.
-		 */
-		// XXX
-		//len = so->so_rcv.sb_hiwat - (m_rcv_adv - m_rcv_nxt);
+		}
 	} else {
 		//m_freem(m);
 		tiflags &= ~TH_FIN;
@@ -1490,7 +1525,7 @@ step6:
 		 */
 		case TCPS_SYN_RECEIVED:
 		case TCPS_ESTABLISHED:
-			m_t_state = TCPS_CLOSE_WAIT;
+			set_state (TCPS_CLOSE_WAIT);
 			break;
 
 	 	/*
@@ -1498,7 +1533,7 @@ step6:
 		 * enter the CLOSING state.
 		 */
 		case TCPS_FIN_WAIT_1:
-			m_t_state = TCPS_CLOSING;
+			set_state (TCPS_CLOSING);
 			break;
 
 	 	/*
@@ -1507,7 +1542,7 @@ step6:
 		 * standard timers.
 		 */
 		case TCPS_FIN_WAIT_2:
-			m_t_state = TCPS_TIME_WAIT;
+			set_state (TCPS_TIME_WAIT);
 			canceltimers ();
 			m_t_timer[TCPT_2MSL] = 2 * TCPTV_MSL;
 			break;
@@ -1585,7 +1620,7 @@ TcpBsdConnection::start_connect (void)
 	while (m_request_r_scale < TCP_MAX_WINSHIFT &&
 	       (TCP_MAXWIN << m_request_r_scale) < ((int)m_recv->get_size ()))
 		m_request_r_scale++;
-	m_t_state = TCPS_SYN_SENT;
+	set_state (TCPS_SYN_SENT);
 	m_t_timer[TCPT_KEEP] = TCPTV_KEEP_INIT;
 	m_iss = m_host->get_tcp ()->get_new_iss ();
 	sendseqinit();
@@ -1601,17 +1636,17 @@ TcpBsdConnection::start_disconnect (void)
 		case TCPS_CLOSED:
 		case TCPS_LISTEN:
 		case TCPS_SYN_SENT:
-			m_t_state = TCPS_CLOSED;
+			set_state (TCPS_CLOSED);
 			//close();
 			break;
 
 		case TCPS_SYN_RECEIVED:
 		case TCPS_ESTABLISHED:
-			m_t_state = TCPS_FIN_WAIT_1;
+			set_state (TCPS_FIN_WAIT_1);
 			break;
 
 		case TCPS_CLOSE_WAIT:
-			m_t_state = TCPS_LAST_ACK;
+			set_state (TCPS_LAST_ACK);
 			break;
 		}
 		output();
@@ -1823,12 +1858,9 @@ TcpBsdConnection::fast_timer (void)
 		m_t_flags |= TF_ACKNOW;
 		output();
 	}
+	trigger_events ();
 }
 
 
-
-void
-TcpBsdConnection::notify_room_ready_to_receive (void)
-{}
 
 

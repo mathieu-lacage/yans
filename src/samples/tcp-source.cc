@@ -29,6 +29,17 @@
 #include "tcp-bsd-connection.h"
 #include "chunk-piece.h"
 
+#define TRACE_TCP_SOURCE 1
+
+#ifdef TRACE_TCP_SOURCE
+#include <iostream>
+#include "simulator.h"
+# define TRACE(x) \
+std::cout << "TCP SOURCE TRACE " << Simulator::now_s () << " " << x << std::endl;
+#else /* TRACE_TCP_SOURCE */
+# define TRACE(format,...)
+#endif /* TRACE_TCP_SOURCE */
+
 
 TcpSource::TcpSource (Host *host)
 	: m_host (host),
@@ -39,19 +50,28 @@ TcpSource::~TcpSource ()
 	if (m_end_point != 0) {
 		delete m_end_point;
 	}
-	delete m_connection;
+	if (m_connection != 0) {
+		delete m_connection;
+	}
 }
 void 
 TcpSource::start_connect (Ipv4Address address, uint16_t port)
 {
 	m_end_point->set_peer (address, port);
 	m_connection = m_host->get_tcp ()->create_connection (m_end_point);
-	m_connection->set_callbacks (make_callback (&TcpSource::completed, this), 
+	m_connection->set_callbacks (make_callback (&TcpSource::connect_completed, this),
+				     make_callback (&TcpSource::disconnect_requested, this),
+				     make_callback (&TcpSource::disconnect_completed, this),
 				     make_callback (&TcpSource::transmitted, this), 
 				     make_callback (&TcpSource::receive, this),
 				     make_callback (&TcpSource::got_ack, this));
 
 	m_connection->start_connect ();
+}
+void 
+TcpSource::start_disconnect (void)
+{
+	m_connection->start_disconnect ();
 }
 void 
 TcpSource::send (Packet *packet)
@@ -83,7 +103,18 @@ TcpSource::should_accept (Ipv4Address from, uint16_t from_port)
 	return false;
 }
 void
-TcpSource::completed (void)
+TcpSource::disconnect_completed (void)
+{
+	delete m_end_point;
+	m_end_point = 0;
+	delete m_connection;
+	m_connection = 0;
+}
+void
+TcpSource::disconnect_requested (void)
+{}
+void
+TcpSource::connect_completed (void)
 {}
 void 
 TcpSource::receive (void)
