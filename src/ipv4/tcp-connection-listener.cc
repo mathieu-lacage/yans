@@ -68,11 +68,7 @@ TcpConnectionListener::receive (Packet *packet)
 				delete end_point;
 				return;
 			}
-			TcpBsdConnection *connection = new TcpBsdConnection ();
-			connection->set_host (m_host);
-			connection->set_ipv4 (m_ipv4);
-			connection->set_end_point (end_point);
-			connection->set_route (route);
+			TcpBsdConnection *connection = m_host->get_tcp ()->create_connection (end_point);
 			(*m_creation) (connection, end_point);
 			end_point->receive (packet);
 		}

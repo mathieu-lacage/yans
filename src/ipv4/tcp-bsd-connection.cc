@@ -221,7 +221,7 @@ TcpBsdConnection::recv (uint32_t size)
 		return 0;
 	}
 	m_recv->remove_at_front (packet->get_size ());
-	notify_room_ready_to_receive ();
+	output ();
 	return packet;
 }
 
@@ -848,6 +848,10 @@ TcpBsdConnection::input (Packet *packet)
 	ChunkTcp *tcp = static_cast<ChunkTcp *> (packet->remove_header ());
 	ChunkPiece *piece = new ChunkPiece ();
 	piece->set_original (packet, 0, packet->get_size ());
+
+	TRACE ("recv " << packet->get_size () << " bytes from "
+	       << m_end_point->get_local_address () << ":" << m_end_point->get_local_port () << " to "
+	       << m_end_point->get_peer_address () << ":" << m_end_point->get_peer_port ());
 
 	tiflags = 0;
 	if (tcp->is_flag_syn ()) {
@@ -1812,7 +1816,14 @@ TcpBsdConnection::slow_timer (void)
 }
 void 
 TcpBsdConnection::fast_timer (void)
-{}
+{
+	if (m_t_flags & TF_DELACK) {
+		TRACE ("delayed ack");
+		m_t_flags &= ~TF_DELACK;
+		m_t_flags |= TF_ACKNOW;
+		output();
+	}
+}
 
 
 

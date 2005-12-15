@@ -308,13 +308,16 @@ ChunkTcp::serialize (WriteBuffer *buffer)
 		buffer->write_u8 (4);
 		buffer->write_hton_u16 (m_option_mss);
 	}
+#if 0
 	if (is_option_windowscale ()) {
+		// XXX broken.
 		buffer->write_u8 (0);
 		buffer->write_u8 (3);
 		buffer->write_u8 (3);
 		buffer->write_u8 (m_option_windowscale);
 	}
 	if (is_option_timestamp ()) {
+		// XXX broken.
 		buffer->write_u8 (0);
 		buffer->write_u8 (0);
 		buffer->write_u8 (8);
@@ -322,6 +325,7 @@ ChunkTcp::serialize (WriteBuffer *buffer)
 		buffer->write_hton_u32 (m_option_timestamp_value);
 		buffer->write_hton_u32 (m_option_timestamp_reply);
 	}
+#endif
 }
 
 void
