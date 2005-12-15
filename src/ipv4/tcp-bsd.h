@@ -108,3 +108,5 @@
  */
 #define	TCP_REXMTVAL \
 	((m_t_srtt >> TCP_RTT_SHIFT) + m_t_rttvar)
+
+#define        SO_KEEPALIVE    0x0008

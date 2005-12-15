@@ -44,6 +44,10 @@
 #define max(a,b) (((a)>(b))?(a):(b))
 #define panic(x)
 
+int	tcp_keepidle = TCPTV_KEEP_IDLE;
+int	tcp_keepintvl = TCPTV_KEEPINTVL;
+int	tcp_maxidle;
+
 #define TCPIPHDRLEN (32)
 #define IPHDRLEN (16)
 #define    MCLBYTES        (1024)
@@ -1523,18 +1527,20 @@ dropwithreset:
 	if ((tiflags & TH_RST) || m->m_flags & (M_BCAST|M_MCAST) ||
 	    IN_MULTICAST(ti->ti_dst.s_addr))
 		goto drop;
+#endif
 	if (tiflags & TH_ACK)
-		tcp_respond(tp, ti, m, (tcp_seq)0, ti->ti_ack, TH_RST);
+		respond ((tcp_seq)0, tcp->get_ack_number (), TH_RST);
 	else {
 		if (tiflags & TH_SYN)
-			ti->ti_len++;
-		tcp_respond(tp, ti, m, ti->ti_seq+ti->ti_len, (tcp_seq)0,
-		    TH_RST|TH_ACK);
+			tcp->set_sequence_number (tcp->get_sequence_number () + 1);
+		respond(tcp->get_sequence_number ()+piece->get_size (), (tcp_seq)0,
+			TH_RST|TH_ACK);
 	}
+#if 0
 	/* destroy temporarily created socket */
 	if (dropsocket)
 		(void) soabort(so);
-	#endif
+#endif
 	return;
 
 drop:
@@ -1590,9 +1596,204 @@ TcpBsdConnection::start_disconnect (void)
 	}
 }
 
+void
+TcpBsdConnection::timers (int timer)
+{
+	register int rexmt;
+
+	switch (timer) {
+
+	/*
+	 * 2 MSL timeout in shutdown went off.  If we're closed but
+	 * still waiting for peer to close and connection has been idle
+	 * too long, or if 2MSL time is up from TIME_WAIT, delete connection
+	 * control block.  Otherwise, check again in a bit.
+	 */
+	case TCPT_2MSL:
+		if (m_t_state != TCPS_TIME_WAIT &&
+		    m_t_idle <= tcp_maxidle)
+			m_t_timer[TCPT_2MSL] = tcp_keepintvl;
+		// else tp = tcp_close(tp);
+		break;
+
+	/*
+	 * Retransmission timer went off.  Message has not
+	 * been acked within retransmit interval.  Back off
+	 * to a longer retransmit interval and retransmit one segment.
+	 */
+	case TCPT_REXMT:
+		if (++m_t_rxtshift > TCP_MAXRXTSHIFT) {
+			m_t_rxtshift = TCP_MAXRXTSHIFT;
+			drop(m_t_softerror ?m_t_softerror : ETIMEDOUT);
+			break;
+		}
+		rexmt = TCP_REXMTVAL * tcp_backoff[m_t_rxtshift];
+		TCPT_RANGESET(m_t_rxtcur, rexmt,
+			      m_t_rttmin, TCPTV_REXMTMAX);
+		m_t_timer[TCPT_REXMT] = m_t_rxtcur;
+		/*
+		 * If losing, let the lower level know and try for
+		 * a better route.  Also, if we backed off this far,
+		 * our srtt estimate is probably bogus.  Clobber it
+		 * so we'll take the next rtt measurement as our srtt;
+		 * move the current srtt into rttvar to keep the current
+		 * retransmit times until then.
+		 */
+		if (m_t_rxtshift > TCP_MAXRXTSHIFT / 4) {
+			//in_losing(m_t_inpcb);
+			m_t_rttvar += (m_t_srtt >> TCP_RTT_SHIFT);
+			m_t_srtt = 0;
+		}
+		m_snd_nxt = m_snd_una;
+		/*
+		 * If timing a segment in this window, stop the timer.
+		 */
+		m_t_rtt = 0;
+		/*
+		 * Close the congestion window down to one segment
+		 * (we'll open it by one segment for each ack we get).
+		 * Since we probably have a window's worth of unacked
+		 * data accumulated, this "slow start" keeps us from
+		 * dumping all that data as back-to-back packets (which
+		 * might overwhelm an intermediate gateway).
+		 *
+		 * There are two phases to the opening: Initially we
+		 * open by one mss on each ack.  This makes the window
+		 * size increase exponentially with time.  If the
+		 * window is larger than the path can handle, this
+		 * exponential growth results in dropped packet(s)
+		 * almost immediately.  To get more time between 
+		 * drops but still "push" the network to take advantage
+		 * of improving conditions, we switch from exponential
+		 * to linear window opening at some threshhold size.
+		 * For a threshhold, we use half the current window
+		 * size, truncated to a multiple of the mss.
+		 *
+		 * (the minimum cwnd that will give us exponential
+		 * growth is 2 mss.  We don't allow the threshhold
+		 * to go below this.)
+		 */
+		{
+		u_int win = min(m_snd_wnd, m_snd_cwnd) / 2 / m_t_maxseg;
+		if (win < 2)
+			win = 2;
+		m_snd_cwnd = m_t_maxseg;
+		m_snd_ssthresh = win * m_t_maxseg;
+		m_t_dupacks = 0;
+		}
+		output ();
+		break;
+
+	/*
+	 * Persistance timer into zero window.
+	 * Force a byte to be output, if possible.
+	 */
+	case TCPT_PERSIST:
+		setpersist ();
+		m_t_force = 1;
+		output ();
+		m_t_force = 0;
+		break;
+
+	/*
+	 * Keep-alive timer went off; send something
+	 * or drop connection if idle for too long.
+	 */
+	case TCPT_KEEP:
+		if (m_t_state < TCPS_ESTABLISHED)
+			goto dropit;
+		if (m_so_options & SO_KEEPALIVE &&
+		    m_t_state <= TCPS_CLOSE_WAIT) {
+		    	if (m_t_idle >= tcp_keepidle + tcp_maxidle)
+				goto dropit;
+			/*
+			 * Send a packet designed to force a response
+			 * if the peer is up and reachable:
+			 * either an ACK if the connection is still alive,
+			 * or an RST if the peer has closed the connection
+			 * due to timeout or reboot.
+			 * Using sequence number tp->snd_una-1
+			 * causes the transmitted zero-length segment
+			 * to lie outside the receive window;
+			 * by the protocol spec, this requires the
+			 * correspondent TCP to respond.
+			 */
+			respond(m_rcv_nxt, m_snd_una - 1, 0);
+			m_t_timer[TCPT_KEEP] = tcp_keepintvl;
+		} else
+			m_t_timer[TCPT_KEEP] = tcp_keepidle;
+		break;
+	dropit:
+		drop (ETIMEDOUT);
+		break;
+	}
+}
+
+/*
+ * Send a single message to the TCP at address specified by
+ * the given TCP/IP header.  If m == 0, then we make a copy
+ * of the tcpiphdr at ti and send directly to the addressed host.
+ * This is used to force keep alive messages out using the TCP
+ * template for a connection tp->t_template.  If flags are given
+ * then we send a message back to the TCP which originated the
+ * segment ti, and discard the mbuf containing it and any other
+ * attached mbufs.
+ *
+ * In any case the ack and sequence number of the transmitted
+ * segment are as specified by the parameters.
+ */
+void
+TcpBsdConnection::respond(tcp_seq ack, tcp_seq seq, int flags)
+{
+	Packet *packet = new Packet ();
+	ChunkTcp *tcp = new ChunkTcp ();
+	packet->add_header (tcp);
+	TagOutIpv4 *tag = new TagOutIpv4 (m_route);
+	packet->add_tag (TagOutIpv4::get_tag (), tag);
+
+	tag->set_dport (m_end_point->get_peer_port ());
+	tag->set_sport (m_end_point->get_local_port ());
+	tag->set_daddress (m_end_point->get_peer_address ());
+	tag->set_saddress (m_end_point->get_local_address ());
+
+	tcp->set_source_port (m_end_point->get_local_port ());
+	tcp->set_destination_port (m_end_point->get_peer_port ());
+	tcp->enable_flag_ack ();
+	tcp->set_ack_number (ack);
+	if (flags & TH_RST) {
+		tcp->enable_flag_rst ();
+	}
+	tcp->set_sequence_number (seq);
+	tcp->set_window_size (m_recv->get_empty_at_back () >> m_rcv_scale);
+	
+	m_ipv4->set_protocol (TCP_PROTOCOL);
+	m_ipv4->send (packet);
+}
+
+
+/*
+ * Tcp protocol timeout routine called every 500 ms.
+ * Updates the timers in all active tcb's and
+ * causes finite state machine actions if timers expire.
+ */
 void 
 TcpBsdConnection::slow_timer (void)
-{}
+{
+	//int s = splnet();
+	register int i;
+
+	tcp_maxidle = TCPTV_KEEPCNT * tcp_keepintvl;
+
+	for (i = 0; i < TCPT_NTIMERS; i++) {
+		if (m_t_timer[i] && --m_t_timer[i] == 0) {
+			timers (i);
+		}
+	}
+	m_t_idle++;
+	if (m_t_rtt)
+		m_t_rtt++;
+	//splx(s);
+}
 void 
 TcpBsdConnection::fast_timer (void)
 {}

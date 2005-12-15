@@ -82,6 +82,8 @@ private:
 	typedef uint32_t u_int32_t;
 
 
+	void respond(tcp_seq ack, tcp_seq seq, int flags);
+	void timers (int tmier);
 	void notify_room_ready_to_receive (void);
 	void input (Packet *packet);
 	int output (void);
@@ -197,6 +199,7 @@ private:
 #define ECONNREFUSED 11
 #define ECONNRESET 12
 	int m_so_error;
+	int m_so_options;
 };
 
 
