@@ -107,7 +107,14 @@ TcpBsdConnection::TcpBsdConnection ()
 		      ((TCPTV_SRTTBASE >> 2) + (TCPTV_SRTTDFLT << 2)) >> 1,
 		      TCPTV_MIN, TCPTV_REXMTMAX);
         m_snd_cwnd = TCP_MAXWIN << TCP_MAX_WINSHIFT;
+	m_snd_wnd = 0;
         m_snd_ssthresh = TCP_MAXWIN << TCP_MAX_WINSHIFT;
+
+	m_request_r_scale = 0;
+	m_t_idle = 0;
+	m_t_force = 0;
+	m_rcv_scale = 0;
+	m_snd_scale = 0;
 
 	m_t_state = TCPS_LISTEN;
 }
@@ -564,10 +571,8 @@ again:
 
 		if (adv >= (long) (2 * m_t_maxseg))
 			goto send;
-#if 0
-		if (2 * adv >= (long) so->so_rcv.sb_hiwat)
+		if (2 * adv >= ((long)m_recv->get_size ()))
 			goto send;
-#endif
 	}
 
 	/*
