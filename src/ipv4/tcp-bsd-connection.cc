@@ -1797,7 +1797,6 @@ TcpBsdConnection::respond(tcp_seq ack, tcp_seq seq, int flags)
 void 
 TcpBsdConnection::slow_timer (void)
 {
-	//int s = splnet();
 	register int i;
 
 	tcp_maxidle = TCPTV_KEEPCNT * tcp_keepintvl;
@@ -1810,7 +1809,6 @@ TcpBsdConnection::slow_timer (void)
 	m_t_idle++;
 	if (m_t_rtt)
 		m_t_rtt++;
-	//splx(s);
 }
 void 
 TcpBsdConnection::fast_timer (void)

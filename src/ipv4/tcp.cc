@@ -292,9 +292,11 @@ Tcp::create_connection (TcpEndPoint *end_p)
 	Route *route = m_host->get_routing_table ()->lookup (end_p->get_peer_address ());
 	connection->set_route (route);
 	connection->set_destroy_handler (make_callback (&Tcp::destroy_connection, this));
+	m_connections.push_back (connection);
 	if (!m_running) {
 		Simulator::insert_in_us (FAST_TIMER_DELAY_US, m_fast_timer);
 		Simulator::insert_in_us (SLOW_TIMER_DELAY_US, m_slow_timer);
+		m_running = true;
 	}
 	return connection;
 }
