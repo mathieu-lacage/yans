@@ -65,6 +65,7 @@ private:
 
 	void insert_piece_at_back (ChunkPiece *piece, uint32_t offset);
 	void insert_piece_at (PiecesI i, ChunkPiece *piece, uint32_t offset);
+	void check_state (void);
 	
 	Pieces m_pieces;
 	uint32_t m_size;

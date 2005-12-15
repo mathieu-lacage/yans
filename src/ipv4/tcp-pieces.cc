@@ -24,10 +24,28 @@
 #include "packet.h"
 #include "chunk-piece.h"
 
+#define CHECK_STATE \
+check_state ();
+
 TcpPieces::TcpPieces ()
 {}
 TcpPieces::~TcpPieces ()
 {}
+
+void 
+TcpPieces::check_state (void)
+{
+	uint32_t prev_start = 0;
+	for (PiecesI i = m_pieces.begin (); i != m_pieces.end (); i++) {
+		assert ((*i).first != 0);
+		uint32_t cur_start = (*i).second;
+		uint32_t cur_end = cur_start + (*i).first->get_size ();
+		assert (cur_start < m_size);
+		assert (cur_end <= m_size);
+		assert (prev_start <= cur_start);
+		prev_start = cur_start;
+	}	
+}
 
 void 
 TcpPieces::set_size (uint32_t size)
@@ -87,6 +105,8 @@ TcpPieces::add_at_back (ChunkPiece *piece)
 	assert (offset < m_size);
 	ChunkPiece *new_piece = static_cast <ChunkPiece *> (piece->copy ());
 	insert_piece_at_back (new_piece, offset);
+
+	CHECK_STATE;
 	return new_piece;
 }
 ChunkPiece *
@@ -98,6 +118,7 @@ TcpPieces::add_at (ChunkPiece *org, uint32_t offset)
 	ChunkPiece *piece = static_cast <ChunkPiece *> (org->copy ());
 	if (m_pieces.empty ()) {
 		insert_piece_at_back (piece, offset);
+		CHECK_STATE;
 		return piece;
 	}
 	for (PiecesI i = m_pieces.begin (); i != m_pieces.end (); i++) {
@@ -125,8 +146,9 @@ TcpPieces::add_at (ChunkPiece *org, uint32_t offset)
 	}
 	if (piece->get_size () == 0) {
 		delete piece;
-		return 0;
+		piece = 0;
 	}
+	CHECK_STATE;
 	return piece;
 }
 
@@ -135,6 +157,7 @@ TcpPieces::remove_at_front (uint32_t size)
 {
 	assert (get_data_at_front () >= size);
 	if (size == 0) {
+		CHECK_STATE;
 		return;
 	}
 	uint32_t expected_start = 0;
@@ -166,8 +189,13 @@ TcpPieces::remove_at_front (uint32_t size)
 	 * The amount of data removed is located in found == size.
 	 */
 	for (PiecesI j = m_pieces.begin (); j != m_pieces.end (); j++) {
-		(*j).second -= size;
+		if ((*j).second < size) {
+			(*j).second = 0;
+		} else {
+			(*j).second -= size;
+		}
 	}
+	CHECK_STATE;
 }
 
 uint32_t
@@ -240,7 +268,7 @@ TcpPieces::get_at (uint32_t start, uint32_t size)
 		expected_start = cur_end;
 	}
 	if (packet->get_size () == 0) {
-		delete packet;
+		packet->unref ();
 		return 0;
 	}
 	return packet;	
