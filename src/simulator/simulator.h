@@ -28,6 +28,15 @@
 class Event;
 class SimulatorPrivate;
 
+/* This simple macro is quite useful when 
+ * debugging.
+ */
+#define STOP_AT(time)              \
+if (Simulator::now_s () >= time) { \
+	bool loop = true;          \
+	while (loop) {}            \
+}
+
 class Simulator {
 public:
 	static void destroy (void);
