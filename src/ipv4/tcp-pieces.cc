@@ -24,6 +24,18 @@
 #include "packet.h"
 #include "chunk-piece.h"
 
+#define TRACE_TCP_PIECES 1
+
+#ifdef TRACE_TCP_PIECES
+#include <iostream>
+#include "simulator.h"
+# define TRACE(x) \
+std::cout << "TCP PIECES " << Simulator::now_s () << " " << x << std::endl;
+#else /* TRACE_TCP_PIECES */
+# define TRACE(format,...)
+#endif /* TRACE_TCP_PIECES */
+
+
 #define CHECK_STATE \
 check_state ();
 
@@ -133,7 +145,7 @@ TcpPieces::add_at (ChunkPiece *org, uint32_t offset)
 				piece->trim_end (offset + piece->get_size () - (*i).second);
 				insert_piece_at (i, piece, offset);
 			}
-			break;
+			goto done;
 		} else {
 			/* We should be located after the current chunk.
 			 * Verify whether or not we overlap the current chunk.
@@ -144,6 +156,8 @@ TcpPieces::add_at (ChunkPiece *org, uint32_t offset)
 			}
 		}
 	}
+	insert_piece_at_back (piece, offset);
+ done:
 	if (piece->get_size () == 0) {
 		delete piece;
 		piece = 0;
@@ -260,7 +274,7 @@ TcpPieces::get_at (uint32_t start, uint32_t size)
 		if (cur_start < start) {
 			piece->trim_start (start - cur_start);
 		}
-		if (cur_end > end) {
+		if (cur_end >= end) {
 			piece->trim_end (cur_end - end);
 			adding = false;
 			break;
