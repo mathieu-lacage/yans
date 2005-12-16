@@ -1417,6 +1417,7 @@ trimthenstep6:
 		 */
 		case TCPS_LAST_ACK:
 			if (ourfinisacked) {
+				set_state (TCPS_CLOSED);
 				goto drop;
 			}
 			break;
