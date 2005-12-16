@@ -26,6 +26,7 @@
 #include "tcp.h"
 #include "host.h"
 #include "packet.h"
+#include "callback-event.tcc"
 
 #define TRACE_TCP_SINK 1
 
@@ -120,12 +121,12 @@ TcpSink::connection_created (TcpBsdConnection *connection, TcpEndPoint *end_poin
 	TRACE ("connection created");
 	m_connection = connection;
 	m_real_end_point = end_point;
-	connection->set_callbacks (make_callback (&TcpSink::connect_completed, this),
-				   make_callback (&TcpSink::disconnect_requested, this),
-				   make_callback (&TcpSink::disconnect_completed, this),
-				   make_callback (&TcpSink::transmitted, this), 
-				   make_callback (&TcpSink::receive, this),
-				   make_callback (&TcpSink::got_ack, this));
+	connection->set_callbacks (make_callback_event (&TcpSink::connect_completed, this),
+				   make_callback_event (&TcpSink::disconnect_requested, this),
+				   make_callback_event (&TcpSink::disconnect_completed, this),
+				   make_callback_event (&TcpSink::transmitted, this), 
+				   make_callback_event (&TcpSink::receive, this),
+				   make_callback_event (&TcpSink::got_ack, this));
 }
 
 

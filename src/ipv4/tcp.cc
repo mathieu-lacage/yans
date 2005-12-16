@@ -28,7 +28,7 @@
 #include "tcp-end-point.h"
 #include "tcp-bsd-connection.h"
 #include "tcp-connection-listener.h"
-#include "event.h"
+#include "event.tcc"
 
 #define TRACE_TCP 1
 
@@ -122,7 +122,7 @@ Tcp::allocate (void)
 		return 0;
 	}
 	TcpEndPoint *end_point = new TcpEndPoint (Ipv4Address::get_any (), port);
-	end_point->set_destroy_callback (make_callback(&Tcp::destroy_end_point, this));
+	end_point->set_destroy_callback (make_callback_event (&Tcp::destroy_end_point, this));
 	m_end_p.push_back (end_point);
 	return end_point;
 }
@@ -134,7 +134,7 @@ Tcp::allocate (Ipv4Address address)
 		return 0;
 	}
 	TcpEndPoint *end_point = new TcpEndPoint (address, port);
-	end_point->set_destroy_callback (make_callback(&Tcp::destroy_end_point, this));
+	end_point->set_destroy_callback (make_callback_event (&Tcp::destroy_end_point, this));
 	m_end_p.push_back (end_point);
 	return end_point;
 }
@@ -145,7 +145,7 @@ Tcp::allocate (Ipv4Address address, uint16_t port)
 		return 0;
 	}
 	TcpEndPoint *end_point = new TcpEndPoint (address, port);
-	end_point->set_destroy_callback (make_callback(&Tcp::destroy_end_point, this));
+	end_point->set_destroy_callback (make_callback_event (&Tcp::destroy_end_point, this));
 	m_end_p.push_back (end_point);
 	return end_point;
 }
@@ -165,7 +165,7 @@ Tcp::allocate (Ipv4Address local_address, uint16_t local_port,
 	}
 	TcpEndPoint *end_point = new TcpEndPoint (local_address, local_port);
 	end_point->set_peer (peer_address, peer_port);
-	end_point->set_destroy_callback (make_callback (&Tcp::destroy_end_point, this));
+	end_point->set_destroy_callback (make_callback_event (&Tcp::destroy_end_point, this));
 	m_end_p.push_back (end_point);
 	return end_point;
 }
@@ -291,7 +291,7 @@ Tcp::create_connection (TcpEndPoint *end_p)
 	connection->set_end_point (end_p);
 	Route *route = m_host->get_routing_table ()->lookup (end_p->get_peer_address ());
 	connection->set_route (route);
-	connection->set_destroy_handler (make_callback (&Tcp::destroy_connection, this));
+	connection->set_destroy_handler (make_callback_event (&Tcp::destroy_connection, this));
 	m_connections.push_back (connection);
 	if (!m_running) {
 		Simulator::insert_in_us (FAST_TIMER_DELAY_US, m_fast_timer);
@@ -361,6 +361,7 @@ Tcp::fast_timer (void)
 		return;
 	}
 
+
 	for (ConnectionsI i = m_connections.begin (); i != m_connections.end (); i++) {
 		(*i)->fast_timer ();
 	}
@@ -372,6 +373,7 @@ Tcp::fast_timer (void)
 void 
 Tcp::destroy_connection (TcpBsdConnection *connection)
 {
+	TRACE ("destroy connection " << connection);
 	for (ConnectionsI i = m_connections.begin (); i != m_connections.end (); i++) {
 		if ((*i) == connection) {
 			m_connections.erase (i);

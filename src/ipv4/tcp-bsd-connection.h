@@ -35,7 +35,7 @@
 #ifndef TCP_BSD_CONNECTION_H
 #define TCP_BSD_CONNECTION_H
 
-#include "callback.h"
+#include "callback-event.tcc"
 #include "ipv4-address.h"
 #include <stdint.h>
 #include "tcp-bsd-timers.h"
@@ -51,13 +51,13 @@ class ChunkTcp;
 
 class TcpBsdConnection {
 public:
-	typedef Callback<void (void)> ConnectCompletedCallback;
-	typedef Callback<void (void)> DisConnectRequestedCallback;
-	typedef Callback<void (void)> DisConnectCompletedCallback;
-	typedef Callback<void (void)> DataReceivedCallback;
-	typedef Callback<void (void)> DataTransmittedCallback;
-	typedef Callback<void (Packet *)> AckReceivedCallback;
-	typedef Callback<void (TcpBsdConnection *)> TcpBsdConnectionDestroy;
+	typedef CallbackEvent<void (void)> ConnectCompletedCallback;
+	typedef CallbackEvent<void (void)> DisConnectRequestedCallback;
+	typedef CallbackEvent<void (void)> DisConnectCompletedCallback;
+	typedef CallbackEvent<void (void)> DataReceivedCallback;
+	typedef CallbackEvent<void (void)> DataTransmittedCallback;
+	typedef CallbackEvent<void (Packet *)> AckReceivedCallback;
+	typedef CallbackEvent<void (TcpBsdConnection *)> TcpBsdConnectionDestroy;
 
 	TcpBsdConnection ();
 	~TcpBsdConnection ();
@@ -99,7 +99,6 @@ private:
 	typedef uint32_t u_int32_t;
 
 
-	void trigger_events (void);
 	void set_state (int new_state);
 	void respond(tcp_seq ack, tcp_seq seq, int flags);
 	void timers (int timer);

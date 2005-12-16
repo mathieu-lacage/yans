@@ -31,7 +31,7 @@ TcpEndPoint::TcpEndPoint (Ipv4Address address, uint16_t port)
 {}
 TcpEndPoint::~TcpEndPoint ()
 {
-	(*m_destroy) (this);
+	m_destroy->invoke_later (this);
 	delete m_destroy;
 	if (m_reception != 0) {
 		delete m_reception;

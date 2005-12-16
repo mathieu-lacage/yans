@@ -23,6 +23,7 @@
 #define TCP_END_POINT_H
 
 #include "callback.h"
+#include "callback-event.tcc"
 #include "ipv4-address.h"
 #include <stdint.h>
 
@@ -31,7 +32,7 @@ class Packet;
 class TcpEndPoint {
 public:
 	typedef Callback<void (Packet *)> TcpEndPointReceptionCallback;
-	typedef Callback <void (TcpEndPoint *)> TcpEndPointDestroyCallback;
+	typedef CallbackEvent<void (TcpEndPoint *)> TcpEndPointDestroyCallback;
 
 	TcpEndPoint (Ipv4Address address, uint16_t port);
 	~TcpEndPoint ();

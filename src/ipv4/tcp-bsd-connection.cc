@@ -130,7 +130,6 @@ TcpBsdConnection::~TcpBsdConnection ()
 {
 	delete m_connect_completed;
 	delete m_disconnect_completed;
-	m_disconnect_completed = 0;
 	delete m_disconnect_requested;
 	delete m_data_received;
 	delete m_data_transmitted;
@@ -138,7 +137,7 @@ TcpBsdConnection::~TcpBsdConnection ()
 	delete m_send;
 	delete m_recv;
 	if (m_destroy != 0) {
-		(*m_destroy) (this);
+		m_destroy->invoke_later (this);
 	}
 	delete m_destroy;
 }
@@ -147,19 +146,14 @@ TcpBsdConnection::set_state (int new_state)
 {
 	TRACE ("from " << tcpstates[m_t_state] << " to " << tcpstates[new_state]);
 	m_t_state = new_state;
-}
-
-void
-TcpBsdConnection::trigger_events (void)
-{
 	if (m_t_state == TCPS_ESTABLISHED) {
-		(*m_connect_completed) ();
+		m_connect_completed->invoke_later ();
 	} else if (m_t_state == TCPS_CLOSE_WAIT) {
-		(*m_disconnect_requested) ();
+		m_disconnect_requested->invoke_later ();
 	} else if (m_t_state == TCPS_CLOSED) {
-		(*m_disconnect_completed) ();
+		m_disconnect_completed->invoke_later ();
 	} else if (m_t_state == TCPS_TIME_WAIT) {
-		(*m_disconnect_completed) ();
+		m_disconnect_completed->invoke_later ();
 	}
 }
 
@@ -453,7 +447,7 @@ TcpBsdConnection::reass(ChunkTcp *tcp, Packet *packet)
 {
 	if (tcp == 0 || packet == 0) {
 		if (m_recv->get_data_at_front () != 0) {
-			(*m_data_received) ();
+			m_data_received->invoke_later ();
 		}
 		return 0;
 	}
@@ -474,7 +468,7 @@ TcpBsdConnection::reass(ChunkTcp *tcp, Packet *packet)
 	if (TCPS_HAVERCVDSYN(m_t_state) == 0)
 		return (0);
 	m_rcv_nxt += completed;
-	(*m_data_received) ();
+	m_data_received->invoke_later ();
 	return TH_FIN;
 }
 
@@ -605,9 +599,12 @@ again:
 		 * taking into account that we are limited by
 		 * TCP_MAXWIN << tp->rcv_scale.
 		 */
+#if 1
 		long adv = min(win, (long)TCP_MAXWIN << m_rcv_scale) -
 			(m_rcv_adv - m_rcv_nxt);
-
+#else
+		long adv = 0;
+#endif
 		if (adv >= (long) (2 * m_t_maxseg))
 			goto send;
 		if (2 * adv >= ((long)m_recv->get_size ()))
@@ -1373,7 +1370,7 @@ trimthenstep6:
 			m_snd_wnd -= acked;
 			ourfinisacked = 0;
 		}
-		(*m_data_transmitted) ();
+		m_data_transmitted->invoke_later ();
 		m_snd_una = tcp->get_ack_number ();
 		if (SEQ_LT(m_snd_nxt, m_snd_una))
 			m_snd_nxt = m_snd_una;
@@ -1497,7 +1494,7 @@ step6:
 			ChunkPiece * piece = static_cast <ChunkPiece *> (packet->remove_header ()); 
 			if (piece != 0) {
 				m_recv->add_at_back (piece); 
-				(*m_data_received) ();
+				m_data_received->invoke_later ();
 			}
 		} else { 
 			tiflags = reass(tcp, packet); 
@@ -1858,7 +1855,6 @@ TcpBsdConnection::fast_timer (void)
 		m_t_flags |= TF_ACKNOW;
 		output();
 	}
-	trigger_events ();
 }
 
 
