@@ -50,6 +50,8 @@ public:
 	static void insert_in_s (double delta, Event *event);
 	static void insert_at_s (double time, Event *event);
 	static double now_s (void);
+
+	static void insert_later (Event *event);
 private:
 	Simulator ();
 	~Simulator ();

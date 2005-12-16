@@ -39,8 +39,12 @@ public:
 	void insert_in_s (Event *event, double delta);
 	void insert_at_s (Event *event, double time);
 	double now_s (void);
+	void insert_later (Event *event);
 
 private:
+	void handle_immediate (void);
+	typedef std::list<Event *> Events;
+	Events m_immediate;
 	bool m_stop;
 	Clock *m_clock;
 	EventHeap *m_event_heap;
@@ -63,14 +67,26 @@ SimulatorPrivate::~SimulatorPrivate ()
 }
 
 void
+SimulatorPrivate::handle_immediate (void)
+{
+	while (!m_immediate.empty ()) {
+		Event *ev = m_immediate.front ();
+		m_immediate.pop_front ();
+		ev->notify ();
+	}
+}
+
+void
 SimulatorPrivate::run (void)
 {
 	Event *next_ev = m_event_heap->peek_next ();
 	uint64_t next_now = m_event_heap->peek_next_time_us ();
+	handle_immediate ();
 	while (next_ev != 0 && !m_stop) {
 		m_event_heap->remove_next ();
 		m_clock->update_current_us (next_now);
 		next_ev->notify ();
+		handle_immediate ();
 		next_ev = m_event_heap->peek_next ();
 		next_now = m_event_heap->peek_next_time_us ();
 	}
@@ -115,6 +131,11 @@ double
 SimulatorPrivate::now_s (void)
 {
 	return m_clock->get_current_s ();
+}
+void
+SimulatorPrivate::insert_later (Event *event)
+{
+	m_immediate.push_back (event);
 }
 
 
@@ -184,4 +205,8 @@ Simulator::now_s (void)
 {
 	return get_priv ()->now_s ();
 }
-
+void
+Simulator::insert_later (Event *event)
+{
+	return get_priv ()->insert_later (event);
+}
