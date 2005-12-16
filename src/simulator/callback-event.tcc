@@ -24,13 +24,14 @@
 
 #include "event.h"
 #include "event.tcc"
+#include "simulator.h"
 
 /***
  * This code is unreadable. It was inspired by the techniques described in:
  * http://www.codeproject.com/cpp/TTLFunction.asp
  */
 
-class empty {};
+class empty;
 
 template<typename T1 = empty, typename T2 = empty>
 class CallbackEvent;
@@ -39,14 +40,14 @@ class CallbackEvent;
 template<>
 class CallbackEvent<void ()> {
 public:
-	virtual ~Callback () {}
-	virtual void invoke_later (void);
+	virtual ~CallbackEvent () {}
+	virtual void invoke_later (void) = 0;
 };
 
 template<typename T1>
 class CallbackEvent<void (T1)> {
  public:
-	virtual ~Callback () {}
+	virtual ~CallbackEvent () {}
 	virtual void invoke_later (T1) = 0;
 };
 
