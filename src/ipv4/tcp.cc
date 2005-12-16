@@ -373,7 +373,6 @@ Tcp::fast_timer (void)
 void 
 Tcp::destroy_connection (TcpBsdConnection *connection)
 {
-	TRACE ("destroy connection " << connection);
 	for (ConnectionsI i = m_connections.begin (); i != m_connections.end (); i++) {
 		if ((*i) == connection) {
 			m_connections.erase (i);
@@ -385,7 +384,6 @@ Tcp::destroy_connection (TcpBsdConnection *connection)
 void 
 Tcp::destroy_end_point (TcpEndPoint *end_point)
 {
-	TRACE ("destroy end point " << end_point);
 	for (TcpEndPointsI i = m_end_p.begin (); i != m_end_p.end (); i++) {
 		if ((*i) == end_point) {
 			m_end_p.erase (i);
