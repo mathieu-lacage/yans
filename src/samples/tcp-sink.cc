@@ -72,6 +72,9 @@ void
 TcpSink::receive (void)
 {	
 	Packet *packet = m_connection->recv (m_connection->get_data_ready ());
+	if (packet == 0) {
+		return;
+	}
 	if (m_callback != 0) {
 		(*m_callback) (packet);
 	}
