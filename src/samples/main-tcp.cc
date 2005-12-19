@@ -80,9 +80,10 @@ int main (int argc, char *argv[])
 
 	TcpSink *sink = new TcpSink (hserver);
 	sink->bind (Ipv4Address ("192.168.0.2"), 1026);
+	sink->stop_listen_at (12.0);
 
 	PeriodicGenerator *generator = new PeriodicGenerator ();
-	generator->set_packet_interval (0.01);
+	generator->set_packet_interval (0.1);
 	generator->set_packet_size (100);
 	generator->start_at (2.0);
 	generator->stop_at (10.0);

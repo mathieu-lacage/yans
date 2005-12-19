@@ -54,6 +54,7 @@ TcpSink::~TcpSink ()
 {
 	if (m_end_point != 0) {
 		delete m_end_point;
+		m_end_point = 0;
 	}
 	m_end_point = (TcpEndPoint *) 0xdeadbeaf;
 	m_host = (Host *)0xdeadbeaf;
@@ -79,6 +80,21 @@ TcpSink::receive (void)
 		(*m_callback) (packet);
 	}
 	packet->unref ();
+}
+
+void 
+TcpSink::stop_listen_at (double at)
+{
+	Simulator::insert_at_s (at, make_event (&TcpSink::stop_listen_now, this));
+}
+
+void
+TcpSink::stop_listen_now (void)
+{
+	if (m_end_point != 0) {
+		delete m_end_point;
+		m_end_point = 0;
+	}
 }
 
 void

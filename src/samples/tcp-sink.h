@@ -43,6 +43,8 @@ public:
 	void set_receive_callback (TcpSinkCallback *callback);
 
 	bool bind (Ipv4Address address, uint16_t port);
+
+	void stop_listen_at (double at);
 private:
 	bool should_accept (Ipv4Address from, uint16_t from_port);
 	void connection_created (TcpConnection *connection, TcpEndPoint *end_point);
@@ -52,6 +54,7 @@ private:
 	void receive (void);
 	void transmitted (void);
 	void got_ack (Packet *packet);
+	void stop_listen_now (void);
 
 	Host *m_host;
 	TcpEndPoint *m_end_point;
