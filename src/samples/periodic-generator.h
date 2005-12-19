@@ -51,6 +51,7 @@ private:
 	double m_interval;
 	uint16_t m_size;
 	double m_stop_at;
+	uint32_t m_n;
 };
 
 

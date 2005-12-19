@@ -27,6 +27,7 @@
 
 
 PeriodicGenerator::PeriodicGenerator ()
+	: m_n (0)
 {}
 
 PeriodicGenerator::~PeriodicGenerator ()
@@ -74,8 +75,9 @@ PeriodicGenerator::send_next_packet (void)
 	Simulator::insert_in_s (m_interval, make_event (&PeriodicGenerator::send_next_packet, this));
 	/* create packet. */
 	Packet *packet = new Packet ();
-	ChunkFakeData *data = new ChunkFakeData (m_size);
+	ChunkFakeData *data = new ChunkFakeData (m_size, m_n);
 	packet->add_header (data);
 	(*m_callback) (packet);
 	packet->unref ();
+	m_n++;
 }
