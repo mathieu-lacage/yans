@@ -29,7 +29,7 @@
 class Host;
 class Ipv4EndPoint;
 class TcpEndPoint;
-class TcpBsdConnection;
+class TcpConnection;
 
 class TcpSource {
  public:
@@ -52,7 +52,7 @@ class TcpSource {
 
 	Host *m_host;
 	TcpEndPoint *m_end_point;
-	TcpBsdConnection *m_connection;
+	TcpConnection *m_connection;
 };
 
 #endif /* TCP_SOURCE */

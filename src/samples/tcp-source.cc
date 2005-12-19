@@ -26,7 +26,7 @@
 #include "tcp.h"
 #include "ipv4-route.h"
 #include "tcp-end-point.h"
-#include "tcp-bsd-connection.h"
+#include "tcp-connection.h"
 #include "chunk-piece.h"
 #include "callback-event.tcc"
 

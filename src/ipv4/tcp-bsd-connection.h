@@ -35,6 +35,7 @@
 #ifndef TCP_BSD_CONNECTION_H
 #define TCP_BSD_CONNECTION_H
 
+#include "tcp-connection.h"
 #include "callback-event.tcc"
 #include "ipv4-address.h"
 #include <stdint.h>
@@ -50,41 +51,33 @@ class ChunkTcp;
 class ChunkPiece;
 
 
-class TcpBsdConnection {
+class TcpBsdConnection : public TcpConnection {
 public:
-	typedef CallbackEvent<void (void)> ConnectCompletedCallback;
-	typedef CallbackEvent<void (void)> DisConnectRequestedCallback;
-	typedef CallbackEvent<void (void)> DisConnectCompletedCallback;
-	typedef CallbackEvent<void (void)> DataReceivedCallback;
-	typedef CallbackEvent<void (void)> DataTransmittedCallback;
-	typedef CallbackEvent<void (Packet *)> AckReceivedCallback;
-	typedef CallbackEvent<void (TcpBsdConnection *)> TcpBsdConnectionDestroy;
-
 	TcpBsdConnection ();
-	~TcpBsdConnection ();
+	virtual ~TcpBsdConnection ();
 
-	void set_ipv4 (Ipv4 *ipv4);
-	void set_host (Host *host);
-	void set_end_point (TcpEndPoint *end_point);
-	void set_route (Route *route);
-	void set_destroy_handler (TcpBsdConnectionDestroy *handler);
+	virtual void set_ipv4 (Ipv4 *ipv4);
+	virtual void set_host (Host *host);
+	virtual void set_end_point (TcpEndPoint *end_point);
+	virtual void set_route (Route *route);
+	virtual void set_destroy_handler (TcpConnectionDestroy *handler);
 
-	void set_callbacks (ConnectCompletedCallback *connect_completed,
-			    DisConnectRequestedCallback *disconnect_requested,
-			    DisConnectCompletedCallback *disconnect_completed,
-			    DataTransmittedCallback *data_transmitted,
-			    DataReceivedCallback *data_received,
-			    AckReceivedCallback *ack_received);
-	void start_connect (void);
-	void start_disconnect (void);
+	virtual void set_callbacks (ConnectCompletedCallback *connect_completed,
+				    DisConnectRequestedCallback *disconnect_requested,
+				    DisConnectCompletedCallback *disconnect_completed,
+				    DataTransmittedCallback *data_transmitted,
+				    DataReceivedCallback *data_received,
+				    AckReceivedCallback *ack_received);
+	virtual void start_connect (void);
+	virtual void start_disconnect (void);
 
-	uint32_t get_room_left (void);
-	uint32_t get_data_ready (void);
-	uint32_t send (Packet *packet);
-	Packet *recv (uint32_t size);
+	virtual uint32_t get_room_left (void);
+	virtual uint32_t get_data_ready (void);
+	virtual uint32_t send (Packet *packet);
+	virtual Packet *recv (uint32_t size);
 
-	void slow_timer (void);
-	void fast_timer (void);
+	virtual void slow_timer (void);
+	virtual void fast_timer (void);
 private:
 	typedef unsigned char u_char;
 	typedef unsigned short u_short;
@@ -121,7 +114,7 @@ private:
 	DataReceivedCallback *m_data_received;
 	DataTransmittedCallback *m_data_transmitted;
 	AckReceivedCallback *m_ack_received;
-	TcpBsdConnectionDestroy *m_destroy;
+	TcpConnectionDestroy *m_destroy;
 	Ipv4 *m_ipv4;
 	Host *m_host;
 	TcpPieces *m_send;

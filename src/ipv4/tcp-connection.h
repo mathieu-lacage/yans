@@ -22,7 +22,7 @@
 #ifndef TCP_CONNECTION_H
 #define TCP_CONNECTION_H
 
-#include "callback.h"
+#include "callback-event.tcc"
 #include "ipv4-address.h"
 #include <stdint.h>
 
@@ -31,114 +31,42 @@ class Ipv4;
 class Host;
 class TcpEndPoint;
 class Route;
-class TcpPieces;
-class ChunkTcp;
 
 
 class TcpConnection {
 public:
-	typedef Callback<void (void)> ConnectionCompletedCallback;
-	typedef Callback<void (void)> DataReceivedCallback;
-	typedef Callback<void (void)> DataTransmittedCallback;
-	typedef Callback<void (Packet *)> AckReceivedCallback;
-	typedef Callback<void (TcpConnection *)> TcpConnectionDestroy;
+	typedef CallbackEvent<void (void)> ConnectCompletedCallback;
+	typedef CallbackEvent<void (void)> DisConnectRequestedCallback;
+	typedef CallbackEvent<void (void)> DisConnectCompletedCallback;
+	typedef CallbackEvent<void (void)> DataReceivedCallback;
+	typedef CallbackEvent<void (void)> DataTransmittedCallback;
+	typedef CallbackEvent<void (Packet *)> AckReceivedCallback;
+	typedef CallbackEvent<void (TcpConnection *)> TcpConnectionDestroy;
 
-	TcpConnection ();
-	~TcpConnection ();
+	virtual ~TcpConnection () = 0;
 
-	void set_ipv4 (Ipv4 *ipv4);
-	void set_host (Host *host);
-	void set_end_point (TcpEndPoint *end_point);
-	void set_route (Route *route);
-	void set_destroy_handler (TcpConnectionDestroy *handler);
+	virtual void set_ipv4 (Ipv4 *ipv4) = 0;
+	virtual void set_host (Host *host) = 0;
+	virtual void set_end_point (TcpEndPoint *end_point) = 0;
+	virtual void set_route (Route *route) = 0;
+	virtual void set_destroy_handler (TcpConnectionDestroy *handler) = 0;
 
-	void set_callbacks (ConnectionCompletedCallback *connection_completed,
-			    DataTransmittedCallback *data_transmitted,
-			    DataReceivedCallback *data_received,
-			    AckReceivedCallback *ack_received);
-	void start_connect (void);
+	virtual void set_callbacks (ConnectCompletedCallback *connect_completed,
+				    DisConnectRequestedCallback *disconnect_requested,
+				    DisConnectCompletedCallback *disconnect_completed,
+				    DataTransmittedCallback *data_transmitted,
+				    DataReceivedCallback *data_received,
+				    AckReceivedCallback *ack_received) = 0;
+	virtual void start_connect (void) = 0;
+	virtual void start_disconnect (void) = 0;
 
-	uint32_t get_room_left (void);
-	uint32_t get_data_ready (void);
-	uint32_t send (Packet *packet);
-	Packet *recv (uint32_t size);
+	virtual uint32_t get_room_left (void) = 0;
+	virtual uint32_t get_data_ready (void) = 0;
+	virtual uint32_t send (Packet *packet) = 0;
+	virtual Packet *recv (uint32_t size) = 0;
 
-	void slow_timer (void);
-	void fast_timer (void);
-private:
-	enum TcpState_e {
-		CLOSED,
-		LISTEN,
-		SYN_SENT,
-		SYN_RCVD,
-		ESTABLISHED,
-		CLOSE_WAIT,
-		LAST_ACK,
-		FIN_WAIT_1,
-		CLOSING,
-		TIME_WAIT,
-		FIN_WAIT_2
-	};
-	void receive (Packet *packet);
-	void set_state (enum TcpState_e new_state);
-	bool invert_packet (Packet *packet);
-	uint32_t get_isn (void);
-	bool send_syn_ack (Packet *packet);
-	bool send_ack (Packet *packet);
-	void send_out (Packet *packet);
-	void retransmission_timeout (void);
-	void start_retransmission_timer (void);
-	void notify_data_ready_to_send (void);
-	void notify_room_ready_to_receive (void);
-	void send_data (void);
-	ChunkTcp *create_chunk_tcp (void);
-	void add_out_tag (Packet *packet);
-	bool seq_gs (uint32_t a, uint32_t b);
-	bool seq_le (uint32_t a, uint32_t b);
-	bool seq_ls (uint32_t a, uint32_t b);
-
-	TcpEndPoint *m_end_point;
-	Route *m_route;
-	ConnectionCompletedCallback *m_connection_completed;
-	DataReceivedCallback *m_data_received;
-	DataTransmittedCallback *m_data_transmitted;
-	AckReceivedCallback *m_ack_received;
-	enum TcpState_e m_state;
-	Ipv4 *m_ipv4;
-	Host *m_host;
-	TcpConnectionDestroy *m_destroy;
-
-	TcpPieces *m_send;
-	TcpPieces *m_recv;
-
-	uint32_t m_snd_una;
-	uint32_t m_snd_nxt;
-	uint32_t m_snd_wnd;
-	uint32_t m_rcv_nxt;
-	uint32_t m_rcv_wnd;
-	uint32_t m_snd_wl1;
-	uint32_t m_snd_wl2;
-	uint32_t m_irs;
-	/* The following variables are also needed although not described
-	 * in the tcp rfc. I have choosen to use the same names as the BSD
-	 * implementation for the sake of clarity.
-	 */
-	uint32_t m_rcv_adv;  /* receive window advertised by other end. */
-	uint32_t m_snd_cwnd; /* congestion window. */
-	uint32_t m_snd_ssthresh; /* snd_cwnd threshold for slow start. */
-	uint32_t m_snd_max; /* the largest sequence number of packets sent. */
-	uint32_t m_max_sndwnd; /* largest window ever offered by other end. */
-
-	uint32_t m_snd_mss; /* maximum segment size to send */
-
-
-	uint32_t m_retransmission_timer;
-	uint32_t m_2msl_timer;
-
-	/* tcp receive and transmission buffers where packets to send 
-	 * and receive are accumulated.
-	 */
-	
+	virtual void slow_timer (void) = 0;
+	virtual void fast_timer (void) = 0;
 };
 
 

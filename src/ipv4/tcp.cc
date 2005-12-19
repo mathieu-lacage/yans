@@ -282,10 +282,14 @@ Tcp::receive (Packet *packet)
 	end_p->receive (packet);
 }
 
-TcpBsdConnection *
+TcpConnection *
 Tcp::create_connection (TcpEndPoint *end_p)
 {
+#ifdef TCP_USE_BSD
 	TcpBsdConnection *connection = new TcpBsdConnection ();
+#else
+	TcpConnection *connection = 0;
+#endif
 	connection->set_host (m_host);
 	connection->set_ipv4 (m_ipv4);
 	connection->set_end_point (end_p);
@@ -371,7 +375,7 @@ Tcp::fast_timer (void)
 
 
 void 
-Tcp::destroy_connection (TcpBsdConnection *connection)
+Tcp::destroy_connection (TcpConnection *connection)
 {
 	for (ConnectionsI i = m_connections.begin (); i != m_connections.end (); i++) {
 		if ((*i) == connection) {

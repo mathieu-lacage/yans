@@ -32,7 +32,7 @@ class Host;
 class Packet;
 class TcpEndPoint;
 class TcpConnectionListener;
-class TcpBsdConnection;
+class TcpConnection;
 class Event;
 
 
@@ -57,7 +57,7 @@ class Tcp {
 	TcpEndPoint *allocate (Ipv4Address local_address, uint16_t local_port,
 			       Ipv4Address peer_address, uint16_t peer_port);
 
-	TcpBsdConnection *create_connection (TcpEndPoint *end_p);
+	TcpConnection *create_connection (TcpEndPoint *end_p);
 	TcpConnectionListener *create_connection_listener (TcpEndPoint *end_p);
 
 
@@ -73,8 +73,8 @@ private:
 
 	typedef std::list<TcpEndPoint *> TcpEndPoints;
 	typedef std::list<TcpEndPoint *>::iterator TcpEndPointsI;
-	typedef std::list<TcpBsdConnection *> Connections;
-	typedef std::list<TcpBsdConnection *>::iterator ConnectionsI;
+	typedef std::list<TcpConnection *> Connections;
+	typedef std::list<TcpConnection *>::iterator ConnectionsI;
 
 	void slow_timer (void);
 	void fast_timer (void);
@@ -88,7 +88,7 @@ private:
 	void receive (Packet *packet);
 	void send_reset (Packet *packet);
 	void destroy_end_point (TcpEndPoint *end_point);
-	void destroy_connection (TcpBsdConnection *listener);
+	void destroy_connection (TcpConnection *listener);
 
 	Host *m_host;
 	Ipv4 *m_ipv4;

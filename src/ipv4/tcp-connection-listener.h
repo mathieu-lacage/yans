@@ -31,12 +31,12 @@ class Host;
 class Ipv4;
 class Tcp;
 class TcpEndPoint;
-class TcpBsdConnection;
+class TcpConnection;
 
 class TcpConnectionListener {
 public:
 	typedef Callback<bool (Ipv4Address, uint16_t)> ConnectionAcception;
-	typedef Callback<void (TcpBsdConnection *, TcpEndPoint *)> ConnectionCreated;
+	typedef Callback<void (TcpConnection *, TcpEndPoint *)> ConnectionCreated;
 	typedef Callback<void (TcpConnectionListener *)> TcpConnectionListenerDestroy;
 
 	TcpConnectionListener ();

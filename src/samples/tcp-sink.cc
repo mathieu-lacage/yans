@@ -21,7 +21,7 @@
 
 #include "tcp-sink.h"
 #include "tcp-end-point.h"
-#include "tcp-bsd-connection.h"
+#include "tcp-connection.h"
 #include "tcp-connection-listener.h"
 #include "tcp.h"
 #include "host.h"
@@ -119,7 +119,7 @@ TcpSink::should_accept (Ipv4Address address, uint16_t port)
 }
 
 void
-TcpSink::connection_created (TcpBsdConnection *connection, TcpEndPoint *end_point)
+TcpSink::connection_created (TcpConnection *connection, TcpEndPoint *end_point)
 {
 	TRACE ("connection created");
 	m_connection = connection;

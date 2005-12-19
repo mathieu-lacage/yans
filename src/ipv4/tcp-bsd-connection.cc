@@ -180,7 +180,7 @@ TcpBsdConnection::set_route (Route *route)
 	m_route = route;
 }
 void 
-TcpBsdConnection::set_destroy_handler (TcpBsdConnectionDestroy *handler)
+TcpBsdConnection::set_destroy_handler (TcpConnectionDestroy *handler)
 {
 	m_destroy = handler;
 }
@@ -604,10 +604,12 @@ again:
 #if 1
 		long adv = min(win, (long)TCP_MAXWIN << m_rcv_scale) -
 			(m_rcv_adv - m_rcv_nxt);
+		int test = (adv >= (long) (2 * m_t_maxseg));
+		adv = 0;
 #else
 		long adv = 0;
 #endif
-		if (adv >= (long) (2 * m_t_maxseg))
+		if (test)
 			goto send;
 		if (2 * adv >= ((long)m_recv->get_size ()))
 			goto send;

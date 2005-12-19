@@ -23,7 +23,7 @@
 #include "tag-ipv4.h"
 #include "chunk-tcp.h"
 #include "packet.h"
-#include "tcp-bsd-connection.h"
+#include "tcp-connection.h"
 #include "host.h"
 #include "ipv4-route.h"
 #include "tcp.h"
@@ -68,7 +68,7 @@ TcpConnectionListener::receive (Packet *packet)
 				delete end_point;
 				return;
 			}
-			TcpBsdConnection *connection = m_host->get_tcp ()->create_connection (end_point);
+			TcpConnection *connection = m_host->get_tcp ()->create_connection (end_point);
 			(*m_creation) (connection, end_point);
 			end_point->receive (packet);
 		}
