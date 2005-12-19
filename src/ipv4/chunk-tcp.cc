@@ -291,9 +291,13 @@ void
 ChunkTcp::serialize (WriteBuffer *buffer)
 {
 	m_header_length = ((get_size () / 4) & 0x0f) << 4;
-	// XXX 
+#if 0
+	// XXX
 	uint16_t checksum = calculate_checksum ((uint8_t *)&m_source_port, 
 						get_size ());
+#else
+	uint16_t checksum = 0;
+#endif
 	buffer->write ((uint8_t *)&m_source_port, 2);
 	buffer->write ((uint8_t *)&m_destination_port, 2);
 	buffer->write ((uint8_t *)&m_sequence_number, 4);

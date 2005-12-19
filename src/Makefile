@@ -1,5 +1,7 @@
 SIMULATOR=simple
 #SIMULATOR=fiber
+TCP=bsd
+#TCP=ns2
 
 RUN_SELF_TESTS=-DRUN_SELF_TESTS=1
 INCLUDES=-I./fiber -I./simulator -I./ -I./arp -I./common -I./ipv4 -I./ethernet -I./test -I./host -I./os-model
@@ -40,7 +42,6 @@ SOURCE= \
 	ipv4/tcp-pieces.cc \
 	ipv4/tcp-end-point.cc \
 	ipv4/tcp-connection.cc \
-	ipv4/tcp-bsd-connection.cc \
 	ipv4/tcp-connection-listener.cc \
 	ipv4/chunk-tcp.cc \
 	ipv4/chunk-udp.cc \
@@ -63,6 +64,13 @@ SOURCE= \
 	arp/arp.cc \
 	arp/arp-cache-entry.cc \
 	arp/chunk-arp.cc
+
+
+ifeq ($(TCP),bsd)
+SOURCE += \
+	ipv4/tcp-bsd-connection.cc
+DEFINES += -DTCP_USE_BSD
+endif
 
 ifeq ($(SIMULATOR),fiber)
 SOURCE += \

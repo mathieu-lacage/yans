@@ -116,15 +116,22 @@ TcpBsdConnection::TcpBsdConnection ()
 		      TCPTV_MIN, TCPTV_REXMTMAX);
         m_snd_cwnd = TCP_MAXWIN << TCP_MAX_WINSHIFT;
 	m_snd_wnd = 0;
+	m_max_sndwnd = 0;
         m_snd_ssthresh = TCP_MAXWIN << TCP_MAX_WINSHIFT;
 
 	m_request_r_scale = 0;
 	m_t_idle = 0;
 	m_t_force = 0;
+	m_t_rtt = 0;
 	m_rcv_scale = 0;
 	m_snd_scale = 0;
+	m_rcv_adv = 0;
+	m_rcv_nxt = 0;
 
 	m_t_state = TCPS_LISTEN;
+	m_t_dupacks = 0;
+
+	canceltimers ();
 }
 TcpBsdConnection::~TcpBsdConnection ()
 {
@@ -479,7 +486,7 @@ TcpBsdConnection::reass(ChunkTcp *tcp, ChunkPiece *p)
 int
 TcpBsdConnection::output (void)
 {
-	register long len, win;
+	long len, win;
 	int off, flags;
 	int idle, sendalot;
 
@@ -601,15 +608,9 @@ again:
 		 * taking into account that we are limited by
 		 * TCP_MAXWIN << tp->rcv_scale.
 		 */
-#if 1
-		long adv = min(win, (long)TCP_MAXWIN << m_rcv_scale) -
+		long adv = min (win, (long)TCP_MAXWIN << m_rcv_scale) -
 			(m_rcv_adv - m_rcv_nxt);
-		int test = (adv >= (long) (2 * m_t_maxseg));
-		adv = 0;
-#else
-		long adv = 0;
-#endif
-		if (test)
+		if (adv >= (long) (2 * m_t_maxseg))
 			goto send;
 		if (2 * adv >= ((long)m_recv->get_size ()))
 			goto send;
