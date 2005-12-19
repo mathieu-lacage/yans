@@ -55,8 +55,21 @@ TcpSource::~TcpSource ()
 		delete m_connection;
 	}
 }
+
 void 
-TcpSource::start_connect (Ipv4Address address, uint16_t port)
+TcpSource::start_connect_at (Ipv4Address address, uint16_t port, double at)
+{
+	Simulator::insert_at_s (at, make_event (&TcpSource::start_connect_now, this, 
+						address, port));
+}
+void 
+TcpSource::start_disconnect_at (double at)
+{
+	Simulator::insert_at_s (at, make_event (&TcpSource::start_disconnect_now, this));
+}
+
+void 
+TcpSource::start_connect_now (Ipv4Address address, uint16_t port)
 {
 	m_end_point->set_peer (address, port);
 	m_connection = m_host->get_tcp ()->create_connection (m_end_point);
@@ -70,7 +83,7 @@ TcpSource::start_connect (Ipv4Address address, uint16_t port)
 	m_connection->start_connect ();
 }
 void 
-TcpSource::start_disconnect (void)
+TcpSource::start_disconnect_now (void)
 {
 	m_connection->start_disconnect ();
 }

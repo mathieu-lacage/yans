@@ -38,8 +38,8 @@ class TcpSource {
 
 	/* return true on success. */
 	bool bind (Ipv4Address address, uint16_t port);
-	void start_connect (Ipv4Address address, uint16_t port);
-	void start_disconnect (void);
+	void start_connect_at (Ipv4Address address, uint16_t port, double at);
+	void start_disconnect_at (double at);
 	void send (Packet *packet);
  private:
 	bool should_accept (Ipv4Address from, uint16_t from_port);
@@ -49,6 +49,8 @@ class TcpSource {
 	void receive (void);
 	void transmitted (void);
 	void got_ack (Packet *packet);
+	void start_connect_now (Ipv4Address address, uint16_t port);
+	void start_disconnect_now (void);
 
 	Host *m_host;
 	TcpEndPoint *m_end_point;
