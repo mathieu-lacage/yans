@@ -27,6 +27,7 @@
 #include "utils.h"
 #include "fiber-scheduler.h"
 #include "callback-test.h"
+#include "tcp-pieces.h"
 
 
 #define ADD_TEST(klass, name) 	m_tests.push_back (std::make_pair (new klass (this), new std::string (name)));
@@ -34,6 +35,7 @@
 TestManager::TestManager ()
 	: m_verbose (false)
 {
+	ADD_TEST (TcpPiecesTest, "TcpPieces");
 	ADD_TEST (BufferTest, "Buffer");
 	ADD_TEST (UtilsTest, "Utils");
 #ifdef SIMULATOR_FIBER
@@ -69,11 +71,17 @@ TestManager::run_tests (void)
 		m_test_name = (*i).second;
 		if (!(*i).first->run_tests ()) {
 			is_success = false;
+			if (m_verbose) {
+				std::cerr << "Test \"" << *m_test_name << "\" fail." << std::endl;
+			}
 		} else {
 			if (m_verbose) {
 				std::cerr << "Test \"" << *m_test_name << "\" success." << std::endl;
 			}
 		}
+	}
+	if (!is_success) {
+		std::cerr << "Some tests failed." << std::endl;
 	}
 	return is_success;
 }
