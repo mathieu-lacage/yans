@@ -41,6 +41,11 @@ ChunkPiece::get_original (void)
 	m_original->ref ();
 	return m_original;
 }
+uint32_t 
+ChunkPiece::get_offset (void)
+{
+	return m_offset;
+}
 void 
 ChunkPiece::set_original (Packet *original, uint32_t offset, uint32_t size)
 {
@@ -53,16 +58,26 @@ ChunkPiece::set_original (Packet *original, uint32_t offset, uint32_t size)
 void 
 ChunkPiece::trim_start (uint32_t delta)
 {
-	assert (m_original->get_size () > delta);
-	assert (m_size > delta);
+	if (m_size < delta) {
+		m_size = 0;
+		m_offset = m_original->get_size ();
+		return;
+	}
+	assert (m_size >= delta);
+	assert (m_original->get_size () >= delta);
 	m_size -= delta;
 	m_offset += delta;
 }
 void 
 ChunkPiece::trim_end (uint32_t delta)
 {
-	assert (m_original->get_size () > delta);
-	assert (m_size > delta);
+	if (m_size < delta) {
+		m_size = 0;
+		m_offset = 0;
+		return;
+	}
+	assert (m_original->get_size () >= delta);
+	assert (m_size >= delta);
 	m_size -= delta;
 }
 
@@ -74,11 +89,10 @@ ChunkPiece::get_size (void) const
 	return m_size;
 }
 Chunk *
-ChunkPiece::copy (void)
+ChunkPiece::copy (void) const
 {
 	ChunkPiece *copy = new ChunkPiece ();
-	m_original->ref ();
-	copy->m_original = m_original;
+	copy->m_original = m_original->copy ();
 	copy->m_size = m_size;
 	copy->m_offset = m_offset;
 	return copy;

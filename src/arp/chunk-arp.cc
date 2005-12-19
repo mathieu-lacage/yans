@@ -87,7 +87,7 @@ ChunkArp::get_size (void) const
 	return 28;
 }
 Chunk *
-ChunkArp::copy (void)
+ChunkArp::copy (void) const
 {
 	ChunkArp *chunk = new ChunkArp ();
 	*chunk = *this;

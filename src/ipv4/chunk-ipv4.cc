@@ -208,7 +208,7 @@ ChunkIpv4::get_size (void) const
 }
 
 Chunk *
-ChunkIpv4::copy (void)
+ChunkIpv4::copy (void) const
 {
 	ChunkIpv4 *ipv4 = new ChunkIpv4 (*this);
 	return ipv4;

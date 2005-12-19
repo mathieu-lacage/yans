@@ -280,7 +280,7 @@ ChunkTcp::get_size (void) const
 }
 
 Chunk *
-ChunkTcp::copy (void)
+ChunkTcp::copy (void) const
 {
 	ChunkTcp *chunk = new ChunkTcp ();
 	*chunk = *this;

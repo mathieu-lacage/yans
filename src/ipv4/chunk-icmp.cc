@@ -74,7 +74,7 @@ ChunkIcmp::get_size (void) const
 	}
 }
 Chunk *
-ChunkIcmp::copy (void)
+ChunkIcmp::copy (void) const
 {
 	ChunkIcmp *copy = new ChunkIcmp ();
 	*copy = *this;

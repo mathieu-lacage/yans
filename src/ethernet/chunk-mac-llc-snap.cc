@@ -77,7 +77,7 @@ ChunkMacLlcSnap::get_size (void) const
 	return 6 + 6 + 2 + 1 + 1 + 1 + 3 + 2;
 }
 Chunk *
-ChunkMacLlcSnap::copy (void)
+ChunkMacLlcSnap::copy (void) const
 {
 	ChunkMacLlcSnap *chunk = new ChunkMacLlcSnap ();
 	*chunk = *this;

@@ -79,7 +79,7 @@ public:
 	bool is_checksum_ok (void);
 
 	virtual uint32_t get_size (void) const;
-	virtual Chunk *copy (void);
+	virtual Chunk *copy (void) const;
 	virtual void serialize (WriteBuffer *buffer);
 	virtual void deserialize (ReadBuffer *buffer);
 	virtual void print (std::ostream *os) const;

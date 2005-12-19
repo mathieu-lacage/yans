@@ -40,7 +40,7 @@ ChunkMacCrc::get_size (void) const
 	return 4 + m_pad_size;
 }
 Chunk *
-ChunkMacCrc::copy (void)
+ChunkMacCrc::copy (void) const
 {
 	ChunkMacCrc *chunk = new ChunkMacCrc ();
 	return chunk;

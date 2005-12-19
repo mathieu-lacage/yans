@@ -32,13 +32,14 @@ public:
 	virtual ~ChunkPiece ();
 
 	Packet *get_original (void);
+	uint32_t get_offset (void);
 	void set_original (Packet *original, uint32_t offset, uint32_t size);
 	void trim_start (uint32_t delta);
 	void trim_end (uint32_t delta);
 	
 
 	virtual uint32_t get_size (void) const;
-	virtual Chunk *copy (void);
+	virtual Chunk *copy (void) const;
 	virtual void serialize (WriteBuffer *buffer);
 	virtual void deserialize (ReadBuffer *buffer);
 	virtual void print (std::ostream *os) const;

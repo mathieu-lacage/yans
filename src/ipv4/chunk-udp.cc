@@ -69,7 +69,7 @@ ChunkUdp::get_size (void) const
 	return 8;
 }
 Chunk *
-ChunkUdp::copy (void)
+ChunkUdp::copy (void) const
 {
 	ChunkUdp *udp_chunk = new ChunkUdp ();
 	*udp_chunk = *this;
