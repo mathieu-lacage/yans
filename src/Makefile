@@ -12,7 +12,7 @@ MAIN_ROUTER_SOURCE=samples/main-router.cc
 MAIN_TCP_SOURCE=samples/main-tcp.cc
 SOURCE= \
 	test/test.cc \
-	samples/chunk-fake-data.cc \
+	common/chunk-fake-data.cc \
 	samples/periodic-generator.cc \
 	samples/reception-listener.cc \
 	samples/traffic-analyzer.cc \
