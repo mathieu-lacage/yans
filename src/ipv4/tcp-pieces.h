@@ -36,22 +36,34 @@ public:
 
 	void set_size (uint32_t size);
 	uint32_t get_size (void);
+	void set_start (uint32_t start);
+	uint32_t get_current (void);
 
 	/* These functions copy the input piece, store
-	 * the copy internally, and return the copy.
-	 * If no data could be copied internally,
-	 * they return 0.
+	 * the copy internally, and return the number of
+	 * bytes copied.
+	 * The input piece should be:
+	 * piece -> packet -> piece -> packet -> data
+	 *             \-> piece -> packet -> data
+	 *              \-> piece -> packet -> data
+	 *               \-> piece -> packet -> data
 	 */
-	ChunkPiece *add_at_back (ChunkPiece *piece);
-	ChunkPiece *add_at (ChunkPiece *piece, uint32_t offset);
+	uint32_t add_all_at (ChunkPiece const* piece, uint32_t offset);
+	uint32_t add_all_at_back (ChunkPiece const* piece);
 
 	/* Returns 0 if no data could be found at the front
 	 * of the buffer.
+	 * The packet will look like:
+	 * packet -> piece -> packet -> data
+	 *    \-> piece -> packet -> data
+	 *     \-> piece -> packet -> data
+	 *      \-> piece -> packet -> data
 	 */
 	Packet *get_at_front (uint32_t size);
-	void remove_at_front (uint32_t size);
-
 	Packet *get_at (uint32_t offset, uint32_t size);
+
+
+	void remove_at_front (uint32_t size);
 
 
 	uint32_t get_data_at_front (void);
@@ -63,13 +75,29 @@ private:
 	typedef std::list<Piece> Pieces;
 	typedef std::list<Piece>::iterator PiecesI;
 
+	uint32_t add_one_at (ChunkPiece *piece, uint32_t offset);
 	void insert_piece_at_back (ChunkPiece *piece, uint32_t offset);
 	void insert_piece_at (PiecesI i, ChunkPiece *piece, uint32_t offset);
 	void check_state (void);
 	
 	Pieces m_pieces;
 	uint32_t m_size;
+	uint32_t m_start;
 };
+
+#ifdef RUN_SELF_TESTS
+#include "test.h"
+class ChunkPiece;
+class TcpPiecesTest : public Test {
+public:
+	TcpPiecesTest (TestManager *manager);
+	virtual bool run_tests (void);
+private:
+	ChunkPiece *create_one_piece (uint32_t size);
+	ChunkPiece *create_many_pieces (uint32_t size);
+	bool check_front_data (TcpPieces *pieces, uint32_t expected_data, int line);
+};
+#endif /* RUN_SELF_TESTS */
 
 
 #endif /* TCP_PIECES_H */

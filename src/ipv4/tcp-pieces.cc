@@ -24,7 +24,7 @@
 #include "packet.h"
 #include "chunk-piece.h"
 
-#define TRACE_TCP_PIECES 1
+#define nopeTRACE_TCP_PIECES 1
 
 #ifdef TRACE_TCP_PIECES
 #include <iostream>
@@ -40,6 +40,7 @@ std::cout << "TCP PIECES " << Simulator::now_s () << " " << x << std::endl;
 check_state ();
 
 TcpPieces::TcpPieces ()
+	: m_start (0)
 {}
 TcpPieces::~TcpPieces ()
 {}
@@ -48,15 +49,36 @@ void
 TcpPieces::check_state (void)
 {
 	uint32_t prev_start = 0;
+	uint32_t prev_end = 0;
+	TRACE ("state");
 	for (PiecesI i = m_pieces.begin (); i != m_pieces.end (); i++) {
 		assert ((*i).first != 0);
 		uint32_t cur_start = (*i).second;
 		uint32_t cur_end = cur_start + (*i).first->get_size ();
+#ifdef TRACE_TCP_PIECES
+		uint32_t seq_start = m_start + cur_start;
+		uint32_t seq_end = m_start + cur_end;
+#endif
+		TRACE ("cur start=" << cur_start << ", cur end=" << cur_end <<
+		       ", seq start=" << seq_start << ", seq end=" << seq_end);
 		assert (cur_start < m_size);
 		assert (cur_end <= m_size);
 		assert (prev_start <= cur_start);
+		assert (cur_start >= prev_end);
 		prev_start = cur_start;
+		prev_end = cur_end;
 	}	
+}
+
+void 
+TcpPieces::set_start (uint32_t start)
+{
+	m_start = start;
+}
+uint32_t
+TcpPieces::get_current (void)
+{
+	return m_start;
 }
 
 void 
@@ -93,56 +115,39 @@ TcpPieces::insert_piece_at_back (ChunkPiece *piece, uint32_t offset)
 		 * than the room we have left.
 		 */
 		piece->trim_end (offset + piece->get_size () - m_size);
-		assert (piece->get_size () > 0);
 	}
-	insert_piece_at (m_pieces.end (), piece, offset);
+	if (piece->get_size () > 0) {
+		insert_piece_at (m_pieces.end (), piece, offset);
+	}
 }
 
 
-ChunkPiece *
-TcpPieces::add_at_back (ChunkPiece *piece)
+uint32_t
+TcpPieces::add_one_at (ChunkPiece *piece, uint32_t offset)
 {
-	assert (piece->get_size () > 0);
-	if (get_empty_at_back () == 0) {
-		return 0;
+	assert (piece != 0);
+	int32_t delta = ((int32_t)offset) - ((int32_t)m_start);
+	if (delta < 0) {
+		delta = 0;
 	}
+	offset = (uint32_t)delta;
 
-	uint32_t offset;
-	if (m_pieces.empty ()) {
-		offset = 0;
-	} else {
-		Piece end = m_pieces.back ();
-		offset = end.second + end.first->get_size ();
-	}
-	assert (offset < m_size);
-	ChunkPiece *new_piece = static_cast <ChunkPiece *> (piece->copy ());
-	insert_piece_at_back (new_piece, offset);
-
-	CHECK_STATE;
-	return new_piece;
-}
-ChunkPiece *
-TcpPieces::add_at (ChunkPiece *org, uint32_t offset)
-{
-	assert (org->get_size () > 0);
-	assert (offset < m_size);
-
-	ChunkPiece *piece = static_cast <ChunkPiece *> (org->copy ());
 	if (m_pieces.empty ()) {
 		insert_piece_at_back (piece, offset);
-		CHECK_STATE;
-		return piece;
+		goto done;
 	}
 	for (PiecesI i = m_pieces.begin (); i != m_pieces.end (); i++) {
-		if ((*i).second > offset) {
-			if (offset + piece->get_size () <= (*i).second) {
+		uint32_t cur_start = (*i).second;
+		uint32_t cur_end = cur_start + (*i).first->get_size ();
+		if (cur_start > offset) {
+			if (offset + piece->get_size () <= cur_start) {
 				/* we fit perfectly well right before the current chunk. */
 				insert_piece_at (i, piece, offset);
 			} else {
 				/* we need to trim the end of this piece because it
 				 * overlaps the current chunk. 
 				 */
-				piece->trim_end (offset + piece->get_size () - (*i).second);
+				piece->trim_end (offset + piece->get_size () - cur_start);
 				insert_piece_at (i, piece, offset);
 			}
 			goto done;
@@ -150,21 +155,89 @@ TcpPieces::add_at (ChunkPiece *org, uint32_t offset)
 			/* We should be located after the current chunk.
 			 * Verify whether or not we overlap the current chunk.
 			 */
-			if (offset < (*i).second + (*i).first->get_size ()) {
+			if (offset < cur_end) {
 				/* damn, we do overlap. */
-				piece->trim_start ((*i).second + (*i).first->get_size () - offset);
+				piece->trim_start (cur_end - offset);
+				offset += cur_end - offset;
 			}
 		}
 	}
 	insert_piece_at_back (piece, offset);
  done:
 	if (piece->get_size () == 0) {
-		delete piece;
-		piece = 0;
+		CHECK_STATE;
+		return 0;
 	}
 	CHECK_STATE;
-	return piece;
+	return piece->get_size ();
 }
+
+uint32_t 
+TcpPieces::add_all_at_back (ChunkPiece const*piece)
+{
+	uint32_t stored = 0;
+	if (m_pieces.empty ()) {
+		stored = add_all_at (piece, m_start);
+	} else {
+		Piece end = *(--(m_pieces.end ()));
+		stored = add_all_at (piece, m_start + end.second + end.first->get_size ());
+	}
+	return stored;
+}
+
+uint32_t
+TcpPieces::add_all_at (ChunkPiece const *org, uint32_t offset)
+{
+	ChunkPiece *p = static_cast <ChunkPiece *> (org->copy ());
+	Packet *packet = p->get_original ();
+	uint32_t start = p->get_offset ();
+	uint32_t end = start + p->get_size ();
+	TRACE ("add all at " << offset << ", start=" << start << ", end=" << end);
+
+	ChunkPiece *piece = static_cast <ChunkPiece *> (packet->remove_header ());
+	uint32_t next_cur_start = 0;
+	uint32_t next_seq_start = offset;
+	while (piece != 0) {
+		uint32_t cur_start = next_cur_start;
+		uint32_t cur_end = cur_start + piece->get_size ();
+		uint32_t seq_start = next_seq_start;
+		next_cur_start = cur_end;
+		TRACE ("cur start=" << cur_start << ", cur end=" << cur_end <<
+		       ", seq start=" << seq_start << ", next seq start=" << next_seq_start);
+		if (cur_end < start) {
+			/* this piece is not part of our chunk. */
+			delete piece;
+			goto end;
+		}
+		if (cur_start >= end) {
+			delete piece;
+			break;
+		}
+		if (cur_start < start) {
+			piece->trim_start (start - cur_start);
+		}
+		if (cur_end > end) {
+			piece->trim_end (end - cur_end);
+		}
+		if (piece->get_size () > 0) {
+			TRACE ("adding at " << seq_start);
+			add_one_at (piece, seq_start);
+			next_seq_start = seq_start + piece->get_size ();
+		} else {
+			TRACE ("null");
+			delete piece;
+		}
+	end:
+		piece = static_cast <ChunkPiece *> (packet->remove_header ());
+		//TRACE ("add " << piece->get_size () << " at " << at);
+	}
+		
+	packet->unref ();
+	delete p;
+	CHECK_STATE;
+	return 0;
+}
+
 
 void
 TcpPieces::remove_at_front (uint32_t size)
@@ -209,6 +282,7 @@ TcpPieces::remove_at_front (uint32_t size)
 			(*j).second -= size;
 		}
 	}
+	m_start += size;
 	CHECK_STATE;
 }
 
@@ -287,3 +361,154 @@ TcpPieces::get_at (uint32_t start, uint32_t size)
 	}
 	return packet;	
 }
+
+
+#ifdef RUN_SELF_TESTS
+
+#include "chunk-fake-data.h"
+
+TcpPiecesTest::TcpPiecesTest (TestManager *manager)
+	: Test (manager)
+{}
+ChunkPiece *
+TcpPiecesTest::create_one_piece (uint32_t size)
+{
+	ChunkPiece *piece = new ChunkPiece ();
+	Packet *packet = new Packet ();
+	ChunkFakeData *data = new ChunkFakeData (10, 0);
+	packet->add_header (data);
+	data = new ChunkFakeData (10, 1);
+	packet->add_header (data);
+	data = new ChunkFakeData (10, 3);
+	packet->add_header (data);
+	data = new ChunkFakeData (size, 4);
+	packet->add_header (data);
+
+	piece->set_original (packet, 1, size);
+
+	packet->unref ();
+
+	return piece;
+}
+ChunkPiece *
+TcpPiecesTest::create_many_pieces (uint32_t size)
+{
+	uint32_t offset = 3;
+	ChunkPiece *piece = new ChunkPiece ();
+	Packet *packet = new Packet ();
+	piece->set_original (packet, offset, size);
+	ChunkPiece *p = create_one_piece (offset);
+	packet->add_header (p);
+	p = create_one_piece (size);
+	packet->add_header (p);
+	p = create_one_piece (size);
+	packet->add_header (p);
+
+	return piece;
+}
+#define CHECK_FRONT_DATA(pieces, size)            \
+if (!check_front_data (pieces, size, __LINE__)) { \
+	ok = false;                               \
+}                                                 
+
+bool
+TcpPiecesTest::check_front_data (TcpPieces *pieces, uint32_t expected_data, int line)
+{
+	if (pieces->get_data_at_front () != expected_data) { 
+		failure () << "at line " << line << " expected: " << expected_data
+			   << " got: " << pieces->get_data_at_front ()
+			   << std::endl; 
+		return false;
+	}
+	return true;
+}
+bool 
+TcpPiecesTest::run_tests (void)
+{
+	bool ok = true;
+
+	TcpPieces *pieces = new TcpPieces ();
+	pieces->set_size (100);
+	ChunkPiece *piece;
+	CHECK_FRONT_DATA (pieces, 0);
+	piece = create_many_pieces (1);
+	pieces->add_all_at (piece, 0);
+	delete piece;
+	CHECK_FRONT_DATA (pieces, 1);
+
+	piece = create_many_pieces (1);
+	pieces->add_all_at (piece, 0);
+	delete piece;
+	CHECK_FRONT_DATA (pieces, 1);
+
+	piece = create_many_pieces (1);
+	pieces->add_all_at (piece, 1);
+	delete piece;
+	CHECK_FRONT_DATA (pieces, 2);
+
+	piece = create_many_pieces (1);
+	pieces->add_all_at (piece, 0);
+	delete piece;
+	CHECK_FRONT_DATA (pieces, 2);
+
+	piece = create_many_pieces (6);
+	pieces->add_all_at (piece, 2);
+	delete piece;
+	CHECK_FRONT_DATA (pieces, 8);
+
+	piece = create_many_pieces (3);
+	pieces->add_all_at (piece, 3);
+	delete piece;
+	CHECK_FRONT_DATA (pieces, 8);
+
+	piece = create_many_pieces (3);
+	pieces->add_all_at (piece, 15);
+	delete piece;
+	CHECK_FRONT_DATA (pieces, 8);
+
+	piece = create_many_pieces (6);
+	pieces->add_all_at (piece, 8);
+	delete piece;
+	CHECK_FRONT_DATA (pieces, 14);
+
+	piece = create_many_pieces (1);
+	pieces->add_all_at (piece, 14);
+	delete piece;
+	CHECK_FRONT_DATA (pieces, 18);
+
+	pieces->remove_at_front (17);
+	CHECK_FRONT_DATA (pieces, 1);
+
+	piece = create_many_pieces (99);
+	pieces->add_all_at (piece, 17); // 18/17
+	delete piece;
+	CHECK_FRONT_DATA (pieces, 99);
+
+	/* here, we hit the buffer size limit. */
+	piece = create_many_pieces (2);
+	pieces->add_all_at (piece, 116);
+	delete piece;
+	CHECK_FRONT_DATA (pieces, 100);
+
+	pieces->set_size (102);
+	piece = create_many_pieces (1);
+	pieces->add_all_at (piece, 117);
+	delete piece;
+	CHECK_FRONT_DATA (pieces, 101);
+
+	piece = create_many_pieces (99);
+	pieces->add_all_at (piece, 117);
+	delete piece;
+	CHECK_FRONT_DATA (pieces, 102);
+
+	piece = create_many_pieces (1);
+	pieces->add_all_at (piece, 17);
+	delete piece;
+	CHECK_FRONT_DATA (pieces, 102);
+
+	return ok;
+}
+
+
+
+#endif /* RUN_SELF_TESTS */

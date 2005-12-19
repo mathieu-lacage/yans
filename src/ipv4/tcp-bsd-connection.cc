@@ -217,39 +217,28 @@ TcpBsdConnection::get_data_ready (void)
 uint32_t
 TcpBsdConnection::send (Packet *packet)
 {
-	uint32_t sent = 0;
-	ChunkPiece *piece = static_cast <ChunkPiece *> (packet->remove_header ());
-	while (piece != 0) {
-		ChunkPiece *copy = m_send->add_at_back (piece);
-		if (copy == 0) {
-			/* there was no room at all to put this piece
-			 * in the buffer. */
-			packet->add_header (piece);
-			break;
-		}
-		sent += copy->get_size ();
-		assert (copy->get_size () <= piece->get_size ());
-		if (copy->get_size () < piece->get_size ()) {
-			/* there was not enough room to put this
-			 * piece entirely in the buffer. */
-			piece->trim_start (copy->get_size ());
-			packet->add_header (piece);
-			break;
-		}
-		delete piece;
-		piece = static_cast <ChunkPiece *> (packet->remove_header ());
-	}
+	ChunkPiece *piece = new ChunkPiece ();
+	piece->set_original (packet, 0, packet->get_size ());
+	uint32_t sent = m_send->add_all_at_back (piece);
 	output ();
 	return sent;
 }
 Packet *
 TcpBsdConnection::recv (uint32_t size)
 {
+	static int total = 0;
+	total += size;
+	if (size == 0) {
+		TRACE ("aaarg " << m_recv->get_data_at_front ());
+		return 0;
+	}
 	Packet *packet = m_recv->get_at_front (size);
 	if (packet == 0) {
+		TRACE ("aaarg2");
 		return 0;
 	}
 	m_recv->remove_at_front (packet->get_size ());
+	TRACE ("read " << total << " acked " << m_rcv_nxt << " room left: " << m_recv->get_empty_at_back ());
 	output ();
 	return packet;
 }
@@ -443,33 +432,46 @@ TcpBsdConnection::setpersist (void)
 
 
 int
-TcpBsdConnection::reass(ChunkTcp *tcp, Packet *packet)
+TcpBsdConnection::reass(ChunkTcp *tcp, ChunkPiece *p)
 {
-	if (tcp == 0 || packet == 0) {
-		if (m_recv->get_data_at_front () != 0) {
-			m_data_received->invoke_later ();
-		}
-		return 0;
+	assert (tcp->get_sequence_number () >= m_rcv_nxt);
+	/*
+	 * Insert segment ti into reassembly queue of tcp with
+	 * control block tp.  Return TH_FIN if reassembly now includes
+	 * a segment with FIN.  The macro form does the common case inline
+	 * (segment is the next to be received on an established connection,
+	 * and the queue is empty), avoiding linkage into and removal
+	 * from the queue and repetition of various conversions.
+	 * Set DELACK for segments received in order, but ack immediately
+	 * when segments are out of order (so fast retransmit can work).
+	 */
+	if (tcp->get_sequence_number () == m_rcv_nxt && 
+	    m_recv->is_empty () && 
+	    m_t_state == TCPS_ESTABLISHED) { 
+		m_t_flags |= TF_DELACK; 
+	} else { 
+		m_t_flags |= TF_ACKNOW; 
 	}
-	ChunkPiece *piece = static_cast <ChunkPiece *> (packet->remove_header ());
-	if (piece == 0) {
-		if (TCPS_HAVERCVDSYN(m_t_state) == 0)
-			return (0);
-		else
-			return TH_FIN;
-	}
+
 	uint32_t prev_available = m_recv->get_data_at_front ();
-	m_recv->add_at (piece, tcp->get_sequence_number ());
+	m_recv->add_all_at (p, tcp->get_sequence_number ());
 	uint32_t completed = m_recv->get_data_at_front () - prev_available;
+
 	/*
 	 * Present data to user, advancing rcv_nxt through
 	 * completed sequence space.
 	 */
-	if (TCPS_HAVERCVDSYN(m_t_state) == 0)
-		return (0);
-	m_rcv_nxt += completed;
-	m_data_received->invoke_later ();
-	return TH_FIN;
+	if (TCPS_HAVERCVDSYN(m_t_state) == 0) {
+		return 0;
+	} else {
+		m_rcv_nxt += completed;
+		m_data_received->invoke_later ();
+		if (tcp->is_flag_fin ()) {
+			return TH_FIN;
+		} else {
+			return 0;
+		}
+	}
 }
 
 
@@ -841,8 +843,10 @@ again:
 		if (SEQ_GT(m_snd_nxt + len, m_snd_max))
 			m_snd_max = m_snd_nxt + len;
 
-	TRACE ("send " << (packet->get_size () - tcp->get_size ()) << " bytes from " 
-	       << m_end_point->get_local_address () << ":" << m_end_point->get_local_port () << " to "
+	TRACE ("send SEQ=" << tcp->get_sequence_number () << ", size=" << (packet->get_size () - tcp->get_size ()) 
+	       << ", [" << (tcp->is_flag_ack ()?"ACK ":"") << (tcp->is_flag_syn ()?"SYN ":"")
+	       << (tcp->is_flag_fin ()?"FIN":"") << "], " << "ACK=" << (tcp->is_flag_ack ()?tcp->get_ack_number ():0) << ", "
+	       << m_end_point->get_local_address () << ":" << m_end_point->get_local_port () << " -> "
 	       << m_end_point->get_peer_address () << ":" << m_end_point->get_peer_port ());
 	TagOutIpv4 *tag = new TagOutIpv4 (m_route);
 	tag->set_dport (m_end_point->get_peer_port ());
@@ -865,8 +869,10 @@ again:
 		m_rcv_adv = m_rcv_nxt + win;
 	m_last_ack_sent = m_rcv_nxt;
 	m_t_flags &= ~(TF_ACKNOW|TF_DELACK);
-	if (sendalot)
+	if (sendalot) {
+		TRACE ("sendalot");
 		goto again;
+	}
 	return 0;
 }
 
@@ -888,6 +894,7 @@ TcpBsdConnection::input (Packet *packet)
 	TRACE ("recv " << packet->get_size () << " bytes from "
 	       << m_end_point->get_local_address () << ":" << m_end_point->get_local_port () << " to "
 	       << m_end_point->get_peer_address () << ":" << m_end_point->get_peer_port ());
+
 
 	tiflags = 0;
 	if (tcp->is_flag_syn ()) {
@@ -976,7 +983,9 @@ TcpBsdConnection::input (Packet *packet)
 			m_iss = iss;
 		else
 			m_iss = m_host->get_tcp ()->get_new_iss ();
+		m_send->set_start (m_iss + 1);
 		m_irs = tcp->get_sequence_number ();
+		m_recv->set_start (m_irs + 1);
 		sendseqinit ();
 		rcvseqinit ();
 		m_t_flags |= TF_ACKNOW;
@@ -1017,6 +1026,7 @@ TcpBsdConnection::input (Packet *packet)
 		}
 		m_t_timer[TCPT_REXMT] = 0;
 		m_irs = tcp->get_sequence_number ();
+		m_recv->set_start (m_irs + 1);
 		rcvseqinit();
 		m_t_flags |= TF_ACKNOW;
 		if (tiflags & TH_ACK && SEQ_GT(m_snd_una, m_iss)) {
@@ -1027,7 +1037,9 @@ TcpBsdConnection::input (Packet *packet)
 				m_snd_scale = m_requested_s_scale;
 				m_rcv_scale = m_request_r_scale;
 			}
-			reass(0, 0);
+			if (m_recv->get_data_at_front () != 0) {
+				m_data_received->invoke_later ();
+			}
 			/*
 			 * if we didn't have to retransmit the SYN,
 			 * use its rtt as our initial srtt & rtt var.
@@ -1229,7 +1241,9 @@ trimthenstep6:
 			m_snd_scale = m_requested_s_scale;
 			m_rcv_scale = m_request_r_scale;
 		}
-		reass(0, 0);
+		if (m_recv->get_data_at_front () != 0) {
+			m_data_received->invoke_later ();
+		}
 		m_snd_wl1 = tcp->get_sequence_number () - 1;
 		/* fall into ... */
 
@@ -1472,35 +1486,7 @@ step6:
 	 */
 	if ((piece->get_size () || (tiflags&TH_FIN)) &&
 	    TCPS_HAVERCVDFIN(m_t_state) == 0) {
-		/*
-		 * Insert segment ti into reassembly queue of tcp with
-		 * control block tp.  Return TH_FIN if reassembly now includes
-		 * a segment with FIN.  The macro form does the common case inline
-		 * (segment is the next to be received on an established connection,
-		 * and the queue is empty), avoiding linkage into and removal
-		 * from the queue and repetition of various conversions.
-		 * Set DELACK for segments received in order, but ack immediately
-		 * when segments are out of order (so fast retransmit can work).
-		 */
-		if (tcp->get_sequence_number () == m_rcv_nxt && 
-		    m_recv->is_empty () && 
-		    m_t_state == TCPS_ESTABLISHED) { 
-			m_t_flags |= TF_DELACK; 
-			m_rcv_nxt += packet->get_size (); 
-			if (tcp->is_flag_fin ()) { 
-				tiflags = TH_FIN; 
-			}  else { 
-				tiflags = 0; 
-			} 
-			ChunkPiece * piece = static_cast <ChunkPiece *> (packet->remove_header ()); 
-			if (piece != 0) {
-				m_recv->add_at_back (piece); 
-				m_data_received->invoke_later ();
-			}
-		} else { 
-			tiflags = reass(tcp, packet); 
-			m_t_flags |= TF_ACKNOW; 
-		}
+		reass (tcp, piece);
 	} else {
 		//m_freem(m);
 		tiflags &= ~TH_FIN;
@@ -1621,6 +1607,7 @@ TcpBsdConnection::start_connect (void)
 	set_state (TCPS_SYN_SENT);
 	m_t_timer[TCPT_KEEP] = TCPTV_KEEP_INIT;
 	m_iss = m_host->get_tcp ()->get_new_iss ();
+	m_send->set_start (m_iss + 1);
 	sendseqinit();
 	output();
 }

@@ -47,6 +47,7 @@ class TcpEndPoint;
 class Route;
 class TcpPieces;
 class ChunkTcp;
+class ChunkPiece;
 
 
 class TcpBsdConnection {
@@ -110,7 +111,7 @@ private:
 	u_int mss (u_int offer);
 	void dooptions (ChunkTcp *tcp, int *ts_present, u_long *ts_val, u_long *ts_ecr);
 	void setpersist (void);
-	int reass(ChunkTcp *tcp, Packet *packet);
+	int reass(ChunkTcp *tcp, ChunkPiece *piece);
 
 	TcpEndPoint *m_end_point;
 	Route *m_route;
