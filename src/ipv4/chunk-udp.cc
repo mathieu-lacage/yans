@@ -100,9 +100,9 @@ void
 ChunkUdp::print (std::ostream *os) const
 {
 	*os << "(udp)"
-	    << " port source: " << m_source_port
-	    << " post destination: " << m_destination_port
-	    << " length: " << m_udp_length;
+	    << ", port source=" << m_source_port
+	    << ", port destination=" << m_destination_port
+	    << ", length=" << m_udp_length;
 }
 
 
