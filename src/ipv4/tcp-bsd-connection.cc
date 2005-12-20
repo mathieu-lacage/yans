@@ -227,6 +227,7 @@ TcpBsdConnection::send (Packet *packet)
 	ChunkPiece *piece = new ChunkPiece ();
 	piece->set_original (packet, 0, packet->get_size ());
 	uint32_t sent = m_send->add_all_at_back (piece);
+	delete piece;
 	output ();
 	return sent;
 }
@@ -861,6 +862,8 @@ again:
 	tcp->set_destination_port (m_end_point->get_peer_port ());
 	m_ipv4->set_protocol (TCP_PROTOCOL);
 	m_ipv4->send (packet);
+
+	packet->unref ();
 
 	/*
 	 * Data sent (as far as we can tell).
@@ -1543,6 +1546,8 @@ step6:
 		}
 	}
 
+	delete tcp;
+	delete piece;
 	/*
 	 * Return any desired output.
 	 */
@@ -1551,6 +1556,10 @@ step6:
 	return;
 
 dropafterack:
+	delete tcp;
+	tcp = 0;
+	delete piece;
+	piece = 0;
 	/*
 	 * Generate an ACK dropping incoming segment if it occupies
 	 * sequence space, where the ACK reflects our state.
@@ -1580,6 +1589,14 @@ dropwithreset:
 		respond(tcp->get_sequence_number ()+piece->get_size (), (tcp_seq)0,
 			TH_RST|TH_ACK);
 	}
+	if (piece != 0) {
+		delete piece;
+		piece = 0;
+	}
+	if (tcp != 0) {
+		delete tcp;
+		tcp = 0;
+	}
 #if 0
 	/* destroy temporarily created socket */
 	if (dropsocket)
@@ -1591,6 +1608,14 @@ drop:
 	/*
 	 * Drop space held by incoming segment and return.
 	 */
+	if (piece != 0) {
+		delete piece;
+		piece = 0;
+	}
+	if (tcp != 0) {
+		delete tcp;
+		tcp = 0;
+	}
 #if 0
 	/* destroy temporarily created socket */
 	if (dropsocket)
