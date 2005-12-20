@@ -25,7 +25,7 @@
 #include "mac-address.h"
 #include "ipv4-address.h"
 #include "sgi-hashmap.h"
-#include "callback.h"
+#include "callback.tcc"
 
 class Packet;
 class NetworkInterface;

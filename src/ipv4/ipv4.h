@@ -25,7 +25,7 @@
 #include <vector>
 
 #include "ipv4-address.h"
-#include "callback.h"
+#include "callback.tcc"
 
 class NetworkInterface;
 class Packet;

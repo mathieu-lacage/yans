@@ -25,7 +25,7 @@
 
 #include <stdint.h>
 #include "ipv4-address.h"
-#include "callback.h"
+#include "callback.tcc"
 
 class Host;
 class Packet;

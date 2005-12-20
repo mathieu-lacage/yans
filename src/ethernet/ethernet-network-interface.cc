@@ -28,7 +28,7 @@
 #include "ipv4.h"
 #include "host.h"
 #include "network-interface-tracer.h"
-#include "callback.h"
+#include "callback.tcc"
 
 EthernetNetworkInterface::EthernetNetworkInterface (char const *name)
 	: m_name (new std::string (name))

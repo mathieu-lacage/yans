@@ -23,7 +23,7 @@
 #define PERIODIC_GENERATOR_H
 
 #include <stdint.h>
-#include "callback.h"
+#include "callback.tcc"
 
 class Packet;
 

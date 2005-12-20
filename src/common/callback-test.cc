@@ -19,7 +19,7 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "callback.h"
+#include "callback.tcc"
 #include "callback-test.h"
 #include <stdio.h>
 

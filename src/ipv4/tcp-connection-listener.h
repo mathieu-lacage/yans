@@ -22,7 +22,7 @@
 #ifndef TCP_CONNECTION_LISTENER_H
 #define TCP_CONNECTION_LISTENER_H
 
-#include "callback.h"
+#include "callback.tcc"
 #include "ipv4-address.h"
 #include <stdint.h>
 

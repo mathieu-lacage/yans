@@ -30,7 +30,7 @@
 #include "network-interface-tracer.h"
 #include "periodic-generator.h"
 #include "traffic-analyzer.h"
-#include "callback.h"
+#include "callback.tcc"
 
 int main (int argc, char *argv[])
 {
