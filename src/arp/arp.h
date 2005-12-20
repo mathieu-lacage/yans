@@ -25,20 +25,16 @@
 #include "mac-address.h"
 #include "ipv4-address.h"
 #include "sgi-hashmap.h"
+#include "callback.h"
 
 class Packet;
 class NetworkInterface;
 class ArpCacheEntry;
 
-class ArpMacSender {
-public:
-	virtual ~ArpMacSender () = 0;
-	virtual void send_data (Packet *packet, MacAddress dest) = 0;
-	virtual void send_arp (Packet *packet, MacAddress dest) = 0;
-};
-
 class Arp {
  public:
+	typedef Callback<void (Packet *, MacAddress)> ArpSendDataCallback;
+	typedef Callback<void (Packet *, MacAddress)> ArpSendArpCallback;
 	Arp (NetworkInterface *interface);
 	~Arp ();
 
@@ -49,7 +45,8 @@ class Arp {
 	double get_dead_timeout (void);
 	double get_wait_reply_timeout (void);
 
-	void set_sender (ArpMacSender *sender);
+	void set_sender (ArpSendDataCallback *send_data,
+			 ArpSendArpCallback *send_arp);
 
 	/* send a packet through the ArpMacSender callback. */
 	void send_data (Packet *packet, Ipv4Address to);
@@ -64,7 +61,8 @@ private:
 	void drop_dead_packet (Packet *packet);
 
 	NetworkInterface *m_interface;
-	ArpMacSender *m_sender;
+	ArpSendDataCallback *m_send_data;
+	ArpSendArpCallback *m_send_arp;
 	double m_alive_timeout;
 	double m_dead_timeout;
 	double m_wait_reply_timeout;

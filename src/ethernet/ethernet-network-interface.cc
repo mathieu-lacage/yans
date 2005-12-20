@@ -28,42 +28,14 @@
 #include "ipv4.h"
 #include "host.h"
 #include "network-interface-tracer.h"
-
-class EthernetArpMacSender : public ArpMacSender {
-public:
-	EthernetArpMacSender (EthernetNetworkInterface *interface);
-	virtual ~EthernetArpMacSender ();
-	virtual void send_data (Packet *packet, MacAddress dest);
-	virtual void send_arp (Packet *packet, MacAddress dest);
-private:
-	EthernetNetworkInterface *m_interface;
-};
-
-EthernetArpMacSender::EthernetArpMacSender (EthernetNetworkInterface *interface)
-	: m_interface (interface)
-{}
-EthernetArpMacSender::~EthernetArpMacSender ()
-{
-	m_interface = (EthernetNetworkInterface *)0xdeadbeaf;
-}
-void 
-EthernetArpMacSender::send_data (Packet *packet, MacAddress dest)
-{
-	m_interface->send_data (packet, dest);
-}
-void 
-EthernetArpMacSender::send_arp (Packet *packet, MacAddress dest)
-{
-	m_interface->send_arp (packet, dest);
-}
-
+#include "callback.h"
 
 EthernetNetworkInterface::EthernetNetworkInterface (char const *name)
 	: m_name (new std::string (name))
 {
 	m_arp = new Arp (this);
-	m_arp_sender = new EthernetArpMacSender (this);
-	m_arp->set_sender (m_arp_sender);
+	m_arp->set_sender (make_callback (&EthernetNetworkInterface::send_data, this),
+			   make_callback (&EthernetNetworkInterface::send_arp, this));
 	m_mtu = 1000;
 }
 
@@ -75,8 +47,6 @@ EthernetNetworkInterface::~EthernetNetworkInterface ()
 	m_cable = (Cable *)0xdeadbeaf;
 	delete m_arp;
 	m_arp = (Arp *)0xdeadbeaf;
-	delete m_arp_sender;
-	m_arp_sender = (EthernetArpMacSender *)0xdeadbeaf;
 	delete m_tracer;
 	m_tracer = (NetworkInterfaceTracer *)0xdeadbeaf;
 }

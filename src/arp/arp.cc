@@ -37,9 +37,6 @@ std::cout << "LLARP TRACE " << Simulator::instance ()->now_s () << " " \
 # define TRACE(format,...)
 #endif /* TRACE_ARP */
 
-ArpMacSender::~ArpMacSender ()
-{}
-
 Arp::Arp (NetworkInterface *interface)
 	: m_interface (interface),
 	  m_alive_timeout (1200.0),
@@ -52,6 +49,10 @@ Arp::~Arp ()
 		delete (*i).second;
 	}
 	m_arp_cache.erase (m_arp_cache.begin (), m_arp_cache.end ());
+	delete m_send_data;
+	delete m_send_arp;
+	m_send_data = 0;
+	m_send_arp = 0;
 }
 
 void 
@@ -88,9 +89,11 @@ Arp::get_wait_reply_timeout (void)
 
 
 void 
-Arp::set_sender (ArpMacSender *sender)
+Arp::set_sender (ArpSendDataCallback *send_data,
+		 ArpSendArpCallback *send_arp)
 {
-	m_sender = sender;
+	m_send_data = send_data;
+	m_send_arp = send_arp;
 }
 
 void
@@ -102,7 +105,7 @@ Arp::send_arp_request (Ipv4Address to)
 			  to);
 	Packet *packet = new Packet ();
 	packet->add_header (arp);
-	m_sender->send_arp (packet, MacAddress::get_broadcast ());
+	(*m_send_arp) (packet, MacAddress::get_broadcast ());
 	packet->unref ();
 }
 
@@ -115,7 +118,7 @@ Arp::send_arp_reply (Ipv4Address to_ip, MacAddress to_mac)
 			to_mac, to_ip);
 	Packet *packet = new Packet ();
 	packet->add_header (arp);
-	m_sender->send_arp (packet, to_mac);
+	(*m_send_arp) (packet, to_mac);
 	packet->unref ();
 }
 
@@ -144,7 +147,7 @@ Arp::send_data (Packet *packet, Ipv4Address to)
 				TRACE ("dead entry for " << to << " valid -- drop");
 			} else if (entry->is_alive ()) {
 				TRACE ("alive entry for " << to << " valid -- send");
-				m_sender->send_data (packet, entry->get_mac_address ());
+				(*m_send_data) (packet, entry->get_mac_address ());
 			} else if (entry->is_wait_reply ()) {
 				TRACE ("wait reply for " << to << " valid -- drop previous");
 				entry->update_wait_reply (packet);
@@ -180,7 +183,7 @@ Arp::recv_arp (Packet *packet)
 				       << " for waiting entry -- flush");
 				MacAddress from_mac = arp->get_source_hardware_address ();
 				Packet *waiting = entry->mark_alive (from_mac);
-				m_sender->send_data (waiting, from_mac);
+				(*m_send_data) (waiting, from_mac);
 				waiting->unref ();
 			} else {
 				// ignore this reply which might well be an attempt 

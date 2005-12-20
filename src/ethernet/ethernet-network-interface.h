@@ -25,7 +25,6 @@
 #include "network-interface.h"
 
 class Arp;
-class EthernetArpMacSender;
 class Cable;
 
 class EthernetNetworkInterface : public NetworkInterface {
@@ -71,7 +70,6 @@ public:
 	friend class EthernetArpMacSender;
 
 	Arp *m_arp;
-	EthernetArpMacSender *m_arp_sender;
 	MacAddress m_mac_address;
 	Ipv4Address m_ipv4_address;
 	Ipv4Mask m_ipv4_mask;
