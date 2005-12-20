@@ -133,7 +133,6 @@ void
 Ipv4::send_real_out (Packet *packet, Route const *route)
 {
 	ChunkIpv4 *ip = static_cast <ChunkIpv4 *> (packet->peek_header ());
-	ip->update_checksum ();
 	NetworkInterface *out_interface = route->get_interface ();
 	assert (packet->get_size () <= out_interface->get_mtu ());
 	m_host->get_tracer ()->trace_tx_ipv4 (packet);
