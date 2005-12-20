@@ -23,6 +23,18 @@
 #include "utils.h"
 #include "buffer.h"
 
+#define TRACE_CHUNK_TCP 1
+
+#ifdef TRACE_CHUNK_TCP
+#include <iostream>
+#include "simulator.h"
+# define TRACE(x) \
+std::cout << "CHUNK TCP TRACE " << Simulator::now_s () << " " << x << std::endl;
+#else /* TRACE_CHUNK_TCP */
+# define TRACE(format,...)
+#endif /* TRACE_CHUNK_TCP */
+
+
 ChunkTcp::ChunkTcp ()
 	: m_source_port (0),
 	  m_destination_port (0),
@@ -44,57 +56,58 @@ ChunkTcp::~ChunkTcp ()
 void 
 ChunkTcp::set_source_port (uint16_t port)
 {
-	m_source_port = utils_hton_16 (port);
+	m_source_port = port;
 }
 void 
 ChunkTcp::set_destination_port (uint16_t port)
 {
-	m_destination_port = utils_hton_16 (port);
+	m_destination_port = port;
 }
 void 
 ChunkTcp::set_sequence_number (uint32_t sequence)
 {
-	m_sequence_number = utils_hton_32 (sequence);
+	m_sequence_number = sequence;
 }
-void ChunkTcp::set_window_size (uint16_t size)
+void 
+ChunkTcp::set_window_size (uint16_t size)
 {
-	m_window_size = utils_hton_16 (size);
+	m_window_size = size;
 }
 void 
 ChunkTcp::set_ack_number (uint32_t ack)
 {
-	m_ack_number = utils_hton_32 (ack);	
+	m_ack_number = ack;
 }
 
 uint16_t 
 ChunkTcp::get_source_port (void)
 {
-	return utils_ntoh_16 (m_source_port);
+	return m_source_port;
 }
 uint16_t 
 ChunkTcp::get_destination_port (void)
 {
-	return utils_ntoh_16 (m_destination_port);
+	return m_destination_port;
 }
 uint32_t 
 ChunkTcp::get_sequence_number (void)
 {
-	return utils_ntoh_32 (m_sequence_number);
+	return m_sequence_number;
 }
 uint32_t 
 ChunkTcp::get_ack_number (void)
 {
-	return utils_ntoh_32 (m_ack_number);
+	return m_ack_number;
 }
 uint16_t 
 ChunkTcp::get_window_size (void)
 {
-	return utils_ntoh_16 (m_window_size);
+	return m_window_size;
 }
 uint16_t 
 ChunkTcp::get_urgent_pointer (void)
 {
-	return utils_ntoh_16 (m_urgent_pointer);
+	return m_urgent_pointer;
 }
 void 
 ChunkTcp::enable_flag_syn (void)
@@ -120,7 +133,7 @@ void
 ChunkTcp::enable_flag_urg (uint16_t ptr)
 {
 	enable_flag (URG);
-	m_urgent_pointer = utils_hton_16 (ptr);
+	m_urgent_pointer = ptr;
 }
 void 
 ChunkTcp::enable_flag_psh (void)
@@ -260,12 +273,7 @@ ChunkTcp::is_option_windowscale (void) const
 bool 
 ChunkTcp::is_checksum_ok (void)
 {
-	uint16_t checksum = calculate_checksum ((uint8_t *)&m_source_port, 20);
-	if (checksum == 0xffff) {
-		return true;
-	} else {
-		return false;
-	}
+	return true;
 }
 
 uint32_t 
@@ -275,6 +283,15 @@ ChunkTcp::get_size (void) const
 	size += 20;
 	if (is_option_mss ()) {
 		size += 4;
+	}
+	if (is_option_windowscale ()) {
+		size += 3;
+	}
+	if (is_option_timestamp ()) {
+		size += 10;
+	}
+	while ((size % 4) != 0) {
+		size++;
 	}
 	return size;
 }
@@ -290,110 +307,86 @@ ChunkTcp::copy (void) const
 void
 ChunkTcp::serialize (WriteBuffer *buffer)
 {
-	m_header_length = ((get_size () / 4) & 0x0f) << 4;
-#if 0
-	// XXX
-	uint16_t checksum = calculate_checksum ((uint8_t *)&m_source_port, 
-						get_size ());
-#else
-	uint16_t checksum = 0;
-#endif
-	buffer->write ((uint8_t *)&m_source_port, 2);
-	buffer->write ((uint8_t *)&m_destination_port, 2);
-	buffer->write ((uint8_t *)&m_sequence_number, 4);
-	buffer->write ((uint8_t *)&m_ack_number, 4);
-	buffer->write_u8 (m_header_length);
-	buffer->write_u8 (m_flags);
-	buffer->write ((uint8_t *)&m_window_size, 2);
-	buffer->write ((uint8_t *)&checksum, 2);
-	buffer->write ((uint8_t *)&m_urgent_pointer, 2);
+	uint32_t start = buffer->get_written_size ();
+	buffer->write_hton_u16 (m_source_port);
+	buffer->write_hton_u16 (m_destination_port);
+	buffer->write_hton_u32 (m_sequence_number);
+	buffer->write_hton_u32 (m_ack_number);
+	uint8_t header_length = ((get_size () / 4) & 0x0f) << 4;
+	buffer->write_u8 (header_length);
+	uint8_t flags;
+	buffer->write_u8 (flags);
+	buffer->write_hton_u16 (m_window_size);
+	buffer->write_hton_u16 (0);
+	buffer->write_hton_u16 (m_urgent_pointer);
 	if (is_option_mss ()) {
 		buffer->write_u8 (2);
 		buffer->write_u8 (4);
 		buffer->write_hton_u16 (m_option_mss);
 	}
-#if 0
 	if (is_option_windowscale ()) {
-		// XXX broken.
-		buffer->write_u8 (0);
 		buffer->write_u8 (3);
 		buffer->write_u8 (3);
 		buffer->write_u8 (m_option_windowscale);
 	}
 	if (is_option_timestamp ()) {
-		// XXX broken.
-		buffer->write_u8 (0);
-		buffer->write_u8 (0);
 		buffer->write_u8 (8);
 		buffer->write_u8 (10);
 		buffer->write_hton_u32 (m_option_timestamp_value);
 		buffer->write_hton_u32 (m_option_timestamp_reply);
 	}
-#endif
+	uint32_t padding = get_size () - (buffer->get_written_size () - start);
+	while (padding > 0) {
+		buffer->write_u8 (0);
+		padding--;
+	}
 }
 
 void
 ChunkTcp::deserialize (ReadBuffer *buffer)
-{
-	buffer->read ((uint8_t *)&m_source_port, 2);
-	buffer->read ((uint8_t *)&m_destination_port, 2);
-	buffer->read ((uint8_t *)&m_sequence_number, 4);
-	buffer->read ((uint8_t *)&m_ack_number, 4);
-	m_header_length = buffer->read_u8 ();
-	m_flags = buffer->read_u8 ();
-	buffer->read ((uint8_t *)&m_window_size, 2);
-	buffer->read ((uint8_t *)&m_checksum, 2);
-	buffer->read ((uint8_t *)&m_urgent_pointer, 2);
-}
+{}
 
 void
 ChunkTcp::print (std::ostream *os) const
 {
 	*os << "tcp -- ";
-	*os << " source port: " << m_source_port;
-	*os << " destination port: " << m_destination_port;
-	*os << " sequence number: " << m_sequence_number;
+	*os << " source port=" << m_source_port;
+	*os << ", destination port=" << m_destination_port;
+	*os << ", sequence number=" << m_sequence_number;
 	if (is_flag_ack ()) {
-		*os << " ack number: " << m_ack_number;
+
 	}
-	*os << " header length: " << get_size ();
-	*os << " flags:";
-	if (m_flags == 0) {
-		*os << " nil";
-	} else {
-		if (is_flag_syn ()) {
-			*os << " syn";
-		} 
-		if (is_flag_fin ()) {
-			*os << "fin";
-		}
-		if (is_flag_rst ()) {
-			*os << " rst";
-		}
-		if (is_flag_ack ()) {
-			*os << " ack";
-		}
-		if (is_flag_urg ()) {
-			*os << " urg";
-		}
-		if (is_flag_psh ()) {
-			*os << " psh";
-		}
+	*os << ", header length=" << get_size ();
+	*os << ", window size=" << m_window_size;
+	*os << " flags=[";
+	if (is_flag_syn ()) {
+		*os << " SYN";
+	} 
+	if (is_flag_fin ()) {
+		*os << "FIN";
 	}
-	*os << " window size: " << m_window_size;
-	*os << " checksum: " << m_checksum;
+	if (is_flag_rst ()) {
+		*os << " RST";
+	}
+	if (is_flag_ack ()) {
+		*os << " ACK=" << m_ack_number;
+	}
 	if (is_flag_urg ()) {
-		*os << " urgent pointer: " << m_urgent_pointer;
+		*os << " URG=" << m_urgent_pointer;
 	}
+	if (is_flag_psh ()) {
+		*os << " PSH";
+	}
+	*os << "]";
 	if (is_option_mss ()) {
-		*os << " mss: " << m_option_mss;
+		*os << ", mss=" << m_option_mss;
 	}
 	if (is_option_timestamp ()) {
-		*os << " tsval: " << m_option_timestamp_value
-		    << " tsecho: " << m_option_timestamp_reply;
+		*os << ", tsval=" << m_option_timestamp_value
+		    << ", tsecho=" << m_option_timestamp_reply;
 	}
 	if (is_option_windowscale ()) {
-		*os << " windowscale: " << m_option_windowscale;
+		*os << ", windowscale=" << m_option_windowscale;
 	}
 }
 
