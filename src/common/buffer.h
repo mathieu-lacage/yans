@@ -25,6 +25,39 @@
 #include <stdint.h>
 
 
+class Buffer {
+public:
+	Buffer ();
+	Buffer (uint32_t initial_size);
+	~Buffer ();
+
+	uint8_t *peek_data (void);
+	uint32_t get_used_size (void) const;
+	uint32_t get_size (void) const;
+	uint32_t get_current (void) const;
+
+	void seek (uint32_t offset);
+	void skip (int32_t delta);
+
+	void write_u8 (uint8_t data);
+	void write (uint8_t const*buffer, uint16_t size);
+	void write_hton_u16 (uint16_t data);
+	void write_hton_u32 (uint32_t data);
+
+	uint8_t read_u8 (void);
+	void read (uint8_t *buffer, uint16_t size);
+	uint16_t read_ntoh_u16 (void);
+	uint32_t read_ntoh_u32 (void);
+
+private:
+	void ensure_room_left (uint16_t needed);
+	bool is_room_left (uint16_t needed);
+	uint8_t *alloc_and_zero (uint32_t size);
+	uint32_t m_size;
+	uint32_t m_current;
+	uint8_t *m_buffer;
+};
+
 class WriteBuffer {
 public:
 	WriteBuffer (uint32_t prefered_size);

@@ -34,6 +34,7 @@
 class Chunk;
 class WriteBuffer;
 class ReadBuffer;
+class Buffer;
 class Packet;
 
 class PacketDestroyNotifier {
@@ -63,9 +64,11 @@ public:
 	Chunk *peek_header (void);
 	Chunk *peek_trailer (void);
 
-	uint32_t get_size (void);
+	uint32_t get_size (void) const;
 
 	void serialize (WriteBuffer *buffer) const;
+	// returns the number of bytes written in the buffer.
+	uint32_t serialize (Buffer *buffer) const;
 
 	void print (std::ostream *os) const;
 
@@ -73,6 +76,7 @@ public:
  private:
 	typedef std::list<Chunk *> Chunks;
 	typedef std::list<Chunk *>::const_iterator ChunksCI;
+	typedef std::list<Chunk *>::const_reverse_iterator ChunksCRI;
 	typedef std::vector<PacketDestroyNotifier *> PacketDestroyNotifiers;
 	typedef std::vector<PacketDestroyNotifier *>::const_iterator PacketDestroyNotifiersCI;
 	typedef Sgi::hash_map<uint32_t, Tag *> Tags;

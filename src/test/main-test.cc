@@ -21,6 +21,37 @@
 
 #include "test.h"
 
+#include <stdio.h>
+static void
+write_buffer (char const *filename, uint8_t *data, uint32_t size)
+{
+	FILE *file = fopen (filename, "w");
+	uint32_t written = 0;
+	while (written < size) {
+		size_t tmp = fwrite (data, 1, size - written, file); 
+		written += tmp;
+		data += tmp;
+	}
+}
+
+#include "buffer.h"
+#include "packet.h"
+#include "chunk-tcp.h"
+static void 
+run_one_test (void)
+{
+	Packet *packet = new Packet ();
+	Buffer *buffer = new Buffer ();
+	ChunkTcp *tcp = new ChunkTcp ();
+	packet->add_header (tcp);
+
+	packet->serialize (buffer);
+
+	packet->unref ();
+
+	write_buffer ("mathieu", buffer->peek_data (), buffer->get_current ());
+}
+
 int main (int argc, char *argv[])
 {
 #ifdef RUN_SELF_TESTS
@@ -28,6 +59,8 @@ int main (int argc, char *argv[])
 	manager->enable_verbose ();
 	manager->run_tests ();
 #endif /* RUN_SELF_TESTS */
+
+	run_one_test ();
 
 	return 0;
 }

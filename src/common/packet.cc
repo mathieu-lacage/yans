@@ -21,6 +21,7 @@
 
 #include "packet.h"
 #include "chunk.h"
+#include "buffer.h"
 
 PacketDestroyNotifier::~PacketDestroyNotifier ()
 {}
@@ -142,7 +143,7 @@ Packet::peek_trailer (void)
 }
 
 uint32_t 
-Packet::get_size (void)
+Packet::get_size (void) const
 {
 	uint32_t size = 0;
 	for (ChunksCI i = m_chunks.begin (); i != m_chunks.end (); i++) {
@@ -157,6 +158,42 @@ Packet::serialize (WriteBuffer *buffer) const
 	for (ChunksCI i = m_chunks.begin (); i != m_chunks.end (); i++) {
 		(*i)->serialize (buffer);
 	}
+}
+uint32_t
+Packet::serialize (Buffer *buffer) const
+{
+	uint32_t loc = 0;
+	for (ChunksCI i = m_chunks.begin (); i != m_chunks.end (); i++) {
+		buffer->seek (loc);
+		(*i)->serialize_init (buffer);
+		loc += (*i)->get_size ();
+	}
+	ChunkSerializationState state;
+	Chunk *prev_chunk = 0;
+	uint32_t prev = loc;
+	for (ChunksCRI j = m_chunks.rbegin (); j != m_chunks.rend (); j++) {
+		Chunk *current_chunk = (*j);
+		assert (prev >= current_chunk->get_size ());
+		uint32_t current = prev - current_chunk->get_size ();
+
+		ChunksCRI tmp = j;
+		tmp++;
+		Chunk *next_chunk;
+		uint32_t next;
+		if (tmp == m_chunks.rend ()) {
+			next_chunk = 0;
+			next = 0;
+		} else {
+			next_chunk = (*tmp);
+			assert (current >= next_chunk->get_size ());
+			next = current - next_chunk->get_size ();
+		}
+		buffer->seek (current);
+		state.set (prev_chunk, next_chunk, prev, next, current);
+		(*j)->serialize_fini (buffer, &state);
+	}
+	buffer->seek (get_size ());
+	return get_size ();
 }
 
 void 

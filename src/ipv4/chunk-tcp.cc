@@ -342,6 +342,18 @@ ChunkTcp::serialize (WriteBuffer *buffer)
 	}
 }
 
+void 
+ChunkTcp::serialize_init (Buffer *buffer) const
+{
+}
+
+void 
+ChunkTcp::serialize_fini (Buffer *buffer,
+			  ChunkSerializationState *state) const
+{
+}
+
+
 void
 ChunkTcp::deserialize (ReadBuffer *buffer)
 {}
