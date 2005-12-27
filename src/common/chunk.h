@@ -59,11 +59,6 @@ public:
 	virtual void serialize_fini (Buffer *buffer,
 				     ChunkSerializationState *state) const = 0;
 	virtual void print (std::ostream *os) const = 0;
-
-private:
-	virtual void serialize (WriteBuffer *buffer);
-	virtual void deserialize (ReadBuffer *buffer);
-
 };
 
 std::ostream& operator<< (std::ostream& os, Chunk const& chunk);
