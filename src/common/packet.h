@@ -30,19 +30,16 @@
 #include "sgi-hashmap.h"
 #include "tag-manager.h"
 #include "ref-count.tcc"
+#include "callback.tcc"
 
 class Chunk;
 class Buffer;
 class Packet;
 
-class PacketDestroyNotifier {
-public:
-	virtual ~PacketDestroyNotifier ();
-	virtual void notify (Packet *packet) = 0;
-};
-
 class Packet {
 public:
+	typedef Callback<void (Packet *)> PacketDestroyNotifier;
+
 	Packet ();
 	~Packet ();
 

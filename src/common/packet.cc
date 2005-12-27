@@ -35,9 +35,6 @@ std::cout << "PACKET TRACE " << Simulator::now_s () << " " << x << std::endl;
 #endif /* TRACE_PACKET */
 
 
-PacketDestroyNotifier::~PacketDestroyNotifier ()
-{}
-
 Packet::Packet ()
 	: m_ref (this)
 {}
@@ -46,7 +43,7 @@ Packet::~Packet ()
 {
 	for (PacketDestroyNotifiersCI k = m_destroy_notifiers.begin ();
 	     k != m_destroy_notifiers.end (); k++) {
-		(*k)->notify (this);
+		(*(*k)) (this);
 		delete (*k);
 	}
 	m_destroy_notifiers.erase (m_destroy_notifiers.begin (),
