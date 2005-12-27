@@ -25,7 +25,6 @@
 #include "ipv4-endpoint.h"
 #include "packet.h"
 #include "host-tracer.h"
-#include "reception-listener.h"
 
 #include <iostream>
 

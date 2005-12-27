@@ -16,7 +16,6 @@ SOURCE= \
 	test/test.cc \
 	common/chunk-fake-data.cc \
 	samples/periodic-generator.cc \
-	samples/reception-listener.cc \
 	samples/traffic-analyzer.cc \
 	samples/udp-source.cc \
 	samples/udp-sink.cc \
