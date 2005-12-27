@@ -25,7 +25,6 @@ SOURCE= \
 	host/mac-address.cc \
 	host/network-interface.cc \
 	host/loopback-interface.cc \
-	host/transport-protocol.cc \
 	host/host.cc \
 	host/host-tracer.cc \
 	host/network-interface-tracer.cc \
