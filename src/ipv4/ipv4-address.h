@@ -25,8 +25,7 @@
 #include <stdint.h>
 #include <ostream>
 
-class WriteBuffer;
-class ReadBuffer;
+class Buffer;
 
 
 /* Ipv4 addresses are stored in host order in
@@ -52,8 +51,8 @@ public:
 	 */
 	uint32_t get_host_order (void) const;
 
-	void serialize (WriteBuffer *buffer);
-	void deserialize (ReadBuffer *buffer);
+	void serialize (Buffer *buffer) const;
+	void deserialize (Buffer *buffer);
 	void print (std::ostream *os) const;
 
 	bool is_broadcast (void);

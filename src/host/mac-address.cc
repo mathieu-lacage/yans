@@ -116,12 +116,12 @@ MacAddress::get_multicast_part (void) const
 }
 
 void 
-MacAddress::serialize (WriteBuffer *buffer) const
+MacAddress::serialize (Buffer *buffer) const
 {
 	buffer->write (m_address, 6);
 }
 void 
-MacAddress::deserialize (ReadBuffer *buffer)
+MacAddress::deserialize (Buffer *buffer)
 {
 	buffer->read (m_address, 6);
 }

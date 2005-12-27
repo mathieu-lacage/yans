@@ -81,7 +81,7 @@ ChunkIcmp::copy (void) const
 	return copy;
 }
 void 
-ChunkIcmp::serialize (WriteBuffer *buffer)
+ChunkIcmp::serialize_init (Buffer *buffer) const
 {
 	buffer->write_u8 (m_type);
 	buffer->write_u8 (m_code);
@@ -118,8 +118,10 @@ ChunkIcmp::serialize (WriteBuffer *buffer)
 	}
 }
 void 
-ChunkIcmp::deserialize (ReadBuffer *buffer)
-{}
+ChunkIcmp::serialize_fini (Buffer *buffer,
+			   ChunkSerializationState *state) const
+{
+}
 void 
 ChunkIcmp::print (std::ostream *os) const
 {

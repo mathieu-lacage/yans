@@ -85,7 +85,7 @@ ChunkMacLlcSnap::copy (void) const
 }
 #include <iostream>
 void 
-ChunkMacLlcSnap::serialize (WriteBuffer *buffer)
+ChunkMacLlcSnap::serialize_init (Buffer *buffer) const
 {
 	m_source.serialize (buffer);
 	m_destination.serialize (buffer);
@@ -101,24 +101,11 @@ ChunkMacLlcSnap::serialize (WriteBuffer *buffer)
 	buffer->write_hton_u16 (m_ether_type);
 }
 void 
-ChunkMacLlcSnap::deserialize (ReadBuffer *buffer)
-{
-	m_source.deserialize (buffer);
-	m_destination.deserialize (buffer);
-	m_length = buffer->read_ntoh_u16 () - 8;
-	uint8_t dsap = buffer->read_u8 ();
-	assert (dsap == 0xaa);
-	uint8_t ssap = buffer->read_u8 ();
-	assert (ssap == 0xaa);
-	uint8_t control = buffer->read_u8 ();
-	assert (control == 0x03);
-	uint8_t vendor_code[3];
-	buffer->read (vendor_code, 3);
-	assert (vendor_code[0] == 0);
-	assert (vendor_code[1] == 0);
-	assert (vendor_code[2] == 0);
-	m_ether_type = buffer->read_ntoh_u16 ();
-}
+ChunkMacLlcSnap::serialize_fini (Buffer *buffer,
+				 ChunkSerializationState *state) const
+{}
+
+
 void 
 ChunkMacLlcSnap::print (std::ostream *os) const
 {

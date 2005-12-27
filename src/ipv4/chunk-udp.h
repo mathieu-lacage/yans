@@ -40,8 +40,9 @@ public:
 
 	virtual uint32_t get_size (void) const;
 	virtual Chunk *copy (void) const;
-	virtual void serialize (WriteBuffer *buffer);
-	virtual void deserialize (ReadBuffer *buffer);
+	virtual void serialize_init (Buffer *buffer) const;
+	virtual void serialize_fini (Buffer *buffer,
+				     ChunkSerializationState *state) const;
 	virtual void print (std::ostream *os) const;
 private:
 	uint16_t m_source_port;

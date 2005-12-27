@@ -64,6 +64,12 @@ Chunk::~Chunk ()
 {}
 
 void 
+Chunk::serialize (WriteBuffer *buffer)
+{}
+void 
+Chunk::deserialize (ReadBuffer *buffer)
+{}
+void 
 Chunk::serialize_init (Buffer *buffer) const
 {}
 void 

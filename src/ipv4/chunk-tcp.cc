@@ -22,6 +22,7 @@
 #include "chunk-tcp.h"
 #include "utils.h"
 #include "buffer.h"
+#include "chunk-ipv4.h"
 
 #define TRACE_CHUNK_TCP 1
 
@@ -304,10 +305,10 @@ ChunkTcp::copy (void) const
 	return chunk;
 }
 
-void
-ChunkTcp::serialize (WriteBuffer *buffer)
+void 
+ChunkTcp::serialize_init (Buffer *buffer) const
 {
-	uint32_t start = buffer->get_written_size ();
+	uint32_t start = buffer->get_current ();
 	buffer->write_hton_u16 (m_source_port);
 	buffer->write_hton_u16 (m_destination_port);
 	buffer->write_hton_u32 (m_sequence_number);
@@ -335,7 +336,7 @@ ChunkTcp::serialize (WriteBuffer *buffer)
 		buffer->write_hton_u32 (m_option_timestamp_value);
 		buffer->write_hton_u32 (m_option_timestamp_reply);
 	}
-	uint32_t padding = get_size () - (buffer->get_written_size () - start);
+	uint32_t padding = get_size () - (buffer->get_current () - start);
 	while (padding > 0) {
 		buffer->write_u8 (0);
 		padding--;
@@ -343,20 +344,30 @@ ChunkTcp::serialize (WriteBuffer *buffer)
 }
 
 void 
-ChunkTcp::serialize_init (Buffer *buffer) const
-{
-}
-
-void 
 ChunkTcp::serialize_fini (Buffer *buffer,
 			  ChunkSerializationState *state) const
 {
+	uint32_t saved0, saved1, saved2;
+	buffer->skip (-12);
+	saved0 = buffer->read_u32 ();
+	saved1 = buffer->read_u32 ();
+	saved2 = buffer->read_u32 ();
+	buffer->skip (-12);
+	ChunkIpv4 *ipv4 = static_cast<ChunkIpv4 *> (state->get_prev_chunk ());
+	ipv4->get_source ().serialize (buffer);
+	ipv4->get_destination ().serialize (buffer);
+	buffer->write_u8 (0);
+	buffer->write_u8 (ipv4->get_protocol ());
+	buffer->write_hton_u16 (ipv4->get_payload_size ());
+	buffer->skip (-12);
+	uint16_t checksum = utils_checksum_calculate (buffer->peek_data () + buffer->get_current (), 
+						      12 + ipv4->get_payload_size ());
+	buffer->write_u32 (saved0);
+	buffer->write_u32 (saved1);
+	buffer->write_u32 (saved2);
+	buffer->skip (+16);
+	buffer->write_u16 (checksum);
 }
-
-
-void
-ChunkTcp::deserialize (ReadBuffer *buffer)
-{}
 
 void
 ChunkTcp::print (std::ostream *os) const

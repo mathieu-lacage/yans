@@ -95,7 +95,7 @@ ChunkArp::copy (void) const
 }
 
 void 
-ChunkArp::serialize (WriteBuffer *buffer)
+ChunkArp::serialize_init (Buffer *buffer) const
 {
 	// XXX should be careful with network/host order.
 	/* ethernet */
@@ -111,22 +111,10 @@ ChunkArp::serialize (WriteBuffer *buffer)
 	m_ipv4_dest.serialize (buffer);
 }
 void 
-ChunkArp::deserialize (ReadBuffer *buffer)
-{
-	uint16_t htype = buffer->read_ntoh_u16 ();
-	assert (htype == 0x0001);
-	uint16_t ptype = buffer->read_ntoh_u16 ();
-	assert (ptype == 0x0800);
-	uint8_t hlen = buffer->read_u8 ();
-	assert (hlen == 6);
-	uint8_t plen = buffer->read_u8 ();
-	assert (plen == 4);
-	m_type = buffer->read_ntoh_u16 ();
-	m_mac_source.deserialize (buffer);
-	m_ipv4_source.deserialize (buffer);
-	m_mac_dest.deserialize (buffer);
-	m_ipv4_dest.deserialize (buffer);
-}
+ChunkArp::serialize_fini (Buffer *buffer,
+			  ChunkSerializationState *state) const
+{}
+
 void 
 ChunkArp::print (std::ostream *os) const
 {

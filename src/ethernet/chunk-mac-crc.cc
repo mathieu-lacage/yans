@@ -46,7 +46,7 @@ ChunkMacCrc::copy (void) const
 	return chunk;
 }
 void 
-ChunkMacCrc::serialize (WriteBuffer *buffer)
+ChunkMacCrc::serialize_init (Buffer *buffer) const
 {
 	for (uint8_t i = 0; i < m_pad_size; i++) {
 		buffer->write_u8 (0x31);
@@ -57,14 +57,10 @@ ChunkMacCrc::serialize (WriteBuffer *buffer)
 	buffer->write_u8 (0);
 }
 void 
-ChunkMacCrc::deserialize (ReadBuffer *buffer)
+ChunkMacCrc::serialize_fini (Buffer *buffer,
+			     ChunkSerializationState *state) const
 {
-	uint8_t crc[4];
-	buffer->read (crc, 4);
-	assert (crc[0] == 0);
-	assert (crc[1] == 0);
-	assert (crc[2] == 0);
-	assert (crc[3] == 0);
+	//XXX we should calculate the MAC crc here.
 }
 void 
 ChunkMacCrc::print (std::ostream *os) const

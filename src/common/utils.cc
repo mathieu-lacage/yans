@@ -126,7 +126,7 @@ ascii_to_mac_network (char const *str, uint8_t address[6])
 }
 
 uint16_t 
-calculate_checksum (uint8_t *buffer, uint16_t size)
+utils_checksum_calculate (uint8_t *buffer, uint16_t size)
 {
 	/* see RFC 1071 to understand this code. */
 	uint32_t sum = 0;

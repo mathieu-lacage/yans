@@ -27,7 +27,7 @@
 class Host;
 class Packet;
 class WriteFile;
-class WriteBuffer;
+class Buffer;
 class NetworkInterface;
 
 class NetworkInterfaceTracer {
@@ -41,7 +41,7 @@ public:
 	void enable_all (void);
 	void disable_all (void);
 private:
-	void write_buffer_to_file (void);
+	void write_buffer_to_file (uint32_t to_write);
 	void write_pcap_header (void);
 	void write_packet_header (uint32_t size);
 	void write_32 (uint32_t data);
@@ -50,7 +50,7 @@ private:
 	Host *m_host;
 	NetworkInterface *m_interface;
 	WriteFile *m_file;
-	WriteBuffer *m_buffer;
+	Buffer *m_buffer;
 	bool m_enable_all;
 };
 

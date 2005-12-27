@@ -43,17 +43,17 @@ ChunkFakeData::copy (void) const
 	return other;
 }
 void 
-ChunkFakeData::serialize (WriteBuffer *buffer)
+ChunkFakeData::serialize_init (Buffer *buffer) const
 {
 	for (uint32_t i = 0; i < m_len; i++) {
 		buffer->write_u8 (m_n & 0xff);
 	}
 }
 void 
-ChunkFakeData::deserialize (ReadBuffer *buffer)
-{
-	// XXX
-}
+ChunkFakeData::serialize_fini (Buffer *buffer,
+			       ChunkSerializationState *state) const
+{}
+
 void 
 ChunkFakeData::print (std::ostream *os) const
 {

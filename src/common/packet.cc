@@ -23,6 +23,18 @@
 #include "chunk.h"
 #include "buffer.h"
 
+#define TRACE_PACKET 1
+
+#ifdef TRACE_PACKET
+#include <iostream>
+#include "simulator.h"
+# define TRACE(x) \
+std::cout << "PACKET TRACE " << Simulator::now_s () << " " << x << std::endl;
+#else /* TRACE_PACKET */
+# define TRACE(format,...)
+#endif /* TRACE_PACKET */
+
+
 PacketDestroyNotifier::~PacketDestroyNotifier ()
 {}
 
@@ -152,18 +164,12 @@ Packet::get_size (void) const
 	return size;
 }
 
-void 
-Packet::serialize (WriteBuffer *buffer) const
-{
-	for (ChunksCI i = m_chunks.begin (); i != m_chunks.end (); i++) {
-		(*i)->serialize (buffer);
-	}
-}
 uint32_t
 Packet::serialize (Buffer *buffer) const
 {
 	uint32_t loc = 0;
 	for (ChunksCI i = m_chunks.begin (); i != m_chunks.end (); i++) {
+		//TRACE ("serialize init at " << loc<<" size="<<(*i)->get_size ());
 		buffer->seek (loc);
 		(*i)->serialize_init (buffer);
 		loc += (*i)->get_size ();
@@ -175,6 +181,7 @@ Packet::serialize (Buffer *buffer) const
 		Chunk *current_chunk = (*j);
 		assert (prev >= current_chunk->get_size ());
 		uint32_t current = prev - current_chunk->get_size ();
+		//TRACE ("serialize fini at "<< current<<" size="<<current_chunk->get_size ());
 
 		ChunksCRI tmp = j;
 		tmp++;
@@ -189,8 +196,9 @@ Packet::serialize (Buffer *buffer) const
 			next = current - next_chunk->get_size ();
 		}
 		buffer->seek (current);
-		state.set (prev_chunk, next_chunk, prev, next, current);
+		state.set (next_chunk, prev_chunk, next, prev, current);
 		(*j)->serialize_fini (buffer, &state);
+		prev = current;
 	}
 	buffer->seek (get_size ());
 	return get_size ();

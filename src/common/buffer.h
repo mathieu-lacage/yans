@@ -39,18 +39,23 @@ public:
 	void seek (uint32_t offset);
 	void skip (int32_t delta);
 
-	void write_u8 (uint8_t data);
+	void write_u8  (uint8_t  data);
+	void write_u16 (uint16_t data);
+	void write_u32 (uint32_t data);
 	void write (uint8_t const*buffer, uint16_t size);
 	void write_hton_u16 (uint16_t data);
 	void write_hton_u32 (uint32_t data);
 
-	uint8_t read_u8 (void);
+	uint8_t  read_u8 (void);
+	uint16_t read_u16 (void);
+	uint32_t read_u32 (void);
 	void read (uint8_t *buffer, uint16_t size);
 	uint16_t read_ntoh_u16 (void);
 	uint32_t read_ntoh_u32 (void);
 
 private:
 	void ensure_room_left (uint16_t needed);
+	void ensure_size_is (uint32_t target);
 	bool is_room_left (uint16_t needed);
 	uint8_t *alloc_and_zero (uint32_t size);
 	uint32_t m_size;

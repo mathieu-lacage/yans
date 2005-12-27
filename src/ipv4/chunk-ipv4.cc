@@ -191,8 +191,9 @@ ChunkIpv4::is_checksum_ok (void) const
 }
 
 void 
-ChunkIpv4::serialize (WriteBuffer *buffer)
+ChunkIpv4::serialize_init (Buffer *buffer) const
 {
+	//TRACE ("init ipv4 current="<<buffer->get_current ());
 	uint8_t ver_ihl = (4 << 4) | (5);
 	buffer->write_u8 (ver_ihl);
 	buffer->write_u8 (m_tos);
@@ -215,10 +216,17 @@ ChunkIpv4::serialize (WriteBuffer *buffer)
 	m_source.serialize (buffer);
 	m_destination.serialize (buffer);
 }
-
 void 
-ChunkIpv4::deserialize (ReadBuffer *buffer)
-{}
+ChunkIpv4::serialize_fini (Buffer *buffer,
+			   ChunkSerializationState *state) const
+{
+	uint8_t *data = buffer->peek_data () + state->get_current ();
+	//TRACE ("fini ipv4 current="<<state->get_current ());
+	uint16_t checksum = utils_checksum_calculate (data, get_size ());
+	//TRACE ("checksum=" <<checksum);
+	buffer->skip (10);
+	buffer->write_u16 (checksum);
+}
 
 void 
 ChunkIpv4::print (std::ostream *os) const

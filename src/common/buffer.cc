@@ -21,6 +21,18 @@
 
 #include "buffer.h"
 
+#define TRACE_BUFFER 1
+
+#ifdef TRACE_BUFFER
+#include <iostream>
+#include "simulator.h"
+# define TRACE(x) \
+std::cout << "BUFFER TRACE " << Simulator::now_s () << " " << x << std::endl;
+#else /* TRACE_BUFFER */
+# define TRACE(format,...)
+#endif /* TRACE_BUFFER */
+
+
 #include <cassert>
 #include <string.h>
 
@@ -44,7 +56,7 @@ Buffer::Buffer (uint32_t initial_size)
 
 Buffer::~Buffer ()
 {
-	delete m_buffer;
+	delete [] m_buffer;
 	m_buffer = (uint8_t *)0xdeadbeaf;
 	m_current = 0xdeadbeaf;
 	m_size = 0xdeadbeaf;
@@ -74,7 +86,8 @@ Buffer::get_current (void) const
 void 
 Buffer::seek (uint32_t offset)
 {
-	assert (offset < m_size);
+	ensure_size_is (offset);
+	assert (offset <= m_size);
 	m_current = offset;
 }
 void 
@@ -82,11 +95,13 @@ Buffer::skip (int32_t delta)
 {
 	if (delta < 0) {
 		uint32_t rewind = -delta;
-		assert (m_current > rewind);
-	} else {
-		assert (is_room_left (delta));
+		if (m_current < rewind) {
+			delta = -m_current;
+		}
 	}
-	m_current += delta;
+	uint32_t new_current = m_current + delta;
+	ensure_size_is (new_current);
+	m_current = new_current;
 }
 
 void 
@@ -95,6 +110,22 @@ Buffer::write_u8 (uint8_t data)
 	ensure_room_left (1);
 	m_buffer[m_current] = data;
 	m_current++;
+}
+void 
+Buffer::write_u16 (uint16_t data)
+{
+	ensure_room_left (2);
+	uint16_t *buffer = (uint16_t *)(m_buffer + m_current);
+	*buffer = data;
+	m_current += 2;
+}
+void 
+Buffer::write_u32 (uint32_t data)
+{
+	ensure_room_left (4);
+	uint32_t *buffer = (uint32_t *)(m_buffer + m_current);
+	*buffer = data;
+	m_current += 4;
 }
 void 
 Buffer::write (uint8_t const *data, uint16_t size)
@@ -133,6 +164,24 @@ Buffer::read_u8 (void)
 	assert (is_room_left (1));
 	uint8_t retval = m_buffer[m_current];
 	m_current++;
+	return retval;
+}
+uint16_t 
+Buffer::read_u16 (void)
+{
+	assert (is_room_left (2));
+	uint16_t *buffer = (uint16_t *)(m_buffer + m_current);
+	uint16_t retval = *buffer;
+	m_current += 4;
+	return retval;
+}
+uint32_t 
+Buffer::read_u32 (void)
+{
+	assert (is_room_left (4));
+	uint32_t *buffer = (uint32_t *)(m_buffer + m_current);
+	uint32_t retval = *buffer;
+	m_current += 4;
 	return retval;
 }
 void 
@@ -174,12 +223,19 @@ Buffer::read_ntoh_u32 (void)
 void
 Buffer::ensure_room_left (uint16_t needed)
 {
-	if (m_size > (m_current + needed)) {
+	ensure_size_is (m_current + needed);
+}
+
+void
+Buffer::ensure_size_is (uint32_t target)
+{
+	if (target <= m_size) {
 		return;
 	}
 	uint32_t new_size = m_size;
 	assert (new_size > 0);
-	while (new_size < (m_current + needed)) {
+	while (new_size < target) {
+		//TRACE ("new size: "<<new_size);
 		new_size <<= 1;
 	}
 	uint8_t *new_data = alloc_and_zero (new_size);

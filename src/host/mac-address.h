@@ -25,8 +25,7 @@
 #include <stdint.h>
 #include <ostream>
 
-class WriteBuffer;
-class ReadBuffer;
+class Buffer;
 
 class MacAddress {
 public:
@@ -51,8 +50,8 @@ public:
 	bool is_multicast (void) const;
 	bool is_multicast_equal (MacAddress other) const;
 
-	void serialize (WriteBuffer *buffer) const;
-	void deserialize (ReadBuffer *buffer);
+	void serialize (Buffer *buffer) const;
+	void deserialize (Buffer *buffer);
 	void print (std::ostream *os) const;
 
 	static MacAddress get_broadcast (void);

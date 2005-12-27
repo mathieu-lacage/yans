@@ -37,13 +37,16 @@ write_buffer (char const *filename, uint8_t *data, uint32_t size)
 #include "buffer.h"
 #include "packet.h"
 #include "chunk-tcp.h"
+#include "chunk-ipv4.h"
 static void 
 run_one_test (void)
 {
 	Packet *packet = new Packet ();
 	Buffer *buffer = new Buffer ();
+	ChunkIpv4 *ipv4 = new ChunkIpv4 ();
 	ChunkTcp *tcp = new ChunkTcp ();
 	packet->add_header (tcp);
+	packet->add_header (ipv4);
 
 	packet->serialize (buffer);
 

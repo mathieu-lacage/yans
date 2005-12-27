@@ -76,25 +76,20 @@ ChunkUdp::copy (void) const
 	return udp_chunk;
 }
 void 
-ChunkUdp::serialize (WriteBuffer *buffer)
+ChunkUdp::serialize_init (Buffer *buffer) const
 {
 	buffer->write_hton_u16 (m_source_port);
 	buffer->write_hton_u16 (m_destination_port);
 	buffer->write_hton_u16 (m_udp_length);
-	/* we do not calculate the udp header checksum
-	 * This is bad but, well...
-	 */
 	buffer->write_hton_u16 (0);
 }
 void 
-ChunkUdp::deserialize (ReadBuffer *buffer)
+ChunkUdp::serialize_fini (Buffer *buffer,
+			  ChunkSerializationState *state) const
 {
-	m_source_port = buffer->read_ntoh_u16 ();
-	m_destination_port = buffer->read_ntoh_u16 ();
-	m_udp_length = buffer->read_ntoh_u16 ();
-	uint16_t checksum = buffer->read_ntoh_u16 ();
-	assert (checksum == 0);
+	// XXX should calculate udp checksum.
 }
+
 
 void 
 ChunkUdp::print (std::ostream *os) const

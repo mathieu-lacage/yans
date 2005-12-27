@@ -66,7 +66,6 @@ public:
 
 	uint32_t get_size (void) const;
 
-	void serialize (WriteBuffer *buffer) const;
 	// returns the number of bytes written in the buffer.
 	uint32_t serialize (Buffer *buffer) const;
 

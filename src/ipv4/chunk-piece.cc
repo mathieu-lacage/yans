@@ -98,12 +98,13 @@ ChunkPiece::copy (void) const
 	return copy;
 }
 void 
-ChunkPiece::serialize (WriteBuffer *buffer)
+ChunkPiece::serialize_init (Buffer *buffer) const
 {
-	WriteBuffer *tmp = new WriteBuffer (m_size);
+	//XXX
+	Buffer *tmp = new Buffer (m_size);
 	m_original->serialize (tmp);
-	assert (tmp->get_written_size () >= m_offset);
-	uint32_t offset = tmp->get_written_size () - m_offset;
+	assert (tmp->get_current () >= m_offset);
+	uint32_t offset = tmp->get_current () - m_offset;
 	if (offset >= m_size) {
 		buffer->write (tmp->peek_data ()+m_offset, m_size);
 	} else {
@@ -115,10 +116,12 @@ ChunkPiece::serialize (WriteBuffer *buffer)
 	delete tmp;
 }
 void 
-ChunkPiece::deserialize (ReadBuffer *buffer)
+ChunkPiece::serialize_fini (Buffer *buffer,
+			    ChunkSerializationState *state) const
 {
-	assert (false);
+	
 }
+
 void 
 ChunkPiece::print (std::ostream *os) const
 {

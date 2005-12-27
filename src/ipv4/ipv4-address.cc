@@ -121,12 +121,12 @@ Ipv4Address::get_host_order (void) const
 }
 
 void 
-Ipv4Address::serialize (WriteBuffer *buffer)
+Ipv4Address::serialize (Buffer *buffer) const
 {
 	buffer->write_hton_u32 (m_address);
 }
 void 
-Ipv4Address::deserialize (ReadBuffer *buffer)
+Ipv4Address::deserialize (Buffer *buffer)
 {
 	m_address = buffer->read_ntoh_u32 ();
 }

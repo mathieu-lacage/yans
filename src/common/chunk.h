@@ -56,12 +56,16 @@ public:
 	virtual uint32_t get_size (void) const = 0;
 	// this is a deep copy.
 	virtual Chunk *copy (void) const = 0;
-	virtual void serialize (WriteBuffer *buffer) = 0;
-	virtual void serialize_init (Buffer *buffer) const;
+
+	virtual void serialize_init (Buffer *buffer) const = 0;
 	virtual void serialize_fini (Buffer *buffer,
-				     ChunkSerializationState *state) const;
-	virtual void deserialize (ReadBuffer *buffer) = 0;
+				     ChunkSerializationState *state) const = 0;
 	virtual void print (std::ostream *os) const = 0;
+
+private:
+	virtual void serialize (WriteBuffer *buffer);
+	virtual void deserialize (ReadBuffer *buffer);
+
 };
 
 std::ostream& operator<< (std::ostream& os, Chunk const& chunk);

@@ -32,7 +32,7 @@ uint32_t utils_ntoh_32 (uint32_t v);
 uint32_t ascii_to_ipv4_host (char const *address);
 void ascii_to_mac_network (char const *str, uint8_t address[6]);
 
-uint16_t calculate_checksum (uint8_t *buffer, uint16_t size);
+uint16_t utils_checksum_calculate (uint8_t *buffer, uint16_t size);
 
 #ifdef RUN_SELF_TESTS
 #include "test.h"
