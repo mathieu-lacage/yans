@@ -4,7 +4,7 @@ TCP=bsd
 #TCP=ns2
 
 RUN_SELF_TESTS=-DRUN_SELF_TESTS=1
-INCLUDES=-I./fiber -I./simulator -I./ -I./arp -I./common -I./ipv4 -I./ethernet -I./test -I./host -I./os-model
+INCLUDES=-I./fiber -I./simulator -I./ -I./arp -I./common -I./ipv4 -I./ethernet -I./test -I./host -I./os-model -I./apps
 DEFINES=$(RUN_SELF_TESTS)
 FLAGS=-Wall -Werror -O0 -gdwarf-2
 
@@ -15,12 +15,12 @@ MAIN_TCP_SOURCE=samples/main-tcp.cc
 SOURCE= \
 	test/test.cc \
 	common/chunk-fake-data.cc \
-	samples/periodic-generator.cc \
-	samples/traffic-analyzer.cc \
-	samples/udp-source.cc \
-	samples/udp-sink.cc \
-	samples/tcp-source.cc \
-	samples/tcp-sink.cc \
+	apps/periodic-generator.cc \
+	apps/traffic-analyzer.cc \
+	apps/udp-source.cc \
+	apps/udp-sink.cc \
+	apps/tcp-source.cc \
+	apps/tcp-sink.cc \
 	host/mac-address.cc \
 	host/network-interface.cc \
 	host/loopback-interface.cc \
