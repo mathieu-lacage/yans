@@ -32,8 +32,6 @@
 #include "ref-count.tcc"
 
 class Chunk;
-class WriteBuffer;
-class ReadBuffer;
 class Buffer;
 class Packet;
 

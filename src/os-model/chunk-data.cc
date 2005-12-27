@@ -48,14 +48,14 @@ ChunkData::copy (void)
 	return other;
 }
 void 
-ChunkData::serialize (WriteBuffer *buffer)
+ChunkData::serialize (Buffer *buffer) const
 {
 	buffer->write (m_data, m_len);
 }
 void 
-ChunkData::deserialize (ReadBuffer *buffer)
+ChunkData::serialize_fini (Buffer *buffer,
+			   ChunkSerializationState *state) const
 {
-	buffer->read (m_data, m_len);
 }
 void 
 ChunkData::print (std::ostream *os) const

@@ -25,8 +25,6 @@
 #include <stdint.h>
 #include <ostream>
 
-class WriteBuffer;
-class ReadBuffer;
 class Buffer;
 class Chunk;
 
