@@ -26,6 +26,8 @@
 
 #include "ipv4-address.h"
 
+namespace yans {
+
 class NetworkInterface;
 
 class Route {
@@ -113,5 +115,7 @@ private:
 	NetworkRoutes m_network_routes;
 	Route *m_default_route;
 };
+
+}; // namespace yans
 
 #endif /* IPV4_ROUTE_H */

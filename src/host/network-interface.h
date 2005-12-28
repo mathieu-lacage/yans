@@ -26,6 +26,8 @@
 #include "mac-address.h"
 #include "ipv4-address.h"
 
+namespace yans {
+
 class Packet;
 class Ipv4;
 class Host;
@@ -62,6 +64,6 @@ public:
 	virtual void send (Packet *packet, Ipv4Address dest) = 0;
 };
 
-
+}; // namespace yans
 
 #endif /* NETWORK_INTERFACE_H */

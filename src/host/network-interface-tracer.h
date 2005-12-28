@@ -24,6 +24,8 @@
 
 #include <stdint.h>
 
+namespace yans {
+
 class Host;
 class Packet;
 class WriteFile;
@@ -53,5 +55,7 @@ private:
 	Buffer *m_buffer;
 	bool m_enable_all;
 };
+
+}; // namespace yans
 
 #endif /* NETWORK_INTERFACE_TRACER_H */

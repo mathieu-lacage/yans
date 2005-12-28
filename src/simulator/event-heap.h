@@ -25,6 +25,8 @@
 #include <list>
 #include <utility>
 
+namespace yans {
+
 class Event;
 
 class EventHeap {
@@ -52,6 +54,8 @@ class EventHeap {
 	typedef std::list<std::pair<Event *, uint64_t> >::iterator EventsI;
 	Events m_events;
 };
+
+}; // namespace yans
 
 
 #endif /* EVENT_HEAP_H */

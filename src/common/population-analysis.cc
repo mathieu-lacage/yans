@@ -29,6 +29,8 @@
    http://cutebugs.net/code/treegrowth-stable.
  */
 
+namespace yans {
+
 PopulationAnalysis::PopulationAnalysis ()
 {
 	reset ();
@@ -89,3 +91,4 @@ PopulationAnalysis::get_unbiased_variance (void)
         return m_square_sum / (m_n - 1);
 }
 
+}; // namespace yans

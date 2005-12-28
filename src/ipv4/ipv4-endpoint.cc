@@ -21,6 +21,8 @@
 
 #include "ipv4-endpoint.h"
 
+namespace yans {
+
 const uint16_t Ipv4EndPoints::PORT_RESERVED = 5000;
 
 
@@ -166,3 +168,4 @@ Ipv4EndPoint::~Ipv4EndPoint ()
 }
 
 
+}; // namespace yans

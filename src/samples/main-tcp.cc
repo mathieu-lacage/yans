@@ -32,6 +32,8 @@
 #include "traffic-analyzer.h"
 #include "event.h"
 
+using namespace yans;
+
 int main (int argc, char *argv[])
 {
 	/* setup the ethernet network itself. */

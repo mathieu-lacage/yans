@@ -22,6 +22,8 @@
 #include "loopback-interface.h"
 #include "ipv4.h"
 
+namespace yans {
+
 LoopbackInterface::LoopbackInterface ()
 	: m_name ("lo"),
 	  m_mtu (16436)
@@ -119,3 +121,4 @@ LoopbackInterface::is_down (void)
 	return m_down;
 }
 
+}; // namespace yans

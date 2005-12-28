@@ -31,6 +31,8 @@
 #include "periodic-generator.h"
 #include "traffic-analyzer.h"
 
+using namespace yans;
+
 int main (int argc, char *argv[])
 {
 	/* setup the ethernet network itself. */

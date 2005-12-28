@@ -22,9 +22,14 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <errno.h>
+#include <iostream>
+
 
 #include "host.h"
 #include "write-file.h"
+
+namespace yans {
 
 class WriteFilePrivate {
 public:
@@ -42,8 +47,6 @@ WriteFile::~WriteFile ()
 	delete m_priv;
 	m_priv = (WriteFilePrivate *)0xdeadbeaf;
 }
-#include <errno.h>
-#include <iostream>
 void 
 WriteFile::open (std::string *filename)
 {	
@@ -76,3 +79,5 @@ WriteFile::write (uint8_t *buf, size_t count)
 	}
 	return written;
 }
+
+}; // namespace yans

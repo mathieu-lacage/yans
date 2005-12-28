@@ -21,6 +21,8 @@
 
 #include "tcp-end-point.h"
 
+namespace yans {
+
 TcpEndPoint::TcpEndPoint (Ipv4Address address, uint16_t port)
 	: m_local_addr (address), 
 	  m_local_port (port),
@@ -81,3 +83,6 @@ TcpEndPoint::set_destroy_callback (TcpEndPointDestroyCallback *destroy)
 {
 	m_destroy = destroy;
 }
+
+
+}; // namespace yans

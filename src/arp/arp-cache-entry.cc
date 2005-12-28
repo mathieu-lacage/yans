@@ -24,6 +24,8 @@
 #include "arp-cache-entry.h"
 #include "packet.h"
 
+namespace yans {
+
 ArpCacheEntry::ArpCacheEntry (Arp *arp)
 	: m_arp (arp),
 	  m_state (ALIVE),
@@ -136,3 +138,5 @@ ArpCacheEntry::now (void)
 {
 	return Simulator::now_s ();
 }
+
+}; // namespace yans

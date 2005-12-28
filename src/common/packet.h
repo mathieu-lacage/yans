@@ -32,9 +32,11 @@
 #include "ref-count.tcc"
 #include "callback.tcc"
 
+namespace yans {
+
 class Chunk;
 class Buffer;
-class Packet;
+
 
 class Packet {
 public:
@@ -82,5 +84,7 @@ public:
 };
 
 std::ostream& operator<< (std::ostream& os, Packet const& packet);
+
+}; // namespace yans
 
 #endif /* PACKET_H */

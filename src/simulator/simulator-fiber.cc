@@ -25,6 +25,8 @@
 #include "fiber-scheduler.h"
 #include "tag-manager.h"
 
+namespace yans {
+
 class SimulatorPrivate {
 public:
 	SimulatorPrivate ();
@@ -175,3 +177,4 @@ Simulator::now_s (void)
 	return get_priv ()->now_s ();
 }
 
+}; // namespace yans

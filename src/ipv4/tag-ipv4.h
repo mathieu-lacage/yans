@@ -26,6 +26,8 @@
 #include "ipv4-address.h"
 #include "ipv4-route.h"
 
+namespace yans {
+
 class NetworkInterface;
 
 class TagOutIpv4 : public Tag {
@@ -78,5 +80,7 @@ public:
 	uint16_t m_dport;
 	static uint32_t m_tag;
 };
+
+}; // namespace yans
 
 #endif /* TAG_IPV4_H */

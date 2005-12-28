@@ -26,6 +26,8 @@
 #include "ipv4-address.h"
 #include "ipv4-endpoint.h"
 
+namespace yans {
+
 class Host;
 class Ipv4EndPoint;
 class TcpEndPoint;
@@ -56,5 +58,7 @@ class TcpSource {
 	TcpEndPoint *m_end_point;
 	TcpConnection *m_connection;
 };
+
+}; // namespace yans
 
 #endif /* TCP_SOURCE */

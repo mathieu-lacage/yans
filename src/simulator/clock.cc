@@ -23,6 +23,8 @@
 
 #include <cassert>
 
+namespace yans {
+
 Clock::Clock ()
 	: m_current_us (0)
 {}
@@ -48,3 +50,6 @@ Clock::get_current_s (void)
 	double s = ((double)m_current_us)/1000000;
 	return s;
 }
+
+
+}; // namespace yans

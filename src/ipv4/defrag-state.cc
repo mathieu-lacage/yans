@@ -26,6 +26,7 @@
 #include "chunk-ipv4.h"
 #include "chunk-piece.h"
 
+namespace yans {
 
 DefragState::DefragState ()
 {
@@ -192,3 +193,5 @@ DefragStates::remove (DefragState *state)
 {
 	m_states.remove (state);
 }
+
+}; // namespace yans

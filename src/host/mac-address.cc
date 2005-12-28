@@ -23,6 +23,8 @@
 #include "buffer.h"
 #include "utils.h"
 
+namespace yans {
+
 MacAddress::MacAddress ()
 {
 	m_address[0] = 0;
@@ -156,3 +158,6 @@ std::ostream& operator<< (std::ostream& os, MacAddress const& address)
 	address.print (&os);
 	return os;
 }
+
+
+}; // namespace yans

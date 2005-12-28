@@ -26,6 +26,8 @@
 #include "mac-address.h"
 #include "ipv4-address.h"
 
+namespace yans {
+
 class ChunkArp : public Chunk {
  public:
 	virtual ~ChunkArp ();
@@ -62,5 +64,7 @@ private:
 	Ipv4Address m_ipv4_source;
 	Ipv4Address m_ipv4_dest;
 };
+
+}; // namespace yans
 
 #endif /* CHUNK_ARP_H */

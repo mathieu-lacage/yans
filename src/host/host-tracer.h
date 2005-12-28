@@ -22,6 +22,8 @@
 #ifndef HOST_TRACER_H
 #define HOST_TRACER_H
 
+namespace yans {
+
 class Host;
 class Packet;
 class WriteFile;
@@ -49,5 +51,7 @@ private:
 	bool m_enable_ipv4;
 	WriteFile *m_file;
 };
+
+}; // namespace yans
 
 #endif /* HOST_TRACER_H */

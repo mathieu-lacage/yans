@@ -21,6 +21,8 @@
 
 #include "utils.h"
 
+namespace yans {
+
 uint16_t 
 utils_hton_16 (uint16_t v)
 {
@@ -142,9 +144,12 @@ utils_checksum_calculate (uint8_t *buffer, uint16_t size)
 
 }
 
+}; // namespace yans
+
 
 #ifdef RUN_SELF_TESTS
 #include "test.h"
+namespace yans {
 UtilsTest::UtilsTest (TestManager *manager)
 	: Test (manager)
 {}
@@ -264,5 +269,5 @@ UtilsTest::run_tests (void)
 	TEST_HTON_16 (0xf00f, 0xf0, 0x0f);
 	return ok;
 }
-
+}; //namespace yans
 #endif /* RUN_SELF_TESTS */

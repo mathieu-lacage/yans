@@ -21,6 +21,8 @@
 
 #include "tag-manager.h"
 
+namespace yans {
+
 TagManager *TagManager::m_instance = 0;
 
 TagManager::TagManager ()
@@ -61,3 +63,5 @@ TagManager::lookup_tag (uint32_t tag_id)
 		return 0;
 	}
 }
+
+}; // namespace yans

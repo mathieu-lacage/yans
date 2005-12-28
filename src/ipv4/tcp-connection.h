@@ -26,6 +26,8 @@
 #include "ipv4-address.h"
 #include <stdint.h>
 
+namespace yans {
+
 class Packet;
 class Ipv4;
 class Host;
@@ -68,6 +70,8 @@ public:
 	virtual void slow_timer (void) = 0;
 	virtual void fast_timer (void) = 0;
 };
+
+}; // namespace yans
 
 
 #endif /* TCP_CONNECTION_H */

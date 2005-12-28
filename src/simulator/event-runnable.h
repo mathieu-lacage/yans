@@ -25,6 +25,8 @@
 #include "runnable.h"
 #include <stdint.h>
 
+namespace yans {
+
 class Event;
 class Simulator;
 class Runnable;
@@ -52,5 +54,7 @@ private:
 	Clock *m_clock;
 	Semaphore *m_wait;
 };
+
+}; // namespace yans
 
 #endif /* EVENT_RUNNABLE_H */

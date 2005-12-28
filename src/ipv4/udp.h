@@ -26,6 +26,8 @@
 
 #include "ipv4-address.h"
 
+namespace yans {
+
 class Ipv4;
 class Ipv4EndPoints;
 class Host;
@@ -50,5 +52,7 @@ public:
 	Host *m_host;
 	Ipv4EndPoints *m_end_points;
 };
+
+}; // namespace yans
 
 #endif /* UDP_H */

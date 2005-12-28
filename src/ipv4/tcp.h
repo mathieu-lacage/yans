@@ -27,6 +27,8 @@
 #include "callback.tcc"
 #include <list>
 
+namespace yans {
+
 class Ipv4;
 class Host;
 class Packet;
@@ -101,5 +103,7 @@ private:
 	int m_tcp_now;
 	int m_tcp_iss;
 };
+
+}; // namespace yans
 
 #endif /* TCP_H */

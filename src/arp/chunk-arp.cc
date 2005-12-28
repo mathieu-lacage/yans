@@ -22,6 +22,8 @@
 #include "chunk-arp.h"
 #include "buffer.h"
 
+namespace yans {
+
 ChunkArp::~ChunkArp ()
 {}
 
@@ -132,3 +134,4 @@ ChunkArp::print (std::ostream *os) const
 	}
 }
 
+}; // namespace yans

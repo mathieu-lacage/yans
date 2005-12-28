@@ -25,6 +25,8 @@
 
 #include <stdint.h>
 
+namespace yans {
+
 class PopulationAnalysis {
 public:
 	PopulationAnalysis ();
@@ -46,6 +48,8 @@ private:
 	double m_sum;
 	uint32_t m_n;
 };
+
+}; // namespace yans
 
 
 #endif /* POPULATION_ANALYSIS_H */

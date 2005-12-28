@@ -25,6 +25,8 @@
 #include "event.h"
 #include "simulator.h"
 
+namespace yans {
+
 const double Cable::SPEED_OF_LIGHT = 300000000;
 
 Cable::Cable ()
@@ -81,3 +83,4 @@ Cable::send (Packet *packet, EthernetNetworkInterface *sender)
 	Simulator::insert_in_s (delay, make_event (&Cable::recv, this, packet, rx));
 }
 
+}; // namespace yans

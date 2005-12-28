@@ -28,6 +28,8 @@
 #include "semaphore.h"
 #include <math.h>
 
+namespace yans {
+
 EventRunnable::EventRunnable ()
 {
 	m_stop = false;
@@ -107,3 +109,6 @@ EventRunnable::run (void)
 		m_wait->up ();
 	}
 }
+
+
+}; // namespace yans

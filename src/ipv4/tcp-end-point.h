@@ -27,6 +27,8 @@
 #include "ipv4-address.h"
 #include <stdint.h>
 
+namespace yans {
+
 class Packet;
 
 class TcpEndPoint {
@@ -55,6 +57,8 @@ private:
 	TcpEndPointReceptionCallback *m_reception;
 	TcpEndPointDestroyCallback *m_destroy;
 };
+
+}; // namespace yans
 
 
 #endif /* TCP_END_POINT_H */

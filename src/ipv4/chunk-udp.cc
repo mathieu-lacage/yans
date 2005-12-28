@@ -22,6 +22,8 @@
 #include "chunk-udp.h"
 #include "buffer.h"
 
+namespace yans {
+
 /* The magic values below are used only for debugging.
  * They can be used to easily detect memory corruption
  * problems so you can see the patterns in memory.
@@ -101,3 +103,4 @@ ChunkUdp::print (std::ostream *os) const
 }
 
 
+}; // namespace yans

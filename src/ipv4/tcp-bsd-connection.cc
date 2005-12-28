@@ -52,6 +52,21 @@
 #include "tcp-bsd-seq.h"
 #include "network-interface.h"
 
+#define TRACE_TCP_BSD_CONNECTION 1
+
+#ifdef TRACE_TCP_BSD_CONNECTION
+#include <iostream>
+#include "simulator.h"
+# define TRACE(x) \
+std::cout << "TCP CONN " << m_end_point->get_local_address () << ":" << m_end_point->get_local_port () << " " << \
+Simulator::now_s () << " " << x << std::endl;
+#else /* TRACE_TCP_BSD_CONNECTION */
+# define TRACE(format,...)
+#endif /* TRACE_TCP_BSD_CONNECTION */
+
+
+namespace yans {
+
 static char *tcpstates[] = {
 	"CLOSED",	"LISTEN",	"SYN_SENT",	"SYN_RCVD",
 	"ESTABLISHED",	"CLOSE_WAIT",	"FIN_WAIT_1",	"CLOSING",
@@ -77,17 +92,6 @@ int	tcp_maxidle;
 #define TCP_PAWS_IDLE       (24 * 24 * 60 * 60 * PR_SLOWHZ)
 
 
-#define TRACE_TCP_BSD_CONNECTION 1
-
-#ifdef TRACE_TCP_BSD_CONNECTION
-#include <iostream>
-#include "simulator.h"
-# define TRACE(x) \
-std::cout << "TCP CONN " << m_end_point->get_local_address () << ":" << m_end_point->get_local_port () << " " << \
-Simulator::now_s () << " " << x << std::endl;
-#else /* TRACE_TCP_BSD_CONNECTION */
-# define TRACE(format,...)
-#endif /* TRACE_TCP_BSD_CONNECTION */
 
 int     tcp_backoff[TCP_MAXRXTSHIFT + 1] =
 	{ 1, 2, 4, 8, 16, 32, 64, 64, 64, 64, 64, 64, 64 };
@@ -432,7 +436,7 @@ TcpBsdConnection::setpersist (void)
 	 * Start/restart persistance timer.
 	 */
 	TCPT_RANGESET(m_t_timer[TCPT_PERSIST],
-		      t * ::tcp_backoff[m_t_rxtshift],
+		      t * tcp_backoff[m_t_rxtshift],
 		      TCPTV_PERSMIN, TCPTV_PERSMAX);
 	if (m_t_rxtshift < TCP_MAXRXTSHIFT)
 		m_t_rxtshift++;
@@ -1873,6 +1877,6 @@ TcpBsdConnection::fast_timer (void)
 	}
 }
 
-
+}; // namespace yans
 
 

@@ -44,6 +44,8 @@ std::cout << "IPV4 TRACE " << Simulator::now_s () << " " << x << std::endl;
 # define TRACE(format,...)
 #endif /* TRACE_IPV4 */
 
+namespace yans {
+
 const uint8_t Ipv4::ICMP_PROTOCOL = 1;
 
 
@@ -368,3 +370,5 @@ Ipv4::receive (Packet *packet, NetworkInterface *interface)
 void 
 Ipv4::receive_icmp (Packet *packet)
 {}
+
+}; // namespace yans

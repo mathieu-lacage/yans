@@ -27,6 +27,8 @@
 #include "callback.tcc"
 #include <list>
 
+namespace yans {
+
 class Packet;
 class Ipv4EndPoints;
 
@@ -74,6 +76,8 @@ private:
 	Addresses m_addresses;
 	uint16_t m_ephemeral;
 };
+
+}; // namespace yans
 
 
 #endif /* IPV4_ENDPOINT_H */

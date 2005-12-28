@@ -27,6 +27,8 @@
 #include "ipv4-address.h"
 #include "callback.tcc"
 
+namespace yans {
+
 class NetworkInterface;
 class Packet;
 class Ipv4Route;
@@ -77,6 +79,8 @@ private:
 	uint16_t m_identification;
 	DefragStates *m_defrag_states;
 };
+
+}; // namespace yans 
 
 #endif /* IPV4_H */
 

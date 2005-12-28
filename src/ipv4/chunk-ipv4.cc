@@ -35,6 +35,7 @@ std::cout << "CHUNK IPV4 TRACE " << Simulator::now_s () << " " << x << std::endl
 # define TRACE(format,...)
 #endif /* TRACE_CHUNK_IPV4 */
 
+namespace yans {
 
 ChunkIpv4::ChunkIpv4 ()
 	: m_payload_size (0),
@@ -244,3 +245,6 @@ ChunkIpv4::print (std::ostream *os) const
 	    << ", source=" << m_source
 	    << ", destination=" << m_destination;
 }
+
+
+}; // namespace yans

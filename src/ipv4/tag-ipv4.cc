@@ -21,6 +21,8 @@
 
 #include "tag-ipv4.h"
 
+namespace yans {
+
 uint32_t TagOutIpv4::m_tag = TagManager::instance ()->register_tag ("out-ipv4");
 
 TagOutIpv4::TagOutIpv4 (Route const*route)
@@ -142,3 +144,4 @@ TagInIpv4::get_tag (void)
 	return m_tag;
 }
 
+}; // namespace yans

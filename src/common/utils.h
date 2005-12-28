@@ -24,6 +24,8 @@
 
 #include <stdint.h>
 
+namespace yans {
+
 uint16_t utils_hton_16 (uint16_t v);
 uint32_t utils_hton_32 (uint32_t v);
 uint16_t utils_ntoh_16 (uint16_t v);
@@ -34,8 +36,11 @@ void ascii_to_mac_network (char const *str, uint8_t address[6]);
 
 uint16_t utils_checksum_calculate (uint8_t *buffer, uint16_t size);
 
+}; // namespace yans
+
 #ifdef RUN_SELF_TESTS
 #include "test.h"
+namespace yans {
 class UtilsTest : public Test {
 public:
 	UtilsTest (TestManager *manager);
@@ -47,6 +52,7 @@ private:
 	bool test_hton_16 (uint16_t v, uint8_t expected[2]);
 	bool test_ipv4_ascii_to_host (char const *str, uint32_t expected);
 };
+}; // namespace yans
 #endif /* RUN_SELF_TESTS */
 
 #endif /* UTILS_H */

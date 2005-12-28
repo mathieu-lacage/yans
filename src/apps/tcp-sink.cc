@@ -39,7 +39,7 @@ std::cout << "TCP SINK TRACE " << Simulator::now_s () << " " << x << std::endl;
 # define TRACE(format,...)
 #endif /* TRACE_TCP_SINK */
 
-
+namespace yans {
 
 TcpSink::TcpSink (Host *host)
 	: m_host (host),
@@ -169,3 +169,5 @@ TcpSink::bind (Ipv4Address address, uint16_t port)
 				      make_callback (&TcpSink::connection_created, this));
 	return true;
 }
+
+}; // namespace yans

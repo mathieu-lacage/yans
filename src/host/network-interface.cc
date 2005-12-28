@@ -21,5 +21,10 @@
 
 #include "network-interface.h"
 
+namespace yans {
+
 NetworkInterface::~NetworkInterface ()
 {}
+
+
+}; // namespace yans

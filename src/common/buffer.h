@@ -24,6 +24,7 @@
 
 #include <stdint.h>
 
+namespace yans {
 
 class Buffer {
 public:
@@ -63,8 +64,12 @@ private:
 	uint8_t *m_buffer;
 };
 
+}; // namespace yans
+
 #ifdef RUN_SELF_TESTS
 #include "test.h"
+
+namespace yans {
 class BufferTest: public Test {
 public:
 	BufferTest (TestManager *manager);
@@ -74,6 +79,7 @@ private:
 	bool ensure_written_bytes (Buffer *buffer, 
 				   uint32_t n, uint8_t array[]);
 };
+}; // namespace yans
 #endif /* RUN_SELF_TESTS */
 
 #endif /* BUFFER_H */

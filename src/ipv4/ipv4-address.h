@@ -25,8 +25,9 @@
 #include <stdint.h>
 #include <ostream>
 
-class Buffer;
+namespace yans {
 
+class Buffer;
 
 /* Ipv4 addresses are stored in host order in
  * this class.
@@ -101,5 +102,7 @@ public:
 	size_t operator()(Ipv4Address const &x) const;
 };
 bool operator != (Ipv4Address const &a, Ipv4Address const &b);
+
+}; // namespace yans
 
 #endif /* IPV4_ADDRESS_H */

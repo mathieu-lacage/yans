@@ -24,6 +24,8 @@
 
 #include <stdint.h>
 
+namespace yans {
+
 class Clock {
 public:
 	Clock ();
@@ -36,6 +38,8 @@ public:
 private:
 	uint64_t m_current_us;
 };
+
+}; // namespace yans
 
 
 #endif /* CLOCK_H */

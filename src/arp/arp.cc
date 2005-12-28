@@ -37,6 +37,8 @@ std::cout << "LLARP TRACE " << Simulator::instance ()->now_s () << " " \
 # define TRACE(format,...)
 #endif /* TRACE_ARP */
 
+namespace yans {
+
 Arp::Arp (NetworkInterface *interface)
 	: m_interface (interface),
 	  m_alive_timeout (1200.0),
@@ -197,3 +199,5 @@ Arp::recv_arp (Packet *packet)
 	}
 	delete arp;
 }
+
+}; // namespace yans

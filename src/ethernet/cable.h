@@ -25,6 +25,8 @@
 #include <list>
 #include "ref-count.tcc"
 
+namespace yans {
+
 class Packet;
 class EthernetNetworkInterface;
 
@@ -57,6 +59,8 @@ private:
 	double m_length;
 	double m_bandwidth;
 };
+
+}; // namespace yans
 
 
 #endif /* CABLE_H */

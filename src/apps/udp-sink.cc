@@ -28,7 +28,7 @@
 
 #include <iostream>
 
-
+namespace yans {
 
 UdpSink::UdpSink (Host *host)
 	: m_host (host),
@@ -75,3 +75,6 @@ UdpSink::receive (Packet *packet)
 		(*m_callback) (packet);
 	}
 }
+
+
+}; // namespace yans

@@ -24,6 +24,8 @@
 
 #include "chunk.h"
 
+namespace yans {
+
 class ChunkTcp : public Chunk {
 public:
 	ChunkTcp ();
@@ -113,5 +115,7 @@ private:
 	uint32_t m_option_timestamp_value;
 	uint32_t m_option_timestamp_reply;
 };
+
+}; // namespace yans
 
 #endif /* CHUNK_TCP_H */

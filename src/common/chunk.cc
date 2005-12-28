@@ -21,6 +21,8 @@
 
 #include "chunk.h"
 
+namespace yans {
+
 uint32_t 
 ChunkSerializationState::get_current (void)
 {
@@ -78,3 +80,5 @@ std::ostream& operator<< (std::ostream& os, Chunk const& chunk)
 	chunk.print (&os);
 	return os;
 }
+
+}; // namespace yans

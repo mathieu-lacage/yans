@@ -25,8 +25,11 @@
 #include <stdint.h>
 #include <ostream>
 
+namespace yans {
+
 class Buffer;
 class Chunk;
+
 
 class ChunkSerializationState {
 public:
@@ -62,5 +65,7 @@ public:
 };
 
 std::ostream& operator<< (std::ostream& os, Chunk const& chunk);
+
+}; // namespace yans
 
 #endif /* CHUNK_H */

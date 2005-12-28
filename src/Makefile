@@ -13,8 +13,15 @@ MAIN_SIMPLE_SOURCE=samples/main-simple.cc
 MAIN_ROUTER_SOURCE=samples/main-router.cc
 MAIN_TCP_SOURCE=samples/main-tcp.cc
 SOURCE= \
-	test/test.cc \
 	common/chunk-fake-data.cc \
+	common/buffer.cc \
+	common/chunk.cc \
+	common/tag-manager.cc \
+	common/packet.cc \
+	common/utils.cc \
+	common/population-analysis.cc \
+	common/callback-test.cc \
+	test/test.cc \
 	apps/periodic-generator.cc \
 	apps/traffic-analyzer.cc \
 	apps/udp-source.cc \
@@ -28,13 +35,6 @@ SOURCE= \
 	host/host-tracer.cc \
 	host/network-interface-tracer.cc \
 	os-model/write-file.cc \
-	common/buffer.cc \
-	common/chunk.cc \
-	common/tag-manager.cc \
-	common/packet.cc \
-	common/utils.cc \
-	common/population-analysis.cc \
-	common/callback-test.cc \
 	ipv4/udp.cc \
 	ipv4/tcp.cc \
 	ipv4/tcp-pieces.cc \

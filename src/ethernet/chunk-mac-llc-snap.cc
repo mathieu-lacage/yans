@@ -19,8 +19,12 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
+#include <iostream>
+
 #include "chunk-mac-llc-snap.h"
 #include "buffer.h"
+
+namespace yans {
 
 ChunkMacLlcSnap::ChunkMacLlcSnap ()
 {}
@@ -83,7 +87,6 @@ ChunkMacLlcSnap::copy (void) const
 	*chunk = *this;
 	return chunk;
 }
-#include <iostream>
 void 
 ChunkMacLlcSnap::serialize_init (Buffer *buffer) const
 {
@@ -120,3 +123,6 @@ ChunkMacLlcSnap::print (std::ostream *os) const
 	*os << m_ether_type;
 	os->setf (std::ios::dec, std::ios::basefield);
 }
+
+
+}; // namespace yans

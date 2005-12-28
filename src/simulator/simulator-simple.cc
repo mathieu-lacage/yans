@@ -26,6 +26,8 @@
 #include "event.h"
 #include <math.h>
 
+namespace yans {
+
 class SimulatorPrivate {
 public:
 	SimulatorPrivate ();
@@ -210,3 +212,5 @@ Simulator::insert_later (Event *event)
 {
 	return get_priv ()->insert_later (event);
 }
+
+}; // namespace yans

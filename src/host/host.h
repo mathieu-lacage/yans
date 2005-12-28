@@ -25,6 +25,8 @@
 #include <vector>
 #include "ipv4-address.h"
 
+namespace yans {
+
 class Ipv4;
 class Ipv4Route;
 class NetworkInterface;
@@ -65,6 +67,8 @@ private:
 	HostTracer *m_tracer;
 	std::string *m_root;
 };
+
+}; // namespace yans
 
 
 #endif /* HOST_H */

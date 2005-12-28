@@ -27,6 +27,8 @@
 #include <utility>
 #include <ostream>
 
+namespace yans {
+
 class TestManager;
 
 class Test {
@@ -59,5 +61,6 @@ private:
 	bool m_verbose;
 	std::string *m_test_name;
 };
+}; // namespace yans 
 
 #endif /* TEST_H */

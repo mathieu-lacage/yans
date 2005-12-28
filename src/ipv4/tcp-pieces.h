@@ -26,6 +26,8 @@
 #include <list>
 #include <utility>
 
+namespace yans {
+
 class Packet;
 class ChunkPiece;
 
@@ -85,8 +87,13 @@ private:
 	uint32_t m_start;
 };
 
+}; //namespace yans
+
 #ifdef RUN_SELF_TESTS
 #include "test.h"
+
+namespace yans {
+
 class ChunkPiece;
 class TcpPiecesTest : public Test {
 public:
@@ -97,6 +104,8 @@ private:
 	ChunkPiece *create_many_pieces (uint32_t size);
 	bool check_front_data (TcpPieces *pieces, uint32_t expected_data, int line);
 };
+
+}; //namespace yans
 #endif /* RUN_SELF_TESTS */
 
 

@@ -39,6 +39,8 @@ std::cout << "TCP PIECES " << Simulator::now_s () << " " << x << std::endl;
 #define CHECK_STATE \
 check_state ();
 
+namespace yans {
+
 TcpPieces::TcpPieces ()
 	: m_start (0)
 {}
@@ -362,10 +364,14 @@ TcpPieces::get_at (uint32_t start, uint32_t size)
 	return packet;	
 }
 
+}; // namespace yans
+
 
 #ifdef RUN_SELF_TESTS
 
 #include "chunk-fake-data.h"
+
+namespace yans {
 
 TcpPiecesTest::TcpPiecesTest (TestManager *manager)
 	: Test (manager)
@@ -509,6 +515,6 @@ TcpPiecesTest::run_tests (void)
 	return ok;
 }
 
-
+}; // namespace yans
 
 #endif /* RUN_SELF_TESTS */

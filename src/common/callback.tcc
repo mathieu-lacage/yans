@@ -22,6 +22,8 @@
 #ifndef CALLBACK_H
 #define CALLBACK_H
 
+namespace yans {
+
 /***
  * This code is unreadable. It was inspired by the techniques described in:
  * http://www.codeproject.com/cpp/TTLFunction.asp
@@ -120,6 +122,8 @@ template<typename T, typename R, typename T1, typename T2>
 Callback2<T, R, T1, T2> *make_callback(R (T::*f) (T1, T2), T* t) {
 	return new Callback2<T, R, T1, T2>(t, f);
 }
+
+}; // namespace yans
 
 
 #endif /* CALLBACK_H */

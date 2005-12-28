@@ -24,6 +24,8 @@
 
 #include <stdint.h>
 
+namespace yans {
+
 template<typename T>
 class RefCount {
 public:
@@ -47,5 +49,7 @@ private:
 	uint32_t m_ref;
 	T *m_obj;
 };
+
+}; // namespace yans
 
 #endif /* REF_COUNT_H */

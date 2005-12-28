@@ -25,6 +25,8 @@
 #include <list>
 #include "ipv4-address.h"
 
+namespace yans {
+
 class Packet;
 
 class DefragState {
@@ -67,6 +69,8 @@ private:
 	typedef std::list <DefragState *>::iterator StatesI;
 	States m_states;
 };
+
+}; // namespace yans
 
 
 #endif /* DEFRAG_STATE_H */

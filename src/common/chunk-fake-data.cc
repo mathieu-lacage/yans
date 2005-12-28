@@ -23,6 +23,8 @@
 #include "buffer.h"
 #include <string.h>
 
+namespace yans {
+
 ChunkFakeData::ChunkFakeData (uint32_t len, uint8_t n)
 	: m_len (len), m_n (n)
 {}
@@ -60,3 +62,5 @@ ChunkFakeData::print (std::ostream *os) const
 	*os << "(fake data)"
 	    << " len: " << m_len;
 }
+
+}; // namespace yans

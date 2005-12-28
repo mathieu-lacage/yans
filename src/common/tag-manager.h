@@ -25,6 +25,8 @@
 #include <stdint.h>
 #include "sgi-hashmap.h"
 
+namespace yans {
+
 class Tag {};
 
 class TagManager {
@@ -49,6 +51,7 @@ private:
 	TagManager ();
 };
 
+}; // namespace yans
 
 
 #endif /* TAG_MANAGER */

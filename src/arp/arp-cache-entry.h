@@ -22,6 +22,8 @@
 #ifndef ARP_CACHE_ENTRY_H
 #define ARP_CACHE_ENTRY_H
 
+namespace yans {
+
 class ArpCacheEntry {
 public:
 	ArpCacheEntry (Arp *arp);
@@ -53,5 +55,7 @@ private:
 	MacAddress m_mac_address;
 	Packet *m_waiting;
 };
+
+}; // namespace yans
 
 #endif /* ARP_CACHE_ENTRY_H */

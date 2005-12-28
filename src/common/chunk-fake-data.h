@@ -24,6 +24,8 @@
 
 #include "chunk.h"
 
+namespace yans {
+
 class ChunkFakeData : public Chunk {
 public:
 	ChunkFakeData (uint32_t len, uint8_t n);
@@ -39,5 +41,7 @@ private:
 	uint32_t m_len;
 	uint8_t m_n;
 };
+
+}; // namespace yans
 
 #endif /* CHUNK_FAKE_DATA_H */

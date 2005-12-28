@@ -25,6 +25,8 @@
 #include <stdint.h>
 #include <ostream>
 
+namespace yans {
+
 class Buffer;
 
 class MacAddress {
@@ -61,5 +63,7 @@ private:
 };
 
 std::ostream& operator<< (std::ostream& os, MacAddress const& address);
+
+}; // namespace yans
 
 #endif /* MAC_ADDRESS_H */

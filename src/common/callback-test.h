@@ -24,6 +24,7 @@
 
 #include "test.h"
 
+namespace yans {
 class CallbackTest : public Test {
 public:
 	CallbackTest (TestManager *manager);
@@ -41,5 +42,7 @@ private:
 	bool m_test3;
 	bool m_test4;
 };
+
+}; // namespace yans
 
 #endif /* CALLBACK_TEST_H */

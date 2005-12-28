@@ -27,6 +27,8 @@
 #include "sgi-hashmap.h"
 #include "callback.tcc"
 
+namespace yans {
+
 class Packet;
 class NetworkInterface;
 class ArpCacheEntry;
@@ -68,5 +70,7 @@ private:
 	double m_wait_reply_timeout;
 	ArpCache m_arp_cache;
 };
+
+}; // namespace yans
 
 #endif /* ARP_H */

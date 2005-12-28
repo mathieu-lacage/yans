@@ -29,6 +29,8 @@
 #include "tcp.h"
 #include "tcp-end-point.h"
 
+namespace yans {
+
 TcpConnectionListener::TcpConnectionListener ()
 {}
 TcpConnectionListener::~TcpConnectionListener ()
@@ -107,3 +109,4 @@ TcpConnectionListener::set_end_point (TcpEndPoint *end_point)
 	end_point->set_callback (make_callback (&TcpConnectionListener::receive, this));
 }
  
+}; // namespace yans

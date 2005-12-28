@@ -28,6 +28,8 @@
 #include "host-tracer.h"
 #include "host.h"
 
+namespace yans {
+
 /* see http://www.iana.org/assignments/protocol-numbers */
 const uint8_t Udp::UDP_PROTOCOL = 17;
 
@@ -95,3 +97,7 @@ Udp::send (Packet *packet)
 	m_ipv4->send (packet);
 	// XXX: if we wanted to, we could generate the udp checksum here.
 }
+
+
+}; // namespace yans
+

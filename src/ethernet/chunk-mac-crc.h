@@ -26,6 +26,8 @@
 #include "mac-address.h"
 #include "ipv4-address.h"
 
+namespace yans {
+
 class ChunkMacCrc : public Chunk {
  public:
 	ChunkMacCrc ();
@@ -43,5 +45,7 @@ class ChunkMacCrc : public Chunk {
 private:
 	uint8_t m_pad_size;
 };
+
+}; // namespace yans
 
 #endif /* CHUNK_MAC_CRC_H */

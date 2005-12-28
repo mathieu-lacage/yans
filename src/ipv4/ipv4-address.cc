@@ -23,6 +23,8 @@
 #include "ipv4-address.h"
 #include "buffer.h"
 
+namespace yans {
+
 Ipv4Mask::Ipv4Mask ()
 	: m_mask (0x66666666)
 {}
@@ -189,3 +191,6 @@ std::ostream& operator<< (std::ostream& os, Ipv4Mask const& mask)
 	mask.print (&os);
 	return os;
 }
+
+
+}; // namespace yans

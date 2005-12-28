@@ -25,6 +25,8 @@
 #include <stdint.h>
 #include <string>
 
+namespace yans {
+
 class WriteFilePrivate;
 class Host;
 
@@ -41,6 +43,8 @@ public:
 private:
 	WriteFilePrivate *m_priv;
 };
+
+}; // namespace yans
 
 #endif /* WRITE_FILE_H */
 

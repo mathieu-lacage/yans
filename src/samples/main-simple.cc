@@ -32,6 +32,8 @@
 #include "traffic-analyzer.h"
 #include "callback.tcc"
 
+using namespace yans;
+
 int main (int argc, char *argv[])
 {
 	/* setup the ethernet network itself. */

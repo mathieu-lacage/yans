@@ -24,6 +24,8 @@
 
 #include "event.h"
 
+namespace yans {
+
 template<typename T>
 class EventCallback0 : public Event {
 public:
@@ -170,5 +172,7 @@ template<typename T, typename T1, typename T2>
 StaticEventCallback2<T, T1, T2> *make__static_event(void (T::*f) (T1, T2), T* t, T1 a1, T2 a2) {
 	return new StaticEventCallback2<T, T1, T2>(t, f, a1, a2);
 }
+
+}; // namespace yans
 
 #endif /* EVENT_TCC */

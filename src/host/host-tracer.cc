@@ -24,6 +24,8 @@
 #include "simulator.h"
 #include <iostream>
 
+namespace yans {
+
 void 
 HostTracer::trace_tx_app (Packet *packet)
 {
@@ -104,3 +106,6 @@ HostTracer::HostTracer (WriteFile *file)
 {}
 HostTracer::~HostTracer ()
 {}
+
+
+}; // namespace yans

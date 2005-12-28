@@ -24,6 +24,8 @@
 
 #include "chunk.h"
 
+namespace yans {
+
 class Packet;
 
 class ChunkPiece: public Chunk {
@@ -50,6 +52,8 @@ private:
 	uint32_t m_size;
 	uint32_t m_offset;
 };
+
+}; // namespace yans
 
 
 #endif /* CHUNK_PIECE_H */

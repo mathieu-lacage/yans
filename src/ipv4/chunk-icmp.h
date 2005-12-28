@@ -25,6 +25,8 @@
 #include "chunk.h"
 #include "ipv4-address.h"
 
+namespace yans {
+
 class ChunkIcmp: public Chunk {
 public:
 	ChunkIcmp ();
@@ -76,6 +78,8 @@ private:
 	uint32_t m_tx_timestamp;
 
 };
+
+}; // namespace yans
 
 
 #endif /* CHUNK_ICMP_H */

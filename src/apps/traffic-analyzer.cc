@@ -26,6 +26,7 @@
 #include "simulator.h"
 #include <iostream>
 
+namespace yans {
 
 TrafficAnalyzer::TrafficAnalyzer ()
 {
@@ -60,3 +61,5 @@ TrafficAnalyzer::print_stats (void)
 		  << ", std dev: " << m_inter_arrival_time->get_standard_deviation () << std::endl
 		  << "received " << m_data->get_total () << " bytes." << std::endl;
 }
+
+}; // namespace yans

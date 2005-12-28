@@ -30,6 +30,8 @@
 #include "network-interface-tracer.h"
 #include "callback.tcc"
 
+namespace yans {
+
 EthernetNetworkInterface::EthernetNetworkInterface (char const *name)
 	: m_name (new std::string (name))
 {
@@ -205,3 +207,5 @@ EthernetNetworkInterface::send_arp (Packet *packet, MacAddress dest)
 	m_tracer->trace_tx_mac (packet);
 	m_cable->send (packet, this);
 }
+
+}; // namespace yans

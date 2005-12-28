@@ -24,6 +24,8 @@
 
 #include "network-interface.h"
 
+namespace yans {
+
 class Arp;
 class Cable;
 
@@ -82,6 +84,6 @@ public:
 	uint16_t m_mtu;
 };
 
-
+}; // namespace yans
 
 #endif /* ETHERNET_NETWORK_INTERFACE_H */

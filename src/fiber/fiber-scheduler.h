@@ -25,6 +25,8 @@
 #include <list>
 #include "fiber-context.h"
 
+namespace yans {
+
 class Fiber;
 
 class FiberScheduler {
@@ -64,9 +66,12 @@ private:
 	int m_do_n;
 };
 
+}; // namespace yans
+
 #ifdef RUN_SELF_TESTS
 #include "test.h"
 #include <map>
+namespace yans {
 class TestRunnable;
 class TestFiberScheduler : public Test {
 public:
@@ -85,6 +90,7 @@ private:
 	typedef std::map<TestRunnable const*, uint32_t>::iterator RunsI;
 	Runs m_runs;
 };
+}; //namespace yans
 #endif /* RUN_SELF_TESTS */
 
 #endif /* FIBER_SCHEDULER_H */

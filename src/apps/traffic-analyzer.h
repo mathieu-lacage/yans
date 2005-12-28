@@ -25,6 +25,8 @@
 
 #include <stdint.h>
 
+namespace yans {
+
 class Packet;
 class PopulationAnalysis;
 
@@ -42,6 +44,8 @@ private:
 	PopulationAnalysis *m_inter_arrival_time;
 	double m_previous_arrival;
 };
+
+}; // namespace yans
 
 
 

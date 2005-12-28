@@ -28,6 +28,8 @@
 #include "tcp.h"
 #include "host-tracer.h"
 
+namespace yans {
+
 Host::Host (char const *path)
 {
 	m_ipv4 = new Ipv4 ();
@@ -117,3 +119,5 @@ Host::get_tracer (void)
 {
 	return m_tracer;
 }
+
+}; // namespace yans

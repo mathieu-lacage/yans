@@ -26,6 +26,8 @@
 #include "udp.h"
 #include "chunk.h"
 
+namespace yans {
+
 class ChunkUdp : public Chunk {
 public:
 	ChunkUdp ();
@@ -49,5 +51,7 @@ private:
 	uint16_t m_destination_port;
 	uint16_t m_udp_length;
 };
+
+}; // namespace yans
 
 #endif /* CHUNK_UDP */

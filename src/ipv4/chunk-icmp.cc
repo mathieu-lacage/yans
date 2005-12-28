@@ -22,6 +22,8 @@
 #include "chunk-icmp.h"
 #include "buffer.h"
 
+namespace yans {
+
 ChunkIcmp::ChunkIcmp ()
 {}
 
@@ -130,3 +132,6 @@ ChunkIcmp::print (std::ostream *os) const
 	    << "code: " << m_code << " "
 		;
 }
+
+
+}; // namespace yans

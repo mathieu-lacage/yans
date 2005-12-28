@@ -25,6 +25,8 @@
 #include "chunk.h"
 #include "ipv4-address.h"
 
+namespace yans {
+
 class ChunkIpv4 : public Chunk {
 public:
 	ChunkIpv4 ();
@@ -80,6 +82,8 @@ private:
 	Ipv4Address m_source;
 	Ipv4Address m_destination;
 };
+
+}; // namespace yans
 
 
 #endif /* CHUNK_IPV4_H */

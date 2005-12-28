@@ -22,6 +22,8 @@
 #include "ipv4-route.h"
 #include "ipv4.h"
 
+namespace yans {
+
 /*****************************************************
  *           Network Route
  *****************************************************/
@@ -214,3 +216,6 @@ Ipv4Route::lookup (Ipv4Address dest)
 	}
 	return 0;
 }
+
+
+}; // namespace yans

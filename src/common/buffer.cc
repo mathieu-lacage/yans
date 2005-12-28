@@ -36,6 +36,8 @@ std::cout << "BUFFER TRACE " << Simulator::now_s () << " " << x << std::endl;
 #include <cassert>
 #include <string.h>
 
+namespace yans {
+
 
 Buffer::Buffer ()
 {
@@ -263,15 +265,15 @@ Buffer::alloc_and_zero (uint32_t size)
 	return buffer;
 }
 
-
-
-
+}; // namespace yans
 
 
 #ifdef RUN_SELF_TESTS
 
 #include "test.h"
 #include <iomanip>
+
+namespace yans {
 
 BufferTest::BufferTest (TestManager *manager)
 	: Test (manager)
@@ -344,4 +346,8 @@ BufferTest::run_tests (void)
 	return ok;
 }
 
+}; // namespace yans
+
 #endif /* RUN_SELF_TESTS */
+
+

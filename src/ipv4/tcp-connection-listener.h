@@ -26,6 +26,8 @@
 #include "ipv4-address.h"
 #include <stdint.h>
 
+namespace yans {
+
 class Packet;
 class Host;
 class Ipv4;
@@ -60,5 +62,6 @@ private:
 	TcpEndPoint *m_end_point;
 };
 
+}; // namespace yans
 
 #endif /* TCP_CONNECTION_LISTENER_H */

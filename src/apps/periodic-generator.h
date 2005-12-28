@@ -25,6 +25,8 @@
 #include <stdint.h>
 #include "callback.tcc"
 
+namespace yans {
+
 class Packet;
 
 
@@ -53,6 +55,8 @@ private:
 	double m_stop_at;
 	uint32_t m_n;
 };
+
+}; //namespace yans
 
 
 #endif /* PERIODIC_GENERATOR_H */

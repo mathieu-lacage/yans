@@ -23,6 +23,8 @@
 #include "buffer.h"
 #include "packet.h"
 
+namespace yans {
+
 ChunkPiece::ChunkPiece ()
 {
 	m_original = 0;
@@ -130,3 +132,5 @@ ChunkPiece::print (std::ostream *os) const
 	    << " offset: " << m_offset << " ";
 	m_original->print (os);
 }
+
+}; // namespace yans

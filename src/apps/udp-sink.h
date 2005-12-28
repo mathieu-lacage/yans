@@ -26,6 +26,8 @@
 #include "ipv4-address.h"
 #include "callback.tcc"
 
+namespace yans {
+
 class Host;
 class Packet;
 class Ipv4EndPoint;
@@ -47,6 +49,8 @@ private:
 	Ipv4EndPoint *m_end_point;
 	UdpSinkCallback *m_callback;
 };
+
+}; // namespace yans
 
 
 #endif /* UDP_SINK_H */

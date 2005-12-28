@@ -25,6 +25,7 @@
 #include "chunk-fake-data.h"
 #include "event.h"
 
+namespace yans {
 
 PeriodicGenerator::PeriodicGenerator ()
 	: m_n (0)
@@ -81,3 +82,5 @@ PeriodicGenerator::send_next_packet (void)
 	packet->unref ();
 	m_n++;
 }
+
+}; //namespace yans

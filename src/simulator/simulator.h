@@ -25,6 +25,8 @@
 #include "block.h"
 #include <stdint.h>
 
+namespace yans {
+
 class Event;
 class SimulatorPrivate;
 
@@ -67,5 +69,7 @@ private:
 	static SimulatorPrivate *get_priv (void);
 	static bool m_destroyed;
 };
+
+}; // namespace yans
 
 #endif /* SIMULATOR_H */

@@ -27,6 +27,8 @@
 #include "buffer.h"
 #include "simulator.h"
 
+namespace yans {
+
 NetworkInterfaceTracer::NetworkInterfaceTracer (Host *host, NetworkInterface *interface)
 	: m_host (host),
 	  m_interface (interface),
@@ -128,3 +130,4 @@ NetworkInterfaceTracer::disable_all (void)
 	m_enable_all = false;
 }
 
+}; // namespace yans

@@ -41,6 +41,8 @@
 #include <stdint.h>
 #include "tcp-bsd-timers.h"
 
+namespace yans {
+
 class Packet;
 class Ipv4;
 class Host;
@@ -214,6 +216,8 @@ private:
 	int m_so_error;
 	int m_so_options;
 };
+
+}; // namespace yans
 
 
 #endif /* TCP_BSD_CONNECTION_H */

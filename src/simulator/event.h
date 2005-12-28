@@ -22,6 +22,8 @@
 #ifndef EVENT_H
 #define EVENT_H
 
+namespace yans {
+
 class Event {
 public:
 	/* Events do not have a destructor on purpose. The notify method
@@ -40,6 +42,8 @@ public:
 	 */
 	virtual ~Event ();
 };
+
+}; // namespace yans
 
 #include "event.tcc"
 

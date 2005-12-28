@@ -35,6 +35,7 @@ std::cout << "CHUNK TCP TRACE " << Simulator::now_s () << " " << x << std::endl;
 # define TRACE(format,...)
 #endif /* TRACE_CHUNK_TCP */
 
+namespace yans {
 
 ChunkTcp::ChunkTcp ()
 	: m_source_port (0),
@@ -433,3 +434,5 @@ ChunkTcp::disable_flag (uint8_t n)
 {
 	m_flags &= ~(1 << n);
 }
+
+}; // namespace yans

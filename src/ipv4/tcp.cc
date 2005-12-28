@@ -41,6 +41,8 @@ std::cout << "TCP " << Simulator::now_s () << " " << x << std::endl;
 # define TRACE(format,...)
 #endif /* TRACE_TCP */
 
+namespace yans {
+
 const uint64_t Tcp::FAST_TIMER_DELAY_US = 200000; /* 200ms */
 const uint64_t Tcp::SLOW_TIMER_DELAY_US = 500000; /* 500ms */
 
@@ -395,3 +397,6 @@ Tcp::destroy_end_point (TcpEndPoint *end_point)
 		}
 	}
 }
+
+
+}; // namespace yans

@@ -26,6 +26,8 @@
 #include "event.tcc"
 #include "simulator.h"
 
+namespace yans {
+
 /***
  * This code is unreadable. It was inspired by the techniques described in:
  * http://www.codeproject.com/cpp/TTLFunction.asp
@@ -127,5 +129,7 @@ template<typename T, typename T1, typename T2>
 CallbackEvent2<T, T1, T2> *make_callback_event (void (T::*f) (T1, T2), T* t) {
 	return new CallbackEvent2<T, T1, T2>(t, f);
 }
+
+}; // namespace yans
 
 #endif /* CALLBACK_EVENT_TCC */

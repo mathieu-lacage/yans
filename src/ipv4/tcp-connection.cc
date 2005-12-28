@@ -21,5 +21,10 @@
 
 #include "tcp-connection.h"
 
+namespace yans {
+
 TcpConnection::~TcpConnection ()
 {}
+
+
+}; // namespace yans

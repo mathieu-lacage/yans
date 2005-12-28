@@ -21,6 +21,10 @@
 
 #include "event.h"
 
+namespace yans {
+
 Event::~Event ()
 {}
 
+
+}; // namespace yans

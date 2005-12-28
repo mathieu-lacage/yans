@@ -28,6 +28,8 @@
 #include "tag-ipv4.h"
 #include "host-tracer.h"
 
+namespace yans {
+
 UdpSource::UdpSource (Host *host)
 	: m_host (host),
 	  m_end_point (0)
@@ -80,3 +82,6 @@ UdpSource::send (Packet *packet)
 void 
 UdpSource::receive (Packet *packet)
 {}
+
+
+}; // namespace yans

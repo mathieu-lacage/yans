@@ -27,6 +27,8 @@
 #include "network-interface.h"
 #include "ipv4-address.h"
 
+namespace yans {
+
 class LoopbackInterface : public NetworkInterface {
 public:
 	LoopbackInterface ();
@@ -61,5 +63,6 @@ private:
 	bool m_down;
 };
 
+}; // namespace yans
 
 #endif /* LOOPBACK_INTERFACE_H */

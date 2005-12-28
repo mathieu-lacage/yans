@@ -22,6 +22,8 @@
 #include "chunk-mac-crc.h"
 #include "buffer.h"
 
+namespace yans {
+
 ChunkMacCrc::ChunkMacCrc ()
 	: m_pad_size (0)
 {}
@@ -67,3 +69,5 @@ ChunkMacCrc::print (std::ostream *os) const
 {
 	*os << "(mac) crc";
 }
+
+}; // namespace yans

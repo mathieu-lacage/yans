@@ -41,6 +41,7 @@ std::cout << "TCP SOURCE TRACE " << Simulator::now_s () << " " << x << std::endl
 # define TRACE(format,...)
 #endif /* TRACE_TCP_SOURCE */
 
+namespace yans {
 
 TcpSource::TcpSource (Host *host)
 	: m_host (host),
@@ -139,3 +140,6 @@ TcpSource::transmitted (void)
 void 
 TcpSource::got_ack (Packet *packet)
 {}
+
+
+}; // namespace yans

@@ -23,6 +23,8 @@
 #include "callback-test.h"
 #include <stdio.h>
 
+namespace yans {
+
 CallbackTest::CallbackTest (TestManager *manager)
 	: Test (manager),
 	  m_test1 (false),
@@ -36,15 +38,15 @@ CallbackTest::~CallbackTest ()
 bool 
 CallbackTest::run_tests (void)
 {
-	typedef Callback<void (void)> A;
-	typedef Callback<int (void)> B;
-	typedef Callback<void (double)> C;
-	typedef Callback<int (double, int)> D;
+	typedef yans::Callback<void (void)> A;
+	typedef yans::Callback<int (void)> B;
+	typedef yans::Callback<void (double)> C;
+	typedef yans::Callback<int (double, int)> D;
 	
-	A * a = make_callback (&CallbackTest::test1, this);
-	B * b = make_callback (&CallbackTest::test2, this);
-	C * c = make_callback (&CallbackTest::test3, this);
-	D * d = make_callback (&CallbackTest::test4, this);
+	A * a = yans::make_callback (&CallbackTest::test1, this);
+	B * b = yans::make_callback (&CallbackTest::test2, this);
+	C * c = yans::make_callback (&CallbackTest::test3, this);
+	D * d = yans::make_callback (&CallbackTest::test4, this);
 	
 	(*a) ();
 
@@ -91,5 +93,5 @@ CallbackTest::test4 (double a, int b)
 	return 4;
 }
 
-
+}; // namespace yans
 

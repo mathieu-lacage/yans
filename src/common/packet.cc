@@ -35,6 +35,8 @@ std::cout << "PACKET TRACE " << Simulator::now_s () << " " << x << std::endl;
 #endif /* TRACE_PACKET */
 
 
+namespace yans {
+
 Packet::Packet ()
 	: m_ref (this)
 {}
@@ -232,3 +234,5 @@ std::ostream& operator<< (std::ostream& os, Packet const& packet)
 	packet.print (&os);
 	return os;
 }
+
+}; // namespace yans

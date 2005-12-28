@@ -34,6 +34,8 @@ std::cout << "HEAP TRACE " << x << std::endl;
 # define TRACE(format,...)
 #endif /* TRACE_EVENT_HEAP */
 
+namespace yans {
+
 EventHeap::EventHeap ()
 {}
 EventHeap::~EventHeap ()
@@ -91,3 +93,5 @@ EventHeap::print_debug (void)
 	}
 	TRACE ("end");
 }
+
+}; // namespace yans

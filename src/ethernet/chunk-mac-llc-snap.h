@@ -26,6 +26,8 @@
 #include "mac-address.h"
 #include "ipv4-address.h"
 
+namespace yans {
+
 class ChunkMacLlcSnap : public Chunk {
  public:
 	ChunkMacLlcSnap ();
@@ -55,5 +57,7 @@ private:
 	uint16_t m_length;
 	uint16_t m_ether_type;
 };
+
+}; // namespace yans
 
 #endif /* CHUNK_MAC_LLC_SNAP_H */

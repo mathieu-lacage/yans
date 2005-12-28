@@ -29,6 +29,7 @@
 #include "callback-test.h"
 #include "tcp-pieces.h"
 
+namespace yans {
 
 #define ADD_TEST(klass, name) 	m_tests.push_back (std::make_pair (new klass (this), new std::string (name)));
 
@@ -97,5 +98,7 @@ Test::failure (void)
 {
 	return m_manager->failure ();
 }
+
+}; // namespace yans
 
 #endif /* RUN_SELF_TESTS */
