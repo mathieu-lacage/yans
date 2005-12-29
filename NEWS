@@ -1,3 +1,14 @@
+Release 0.3 (2005-12-29)
+-----------
+
+This release features:
+   - working ipv4 forwarding (lots of bugfixes)
+   - ipv4 fragmentation/defragmentation
+   - a port of the bsd 4.4 tcp stack.
+   - large number of cleanups to the API.
+   - a reworked libpcap dump support to deal with
+     tcp checksums.
+
 Release 0.2
 -----------
 

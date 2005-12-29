@@ -41,8 +41,6 @@ The current implementation features:
 
 The next features which require work are:
    - ipv4 routing
-   - ipv4 fragmentation/defragmentation
-   - tcp support
    - csma/cd support
    - port of our ns-2 802.11 code
 
