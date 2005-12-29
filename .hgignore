@@ -1,5 +1,6 @@
 .*\.o
 .*~$
+src/ipv4/tcp-bsd
 src/test/main-test
 src/samples/main-simple
 src/samples/main-router
