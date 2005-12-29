@@ -134,6 +134,7 @@ TcpBsdConnection::TcpBsdConnection ()
 
 	m_t_state = TCPS_LISTEN;
 	m_t_dupacks = 0;
+	m_ts_recent = 0;
 
 	canceltimers ();
 }
