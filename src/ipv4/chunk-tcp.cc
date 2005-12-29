@@ -316,7 +316,25 @@ ChunkTcp::serialize_init (Buffer *buffer) const
 	buffer->write_hton_u32 (m_ack_number);
 	uint8_t header_length = ((get_size () / 4) & 0x0f) << 4;
 	buffer->write_u8 (header_length);
-	uint8_t flags;
+	uint8_t flags = 0;
+	if (is_flag_urg ()) {
+		flags |= (1<<5);
+	}
+	if (is_flag_ack ()) {
+		flags |= (1<<4);
+	}
+	if (is_flag_psh ()) {
+		flags |= (1<<3);
+	}
+	if (is_flag_rst ()) {
+		flags |= (1<<2);
+	}
+	if (is_flag_syn ()) {
+		flags |= (1<<1);
+	}
+	if (is_flag_fin ()) {
+		flags |= (1<<0);
+	}
 	buffer->write_u8 (flags);
 	buffer->write_hton_u16 (m_window_size);
 	buffer->write_hton_u16 (0);
