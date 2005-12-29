@@ -35,11 +35,11 @@ SOURCE= \
 	host/host-tracer.cc \
 	host/network-interface-tracer.cc \
 	os-model/write-file.cc \
-	ipv4/tcp-end-points.cc \
 	ipv4/udp.cc \
 	ipv4/tcp.cc \
+	ipv4/ipv4-end-point.cc \
+	ipv4/ipv4-end-points.cc \
 	ipv4/tcp-pieces.cc \
-	ipv4/tcp-end-point.cc \
 	ipv4/tcp-connection.cc \
 	ipv4/tcp-connection-listener.cc \
 	ipv4/chunk-tcp.cc \

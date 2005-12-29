@@ -19,8 +19,8 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "tcp-end-points.h"
-#include "tcp-end-point.h"
+#include "ipv4-end-points.h"
+#include "ipv4-end-point.h"
 
 namespace yans {
 

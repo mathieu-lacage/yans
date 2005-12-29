@@ -20,7 +20,7 @@
  */
 
 #include "tcp-sink.h"
-#include "tcp-end-point.h"
+#include "ipv4-end-point.h"
 #include "tcp-connection.h"
 #include "tcp-connection-listener.h"
 #include "tcp.h"

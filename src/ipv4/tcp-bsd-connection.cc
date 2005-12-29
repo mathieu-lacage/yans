@@ -34,7 +34,7 @@
 
 #include "tcp-bsd-connection.h"
 #include "host.h"
-#include "tcp-end-point.h"
+#include "ipv4-end-point.h"
 #include "tag-ipv4.h"
 #include "packet.h"
 #include "chunk-tcp.h"

@@ -24,8 +24,8 @@
 #include "packet.h"
 #include "ipv4.h"
 #include "tag-ipv4.h"
-#include "tcp-end-point.h"
-#include "tcp-end-points.h"
+#include "ipv4-end-point.h"
+#include "ipv4-end-points.h"
 #include "host-tracer.h"
 #include "host.h"
 

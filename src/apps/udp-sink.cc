@@ -22,7 +22,7 @@
 #include "udp-sink.h"
 #include "udp.h"
 #include "host.h"
-#include "tcp-end-point.h"
+#include "ipv4-end-point.h"
 #include "packet.h"
 #include "host-tracer.h"
 #include "simulator.h"

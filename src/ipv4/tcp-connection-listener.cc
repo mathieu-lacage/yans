@@ -27,7 +27,7 @@
 #include "host.h"
 #include "ipv4-route.h"
 #include "tcp.h"
-#include "tcp-end-point.h"
+#include "ipv4-end-point.h"
 
 namespace yans {
 

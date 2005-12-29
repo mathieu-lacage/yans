@@ -25,10 +25,10 @@
 #include "packet.h"
 #include "chunk-tcp.h"
 #include "host.h"
-#include "tcp-end-point.h"
+#include "ipv4-end-point.h"
 #include "tcp-connection-listener.h"
 #include "event.tcc"
-#include "tcp-end-points.h"
+#include "ipv4-end-points.h"
 
 #ifdef TCP_USE_BSD
 #include "tcp-bsd-connection.h"

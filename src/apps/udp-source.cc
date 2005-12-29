@@ -22,7 +22,7 @@
 #include "udp-source.h"
 #include "event.h"
 #include "packet.h"
-#include "tcp-end-point.h"
+#include "ipv4-end-point.h"
 #include "host.h"
 #include "udp.h"
 #include "tag-ipv4.h"
