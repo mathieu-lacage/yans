@@ -22,9 +22,11 @@
 #include "udp-sink.h"
 #include "udp.h"
 #include "host.h"
-#include "ipv4-endpoint.h"
+#include "tcp-end-point.h"
 #include "packet.h"
 #include "host-tracer.h"
+#include "simulator.h"
+#include "event.tcc"
 
 #include <iostream>
 
@@ -41,7 +43,7 @@ UdpSink::~UdpSink ()
 	if (m_end_point != 0) {
 		delete m_end_point;
 	}
-	m_end_point = (Ipv4EndPoint *) 0xdeadbeaf;
+	m_end_point = (TcpEndPoint *) 0xdeadbeaf;
 	m_host = (Host *)0xdeadbeaf;
 	delete m_callback;
 }
@@ -58,13 +60,19 @@ bool
 UdpSink::bind (Ipv4Address address, uint16_t port)
 {
 	assert (m_end_point == 0);
-	Ipv4EndPoints *end_points = m_host->get_udp ()->get_end_points ();
-	m_end_point = end_points->allocate (address, port);
+	Udp *udp = m_host->get_udp ();
+	m_end_point = udp->allocate (address, port);
 	m_end_point->set_callback (make_callback (&UdpSink::receive, this));
 	if (m_end_point == 0) {
 		return false;
 	}
 	return true;
+}
+
+void
+UdpSink::unbind_at (double at)
+{
+	Simulator::insert_at_s (at, make_event (&UdpSink::unbind_now, this));
 }
 
 void
@@ -74,6 +82,13 @@ UdpSink::receive (Packet *packet)
 	if (m_callback != 0) {
 		(*m_callback) (packet);
 	}
+}
+
+void 
+UdpSink::unbind_now (void)
+{
+	delete m_end_point;
+	m_end_point = 0;
 }
 
 

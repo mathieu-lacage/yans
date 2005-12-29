@@ -360,6 +360,7 @@ ChunkTcp::serialize_init (Buffer *buffer) const
 		buffer->write_u8 (0);
 		padding--;
 	}
+	TRACE ("wrote until "<< buffer->get_current ());
 }
 
 void 

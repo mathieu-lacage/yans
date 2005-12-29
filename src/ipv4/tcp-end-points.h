@@ -19,45 +19,46 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#ifndef TCP_SOURCE_H
-#define TCP_SOURCE_H
+#ifndef TCP_END_POINTS_H
+#define TCP_END_POINTS_H
 
 #include <stdint.h>
+#include <list>
 #include "ipv4-address.h"
 
 namespace yans {
 
-class Host;
 class TcpEndPoint;
-class TcpConnection;
-class Packet;
 
-class TcpSource {
- public:
-	TcpSource (Host *host);
-	~TcpSource ();
+class TcpEndPoints {
+public:
+	TcpEndPoints ();
+	~TcpEndPoints ();
 
-	/* return true on success. */
-	bool bind (Ipv4Address address, uint16_t port);
-	void start_connect_at (Ipv4Address address, uint16_t port, double at);
-	void start_disconnect_at (double at);
-	void send (Packet *packet);
+	bool lookup_port_local (uint16_t port);
+	bool lookup_local (Ipv4Address addr, uint16_t port);
+	TcpEndPoint *lookup (Ipv4Address daddr, 
+			     uint16_t dport, 
+			     Ipv4Address saddr, 
+			     uint16_t sport);
+
+	TcpEndPoint *allocate (void);
+	TcpEndPoint *allocate (Ipv4Address address);
+	TcpEndPoint *allocate (Ipv4Address address, uint16_t port);
+	TcpEndPoint *allocate (Ipv4Address local_address, uint16_t local_port,
+			       Ipv4Address peer_address, uint16_t peer_port);
+
  private:
-	bool should_accept (Ipv4Address from, uint16_t from_port);
-	void connect_completed (void);
-	void disconnect_requested (void);
-	void disconnect_completed (void);
-	void receive (void);
-	void transmitted (void);
-	void got_ack (Packet *packet);
-	void start_connect_now (Ipv4Address address, uint16_t port);
-	void start_disconnect_now (void);
+	uint16_t allocate_ephemeral_port (void);
+	void destroy_end_point (TcpEndPoint *end_point);
+	typedef std::list<TcpEndPoint *> EndPoints;
+	typedef std::list<TcpEndPoint *>::iterator EndPointsI;
 
-	Host *m_host;
-	TcpEndPoint *m_end_point;
-	TcpConnection *m_connection;
+	uint16_t m_ephemeral;
+	EndPoints m_end_points;
 };
 
 }; // namespace yans
 
-#endif /* TCP_SOURCE */
+
+#endif /* TCP_END_POINTS_H */

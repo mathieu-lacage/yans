@@ -75,9 +75,11 @@ int main (int argc, char *argv[])
 	UdpSource *source = new UdpSource (hclient);
 	source->bind (Ipv4Address ("192.168.0.3"), 1025);
 	source->set_peer (Ipv4Address ("192.168.0.2"), 1026);
+	source->unbind_at (11.0);
 	/* create udp sink endpoint. */
 	UdpSink *sink = new UdpSink (hserver);
 	sink->bind (Ipv4Address ("192.168.0.2"), 1026);
+	sink->unbind_at (11.0);
 
 
 	PeriodicGenerator *generator = new PeriodicGenerator ();

@@ -30,7 +30,7 @@ namespace yans {
 
 class Host;
 class Packet;
-class Ipv4EndPoint;
+class TcpEndPoint;
 
 
 class UdpSink {
@@ -43,10 +43,12 @@ public:
 	void set_receive_callback (UdpSinkCallback *callback);
 
 	bool bind (Ipv4Address address, uint16_t port);
+	void unbind_at (double at);
 private:
 	void receive (Packet *packet);
+	void unbind_now (void);
 	Host *m_host;
-	Ipv4EndPoint *m_end_point;
+	TcpEndPoint *m_end_point;
 	UdpSinkCallback *m_callback;
 };
 

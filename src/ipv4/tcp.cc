@@ -26,9 +26,13 @@
 #include "chunk-tcp.h"
 #include "host.h"
 #include "tcp-end-point.h"
-#include "tcp-bsd-connection.h"
 #include "tcp-connection-listener.h"
 #include "event.tcc"
+#include "tcp-end-points.h"
+
+#ifdef TCP_USE_BSD
+#include "tcp-bsd-connection.h"
+#endif /* TCP_USE_BSD */
 
 #define TRACE_TCP 1
 
@@ -56,11 +60,13 @@ Tcp::Tcp ()
 	m_running = false;
 	m_tcp_now = 0;
 	m_tcp_iss = 0;
+	m_end_p = new TcpEndPoints ();
 }
 Tcp::~Tcp ()
 {
 	delete m_slow_timer;
 	delete m_fast_timer;
+	delete m_end_p;
 }
 
 void 
@@ -76,101 +82,29 @@ Tcp::set_ipv4 (Ipv4 *ipv4)
 					     TCP_PROTOCOL);
 }
 
-bool
-Tcp::lookup_port_local (uint16_t port)
-{
-	for (TcpEndPointsI i = m_end_p.begin (); i != m_end_p.end (); i++) {
-		if ((*i)->get_local_port  () == port) {
-			return true;
-		}
-	}
-	return false;
-}
-
-bool
-Tcp::lookup_local (Ipv4Address addr, uint16_t port)
-{
-	for (TcpEndPointsI i = m_end_p.begin (); i != m_end_p.end (); i++) {
-		if ((*i)->get_local_port () == port &&
-		    (*i)->get_local_address () == addr) {
-			return true;
-		}
-	}
-	return false;
-}
-
-uint16_t
-Tcp::allocate_ephemeral_port (void)
-{
-	uint16_t port = m_ephemeral;
-	do {
-		port++;
-		if (port > 5000) {
-			port = 1024;
-		}
-		if (!lookup_port_local (port)) {
-			return port;
-			
-		}
-	} while (port != m_ephemeral);
-	return 0;
-}
-
 TcpEndPoint *
 Tcp::allocate (void)
 {
-	uint16_t port = allocate_ephemeral_port ();
-	if (port == 0) {
-		return 0;
-	}
-	TcpEndPoint *end_point = new TcpEndPoint (Ipv4Address::get_any (), port);
-	end_point->set_destroy_callback (make_callback_event (&Tcp::destroy_end_point, this));
-	m_end_p.push_back (end_point);
-	return end_point;
+	return m_end_p->allocate ();
 }
 TcpEndPoint *
 Tcp::allocate (Ipv4Address address)
 {
-	uint16_t port = allocate_ephemeral_port ();
-	if (port == 0) {
-		return 0;
-	}
-	TcpEndPoint *end_point = new TcpEndPoint (address, port);
-	end_point->set_destroy_callback (make_callback_event (&Tcp::destroy_end_point, this));
-	m_end_p.push_back (end_point);
-	return end_point;
+	return m_end_p->allocate (address);
 }
 TcpEndPoint *
 Tcp::allocate (Ipv4Address address, uint16_t port)
 {
-	if (lookup_local (address, port)) {
-		return 0;
-	}
-	TcpEndPoint *end_point = new TcpEndPoint (address, port);
-	end_point->set_destroy_callback (make_callback_event (&Tcp::destroy_end_point, this));
-	m_end_p.push_back (end_point);
-	return end_point;
+	return m_end_p->allocate (address, port);
 }
-
 TcpEndPoint *
 Tcp::allocate (Ipv4Address local_address, uint16_t local_port,
 	       Ipv4Address peer_address, uint16_t peer_port)
 {
-	for (TcpEndPointsI i = m_end_p.begin (); i != m_end_p.end (); i++) {
-		if ((*i)->get_local_port () == local_port &&
-		    (*i)->get_local_address () == local_address &&
-		    (*i)->get_peer_port () == peer_port &&
-		    (*i)->get_peer_address () == peer_address) {
-			/* no way we can allocate this end-point. */
-			return 0;
-		}
-	}
-	TcpEndPoint *end_point = new TcpEndPoint (local_address, local_port);
-	end_point->set_peer (peer_address, peer_port);
-	end_point->set_destroy_callback (make_callback_event (&Tcp::destroy_end_point, this));
-	m_end_p.push_back (end_point);
-	return end_point;
+	return m_end_p->allocate (local_address, local_port,
+				  peer_address, peer_port);
 }
+
 
 
 void
@@ -212,52 +146,6 @@ Tcp::send_reset (Packet *packet)
 	delete in_tag;
 }
 
-/*
- * If we have an exact match, we return it.
- * Otherwise, if we find a generic match, we return it.
- * Otherwise, we return 0.
- */
-TcpEndPoint *
-Tcp::lookup (Ipv4Address daddr, uint16_t dport, Ipv4Address saddr, uint16_t sport)
-{
-	uint32_t genericity = 3;
-	TcpEndPoint *generic = 0;
-	//TRACE ("lookup " << daddr << ":" << dport << " " << saddr << ":" << sport);
-	for (TcpEndPointsI i = m_end_p.begin (); i != m_end_p.end (); i++) {
-#if 0
-		TRACE ("against " << 
-		       (*i)->get_local_address ()
-		       << ":" << 
-		       (*i)->get_local_port () 
-		       << " " << 
-		       (*i)->get_peer_address () 
-		       << ":" 
-		       << (*i)->get_peer_port ());
-#endif
-		if ((*i)->get_local_port () != dport) {
-			continue;
-		}
-		if ((*i)->get_local_address () == daddr &&
-		    (*i)->get_peer_port () == sport &&
-		    (*i)->get_peer_address () == saddr) {
-			/* this is an exact match. */
-			return *i;
-		}
-		uint32_t tmp = 0;
-		if ((*i)->get_local_address () == Ipv4Address::get_any ()) {
-			tmp ++;
-		}
-		if ((*i)->get_peer_address () == Ipv4Address::get_any ()) {
-			tmp ++;
-		}
-		if (tmp < genericity) {
-			generic = (*i);
-			genericity = tmp;
-		}
-	}
-	return generic;
-}
-
 
 
 void
@@ -268,8 +156,8 @@ Tcp::receive (Packet *packet)
 	ChunkTcp *tcp_chunk = static_cast <ChunkTcp *> (packet->peek_header ());
 	tag->set_dport (tcp_chunk->get_destination_port ());
 	tag->set_sport (tcp_chunk->get_source_port ());
-	TcpEndPoint *end_p = lookup (tag->get_daddress (), tag->get_dport (), 
-				     tag->get_saddress (), tag->get_sport ());
+	TcpEndPoint *end_p = m_end_p->lookup (tag->get_daddress (), tag->get_dport (), 
+					      tag->get_saddress (), tag->get_sport ());
 	if (end_p == 0) {
 		if (tcp_chunk->is_flag_syn () &&
 		    !tcp_chunk->is_flag_ack ()) {
@@ -386,17 +274,5 @@ Tcp::destroy_connection (TcpConnection *connection)
 		}
 	}
 }
-
-void 
-Tcp::destroy_end_point (TcpEndPoint *end_point)
-{
-	for (TcpEndPointsI i = m_end_p.begin (); i != m_end_p.end (); i++) {
-		if ((*i) == end_point) {
-			m_end_p.erase (i);
-			return;
-		}
-	}
-}
-
 
 }; // namespace yans

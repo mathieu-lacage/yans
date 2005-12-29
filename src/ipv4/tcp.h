@@ -33,6 +33,7 @@ class Ipv4;
 class Host;
 class Packet;
 class TcpEndPoint;
+class TcpEndPoints;
 class TcpConnectionListener;
 class TcpConnection;
 class Event;
@@ -73,29 +74,18 @@ private:
 	static const uint64_t FAST_TIMER_DELAY_US;
 	static const uint64_t SLOW_TIMER_DELAY_US;
 
-	typedef std::list<TcpEndPoint *> TcpEndPoints;
-	typedef std::list<TcpEndPoint *>::iterator TcpEndPointsI;
 	typedef std::list<TcpConnection *> Connections;
 	typedef std::list<TcpConnection *>::iterator ConnectionsI;
 
 	void slow_timer (void);
 	void fast_timer (void);
-	bool lookup_port_local (uint16_t port);
-	bool lookup_local (Ipv4Address addr, uint16_t port);
-	uint16_t allocate_ephemeral_port (void);
-	TcpEndPoint *lookup (Ipv4Address daddr, 
-			     uint16_t dport, 
-			     Ipv4Address saddr, 
-			     uint16_t sport);
 	void receive (Packet *packet);
 	void send_reset (Packet *packet);
-	void destroy_end_point (TcpEndPoint *end_point);
 	void destroy_connection (TcpConnection *listener);
 
 	Host *m_host;
 	Ipv4 *m_ipv4;
-	TcpEndPoints m_end_p;
-	uint16_t m_ephemeral;
+	TcpEndPoints *m_end_p;
 	Connections m_connections;
 	Event *m_slow_timer;
 	Event *m_fast_timer;
