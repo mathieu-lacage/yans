@@ -56,7 +56,7 @@ TcpSink::~TcpSink ()
 		delete m_end_point;
 		m_end_point = 0;
 	}
-	m_end_point = (TcpEndPoint *) 0xdeadbeaf;
+	m_end_point = (Ipv4EndPoint *) 0xdeadbeaf;
 	m_host = (Host *)0xdeadbeaf;
 	delete m_callback;
 	m_callback = (TcpSinkCallback *)0xdeadbeaf;
@@ -135,7 +135,7 @@ TcpSink::should_accept (Ipv4Address address, uint16_t port)
 }
 
 void
-TcpSink::connection_created (TcpConnection *connection, TcpEndPoint *end_point)
+TcpSink::connection_created (TcpConnection *connection, Ipv4EndPoint *end_point)
 {
 	TRACE ("connection created");
 	m_connection = connection;

@@ -48,7 +48,7 @@ TcpConnectionListener::receive (Packet *packet)
 	if (tcp_chunk->is_flag_syn () &&
 	    !tcp_chunk->is_flag_ack ()) {
 		if ((*m_acception) (tag->get_saddress (), tag->get_sport ())) {
-			TcpEndPoint *end_point = m_tcp->allocate (m_end_point->get_local_address (),
+			Ipv4EndPoint *end_point = m_tcp->allocate (m_end_point->get_local_address (),
 								  m_end_point->get_local_port (), 
 								  tag->get_saddress (), 
 								  tag->get_sport ());
@@ -103,7 +103,7 @@ TcpConnectionListener::set_tcp (Tcp *tcp)
 	m_tcp = tcp;
 }
 void 
-TcpConnectionListener::set_end_point (TcpEndPoint *end_point)
+TcpConnectionListener::set_end_point (Ipv4EndPoint *end_point)
 {
 	m_end_point = end_point;
 	end_point->set_callback (make_callback (&TcpConnectionListener::receive, this));

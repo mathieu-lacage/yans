@@ -19,8 +19,8 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#ifndef TCP_END_POINT_H
-#define TCP_END_POINT_H
+#ifndef IPV4_END_POINT_H
+#define IPV4_END_POINT_H
 
 #include "callback.tcc"
 #include "callback-event.tcc"
@@ -31,13 +31,13 @@ namespace yans {
 
 class Packet;
 
-class TcpEndPoint {
+class Ipv4EndPoint {
 public:
-	typedef Callback<void (Packet *)> TcpEndPointReceptionCallback;
-	typedef CallbackEvent<void (TcpEndPoint *)> TcpEndPointDestroyCallback;
+	typedef Callback<void (Packet *)> Ipv4EndPointReceptionCallback;
+	typedef CallbackEvent<void (Ipv4EndPoint *)> Ipv4EndPointDestroyCallback;
 
-	TcpEndPoint (Ipv4Address address, uint16_t port);
-	~TcpEndPoint ();
+	Ipv4EndPoint (Ipv4Address address, uint16_t port);
+	~Ipv4EndPoint ();
 
 	Ipv4Address get_local_address (void);
 	uint16_t get_local_port (void);
@@ -47,18 +47,18 @@ public:
 	void set_peer (Ipv4Address address, uint16_t port);
 
 	void receive (Packet *packet);
-	void set_callback (TcpEndPointReceptionCallback *reception);
-	void set_destroy_callback (TcpEndPointDestroyCallback *destroy);
+	void set_callback (Ipv4EndPointReceptionCallback *reception);
+	void set_destroy_callback (Ipv4EndPointDestroyCallback *destroy);
 private:
 	Ipv4Address m_local_addr;
 	uint16_t m_local_port;
 	Ipv4Address m_peer_addr;
 	uint16_t m_peer_port;
-	TcpEndPointReceptionCallback *m_reception;
-	TcpEndPointDestroyCallback *m_destroy;
+	Ipv4EndPointReceptionCallback *m_reception;
+	Ipv4EndPointDestroyCallback *m_destroy;
 };
 
 }; // namespace yans
 
 
-#endif /* TCP_END_POINT_H */
+#endif /* IPV4_END_POINT_H */

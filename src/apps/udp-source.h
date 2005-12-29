@@ -28,7 +28,7 @@
 namespace yans {
 
 class Host;
-class TcpEndPoint;
+class Ipv4EndPoint;
 class Packet;
 
 class UdpSource  {
@@ -47,7 +47,7 @@ private:
 	void receive (Packet *packet);
 	void unbind_now (void);
 	Host *m_host;
-	TcpEndPoint *m_end_point;
+	Ipv4EndPoint *m_end_point;
 	Ipv4Address m_peer_address;
 	uint16_t m_peer_port;
 };

@@ -60,7 +60,7 @@ Tcp::Tcp ()
 	m_running = false;
 	m_tcp_now = 0;
 	m_tcp_iss = 0;
-	m_end_p = new TcpEndPoints ();
+	m_end_p = new Ipv4EndPoints ();
 }
 Tcp::~Tcp ()
 {
@@ -82,22 +82,22 @@ Tcp::set_ipv4 (Ipv4 *ipv4)
 					     TCP_PROTOCOL);
 }
 
-TcpEndPoint *
+Ipv4EndPoint *
 Tcp::allocate (void)
 {
 	return m_end_p->allocate ();
 }
-TcpEndPoint *
+Ipv4EndPoint *
 Tcp::allocate (Ipv4Address address)
 {
 	return m_end_p->allocate (address);
 }
-TcpEndPoint *
+Ipv4EndPoint *
 Tcp::allocate (Ipv4Address address, uint16_t port)
 {
 	return m_end_p->allocate (address, port);
 }
-TcpEndPoint *
+Ipv4EndPoint *
 Tcp::allocate (Ipv4Address local_address, uint16_t local_port,
 	       Ipv4Address peer_address, uint16_t peer_port)
 {
@@ -156,7 +156,7 @@ Tcp::receive (Packet *packet)
 	ChunkTcp *tcp_chunk = static_cast <ChunkTcp *> (packet->peek_header ());
 	tag->set_dport (tcp_chunk->get_destination_port ());
 	tag->set_sport (tcp_chunk->get_source_port ());
-	TcpEndPoint *end_p = m_end_p->lookup (tag->get_daddress (), tag->get_dport (), 
+	Ipv4EndPoint *end_p = m_end_p->lookup (tag->get_daddress (), tag->get_dport (), 
 					      tag->get_saddress (), tag->get_sport ());
 	if (end_p == 0) {
 		if (tcp_chunk->is_flag_syn () &&
@@ -173,7 +173,7 @@ Tcp::receive (Packet *packet)
 }
 
 TcpConnection *
-Tcp::create_connection (TcpEndPoint *end_p)
+Tcp::create_connection (Ipv4EndPoint *end_p)
 {
 #ifdef TCP_USE_BSD
 	TcpBsdConnection *connection = new TcpBsdConnection ();
@@ -195,7 +195,7 @@ Tcp::create_connection (TcpEndPoint *end_p)
 	return connection;
 }
 TcpConnectionListener *
-Tcp::create_connection_listener (TcpEndPoint *end_p)
+Tcp::create_connection_listener (Ipv4EndPoint *end_p)
 {
 	TcpConnectionListener *connection = new TcpConnectionListener ();
 	connection->set_host (m_host);

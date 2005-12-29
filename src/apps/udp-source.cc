@@ -41,7 +41,7 @@ UdpSource::~UdpSource ()
 	if (m_end_point != 0) {
 		delete m_end_point;
 	}
-	m_end_point = (TcpEndPoint *) 0xdeadbeaf;
+	m_end_point = (Ipv4EndPoint *) 0xdeadbeaf;
 	m_host = (Host *)0xdeadbeaf;
 }
 

@@ -29,8 +29,8 @@
 namespace yans {
 
 class Ipv4;
-class TcpEndPoints;
-class TcpEndPoint;
+class Ipv4EndPoints;
+class Ipv4EndPoint;
 class Host;
 class Packet;
 
@@ -42,10 +42,10 @@ public:
 	void set_host (Host *host);
 	void set_ipv4 (Ipv4 *ipv4);
 
-	TcpEndPoint *allocate (void);
-	TcpEndPoint *allocate (Ipv4Address address);
-	TcpEndPoint *allocate (Ipv4Address address, uint16_t port);
-	TcpEndPoint *allocate (Ipv4Address local_address, uint16_t local_port,
+	Ipv4EndPoint *allocate (void);
+	Ipv4EndPoint *allocate (Ipv4Address address);
+	Ipv4EndPoint *allocate (Ipv4Address address, uint16_t port);
+	Ipv4EndPoint *allocate (Ipv4Address local_address, uint16_t local_port,
 			       Ipv4Address peer_address, uint16_t peer_port);
 
 	void send (Packet *packet);
@@ -55,7 +55,7 @@ public:
 	static const uint8_t UDP_PROTOCOL;
 	Ipv4 *m_ipv4;
 	Host *m_host;
-	TcpEndPoints *m_end_points;
+	Ipv4EndPoints *m_end_points;
 };
 
 }; // namespace yans

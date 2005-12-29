@@ -181,7 +181,7 @@ TcpBsdConnection::set_host (Host *host)
         m_t_flags = m_host->get_tcp ()->is_rfc1323 () ? (TF_REQ_SCALE|TF_REQ_TSTMP) : 0;
 }
 void 
-TcpBsdConnection::set_end_point (TcpEndPoint *end_point)
+TcpBsdConnection::set_end_point (Ipv4EndPoint *end_point)
 {
 	m_end_point = end_point;
 	m_end_point->set_callback (make_callback (&TcpBsdConnection::input, this));

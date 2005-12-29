@@ -36,7 +36,7 @@ const uint8_t Udp::UDP_PROTOCOL = 17;
 
 Udp::Udp ()
 {
-	m_end_points = new TcpEndPoints ();
+	m_end_points = new Ipv4EndPoints ();
 }
 
 Udp::~Udp ()
@@ -57,22 +57,22 @@ Udp::set_ipv4 (Ipv4 *ipv4)
 					     UDP_PROTOCOL);
 }
 
-TcpEndPoint *
+Ipv4EndPoint *
 Udp::allocate (void)
 {
 	return m_end_points->allocate ();
 }
-TcpEndPoint *
+Ipv4EndPoint *
 Udp::allocate (Ipv4Address address)
 {
 	return m_end_points->allocate (address);
 }
-TcpEndPoint *
+Ipv4EndPoint *
 Udp::allocate (Ipv4Address address, uint16_t port)
 {
 	return m_end_points->allocate (address, port);
 }
-TcpEndPoint *
+Ipv4EndPoint *
 Udp::allocate (Ipv4Address local_address, uint16_t local_port,
 	       Ipv4Address peer_address, uint16_t peer_port)
 {
@@ -91,8 +91,8 @@ Udp::receive (Packet *packet)
 	ChunkUdp *udp_chunk = static_cast <ChunkUdp *> (packet->remove_header ());
 	tag->set_dport (udp_chunk->get_destination ());
 	tag->set_sport (udp_chunk->get_source ());
-	TcpEndPoint *end_point = m_end_points->lookup (tag->get_daddress (), tag->get_dport (),
-						       tag->get_saddress (), tag->get_sport ());
+	Ipv4EndPoint *end_point = m_end_points->lookup (tag->get_daddress (), tag->get_dport (),
+							tag->get_saddress (), tag->get_sport ());
 	delete udp_chunk;
 	if (end_point == 0) {
 		return;

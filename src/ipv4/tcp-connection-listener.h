@@ -32,13 +32,13 @@ class Packet;
 class Host;
 class Ipv4;
 class Tcp;
-class TcpEndPoint;
+class Ipv4EndPoint;
 class TcpConnection;
 
 class TcpConnectionListener {
 public:
 	typedef Callback<bool (Ipv4Address, uint16_t)> ConnectionAcception;
-	typedef Callback<void (TcpConnection *, TcpEndPoint *)> ConnectionCreated;
+	typedef Callback<void (TcpConnection *, Ipv4EndPoint *)> ConnectionCreated;
 	typedef Callback<void (TcpConnectionListener *)> TcpConnectionListenerDestroy;
 
 	TcpConnectionListener ();
@@ -47,7 +47,7 @@ public:
 	void set_host (Host *host);
 	void set_ipv4 (Ipv4 *ipv4);
 	void set_tcp (Tcp *tcp);
-	void set_end_point (TcpEndPoint *end_point);
+	void set_end_point (Ipv4EndPoint *end_point);
 
 	void receive (Packet *packet);
 
@@ -59,7 +59,7 @@ private:
 	Host *m_host;
 	Ipv4 *m_ipv4;
 	Tcp *m_tcp;
-	TcpEndPoint *m_end_point;
+	Ipv4EndPoint *m_end_point;
 };
 
 }; // namespace yans

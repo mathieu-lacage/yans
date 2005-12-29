@@ -32,8 +32,8 @@ namespace yans {
 class Ipv4;
 class Host;
 class Packet;
-class TcpEndPoint;
-class TcpEndPoints;
+class Ipv4EndPoint;
+class Ipv4EndPoints;
 class TcpConnectionListener;
 class TcpConnection;
 class Event;
@@ -54,14 +54,14 @@ class Tcp {
 	void set_host (Host *host);
 	void set_ipv4 (Ipv4 *ipv4);
 
-	TcpEndPoint *allocate (void);
-	TcpEndPoint *allocate (Ipv4Address address);
-	TcpEndPoint *allocate (Ipv4Address address, uint16_t port);
-	TcpEndPoint *allocate (Ipv4Address local_address, uint16_t local_port,
+	Ipv4EndPoint *allocate (void);
+	Ipv4EndPoint *allocate (Ipv4Address address);
+	Ipv4EndPoint *allocate (Ipv4Address address, uint16_t port);
+	Ipv4EndPoint *allocate (Ipv4Address local_address, uint16_t local_port,
 			       Ipv4Address peer_address, uint16_t peer_port);
 
-	TcpConnection *create_connection (TcpEndPoint *end_p);
-	TcpConnectionListener *create_connection_listener (TcpEndPoint *end_p);
+	TcpConnection *create_connection (Ipv4EndPoint *end_p);
+	TcpConnectionListener *create_connection_listener (Ipv4EndPoint *end_p);
 
 
 	// XXX
@@ -85,7 +85,7 @@ private:
 
 	Host *m_host;
 	Ipv4 *m_ipv4;
-	TcpEndPoints *m_end_p;
+	Ipv4EndPoints *m_end_p;
 	Connections m_connections;
 	Event *m_slow_timer;
 	Event *m_fast_timer;

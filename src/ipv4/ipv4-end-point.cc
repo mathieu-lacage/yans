@@ -23,7 +23,7 @@
 
 namespace yans {
 
-TcpEndPoint::TcpEndPoint (Ipv4Address address, uint16_t port)
+Ipv4EndPoint::Ipv4EndPoint (Ipv4Address address, uint16_t port)
 	: m_local_addr (address), 
 	  m_local_port (port),
 	  m_peer_addr (Ipv4Address::get_any ()),
@@ -31,7 +31,7 @@ TcpEndPoint::TcpEndPoint (Ipv4Address address, uint16_t port)
 	  m_reception (0),
 	  m_destroy (0)
 {}
-TcpEndPoint::~TcpEndPoint ()
+Ipv4EndPoint::~Ipv4EndPoint ()
 {
 	m_destroy->invoke_later (this);
 	delete m_destroy;
@@ -41,45 +41,45 @@ TcpEndPoint::~TcpEndPoint ()
 }
 
 Ipv4Address 
-TcpEndPoint::get_local_address (void)
+Ipv4EndPoint::get_local_address (void)
 {
 	return m_local_addr;
 }
 uint16_t 
-TcpEndPoint::get_local_port (void)
+Ipv4EndPoint::get_local_port (void)
 {
 	return m_local_port;
 }
 Ipv4Address 
-TcpEndPoint::get_peer_address (void)
+Ipv4EndPoint::get_peer_address (void)
 {
 	return m_peer_addr;
 }
 uint16_t 
-TcpEndPoint::get_peer_port (void)
+Ipv4EndPoint::get_peer_port (void)
 {
 	return m_peer_port;
 }
 void 
-TcpEndPoint::set_peer (Ipv4Address address, uint16_t port)
+Ipv4EndPoint::set_peer (Ipv4Address address, uint16_t port)
 {
 	m_peer_addr = address;
 	m_peer_port = port;
 }
 
 void 
-TcpEndPoint::receive (Packet *packet)
+Ipv4EndPoint::receive (Packet *packet)
 {
 	(*m_reception) (packet);
 }
 void 
-TcpEndPoint::set_callback (TcpEndPointReceptionCallback *reception)
+Ipv4EndPoint::set_callback (Ipv4EndPointReceptionCallback *reception)
 {
 	m_reception = reception;
 }
 
 void 
-TcpEndPoint::set_destroy_callback (TcpEndPointDestroyCallback *destroy)
+Ipv4EndPoint::set_destroy_callback (Ipv4EndPointDestroyCallback *destroy)
 {
 	m_destroy = destroy;
 }

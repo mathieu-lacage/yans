@@ -46,7 +46,7 @@ namespace yans {
 class Packet;
 class Ipv4;
 class Host;
-class TcpEndPoint;
+class Ipv4EndPoint;
 class Route;
 class TcpPieces;
 class ChunkTcp;
@@ -60,7 +60,7 @@ public:
 
 	virtual void set_ipv4 (Ipv4 *ipv4);
 	virtual void set_host (Host *host);
-	virtual void set_end_point (TcpEndPoint *end_point);
+	virtual void set_end_point (Ipv4EndPoint *end_point);
 	virtual void set_route (Route *route);
 	virtual void set_destroy_handler (TcpConnectionDestroy *handler);
 
@@ -108,7 +108,7 @@ private:
 	void setpersist (void);
 	int reass(ChunkTcp *tcp, ChunkPiece *piece);
 
-	TcpEndPoint *m_end_point;
+	Ipv4EndPoint *m_end_point;
 	Route *m_route;
 	ConnectCompletedCallback *m_connect_completed;
 	DisConnectCompletedCallback *m_disconnect_completed;

@@ -19,8 +19,8 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#ifndef TCP_END_POINTS_H
-#define TCP_END_POINTS_H
+#ifndef IPV4_END_POINTS_H
+#define IPV4_END_POINTS_H
 
 #include <stdint.h>
 #include <list>
@@ -28,31 +28,31 @@
 
 namespace yans {
 
-class TcpEndPoint;
+class Ipv4EndPoint;
 
-class TcpEndPoints {
+class Ipv4EndPoints {
 public:
-	TcpEndPoints ();
-	~TcpEndPoints ();
+	Ipv4EndPoints ();
+	~Ipv4EndPoints ();
 
 	bool lookup_port_local (uint16_t port);
 	bool lookup_local (Ipv4Address addr, uint16_t port);
-	TcpEndPoint *lookup (Ipv4Address daddr, 
-			     uint16_t dport, 
-			     Ipv4Address saddr, 
-			     uint16_t sport);
+	Ipv4EndPoint *lookup (Ipv4Address daddr, 
+			      uint16_t dport, 
+			      Ipv4Address saddr, 
+			      uint16_t sport);
 
-	TcpEndPoint *allocate (void);
-	TcpEndPoint *allocate (Ipv4Address address);
-	TcpEndPoint *allocate (Ipv4Address address, uint16_t port);
-	TcpEndPoint *allocate (Ipv4Address local_address, uint16_t local_port,
-			       Ipv4Address peer_address, uint16_t peer_port);
+	Ipv4EndPoint *allocate (void);
+	Ipv4EndPoint *allocate (Ipv4Address address);
+	Ipv4EndPoint *allocate (Ipv4Address address, uint16_t port);
+	Ipv4EndPoint *allocate (Ipv4Address local_address, uint16_t local_port,
+				Ipv4Address peer_address, uint16_t peer_port);
 
  private:
 	uint16_t allocate_ephemeral_port (void);
-	void destroy_end_point (TcpEndPoint *end_point);
-	typedef std::list<TcpEndPoint *> EndPoints;
-	typedef std::list<TcpEndPoint *>::iterator EndPointsI;
+	void destroy_end_point (Ipv4EndPoint *end_point);
+	typedef std::list<Ipv4EndPoint *> EndPoints;
+	typedef std::list<Ipv4EndPoint *>::iterator EndPointsI;
 
 	uint16_t m_ephemeral;
 	EndPoints m_end_points;
@@ -61,4 +61,4 @@ public:
 }; // namespace yans
 
 
-#endif /* TCP_END_POINTS_H */
+#endif /* IPV4_END_POINTS_H */

@@ -28,7 +28,7 @@
 namespace yans {
 
 class Host;
-class TcpEndPoint;
+class Ipv4EndPoint;
 class TcpConnection;
 class Packet;
 
@@ -54,7 +54,7 @@ class TcpSource {
 	void start_disconnect_now (void);
 
 	Host *m_host;
-	TcpEndPoint *m_end_point;
+	Ipv4EndPoint *m_end_point;
 	TcpConnection *m_connection;
 };
 

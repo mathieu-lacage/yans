@@ -24,15 +24,15 @@
 
 namespace yans {
 
-TcpEndPoints::TcpEndPoints ()
+Ipv4EndPoints::Ipv4EndPoints ()
   : m_ephemeral (1025)
 {}
 
-TcpEndPoints::~TcpEndPoints ()
+Ipv4EndPoints::~Ipv4EndPoints ()
 {}
 
 bool
-TcpEndPoints::lookup_port_local (uint16_t port)
+Ipv4EndPoints::lookup_port_local (uint16_t port)
 {
 	for (EndPointsI i = m_end_points.begin (); i != m_end_points.end (); i++) {
 		if ((*i)->get_local_port  () == port) {
@@ -43,7 +43,7 @@ TcpEndPoints::lookup_port_local (uint16_t port)
 }
 
 bool
-TcpEndPoints::lookup_local (Ipv4Address addr, uint16_t port)
+Ipv4EndPoints::lookup_local (Ipv4Address addr, uint16_t port)
 {
 	for (EndPointsI i = m_end_points.begin (); i != m_end_points.end (); i++) {
 		if ((*i)->get_local_port () == port &&
@@ -54,44 +54,44 @@ TcpEndPoints::lookup_local (Ipv4Address addr, uint16_t port)
 	return false;
 }
 
-TcpEndPoint *
-TcpEndPoints::allocate (void)
+Ipv4EndPoint *
+Ipv4EndPoints::allocate (void)
 {
 	uint16_t port = allocate_ephemeral_port ();
 	if (port == 0) {
 		return 0;
 	}
-	TcpEndPoint *end_point = new TcpEndPoint (Ipv4Address::get_any (), port);
-	end_point->set_destroy_callback (make_callback_event (&TcpEndPoints::destroy_end_point, this));
+	Ipv4EndPoint *end_point = new Ipv4EndPoint (Ipv4Address::get_any (), port);
+	end_point->set_destroy_callback (make_callback_event (&Ipv4EndPoints::destroy_end_point, this));
 	m_end_points.push_back (end_point);
 	return end_point;
 }
-TcpEndPoint *
-TcpEndPoints::allocate (Ipv4Address address)
+Ipv4EndPoint *
+Ipv4EndPoints::allocate (Ipv4Address address)
 {
 	uint16_t port = allocate_ephemeral_port ();
 	if (port == 0) {
 		return 0;
 	}
-	TcpEndPoint *end_point = new TcpEndPoint (address, port);
-	end_point->set_destroy_callback (make_callback_event (&TcpEndPoints::destroy_end_point, this));
+	Ipv4EndPoint *end_point = new Ipv4EndPoint (address, port);
+	end_point->set_destroy_callback (make_callback_event (&Ipv4EndPoints::destroy_end_point, this));
 	m_end_points.push_back (end_point);
 	return end_point;
 }
-TcpEndPoint *
-TcpEndPoints::allocate (Ipv4Address address, uint16_t port)
+Ipv4EndPoint *
+Ipv4EndPoints::allocate (Ipv4Address address, uint16_t port)
 {
 	if (lookup_local (address, port)) {
 		return 0;
 	}
-	TcpEndPoint *end_point = new TcpEndPoint (address, port);
-	end_point->set_destroy_callback (make_callback_event (&TcpEndPoints::destroy_end_point, this));
+	Ipv4EndPoint *end_point = new Ipv4EndPoint (address, port);
+	end_point->set_destroy_callback (make_callback_event (&Ipv4EndPoints::destroy_end_point, this));
 	m_end_points.push_back (end_point);
 	return end_point;
 }
 
-TcpEndPoint *
-TcpEndPoints::allocate (Ipv4Address local_address, uint16_t local_port,
+Ipv4EndPoint *
+Ipv4EndPoints::allocate (Ipv4Address local_address, uint16_t local_port,
 	       Ipv4Address peer_address, uint16_t peer_port)
 {
 	for (EndPointsI i = m_end_points.begin (); i != m_end_points.end (); i++) {
@@ -103,9 +103,9 @@ TcpEndPoints::allocate (Ipv4Address local_address, uint16_t local_port,
 			return 0;
 		}
 	}
-	TcpEndPoint *end_point = new TcpEndPoint (local_address, local_port);
+	Ipv4EndPoint *end_point = new Ipv4EndPoint (local_address, local_port);
 	end_point->set_peer (peer_address, peer_port);
-	end_point->set_destroy_callback (make_callback_event (&TcpEndPoints::destroy_end_point, this));
+	end_point->set_destroy_callback (make_callback_event (&Ipv4EndPoints::destroy_end_point, this));
 	m_end_points.push_back (end_point);
 	return end_point;
 }
@@ -115,11 +115,11 @@ TcpEndPoints::allocate (Ipv4Address local_address, uint16_t local_port,
  * Otherwise, if we find a generic match, we return it.
  * Otherwise, we return 0.
  */
-TcpEndPoint *
-TcpEndPoints::lookup (Ipv4Address daddr, uint16_t dport, Ipv4Address saddr, uint16_t sport)
+Ipv4EndPoint *
+Ipv4EndPoints::lookup (Ipv4Address daddr, uint16_t dport, Ipv4Address saddr, uint16_t sport)
 {
 	uint32_t genericity = 3;
-	TcpEndPoint *generic = 0;
+	Ipv4EndPoint *generic = 0;
 	//TRACE ("lookup " << daddr << ":" << dport << " " << saddr << ":" << sport);
 	for (EndPointsI i = m_end_points.begin (); i != m_end_points.end (); i++) {
 #if 0
@@ -157,7 +157,7 @@ TcpEndPoints::lookup (Ipv4Address daddr, uint16_t dport, Ipv4Address saddr, uint
 }
 
 void 
-TcpEndPoints::destroy_end_point (TcpEndPoint *end_point)
+Ipv4EndPoints::destroy_end_point (Ipv4EndPoint *end_point)
 {
 	for (EndPointsI i = m_end_points.begin (); i != m_end_points.end (); i++) {
 		if ((*i) == end_point) {
@@ -168,7 +168,7 @@ TcpEndPoints::destroy_end_point (TcpEndPoint *end_point)
 }
 
 uint16_t
-TcpEndPoints::allocate_ephemeral_port (void)
+Ipv4EndPoints::allocate_ephemeral_port (void)
 {
 	uint16_t port = m_ephemeral;
 	do {

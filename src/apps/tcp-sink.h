@@ -31,7 +31,7 @@ namespace yans {
 
 class Host;
 class Packet;
-class TcpEndPoint;
+class Ipv4EndPoint;
 class TcpConnection;
 class TcpConnectionListener;
 
@@ -49,7 +49,7 @@ public:
 	void stop_listen_at (double at);
 private:
 	bool should_accept (Ipv4Address from, uint16_t from_port);
-	void connection_created (TcpConnection *connection, TcpEndPoint *end_point);
+	void connection_created (TcpConnection *connection, Ipv4EndPoint *end_point);
 	void connect_completed (void);
 	void disconnect_requested (void);
 	void disconnect_completed (void);
@@ -59,8 +59,8 @@ private:
 	void stop_listen_now (void);
 
 	Host *m_host;
-	TcpEndPoint *m_end_point;
-	TcpEndPoint *m_real_end_point;
+	Ipv4EndPoint *m_end_point;
+	Ipv4EndPoint *m_real_end_point;
 	TcpConnectionListener *m_connections;
 	TcpConnection *m_connection;
 	TcpSinkCallback *m_callback;

@@ -31,7 +31,7 @@ namespace yans {
 class Packet;
 class Ipv4;
 class Host;
-class TcpEndPoint;
+class Ipv4EndPoint;
 class Route;
 
 
@@ -49,7 +49,7 @@ public:
 
 	virtual void set_ipv4 (Ipv4 *ipv4) = 0;
 	virtual void set_host (Host *host) = 0;
-	virtual void set_end_point (TcpEndPoint *end_point) = 0;
+	virtual void set_end_point (Ipv4EndPoint *end_point) = 0;
 	virtual void set_route (Route *route) = 0;
 	virtual void set_destroy_handler (TcpConnectionDestroy *handler) = 0;
 
