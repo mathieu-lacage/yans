@@ -35,6 +35,9 @@ The current implementation features:
    - a sample application with a simple udp source and sink pair.
    - the framework to provide a POSIX environment (this is far from the
      real thing for now).
+   - a port of the BSD4.4Lite TCP stack. This stack has been ported and 
+     debugged but, due to licensing incompatibility reasons, we have not
+     included it in the simulator distribution.
 
 3) Roadmap
 ----------
