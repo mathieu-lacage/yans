@@ -66,8 +66,9 @@ SOURCE= \
 
 ifeq ($(TCP),bsd)
 SOURCE += \
-	ipv4/tcp-bsd-connection.cc
+	ipv4/tcp-bsd/tcp-bsd-connection.cc
 DEFINES += -DTCP_USE_BSD
+INCLUDES += -I./ipv4/tcp-bsd/
 endif
 
 ifeq ($(SIMULATOR),fiber)
