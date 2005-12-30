@@ -8,6 +8,7 @@ INCLUDES=-I./fiber -I./simulator -I./ -I./arp -I./common -I./ipv4 -I./ethernet -
 DEFINES=$(RUN_SELF_TESTS)
 FLAGS=-Wall -Werror -O0 -gdwarf-2
 
+SUBDIRS=python
 MAIN_TEST_SOURCE=test/main-test.cc
 MAIN_SIMPLE_SOURCE=samples/main-simple.cc
 MAIN_ROUTER_SOURCE=samples/main-router.cc
@@ -104,7 +105,12 @@ OBJ_MAIN_SIMPLE=$(addsuffix .o, $(basename $(MAIN_SIMPLE_SOURCE)))
 OBJ_MAIN_ROUTER=$(addsuffix .o, $(basename $(MAIN_ROUTER_SOURCE)))
 OBJ_MAIN_TCP=$(addsuffix .o, $(basename $(MAIN_TCP_SOURCE)))
 
-all: test/main-test samples/main-simple samples/main-router samples/main-tcp
+all: test/main-test samples/main-simple samples/main-router samples/main-tcp $(SUBDIRS)
+
+.PHONY: $(SUBDIRS)
+
+$(SUBDIRS):
+	@$(MAKE) -C $@
 
 test/main-test: $(OBJFILES) $(OBJ_MAIN_TEST)
 	$(CXX) $(LDFLAGS) -o $@ $^
