@@ -22,16 +22,36 @@
 #include <boost/python.hpp>
 #include "event.h"
 #include "event-wrap.h"
+#include <Python.h>
 
 using namespace yans;
 using namespace boost::python;
 
+EventWrap::EventWrap (PyObject* self_)
+	: m_self(self_)
+{
+	Py_INCREF(m_self);
+}
+EventWrap::~EventWrap()
+{
+	Py_DECREF(m_self);
+}
+
+
 void 
 EventWrap::notify (void) 
 {
-	get_override("notify") ();
-	delete this;
+	call_method<void>(m_self, "notify");
+	//delete this;
 }
+
+// specialize has_back_reference for EventWrap to make
+// sure a PyObject* is passed to its constructor
+namespace boost { namespace python {
+	template <>
+	struct has_back_reference<EventWrap>
+		: mpl::true_ {};
+}}
 
 void 
 export_event (void)

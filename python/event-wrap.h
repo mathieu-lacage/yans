@@ -24,8 +24,13 @@
 #include "event.h"
 #include <boost/python.hpp>
 
-struct EventWrap : yans::Event, boost::python::wrapper<yans::Event> {
+struct EventWrap : yans::Event
+{
+	EventWrap( PyObject* self_);
+	virtual ~EventWrap();
 	virtual void notify (void);
+private:
+	PyObject *m_self;
 };
 
 #endif /* EVENT_WRAP_H */
