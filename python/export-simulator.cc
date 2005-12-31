@@ -64,19 +64,19 @@ simu_insert_later (std::auto_ptr<EventWrap> ev)
 void 
 export_simulator (void)
 {
-	def ("simulator_run", Simulator::run);
-	def ("simulator_stop", Simulator::stop);
+	def ("run", Simulator::run);
+	def ("stop", Simulator::stop);
 
-	def ("simulator_destroy", Simulator::destroy);
+	def ("destroy", Simulator::destroy);
 
-	def ("simulator_insert_in_s", simu_insert_in_s);
-	def ("simulator_insert_in_us", simu_insert_in_us);
+	def ("insert_in_s", simu_insert_in_s);
+	def ("insert_in_us", simu_insert_in_us);
 
-	def ("simulator_insert_at_s", simu_insert_at_s);
-	def ("simulator_insert_at_us", simu_insert_at_us);
+	def ("insert_at_s", simu_insert_at_s);
+	def ("insert_at_us", simu_insert_at_us);
 
-	def ("simulator_now_s", Simulator::now_s);
-	def ("simulator_now_us", Simulator::now_us);
+	def ("now_s", Simulator::now_s);
+	def ("now_us", Simulator::now_us);
 
-	def ("simulator_insert_later", simu_insert_later);
+	def ("insert_later", simu_insert_later);
 }
