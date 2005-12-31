@@ -20,5 +20,3 @@ simulator.insert_in_s (3.0, ev2);
 simulator.run ();
 
 simulator.destroy ();
-
-

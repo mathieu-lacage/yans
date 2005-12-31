@@ -1,5 +1,8 @@
 .*\.o
 .*~$
+bin
+libyans.so
+python/_simulatormodule.so
 src/ipv4/tcp-bsd
 src/test/main-test
 src/samples/main-simple
