@@ -30,6 +30,7 @@ void
 EventWrap::notify (void) 
 {
 	get_override("notify") ();
+	delete this;
 }
 
 void 
