@@ -22,7 +22,6 @@
 #include "simulator.h"
 #include "clock.h"
 #include "event-heap.h"
-#include "tag-manager.h"
 #include "event.h"
 #include <math.h>
 
@@ -65,7 +64,6 @@ SimulatorPrivate::~SimulatorPrivate ()
 	m_clock = (Clock *)0xdeadbeaf;
 	delete m_event_heap;
 	m_event_heap = (EventHeap *)0xdeadbeaf;
-	TagManager::instance ()->destroy ();
 }
 
 void

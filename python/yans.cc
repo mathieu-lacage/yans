@@ -18,14 +18,13 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-
 #include <boost/python.hpp>
-#include "host.h"
 
-using namespace yans;
-using namespace boost::python;
+void export_simulator (void);
+void export_event (void);
 
 BOOST_PYTHON_MODULE(yans)
 {
-  class_<Host> h ("Host", init<char const *> ());
+	export_simulator ();
+	export_event ();
 }
