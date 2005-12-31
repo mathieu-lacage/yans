@@ -42,7 +42,7 @@ void
 EventWrap::notify (void) 
 {
 	call_method<void>(m_self, "notify");
-	//delete this;
+	delete this;
 }
 
 // specialize has_back_reference for EventWrap to make
