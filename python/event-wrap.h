@@ -18,23 +18,14 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
+#ifndef EVENT_WRAP_H
+#define EVENT_WRAP_H
 
-#include <boost/python.hpp>
 #include "event.h"
-#include "event-wrap.h"
+#include <boost/python.hpp>
 
-using namespace yans;
-using namespace boost::python;
+struct EventWrap : yans::Event, boost::python::wrapper<yans::Event> {
+	virtual void notify (void);
+};
 
-void 
-EventWrap::notify (void) 
-{
-	get_override("notify") ();
-}
-
-void 
-export_event (void)
-{
-	class_<EventWrap, std::auto_ptr<EventWrap>, boost::noncopyable> event ("Event");
-	event.def ("notify", pure_virtual(&Event::notify));
-}
+#endif /* EVENT_WRAP_H */

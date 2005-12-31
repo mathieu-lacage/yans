@@ -21,41 +21,41 @@
 
 #include <boost/python.hpp>
 #include "simulator.h"
-#include "event.h"
+#include "event-wrap.h"
 
 using namespace yans;
 using namespace boost::python;
 
 void 
-simu_insert_in_s (double delta, std::auto_ptr<Event> ev)
+simu_insert_in_s (double delta, std::auto_ptr<EventWrap> ev)
 {
 	Simulator::insert_in_s (delta, ev.get ());
 	ev.release ();
 }
 
 void 
-simu_insert_in_us (uint64_t delta, std::auto_ptr<Event> ev)
+simu_insert_in_us (uint64_t delta, std::auto_ptr<EventWrap> ev)
 {
 	Simulator::insert_in_us (delta, ev.get ());
 	ev.release ();
 }
 
 void 
-simu_insert_at_s (double at, std::auto_ptr<Event> ev)
+simu_insert_at_s (double at, std::auto_ptr<EventWrap> ev)
 {
 	Simulator::insert_at_s (at, ev.get ());
 	ev.release ();
 }
 
 void 
-simu_insert_at_us (uint64_t at, std::auto_ptr<Event> ev)
+simu_insert_at_us (uint64_t at, std::auto_ptr<EventWrap> ev)
 {
 	Simulator::insert_at_us (at, ev.get ());
 	ev.release ();
 }
 
 void 
-simu_insert_later (std::auto_ptr<Event> ev)
+simu_insert_later (std::auto_ptr<EventWrap> ev)
 {
 	Simulator::insert_later (ev.get ());
 	ev.release ();
@@ -66,6 +66,8 @@ export_simulator (void)
 {
 	def ("simulator_run", Simulator::run);
 	def ("simulator_stop", Simulator::stop);
+
+	def ("simulator_destroy", Simulator::destroy);
 
 	def ("simulator_insert_in_s", simu_insert_in_s);
 	def ("simulator_insert_in_us", simu_insert_in_us);

@@ -4,11 +4,13 @@ import yans;
 
 class MyEvent(yans.Event):
     def notify (self):
-        print "my event " + yans.simulator_now_s () + "\n";
+        print "my event %f\n" % yans.simulator_now_s ();
 
 ev = MyEvent ();
 
-yans.simulator_insert_in_s ((double)5.0, ev);
+yans.simulator_insert_in_s (1.0, ev);
 
 
-yans.run ();
+yans.simulator_run ();
+
+yans.simulator_destroy ();
