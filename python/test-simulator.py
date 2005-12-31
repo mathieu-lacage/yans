@@ -24,6 +24,16 @@ simulator.insert_in_s (2.0, ev1);
 simulator.insert_in_s (3.0, ev2);
 simulator.insert_in_s (4.0, ev3);
 
+class MyEventClass (simulator.Event):
+    def notify (self):
+        print "my event class now=%f" % simulator.now_s ();
+
+ev4 = MyEventClass ();
+
+simulator.insert_in_s (5.0, ev4);
+simulator.insert_in_s (6.0, MyEventClass ());
+
+
 simulator.run ();
 
 simulator.destroy ();
