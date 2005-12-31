@@ -3,11 +3,11 @@
 from yans import *;
 
 def my_nothing0 ():
-    print "my model now=%f \n" % simulator.now_s ();
+    print "my model now=%f" % simulator.now_s ();
 def my_nothing1 (v1):
-    print "my model now=%f v1=%d\n" % (simulator.now_s (), v1);
+    print "my model now=%f v1=%d" % (simulator.now_s (), v1);
 def my_nothing2 (v1, v2):
-    print "my model now=%f v1=%d,v2=%d\n" % (simulator.now_s (), v1, v2);
+    print "my model now=%f v1=%d,v2=%d" % (simulator.now_s (), v1, v2);
 
 ev = simulator.make_event (my_nothing0);
 ev1 = simulator.make_event (my_nothing1, 99);
