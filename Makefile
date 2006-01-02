@@ -60,7 +60,7 @@ $(SUBDIRS):
 $(LIB_YANS): $(YANS_OBJ)
 	$(CXX) $(LDFLAGS) -shared -o $@ $^
 
-$(YANS_PYTHON_OBJ): CXXFLAGS+=-I/usr/include/python2.4
+$(YANS_PYTHON_OBJ): CXXFLAGS+=-I/usr/include/python2.3
 $(LIB_SIMULATOR_PYTHON): $(SIMULATOR_PYTHON_OBJ)
 	$(CXX) $(LDFLAGS) -lboost_python -L$(TOP) -lyans -shared -o $@ $^
 
