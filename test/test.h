@@ -33,14 +33,12 @@ class TestManager;
 
 class Test {
 public:
-	Test (TestManager *manager);
 	virtual ~Test ();
 
 	virtual bool run_tests (void) = 0;
 
+protected:
 	std::ostream &failure (void);
-private:
-	TestManager *m_manager;
 };
 
 class TestManager {
@@ -51,7 +49,7 @@ public:
 	void enable_verbose (void);
 	bool run_tests (void);
 
-	std::ostream &failure (void);
+	static std::ostream &failure (void);
 private:
 	typedef std::list<std::pair<Test *,std::string *> > Tests;
 	typedef std::list<std::pair<Test *,std::string *> >::iterator TestsI;

@@ -2,8 +2,8 @@ TOP=.
 TOP_INSTALL=bin
 TOP_PYTHON_INSTALL=$(TOP_INSTALL)/yans
 NULL=
-DEFINES=
-INCLUDES=-I./simulator
+DEFINES=-DRUN_SELF_TESTS=1
+INCLUDES=-I$(TOP)/simulator -I$(TOP)/src/thread -I$(TOP)/test
 FLAGS=-Wall -Werror -O0 -gdwarf-2
 LDFLAGS=
 INSTALL_DIRS= \
@@ -22,8 +22,9 @@ YANS_SRC= \
 	$(TOP)/simulator/simulator-simple.cc \
 	$(TOP)/src/thread/fiber-context-x86-linux-gcc.cc \
 	$(TOP)/src/thread/semaphore.cc \
-	$(TOP)/src/thread/thread.cc \
 	$(TOP)/src/thread/fiber.cc \
+	$(TOP)/src/thread/thread.cc \
+	$(TOP)/test/test.cc \
 	$(NULL)
 
 SIMULATOR_PYTHON_SRC= \
@@ -40,8 +41,11 @@ LIB_YANS=$(TOP)/libyans.so
 YANS_PYTHON_OBJ=$(addsuffix .o, $(basename $(YANS_PYTHON_SRC)))
 SIMULATOR_PYTHON_OBJ=$(addsuffix .o, $(basename $(SIMULATOR_PYTHON_SRC)))
 LIB_SIMULATOR_PYTHON=$(TOP)/python/_simulatormodule.so
+MAIN_TEST_SRC=$(TOP)/test/main-test.cc
+MAIN_TEST_OBJ=$(addsuffix .o, $(basename $(MAIN_TEST_SRC)))
+MAIN_TEST=$(TOP)/test/main-test
 
-all: $(LIB_YANS) $(LIB_SIMULATOR_PYTHON)
+all: $(LIB_YANS) $(LIB_SIMULATOR_PYTHON) $(MAIN_TEST)
 
 
 ESCAPED_TOP_PYTHON_INSTALL=$(subst /,\/,$(TOP_PYTHON_INSTALL))
@@ -60,6 +64,9 @@ $(INSTALL_DIRS):
 
 $(SUBDIRS):
 	@$(MAKE) -C $@
+
+$(MAIN_TEST): $(MAIN_TEST_OBJ)
+	$(CXX) $(LDFLAGS) -lyans -L$(TOP) -o $@ $^
 
 $(LIB_YANS): $(YANS_OBJ)
 	$(CXX) $(LDFLAGS) -shared -o $@ $^

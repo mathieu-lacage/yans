@@ -49,28 +49,56 @@ Thread::yield (void)
 void 
 Thread::sleep_s (double delta)
 {
-	Simulator::insert_in_s (delta, make_event (&Thread::sleep_finished, this));
+	Simulator::insert_in_s (delta, make_event (&Semaphore::up, m_sleep_sem));
 	m_sleep_sem->down ();
 }
 void 
 Thread::sleep_us (uint64_t delta)
 {
-	Simulator::insert_in_us (delta, make_event (&Thread::sleep_finished, this));
+	Simulator::insert_in_us (delta, make_event (&Semaphore::up, m_sleep_sem));
 	m_sleep_sem->down ();
 }
 
-void 
-Thread::wait (void)
-{}
-void 
-Thread::notify (void)
-{}
-
-
-void 
-Thread::sleep_finished (void)
+double 
+Thread::time_s (void)
 {
-	m_sleep_sem->up ();
+	return Simulator::now_s ();
 }
 
 }; // namespace yans
+
+
+#ifdef RUN_SELF_TESTS
+
+#include <iostream>
+
+namespace yans {
+
+class A : public Thread {
+public:
+	A () : Thread ("A") {}
+private:
+	void run (void) {
+		sleep_s (1.0);
+		std::cout << "slept until: " << time_s () << std::endl;
+	}
+};
+
+
+ThreadTest::ThreadTest ()
+{}
+bool 
+ThreadTest::run_tests (void)
+{
+	Thread *a = new A ();
+
+	Simulator::run ();
+
+	delete a;
+
+	return true;
+}
+
+}; // namespace yans
+
+#endif /* RUN_SELF_TESTS */

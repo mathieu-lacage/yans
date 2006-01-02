@@ -23,19 +23,23 @@
 
 #ifdef RUN_SELF_TESTS
 #include <iostream>
+#include "thread.h"
+#if 0
 #include "buffer.h"
 #include "utils.h"
 #include "fiber-scheduler.h"
 #include "callback-test.h"
 #include "tcp-pieces.h"
+#endif
 
 namespace yans {
 
-#define ADD_TEST(klass, name) 	m_tests.push_back (std::make_pair (new klass (this), new std::string (name)));
+#define ADD_TEST(klass, name) 	m_tests.push_back (std::make_pair (new klass (), new std::string (name)));
 
 TestManager::TestManager ()
 	: m_verbose (false)
 {
+#if 0
 	ADD_TEST (TcpPiecesTest, "TcpPieces");
 	ADD_TEST (BufferTest, "Buffer");
 	ADD_TEST (UtilsTest, "Utils");
@@ -43,6 +47,8 @@ TestManager::TestManager ()
 	ADD_TEST (TestFiberScheduler, "FiberScheduler");
 #endif
 	ADD_TEST (CallbackTest, "Callback");
+#endif
+	ADD_TEST (ThreadTest, "Thread");
 }
 
 TestManager::~TestManager ()
@@ -87,16 +93,13 @@ TestManager::run_tests (void)
 	return is_success;
 }
 
-Test::Test (TestManager *manager)
-	: m_manager (manager)
-{}
 Test::~Test ()
 {}
 
 std::ostream &
 Test::failure (void)
 {
-	return m_manager->failure ();
+	return TestManager::failure ();
 }
 
 }; // namespace yans

@@ -35,26 +35,34 @@ public:
 	Thread (char const *name);
 	virtual ~Thread ();
 
+protected:
 	void yield (void);
 
 	void sleep_s (double delta);
 	void sleep_us (uint64_t delta);
 
-	/* blocking wait for notify. */
-	void wait (void);
-	/* unblock any blocked wait. */
-	void notify (void);
+	double time_s (void);
 
 	//static Thread *current (void);
 private:
 	virtual void run (void) = 0;
-	void sleep_finished (void);
 	
 	Fiber *m_fiber;
 	Semaphore *m_sleep_sem;
 };
 
 }; // namespace yans
+
+#ifdef RUN_SELF_TESTS
+#include "test.h"
+namespace yans {
+class ThreadTest : public Test {
+public:
+	ThreadTest ();
+	virtual bool run_tests (void);
+};
+}; // namespace yans
+#endif /* RUN_SELF_TESTS */
 
 #endif /* THREAD_H */
 
