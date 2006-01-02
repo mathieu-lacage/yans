@@ -20,6 +20,10 @@ YANS_SRC= \
 	$(TOP)/simulator/event-heap.cc \
 	$(TOP)/simulator/event.cc \
 	$(TOP)/simulator/simulator-simple.cc \
+	$(TOP)/src/thread/fiber-context-x86-linux-gcc.cc \
+	$(TOP)/src/thread/semaphore.cc \
+	$(TOP)/src/thread/thread.cc \
+	$(TOP)/src/thread/fiber.cc \
 	$(NULL)
 
 SIMULATOR_PYTHON_SRC= \

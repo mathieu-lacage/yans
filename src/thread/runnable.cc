@@ -23,16 +23,10 @@
 #include "fiber-scheduler.h"
 #include "fiber.h"
 
+namespace yans {
 
-Runnable::Runnable ()
-{}
 Runnable::~Runnable ()
 {}
 
-Host *
-Runnable::get_host (void)
-{
-	Host *host = FiberScheduler::instance ()->get_current ()->get_host ();
-	return host;
-}
+}; // namespace yans
 

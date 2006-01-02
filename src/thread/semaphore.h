@@ -25,6 +25,8 @@
 #include <stdint.h>
 #include <list>
 
+namespace yans {
+
 class Fiber;
 
 class Semaphore {
@@ -44,6 +46,8 @@ private:
 	int32_t m_n;
 	std::list<Fiber *> m_waiting;
 };
+
+}; // namespace yans
 
 
 #endif /* SEMAPHORE_H */

@@ -27,29 +27,18 @@
 #include "runnable.h"
 #include "semaphore.h"
 
-uint32_t const Fiber::DEFAULT_STACK_SIZE = 8192;
+namespace yans {
 
-Fiber::Fiber (Host *host, Runnable *runnable, char const *name)
-	: m_host (host), m_runnable (runnable)
-{
-	initialize (name, DEFAULT_STACK_SIZE);
-}
-Fiber::Fiber (Host *host, Runnable *runnable, char const *name, uint32_t stack_size)
-	: m_host (host), m_runnable (runnable)
-{
-	initialize (name, stack_size);
-}
+uint32_t const Fiber::DEFAULT_STACK_SIZE = 8192;
 
 Fiber::Fiber (Runnable *runnable, char const *name)
 	: m_runnable (runnable)
 {
-	m_host = FiberScheduler::instance ()->get_current ()->get_host ();
 	initialize (name, DEFAULT_STACK_SIZE);
 }
 Fiber::Fiber (Runnable *runnable, char const *name, uint32_t stack_size)
 	: m_runnable (runnable)
 {
-	m_host = FiberScheduler::instance ()->get_current ()->get_host ();
 	initialize (name, stack_size);
 }
 void
@@ -155,15 +144,11 @@ Fiber::switch_to (Fiber *to)
 	fiber_context_switch_to (m_context, to->m_context);
 }
 
-Host *
-Fiber::get_host (void) const
-{
-	return m_host;
-}
-
 void 
 Fiber::wait_until_is_dead (void)
 {
 	m_sem_dead->down ();
 }
+
+}; // namespace yans
 

@@ -26,17 +26,12 @@
 #include "simulator.h"
 #include "fiber-scheduler.h"
 
-
+namespace yans {
 
 Thread::Thread (char const *name)
 {
 	m_sleep_sem = new Semaphore (0);
 	m_fiber = new Fiber (this, name);
-}
-Thread::Thread (Host *host, char const *name)
-{
-	m_sleep_sem = new Semaphore (0);
-	m_fiber = new Fiber (host, this, name);
 }
 
 Thread::~Thread ()
@@ -77,3 +72,5 @@ Thread::sleep_finished (void)
 {
 	m_sleep_sem->up ();
 }
+
+}; // namespace yans

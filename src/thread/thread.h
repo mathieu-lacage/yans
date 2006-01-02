@@ -25,14 +25,14 @@
 #include <stdint.h>
 #include "runnable.h"
 
+namespace yans {
+
 class Fiber;
 class Semaphore;
-class SleepEvent;
 
 class Thread : public Runnable {
 public:
 	Thread (char const *name);
-	Thread (Host *host, char const *name);
 	virtual ~Thread ();
 
 	void yield (void);
@@ -53,6 +53,8 @@ private:
 	Fiber *m_fiber;
 	Semaphore *m_sleep_sem;
 };
+
+}; // namespace yans
 
 #endif /* THREAD_H */
 

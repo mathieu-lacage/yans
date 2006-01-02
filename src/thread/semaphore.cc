@@ -23,6 +23,8 @@
 #include "fiber-scheduler.h"
 #include "fiber.h"
 
+namespace yans {
+
 Semaphore::Semaphore (int32_t n)
 	: m_n (n)
 {}
@@ -92,3 +94,5 @@ Semaphore::down_all (void)
 	assert (m_n >= 0);
 	down (m_n);
 }
+
+}; // namespace yans

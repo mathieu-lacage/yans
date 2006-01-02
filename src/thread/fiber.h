@@ -26,14 +26,14 @@
 #include <string>
 
 struct FiberContext;
-class Host;
+
+namespace yans {
+
 class Runnable;
 class Semaphore;
 
 class Fiber {
 public:
-	Fiber (Host *host, Runnable *runnable, char const *name);
-	Fiber (Host *host, Runnable *runnable, char const *name, uint32_t stack_size);
 	Fiber (Runnable *runnable, char const *name);
 	Fiber (Runnable *runnable, char const *name, uint32_t stack_size);
 	virtual ~Fiber ();
@@ -44,8 +44,6 @@ public:
 	bool is_dead (void) const;
 
 	std::string *peek_name (void) const;
-
-	Host *get_host (void) const;
 
 	void wait_until_is_dead (void);
 
@@ -73,10 +71,11 @@ private:
 	enum FiberState_e m_state;
 	FiberContext *m_context;
 	std::string *m_name;
-	Host *m_host;
 	Runnable *m_runnable;
 	Semaphore *m_sem_dead;
 };
+
+}; // namespace yans
 
 
 #endif /* FIBER_H */

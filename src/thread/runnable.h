@@ -22,18 +22,18 @@
 #ifndef RUNNABLE_H
 #define RUNNABLE_H
 
-class Host;
+namespace yans {
 
 class Runnable {
 public:
-	Runnable ();
 	virtual ~Runnable () = 0;
-	static Host *get_host (void);
 
 private:
 	friend class Fiber;
 	virtual void run (void) = 0;
 };
+
+}; // namespace yans
 
 
 #endif /* RUNNABLE_H */
