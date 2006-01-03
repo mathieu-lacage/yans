@@ -28,6 +28,7 @@ int main (int argc, char *argv[])
 	yans::TestManager *manager = new yans::TestManager ();
 	manager->enable_verbose ();
 	manager->run_tests ();
+	delete manager;
 #endif /* RUN_SELF_TESTS */
 
 	return 0;
