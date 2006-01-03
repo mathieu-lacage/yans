@@ -184,6 +184,12 @@ FiberScheduler::unregister_fiber (Fiber *fiber)
 {
 	assert (fiber->is_dead ());
 	m_dead.remove (fiber);
+	if (m_current == 0 &&
+	    m_active.empty () &&
+	    m_dead.empty () &&
+	    m_blocked.empty ()) {
+		FiberScheduler::destroy ();
+	}
 }
 
 Fiber *
@@ -195,7 +201,7 @@ FiberScheduler::get_current (void)
 void
 FiberScheduler::destroy (void)
 {
-	delete this;
+	delete m_instance;
 	m_instance = 0;
 }
 FiberScheduler *

@@ -42,7 +42,7 @@ public:
 
 	Fiber *get_current (void);
 
-	void destroy (void);
+	static void destroy (void);
 	static FiberScheduler *instance (void);
 private:
 	FiberScheduler ();
