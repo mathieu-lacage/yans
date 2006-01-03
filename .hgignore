@@ -1,5 +1,6 @@
 .*\.o
 .*~$
+\.deps
 bin
 libyans.so
 python/_simulatormodule.so
