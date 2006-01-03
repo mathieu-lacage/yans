@@ -85,5 +85,5 @@ $(TOP_INSTALL)/%.o:%.c
 	$(CC) $(CFLAGS) -c -o $@ $^
 
 clean:
-	find ./ -name '*~'|xargs rm;
+	find ./ -name '*~'|xargs rm -f 2>/dev/null;
 	rm -rf $(TOP_INSTALL) 2>/dev/null;
