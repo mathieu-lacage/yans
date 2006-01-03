@@ -17,7 +17,7 @@ YANS_SRC= \
 	simulator/clock.cc \
 	simulator/event-heap.cc \
 	simulator/event.cc \
-	simulator/simulator-simple.cc \
+	simulator/simulator.cc \
 	src/thread/fiber-context-x86-linux-gcc.cc \
 	src/thread/semaphore.cc \
 	src/thread/runnable.cc \
