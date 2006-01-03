@@ -87,3 +87,18 @@ $(TOP_INSTALL)/%.o:%.c
 clean:
 	find ./ -name '*~'|xargs rm -f 2>/dev/null;
 	rm -rf $(TOP_INSTALL) 2>/dev/null;
+
+depsclean:
+	rm -f .deps 2>/dev/null
+
+.deps:
+	@echo "Generating dependency information.";
+	@rm -f .deps 2>/dev/null; touch .deps;
+	@-for f in `find ./ -name '*.c'`; do \
+		$(CC) $(CFLAGS) -E -M -MP -MM -MT $(TOP_INSTALL)/$$f $$f 2>/dev/null >> .deps; \
+	done;
+	@-for f in `find ./ -name '*.cc'`; do \
+		$(CXX) $(CXXFLAGS) -E -M -MP -MM -MT $(TOP_INSTALL)/$$f $$f 2>/dev/null >> .deps; \
+	done;
+
+-include .deps
