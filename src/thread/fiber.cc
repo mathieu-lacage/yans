@@ -24,19 +24,18 @@
 #include <cassert>
 #include <string.h>
 #include "fiber-context.h"
-#include "runnable.h"
 #include "semaphore.h"
 
 namespace yans {
 
 uint32_t const Fiber::DEFAULT_STACK_SIZE = 8192;
 
-Fiber::Fiber (Runnable *runnable, char const *name)
+Fiber::Fiber (FiberRunnable *runnable, char const *name)
 	: m_runnable (runnable)
 {
 	initialize (name, DEFAULT_STACK_SIZE);
 }
-Fiber::Fiber (Runnable *runnable, char const *name, uint32_t stack_size)
+Fiber::Fiber (FiberRunnable *runnable, char const *name, uint32_t stack_size)
 	: m_runnable (runnable)
 {
 	initialize (name, stack_size);
@@ -55,11 +54,13 @@ Fiber::~Fiber ()
 	assert (m_state == DEAD);
 	FiberScheduler::instance ()->unregister_fiber (this);
 	fiber_context_delete (m_context);
-	m_context = (FiberContext *)0xdeadbeaf;
 	delete m_sem_dead;
-	m_sem_dead = (Semaphore *)0xdeadbeaf;
 	delete m_name;
+	delete m_runnable;
+	m_context = (FiberContext *)0xdeadbeaf;
+	m_sem_dead = (Semaphore *)0xdeadbeaf;
 	m_name = (std::string *)0xdeadbeaf;
+	m_runnable = (FiberRunnable *)0xdeadbeaf; 
 }
 
 void 
@@ -72,7 +73,7 @@ Fiber::run_static (void *data)
 void
 Fiber::run (void)
 {
-	m_runnable->run ();
+	(*m_runnable) ();
 	set_dead ();
 	FiberScheduler::instance ()->schedule ();
 }

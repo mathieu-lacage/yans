@@ -23,19 +23,18 @@
 #define THREAD_H
 
 #include <stdint.h>
-#include "runnable.h"
 
 namespace yans {
 
 class Fiber;
 class Semaphore;
 
-class Thread : public Runnable {
+class Thread {
 public:
 	Thread (char const *name);
 	virtual ~Thread ();
 
-protected:
+
 	void yield (void);
 
 	void sleep_s (double delta);
@@ -43,7 +42,6 @@ protected:
 
 	double time_s (void);
 
-	//static Thread *current (void);
 private:
 	virtual void run (void) = 0;
 	

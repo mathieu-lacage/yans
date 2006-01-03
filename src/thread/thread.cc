@@ -42,7 +42,7 @@ namespace yans {
 Thread::Thread (char const *name)
 {
 	m_sleep_sem = new Semaphore (0);
-	m_fiber = new Fiber (this, name);
+	m_fiber = new Fiber (make_callback (&Thread::run, this), name);
 }
 
 Thread::~Thread ()

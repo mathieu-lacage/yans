@@ -3,7 +3,7 @@ include ./functions.mk
 TOP_INSTALL=$(TOP)/bin
 TOP_PYTHON_INSTALL=$(TOP_INSTALL)/yans
 DEFINES=-DRUN_SELF_TESTS=1
-INCLUDES=-I$(TOP)/simulator -I$(TOP)/src/thread -I$(TOP)/test
+INCLUDES=-I$(TOP)/simulator -I$(TOP)/src/thread -I$(TOP)/test -I$(TOP)/src/common
 FLAGS=-Wall -Werror -O0 -gdwarf-2
 
 LDFLAGS=
@@ -20,7 +20,6 @@ YANS_SRC= \
 	simulator/simulator.cc \
 	src/thread/fiber-context-x86-linux-gcc.cc \
 	src/thread/semaphore.cc \
-	src/thread/runnable.cc \
 	src/thread/fiber.cc \
 	src/thread/fiber-scheduler.cc \
 	src/thread/thread.cc \
@@ -54,16 +53,35 @@ SIMULATOR_PYTHON_SRC= \
 	python/__init__.py \
 	python/simulator/__init__.py \
 	$(NULL)
-YANS_PYTHON_SRC= \
-	$(SIMULATOR_PYTHON_SRC) \
-	$(NULL)
-SIMULATOR_PYTHON_OBJ=$(call genobj, $(YANS_PYTHON_SRC))
+SIMULATOR_PYTHON_OBJ=$(call genobj, $(SIMULATOR_PYTHON_SRC))
 LIB_SIMULATOR_PYTHON=$(TOP_INSTALL)/python/_simulatormodule.so
 $(SIMULATOR_PYTHON_OBJ): CXXFLAGS+=-I/usr/include/python2.3
 $(LIB_SIMULATOR_PYTHON): $(SIMULATOR_PYTHON_OBJ)
 	$(CXX) $(LDFLAGS) -lboost_python -L$(TOP_INSTALL) -lyans -shared -o $@ $(filter *.o,$^)
 DIRS += $(call gendirs, $(SIMULATOR_PYTHON_SRC))
 build: $(LIB_SIMULATOR_PYTHON)
+
+# building of python models bindings
+MODELS_PYTHON_SRC= \
+	python/yans-models.cc \
+	python/export-thread.cc \
+	$(NULL)
+MODELS_PYTHON_OBJ=$(call genobj, $(MODELS_PYTHON_SRC))
+LIB_MODELS_PYTHON=$(TOP_INSTALL)/python/_modelsmodule.so
+$(MODELS_PYTHON_OBJ): CXXFLAGS+=-I/usr/include/python2.3
+$(LIB_MODELS_PYTHON): $(MODELS_PYTHON_OBJ)
+	$(CXX) $(LDFLAGS) -lboost_python -L$(TOP_INSTALL) -lyans -shared -o $@ $(filter *.o,$^)
+DIRS += $(call gendirs, $(MODELS_PYTHON_SRC))
+$build: $(LIB_MODELS_PYTHON)
+
+
+
+YANS_PYTHON_SRC= \
+	$(SIMULATOR_PYTHON_SRC) \
+	$(MODELS_PYTHON_SRC) \
+	$(NULL)
+
+
 
 
 
