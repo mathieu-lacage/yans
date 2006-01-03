@@ -1,88 +1,89 @@
-TOP=.
-TOP_INSTALL=bin
+include ./functions.mk
+
+TOP_INSTALL=$(TOP)/bin
 TOP_PYTHON_INSTALL=$(TOP_INSTALL)/yans
-NULL=
 DEFINES=-DRUN_SELF_TESTS=1
 INCLUDES=-I$(TOP)/simulator -I$(TOP)/src/thread -I$(TOP)/test
 FLAGS=-Wall -Werror -O0 -gdwarf-2
-LDFLAGS=
-INSTALL_DIRS= \
-	$(TOP_INSTALL) \
-	$(TOP_PYTHON_INSTALL) \
-	$(TOP_PYTHON_INSTALL)/simulator \
-	$(NULL)
 
+LDFLAGS=
 CXXFLAGS+=$(FLAGS) $(INCLUDES) $(DEFINES)
 CFLAGS+=$(FLAGS) $(INCLUDES) $(DEFINES)
+all: dirs build
 
+
+# building of libyans.so
 YANS_SRC= \
-	$(TOP)/simulator/clock.cc \
-	$(TOP)/simulator/event-heap.cc \
-	$(TOP)/simulator/event.cc \
-	$(TOP)/simulator/simulator-simple.cc \
-	$(TOP)/src/thread/fiber-context-x86-linux-gcc.cc \
-	$(TOP)/src/thread/semaphore.cc \
-	$(TOP)/src/thread/fiber.cc \
-	$(TOP)/src/thread/thread.cc \
-	$(TOP)/test/test.cc \
+	simulator/clock.cc \
+	simulator/event-heap.cc \
+	simulator/event.cc \
+	simulator/simulator-simple.cc \
+	src/thread/fiber-context-x86-linux-gcc.cc \
+	src/thread/semaphore.cc \
+	src/thread/runnable.cc \
+	src/thread/fiber.cc \
+	src/thread/fiber-scheduler.cc \
+	src/thread/thread.cc \
+	test/test.cc \
 	$(NULL)
+YANS_OBJ=$(call genobj, $(YANS_SRC))
+LIB_YANS=$(TOP_INSTALL)/libyans.so
+$(YANS_OBJ): CXXFLAGS += -fPIC
+$(YANS_OBJ): CFLAGS += -fPIC
+$(LIB_YANS): $(YANS_OBJ)
+	$(CXX) $(LDFLAGS) -shared -o $@ $(filter %.o,$^)
+DIRS += $(call gendirs, $(YANS_SRC))
+build: $(LIB_YANS)
 
+
+# building of main-test
+MAIN_TEST_SRC=test/main-test.cc
+MAIN_TEST_OBJ=$(call genobj, $(MAIN_TEST_SRC))
+MAIN_TEST=$(call genbin, test/main-test)
+$(MAIN_TEST): $(MAIN_TEST_OBJ)
+	$(CXX) $(CXXFLAGS) -lyans -L$(TOP_INSTALL) -o $@ $^
+DIRS += $(call gendirs, $(YANS_SRC))
+build: $(MAIN_TEST)
+
+
+# building of python bindings.
 SIMULATOR_PYTHON_SRC= \
-	$(TOP)/python/yans-simulator.cc \
-	$(TOP)/python/export-simulator.cc \
-	$(TOP)/python/export-event.cc \
+	python/yans-simulator.cc \
+	python/export-simulator.cc \
+	python/export-event.cc \
+	python/__init__.py \
+	python/simulator/__init__.py \
 	$(NULL)
 YANS_PYTHON_SRC= \
 	$(SIMULATOR_PYTHON_SRC) \
 	$(NULL)
-
-YANS_OBJ=$(addsuffix .o, $(basename $(YANS_SRC)))
-LIB_YANS=$(TOP)/libyans.so
-YANS_PYTHON_OBJ=$(addsuffix .o, $(basename $(YANS_PYTHON_SRC)))
-SIMULATOR_PYTHON_OBJ=$(addsuffix .o, $(basename $(SIMULATOR_PYTHON_SRC)))
-LIB_SIMULATOR_PYTHON=$(TOP)/python/_simulatormodule.so
-MAIN_TEST_SRC=$(TOP)/test/main-test.cc
-MAIN_TEST_OBJ=$(addsuffix .o, $(basename $(MAIN_TEST_SRC)))
-MAIN_TEST=$(TOP)/test/main-test
-
-all: $(LIB_YANS) $(LIB_SIMULATOR_PYTHON) $(MAIN_TEST)
+SIMULATOR_PYTHON_OBJ=$(call genobj, $(YANS_PYTHON_SRC))
+LIB_SIMULATOR_PYTHON=$(TOP_INSTALL)/python/_simulatormodule.so
+$(SIMULATOR_PYTHON_OBJ): CXXFLAGS+=-I/usr/include/python2.3
+$(LIB_SIMULATOR_PYTHON): $(SIMULATOR_PYTHON_OBJ)
+	$(CXX) $(LDFLAGS) -lboost_python -L$(TOP_INSTALL) -lyans -shared -o $@ $(filter *.o,$^)
+DIRS += $(call gendirs, $(SIMULATOR_PYTHON_SRC))
+build: $(LIB_SIMULATOR_PYTHON)
 
 
-ESCAPED_TOP_PYTHON_INSTALL=$(subst /,\/,$(TOP_PYTHON_INSTALL))
-install: all $(INSTALL_DIRS)
-	cp $(LIB_YANS) $(TOP_INSTALL);
-	cp $(LIB_SIMULATOR_PYTHON) $(TOP_PYTHON_INSTALL)/simulator;
-	for f in `find ./python -name __init__.py`; do \
-		DEST=`echo $$f|sed -e 's/\.\/python/\.\/$(ESCAPED_TOP_PYTHON_INSTALL)/'`; \
-		cp $$f $$DEST; \
-	done
 
-$(INSTALL_DIRS):
+TMP_DIRS=$(sort $(DIRS))
+dirs: $(TMP_DIRS)
+$(TMP_DIRS):
 	mkdir -p $@;
 
 .PHONY: $(SUBDIRS)
-
 $(SUBDIRS):
 	@$(MAKE) -C $@
 
-$(MAIN_TEST): $(MAIN_TEST_OBJ)
-	$(CXX) $(LDFLAGS) -lyans -L$(TOP) -o $@ $^
 
-$(LIB_YANS): $(YANS_OBJ)
-	$(CXX) $(LDFLAGS) -shared -o $@ $^
-
-$(YANS_PYTHON_OBJ): CXXFLAGS+=-I/usr/include/python2.3
-$(LIB_SIMULATOR_PYTHON): $(SIMULATOR_PYTHON_OBJ)
-	$(CXX) $(LDFLAGS) -lboost_python -L$(TOP) -lyans -shared -o $@ $^
-
-%.o:%.cc
+$(TOP_INSTALL)/%.py:%.py
+	cp $^ $@
+$(TOP_INSTALL)/%.o:%.cc
 	$(CXX) $(CXXFLAGS) -c -o $@ $^
-
-TILDES=$(addsuffix ~, $(YANS_SRC))
-TILDES+=$(addsuffix ~, $(YANS_PYTHON_SRC))
+$(TOP_INSTALL)/%.o:%.c
+	$(CC) $(CFLAGS) -c -o $@ $^
 
 clean:
-	rm -f $(YANS_OBJ) $(LIB_YANS) \
-	$(YANS_PYTHON_OBJ) $(LIB_SIMULATOR_PYTHON) \
-	$(TILDES) \
-	2>/dev/null;
+	find ./ -name '*~'|xargs rm;
+	rm -rf $(TOP_INSTALL) 2>/dev/null;
