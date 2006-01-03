@@ -20,11 +20,9 @@
  */
 #include <boost/python.hpp>
 
-void export_simulator (void);
-void export_event (void);
+void export_thread (void);
 
-BOOST_PYTHON_MODULE(yans)
+BOOST_PYTHON_MODULE(_models)
 {
-	export_simulator ();
-	export_event ();
+	export_thread ();
 }
