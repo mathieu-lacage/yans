@@ -26,6 +26,17 @@
 #include "simulator.h"
 #include "fiber-scheduler.h"
 
+#define TRACE_THREAD 1
+
+#ifdef TRACE_THREAD
+#include <iostream>
+# define TRACE(x) \
+std::cout << "THREAD TRACE " << Simulator::now_s () << " " << x << std::endl;
+#else /* TRACE_THREAD */
+# define TRACE(format,...)
+#endif /* TRACE_THREAD */
+
+
 namespace yans {
 
 Thread::Thread (char const *name)
@@ -79,8 +90,9 @@ public:
 	A () : Thread ("A") {}
 private:
 	void run (void) {
+		TRACE ("run");
 		sleep_s (1.0);
-		std::cout << "slept until: " << time_s () << std::endl;
+		TRACE ("run completed");
 	}
 };
 
@@ -92,9 +104,15 @@ ThreadTest::run_tests (void)
 {
 	Thread *a = new A ();
 
+	TRACE ("a created");
+
 	Simulator::run ();
 
+	TRACE ("simulation completed");
+
 	delete a;
+
+	Simulator::destroy ();
 
 	return true;
 }

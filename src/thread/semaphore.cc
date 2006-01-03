@@ -23,6 +23,17 @@
 #include "fiber-scheduler.h"
 #include "fiber.h"
 
+#define TRACE_SEM 1
+
+#ifdef TRACE_SEM
+#include <iostream>
+#include "simulator.h"
+# define TRACE(x) \
+std::cout << "SEM TRACE " << Simulator::now_s () << " " << x << std::endl;
+#else /* TRACE_SEM */
+# define TRACE(format,...)
+#endif /* TRACE_SEM */
+
 namespace yans {
 
 Semaphore::Semaphore (int32_t n)
@@ -50,6 +61,7 @@ Semaphore::down (void)
 void 
 Semaphore::up (uint8_t delta)
 {
+	TRACE ("upping " << this << " by " << (uint16_t)delta);
 	m_n += delta;
 	FiberScheduler *scheduler = FiberScheduler::instance ();
 	if (m_n >= 0 && 
@@ -64,6 +76,7 @@ Semaphore::up (uint8_t delta)
 void 
 Semaphore::down (uint8_t delta)
 {
+	TRACE ("downing " << this << " by " << (uint16_t)delta);
 	m_n -= delta;
 	while (m_n < 0) {
 		FiberScheduler *scheduler = FiberScheduler::instance ();

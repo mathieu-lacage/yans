@@ -22,13 +22,17 @@
 #include "fiber-scheduler.h"
 #include "fiber.h"
 #include "fiber-context.h"
+#include "simulator.h"
+#include "event.tcc"
 
 #define noSCHED_DEBUG 1
 
+
 #ifdef SCHED_DEBUG
 #  include <iostream>
+
 static void
-print_fiber (Fiber const *f)
+print_fiber (yans::Fiber const *f)
 {
 	std::cout << f->peek_name ();
 	if (f->is_blocked ()) {
@@ -57,6 +61,8 @@ std::cout << std::endl;
 #  define TRACE_ENTER(f)
 #endif
 
+namespace yans {
+
 
 FiberScheduler *FiberScheduler::m_instance = 0;
 
@@ -64,6 +70,7 @@ FiberScheduler::FiberScheduler ()
 	: m_current (0)
 {
 	m_context = fiber_context_new_blank ();
+	Simulator::insert_later (make_event (&FiberScheduler::schedule, this));
 }
 
 FiberScheduler::~FiberScheduler ()
@@ -92,25 +99,16 @@ FiberScheduler::schedule (void)
 		prev = m_current;
 		m_current = 0;
 
-		if (m_do_n > 0) {
-			m_do_n--;
-		}
 		next = select_next_fiber ();
-		if (next != 0 && m_do_n != 0) {
-			m_current = next;
-			TRACE_ENTER (m_current);
-			prev->switch_to (next);
-		} else {
-			TRACE_ENTER_MAIN ();
-			prev->switch_to (m_context);
+		if (next != 0) {
+			Simulator::insert_in_s (40e-3, make_event (&FiberScheduler::schedule, this));
 		}
+		TRACE_ENTER_MAIN ();
+		prev->switch_to (m_context);
 	} else {
 		TRACE_LEAVE_MAIN ();
-		if (m_do_n > 0) {
-			m_do_n--;
-		}
 		next = select_next_fiber ();
-		if (next != 0 && m_do_n != 0) {
+		if (next != 0) {
 			m_current = next;
 			TRACE_ENTER (m_current);
 			next->switch_from (m_context);
@@ -155,33 +153,6 @@ FiberScheduler::is_deadlock (void)
 	}
 }
 
-void 
-FiberScheduler::run_main (void)
-{
-	m_do_n = -1;
-	while (!is_all_fibers_dead () &&
-	       !is_deadlock ()) {
-		schedule ();
-	}
-}
-
-void 
-FiberScheduler::run_main_one (void)
-{
-	m_do_n = 1;
-	assert (m_current == 0);
-	schedule ();
-}
-bool 
-FiberScheduler::is_work_left (void)
-{
-	if (!is_all_fibers_dead () &&
-	    !is_deadlock ()) {
-		return true;
-	} else {
-		return false;
-	}
-}
 
 void
 FiberScheduler::set_current_blocked (void)
@@ -236,128 +207,6 @@ FiberScheduler::instance (void)
 	return m_instance;
 }
 
-
-#ifdef RUN_SELF_TESTS
-
-#include "runnable.h"
-
-class TestRunnable : public Runnable {
-public:
-	TestRunnable (char const *name, TestFiberScheduler *test, uint8_t max)
-		: m_fiber (new Fiber (0, this, name)), 
-		  m_test (test), 
-		  m_max (max) {}
-	virtual ~TestRunnable () {
-		delete m_fiber;
-		m_fiber = (Fiber *)0xdeadbeaf;
-		m_max = 0x66;
-		m_test = (TestFiberScheduler *)0xdeadbeaf;
-	}
-
-	bool is_dead (void) const {
-		return m_fiber->is_dead ();
-	}
-private:
-	virtual void run (void) {
-		for (uint8_t i = 0; i < m_max; i++) {
-			m_test->record_run (this);
-			FiberScheduler::instance ()->schedule ();
-		}
-	}
-	Fiber *m_fiber;
-	TestFiberScheduler *m_test;
-	uint8_t m_max;
-};
-
-TestFiberScheduler::TestFiberScheduler (TestManager *manager)
-	: Test (manager)
-{}
-TestFiberScheduler::~TestFiberScheduler ()
-{}
-
-void 
-TestFiberScheduler::record_run (TestRunnable const *fiber)
-{
-	if (m_runs.find (fiber) == m_runs.end ()) {
-		m_runs[fiber] = 1;
-	} else {
-		m_runs[fiber] ++;
-	}
-}
-uint32_t 
-TestFiberScheduler::get_run (TestRunnable const *fiber)
-{
-	return m_runs[fiber];
-}
-void
-TestFiberScheduler::clear_runs (void)
-{
-	m_runs.clear ();
-}
-
-bool
-TestFiberScheduler::ensure_dead (TestRunnable const *runnable)
-{
-	bool ok = true;
-	if (!runnable->is_dead ()) {
-		ok = false;
-		failure () << "FiberScheduler -- "
-			   << "expected dead fiber."
-			   << std::endl;
-	}
-	return ok;
-}
-
-bool
-TestFiberScheduler::ensure_runs (TestRunnable const *fiber, uint32_t expected)
-{
-	bool ok = true;
-	if (get_run (fiber) != expected) {
-		ok = false;
-		failure () << "FiberScheduler -- "
-			   << "expected runs: " << expected << ", "
-			   << "got: " << get_run (fiber)
-			   << std::endl;
-	}
-	return ok;
-}
+}; // namespace yans
 
 
-#define ENSURE_DEAD(f)  \
-if (!ensure_dead (f)) { \
-	ok = false;     \
-}
-#define ENSURE_RUNS(f,expected)   \
-if (!ensure_runs (f, expected)) { \
-	ok = false;               \
-}
-
-bool 
-TestFiberScheduler::run_tests (void)
-{
-	bool ok = true;
-	FiberScheduler *sched = FiberScheduler::instance ();
-
-	TestRunnable *fiber = new TestRunnable ("test0", this, 5);
-	sched->run_main ();
-	ENSURE_DEAD (fiber);
-	clear_runs ();
-	delete fiber;
-
-	TestRunnable *fiber1 = new TestRunnable ("test1", this, 9);
-	TestRunnable *fiber2 = new TestRunnable ("test2", this, 3);
-	sched->run_main ();
-	ENSURE_RUNS (fiber1, 9);
-	ENSURE_DEAD (fiber1);
-	ENSURE_RUNS (fiber2, 3);
-	ENSURE_DEAD (fiber2);
-	clear_runs ();
-	ENSURE_DEAD (fiber1);
-	ENSURE_DEAD (fiber2);
-	delete fiber1;
-	delete fiber2;
-
-	return ok;
-}
-
-#endif /* RUN_SELF_TESTS */

@@ -25,6 +25,20 @@
 #include "event.h"
 #include <math.h>
 
+#define noTRACE_SIMU 1
+
+#ifdef TRACE_SIMU
+#include <iostream>
+# define TRACE(x) \
+std::cout << "SIMU TRACE " << Simulator::now_s () << " " << x << std::endl;
+# define TRACE_S(x) \
+std::cout << "SIMU TRACE " << x << std::endl;
+#else /* TRACE_SIMU */
+# define TRACE(format,...)
+# define TRACE_S(format,...)
+#endif /* TRACE_SIMU */
+
+
 namespace yans {
 
 class SimulatorPrivate {
@@ -72,6 +86,7 @@ SimulatorPrivate::handle_immediate (void)
 	while (!m_immediate.empty ()) {
 		Event *ev = m_immediate.front ();
 		m_immediate.pop_front ();
+		TRACE ("handle imm " << ev);
 		ev->notify ();
 	}
 }
@@ -79,12 +94,13 @@ SimulatorPrivate::handle_immediate (void)
 void
 SimulatorPrivate::run (void)
 {
+	handle_immediate ();
 	Event *next_ev = m_event_heap->peek_next ();
 	uint64_t next_now = m_event_heap->peek_next_time_us ();
-	handle_immediate ();
 	while (next_ev != 0 && !m_stop) {
 		m_event_heap->remove_next ();
 		m_clock->update_current_us (next_now);
+		TRACE ("handle " << next_ev);
 		next_ev->notify ();
 		handle_immediate ();
 		next_ev = m_event_heap->peek_next ();
@@ -155,6 +171,7 @@ Simulator::get_priv (void)
 {
 	assert (!m_destroyed);
 	static SimulatorPrivate *priv = new SimulatorPrivate ();
+	TRACE_S ("priv " << priv);
 	return priv;
 }
 
@@ -173,16 +190,19 @@ Simulator::run (void)
 void 
 Simulator::stop (void)
 {
+	TRACE ("stop");
 	get_priv ()->stop ();
 }
 void 
 Simulator::insert_in_us (uint64_t delta, Event *event)
 {
+	TRACE ("insert " << event << " in " << delta << "us");
 	get_priv ()->insert_in_us (event, delta);
 }
 void 
 Simulator::insert_at_us (uint64_t time, Event *event)
 {
+	TRACE ("insert " << event << " at " << time << "us");
 	get_priv ()->insert_at_us (event, time);
 }
 uint64_t 
@@ -193,11 +213,13 @@ Simulator::now_us (void)
 void 
 Simulator::insert_in_s (double delta, Event *event)
 {
+	TRACE ("insert " << event << " in " << delta << "s");
 	get_priv ()->insert_in_s (event, delta);
 }
 void 
 Simulator::insert_at_s (double time, Event *event)
 {
+	TRACE ("insert " << event << " at " << time << "s");
 	get_priv ()->insert_at_s (event, time);
 }
 double 
@@ -208,6 +230,7 @@ Simulator::now_s (void)
 void
 Simulator::insert_later (Event *event)
 {
+	TRACE ("insert later " << event);
 	return get_priv ()->insert_later (event);
 }
 
