@@ -26,7 +26,7 @@
 #include "simulator.h"
 #include "fiber-scheduler.h"
 
-#define TRACE_THREAD 1
+#define noTRACE_THREAD 1
 
 #ifdef TRACE_THREAD
 #include <iostream>

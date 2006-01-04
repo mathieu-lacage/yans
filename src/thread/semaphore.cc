@@ -23,7 +23,7 @@
 #include "fiber-scheduler.h"
 #include "fiber.h"
 
-#define TRACE_SEM 1
+#define noTRACE_SEM 1
 
 #ifdef TRACE_SEM
 #include <iostream>

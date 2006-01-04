@@ -25,7 +25,7 @@
 #include "simulator.h"
 #include "event.tcc"
 
-#define SCHED_DEBUG 1
+#define noSCHED_DEBUG 1
 
 
 #ifdef SCHED_DEBUG
