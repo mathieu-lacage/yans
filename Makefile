@@ -78,6 +78,18 @@ $(LIB_MODELS_PYTHON): $(MODELS_PYTHON_OBJ)
 DIRS += $(call gendirs, $(MODELS_PYTHON_SRC))
 build: $(LIB_MODELS_PYTHON)
 
+# building of sample applications
+SAMPLES_SRC= \
+	src/samples/main-simulator.cc \
+	src/samples/main-forwarding-simulator.cc \
+	src/samples/main-forwarding-simulator-template.cc \
+	$(NULL)
+DIRS += $(call gendirs, $(SAMPLES_SRC))
+SAMPLES=$(call genbin, $(basename $(SAMPLES_SRC)))
+$(SAMPLES): %:%.o
+	$(CXX) $(LDFLAGS) -L$(TOP_INSTALL) -lyans -o $@ $^
+build: $(SAMPLES)
+
 
 
 YANS_PYTHON_SRC= \
