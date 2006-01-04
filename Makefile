@@ -5,6 +5,7 @@ TOP_PYTHON_INSTALL=$(TOP_INSTALL)/yans
 DEFINES=-DRUN_SELF_TESTS=1
 INCLUDES=-I$(TOP)/simulator -I$(TOP)/src/thread -I$(TOP)/test -I$(TOP)/src/common
 FLAGS=-Wall -Werror -O0 -gdwarf-2
+PYTHON_INCLUDES=-I/usr/include/python2.3
 
 LDFLAGS=
 CXXFLAGS+=$(FLAGS) $(INCLUDES) $(DEFINES)
@@ -57,7 +58,7 @@ SIMULATOR_PYTHON_SRC= \
 	$(NULL)
 SIMULATOR_PYTHON_OBJ=$(call genobj, $(SIMULATOR_PYTHON_SRC))
 LIB_SIMULATOR_PYTHON=$(TOP_INSTALL)/python/_simulatormodule.so
-$(SIMULATOR_PYTHON_OBJ): CXXFLAGS+=-I/usr/include/python2.3
+$(SIMULATOR_PYTHON_OBJ): CXXFLAGS+=$(PYTHON_INCLUDES)
 $(LIB_SIMULATOR_PYTHON): $(SIMULATOR_PYTHON_OBJ)
 	$(CXX) $(LDFLAGS) -lboost_python -L$(TOP_INSTALL) -lyans -shared -o $@ $(filter %.o,$^)
 DIRS += $(call gendirs, $(SIMULATOR_PYTHON_SRC))
@@ -71,7 +72,7 @@ MODELS_PYTHON_SRC= \
 	$(NULL)
 MODELS_PYTHON_OBJ=$(call genobj, $(MODELS_PYTHON_SRC))
 LIB_MODELS_PYTHON=$(TOP_INSTALL)/python/_modelsmodule.so
-$(MODELS_PYTHON_OBJ): CXXFLAGS+=-I/usr/include/python2.3
+$(MODELS_PYTHON_OBJ): CXXFLAGS+=$(PYTHON_INCLUDES)
 $(LIB_MODELS_PYTHON): $(MODELS_PYTHON_OBJ)
 	$(CXX) $(LDFLAGS) -lboost_python -L$(TOP_INSTALL) -lyans -shared -o $@ $(filter %.o,$^)
 DIRS += $(call gendirs, $(MODELS_PYTHON_SRC))
