@@ -1,0 +1,247 @@
+<html>
+
+<head>
+<title>The Simulator</title>
+</head>
+
+
+<body>
+
+<h1>The Simulator</h1>
+
+<p>Two classes are used to offer a basic event-based simulation service:
+<ul>
+<li>Event</li>
+<li>Simulator</li>
+</ul>
+
+The user is expected to create Events and schedule them for expiration with
+the Simulator. The Simulator is responsible for notifying each Event when it
+has expired. The following very simple example shows how this can be done:
+<pre>
+#include "event.h"
+#include "simulator.h"
+#include <iostream>
+
+using namespace yans;
+
+class MyEvent : public Event {
+public:
+        MyEvent ();
+	virtual void notify (void);
+};
+
+MyEvent::MyEvent () 
+{}
+
+void
+MyEvent::notify (void)
+{
+        std::cout << "notified at " << Simulator::now_s () << "s" << std::endl;
+	delete this;
+}
+
+int main (int argc, char *argv[])
+{
+        Simulator::insert_at_s (10.0, new MyEvent ());
+
+	Simulator::run ();
+
+	Simulator::destroy ();
+}
+</pre>
+The output of this program when run is:
+<pre>
+[mlacage@chronos yans-current]$ ./bin/src/samples/main-simulator
+notified at 10s
+[mlacage@chronos yans-current]$ 
+</pre>
+</p>
+
+<h2>Simulator</h2>
+
+<p>
+The Simulator class exports 2 methods which can be used to access the
+value of the current time:
+<ul>
+<li>Simulator::now_s (void) : this method returns a double which 
+identifies the current time in seconds</li>
+<li>Simulator::now_us (void) : this method returns a 64 bit unsigned 
+integer which identifies the current time in microseconds</li>
+</ul>
+The Simulator class exports 5 methods which can be used to schedule events:
+<ul>
+<li><i>Simulator::insert_at_s (at, event)</i>: the event will expire at time 
+<i>at</i> seconds.</li>
+<li><i>Simulator::insert_at_us (at, event)</i>: the event will expire at time 
+<i>at</i> microseconds.</li>
+<li><i>Simulator::insert_in_s (delta, event)</i>: the event will expire in 
+<i>at</i> seconds from now. This is equivalent to a call to: 
+Simulator::insert_at_s (Simulator::now_s () + delta, event)</li>
+<li><i>Simulator::insert_in_us (delta, event)</i>: the event will expire in 
+<i>at</i> seconds from now. This is equivalent to a call to: 
+Simulator::insert_at_us (Simulator::now_us () + delta, event)</li>
+<li><i>Simulator::insert_later (delta, event)</i>: the event will expire now. 
+Specifically, when this event expires, the current time returned
+by Simulator::now_s will be the same but all other events which were
+inserted with one of the insert_at or insert_in methods and which 
+were scheduled for the current time will have expired. This method is
+very useful to deal with various re-entrency issues.</li>
+</ul>
+</p>
+
+<p>The simulation itself is controlled with two methods:
+<ul>
+<li><i>Simulator::run (void)</i>: this method executes the simulation until
+no events are available to be scheduled anymore.</li>
+<li><i>Simulator::stop (void)</i>: this method can be invoked at any time
+to interrupt the execution of Simulation::run (void). Using this method
+is not really recommended. A good simulation should naturally complete
+when no events are scheduled.</li>
+</ul>
+The last method exported by the simulator class is used to perform the
+final memory cleanup when teh simulation is completed. It should be used
+right after Simulator::run returns. It is very useful when using
+memory leak checkers to ensure that no memory is ever lost:
+<ul>
+<li><i>Simulator::destroy (void)</i></li>
+</ul>
+</p>
+
+<h2>Event</h2>
+
+<p>
+All Events scheduled with the Simulator must inherit from the Event class. They
+must implement the public pure virtual method named 
+<i>void Event::notify (void)</i>. This method is invoked by the Simulator class
+whenever the event has expired. This method should perform some event-specific
+processing to deal with the event and should cleanup the memory associated
+with this Event if there is any.
+</p>
+
+<p>In the example shown above, we delete the event because it was allocated
+with a call to operator new before being scheduled. It is also possible
+to allocate Events on the stack or in static storage or, more, generally,
+anywhere provided their lifetime lasts longuer than after the Simulator's
+call to their notify method. Howeverm, for the sake of simplicity, we do 
+recommend that every event is allocated with operator new and deleted in 
+its Event::notify handler.</p>
+
+<h2>make_event</h2>
+
+<p>When implementing large complex models, the number of distinct types
+of events can grow quite large and the common forwarding pattern can 
+require writing large amounts of not-so-useful/exciting code:
+<pre>
+#include "event.h"
+#include "simulator.h"
+#include <iostream>
+
+using namespace yans;
+
+
+class MyModel {
+public:
+	void start (void);
+	void deal_with_event (double event_value);
+};
+class MyEvent : public Event {
+public:
+        MyEvent (MyModel *model, double event_value);
+	virtual void notify (void);
+private:
+	MyModel *m_model;
+	double m_value;
+};
+
+
+MyEvent::MyEvent (MyModel *model, double event_value)
+	: m_model (model),
+	  m_value (event_value)
+{}
+void
+MyEvent::notify (void)
+{
+	m_model->deal_with_event (m_value);
+	delete this;
+}
+
+void 
+MyModel::start (void)
+{
+	Simulator::insert_at_s (10.0, new MyEvent (this, Simulator::now_s ()));
+}
+void
+MyModel::deal_with_event (double value)
+{
+	std::cout << "Received event at " << Simulator::now_s () << " started at " << value << std::endl;
+}
+
+
+int main (int argc, char *argv[])
+{
+	MyModel model;
+
+	model.start ();
+
+	Simulator::run ();
+
+	Simulator::destroy ();
+}
+</pre>
+In this example, the class MyModel wants to be notified of an event at time 10.0 and 
+wants to be forwarded an event-specific value at this point. This type of code happens
+very often because each event needs to share decision variables with some other events.
+</p>
+
+<p>The <a href="event.tcc">event.tcc</a> header provides a very simple-to-use
+template-based solution to this problem. The previous example, can be rewritten as:
+<pre>
+#include "event.h"
+#include "event.tcc"
+#include "simulator.h"
+#include <iostream>
+
+using namespace yans;
+
+class MyModel {
+public:
+	void start (void);
+private:
+	void deal_with_event (double event_value);
+};
+
+void 
+MyModel::start (void)
+{
+	Simulator::insert_at_s (10.0, make_event (&MyModel::deal_with_event, 
+						  this, Simulator::now_s ()));
+}
+void
+MyModel::deal_with_event (double value)
+{
+	std::cout << "Received event at " << Simulator::now_s () << " started at " << value << std::endl;
+}
+
+
+int main (int argc, char *argv[])
+{
+	MyModel model;
+
+	model.start ();
+
+	Simulator::run ();
+
+	Simulator::destroy ();
+}
+</pre>
+This version is 18 lines shorter than the previous version and still performs the exact same
+function with the same performance. <i>Event *make_event (method, instance, argument1, argument2)</i>
+creates an instance of a new subclass of Event which stores a copy of the method pointer, instance
+and arguments and invokes them in its notify handler. For now, make_event works only
+on methods with 0, 1, or 2 arguments but extending it to support a larger number of arguments
+is trivial and will done whenever users request it.
+</p>
+
+</body>
+</html>

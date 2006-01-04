@@ -1,0 +1,47 @@
+<html>
+
+<head>
+<title>Yans</title>
+</head>
+
+<body>
+
+<h1>Introduction</h1>
+
+<p>Yans was written as a prototype to investigate the requirements
+of a complete network simulator with a large number of very different
+models. The core of the simulation engine has been designed to make
+the following features as easy as possible to support:
+<ul>
+<li>dump of trace files in libpcap format,</li>
+<li>emulation: the ability to plug the simulator in a real network and
+exchange packets to and from the real network,</li>
+<li>integration of real-world userspace socket-based applications: 
+minimal changes to the code of such applications and recompilation 
+should be all that is required to run a socket-based application in the
+simulator,</li>
+<li>parallelisation: it should be easy to write a single simulation scenario
+and run it either on a simple workstation or a large cluster of machines and
+obtain a linear increase of performance with the size of the cluster,</li>
+<li>scripting: it should be possible to use a scripting language
+to run various simulation scenarios without requiring a recompile. tcl
+should not be used.</li>
+<li>Graphical User Interface: it should be possible to define and run
+a simulation scenario with a user interface.</li>
+</ul>
+</p>
+
+<p>While implementing all these features is known not to be a problem, 
+so far, no single simulator has been able to offer easy-to-use
+solutions to all these problems together which is why yans was started.</p>
+
+<p>The following sections describe the C++ APIs which offer the basic
+services on top of which network-specific models are implemented.</p>
+
+<ul>
+<li><a href="simulator.html">The Simulator</a></li>
+<li><a href="network-core.html">The Core Network Models</a></li>
+</ul>
+
+</body>
+</html>
