@@ -275,10 +275,6 @@ Buffer::alloc_and_zero (uint32_t size)
 
 namespace yans {
 
-BufferTest::BufferTest (TestManager *manager)
-	: Test (manager)
-{}
-
 bool
 BufferTest::ensure_written_bytes (Buffer *buffer, uint32_t n, uint8_t array[])
 {

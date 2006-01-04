@@ -373,9 +373,6 @@ TcpPieces::get_at (uint32_t start, uint32_t size)
 
 namespace yans {
 
-TcpPiecesTest::TcpPiecesTest (TestManager *manager)
-	: Test (manager)
-{}
 ChunkPiece *
 TcpPiecesTest::create_one_piece (uint32_t size)
 {

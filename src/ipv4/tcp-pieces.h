@@ -97,7 +97,6 @@ namespace yans {
 class ChunkPiece;
 class TcpPiecesTest : public Test {
 public:
-	TcpPiecesTest (TestManager *manager);
 	virtual bool run_tests (void);
 private:
 	ChunkPiece *create_one_piece (uint32_t size);

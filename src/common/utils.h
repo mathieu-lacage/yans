@@ -43,9 +43,6 @@ uint16_t utils_checksum_calculate (uint8_t *buffer, uint16_t size);
 namespace yans {
 class UtilsTest : public Test {
 public:
-	UtilsTest (TestManager *manager);
-	virtual ~UtilsTest ();
-
 	virtual bool run_tests (void);
 private:
 	bool test_mac_ascii (char const *str, uint8_t expected[6]);

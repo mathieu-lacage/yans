@@ -27,6 +27,7 @@
 #include "host.h"
 #include "ipv4-end-point.h"
 #include "tcp-connection-listener.h"
+#include "tcp-connection.h"
 #include "event.tcc"
 #include "ipv4-end-points.h"
 
@@ -64,8 +65,8 @@ Tcp::Tcp ()
 }
 Tcp::~Tcp ()
 {
-	delete m_slow_timer;
-	delete m_fast_timer;
+	m_slow_timer->destroy ();
+	m_fast_timer->destroy ();
 	delete m_end_p;
 }
 

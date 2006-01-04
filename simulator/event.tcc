@@ -100,10 +100,15 @@ EventCallback2<T, T1, T2> *make_event(void (T::*f) (T1, T2), T* t, T1 a1, T2 a2)
 	return new EventCallback2<T, T1, T2>(t, f, a1, a2);
 }
 
-
+class StaticEvent : public Event {
+public:
+	void destroy (void) {
+		delete this;
+	}
+};
 
 template<typename T>
-class StaticEventCallback0 : public Event {
+class StaticEventCallback0 : public StaticEvent {
 public:
 	typedef void (T::*F)(void);
 
@@ -120,7 +125,7 @@ private:
 };
 
 template<typename T, typename T1>
-class StaticEventCallback1 : public Event {
+class StaticEventCallback1 : public StaticEvent {
 public:
 	typedef void (T::*F)(T1);
 
@@ -139,7 +144,7 @@ private:
 };
 
 template<typename T, typename T1, typename T2>
-class StaticEventCallback2 : public Event {
+class StaticEventCallback2 : public StaticEvent {
 public:
 	typedef void (T::*F)(T1, T2);
 

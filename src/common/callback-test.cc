@@ -25,14 +25,11 @@
 
 namespace yans {
 
-CallbackTest::CallbackTest (TestManager *manager)
-	: Test (manager),
-	  m_test1 (false),
+CallbackTest::CallbackTest ()
+	: m_test1 (false),
 	  m_test2 (false),
 	  m_test3 (false),
 	  m_test4 (false)
-{}
-CallbackTest::~CallbackTest ()
 {}
   
 bool 

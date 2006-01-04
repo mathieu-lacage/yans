@@ -3,7 +3,18 @@ include ./functions.mk
 TOP_INSTALL=$(TOP)/bin
 TOP_PYTHON_INSTALL=$(TOP_INSTALL)/yans
 DEFINES=-DRUN_SELF_TESTS=1
-INCLUDES=-I$(TOP)/simulator -I$(TOP)/src/thread -I$(TOP)/test -I$(TOP)/src/common
+INCLUDES=\
+ -I$(TOP)/simulator \
+ -I$(TOP)/src/thread \
+ -I$(TOP)/test \
+ -I$(TOP)/src/common \
+ -I$(TOP)/src/host \
+ -I$(TOP)/src/arp \
+ -I$(TOP)/src/ethernet \
+ -I$(TOP)/src/ipv4 \
+ -I$(TOP)/src/os-model \
+ -I$(TOP)/src/apps \
+ $(NULL)
 FLAGS=-Wall -Werror -O0 -gdwarf-2
 PYTHON_INCLUDES=-I/usr/include/python2.3
 
@@ -24,6 +35,51 @@ YANS_SRC= \
 	src/thread/fiber.cc \
 	src/thread/fiber-scheduler.cc \
 	src/thread/thread.cc \
+	src/common/buffer.cc \
+	src/common/chunk.cc \
+	src/common/packet.cc \
+	src/common/utils.cc \
+	src/common/population-analysis.cc \
+	src/common/tag-manager.cc \
+	src/common/chunk-fake-data.cc \
+	src/common/callback-test.cc \
+	src/common/ipv4-address.cc \
+	src/common/mac-address.cc \
+	src/arp/arp-cache-entry.cc \
+	src/arp/arp.cc \
+	src/arp/chunk-arp.cc \
+	src/host/host.cc \
+	src/host/network-interface.cc \
+	src/host/network-interface-tracer.cc \
+	src/host/loopback-interface.cc \
+	src/host/host-tracer.cc \
+	src/ipv4/chunk-icmp.cc \
+	src/ipv4/chunk-ipv4.cc \
+	src/ipv4/chunk-piece.cc \
+	src/ipv4/chunk-tcp.cc \
+	src/ipv4/chunk-udp.cc \
+	src/ipv4/defrag-state.cc \
+	src/ipv4/ipv4.cc \
+	src/ipv4/ipv4-end-point.cc \
+	src/ipv4/ipv4-end-points.cc \
+	src/ipv4/ipv4-route.cc \
+	src/ipv4/tag-ipv4.cc \
+	src/ipv4/tcp.cc \
+	src/ipv4/tcp-connection.cc \
+	src/ipv4/tcp-connection-listener.cc \
+	src/ipv4/tcp-pieces.cc \
+	src/ipv4/udp.cc \
+	src/apps/periodic-generator.cc \
+	src/apps/tcp-sink.cc \
+	src/apps/tcp-source.cc \
+	src/apps/traffic-analyzer.cc \
+	src/apps/udp-sink.cc \
+	src/apps/udp-source.cc \
+	src/ethernet/cable.cc \
+	src/ethernet/chunk-mac-crc.cc \
+	src/ethernet/chunk-mac-llc-snap.cc \
+	src/ethernet/ethernet-network-interface.cc \
+	src/os-model/write-file.cc \
 	test/test.cc \
 	$(NULL)
 YANS_OBJ=$(call genobj, $(YANS_SRC))
@@ -83,6 +139,9 @@ SAMPLES_SRC= \
 	src/samples/main-simulator.cc \
 	src/samples/main-forwarding-simulator.cc \
 	src/samples/main-forwarding-simulator-template.cc \
+	src/samples/main-simple.cc \
+	src/samples/main-router.cc \
+	src/samples/main-tcp.cc \
 	$(NULL)
 DIRS += $(call gendirs, $(SAMPLES_SRC))
 SAMPLES=$(call genbin, $(basename $(SAMPLES_SRC)))

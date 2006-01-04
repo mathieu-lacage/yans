@@ -36,7 +36,7 @@ class Ipv4EndPoint;
 class Ipv4EndPoints;
 class TcpConnectionListener;
 class TcpConnection;
-class Event;
+class StaticEvent;
 
 
 enum {
@@ -87,8 +87,8 @@ private:
 	Ipv4 *m_ipv4;
 	Ipv4EndPoints *m_end_p;
 	Connections m_connections;
-	Event *m_slow_timer;
-	Event *m_fast_timer;
+	StaticEvent *m_slow_timer;
+	StaticEvent *m_fast_timer;
 	bool m_running;
 	int m_tcp_now;
 	int m_tcp_iss;

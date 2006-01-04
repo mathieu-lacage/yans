@@ -150,11 +150,6 @@ utils_checksum_calculate (uint8_t *buffer, uint16_t size)
 #ifdef RUN_SELF_TESTS
 #include "test.h"
 namespace yans {
-UtilsTest::UtilsTest (TestManager *manager)
-	: Test (manager)
-{}
-UtilsTest::~UtilsTest ()
-{}
 
 bool
 UtilsTest::test_ipv4_ascii_to_host (char const *str, uint32_t expected)

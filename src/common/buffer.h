@@ -72,8 +72,6 @@ private:
 namespace yans {
 class BufferTest: public Test {
 public:
-	BufferTest (TestManager *manager);
-	
 	virtual bool run_tests (void);
 private:
 	bool ensure_written_bytes (Buffer *buffer, 

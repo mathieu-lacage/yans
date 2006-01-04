@@ -27,8 +27,7 @@
 namespace yans {
 class CallbackTest : public Test {
 public:
-	CallbackTest (TestManager *manager);
-	virtual ~CallbackTest ();
+	CallbackTest ();
   
 	virtual bool run_tests (void);
 private:
