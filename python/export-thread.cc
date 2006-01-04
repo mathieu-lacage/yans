@@ -25,7 +25,7 @@
 using namespace yans;
 using namespace boost::python;
 
-struct ThreadWrap : Thread, wrapper<Thread> {
+struct ThreadWrap : Thread {
 	ThreadWrap (PyObject *self, char const *name)
 		: Thread (name), 
 		  m_self (self) 
