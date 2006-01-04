@@ -238,10 +238,24 @@ int main (int argc, char *argv[])
 This version is 18 lines shorter than the previous version and still performs the exact same
 function with the same performance. <i>Event *make_event (method, instance, argument1, argument2)</i>
 creates an instance of a new subclass of Event which stores a copy of the method pointer, instance
-and arguments and invokes them in its notify handler. For now, make_event works only
+and arguments and invokes them in its notify handler. This event also deletes itself after
+calling its notification target. For now, make_event works only
 on methods with 0, 1, or 2 arguments but extending it to support a larger number of arguments
 is trivial and will done whenever users request it.
 </p>
+
+<h2>make_static_event</h2>
+
+<p>make_static_event is very similar to make_event: it also creates a new instance of a subclass
+of the Event class and stores a copy of the method, instance pointer and arguments and
+invokes them in its notify handler. This event <i>does not</i> delete itself upon notify. Instead,
+the user is expected to destroy this event by an explicit call to StaticEvent::destroy. Typically,
+this method would be called from the destructor of the model class to which the event is forwarded.
+</p>
+
+<p>make_static_event is represents another way to manage the memory associated with events.
+As mentioned before, we do not recommend using this memory allocation strategy: most users
+should be happy with the default strategy implemented by make_event.</p>
 
 </body>
 </html>
