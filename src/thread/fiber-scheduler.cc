@@ -25,7 +25,7 @@
 #include "simulator.h"
 #include "event.tcc"
 
-#define noSCHED_DEBUG 1
+#define SCHED_DEBUG 1
 
 
 #ifdef SCHED_DEBUG
@@ -34,7 +34,7 @@
 static void
 print_fiber (yans::Fiber const *f)
 {
-	std::cout << f->peek_name ();
+	std::cout << "\"" << *(f->peek_name ()) << "\" ";
 	if (f->is_blocked ()) {
 		std::cout << "blocked ";
 	} else if (f->is_dead ()) {
