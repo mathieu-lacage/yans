@@ -60,12 +60,14 @@ Thread::yield (void)
 void 
 Thread::sleep_s (double delta)
 {
+	TRACE ("sleep for " << delta << "s");
 	Simulator::insert_in_s (delta, make_event (&Semaphore::up, m_sleep_sem));
 	m_sleep_sem->down ();
 }
 void 
 Thread::sleep_us (uint64_t delta)
 {
+	TRACE ("sleep for " << delta << "us");
 	Simulator::insert_in_us (delta, make_event (&Semaphore::up, m_sleep_sem));
 	m_sleep_sem->down ();
 }
