@@ -1,35 +1,20 @@
 
-1) Goals
+1) Yans
 --------
 
-This is an discrete time event-driven network simulator. Yet another one. Our 
-feature goals are:
-   - provide a UDP/TCP IPv4 stack with multicast support.
-   - provide a nice network interface API to plug in various types of
-     network interfaces.
-   - provide at least a CSMA-CD (ethernet) network interface and a 802.11
-     network interface.
-   - provide a nice Packet API which can be used to support:
-       - libpcap-style packet dumps
-       - injection and sniffing of real packets in and out of the simulator
-         to and from a real network
-   - provide an application-level API similar to normal POSIX environments
-     to allow the porting of various classic socket-based applications.
-     For example, apache and various routing daemons.
-
 So far, this code could be labeled as a prototype since it does not implement
-all the features described above. We are also open to outside contributions
-which would be interested on working on some of these features or other
-network simulation modules.
+all the features we want. We are open to outside contributions which would be 
+interested on working on some of these features or other network simulation 
+models.
 
-2) Current Implementation
--------------------------
+2) Current features
+-------------------
 
 The current implementation features:
    - a UDP/IPv4 stack without multicast
    - a nice packet API
    - a complete arp module
-   - an empty ethernet module which uses the arp module to perform address
+   - an ethernet module which uses the arp module to perform address
      translation between IPv4 addresses and MAC addresses.
    - libpcap dump support at the network interface level
    - a sample application with a simple udp source and sink pair.
@@ -38,28 +23,60 @@ The current implementation features:
    - a port of the BSD4.4Lite TCP stack. This stack has been ported and 
      debugged but, due to licensing incompatibility reasons, we have not
      included it in the simulator distribution.
+   - a set of python bindings.
 
-3) Roadmap
+3) How to build 
+---------------
+
+If you want to use the python bindings, you need:
+   - python (tested with 2.3 and 2.4) (see http://www.python.org)
+   - Boost (tested with 1.32.0) (see http://www.boost.org)
+Otherwise, you need:
+   - gcc (tested with 3.4 and 4.0.2)
+   - GNU make (tested with 3.80)
+
+All of these should be available on standard linux distributions. Make
+sure you install the -devel packages associated to these packages. Fedora
+Core 3 and 4 have been tested and work. (You might need to adjust the
+path to the python headers in Makefile: PYTHON_INCLUDES=python_path).
+
+Once the dependencies are installed, you can build the thing with a
+simple "make" command. The binaries are build in the "bin" directory.
+[mlacage@chronos yans-current]$ make
+mkdir -p bin/python;
+mkdir -p bin/python/yans;
+mkdir -p bin/python/yans/simulator;
+[....]
+cp python/test-thread.py bin/python/test-thread.py
+g++  -lboost_python -L./bin -lyans -shared -o bin/python/_modelsmodule.so bin/python/yans-models.o bin/python/export-thread.o
+[mlacage@chronos yans-current]$ ./bin/test/main-test
+Test "Thread" success.
+[mlacage@chronos yans-current]$ ./bin/python/test-simulator.py
+my model now=1.000000
+my model now=2.000000 v1=99
+my model now=3.000000 v1=98,v2=97
+my member now=4.000000
+my event class now=5.000000
+my event class now=6.000000
+
+
+4) TODO
 ----------
 
-The next features which require work are:
-   - ipv4 routing
-   - csma/cd support
-   - port of our ns-2 802.11 code
-
-
-4) Known bugs
--------------
-
-Mac crc are not calculated.
-   
+- Deserialization support
+- emulation support
+- complete python binding
+- parallelisation support
+- deployment for parallelisation through python
+- 802.11 model
+  
 5) Contributing/Using
 ---------------------
 
 If you are interested in:
   - using this simulator
   - reporting a bug
-  - contributing a new module
+  - contributing a new model
 
 Please, consult our website:
 http://spoutnik.inria.fr/yans

@@ -8,6 +8,8 @@ This release features:
    - large number of cleanups to the API.
    - a reworked libpcap dump support to deal with
      tcp checksums.
+   - a reworked framework for POSIX support.
+   - the start of a set of python bindings.
 
 Release 0.2
 -----------
