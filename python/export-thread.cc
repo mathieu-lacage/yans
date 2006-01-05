@@ -21,6 +21,8 @@
 
 #include <boost/python.hpp>
 #include "thread.h"
+#include "simulator.h"
+#include "event.tcc"
 
 using namespace yans;
 using namespace boost::python;
@@ -37,8 +39,15 @@ struct ThreadWrap : Thread {
 		Py_DECREF(m_self);
 	}
 private:
+	void rethrow_exception (error_already_set &set) {
+		throw set;
+	}
 	virtual void run (void) {
-		call_method<void>(m_self, "run");
+		try {
+			call_method<void>(m_self, "run");
+		} catch (error_already_set &set) {
+			Simulator::insert_later (make_event (&ThreadWrap::rethrow_exception, this, set));
+		}
 	}
 	PyObject *m_self;
 };
