@@ -23,57 +23,8 @@
 
 namespace yans {
 
-uint32_t 
-ChunkSerializationState::get_current (void)
-{
-	return m_current;
-}
-uint32_t 
-ChunkSerializationState::get_next (void)
-{
-	return m_next;
-}
-uint32_t 
-ChunkSerializationState::get_prev (void)
-{
-	return m_prev;
-}
-Chunk *
-ChunkSerializationState::get_prev_chunk (void)
-{
-	return m_prev_chunk;
-}
-Chunk *
-ChunkSerializationState::get_next_chunk (void)
-{
-	return m_next_chunk;
-}
-
-void 
-ChunkSerializationState::set (Chunk *prev_chunk, Chunk *next_chunk,
-			      uint32_t prev, uint32_t next,
-			      uint32_t current)
-{
-	m_prev_chunk = prev_chunk;
-	m_next_chunk = next_chunk;
-	m_prev = prev;
-	m_next = next;
-	m_current = current;
-}
-
-
 Chunk::~Chunk ()
 {}
-
-void 
-Chunk::serialize_init (Buffer *buffer) const
-{}
-void 
-Chunk::serialize_fini (Buffer *buffer, 
-		       ChunkSerializationState *state) const
-{}
-
-
 
 std::ostream& operator<< (std::ostream& os, Chunk const& chunk)
 {
