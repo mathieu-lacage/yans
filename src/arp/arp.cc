@@ -101,12 +101,12 @@ Arp::set_sender (ArpSendDataCallback *send_data,
 void
 Arp::send_arp_request (Ipv4Address to)
 {
-	ChunkArp *arp = new ChunkArp ();
-	arp->set_request (m_interface->get_mac_address (),
-			  m_interface->get_ipv4_address (),
-			  to);
+	ChunkArp arp;
+	arp.set_request (m_interface->get_mac_address (),
+			 m_interface->get_ipv4_address (),
+			 to);
 	Packet *packet = new Packet ();
-	packet->add_header (arp);
+	packet->add (&arp);
 	(*m_send_arp) (packet, MacAddress::get_broadcast ());
 	packet->unref ();
 }
@@ -114,12 +114,12 @@ Arp::send_arp_request (Ipv4Address to)
 void
 Arp::send_arp_reply (Ipv4Address to_ip, MacAddress to_mac)
 {
-	ChunkArp *arp = new ChunkArp ();
-	arp->set_reply (m_interface->get_mac_address (),
-			m_interface->get_ipv4_address (),
-			to_mac, to_ip);
+	ChunkArp arp;
+	arp.set_reply (m_interface->get_mac_address (),
+		       m_interface->get_ipv4_address (),
+		       to_mac, to_ip);
 	Packet *packet = new Packet ();
-	packet->add_header (arp);
+	packet->add (&arp);
 	(*m_send_arp) (packet, to_mac);
 	packet->unref ();
 }
@@ -167,37 +167,37 @@ Arp::send_data (Packet *packet, Ipv4Address to)
 void 
 Arp::recv_arp (Packet *packet)
 {
-	ChunkArp *arp = static_cast <ChunkArp *> (packet->remove_header ());
-	if (arp->is_request () && 
-	    arp->get_destination_ipv4_address () == m_interface->get_ipv4_address ()) {
-		TRACE ("got request from " << arp->get_source_ipv4_address () << " -- send reply");
-		send_arp_reply (arp->get_source_ipv4_address (),
-				arp->get_source_hardware_address ());
-	} else if (arp->is_reply () &&
-		   arp->get_destination_ipv4_address ().is_equal (m_interface->get_ipv4_address ()) &&
-		   arp->get_destination_hardware_address ().is_equal (m_interface->get_mac_address ())) {
-		Ipv4Address from = arp->get_source_ipv4_address ();
+	ChunkArp arp;
+	packet->remove (&arp);
+	if (arp.is_request () && 
+	    arp.get_destination_ipv4_address () == m_interface->get_ipv4_address ()) {
+		TRACE ("got request from " << arp.get_source_ipv4_address () << " -- send reply");
+		send_arp_reply (arp.get_source_ipv4_address (),
+				arp.get_source_hardware_address ());
+	} else if (arp.is_reply () &&
+		   arp.get_destination_ipv4_address ().is_equal (m_interface->get_ipv4_address ()) &&
+		   arp.get_destination_hardware_address ().is_equal (m_interface->get_mac_address ())) {
+		Ipv4Address from = arp.get_source_ipv4_address ();
 		if (m_arp_cache.find (from) != m_arp_cache.end ()) {
 			ArpCacheEntry *entry = m_arp_cache[from];
 			assert (entry != 0);
 			if (entry->is_wait_reply ()) {
-				TRACE ("got reply from " << arp->get_source_ipv4_address ()
+				TRACE ("got reply from " << arp.get_source_ipv4_address ()
 				       << " for waiting entry -- flush");
-				MacAddress from_mac = arp->get_source_hardware_address ();
+				MacAddress from_mac = arp.get_source_hardware_address ();
 				Packet *waiting = entry->mark_alive (from_mac);
 				(*m_send_data) (waiting, from_mac);
 				waiting->unref ();
 			} else {
 				// ignore this reply which might well be an attempt 
 				// at poisening my arp cache.
-				TRACE ("got reply from " << arp->get_source_ipv4_address () << 
+				TRACE ("got reply from " << arp.get_source_ipv4_address () << 
 				       " for non-waiting entry -- drop");
 			}
 		} else {
 			TRACE ("got reply for unknown entry -- drop");
 		}
 	}
-	delete arp;
 }
 
 }; // namespace yans

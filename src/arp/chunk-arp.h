@@ -46,14 +46,12 @@ class ChunkArp : public Chunk {
 	Ipv4Address get_source_ipv4_address (void);
 	Ipv4Address get_destination_ipv4_address (void);
 
-	virtual uint32_t get_size (void) const;
-	virtual Chunk *copy (void) const;
-	virtual void serialize_init (Buffer *buffer) const;
-	virtual void serialize_fini (Buffer *buffer,
-				     ChunkSerializationState *state) const;
+	virtual void add_to (Buffer *buffer) const;
+	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
 
 private:
+	uint32_t get_size (void) const;
 	enum ArpType_e {
 		ARP_TYPE_REQUEST = 1,
 		ARP_TYPE_REPLY   = 2

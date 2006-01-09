@@ -88,18 +88,13 @@ ChunkArp::get_size (void) const
 	/* this is the size of an ARP payload. */
 	return 28;
 }
-Chunk *
-ChunkArp::copy (void) const
-{
-	ChunkArp *chunk = new ChunkArp ();
-	*chunk = *this;
-	return chunk;
-}
 
 void 
-ChunkArp::serialize_init (Buffer *buffer) const
+ChunkArp::add_to (Buffer *buffer) const
 {
-	// XXX should be careful with network/host order.
+	buffer->add_at_start (get_size ());
+	buffer->seek (0);
+
 	/* ethernet */
 	buffer->write_hton_u16 (0x0001);
 	/* ipv4 */
@@ -113,10 +108,17 @@ ChunkArp::serialize_init (Buffer *buffer) const
 	m_ipv4_dest.serialize (buffer);
 }
 void 
-ChunkArp::serialize_fini (Buffer *buffer,
-			  ChunkSerializationState *state) const
-{}
+ChunkArp::remove_from (Buffer *buffer)
+{
+	buffer->seek (0);
+	buffer->skip (2+2+1+1);
+	m_type = buffer->read_ntoh_u16 ();
+	m_mac_source.deserialize (buffer);
+	m_ipv4_source.deserialize (buffer);
+	m_mac_dest.deserialize (buffer);
+	m_ipv4_dest.deserialize (buffer);
 
+}
 void 
 ChunkArp::print (std::ostream *os) const
 {
