@@ -35,21 +35,20 @@ public:
 
 	void set_destination (uint16_t port);
 	void set_source (uint16_t port);
-	uint16_t get_source (void);
-	uint16_t get_destination (void);
+	uint16_t get_source (void) const;
+	uint16_t get_destination (void) const;
 
 	void set_payload_size (uint16_t size);
 
-	virtual uint32_t get_size (void) const;
-	virtual Chunk *copy (void) const;
-	virtual void serialize_init (Buffer *buffer) const;
-	virtual void serialize_fini (Buffer *buffer,
-				     ChunkSerializationState *state) const;
+	virtual void add_to (Buffer *buffer) const;
+	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
 private:
+	uint32_t get_size (void) const;
+
 	uint16_t m_source_port;
 	uint16_t m_destination_port;
-	uint16_t m_udp_length;
+	uint16_t m_payload_size;
 };
 
 }; // namespace yans

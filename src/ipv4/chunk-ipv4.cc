@@ -173,27 +173,19 @@ ChunkIpv4::get_destination (void) const
 }
 
 
-uint32_t 
-ChunkIpv4::get_size (void) const
-{
-	return 5 * 4;
-}
-
-Chunk *
-ChunkIpv4::copy (void) const
-{
-	ChunkIpv4 *ipv4 = new ChunkIpv4 (*this);
-	return ipv4;
-}
 bool
 ChunkIpv4::is_checksum_ok (void) const
 {
-	return true;
+	return m_good_checksum;
 }
 
+
 void 
-ChunkIpv4::serialize_init (Buffer *buffer) const
+ChunkIpv4::add_to (Buffer *buffer) const
 {
+	buffer->add_at_start (get_size ());
+	buffer->seek (0);
+	
 	//TRACE ("init ipv4 current="<<buffer->get_current ());
 	uint8_t ver_ihl = (4 << 4) | (5);
 	buffer->write_u8 (ver_ihl);
@@ -216,19 +208,53 @@ ChunkIpv4::serialize_init (Buffer *buffer) const
 	buffer->write_hton_u16 (0);
 	m_source.serialize (buffer);
 	m_destination.serialize (buffer);
-}
-void 
-ChunkIpv4::serialize_fini (Buffer *buffer,
-			   ChunkSerializationState *state) const
-{
-	uint8_t *data = buffer->peek_data () + state->get_current ();
+
+	uint8_t *data = buffer->peek_data ();
 	//TRACE ("fini ipv4 current="<<state->get_current ());
 	uint16_t checksum = utils_checksum_calculate (data, get_size ());
 	//TRACE ("checksum=" <<checksum);
-	buffer->skip (10);
+	buffer->seek (0+10);
 	buffer->write_u16 (checksum);
 }
+void 
+ChunkIpv4::remove_from (Buffer *buffer)
+{
+	buffer->seek (0);
+	uint8_t ver_ihl = buffer->read_u8 ();
+	uint8_t ihl = ver_ihl & 0x0f; 
+	uint16_t header_size = ihl * 4;
+	assert ((ver_ihl >> 4) == 4);
+	m_tos = buffer->read_u8 ();
+	uint16_t size = buffer->read_ntoh_u16 ();
+	m_payload_size = size - header_size;
+	m_identification = buffer->read_ntoh_u16 ();
+	uint8_t flags = buffer->read_u8 ();
+	m_flags = 0;
+	if (flags & (1<<6)) {
+		m_flags |= DONT_FRAGMENT;
+	}
+	if (flags & (1<<5)) {
+		m_flags |= MORE_FRAGMENTS;
+	}
+	buffer->skip (-1);
+	m_fragment_offset = buffer->read_ntoh_u16 ();
+	m_ttl = buffer->read_u8 ();
+	m_protocol = buffer->read_u8 ();
+	buffer->skip (2); // checksum.
+	m_source.deserialize (buffer);
+	m_destination.deserialize (buffer);
 
+	uint8_t *data = buffer->peek_data ();
+	//TRACE ("fini ipv4 current="<<state->get_current ());
+	uint16_t local_checksum = utils_checksum_calculate (data, header_size);
+	if (local_checksum == 0) {
+		m_good_checksum = true;
+	} else {
+		m_good_checksum = false;
+	}
+
+	buffer->remove_at_start (header_size);
+}
 void 
 ChunkIpv4::print (std::ostream *os) const
 {
@@ -246,5 +272,10 @@ ChunkIpv4::print (std::ostream *os) const
 	    << ", destination=" << m_destination;
 }
 
+uint32_t 
+ChunkIpv4::get_size (void) const
+{
+	return 5 * 4;
+}
 
 }; // namespace yans

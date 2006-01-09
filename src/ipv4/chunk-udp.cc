@@ -31,13 +31,13 @@ namespace yans {
 ChunkUdp::ChunkUdp ()
 	: m_source_port (0xfffd),
 	  m_destination_port (0xfffd),
-	  m_udp_length (0xfffd)
+	  m_payload_size (0xfffd)
 {}
 ChunkUdp::~ChunkUdp ()
 {
 	m_source_port = 0xfffe;
 	m_destination_port = 0xffffe;
-	m_udp_length = 0xfffe;
+	m_payload_size = 0xfffe;
 }
 
 void 
@@ -51,47 +51,48 @@ ChunkUdp::set_source (uint16_t port)
 	m_source_port = port;
 }
 uint16_t 
-ChunkUdp::get_source (void)
+ChunkUdp::get_source (void) const
 {
 	return m_source_port;
 }
 uint16_t 
-ChunkUdp::get_destination (void)
+ChunkUdp::get_destination (void) const
 {
 	return m_destination_port;
 }
 void 
 ChunkUdp::set_payload_size (uint16_t size)
 {
-	m_udp_length = size + 8;
+	m_payload_size = size;
 }
 uint32_t 
 ChunkUdp::get_size (void) const
 {
 	return 8;
 }
-Chunk *
-ChunkUdp::copy (void) const
-{
-	ChunkUdp *udp_chunk = new ChunkUdp ();
-	*udp_chunk = *this;
-	return udp_chunk;
-}
+
+
 void 
-ChunkUdp::serialize_init (Buffer *buffer) const
+ChunkUdp::add_to (Buffer *buffer) const
 {
+	buffer->add_at_start (get_size ());
+	buffer->seek (0);
 	buffer->write_hton_u16 (m_source_port);
 	buffer->write_hton_u16 (m_destination_port);
-	buffer->write_hton_u16 (m_udp_length);
+	buffer->write_hton_u16 (m_payload_size + get_size ());
 	buffer->write_hton_u16 (0);
+
+	// XXX calculate checksum.
 }
 void 
-ChunkUdp::serialize_fini (Buffer *buffer,
-			  ChunkSerializationState *state) const
+ChunkUdp::remove_from (Buffer *buffer)
 {
-	// XXX should calculate udp checksum.
+	buffer->seek (0);
+	m_source_port = buffer->read_ntoh_u16 ();
+	m_destination_port = buffer->read_ntoh_u16 ();
+	m_payload_size = buffer->read_ntoh_u16 () - get_size ();
+	buffer->remove_at_start (get_size ());
 }
-
 
 void 
 ChunkUdp::print (std::ostream *os) const
@@ -99,7 +100,7 @@ ChunkUdp::print (std::ostream *os) const
 	*os << "(udp)"
 	    << ", port source=" << m_source_port
 	    << ", port destination=" << m_destination_port
-	    << ", length=" << m_udp_length;
+	    << ", length=" << m_payload_size;
 }
 
 

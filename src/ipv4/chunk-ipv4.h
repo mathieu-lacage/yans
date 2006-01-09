@@ -58,12 +58,10 @@ public:
 	Ipv4Address get_destination (void) const;
 
 	bool is_checksum_ok (void) const;
+	uint32_t get_size (void) const;
 
-	virtual uint32_t get_size (void) const;
-	virtual Chunk *copy (void) const;
-	virtual void serialize_init (Buffer *buffer) const;
-	virtual void serialize_fini (Buffer *buffer,
-				     ChunkSerializationState *state) const;
+	virtual void add_to (Buffer *buffer) const;
+	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
 private:
 
@@ -81,6 +79,7 @@ private:
 	uint16_t m_fragment_offset : 13;
 	Ipv4Address m_source;
 	Ipv4Address m_destination;
+	bool m_good_checksum;
 };
 
 }; // namespace yans
