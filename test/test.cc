@@ -24,8 +24,8 @@
 #ifdef RUN_SELF_TESTS
 #include <iostream>
 #include "thread.h"
-#if 0
 #include "buffer.h"
+#if 0
 #include "utils.h"
 #include "fiber-scheduler.h"
 #include "callback-test.h"
@@ -49,6 +49,7 @@ TestManager::TestManager ()
 	ADD_TEST (CallbackTest, "Callback");
 #endif
 	ADD_TEST (ThreadTest, "Thread");
+	ADD_TEST (BufferTest, "Buffer");
 }
 
 TestManager::~TestManager ()
