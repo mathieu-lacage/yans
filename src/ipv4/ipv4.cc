@@ -89,25 +89,23 @@ Ipv4::set_protocol (uint8_t protocol)
 void 
 Ipv4::send (Packet *packet)
 {
-	ChunkIpv4 *ip_header;
-	ip_header = new ChunkIpv4 ();
-	ip_header->set_payload_size (packet->get_size ());
-	ip_header->set_may_fragment ();
+	ChunkIpv4 ip_header;
 
 	TagOutIpv4 *tag = static_cast <TagOutIpv4 *> (packet->remove_tag (TagOutIpv4::get_tag ()));
-	ip_header->set_source (tag->get_saddress ());
-	ip_header->set_destination (tag->get_daddress ());
-	ip_header->set_protocol (m_send_protocol);
-	ip_header->set_payload_size (packet->get_size ());
-	ip_header->set_ttl (m_default_ttl);
+	ip_header.set_source (tag->get_saddress ());
+	ip_header.set_destination (tag->get_daddress ());
+	ip_header.set_protocol (m_send_protocol);
+	ip_header.set_payload_size (packet->get_size ());
+	ip_header.set_ttl (m_default_ttl);
+	ip_header.set_may_fragment ();
+	ip_header.set_identification (m_identification);
 
-	Route const*route = tag->get_route ();
-	assert (route != 0);
-	packet->add_header (ip_header);
-
-	ip_header->set_identification (m_identification);
 	m_identification ++;
-	send_out (packet, route);
+
+	Route const *route = tag->get_route ();
+	assert (route != 0);
+
+	send_out (packet, &ip_header, route);
 
 	delete tag;
 }
@@ -131,9 +129,9 @@ Ipv4::lookup_protocol (uint8_t protocol)
 }
 
 void
-Ipv4::send_real_out (Packet *packet, Route const *route)
+Ipv4::send_real_out (Packet *packet, ChunkIpv4 *ip, Route const *route)
 {
-	ChunkIpv4 *ip = static_cast <ChunkIpv4 *> (packet->peek_header ());
+	packet->add (ip);
 	NetworkInterface *out_interface = route->get_interface ();
 	assert (packet->get_size () <= out_interface->get_mtu ());
 	m_host->get_tracer ()->trace_tx_ipv4 (packet);
@@ -145,125 +143,95 @@ Ipv4::send_real_out (Packet *packet, Route const *route)
 }
 
 bool
-Ipv4::send_out (Packet *packet, Route const *route)
+Ipv4::send_out (Packet *packet, ChunkIpv4 *ip, Route const *route)
 {
-	ChunkIpv4 *ip = static_cast <ChunkIpv4 *> (packet->peek_header ());
 	NetworkInterface *out_interface = route->get_interface ();
 
 	if (packet->get_size () > out_interface->get_mtu ()) {
+		/* we need to fragment. */
 		if (ip->is_dont_fragment ()) {
+			/* we are not allowed to fragment this packet. */
 			return false;
 		}
-		ip = static_cast <ChunkIpv4 *> (packet->remove_header ());
 		uint16_t fragment_length = (out_interface->get_mtu () - 20) & (~0x7);
 		uint16_t last_fragment_length = packet->get_size () % fragment_length;
 		uint16_t n_fragments = packet->get_size () / fragment_length + 1;
 		uint16_t current_offset = ip->get_fragment_offset ();
-		Packet *original;
-		if (!ip->is_last_fragment () ||
-		    ip->get_fragment_offset () != 0) {
-			/* we are attempting to fragment an ipv4 fragment so
-			   we try to get access to the underlying ip packet.
-			 */
-			ChunkPiece *piece = static_cast <ChunkPiece *> (packet->peek_header ());
-			original = piece->get_original ();
-		} else {
-			original = packet;
-		}
 
 		assert (n_fragments > 1);
+		ChunkIpv4 ip_fragment = *ip;
 		for (uint16_t i = 0; i < n_fragments - 1; i++) {
-			Packet *fragment = new Packet ();
+			Packet *fragment = packet->copy (current_offset - ip->get_fragment_offset (),
+							 fragment_length);
 
-			ChunkPiece *piece = new ChunkPiece ();
-			piece->set_original (original, current_offset, fragment_length);
-			fragment->add_header (piece);
+			ip_fragment.set_more_fragments ();
+			ip_fragment.set_fragment_offset (current_offset);
+			ip_fragment.set_payload_size (fragment_length);
 
-			ChunkIpv4 *ip_fragment = static_cast <ChunkIpv4 *> (ip->copy ());
-			ip_fragment->set_more_fragments ();
-			ip_fragment->set_fragment_offset (current_offset);
-			ip_fragment->set_payload_size (fragment_length);
-			fragment->add_header (ip_fragment);
-
-			send_real_out (fragment, route);
+			send_real_out (fragment, &ip_fragment, route);
 			fragment->unref ();
 			current_offset += fragment_length;
 		}
 
 		/* generate the last fragment */
-		Packet *last_fragment = new Packet ();
-
-		ChunkPiece *piece = new ChunkPiece ();
-		piece->set_original (original, current_offset, last_fragment_length);
-		last_fragment->add_header (piece);
-
-		ChunkIpv4 *ip_fragment = static_cast <ChunkIpv4 *> (ip->copy ());
+		Packet *last_fragment = packet->copy (current_offset - ip->get_fragment_offset (),
+						      last_fragment_length);
+		ip_fragment = *ip;
 		if (!ip->is_last_fragment ()) {
 			/* this is the last fragment of an ipv4 fragment. */
-			original->unref ();
-			ip_fragment->set_more_fragments ();
+			ip_fragment.set_more_fragments ();
 		} else if (ip->get_fragment_offset () != 0) {
 			/* this is the last fragment of the last fragment of an ipv4 packet.*/
-			original->unref ();
-			ip_fragment->set_last_fragment ();
+			ip_fragment.set_last_fragment ();
 		} else {
-			ip_fragment->set_last_fragment ();
+			ip_fragment.set_last_fragment ();
 		}
-		ip_fragment->set_fragment_offset (current_offset);
-		ip_fragment->set_payload_size (last_fragment_length);
-		last_fragment->add_header (ip_fragment);
+		ip_fragment.set_fragment_offset (current_offset);
+		ip_fragment.set_payload_size (last_fragment_length);
 
-		send_real_out (last_fragment, route);
-		last_fragment->unref ();
-		delete ip;
-		return true;
+		send_real_out (last_fragment, &ip_fragment, route);
 	} else {
-		send_real_out (packet, route);
-		return true;
+		send_real_out (packet, ip, route);
 	}
+	return true;
 }
 
 void
-Ipv4::send_icmp_time_exceeded_ttl (Packet *original, NetworkInterface *interface)
+Ipv4::send_icmp_time_exceeded_ttl (Packet *original, ChunkIpv4 *ip, NetworkInterface *interface)
 {
-	Packet *packet = new Packet ();
-
-	ChunkIpv4 *ip_header = static_cast <ChunkIpv4 *> (original->remove_header ());
-
-	ChunkPiece *payload_piece = new ChunkPiece ();
-	payload_piece->set_original (original, 0, 8);
-	packet->add_header (payload_piece);
-
-	packet->add_header (ip_header);
+	Packet *packet = original->copy ();
+	packet->add (ip);
+	packet->remove_at_end (packet->get_size ()- (ip->get_payload_size () + 8));
 	
-	ChunkIcmp *icmp = new ChunkIcmp ();
-	icmp->set_time_exceeded ();
-	icmp->set_code (0);
-	packet->add_header (icmp);
+	ChunkIcmp icmp;
+	icmp.set_time_exceeded ();
+	icmp.set_code (0);
+	packet->add (&icmp);
 
-	ChunkIpv4 *ip_real = new ChunkIpv4 ();
-	ip_real->set_destination (ip_header->get_source ());
-	ip_real->set_source (interface->get_ipv4_address ());
-	ip_real->set_payload_size (packet->get_size ());
-	ip_real->set_protocol (ICMP_PROTOCOL);
-	ip_real->set_ttl (m_default_ttl);
-	packet->add_header (ip_real);
+	ChunkIpv4 ip_real;
+	ip_real.set_destination (ip->get_source ());
+	ip_real.set_source (interface->get_ipv4_address ());
+	ip_real.set_payload_size (packet->get_size ());
+	ip_real.set_protocol (ICMP_PROTOCOL);
+	ip_real.set_ttl (m_default_ttl);
+	ip_real.set_identification (m_identification);
 
-	Route *route = m_host->get_routing_table ()->lookup (ip_real->get_destination ());
+	Route *route = m_host->get_routing_table ()->lookup (ip_real.get_destination ());
 	if (route == 0) {
-		TRACE ("cannot send back icmp message to " << ip_real->get_destination ());
+		TRACE ("cannot send back icmp message to " << ip_real.get_destination ());
+		packet->unref ();
 		return;
 	}
-	TRACE ("send back icmp ttl exceeded to " << ip_real->get_destination ());
-	ip_real->set_identification (m_identification);
+	TRACE ("send back icmp ttl exceeded to " << ip_real.get_destination ());
 	m_identification ++;
-	send_out (packet, route);
+
+	send_out (packet, &ip_real, route);
+	packet->unref ();
 }
 
 bool
-Ipv4::forwarding (Packet *packet, NetworkInterface *interface)
+Ipv4::forwarding (Packet *packet, ChunkIpv4 *ip_header, NetworkInterface *interface)
 {
-	ChunkIpv4 *ip_header = static_cast <ChunkIpv4 *> (packet->peek_header ());
 	NetworkInterfaces const * interfaces = m_host->get_interfaces ();
 	for (NetworkInterfacesCI i = interfaces->begin ();
 	     i != interfaces->end (); i++) {
@@ -285,7 +253,7 @@ Ipv4::forwarding (Packet *packet, NetworkInterface *interface)
 		return false;
 	}
 	if (ip_header->get_ttl () == 1) {
-		send_icmp_time_exceeded_ttl (packet, interface);
+		send_icmp_time_exceeded_ttl (packet, ip_header, interface);
 		TRACE ("not for me -- ttl expired. drop.");
 		return true;
 	}
@@ -296,21 +264,21 @@ Ipv4::forwarding (Packet *packet, NetworkInterface *interface)
 		return true;
 	}
 	TRACE ("not for me -- forwarding.");
-	send_out (packet, route);
+	send_out (packet, ip_header, route);
 	return true;
 }
 
 Packet *
-Ipv4::re_assemble (Packet *fragment)
+Ipv4::re_assemble (Packet *fragment, ChunkIpv4 *ip)
 {
-	DefragState *state = m_defrag_states->lookup (fragment);
+	DefragState *state = m_defrag_states->lookup (ip);
 	if (state == 0) {
-		state = new DefragState ();
-		state->add (fragment);
+		state = new DefragState (ip);
+		state->add (fragment, ip);
 		m_defrag_states->add (state);
 		return 0;
 	}
-	state->add (fragment);
+	state->add (fragment, ip);
 	if (state->is_complete ()) {
 		Packet *completed = state->get_complete ();
 		m_defrag_states->remove (state);
@@ -338,31 +306,30 @@ void
 Ipv4::receive (Packet *packet, NetworkInterface *interface)
 {
 	m_host->get_tracer ()->trace_rx_ipv4 (packet);
-	ChunkIpv4 *ip_header = static_cast <ChunkIpv4 *> (packet->peek_header ());
+	ChunkIpv4 ip_header;
+	packet->remove (&ip_header);
 
-	if (!ip_header->is_checksum_ok ()) {
-		TRACE ("checksum not ok. " << *ip_header );
+	if (!ip_header.is_checksum_ok ()) {
+		TRACE ("checksum not ok. " << ip_header );
 		return;
 	}
-	if (forwarding (packet, interface)) {
+	if (forwarding (packet, &ip_header, interface)) {
 		return;
 	}
-	if (!ip_header->is_last_fragment () ||
-	    ip_header->get_fragment_offset () != 0) {
-		Packet *new_packet = re_assemble (packet);
+	if (!ip_header.is_last_fragment () ||
+	    ip_header.get_fragment_offset () != 0) {
+		Packet *new_packet = re_assemble (packet, &ip_header);
 		if (new_packet == 0) {
 			TRACE ("reassemble fragment not finished.");
 			return;
 		}
 		TRACE ("reassemble fragment finished.");
-		receive_packet (new_packet, ip_header, interface);
+		receive_packet (new_packet, &ip_header, interface);
 		new_packet->unref ();
 		return;
 	}
 
-	packet->remove_header ();
-	receive_packet (packet, ip_header, interface);
-	delete ip_header;
+	receive_packet (packet, &ip_header, interface);
 }
 
 

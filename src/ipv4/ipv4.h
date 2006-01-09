@@ -56,13 +56,13 @@ public:
 	void receive (Packet *packet, NetworkInterface *from);
 
 private:
-	bool forwarding (Packet *packet, NetworkInterface *from);
+	bool forwarding (Packet *packet, ChunkIpv4 *ip, NetworkInterface *from);
 	Ipv4Route *get_route (void);
 	TransportProtocolCallback *lookup_protocol (uint8_t id);
-	void send_icmp_time_exceeded_ttl (Packet *original, NetworkInterface *interface);
-	bool send_out (Packet *packet, Route const*route);
-	void send_real_out (Packet *packet, Route const*route);
-	Packet *re_assemble (Packet *fragment);
+	void send_icmp_time_exceeded_ttl (Packet *original, ChunkIpv4 *ip, NetworkInterface *interface);
+	bool send_out (Packet *packet, ChunkIpv4 *ip, Route const*route);
+	void send_real_out (Packet *packet, ChunkIpv4 *ip, Route const*route);
+	Packet *re_assemble (Packet *fragment, ChunkIpv4 *ip);
 	void receive_packet (Packet *packet, ChunkIpv4 *ip, NetworkInterface *interface);
 	void receive_icmp (Packet *packet);
 
