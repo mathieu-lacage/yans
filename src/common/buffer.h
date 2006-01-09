@@ -29,14 +29,21 @@ namespace yans {
 class Buffer {
 public:
 	Buffer ();
-	Buffer (uint32_t initial_size);
 	~Buffer ();
 
-	uint8_t *peek_data (void);
-	uint32_t get_used_size (void) const;
 	uint32_t get_size (void) const;
-	uint32_t get_current (void) const;
+	uint8_t *peek_data (void);
 
+	/* after a call to any of these methods, 
+	 * the current position is invalidated.
+	 */
+	void add_at_start (uint32_t start);
+	void add_at_end (uint32_t end);
+	void remove_at_start (uint32_t start);
+	void remove_at_end (uint32_t end);
+
+
+	uint32_t get_current (void) const;
 	void seek (uint32_t offset);
 	void skip (int32_t delta);
 
@@ -55,10 +62,7 @@ public:
 	uint32_t read_ntoh_u32 (void);
 
 private:
-	void ensure_room_left (uint16_t needed);
-	void ensure_size_is (uint32_t target);
-	bool is_room_left (uint16_t needed);
-	uint8_t *alloc_and_zero (uint32_t size);
+	uint8_t *alloc_and_zero (uint32_t size) const;
 	uint32_t m_size;
 	uint32_t m_current;
 	uint8_t *m_buffer;

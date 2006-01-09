@@ -40,47 +40,32 @@ class Buffer;
 
 class Packet {
 public:
-	typedef Callback<void (Packet *)> PacketDestroyNotifier;
-
 	Packet ();
 	~Packet ();
 
 	void ref (void);
 	void unref (void);
+	Packet *copy (void) const;
+	Packet *copy (uint32_t start, uint32_t length) const;
 
-	void add_destroy_notifier (PacketDestroyNotifier *notifier);
+	uint32_t get_size (void) const;
 
 	void add_tag (uint32_t tag_id, Tag *tag);
 	Tag *get_tag (uint32_t tag_id);
 	Tag *remove_tag (uint32_t tag_id);
+	
+	void add (Chunk *chunk);
+	void add_at_end (Packet *packet);
+	void remove (Chunk *chunk);
+	void remove_at_end (uint32_t size);
+	void remove_at_start (uint32_t size);
 
-	void add_header (Chunk *header);
-	void add_trailer (Chunk *trailer);
-	Chunk *remove_header (void);
-	Chunk *remove_trailer (void);
-	Chunk *peek_header (void);
-	Chunk *peek_trailer (void);
-
-	uint32_t get_size (void) const;
-
-	// returns the number of bytes written in the buffer.
-	uint32_t serialize (Buffer *buffer) const;
-
-	void print (std::ostream *os) const;
-
-	Packet *copy (void);
  private:
-	typedef std::list<Chunk *> Chunks;
-	typedef std::list<Chunk *>::const_iterator ChunksCI;
-	typedef std::list<Chunk *>::const_reverse_iterator ChunksCRI;
-	typedef std::vector<PacketDestroyNotifier *> PacketDestroyNotifiers;
-	typedef std::vector<PacketDestroyNotifier *>::const_iterator PacketDestroyNotifiersCI;
 	typedef Sgi::hash_map<uint32_t, Tag *> Tags;
 	typedef Sgi::hash_map<uint32_t, Tag *>::iterator TagsI;
-	PacketDestroyNotifiers m_destroy_notifiers;
-	Chunks m_chunks;
 	Tags m_tags;
 	RefCount<Packet> m_ref;
+	Buffer *buffer;
 };
 
 std::ostream& operator<< (std::ostream& os, Packet const& packet);

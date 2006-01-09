@@ -38,32 +38,16 @@ std::cout << "PACKET TRACE " << Simulator::now_s () << " " << x << std::endl;
 namespace yans {
 
 Packet::Packet ()
-	: m_ref (this)
+	: m_ref (this),
+	  m_buffer (new Buffer ())
 {}
 
 Packet::~Packet ()
 {
-	for (PacketDestroyNotifiersCI k = m_destroy_notifiers.begin ();
-	     k != m_destroy_notifiers.end (); k++) {
-		(*(*k)) (this);
-		delete (*k);
-	}
-	m_destroy_notifiers.erase (m_destroy_notifiers.begin (),
-				   m_destroy_notifiers.end ());
-	for (ChunksCI i = m_chunks.begin (); i != m_chunks.end (); i++) {
-		delete (*i);
-	}
-	m_chunks.erase (m_chunks.begin (), m_chunks.end ());
 	for (TagsI k = m_tags.begin (); k != m_tags.end (); k++) {
 		delete (*k).second;
 	}
 	m_tags.erase (m_tags.begin (), m_tags.end ());
-}
-
-void 
-Packet::add_destroy_notifier (PacketDestroyNotifier *notifier)
-{
-	m_destroy_notifiers.push_back (notifier);
 }
 
 void 
@@ -76,6 +60,30 @@ void
 Packet::unref (void)
 {
 	m_ref.unref ();
+}
+
+Packet *
+Packet::copy (void) const
+{
+	return copy (0, m_size);
+}
+Packet *
+Packet::copy (uint32_t start, uint32_t length) const
+{
+	assert (length < m_size);
+	assert (start < m_size);
+	assert (start + length <= m_size);
+	Packet *other = new Packet ();
+	Buffer *tmp = other->m_buffer;
+	tmp->allocate_at_start (length);
+	tmp->write (m_buffer->peek_data () + start, m_buffer->get_size ());
+	return other;
+}
+
+uint32_t 
+Packet::get_size (void) const
+{
+	return m_buffer->get_size ();
 }
 
 void 
@@ -107,131 +115,42 @@ Packet::remove_tag (uint32_t tag_id)
 
 
 void 
-Packet::add_header (Chunk *header)
+Packet::add (Chunk *chunk)
 {
-	m_chunks.push_front (header);
+	chunk->add_to (m_buffer);
 }
 void 
-Packet::add_trailer (Chunk *trailer)
+Packet::add_at_end (Packet *packet)
 {
-	m_chunks.push_back (trailer);
-}
-Chunk *
-Packet::remove_header (void)
-{
-	if (m_chunks.empty ()) {
-		return 0;
-	}
-	Chunk *header = m_chunks.front ();
-	m_chunks.pop_front ();
-	return header;
-}
-Chunk *
-Packet::remove_trailer (void)
-{
-	if (m_chunks.empty ()) {
-		return 0;
-	}
-	Chunk *trailer = m_chunks.back ();
-	m_chunks.pop_back ();
-	return trailer;
-}
-Chunk *
-Packet::peek_header (void)
-{
-	if (m_chunks.empty ()) {
-		return 0;
-	}
-	return m_chunks.front ();
-}
-Chunk *
-Packet::peek_trailer (void)
-{
-	if (m_chunks.empty ()) {
-		return 0;
-	}
-	return m_chunks.back ();
-}
-
-uint32_t 
-Packet::get_size (void) const
-{
-	uint32_t size = 0;
-	for (ChunksCI i = m_chunks.begin (); i != m_chunks.end (); i++) {
-		size += (*i)->get_size ();
-	}
-	return size;
-}
-
-uint32_t
-Packet::serialize (Buffer *buffer) const
-{
-	uint32_t loc = 0;
-	for (ChunksCI i = m_chunks.begin (); i != m_chunks.end (); i++) {
-		//TRACE ("serialize init at " << loc<<" size="<<(*i)->get_size ());
-		buffer->seek (loc);
-		(*i)->serialize_init (buffer);
-		loc += (*i)->get_size ();
-	}
-	ChunkSerializationState state;
-	Chunk *prev_chunk = 0;
-	uint32_t prev = loc;
-	for (ChunksCRI j = m_chunks.rbegin (); j != m_chunks.rend (); j++) {
-		Chunk *current_chunk = (*j);
-		assert (prev >= current_chunk->get_size ());
-		uint32_t current = prev - current_chunk->get_size ();
-		//TRACE ("serialize fini at "<< current<<" size="<<current_chunk->get_size ());
-
-		ChunksCRI tmp = j;
-		tmp++;
-		Chunk *next_chunk;
-		uint32_t next;
-		if (tmp == m_chunks.rend ()) {
-			next_chunk = 0;
-			next = 0;
-		} else {
-			next_chunk = (*tmp);
-			assert (current >= next_chunk->get_size ());
-			next = current - next_chunk->get_size ();
-		}
-		buffer->seek (current);
-		state.set (next_chunk, prev_chunk, next, prev, current);
-		(*j)->serialize_fini (buffer, &state);
-		prev = current;
-	}
-	buffer->seek (get_size ());
-	return get_size ();
+	Buffer *tmp = packet->m_buffer;
+	m_buffer->add_at_end (tmp->get_size ());
+	m_buffer->seek (m_buffer->get_size () - tmp->get_size ());
+	m_buffer->write (tmp->peek_data (), tmp->get_size ());
 }
 
 void 
-Packet::print (std::ostream *os) const
+Packet::remove (Chunk *chunk)
 {
-	Chunks::size_type k = 0;
-	for (ChunksCI i = m_chunks.begin (); i != m_chunks.end (); i++) {
-		(*i)->print (os);
-		k++;
-		if (k < m_chunks.size ()) {
-			*os << " | ";
-		}
-	}
+	chunk->remove_from (m_buffer);
+}
+void 
+Packet::remove_at_end (uint32_t size)
+{
+	m_buffer->delete_at_end (size);
+}
+void
+Packet::remove_at_start (uint32_t size)
+{
+	m_buffer->delete_at_start (size);
 }
 
-Packet *
-Packet::copy (void)
-{
-	Packet *other = new Packet ();
-	for (ChunksCI i = m_chunks.begin (); i != m_chunks.end (); i++) {
-		Chunk *new_chunk = (*i)->copy ();
-		other->add_header (new_chunk);
-	}
-	return other;
-}
+
+
 
 
 
 std::ostream& operator<< (std::ostream& os, Packet const& packet)
 {
-	packet.print (&os);
 	return os;
 }
 
