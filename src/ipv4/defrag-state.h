@@ -28,31 +28,44 @@
 namespace yans {
 
 class Packet;
+class ChunkIpv4;
+
+class DefragFragment {
+public:
+	DefragFragment (Packet *fragment, ChunkIpv4 *ip);
+	Packet *get_fragment (void);
+	bool is_last (void);
+	uint16_t get_offset (void);
+	uint32_t get_size (void);
+private:
+	Packet *m_fragment;
+	bool m_is_last;
+	uint16_t m_offset;
+};
 
 class DefragState {
 public:
-	DefragState ();
+	DefragState (ChunkIpv4 const *ip);
 	~DefragState ();
 
-	void add (Packet *fragment);
+	void add (Packet *fragment, ChunkIpv4 *ip);
 	bool is_complete (void);
 	Packet *get_complete (void);
 
 	bool is_too_old (void);
-	bool matches (Packet *fragment);
-	Ipv4Address get_source (void);
-	Ipv4Address get_destination (void);
-	uint8_t get_protocol (void);
-	uint16_t get_identification (void);
-
+	bool matches (ChunkIpv4 const *ip);
 private:
 	double get_reassembly_timeout (void);
 
-	typedef std::list <Packet *> Fragments;
-	typedef std::list <Packet *>::iterator FragmentsI;
+	typedef std::list <DefragFragment> Fragments;
+	typedef std::list <DefragFragment>::iterator FragmentsI;
 
 	double m_defrag_start;
 	Fragments m_fragments;
+	Ipv4Address m_source;
+	Ipv4Address m_destination;
+	uint8_t m_protocol;
+	uint16_t m_identification;
 };
 
 class DefragStates {
@@ -60,7 +73,7 @@ public:
 	DefragStates ();
 	~DefragStates ();
 
-	DefragState *lookup (Packet *packet);
+	DefragState *lookup (ChunkIpv4 const *ip);
 	void add (DefragState *state);
 	void remove (DefragState *state);
 
