@@ -22,7 +22,7 @@
 #include "periodic-generator.h"
 #include "simulator.h"
 #include "packet.h"
-#include "chunk-fake-data.h"
+#include "chunk-constant-data.h"
 #include "event.h"
 
 namespace yans {
@@ -76,8 +76,8 @@ PeriodicGenerator::send_next_packet (void)
 	Simulator::insert_in_s (m_interval, make_event (&PeriodicGenerator::send_next_packet, this));
 	/* create packet. */
 	Packet *packet = new Packet ();
-	ChunkFakeData *data = new ChunkFakeData (m_size, m_n);
-	packet->add_header (data);
+	ChunkConstantData data = ChunkConstantData (m_size, m_n);
+	packet->add (&data);
 	(*m_callback) (packet);
 	packet->unref ();
 	m_n++;
