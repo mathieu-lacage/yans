@@ -24,13 +24,26 @@
 
 #include <stdint.h>
 
+#define noTRACE_REF 1
+
+#ifdef TRACE_REF
+#include <iostream>
+#include "simulator.h"
+# define REF_TRACE(x) \
+std::cout << "REF TRACE " << Simulator::now_s () << " " << x << std::endl;
+#else /* TRACE_REF */
+# define REF_TRACE(format,...)
+#endif /* TRACE_REF */
+
 namespace yans {
 
 template<typename T>
 class RefCount {
 public:
 	RefCount (T *obj)
-	: m_ref (1), m_obj (obj) {}
+	: m_ref (1), m_obj (obj) {
+		REF_TRACE ("obj="<<m_obj<<", ref="<<m_ref);
+	}
 	~RefCount () {
 		m_obj = (T *)0xdeadbeaf;
 		m_ref = 0xdeadbeaf;
@@ -38,9 +51,11 @@ public:
 
 	void ref (void) {
 		m_ref++;
+		REF_TRACE ("obj="<<m_obj<<", ref="<<m_ref);
 	}
 	void unref (void) {
 		m_ref--;
+		REF_TRACE ("obj="<<m_obj<<", ref="<<m_ref);
 		if (m_ref == 0) {
 			delete m_obj;
 		}
@@ -49,6 +64,9 @@ private:
 	uint32_t m_ref;
 	T *m_obj;
 };
+
+#undef REF_TRACE
+#undef TRACE_REF
 
 }; // namespace yans
 
