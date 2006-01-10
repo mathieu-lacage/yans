@@ -75,16 +75,13 @@ ChunkIcmp::get_size (void) const
 		return 0;
 	}
 }
-Chunk *
-ChunkIcmp::copy (void) const
-{
-	ChunkIcmp *copy = new ChunkIcmp ();
-	*copy = *this;
-	return copy;
-}
+
+
 void 
-ChunkIcmp::serialize_init (Buffer *buffer) const
+ChunkIcmp::add_to (Buffer *buffer) const
 {
+	buffer->add_at_start (get_size ());
+	buffer->seek (0);
 	buffer->write_u8 (m_type);
 	buffer->write_u8 (m_code);
 	buffer->write_hton_u16 (0);
@@ -117,19 +114,21 @@ ChunkIcmp::serialize_init (Buffer *buffer) const
 		   m_type == INFORMATION_REPLY) {
 		buffer->write_hton_u16 (m_identifier);
 		buffer->write_hton_u16 (m_seq_number);		
-	}
+	}	
 }
 void 
-ChunkIcmp::serialize_fini (Buffer *buffer,
-			   ChunkSerializationState *state) const
+ChunkIcmp::remove_from (Buffer *buffer)
 {
+	buffer->seek (0);
+	m_type = buffer->read_u8 ();
+	buffer->remove_at_start (get_size ());
 }
 void 
 ChunkIcmp::print (std::ostream *os) const
 {
 	*os << "(icmp) "
-	    << "type: " << m_type << " "
-	    << "code: " << m_code << " "
+	    << "type=" << m_type << " "
+	    << ", code=" << m_code << " "
 		;
 }
 

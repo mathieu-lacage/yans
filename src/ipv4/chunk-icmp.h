@@ -38,11 +38,8 @@ public:
 
 	void set_time_exceeded (void);
 
-	virtual uint32_t get_size (void) const;
-	virtual Chunk *copy (void) const;
-	virtual void serialize_init (Buffer *buffer) const;
-	virtual void serialize_fini (Buffer *buffer,
-				     ChunkSerializationState *state) const;
+	virtual void add_to (Buffer *buffer) const;
+	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
 
 	enum {
@@ -65,6 +62,7 @@ private:
 	void set_redirect (uint8_t code, Ipv4Address gateway);
 	void set_echo (uint8_t echo_data_size);
 	void set_echo_reply (uint8_t echo_data_size);
+	uint32_t get_size (void) const;
 
 	uint8_t m_type;
 	uint8_t m_code;
