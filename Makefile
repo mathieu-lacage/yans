@@ -38,50 +38,87 @@ YANS_SRC= \
 	src/common/buffer.cc \
 	src/common/chunk.cc \
 	src/common/packet.cc \
-	src/common/utils.cc \
-	src/common/population-analysis.cc \
-	src/common/tag-manager.cc \
-	src/common/chunk-fake-data.cc \
-	src/common/callback-test.cc \
+	src/common/chunk-constant-data.cc \
 	src/common/ipv4-address.cc \
 	src/common/mac-address.cc \
-	src/arp/arp-cache-entry.cc \
+	src/common/tag-manager.cc \
+	src/common/utils.cc \
+	src/common/population-analysis.cc \
+	src/ipv4/tag-ipv4.cc \
+	src/ipv4/ipv4-end-point.cc \
+	src/ipv4/ipv4-end-points.cc \
+	src/ipv4/ipv4-route.cc \
+	src/ipv4/ipv4.cc \
+	src/ipv4/defrag-state.cc \
+	src/ipv4/chunk-ipv4.cc \
+	src/ipv4/udp.cc \
+	src/ipv4/chunk-udp.cc \
+	src/ipv4/chunk-icmp.cc \
 	src/arp/arp.cc \
 	src/arp/chunk-arp.cc \
+	src/arp/arp-cache-entry.cc \
 	src/host/host.cc \
 	src/host/network-interface.cc \
 	src/host/network-interface-tracer.cc \
 	src/host/loopback-interface.cc \
 	src/host/host-tracer.cc \
-	src/ipv4/chunk-icmp.cc \
-	src/ipv4/chunk-ipv4.cc \
-	src/ipv4/chunk-piece.cc \
-	src/ipv4/chunk-tcp.cc \
-	src/ipv4/chunk-udp.cc \
-	src/ipv4/defrag-state.cc \
-	src/ipv4/ipv4.cc \
-	src/ipv4/ipv4-end-point.cc \
-	src/ipv4/ipv4-end-points.cc \
-	src/ipv4/ipv4-route.cc \
-	src/ipv4/tag-ipv4.cc \
-	src/ipv4/tcp.cc \
-	src/ipv4/tcp-connection.cc \
-	src/ipv4/tcp-connection-listener.cc \
-	src/ipv4/tcp-pieces.cc \
-	src/ipv4/udp.cc \
-	src/apps/periodic-generator.cc \
-	src/apps/tcp-sink.cc \
-	src/apps/tcp-source.cc \
-	src/apps/traffic-analyzer.cc \
-	src/apps/udp-sink.cc \
-	src/apps/udp-source.cc \
+	src/os-model/write-file.cc \
 	src/ethernet/cable.cc \
 	src/ethernet/chunk-mac-crc.cc \
 	src/ethernet/chunk-mac-llc-snap.cc \
 	src/ethernet/ethernet-network-interface.cc \
-	src/os-model/write-file.cc \
+	src/apps/udp-source.cc \
+	src/apps/udp-sink.cc \
+	src/apps/periodic-generator.cc \
+	src/apps/traffic-analyzer.cc \
 	test/test.cc \
 	$(NULL)
+
+# 	src/common/chunk.cc \
+# 	src/common/packet.cc \
+# 	src/common/utils.cc \
+# 	src/common/population-analysis.cc \
+# 	src/common/tag-manager.cc \
+# 	src/common/chunk-fake-data.cc \
+# 	src/common/callback-test.cc \
+# 	src/common/ipv4-address.cc \
+# 	src/common/mac-address.cc \
+# 	src/arp/arp-cache-entry.cc \
+# 	src/arp/arp.cc \
+# 	src/arp/chunk-arp.cc \
+# 	src/host/host.cc \
+# 	src/host/network-interface.cc \
+# 	src/host/network-interface-tracer.cc \
+# 	src/host/loopback-interface.cc \
+# 	src/host/host-tracer.cc \
+# 	src/ipv4/chunk-icmp.cc \
+# 	src/ipv4/chunk-ipv4.cc \
+# 	src/ipv4/chunk-piece.cc \
+# 	src/ipv4/chunk-tcp.cc \
+# 	src/ipv4/chunk-udp.cc \
+# 	src/ipv4/defrag-state.cc \
+# 	src/ipv4/ipv4.cc \
+# 	src/ipv4/ipv4-end-point.cc \
+# 	src/ipv4/ipv4-end-points.cc \
+# 	src/ipv4/ipv4-route.cc \
+# 	src/ipv4/tag-ipv4.cc \
+# 	src/ipv4/tcp.cc \
+# 	src/ipv4/tcp-connection.cc \
+# 	src/ipv4/tcp-connection-listener.cc \
+# 	src/ipv4/tcp-pieces.cc \
+# 	src/ipv4/udp.cc \
+# 	src/apps/periodic-generator.cc \
+# 	src/apps/tcp-sink.cc \
+# 	src/apps/tcp-source.cc \
+# 	src/apps/traffic-analyzer.cc \
+# 	src/apps/udp-sink.cc \
+# 	src/apps/udp-source.cc \
+# 	src/ethernet/cable.cc \
+# 	src/ethernet/chunk-mac-crc.cc \
+# 	src/ethernet/chunk-mac-llc-snap.cc \
+# 	src/ethernet/ethernet-network-interface.cc \
+# 	src/os-model/write-file.cc \
+
 YANS_OBJ=$(call genobj, $(YANS_SRC))
 LIB_YANS=$(TOP_INSTALL)/libyans.so
 $(YANS_OBJ): CXXFLAGS += -fPIC
@@ -140,9 +177,11 @@ SAMPLES_SRC= \
 	src/samples/main-forwarding-simulator.cc \
 	src/samples/main-forwarding-simulator-template.cc \
 	src/samples/main-simple.cc \
-	src/samples/main-router.cc \
-	src/samples/main-tcp.cc \
 	$(NULL)
+
+# 	src/samples/main-router.cc \
+# 	src/samples/main-tcp.cc \
+
 DIRS += $(call gendirs, $(SAMPLES_SRC))
 SAMPLES=$(call genbin, $(basename $(SAMPLES_SRC)))
 $(SAMPLES): %:%.o
@@ -171,13 +210,13 @@ $(SUBDIRS):
 
 
 $(TOP_INSTALL)/%.py:%.py
-	cp $^ $@
+	cp $< $@
 $(TOP_INSTALL)/%.o:%.cc
-	$(CXX) $(CXXFLAGS) -c -o $@ $^
+	$(CXX) $(CXXFLAGS) -c -o $@ $<
 $(TOP_INSTALL)/%.o:%.c
-	$(CC) $(CFLAGS) -c -o $@ $^
+	$(CC) $(CFLAGS) -c -o $@ $<
 
-clean:
+clean: depsclean
 	find ./ -name '*~'|xargs rm -f 2>/dev/null;
 	rm -rf $(TOP_INSTALL) 2>/dev/null;
 
@@ -187,11 +226,13 @@ depsclean:
 .deps:
 	@echo "Generating dependency information.";
 	@rm -f .deps 2>/dev/null; touch .deps;
-	@-for f in `find ./ -name '*.c'`; do \
-		$(CC) $(CFLAGS) -E -M -MP -MM -MT $(TOP_INSTALL)/$$f $$f 2>/dev/null >> .deps; \
+	@-for f in `find . -name '*.c'`; do \
+		TARGET=`echo $(TOP_INSTALL)/$$f|sed -e 's/\.c$$/\.o/' -e 's/\/\.\//\//'`; \
+		$(CC) $(CFLAGS) -E -M -MP -MM -MT $$TARGET $$f 2>/dev/null >> .deps; \
 	done;
-	@-for f in `find ./ -name '*.cc'`; do \
-		$(CXX) $(CXXFLAGS) -E -M -MP -MM -MT $(TOP_INSTALL)/$$f $$f 2>/dev/null >> .deps; \
+	@-for f in `find . -name '*.cc'`; do \
+		TARGET=`echo $(TOP_INSTALL)/$$f|sed -e 's/\.cc$$/\.o/' -e 's/\/\.\//\//'`; \
+		$(CXX) $(CXXFLAGS) -E -M -MP -MM -MT $$TARGET $$f 2>/dev/null >> .deps; \
 	done;
 
 -include .deps
