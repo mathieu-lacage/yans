@@ -238,6 +238,7 @@ ChunkIpv4::remove_from (Buffer *buffer)
 	}
 	buffer->skip (-1);
 	m_fragment_offset = buffer->read_ntoh_u16 ();
+	m_fragment_offset *= 8;
 	m_ttl = buffer->read_u8 ();
 	m_protocol = buffer->read_u8 ();
 	buffer->skip (2); // checksum.
