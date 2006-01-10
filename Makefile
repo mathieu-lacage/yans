@@ -177,6 +177,7 @@ SAMPLES_SRC= \
 	src/samples/main-forwarding-simulator.cc \
 	src/samples/main-forwarding-simulator-template.cc \
 	src/samples/main-simple.cc \
+	src/samples/main-router.cc \
 	$(NULL)
 
 # 	src/samples/main-router.cc \
