@@ -154,11 +154,14 @@ void
 EthernetNetworkInterface::recv (Packet *packet)
 {
 	m_tracer->trace_rx_mac (packet);
-	ChunkMacLlcSnap *header;
-	ChunkMacCrc *trailer;
-	header = static_cast <ChunkMacLlcSnap *> (packet->remove_header ());
-	trailer = static_cast <ChunkMacCrc *> (packet->remove_trailer ());
-	switch (header->get_ether_type ()) {
+	ChunkMacLlcSnap header;
+	ChunkMacCrc trailer;
+	packet->remove (&header);
+	if (header.get_length () < packet->get_size () - 4) {
+		trailer.set_pad (header.get_length () - packet->get_size () - 4);
+	}
+	packet->remove (&trailer);
+	switch (header.get_ether_type ()) {
 	case ETHER_TYPE_ARP:
 		m_arp->recv_arp (packet);
 		break;
@@ -166,24 +169,22 @@ EthernetNetworkInterface::recv (Packet *packet)
 		m_ipv4->receive (packet, this);
 		break;
 	}
-	delete header;
-	delete trailer;
 }
 
 void 
 EthernetNetworkInterface::send_data (Packet *packet, MacAddress dest)
 {
-	ChunkMacLlcSnap *header = new ChunkMacLlcSnap ();
-	header->set_destination (dest);
-	header->set_source (get_mac_address ());
-	header->set_length (packet->get_size ());
-	header->set_ether_type (ETHER_TYPE_IPV4);
-	ChunkMacCrc *trailer = new ChunkMacCrc ();
+	ChunkMacLlcSnap header;
+	header.set_destination (dest);
+	header.set_source (get_mac_address ());
+	header.set_length (packet->get_size ());
+	header.set_ether_type (ETHER_TYPE_IPV4);
+	ChunkMacCrc trailer;
 	if (packet->get_size () < 38) {
-		trailer->set_pad (38 - packet->get_size ());
+		trailer.set_pad (38 - packet->get_size ());
 	}
-	packet->add_header (header);
-	packet->add_trailer (trailer);
+	packet->add (&header);
+	packet->add (&trailer);
 	m_tracer->trace_tx_mac (packet);
 	m_cable->send (packet, this);
 }
@@ -191,19 +192,19 @@ EthernetNetworkInterface::send_data (Packet *packet, MacAddress dest)
 void 
 EthernetNetworkInterface::send_arp (Packet *packet, MacAddress dest)
 {
-	ChunkMacLlcSnap *header = new ChunkMacLlcSnap ();
-	header->set_destination (dest);
-	header->set_source (get_mac_address ());
-	header->set_ether_type (ETHER_TYPE_ARP);
-	ChunkMacCrc *trailer = new ChunkMacCrc ();
+	ChunkMacLlcSnap header;
+	header.set_destination (dest);
+	header.set_source (get_mac_address ());
+	header.set_ether_type (ETHER_TYPE_ARP);
+	ChunkMacCrc trailer;
 	if (packet->get_size () < 38) {
-		trailer->set_pad (38 - packet->get_size ());
-		header->set_length (38);
+		trailer.set_pad (38 - packet->get_size ());
+		header.set_length (38);
 	} else {
-		header->set_length (packet->get_size ());
+		header.set_length (packet->get_size ());
 	}
-	packet->add_header (header);
-	packet->add_trailer (trailer);
+	packet->add (&header);
+	packet->add (&trailer);
 	m_tracer->trace_tx_mac (packet);
 	m_cable->send (packet, this);
 }

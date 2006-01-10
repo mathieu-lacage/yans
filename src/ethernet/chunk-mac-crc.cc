@@ -41,33 +41,26 @@ ChunkMacCrc::get_size (void) const
 {
 	return 4 + m_pad_size;
 }
-Chunk *
-ChunkMacCrc::copy (void) const
-{
-	ChunkMacCrc *chunk = new ChunkMacCrc ();
-	return chunk;
-}
 void 
-ChunkMacCrc::serialize_init (Buffer *buffer) const
+ChunkMacCrc::add_to (Buffer *buffer) const
 {
+	buffer->add_at_end (get_size ());
+	buffer->seek (0);
+	buffer->write_u32 (0);
 	for (uint8_t i = 0; i < m_pad_size; i++) {
-		buffer->write_u8 (0x31);
+		buffer->write_u8 (i);
 	}
-	buffer->write_u8 (0);
-	buffer->write_u8 (0);
-	buffer->write_u8 (0);
-	buffer->write_u8 (0);
 }
 void 
-ChunkMacCrc::serialize_fini (Buffer *buffer,
-			     ChunkSerializationState *state) const
+ChunkMacCrc::remove_from (Buffer *buffer)
 {
-	//XXX we should calculate the MAC crc here.
+	buffer->remove_at_end (get_size ());
 }
 void 
 ChunkMacCrc::print (std::ostream *os) const
 {
 	*os << "(mac) crc";
 }
+
 
 }; // namespace yans

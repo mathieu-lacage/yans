@@ -80,16 +80,11 @@ ChunkMacLlcSnap::get_size (void) const
 {
 	return 6 + 6 + 2 + 1 + 1 + 1 + 3 + 2;
 }
-Chunk *
-ChunkMacLlcSnap::copy (void) const
-{
-	ChunkMacLlcSnap *chunk = new ChunkMacLlcSnap ();
-	*chunk = *this;
-	return chunk;
-}
 void 
-ChunkMacLlcSnap::serialize_init (Buffer *buffer) const
+ChunkMacLlcSnap::add_to (Buffer *buffer) const
 {
+	buffer->add_at_start (get_size ());
+	buffer->seek (0);
 	m_source.serialize (buffer);
 	m_destination.serialize (buffer);
 	assert (m_length <= 0x05dc);
@@ -104,10 +99,16 @@ ChunkMacLlcSnap::serialize_init (Buffer *buffer) const
 	buffer->write_hton_u16 (m_ether_type);
 }
 void 
-ChunkMacLlcSnap::serialize_fini (Buffer *buffer,
-				 ChunkSerializationState *state) const
-{}
-
+ChunkMacLlcSnap::remove_from (Buffer *buffer)
+{
+	buffer->seek (0);
+	m_source.deserialize (buffer);
+	m_destination.deserialize (buffer);
+	m_length = buffer->read_ntoh_u16 () - 8;
+	buffer->skip (6);
+	m_ether_type = buffer->read_ntoh_u16 ();
+	buffer->remove_at_start (get_size ());
+}
 
 void 
 ChunkMacLlcSnap::print (std::ostream *os) const
