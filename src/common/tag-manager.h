@@ -33,8 +33,6 @@ class TagManager {
 public:
 	static TagManager *instance (void);
 
-	void destroy (void);
-
 	uint32_t register_tag (char const *name);
 
 	char const *lookup_tag (uint32_t tag_id);
@@ -44,6 +42,7 @@ public:
 	uint32_t lookup_tag_id (char const *name);
 
 private:
+	void destroy (void);
 	typedef Sgi::hash_map<uint32_t, char const *> TagMapping;
 	uint32_t m_tag_id;
 	TagMapping m_tag_mapping;

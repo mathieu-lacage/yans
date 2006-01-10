@@ -20,6 +20,9 @@
  */
 
 #include "tag-manager.h"
+#include "simulator.h"
+#include "event.h"
+#include "event.tcc"
 
 namespace yans {
 
@@ -34,6 +37,7 @@ TagManager::instance (void)
 {
 	if (m_instance == 0) {
 		m_instance = new TagManager ();
+		Simulator::insert_at_destroy (make_event (&TagManager::destroy, m_instance));
 	}
 	return m_instance;
 }
