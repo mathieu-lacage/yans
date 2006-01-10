@@ -40,6 +40,10 @@ public:
 
 	void set_payload_size (uint16_t size);
 
+	void initialize_checksum (Ipv4Address source, 
+				  Ipv4Address destination,
+				  uint8_t protocol);
+
 	virtual void add_to (Buffer *buffer) const;
 	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
@@ -49,6 +53,7 @@ private:
 	uint16_t m_source_port;
 	uint16_t m_destination_port;
 	uint16_t m_payload_size;
+	uint16_t m_initial_checksum;
 };
 
 }; // namespace yans

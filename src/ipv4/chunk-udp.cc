@@ -21,6 +21,7 @@
 
 #include "chunk-udp.h"
 #include "buffer.h"
+#include "utils.h"
 
 namespace yans {
 
@@ -31,7 +32,8 @@ namespace yans {
 ChunkUdp::ChunkUdp ()
 	: m_source_port (0xfffd),
 	  m_destination_port (0xfffd),
-	  m_payload_size (0xfffd)
+	  m_payload_size (0xfffd),
+	  m_initial_checksum (0)
 {}
 ChunkUdp::~ChunkUdp ()
 {
@@ -71,6 +73,24 @@ ChunkUdp::get_size (void) const
 	return 8;
 }
 
+void 
+ChunkUdp::initialize_checksum (Ipv4Address source, 
+			       Ipv4Address destination,
+			       uint8_t protocol)
+{
+	uint8_t buf[12];
+	source.serialize (buf);
+	destination.serialize (buf+4);
+	buf[8] = 0;
+	buf[9] = protocol;
+	uint16_t udp_length = m_payload_size + get_size ();
+	buf[10] = udp_length >> 8;
+	buf[11] = udp_length & 0xff;
+
+	m_initial_checksum = utils_checksum_calculate (0, buf, 12);
+}
+
+
 
 void 
 ChunkUdp::add_to (Buffer *buffer) const
@@ -82,7 +102,12 @@ ChunkUdp::add_to (Buffer *buffer) const
 	buffer->write_hton_u16 (m_payload_size + get_size ());
 	buffer->write_hton_u16 (0);
 
-	// XXX calculate checksum.
+	uint16_t checksum = utils_checksum_calculate (m_initial_checksum, 
+						      buffer->peek_data (), 
+						      get_size () + m_payload_size);
+	checksum = utils_checksum_complete (checksum);
+	buffer->skip (-2);
+	buffer->write_u16 (checksum);
 }
 void 
 ChunkUdp::remove_from (Buffer *buffer)
@@ -92,6 +117,7 @@ ChunkUdp::remove_from (Buffer *buffer)
 	m_destination_port = buffer->read_ntoh_u16 ();
 	m_payload_size = buffer->read_ntoh_u16 () - get_size ();
 	buffer->remove_at_start (get_size ());
+	// XXX verify checksum.
 }
 
 void 

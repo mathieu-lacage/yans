@@ -211,7 +211,8 @@ ChunkIpv4::add_to (Buffer *buffer) const
 
 	uint8_t *data = buffer->peek_data ();
 	//TRACE ("fini ipv4 current="<<state->get_current ());
-	uint16_t checksum = utils_checksum_calculate (data, get_size ());
+	uint16_t checksum = utils_checksum_calculate (0, data, get_size ());
+	checksum = utils_checksum_complete (checksum);
 	//TRACE ("checksum=" <<checksum);
 	buffer->seek (0+10);
 	buffer->write_u16 (checksum);
@@ -247,8 +248,8 @@ ChunkIpv4::remove_from (Buffer *buffer)
 
 	uint8_t *data = buffer->peek_data ();
 	//TRACE ("fini ipv4 current="<<state->get_current ());
-	uint16_t local_checksum = utils_checksum_calculate (data, header_size);
-	if (local_checksum == 0) {
+	uint16_t local_checksum = utils_checksum_calculate (0, data, header_size);
+	if (local_checksum == 0xffff) {
 		m_good_checksum = true;
 	} else {
 		m_good_checksum = false;

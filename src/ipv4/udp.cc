@@ -109,6 +109,9 @@ Udp::send (Packet *packet)
 	udp_chunk.set_destination (tag->get_dport ());
 	udp_chunk.set_source (tag->get_sport ());
 	udp_chunk.set_payload_size (packet->get_size ());
+	udp_chunk.initialize_checksum (tag->get_saddress (),
+				       tag->get_daddress (),
+				       UDP_PROTOCOL);
 
 	packet->add (&udp_chunk);
 
