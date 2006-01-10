@@ -79,7 +79,7 @@ Packet::copy (uint32_t start, uint32_t length) const
 	Packet *other = new Packet ();
 	Buffer *tmp = other->m_buffer;
 	tmp->add_at_start (length);
-	tmp->write (m_buffer->peek_data () + start, m_buffer->get_size ());
+	tmp->write (m_buffer->peek_data () + start, length);
 	return other;
 }
 
