@@ -63,6 +63,8 @@ public:
 	static double now_s (void);
 
 	static void insert_later (Event *event);
+
+	static void insert_at_destroy (Event *event);
 private:
 	Simulator ();
 	~Simulator ();

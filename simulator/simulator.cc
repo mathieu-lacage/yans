@@ -55,11 +55,13 @@ public:
 	void insert_at_s (Event *event, double time);
 	double now_s (void);
 	void insert_later (Event *event);
+	void insert_at_destroy (Event *event);
 
 private:
 	void handle_immediate (void);
 	typedef std::list<Event *> Events;
 	Events m_immediate;
+	Events m_destroy;
 	bool m_stop;
 	Clock *m_clock;
 	EventHeap *m_event_heap;
@@ -74,6 +76,12 @@ SimulatorPrivate::SimulatorPrivate ()
 
 SimulatorPrivate::~SimulatorPrivate ()
 {
+	while (!m_destroy.empty ()) {
+		Event *ev = m_destroy.front ();
+		m_destroy.pop_front ();
+		TRACE ("handle destroy " << ev);
+		ev->notify ();
+	}
 	delete m_clock;
 	m_clock = (Clock *)0xdeadbeaf;
 	delete m_event_heap;
@@ -152,6 +160,11 @@ void
 SimulatorPrivate::insert_later (Event *event)
 {
 	m_immediate.push_back (event);
+}
+void
+SimulatorPrivate::insert_at_destroy (Event *event)
+{
+	m_destroy.push_back (event);
 }
 
 
@@ -232,6 +245,12 @@ Simulator::insert_later (Event *event)
 {
 	TRACE ("insert later " << event);
 	return get_priv ()->insert_later (event);
+}
+void 
+Simulator::insert_at_destroy (Event *event)
+{
+	TRACE ("insert at destroy " << event);
+	return get_priv ()->insert_at_destroy (event);
 }
 
 }; // namespace yans
