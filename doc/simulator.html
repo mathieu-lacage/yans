@@ -87,6 +87,11 @@ by Simulator::now_s will be the same but all other events which were
 inserted with one of the insert_at or insert_in methods and which 
 were scheduled for the current time will have expired. This method is
 very useful to deal with various re-entrency issues.</li>
+<li><i>Simulator::insert_at_destroy (delta, event)</i>: the event will
+expire when Simulator::destroy is called. This method should be used to
+ensure proper cleanup of singleton/static objects which need to be
+destroyed at the end of a simulation before the next simulation starts.
+This is very useful to run memory leak checkers.</li>
 </ul>
 </p>
 
