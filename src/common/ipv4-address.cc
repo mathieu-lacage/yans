@@ -128,6 +128,14 @@ Ipv4Address::serialize (Buffer *buffer) const
 	buffer->write_hton_u32 (m_address);
 }
 void 
+Ipv4Address::serialize (uint8_t buf[4]) const
+{
+	buf[0] = (m_address >> 24) & 0xff;
+	buf[1] = (m_address >> 16) & 0xff;
+	buf[2] = (m_address >> 8) & 0xff;
+	buf[3] = (m_address >> 0) & 0xff;
+}
+void 
 Ipv4Address::deserialize (Buffer *buffer)
 {
 	m_address = buffer->read_ntoh_u32 ();

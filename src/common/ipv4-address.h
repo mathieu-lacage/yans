@@ -53,6 +53,7 @@ public:
 	uint32_t get_host_order (void) const;
 
 	void serialize (Buffer *buffer) const;
+	void serialize (uint8_t buf[4]) const;
 	void deserialize (Buffer *buffer);
 	void print (std::ostream *os) const;
 
