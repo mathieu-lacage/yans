@@ -34,7 +34,9 @@ uint32_t utils_ntoh_32 (uint32_t v);
 uint32_t ascii_to_ipv4_host (char const *address);
 void ascii_to_mac_network (char const *str, uint8_t address[6]);
 
-uint16_t utils_checksum_calculate (uint8_t *buffer, uint16_t size);
+/* call with checksum = 0 the first time. */
+uint16_t utils_checksum_calculate (uint16_t checksum, uint8_t *buffer, uint16_t size);
+uint16_t utils_checksum_complete (uint16_t checksum);
 
 }; // namespace yans
 

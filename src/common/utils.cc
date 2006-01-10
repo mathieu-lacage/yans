@@ -128,10 +128,10 @@ ascii_to_mac_network (char const *str, uint8_t address[6])
 }
 
 uint16_t 
-utils_checksum_calculate (uint8_t *buffer, uint16_t size)
+utils_checksum_calculate (uint16_t checksum, uint8_t *buffer, uint16_t size)
 {
 	/* see RFC 1071 to understand this code. */
-	uint32_t sum = 0;
+	uint32_t sum = checksum;
 	uint16_t *data = (uint16_t *) buffer;
 	for (uint16_t i = 0; i < (size/2); i += 1) {
 		sum += data[i];
@@ -139,10 +139,15 @@ utils_checksum_calculate (uint8_t *buffer, uint16_t size)
 	while (sum >> 16) {
 		sum = (sum & 0xffff) + (sum >> 16);
 	}
-	uint16_t checksum = ~sum;
-	return checksum;
-
+	return sum;
 }
+
+uint16_t 
+utils_checksum_complete (uint16_t checksum)
+{
+	return ~checksum;
+}
+
 
 }; // namespace yans
 
