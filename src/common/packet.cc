@@ -50,6 +50,7 @@ Packet::~Packet ()
 		delete (*k).second;
 	}
 	m_tags.erase (m_tags.begin (), m_tags.end ());
+	delete m_buffer;
 }
 
 void 
