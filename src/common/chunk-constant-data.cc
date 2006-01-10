@@ -35,7 +35,7 @@ void
 ChunkConstantData::add_to (Buffer *buffer) const
 {
 	buffer->add_at_start (m_len);
-	memset (buffer->peek_data (), m_len, m_data);
+	memset (buffer->peek_data (), m_data, m_len);
 }
 void 
 ChunkConstantData::remove_from (Buffer *buffer)
