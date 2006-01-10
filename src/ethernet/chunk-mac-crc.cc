@@ -47,10 +47,10 @@ ChunkMacCrc::add_to (Buffer *buffer) const
 	uint32_t end = buffer->get_size ();
 	buffer->add_at_end (get_size ());
 	buffer->seek (end);
-	buffer->write_u32 (0);
 	for (uint8_t i = 0; i < m_pad_size; i++) {
 		buffer->write_u8 (i);
 	}
+	buffer->write_u32 (0);
 }
 void 
 ChunkMacCrc::remove_from (Buffer *buffer)
