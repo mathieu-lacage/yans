@@ -147,7 +147,7 @@ Ipv4::send_out (Packet *packet, ChunkIpv4 *ip, Route const *route)
 {
 	NetworkInterface *out_interface = route->get_interface ();
 
-	if (packet->get_size () > out_interface->get_mtu ()) {
+	if (packet->get_size () + ip->get_size () > out_interface->get_mtu ()) {
 		/* we need to fragment. */
 		if (ip->is_dont_fragment ()) {
 			/* we are not allowed to fragment this packet. */
@@ -190,6 +190,7 @@ Ipv4::send_out (Packet *packet, ChunkIpv4 *ip, Route const *route)
 		ip_fragment.set_payload_size (last_fragment_length);
 
 		send_real_out (last_fragment, &ip_fragment, route);
+		last_fragment->unref ();
 	} else {
 		send_real_out (packet, ip, route);
 	}
