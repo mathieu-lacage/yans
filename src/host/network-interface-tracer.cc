@@ -39,16 +39,15 @@ NetworkInterfaceTracer::NetworkInterfaceTracer (Host *host, NetworkInterface *in
 	m_file = new WriteFile (host);
 	m_file->open (filename);
 	delete filename;
-	m_buffer = new Buffer (64);
 	write_pcap_header ();
+	m_write_callback = make_callback (&NetworkInterfaceTracer::write_data, this);
 }
 NetworkInterfaceTracer::~NetworkInterfaceTracer ()
 {
 	m_file->close ();
 	delete m_file;
 	m_file = (WriteFile *)0xdeadbeaf;
-	delete m_buffer;
-	m_buffer = (Buffer *)0xdeadbeaf;
+	delete m_write_callback;
 }
 
 void
@@ -84,28 +83,14 @@ NetworkInterfaceTracer::write_packet_header (uint32_t size)
 	write_32 (size);
 }
 
-void
-NetworkInterfaceTracer::write_buffer_to_file (uint32_t to_write)
-{
-	uint8_t *data = m_buffer->peek_data ();
-	uint32_t written = 0;
-	while (written < to_write) {
-		uint32_t just_written = m_file->write (data, to_write - written);
-		written += just_written;
-		data += just_written;
-	}
-}
-
 void 
 NetworkInterfaceTracer::trace_tx_mac (Packet *packet)
 {
 	if (!m_enable_all) {
 		return;
 	}
-	m_buffer->seek (0);
-	uint32_t serialized = packet->serialize (m_buffer);
-	write_packet_header (serialized);
-	write_buffer_to_file (serialized);
+	write_packet_header (packet->get_size ());
+	packet->write (m_write_callback);
 }
 void 
 NetworkInterfaceTracer::trace_rx_mac (Packet *packet)
@@ -113,10 +98,14 @@ NetworkInterfaceTracer::trace_rx_mac (Packet *packet)
 	if (!m_enable_all) {
 		return;
 	}
-	m_buffer->seek (0);
-	uint32_t serialized = packet->serialize (m_buffer);
-	write_packet_header (serialized);
-	write_buffer_to_file (serialized);
+	write_packet_header (packet->get_size ());
+	packet->write (m_write_callback);
+}
+
+uint32_t
+NetworkInterfaceTracer::write_data (uint8_t *buffer, uint32_t size)
+{
+	return m_file->write (buffer, size);
 }
 
 void 
