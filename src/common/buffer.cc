@@ -207,7 +207,7 @@ Buffer::read_u16 (void)
 	assert (m_current + 2 <= m_size);
 	uint16_t *buffer = (uint16_t *)(m_buffer + m_current);
 	uint16_t retval = *buffer;
-	m_current += 4;
+	m_current += 2;
 	return retval;
 }
 uint32_t 
@@ -354,6 +354,16 @@ BufferTest::run_tests (void)
 	buffer->add_at_end (1);
 	buffer->seek (4);
 	buffer->write_u8 (0xff);
+	buffer->skip (-2);
+	uint16_t saved = buffer->read_u16 ();
+	buffer->skip (-2);
+	buffer->write_hton_u16 (0xff00);
+	buffer->skip (-2);
+	if (buffer->read_ntoh_u16 () != 0xff00) {
+		ok = false;
+	}
+	buffer->skip (-2);
+	buffer->write_u16 (saved);
 	ENSURE_WRITTEN_BYTES (buffer, 4, 0xff, 0x69, 0xde, 0xad, 0xff);
 	delete buffer;
 	return ok;
