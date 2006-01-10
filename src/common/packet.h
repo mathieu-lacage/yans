@@ -40,6 +40,7 @@ class Buffer;
 
 class Packet {
 public:
+	typedef Callback<uint32_t (uint8_t *, uint32_t)> PacketReadWriteCallback;
 	Packet ();
 	~Packet ();
 
@@ -60,12 +61,15 @@ public:
 	void remove_at_end (uint32_t size);
 	void remove_at_start (uint32_t size);
 
+	void write (PacketReadWriteCallback *callback) const;
+	void read (PacketReadWriteCallback *callback, uint32_t to_read);
+
  private:
 	typedef Sgi::hash_map<uint32_t, Tag *> Tags;
 	typedef Sgi::hash_map<uint32_t, Tag *>::iterator TagsI;
 	Tags m_tags;
 	RefCount<Packet> m_ref;
-	Buffer *buffer;
+	Buffer *m_buffer;
 };
 
 std::ostream& operator<< (std::ostream& os, Packet const& packet);

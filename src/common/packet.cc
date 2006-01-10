@@ -22,6 +22,8 @@
 #include "packet.h"
 #include "chunk.h"
 #include "buffer.h"
+#include "write-file.h"
+#include "callback.tcc"
 
 #define TRACE_PACKET 1
 
@@ -65,17 +67,17 @@ Packet::unref (void)
 Packet *
 Packet::copy (void) const
 {
-	return copy (0, m_size);
+	return copy (0, get_size ());
 }
 Packet *
 Packet::copy (uint32_t start, uint32_t length) const
 {
-	assert (length < m_size);
-	assert (start < m_size);
-	assert (start + length <= m_size);
+	assert (length < get_size ());
+	assert (start < get_size ());
+	assert (start + length <= get_size ());
 	Packet *other = new Packet ();
 	Buffer *tmp = other->m_buffer;
-	tmp->allocate_at_start (length);
+	tmp->add_at_start (length);
 	tmp->write (m_buffer->peek_data () + start, m_buffer->get_size ());
 	return other;
 }
@@ -136,12 +138,39 @@ Packet::remove (Chunk *chunk)
 void 
 Packet::remove_at_end (uint32_t size)
 {
-	m_buffer->delete_at_end (size);
+	m_buffer->remove_at_end (size);
 }
 void
 Packet::remove_at_start (uint32_t size)
 {
-	m_buffer->delete_at_start (size);
+	m_buffer->remove_at_start (size);
+}
+
+void
+Packet::write (PacketReadWriteCallback *callback) const
+{
+	uint8_t *data = m_buffer->peek_data ();
+	uint32_t to_write = get_size ();
+	uint32_t written = 0;
+	while (written < to_write) {
+		uint32_t just_written = (*callback) (data, to_write - written);
+		written += just_written;
+		data += just_written;
+	}
+}
+
+void 
+Packet::read (PacketReadWriteCallback *callback, 
+	      uint32_t to_read)
+{
+	m_buffer->add_at_start (to_read);
+	uint8_t *data = m_buffer->peek_data ();
+	uint32_t read = 0;
+	while (read < to_read) {
+		uint32_t just_read = (*callback) (data, to_read - read);
+		read += just_read;
+		data += just_read;
+	}	
 }
 
 
