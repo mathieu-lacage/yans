@@ -182,6 +182,7 @@ EthernetNetworkInterface::send_data (Packet *packet, MacAddress dest)
 	ChunkMacCrc trailer;
 	if (packet->get_size () < 38) {
 		trailer.set_pad (38 - packet->get_size ());
+		header.set_length (38);
 	}
 	packet->add (&header);
 	packet->add (&trailer);
@@ -195,13 +196,12 @@ EthernetNetworkInterface::send_arp (Packet *packet, MacAddress dest)
 	ChunkMacLlcSnap header;
 	header.set_destination (dest);
 	header.set_source (get_mac_address ());
+	header.set_length (packet->get_size ());
 	header.set_ether_type (ETHER_TYPE_ARP);
 	ChunkMacCrc trailer;
 	if (packet->get_size () < 38) {
 		trailer.set_pad (38 - packet->get_size ());
 		header.set_length (38);
-	} else {
-		header.set_length (packet->get_size ());
 	}
 	packet->add (&header);
 	packet->add (&trailer);
