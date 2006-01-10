@@ -24,6 +24,18 @@
 #include "chunk-mac-llc-snap.h"
 #include "buffer.h"
 
+#define noTRACE_CHUNK_LLC_SNAP 1
+
+#ifdef TRACE_CHUNK_LLC_SNAP
+#include <iostream>
+#include "simulator.h"
+# define TRACE(x) \
+std::cout << "CHUNK LLCSNAP TRACE " << Simulator::now_s () << " " << x << std::endl;
+#else /* TRACE_CHUNK_LLC_SNAP */
+# define TRACE(format,...)
+#endif /* TRACE_CHUNK_LLC_SNAP */
+
+
 namespace yans {
 
 ChunkMacLlcSnap::ChunkMacLlcSnap ()
@@ -89,6 +101,7 @@ ChunkMacLlcSnap::add_to (Buffer *buffer) const
 	m_destination.serialize (buffer);
 	assert (m_length <= 0x05dc);
 	/* ieee 802.3 says length is msb. */
+	TRACE ("length="<<m_length);
 	buffer->write_hton_u16 (m_length + 8);
 	buffer->write_u8 (0xaa);
 	buffer->write_u8 (0xaa);
@@ -105,6 +118,7 @@ ChunkMacLlcSnap::remove_from (Buffer *buffer)
 	m_source.deserialize (buffer);
 	m_destination.deserialize (buffer);
 	m_length = buffer->read_ntoh_u16 () - 8;
+	TRACE ("length="<<m_length);
 	buffer->skip (6);
 	m_ether_type = buffer->read_ntoh_u16 ();
 	buffer->remove_at_start (get_size ());
