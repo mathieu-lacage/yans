@@ -32,7 +32,6 @@ HostTracer::trace_tx_app (Packet *packet)
 	if (m_enable_all || m_enable_app) {
 		std::cout << Simulator::now_s ()
 			  << " tx ";
-		packet->print (&std::cout);
 		std::cout << std::endl;
 	}
 }
@@ -42,7 +41,6 @@ HostTracer::trace_tx_udp (Packet *packet)
 	if (m_enable_all || m_enable_udp) {
 		std::cout << Simulator::now_s ()
 			  << " tx ";
-		packet->print (&std::cout);
 		std::cout << std::endl;
 	}
 }
@@ -52,7 +50,6 @@ HostTracer::trace_tx_ipv4 (Packet *packet)
 	if (m_enable_all || m_enable_ipv4) {
 		std::cout << Simulator::now_s ()
 			  << " tx ";
-		packet->print (&std::cout);
 		std::cout << std::endl;
 	}
 }
@@ -62,7 +59,6 @@ HostTracer::trace_rx_app (Packet *packet)
 	if (m_enable_all || m_enable_app) {
 		std::cout << Simulator::now_s ()
 			  << " rx ";
-		packet->print (&std::cout);
 		std::cout << std::endl;
 	}
 }
@@ -72,7 +68,6 @@ HostTracer::trace_rx_udp (Packet *packet)
 	if (m_enable_all || m_enable_udp) {
 		std::cout << Simulator::now_s ()
 			  << " rx ";
-		packet->print (&std::cout);
 		std::cout << std::endl;
 	}
 }
@@ -82,7 +77,6 @@ HostTracer::trace_rx_ipv4 (Packet *packet)
 	if (m_enable_all || m_enable_ipv4) {
 		std::cout << Simulator::now_s ()
 			  << " rx ";
-		packet->print (&std::cout);
 		std::cout << std::endl;
 	}
 }
