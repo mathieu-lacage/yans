@@ -23,6 +23,7 @@
 #define CHUNK_TCP_H
 
 #include "chunk.h"
+#include "ipv4-address.h"
 
 namespace yans {
 
@@ -80,11 +81,13 @@ public:
 
 	bool is_checksum_ok (void);
 
-	virtual uint32_t get_size (void) const;
-	virtual Chunk *copy (void) const;
-	virtual void serialize_init (Buffer *buffer) const;
-	virtual void serialize_fini (Buffer *buffer,
-				     ChunkSerializationState *state) const;
+	void initialize_checksum (Ipv4Address source,
+				  Ipv4Address destination,
+				  uint8_t protocol,
+				  uint16_t payload_size);
+
+	virtual void add_to (Buffer *buffer) const;
+	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
 private:
 	enum {
@@ -95,9 +98,11 @@ private:
 		SYN = 1,
 		FIN = 0
 	};
+	uint32_t get_size (void) const;
 	bool is_flag (uint8_t n) const;
 	void enable_flag (uint8_t n);
 	void disable_flag (uint8_t n);
+
 	uint16_t m_source_port;
 	uint16_t m_destination_port;
 	uint32_t m_sequence_number;
@@ -105,15 +110,18 @@ private:
 	uint8_t m_header_length;
 	uint8_t m_flags;
 	uint16_t m_window_size;
-	uint16_t m_checksum;
 	uint16_t m_urgent_pointer;
-	bool m_has_option_mss;
-	bool m_has_option_timestamp;
-	bool m_has_option_windowscale;
+
+	uint32_t m_has_option_mss         : 1;
+	uint32_t m_has_option_timestamp   : 1;
+	uint32_t m_has_option_windowscale : 1;
+	uint32_t m_is_checksum_ok         : 1;
+	
 	uint16_t m_option_mss;
 	uint8_t m_option_windowscale;
 	uint32_t m_option_timestamp_value;
 	uint32_t m_option_timestamp_reply;
+	uint16_t m_initial_checksum;
 };
 
 }; // namespace yans
