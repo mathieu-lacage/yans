@@ -69,6 +69,10 @@ my event class now=6.000000
 - parallelisation support
 - deployment for parallelisation through python
 - 802.11 model
+- port to other architectures/OSes:
+   - x86-64 linux
+   - ppc osx
+   - x86 win32
   
 5) Contributing/Using
 ---------------------
