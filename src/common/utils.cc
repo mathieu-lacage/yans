@@ -133,8 +133,15 @@ utils_checksum_calculate (uint16_t checksum, uint8_t *buffer, uint16_t size)
 	/* see RFC 1071 to understand this code. */
 	uint32_t sum = checksum;
 	uint16_t *data = (uint16_t *) buffer;
-	for (uint16_t i = 0; i < (size/2); i += 1) {
+	for (uint16_t i = 0; i < (size/2); i++) {
 		sum += data[i];
+	}
+	if ((size % 2) != 0) {
+		uint8_t tmp_buf[2];
+		tmp_buf[0] = buffer[size-1];
+		tmp_buf[1] = 0;
+		data = (uint16_t *)tmp_buf;
+		sum += *data;
 	}
 	while (sum >> 16) {
 		sum = (sum & 0xffff) + (sum >> 16);
