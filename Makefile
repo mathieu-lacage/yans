@@ -54,6 +54,7 @@ YANS_SRC= \
 	src/ipv4/udp.cc \
 	src/ipv4/chunk-udp.cc \
 	src/ipv4/chunk-icmp.cc \
+	src/ipv4/chunk-tcp.cc \
 	src/arp/arp.cc \
 	src/arp/chunk-arp.cc \
 	src/arp/arp-cache-entry.cc \
