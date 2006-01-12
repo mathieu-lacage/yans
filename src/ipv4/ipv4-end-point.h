@@ -30,10 +30,11 @@
 namespace yans {
 
 class Packet;
+class Chunk;
 
 class Ipv4EndPoint {
 public:
-	typedef Callback<void (Packet *)> Ipv4EndPointReceptionCallback;
+	typedef Callback<void (Packet *, Chunk *)> Ipv4EndPointReceptionCallback;
 	typedef CallbackEvent<void (Ipv4EndPoint *)> Ipv4EndPointDestroyCallback;
 
 	Ipv4EndPoint (Ipv4Address address, uint16_t port);
@@ -46,7 +47,7 @@ public:
 
 	void set_peer (Ipv4Address address, uint16_t port);
 
-	void receive (Packet *packet);
+	void receive (Packet *packet, Chunk *chunk);
 	void set_callback (Ipv4EndPointReceptionCallback *reception);
 	void set_destroy_callback (Ipv4EndPointDestroyCallback *destroy);
 private:

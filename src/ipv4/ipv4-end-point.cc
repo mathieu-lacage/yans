@@ -68,9 +68,9 @@ Ipv4EndPoint::set_peer (Ipv4Address address, uint16_t port)
 }
 
 void 
-Ipv4EndPoint::receive (Packet *packet)
+Ipv4EndPoint::receive (Packet *packet, Chunk *chunk)
 {
-	(*m_reception) (packet);
+	(*m_reception) (packet, chunk);
 }
 void 
 Ipv4EndPoint::set_callback (Ipv4EndPointReceptionCallback *reception)
