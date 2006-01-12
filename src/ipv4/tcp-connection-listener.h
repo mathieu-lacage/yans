@@ -34,6 +34,7 @@ class Ipv4;
 class Tcp;
 class Ipv4EndPoint;
 class TcpConnection;
+class Chunk;
 
 class TcpConnectionListener {
 public:
@@ -49,7 +50,7 @@ public:
 	void set_tcp (Tcp *tcp);
 	void set_end_point (Ipv4EndPoint *end_point);
 
-	void receive (Packet *packet);
+	void receive (Packet *packet, Chunk *chunk);
 
 	void set_callbacks (ConnectionAcception *connection_acception,
 			    ConnectionCreated *connection_created);

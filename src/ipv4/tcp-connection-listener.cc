@@ -40,11 +40,11 @@ TcpConnectionListener::~TcpConnectionListener ()
 }
 
 void 
-TcpConnectionListener::receive (Packet *packet)
+TcpConnectionListener::receive (Packet *packet, Chunk *chunk)
 {
 	TagInIpv4 *tag = static_cast <TagInIpv4 *> (packet->get_tag (TagInIpv4::get_tag ()));
 	assert (tag != 0);
-	ChunkTcp *tcp_chunk = static_cast <ChunkTcp *> (packet->peek_header ());
+	ChunkTcp *tcp_chunk = static_cast <ChunkTcp *> (chunk);
 	if (tcp_chunk->is_flag_syn () &&
 	    !tcp_chunk->is_flag_ack ()) {
 		if ((*m_acception) (tag->get_saddress (), tag->get_sport ())) {
@@ -72,7 +72,7 @@ TcpConnectionListener::receive (Packet *packet)
 			}
 			TcpConnection *connection = m_host->get_tcp ()->create_connection (end_point);
 			(*m_creation) (connection, end_point);
-			end_point->receive (packet);
+			end_point->receive (packet, chunk);
 		}
 	}
 
