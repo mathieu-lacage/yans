@@ -76,7 +76,7 @@ UdpSink::unbind_at (double at)
 }
 
 void
-UdpSink::receive (Packet *packet)
+UdpSink::receive (Packet *packet, Chunk *chunk)
 {
 	m_host->get_tracer ()->trace_rx_app (packet);
 	if (m_callback != 0) {

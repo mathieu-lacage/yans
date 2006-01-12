@@ -30,6 +30,7 @@ namespace yans {
 class Host;
 class Ipv4EndPoint;
 class Packet;
+class Chunk;
 
 class UdpSource  {
 public:
@@ -44,7 +45,7 @@ public:
 
 	void send (Packet *packet);
 private:
-	void receive (Packet *packet);
+	void receive (Packet *packet, Chunk *chunk);
 	void unbind_now (void);
 	Host *m_host;
 	Ipv4EndPoint *m_end_point;

@@ -87,7 +87,7 @@ UdpSource::send (Packet *packet)
 }
 
 void 
-UdpSource::receive (Packet *packet)
+UdpSource::receive (Packet *packet, Chunk *chunk)
 {}
 
 void
