@@ -109,7 +109,7 @@ Tcp::allocate (Ipv4Address local_address, uint16_t local_port,
 
 
 void
-Tcp::send_reset (Packet *packet)
+Tcp::send_reset (Packet *packet, ChunkTcp *tcp_chunk)
 {
 	TagInIpv4 *in_tag = static_cast <TagInIpv4 *> (packet->remove_tag (TagInIpv4::get_tag ()));
 	Route *route = m_host->get_routing_table ()->lookup (in_tag->get_saddress ());
@@ -125,7 +125,6 @@ Tcp::send_reset (Packet *packet)
 	out_tag->set_sport (in_tag->get_dport ());
 	packet->add_tag (TagOutIpv4::get_tag (), out_tag);
 
-	ChunkTcp *tcp_chunk = static_cast <ChunkTcp *> (packet->peek_header ());
 	tcp_chunk->disable_flag_syn ();
 	tcp_chunk->enable_flag_rst ();
 	uint16_t old_sp, old_dp;
@@ -133,12 +132,14 @@ Tcp::send_reset (Packet *packet)
 	old_sp = tcp_chunk->get_source_port ();
 	old_dp = tcp_chunk->get_destination_port ();
 	old_seq = tcp_chunk->get_sequence_number ();
-	old_payload_size = packet->get_size () - tcp_chunk->get_size ();
+	old_payload_size = packet->get_size ();
 	tcp_chunk->set_source_port (old_dp);
 	tcp_chunk->set_destination_port (old_sp);
 	tcp_chunk->set_ack_number (old_seq + old_payload_size + 1);
 	tcp_chunk->enable_flag_ack ();
 	tcp_chunk->set_sequence_number (0);
+
+	packet->add (tcp_chunk);
 
 	TRACE ("send back RST to " << in_tag->get_saddress ());
 	m_ipv4->set_protocol (TCP_PROTOCOL);
@@ -154,23 +155,24 @@ Tcp::receive (Packet *packet)
 {
 	TagInIpv4 *tag = static_cast <TagInIpv4 *> (packet->get_tag (TagInIpv4::get_tag ()));
 	assert (tag != 0);
-	ChunkTcp *tcp_chunk = static_cast <ChunkTcp *> (packet->peek_header ());
-	tag->set_dport (tcp_chunk->get_destination_port ());
-	tag->set_sport (tcp_chunk->get_source_port ());
+	ChunkTcp tcp_chunk;
+	packet->remove (&tcp_chunk);
+	tag->set_dport (tcp_chunk.get_destination_port ());
+	tag->set_sport (tcp_chunk.get_source_port ());
 	Ipv4EndPoint *end_p = m_end_p->lookup (tag->get_daddress (), tag->get_dport (), 
-					      tag->get_saddress (), tag->get_sport ());
+					       tag->get_saddress (), tag->get_sport ());
 	if (end_p == 0) {
-		if (tcp_chunk->is_flag_syn () &&
-		    !tcp_chunk->is_flag_ack ()) {
+		if (tcp_chunk.is_flag_syn () &&
+		    !tcp_chunk.is_flag_ack ()) {
 			/* This is the first SYN packet to open a connection
 			 * but no one is expecting this connection to be
 			 * opened so we close it with a RST packet.
 			 */
-			send_reset (packet);
+			send_reset (packet, &tcp_chunk);
 		}
 		return;
 	}
-	end_p->receive (packet);
+	end_p->receive (packet, &tcp_chunk);
 }
 
 TcpConnection *
