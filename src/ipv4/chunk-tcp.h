@@ -86,6 +86,8 @@ public:
 				  uint8_t protocol,
 				  uint16_t payload_size);
 
+	uint32_t get_size (void) const;
+
 	virtual void add_to (Buffer *buffer) const;
 	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
@@ -98,7 +100,6 @@ private:
 		SYN = 1,
 		FIN = 0
 	};
-	uint32_t get_size (void) const;
 	bool is_flag (uint8_t n) const;
 	void enable_flag (uint8_t n);
 	void disable_flag (uint8_t n);
