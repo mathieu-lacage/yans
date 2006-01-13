@@ -24,7 +24,6 @@
 #include "simulator.h"
 #include "packet.h"
 #include "chunk-ipv4.h"
-#include "chunk-piece.h"
 
 namespace yans {
 

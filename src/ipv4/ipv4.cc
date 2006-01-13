@@ -28,7 +28,6 @@
 #include "tag-ipv4.h"
 #include "host-tracer.h"
 #include "chunk-icmp.h"
-#include "chunk-piece.h"
 #include "defrag-state.h"
 
 
