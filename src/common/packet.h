@@ -24,8 +24,6 @@
 
 #include <stdint.h>
 #include <ostream>
-#include <vector>
-#include <list>
 
 #include "sgi-hashmap.h"
 #include "tag-manager.h"
