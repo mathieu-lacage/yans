@@ -76,7 +76,8 @@ Cable::send (Packet *packet, EthernetNetworkInterface *sender)
 	EthernetNetworkInterface *rx;
 	if (sender == m_a) {
 		rx = m_b;
-	} else if (sender == m_b) {
+	} else {
+		assert (sender == m_b);
 		rx = m_a;
 	}
 	packet->ref ();
