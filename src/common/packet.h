@@ -24,9 +24,9 @@
 
 #include <stdint.h>
 #include <ostream>
+#include <list>
+#include <utility>
 
-#include "sgi-hashmap.h"
-#include "tag-manager.h"
 #include "ref-count.tcc"
 #include "callback.tcc"
 
@@ -34,6 +34,7 @@ namespace yans {
 
 class Chunk;
 class Buffer;
+class Tag;
 
 
 class Packet {
@@ -63,8 +64,8 @@ public:
 	void read (PacketReadWriteCallback *callback, uint32_t to_read);
 
  private:
-	typedef Sgi::hash_map<uint32_t, Tag *> Tags;
-	typedef Sgi::hash_map<uint32_t, Tag *>::iterator TagsI;
+	typedef std::list<std::pair<uint32_t, Tag *> >Tags;
+	typedef std::list<std::pair<uint32_t, Tag *> >::iterator TagsI;
 	Tags m_tags;
 	RefCount<Packet> m_ref;
 	Buffer *m_buffer;

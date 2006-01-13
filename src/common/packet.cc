@@ -24,6 +24,7 @@
 #include "buffer.h"
 #include "write-file.h"
 #include "callback.tcc"
+#include "tag-manager.h"
 
 #define TRACE_PACKET 1
 
@@ -92,28 +93,30 @@ Packet::get_size (void) const
 void 
 Packet::add_tag (uint32_t tag_id, Tag *tag)
 {
-	assert (m_tags.find (tag_id) == m_tags.end ());
-	m_tags[tag_id] = tag;
+	assert (get_tag (tag_id) == 0);
+	m_tags.push_back (std::make_pair (tag_id, tag));
 }
 Tag *
 Packet::get_tag (uint32_t tag_id)
 {
-	if (m_tags.find (tag_id) == m_tags.end ()) {
-		return 0;
-	} else {
-		return m_tags[tag_id];
+	for (TagsI i = m_tags.begin (); i != m_tags.end (); i++) {
+		if ((*i).first == tag_id) {
+			return (*i).second;
+		}
 	}
+	return 0;
 }
 Tag *
 Packet::remove_tag (uint32_t tag_id)
 {
-	if (m_tags.find (tag_id) == m_tags.end ()) {
-		return 0;
-	} else {
-		Tag *tag = m_tags[tag_id];
-		m_tags.erase (m_tags.find (tag_id));
-		return tag;
+	for (TagsI i = m_tags.begin (); i != m_tags.end (); i++) {
+		if ((*i).first == tag_id) {
+			Tag *tag = (*i).second;
+			m_tags.erase (i);
+			return tag;
+		}
 	}
+	return 0;
 }
 
 
