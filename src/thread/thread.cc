@@ -21,6 +21,7 @@
 
 #include "thread.h"
 #include "event.h"
+#include "event.tcc"
 #include "semaphore.h"
 #include "fiber.h"
 #include "simulator.h"

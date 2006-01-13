@@ -24,6 +24,7 @@
 #include "packet.h"
 #include "chunk-constant-data.h"
 #include "event.h"
+#include "event.tcc"
 
 namespace yans {
 

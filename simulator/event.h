@@ -46,6 +46,4 @@ protected:
 
 }; // namespace yans
 
-#include "event.tcc"
-
 #endif /* EVENT_H */
