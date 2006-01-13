@@ -17,6 +17,7 @@ INCLUDES=\
  $(NULL)
 FLAGS=-Wall -Werror -O0 -gdwarf-2
 PYTHON_INCLUDES=-I/usr/include/python2.3
+#TCP=bsd
 
 LDFLAGS=
 CXXFLAGS+=$(FLAGS) $(INCLUDES) $(DEFINES)
@@ -77,52 +78,12 @@ YANS_SRC= \
 	src/apps/traffic-analyzer.cc \
 	test/test.cc \
 	$(NULL)
-
-# 	src/common/chunk.cc \
-# 	src/common/packet.cc \
-# 	src/common/utils.cc \
-# 	src/common/population-analysis.cc \
-# 	src/common/tag-manager.cc \
-# 	src/common/chunk-fake-data.cc \
-# 	src/common/callback-test.cc \
-# 	src/common/ipv4-address.cc \
-# 	src/common/mac-address.cc \
-# 	src/arp/arp-cache-entry.cc \
-# 	src/arp/arp.cc \
-# 	src/arp/chunk-arp.cc \
-# 	src/host/host.cc \
-# 	src/host/network-interface.cc \
-# 	src/host/network-interface-tracer.cc \
-# 	src/host/loopback-interface.cc \
-# 	src/host/host-tracer.cc \
-# 	src/ipv4/chunk-icmp.cc \
-# 	src/ipv4/chunk-ipv4.cc \
-# 	src/ipv4/chunk-piece.cc \
-# 	src/ipv4/chunk-tcp.cc \
-# 	src/ipv4/chunk-udp.cc \
-# 	src/ipv4/defrag-state.cc \
-# 	src/ipv4/ipv4.cc \
-# 	src/ipv4/ipv4-end-point.cc \
-# 	src/ipv4/ipv4-end-points.cc \
-# 	src/ipv4/ipv4-route.cc \
-# 	src/ipv4/tag-ipv4.cc \
-# 	src/ipv4/tcp.cc \
-# 	src/ipv4/tcp-connection.cc \
-# 	src/ipv4/tcp-connection-listener.cc \
-# 	src/ipv4/tcp-pieces.cc \
-# 	src/ipv4/udp.cc \
-# 	src/apps/periodic-generator.cc \
-# 	src/apps/tcp-sink.cc \
-# 	src/apps/tcp-source.cc \
-# 	src/apps/traffic-analyzer.cc \
-# 	src/apps/udp-sink.cc \
-# 	src/apps/udp-source.cc \
-# 	src/ethernet/cable.cc \
-# 	src/ethernet/chunk-mac-crc.cc \
-# 	src/ethernet/chunk-mac-llc-snap.cc \
-# 	src/ethernet/ethernet-network-interface.cc \
-# 	src/os-model/write-file.cc \
-
+ifeq ($(TCP),bsd)
+YANS_SRC += \
+	src/ipv4/tcp-bsd/tcp-bsd-connection.cc
+CXXFLAGS += -DTCP_USE_BSD
+CXXFLAGS += -I$(TOP)/src/ipv4/tcp-bsd/
+endif
 YANS_OBJ=$(call genobj, $(YANS_SRC))
 LIB_YANS=$(TOP_INSTALL)/libyans.so
 $(YANS_OBJ): CXXFLAGS += -fPIC
