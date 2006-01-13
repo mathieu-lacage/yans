@@ -72,6 +72,10 @@ UdpSource::set_peer (Ipv4Address address, uint16_t port)
 void
 UdpSource::send (Packet *packet)
 {
+	if (m_end_point == 0) {
+		// not bound.
+		return;
+	}
 	/* route packet. */
 	Ipv4Route *routing_table = m_host->get_routing_table ();
 	Route *route = routing_table->lookup (m_peer_address);
