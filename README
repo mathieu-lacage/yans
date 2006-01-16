@@ -61,9 +61,10 @@ my event class now=6.000000
 
 
 4) TODO
-----------
+-------
 
-- Deserialization support
+In no particular order:
+
 - emulation support
 - complete python binding
 - parallelisation support
@@ -73,6 +74,14 @@ my event class now=6.000000
    - x86-64 linux
    - ppc osx
    - x86 win32
+- rng
+- simulator performance statistics output. i.e.:
+	> The core should be instrumented to output statistics on its performance
+	> (wall time elapsed, number of events processed, max event queue length,
+	> etc.) Simulator should output this by default to stdout and if run in
+	> quiet mode should dump to some file like testname-output/testname.log
+	> or .stat
+- counter/statistics facility for models -- related to logging
   
 5) Contributing/Using
 ---------------------
