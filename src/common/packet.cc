@@ -133,6 +133,15 @@ Packet::add_at_end (Packet *packet)
 	m_buffer->seek (m_buffer->get_size () - tmp->get_size ());
 	m_buffer->write (tmp->peek_data (), tmp->get_size ());
 }
+void 
+Packet::add_at_end (Packet *packet, uint32_t start, uint32_t size)
+{
+	assert (packet->get_size () < start + size);
+	Buffer *tmp = packet->m_buffer;
+	m_buffer->add_at_end (tmp->get_size ());
+	m_buffer->seek (m_buffer->get_size () - size);
+	m_buffer->write (tmp->peek_data () + start, size);
+}
 
 void 
 Packet::remove (Chunk *chunk)
