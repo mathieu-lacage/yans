@@ -25,6 +25,7 @@
 #include <iostream>
 #include "thread.h"
 #include "buffer.h"
+#include "tcp-buffer.h"
 #if 0
 #include "utils.h"
 #include "fiber-scheduler.h"
@@ -50,6 +51,7 @@ TestManager::TestManager ()
 #endif
 	ADD_TEST (ThreadTest, "Thread");
 	ADD_TEST (BufferTest, "Buffer");
+	ADD_TEST (TcpBufferTest, "TcpBuffer");
 }
 
 TestManager::~TestManager ()
