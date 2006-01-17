@@ -27,7 +27,6 @@
 #include "ipv4-route.h"
 #include "ipv4-end-point.h"
 #include "tcp-connection.h"
-#include "chunk-piece.h"
 #include "callback-event.tcc"
 
 #define TRACE_TCP_SOURCE 1
@@ -91,12 +90,7 @@ TcpSource::start_disconnect_now (void)
 void 
 TcpSource::send (Packet *packet)
 {
-	Packet *new_packet = new Packet ();
-	ChunkPiece *piece = new ChunkPiece ();
-	new_packet->add_header (piece);
-	piece->set_original (packet, 0, packet->get_size ());
-	m_connection->send (new_packet);
-	new_packet->unref ();
+	m_connection->send (packet);
 }
 
 
