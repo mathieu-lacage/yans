@@ -433,7 +433,7 @@ void ChunkTcp::remove_from (Buffer *buffer)
 			if (length != 3) {
 				goto out;
 			}
-			uint8_t scale = buffer->read_ntoh_u16 ();
+			uint8_t scale = buffer->read_u8 ();
 			enable_option_windowscale (scale);
 		} break;
 		case 8: {
