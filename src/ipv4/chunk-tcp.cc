@@ -386,7 +386,7 @@ void ChunkTcp::remove_from (Buffer *buffer)
 	m_destination_port = buffer->read_ntoh_u16 ();
 	m_sequence_number = buffer->read_ntoh_u32 ();
 	m_ack_number = buffer->read_ntoh_u32 ();
-        uint8_t header_length = buffer->read_u8 ();
+        uint8_t header_length = buffer->read_u8 () >> 4;
 	uint8_t flags = buffer->read_u8 ();
 	if (flags & (1<<0)) {
 		enable_flag (FIN);
