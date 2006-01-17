@@ -1,12 +1,153 @@
 <html>
 
 <head>
-<title>Core Network Models</title>
+<title>Utility library to implement network models</title>
 </head>
 
-<h1>The Core Network Models</h1>
+<h1>Utility library to implement network models</h1>
 
-<p></p>
+<p>Network simulation models often need a common set of tools.
+The following sections describe the tools provided by yans
+to ease the development of networking models.
+</p>
+
+<h2>Packet/Buffer/Chunk/Tags</h2>
+
+<p>Networking simulations are often based on the exchange of 
+packets by various networking nodes. The Linux network stack
+provides a C-based API to handle packets named <i>skbuf</i>.
+The BSD networking stack also provides similar functionality
+with its <i>mbuf</i> structure. This functionality is provided
+in yans by a set of 4 C++ classes:
+<ul>
+<li><i>Buffer</i>: this class represents a byte buffer which can
+be extended dynamically to insert room for packet headers and
+trailers. The Buffer class can also be used to perform encoding
+transformations to and from classic networking formats (to/from
+network byte order).</li>
+<li><i>Chunk</i>: this class represents a header or a trailer which 
+can be appended or prepended to a <i>Buffer</i>.</li>
+<li><i>Packet</i>: this class is an agregate of:
+  <ul>
+  <li>a <i>Buffer</i></li>
+  <li>a reference count</li>
+  <li>a list of packet tags</li>
+  </ul>
+When the reference count of this class reaches 0, it deletes itself
+and its buffer.
+</li>
+<li><i>Tag</i> and <i>TagManager</i>: the <i>Tag</i> class 
+is used to associate arbitrary data to a packet. It is very convenient
+to propagate packet-level information accross a networking
+stack and perform cross-layer optimizations.</li>
+</ul>
+</p>
+
+<h2>Buffer</h2>
+
+<p>Since this class holds a byte buffer, it can be used to access it:
+<ul>
+<li><i>uint32_t get_size (void)</i> will return the number of bytes held in 
+the buffer.</li>
+<li><i>uint8_t *peek_data (void)</i> returns a pointer to the internal
+byte buffer which is necessarily bigger than the value returned
+by get_size.</li>
+</ul>
+It is possible to avoid using the peek_data method to write into the
+internal buffer thanks to the following methods which emulate a 
+stream-based API:
+<ul>
+<li><i>uint32_t get_current (void)</i>: this method returns
+the current reading and writing location in the Buffer. The reading 
+and writing location is increased by the reading and writing methods
+but it can be manipulated directly with the seek and skip methods.
+the add_at_* and remove_at_* methods also clobber the current 
+reading and writing location: the reading/writing position is undefined
+after a call to one of these methods.</li>
+<li><i>void seek (uint32_t offset)</i>: the method positions
+the reading/writing location to offset. For example, <i>buffer->seek (0)</i>
+will go back at the start of the buffer.</li>
+<li><i>void skip (int32_t delta)</i>: a call to this method is equivalent
+to: <i>buffer->seek (buffer->get_current () + delta)</i></li>
+<li><i>void write_u8  (uint8_t  data)</i>: this method writes one byte
+at the current reading/writing position and increments the current 
+reading/writing position by one.</li>
+<li><i>void write_u16 (uint16_t data)</i>: this method writes two bytes 
+in host order at the current position and 
+increments the current position by 2.</li>
+<li><i>void write_u32 (uint32_t data)</i>: this method writes four bytes 
+in host order at the current position and 
+increments the current position by 4.</li>
+<li><i>void write (uint8_t const*buffer, uint16_t size)</i>: this method
+write <i>size</i> bytes at the current position and increments the
+current position by <i>size</i></li>
+<li><i>void write_hton_u16 (uint16_t data)</i>: this method writes
+two bytes from host to network order at the current position and increments
+the current position by 2.</li>
+<li><i>void write_hton_u32 (uint32_t data)</i>: this method writes
+four bytes from host to network order at the current position and increments
+the current position by 4.</li>
+<li><i>uint8_t  read_u8 (void)</i>: this method reads one byte at the
+current position and increments the current position by 1.</li>
+<li><i>uint16_t read_u16 (void)</i>: this method reads 2 bytes
+in host order at the current position and increments the current
+position by 2.</li>
+<li><i>uint32_t read_u32 (void)</i>: this method reads 4 bytes
+in host order at the current position and increments the current
+position by 4.</li>
+<li><i>void read (uint8_t *buffer, uint16_t size)</i>: this method reads
+<i>size</i> bytes in the byte buffer <i>buffer</i> at the current position
+and increments the current position by <i>size</i>.</li>
+<li><i>uint16_t read_ntoh_u16 (void)</i>: this method reads 2 bytes
+in network order to host order at the current position and increments
+the current position by 2.</li>
+<li><i>uint32_t read_ntoh_u32 (void)</i>: this method reads 4 bytes
+in network order to host order at the current position and increments
+the current position by 4.</li>
+</ul>
+The current reading/writing position becomes unspecified after a call
+to one of the growing/shrinking methods:
+<ul>
+<li><i>void add_at_start (uint32_t start)</i>: this method grows the internal
+buffer by allocating <i>start</i> bytes at the start of the internal Buffer.
+The content of these newly-allocated bytes is unspecified.</li>
+<li><i>void add_at_end (uint32_t end)</i>: this method grows the internal
+buffer by allocating <i>end</i> bytes at the end of the internal Buffer.
+The content of these newly-allocated bytes is unspecified.</li>
+<li><i>void remove_at_start (uint32_t start)</i>: this method shrinks the internal
+buffer by removing <i>start</i> bytes at the start of the internal Buffer. The
+other bytes in the buffer are unmodified.</li>
+<li><i>void remove_at_end (uint32_t end)</i>: this method shrinks the internal
+buffer by removing <i>end</i> bytes at the end of the internal Buffer. The
+other bytes in the buffer are unmodified.</li>
+</ul>
+</p>
+
+<h2>Packet</h2>
+
+<p>The reference count of the Packet can be changed by a call to one of:
+<ul>
+<li><i>void ref (void)</i>: increase the reference count</li>
+<li><i>void unref (void)</i>: decrease the reference count</li>
+</ul>
+A packet can hold any number of tags whose tag ids are distinct. It
+is a fatal programming error to try to associate more than one tag instance
+to a packet with a single id (i.e., the system will crash hard). A tag
+instance associated to a packet is owned by the packet. That is, when the
+packet is destroyed, the tag instances it owns are destroyed automatically.
+<ul>
+<li><i>void add_tag (uint32_t tag_id, Tag *tag)</i>: associate a tag whose tag 
+is tag_id to the packet.</li>
+<li><i>Tag *get_tag (uint32_t tag_id)</i>: return the tag instance associated
+to tag_id in this packet. If there is no tag instance associated to this
+tag_id, 0 is returned.</li>
+<li><i>Tag *remove_tag (uint32_t tag_id)</i>: return the tag instance associated
+to tag_id in this packet. If there is no tag instance associated to thsi tag_id,
+0 is returned. The caller gets ownership of the returned tag. That is, it is
+responsible for invoking the tag's delete operator.</li>
+</ul>
+</p>
+
 
 
 </html>
