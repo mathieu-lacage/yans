@@ -51,7 +51,6 @@ public:
 	 * of the buffer.
 	 */
 	Packet *get_at_front (uint32_t size);
-	Packet *get_at (uint32_t offset, uint32_t size);
 
 
 	void remove_at_front (uint32_t size);
@@ -66,6 +65,7 @@ private:
 	typedef std::list<Piece> Pieces;
 	typedef std::list<Piece>::iterator PiecesI;
 
+	Packet *get_at (uint32_t offset, uint32_t size);
 	int32_t seq_sub (uint32_t a, uint32_t b);
 	void insert_piece_at_back (Packet *piece, uint32_t offset);
 	void insert_piece_at (PiecesI i, Packet *piece, uint32_t offset);

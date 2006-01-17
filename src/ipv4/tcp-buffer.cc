@@ -127,6 +127,11 @@ uint32_t
 TcpBuffer::add_at (Packet const *packet, uint32_t seq_offset)
 {
 	assert (packet != 0);
+
+	if (packet->get_size () == 0) {
+		return 0;
+	}
+
 	Packet *piece = packet->copy ();
 	int delta = seq_sub (seq_offset, m_start);
 	uint32_t offset;
@@ -194,7 +199,7 @@ TcpBuffer::add_at_back (Packet const *packet)
 Packet *
 TcpBuffer::get_at_front (uint32_t size)
 {
-	return get_at (m_start, size);
+	return get_at (0, size);
 }
 Packet *
 TcpBuffer::get_at (uint32_t offset, uint32_t size)
@@ -238,6 +243,7 @@ TcpBuffer::get_at (uint32_t offset, uint32_t size)
 	}
 	if (packet->get_size () == 0) {
 		packet->unref ();
+		TRACE ("foo");
 		return 0;
 	}
 	return packet;	
