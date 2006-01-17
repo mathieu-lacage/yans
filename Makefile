@@ -59,6 +59,7 @@ YANS_SRC= \
 	src/ipv4/tcp.cc \
 	src/ipv4/tcp-connection-listener.cc \
 	src/ipv4/tcp-connection.cc \
+	src/ipv4/tcp-buffer.cc \
 	src/arp/arp.cc \
 	src/arp/chunk-arp.cc \
 	src/arp/arp-cache-entry.cc \
@@ -74,6 +75,8 @@ YANS_SRC= \
 	src/ethernet/ethernet-network-interface.cc \
 	src/apps/udp-source.cc \
 	src/apps/udp-sink.cc \
+	src/apps/tcp-source.cc \
+	src/apps/tcp-sink.cc \
 	src/apps/periodic-generator.cc \
 	src/apps/traffic-analyzer.cc \
 	test/test.cc \
@@ -128,6 +131,11 @@ MODELS_PYTHON_SRC= \
 	python/export-thread.cc \
 	python/test-thread.py \
 	$(NULL)
+#	python/export-packet.cc \
+#	python/export-ipv4-address.cc \
+#	python/export-periodic-generator.cc \
+#	python/test-periodic-generator.py \
+
 MODELS_PYTHON_OBJ=$(call genobj, $(MODELS_PYTHON_SRC))
 LIB_MODELS_PYTHON=$(TOP_INSTALL)/python/_modelsmodule.so
 $(MODELS_PYTHON_OBJ): CXXFLAGS+=$(PYTHON_INCLUDES)
@@ -143,10 +151,8 @@ SAMPLES_SRC= \
 	src/samples/main-forwarding-simulator-template.cc \
 	src/samples/main-simple.cc \
 	src/samples/main-router.cc \
+	src/samples/main-tcp.cc \
 	$(NULL)
-
-# 	src/samples/main-router.cc \
-# 	src/samples/main-tcp.cc \
 
 DIRS += $(call gendirs, $(SAMPLES_SRC))
 SAMPLES=$(call genbin, $(basename $(SAMPLES_SRC)))
