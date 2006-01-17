@@ -82,6 +82,7 @@ In no particular order:
 	> quiet mode should dump to some file like testname-output/testname.log
 	> or .stat
 - counter/statistics facility for models -- related to logging
+- timers
   
 5) Contributing/Using
 ---------------------
