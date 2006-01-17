@@ -1,3 +1,9 @@
+Release 0.4 (2006-17-01)
+-----------
+
+This release features:
+   - a new packet/buffer/chunk API
+
 Release 0.3 (2006-05-01)
 -----------
 
