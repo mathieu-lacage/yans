@@ -74,7 +74,7 @@ Packet::copy (void) const
 Packet *
 Packet::copy (uint32_t start, uint32_t length) const
 {
-	assert (length < get_size ());
+	assert (length <= get_size ());
 	assert (start < get_size ());
 	assert (start + length <= get_size ());
 	Packet *other = new Packet ();
