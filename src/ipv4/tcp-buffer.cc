@@ -92,62 +92,91 @@ TcpBuffer::get_current (void)
 {
 	return m_start;
 }
-uint32_t 
-TcpBuffer::add_at (Packet const *packet, uint32_t offset)
+void
+TcpBuffer::insert_piece_at (PiecesI i, Packet *piece, uint32_t offset)
 {
-	uint32_t trim_start; // amount to trim at start of input packet
-	uint32_t trim_end;   // amount to trim at end of input packet
-	uint32_t packet_start;
-	uint32_t packet_end;
-
-	if (m_start > offset) {
-		trim_start = m_start - offset;
-		packet_start = 0;
-	} else {
-		trim_start = 0;
-		packet_start = offset - m_start;
+	if (piece->get_size () > 0) {
+		m_pieces.insert (i, std::make_pair (piece, offset));
 	}
-	packet_end  = packet_start + packet->get_size ();
-	packet_end -= trim_start;
-	if (packet_end > m_size) {
-		trim_end = packet_end - m_size;
-	} else {
-		trim_end = 0;
+}
+
+void
+TcpBuffer::insert_piece_at_back (Packet *piece, uint32_t offset)
+{
+	if (offset + piece->get_size () > m_size) {
+		/* we have to trim the input piece if it is bigger
+		 * than the room we have left.
+		 */
+		piece->remove_at_end (offset + piece->get_size () - m_size);
 	}
-	packet_end -= trim_end;
+	if (piece->get_size () > 0) {
+		insert_piece_at (m_pieces.end (), piece, offset);
+	}
+}
 
+/* calculates a - b */
+int32_t 
+TcpBuffer::seq_sub (uint32_t a, uint32_t b) 
+{
+	int32_t sa = a;
+	int32_t sb = b;
+	return sa - sb;
+}
 
-	for (PiecesI i = m_pieces.begin (); i != m_pieces.end ();) {
+uint32_t 
+TcpBuffer::add_at (Packet const *packet, uint32_t seq_offset)
+{
+	assert (packet != 0);
+	Packet *piece = packet->copy ();
+	int delta = seq_sub (seq_offset, m_start);
+	uint32_t offset;
+
+	if (delta < 0) {
+		piece->remove_at_start (-delta);
+		offset = 0;
+	} else {
+		offset = delta;
+	}
+
+	if (m_pieces.empty ()) {
+		insert_piece_at_back (piece, offset);
+		goto done;
+	}
+	for (PiecesI i = m_pieces.begin (); i != m_pieces.end (); i++) {
 		uint32_t cur_start = (*i).second;
-		uint32_t cur_end = (*i).second + (*i).first->get_size ();
-		if (packet_end > cur_end && packet_start < cur_start) {
-			// the current piece is entirely covered
-			// by the current packet.
-			(*i).first->unref ();
-			i = m_pieces.erase (i);
-			continue;
-		} else if (packet_end < cur_end && packet_start > cur_start) {
-			// the current packet is entirely included
-			// by the current piece.
-			break;
-		} 
-		if (packet_start < cur_end && packet_end > cur_end) {
-			trim_start += cur_end - packet_start;
-			packet_start += cur_end - packet_start;
-		} 
-		if (packet_start < cur_start && packet_end > cur_start) {
-			trim_end += packet_end - cur_start;
-			packet_end -= packet_end - cur_start;
-			Packet *copy = packet->copy (trim_start, packet_end);
-			m_pieces.insert (i, std::make_pair (copy, packet_start));
-			return copy->get_size ();
+		uint32_t cur_end = cur_start + (*i).first->get_size ();
+		if (cur_start > offset) {
+			if (offset + piece->get_size () <= cur_start) {
+				/* we fit perfectly well right before the current chunk. */
+				insert_piece_at (i, piece, offset);
+			} else {
+				/* we need to trim the end of this piece because it
+				 * overlaps the current chunk. 
+				 */
+				piece->remove_at_end (offset + piece->get_size () - cur_start);
+				insert_piece_at (i, piece, offset);
+			}
+			goto done;
+		} else {
+			/* We should be located after the current chunk.
+			 * Verify whether or not we overlap the current chunk.
+			 */
+			if (offset < cur_end) {
+				/* damn, we do overlap. */
+				piece->remove_at_start (cur_end - offset);
+				offset += cur_end - offset;
+			}
 		}
-		// the current packet overlaps partially the current piece
-		// and the overlap has been calculated in trim_start, trim_end
-		// packet_start and packet_end
-		i++;
 	}
-	return 0;
+	insert_piece_at_back (piece, offset);
+ done:
+	if (piece->get_size () == 0) {
+		delete piece;
+		CHECK_STATE;
+		return 0;
+	}
+	CHECK_STATE;
+	return piece->get_size ();
 }
 uint32_t 
 TcpBuffer::add_at_back (Packet const *packet)

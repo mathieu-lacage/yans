@@ -66,6 +66,9 @@ private:
 	typedef std::list<Piece> Pieces;
 	typedef std::list<Piece>::iterator PiecesI;
 
+	int32_t seq_sub (uint32_t a, uint32_t b);
+	void insert_piece_at_back (Packet *piece, uint32_t offset);
+	void insert_piece_at (PiecesI i, Packet *piece, uint32_t offset);
 	void check_state (void);
 	
 	Pieces m_pieces;
