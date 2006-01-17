@@ -1,19 +1,19 @@
 include ./functions.mk
 
-TOP_INSTALL=$(TOP)/bin
-TOP_PYTHON_INSTALL=$(TOP_INSTALL)/yans
+TOP_BUILD_DIR=$(TOP)/bin
+TOP_SRC_DIR=$(TOP)
 DEFINES=-DRUN_SELF_TESTS=1
 INCLUDES=\
- -I$(TOP)/simulator \
- -I$(TOP)/src/thread \
- -I$(TOP)/test \
- -I$(TOP)/src/common \
- -I$(TOP)/src/host \
- -I$(TOP)/src/arp \
- -I$(TOP)/src/ethernet \
- -I$(TOP)/src/ipv4 \
- -I$(TOP)/src/os-model \
- -I$(TOP)/src/apps \
+ -I$(TOP_SRC_DIR)/simulator \
+ -I$(TOP_SRC_DIR)/src/thread \
+ -I$(TOP_SRC_DIR)/test \
+ -I$(TOP_SRC_DIR)/src/common \
+ -I$(TOP_SRC_DIR)/src/host \
+ -I$(TOP_SRC_DIR)/src/arp \
+ -I$(TOP_SRC_DIR)/src/ethernet \
+ -I$(TOP_SRC_DIR)/src/ipv4 \
+ -I$(TOP_SRC_DIR)/src/os-model \
+ -I$(TOP_SRC_DIR)/src/apps \
  $(NULL)
 FLAGS=-Wall -Werror -O0 -gdwarf-2
 PYTHON_INCLUDES=-I/usr/include/python2.3
@@ -85,10 +85,10 @@ ifeq ($(TCP),bsd)
 YANS_SRC += \
 	src/ipv4/tcp-bsd/tcp-bsd-connection.cc
 CXXFLAGS += -DTCP_USE_BSD
-CXXFLAGS += -I$(TOP)/src/ipv4/tcp-bsd/
+CXXFLAGS += -I$(TOP_SRC_DIR)/src/ipv4/tcp-bsd/
 endif
 YANS_OBJ=$(call genobj, $(YANS_SRC))
-LIB_YANS=$(TOP_INSTALL)/libyans.so
+LIB_YANS=$(TOP_BUILD_DIR)/libyans.so
 $(YANS_OBJ): CXXFLAGS += -fPIC
 $(YANS_OBJ): CFLAGS += -fPIC
 $(LIB_YANS): $(YANS_OBJ)
@@ -102,7 +102,7 @@ MAIN_TEST_SRC=test/main-test.cc
 MAIN_TEST_OBJ=$(call genobj, $(MAIN_TEST_SRC))
 MAIN_TEST=$(call genbin, test/main-test)
 $(MAIN_TEST): $(MAIN_TEST_OBJ)
-	$(CXX) $(CXXFLAGS) -lyans -L$(TOP_INSTALL) -o $@ $^
+	$(CXX) $(CXXFLAGS) -lyans -L$(TOP_BUILD_DIR) -o $@ $^
 DIRS += $(call gendirs, $(YANS_SRC))
 build: $(MAIN_TEST)
 
@@ -118,10 +118,10 @@ SIMULATOR_PYTHON_SRC= \
 	python/test-simulator-gc.py \
 	$(NULL)
 SIMULATOR_PYTHON_OBJ=$(call genobj, $(SIMULATOR_PYTHON_SRC))
-LIB_SIMULATOR_PYTHON=$(TOP_INSTALL)/python/_simulatormodule.so
+LIB_SIMULATOR_PYTHON=$(TOP_BUILD_DIR)/python/_simulatormodule.so
 $(SIMULATOR_PYTHON_OBJ): CXXFLAGS+=$(PYTHON_INCLUDES)
 $(LIB_SIMULATOR_PYTHON): $(SIMULATOR_PYTHON_OBJ)
-	$(CXX) $(LDFLAGS) -lboost_python -L$(TOP_INSTALL) -lyans -shared -o $@ $(filter %.o,$^)
+	$(CXX) $(LDFLAGS) -lboost_python -L$(TOP_BUILD_DIR) -lyans -shared -o $@ $(filter %.o,$^)
 DIRS += $(call gendirs, $(SIMULATOR_PYTHON_SRC))
 build: $(LIB_SIMULATOR_PYTHON)
 
@@ -137,10 +137,10 @@ MODELS_PYTHON_SRC= \
 #	python/test-periodic-generator.py \
 
 MODELS_PYTHON_OBJ=$(call genobj, $(MODELS_PYTHON_SRC))
-LIB_MODELS_PYTHON=$(TOP_INSTALL)/python/_modelsmodule.so
+LIB_MODELS_PYTHON=$(TOP_BUILD_DIR)/python/_modelsmodule.so
 $(MODELS_PYTHON_OBJ): CXXFLAGS+=$(PYTHON_INCLUDES)
 $(LIB_MODELS_PYTHON): $(MODELS_PYTHON_OBJ)
-	$(CXX) $(LDFLAGS) -lboost_python -L$(TOP_INSTALL) -lyans -shared -o $@ $(filter %.o,$^)
+	$(CXX) $(LDFLAGS) -lboost_python -L$(TOP_BUILD_DIR) -lyans -shared -o $@ $(filter %.o,$^)
 DIRS += $(call gendirs, $(MODELS_PYTHON_SRC))
 build: $(LIB_MODELS_PYTHON)
 
@@ -157,7 +157,7 @@ SAMPLES_SRC= \
 DIRS += $(call gendirs, $(SAMPLES_SRC))
 SAMPLES=$(call genbin, $(basename $(SAMPLES_SRC)))
 $(SAMPLES): %:%.o
-	$(CXX) $(LDFLAGS) -L$(TOP_INSTALL) -lyans -o $@ $^
+	$(CXX) $(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans -o $@ $^
 build: $(SAMPLES)
 
 
@@ -181,16 +181,16 @@ $(SUBDIRS):
 	@$(MAKE) -C $@
 
 
-$(TOP_INSTALL)/%.py:%.py
+$(TOP_BUILD_DIR)/%.py:%.py
 	cp $< $@
-$(TOP_INSTALL)/%.o:%.cc
+$(TOP_BUILD_DIR)/%.o:%.cc
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
-$(TOP_INSTALL)/%.o:%.c
+$(TOP_BUILD_DIR)/%.o:%.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 clean: depsclean
 	find ./ -name '*~'|xargs rm -f 2>/dev/null;
-	rm -rf $(TOP_INSTALL) 2>/dev/null;
+	rm -rf $(TOP_BUILD_DIR) 2>/dev/null;
 
 depsclean:
 	rm -f .deps 2>/dev/null
@@ -199,11 +199,11 @@ depsclean:
 	@echo "Generating dependency information.";
 	@rm -f .deps 2>/dev/null; touch .deps;
 	@-for f in `find . -name '*.c'`; do \
-		TARGET=`echo $(TOP_INSTALL)/$$f|sed -e 's/\.c$$/\.o/' -e 's/\/\.\//\//'`; \
+		TARGET=`echo $(TOP_BUILD_DIR)/$$f|sed -e 's/\.c$$/\.o/' -e 's/\/\.\//\//'`; \
 		$(CC) $(CFLAGS) -E -M -MP -MM -MT $$TARGET $$f 2>/dev/null >> .deps; \
 	done;
 	@-for f in `find . -name '*.cc'`; do \
-		TARGET=`echo $(TOP_INSTALL)/$$f|sed -e 's/\.cc$$/\.o/' -e 's/\/\.\//\//'`; \
+		TARGET=`echo $(TOP_BUILD_DIR)/$$f|sed -e 's/\.cc$$/\.o/' -e 's/\/\.\//\//'`; \
 		$(CXX) $(CXXFLAGS) -E -M -MP -MM -MT $$TARGET $$f 2>/dev/null >> .deps; \
 	done;
 
