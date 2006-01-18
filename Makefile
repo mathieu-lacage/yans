@@ -22,7 +22,7 @@ PYTHON_INCLUDES=-I/usr/include/python2.3
 LDFLAGS=
 CXXFLAGS+=$(FLAGS) $(INCLUDES) $(DEFINES)
 CFLAGS+=$(FLAGS) $(INCLUDES) $(DEFINES)
-all: dirs build
+all: dirs build build-python
 
 
 # building of libyans.so
@@ -123,7 +123,7 @@ $(SIMULATOR_PYTHON_OBJ): CXXFLAGS+=$(PYTHON_INCLUDES)
 $(LIB_SIMULATOR_PYTHON): $(SIMULATOR_PYTHON_OBJ)
 	$(CXX) $(LDFLAGS) -lboost_python -L$(TOP_BUILD_DIR) -lyans -shared -o $@ $(filter %.o,$^)
 DIRS += $(call gendirs, $(SIMULATOR_PYTHON_SRC))
-build: $(LIB_SIMULATOR_PYTHON)
+build-python: $(LIB_SIMULATOR_PYTHON)
 
 # building of python models bindings
 MODELS_PYTHON_SRC= \
@@ -142,7 +142,7 @@ $(MODELS_PYTHON_OBJ): CXXFLAGS+=$(PYTHON_INCLUDES)
 $(LIB_MODELS_PYTHON): $(MODELS_PYTHON_OBJ)
 	$(CXX) $(LDFLAGS) -lboost_python -L$(TOP_BUILD_DIR) -lyans -shared -o $@ $(filter %.o,$^)
 DIRS += $(call gendirs, $(MODELS_PYTHON_SRC))
-build: $(LIB_MODELS_PYTHON)
+build-python: $(LIB_MODELS_PYTHON)
 
 # building of sample applications
 SAMPLES_SRC= \
