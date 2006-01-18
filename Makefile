@@ -1,4 +1,5 @@
 include ./functions.mk
+include ./platform.mk
 
 TOP_BUILD_DIR=$(TOP)/bin
 TOP_SRC_DIR=$(TOP)
@@ -16,7 +17,10 @@ INCLUDES=\
  -I$(TOP_SRC_DIR)/src/apps \
  $(NULL)
 FLAGS=-Wall -Werror -O0 -gdwarf-2
-PYTHON_INCLUDES=-I/usr/include/python2.3
+PYTHON_PREFIX_INC=/usr/include/python2.3
+PYTHON_PREFIX_LIB=/usr/lib
+BOOST_PREFIX_LIB=/usr/lib
+BOOST_PREFIX_INC=/usr/include
 #TCP=bsd
 
 LDFLAGS=
@@ -31,7 +35,7 @@ YANS_SRC= \
 	simulator/event-heap.cc \
 	simulator/event.cc \
 	simulator/simulator.cc \
-	src/thread/fiber-context-x86-linux-gcc.cc \
+	src/thread/fiber-context-$(PLATFORM).cc \
 	src/thread/semaphore.cc \
 	src/thread/fiber.cc \
 	src/thread/fiber-scheduler.cc \
@@ -88,11 +92,12 @@ CXXFLAGS += -DTCP_USE_BSD
 CXXFLAGS += -I$(TOP_SRC_DIR)/src/ipv4/tcp-bsd/
 endif
 YANS_OBJ=$(call genobj, $(YANS_SRC))
-LIB_YANS=$(TOP_BUILD_DIR)/libyans.so
-$(YANS_OBJ): CXXFLAGS += -fPIC
-$(YANS_OBJ): CFLAGS += -fPIC
+LIB_YANS=$(TOP_BUILD_DIR)/$(call gen-lib-name, yans)
+$(YANS_OBJ): CXXFLAGS += $(call gen-lib-build-flags)
+$(YANS_OBJ): CFLAGS += $(call gen-lib-build-flags)
+$(LIB_YANS): LDFLAGS += $(call gen-lib-link-flags)
 $(LIB_YANS): $(YANS_OBJ)
-	$(CXX) $(LDFLAGS) -shared -o $@ $(filter %.o,$^)
+	$(CXX) $(LDFLAGS) -o $@ $(filter %.o,$^)
 DIRS += $(call gendirs, $(YANS_SRC))
 build: $(LIB_YANS)
 
@@ -118,10 +123,11 @@ SIMULATOR_PYTHON_SRC= \
 	python/test-simulator-gc.py \
 	$(NULL)
 SIMULATOR_PYTHON_OBJ=$(call genobj, $(SIMULATOR_PYTHON_SRC))
-LIB_SIMULATOR_PYTHON=$(TOP_BUILD_DIR)/python/_simulatormodule.so
-$(SIMULATOR_PYTHON_OBJ): CXXFLAGS+=$(PYTHON_INCLUDES)
+LIB_SIMULATOR_PYTHON=$(TOP_BUILD_DIR)/python/$(call gen-pymod-name, _simulator)
+$(SIMULATOR_PYTHON_OBJ): CXXFLAGS+=$(call gen-pymod-build-flags)
+$(LIB_SIMULATOR_PYTHON): LDFLAGS+=$(call gen-pymod-link-flags) -lyans -L$(TOP_BUILD_DIR)
 $(LIB_SIMULATOR_PYTHON): $(SIMULATOR_PYTHON_OBJ)
-	$(CXX) $(LDFLAGS) -lboost_python -L$(TOP_BUILD_DIR) -lyans -shared -o $@ $(filter %.o,$^)
+	$(CXX) $(LDFLAGS) -o $@ $(filter %.o,$^)
 DIRS += $(call gendirs, $(SIMULATOR_PYTHON_SRC))
 build-python: $(LIB_SIMULATOR_PYTHON)
 
@@ -137,10 +143,11 @@ MODELS_PYTHON_SRC= \
 #	python/test-periodic-generator.py \
 
 MODELS_PYTHON_OBJ=$(call genobj, $(MODELS_PYTHON_SRC))
-LIB_MODELS_PYTHON=$(TOP_BUILD_DIR)/python/_modelsmodule.so
-$(MODELS_PYTHON_OBJ): CXXFLAGS+=$(PYTHON_INCLUDES)
+LIB_MODELS_PYTHON=$(TOP_BUILD_DIR)/python/$(call gen-pymod-name, _models)
+$(MODELS_PYTHON_OBJ): CXXFLAGS+=$(call gen-pymod-build-flags)
+$(LIB_MODELS_PYTHON): LDFLAGS+=$(call gen-pymod-link-flags) -lyans -L$(TOP_BUILD_DIR)
 $(LIB_MODELS_PYTHON): $(MODELS_PYTHON_OBJ)
-	$(CXX) $(LDFLAGS) -lboost_python -L$(TOP_BUILD_DIR) -lyans -shared -o $@ $(filter %.o,$^)
+	$(CXX) $(LDFLAGS) -o $@ $(filter %.o,$^)
 DIRS += $(call gendirs, $(MODELS_PYTHON_SRC))
 build-python: $(LIB_MODELS_PYTHON)
 
