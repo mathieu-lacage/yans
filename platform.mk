@@ -15,5 +15,5 @@ gen-lib-build-flags=-fPIC
 gen-lib-link-flags=-dynamiclib
 gen-pymod-name=$(addsuffix module.so, $1)
 gen-pymod-build-flags=-I$(PYTHON_PREFIX_INC) -I$(BOOST_PREFIX_INC)
-gen-pymod-link-flags=-w -bundle -bundle_loader /usr/bin/python -L$(PYTHON_PREFIX_LIB) -lpython -L$(BOOST_PREFIX_LIB) -lboost_python
+gen-pymod-link-flags=-w -bundle -bundle_loader $(PYTHON_BIN) -L$(PYTHON_PREFIX_LIB) -lpython -L$(BOOST_PREFIX_LIB) -lboost_python
 endif
