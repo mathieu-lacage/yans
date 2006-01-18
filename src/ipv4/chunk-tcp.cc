@@ -372,9 +372,10 @@ void ChunkTcp::add_to (Buffer *buffer) const
 		padding--;
 	}
 
-	uint16_t checksum = utils_checksum_calculate (m_initial_checksum, 
-						      buffer->peek_data (),
-						      buffer->get_size ());
+	uint16_t checksum;
+	checksum = utils_checksum_calculate (m_initial_checksum, 
+					     buffer->peek_data (),
+					     buffer->get_size ());
 	checksum = utils_checksum_complete (checksum);
 	buffer->seek (16);
 	buffer->write_u16 (checksum);
