@@ -92,24 +92,24 @@ YANS_SRC += \
 CXXFLAGS += -DTCP_USE_BSD
 CXXFLAGS += -I$(TOP_SRC_DIR)/src/ipv4/tcp-bsd/
 endif
-YANS_OBJ=$(call genobj, $(YANS_SRC))
+YANS_OBJ=$(call gen-obj, $(YANS_SRC))
 LIB_YANS=$(TOP_BUILD_DIR)/$(call gen-lib-name, yans)
 $(YANS_OBJ): CXXFLAGS += $(call gen-lib-build-flags)
 $(YANS_OBJ): CFLAGS += $(call gen-lib-build-flags)
 $(LIB_YANS): LDFLAGS += $(call gen-lib-link-flags)
 $(LIB_YANS): $(YANS_OBJ)
 	$(CXX) $(LDFLAGS) -o $@ $(filter %.o,$^)
-DIRS += $(call gendirs, $(YANS_SRC))
+DIRS += $(call gen-dirs, $(YANS_SRC))
 build: $(LIB_YANS)
 
 
 # building of main-test
 MAIN_TEST_SRC=test/main-test.cc
-MAIN_TEST_OBJ=$(call genobj, $(MAIN_TEST_SRC))
-MAIN_TEST=$(call genbin, test/main-test)
+MAIN_TEST_OBJ=$(call gen-obj, $(MAIN_TEST_SRC))
+MAIN_TEST=$(call gen-bin, test/main-test)
 $(MAIN_TEST): $(MAIN_TEST_OBJ)
 	$(CXX) $(CXXFLAGS) -lyans -L$(TOP_BUILD_DIR) -o $@ $^
-DIRS += $(call gendirs, $(YANS_SRC))
+DIRS += $(call gen-dirs, $(YANS_SRC))
 build: $(MAIN_TEST)
 
 
@@ -123,13 +123,13 @@ SIMULATOR_PYTHON_SRC= \
 	python/test-simulator.py \
 	python/test-simulator-gc.py \
 	$(NULL)
-SIMULATOR_PYTHON_OBJ=$(call genobj, $(SIMULATOR_PYTHON_SRC))
+SIMULATOR_PYTHON_OBJ=$(call gen-obj, $(SIMULATOR_PYTHON_SRC))
 LIB_SIMULATOR_PYTHON=$(TOP_BUILD_DIR)/python/$(call gen-pymod-name, _simulator)
 $(SIMULATOR_PYTHON_OBJ): CXXFLAGS+=$(call gen-pymod-build-flags)
 $(LIB_SIMULATOR_PYTHON): LDFLAGS+=$(call gen-pymod-link-flags) -lyans -L$(TOP_BUILD_DIR)
 $(LIB_SIMULATOR_PYTHON): $(SIMULATOR_PYTHON_OBJ)
 	$(CXX) $(LDFLAGS) -o $@ $(filter %.o,$^)
-DIRS += $(call gendirs, $(SIMULATOR_PYTHON_SRC))
+DIRS += $(call gen-dirs, $(SIMULATOR_PYTHON_SRC))
 build-python: $(LIB_SIMULATOR_PYTHON)
 
 # building of python models bindings
@@ -143,13 +143,13 @@ MODELS_PYTHON_SRC= \
 #	python/export-periodic-generator.cc \
 #	python/test-periodic-generator.py \
 
-MODELS_PYTHON_OBJ=$(call genobj, $(MODELS_PYTHON_SRC))
+MODELS_PYTHON_OBJ=$(call gen-obj, $(MODELS_PYTHON_SRC))
 LIB_MODELS_PYTHON=$(TOP_BUILD_DIR)/python/$(call gen-pymod-name, _models)
 $(MODELS_PYTHON_OBJ): CXXFLAGS+=$(call gen-pymod-build-flags)
 $(LIB_MODELS_PYTHON): LDFLAGS+=$(call gen-pymod-link-flags) -lyans -L$(TOP_BUILD_DIR)
 $(LIB_MODELS_PYTHON): $(MODELS_PYTHON_OBJ)
 	$(CXX) $(LDFLAGS) -o $@ $(filter %.o,$^)
-DIRS += $(call gendirs, $(MODELS_PYTHON_SRC))
+DIRS += $(call gen-dirs, $(MODELS_PYTHON_SRC))
 build-python: $(LIB_MODELS_PYTHON)
 
 # building of sample applications
@@ -162,22 +162,14 @@ SAMPLES_SRC= \
 	src/samples/main-tcp.cc \
 	$(NULL)
 
-DIRS += $(call gendirs, $(SAMPLES_SRC))
-SAMPLES=$(call genbin, $(basename $(SAMPLES_SRC)))
+DIRS += $(call gen-dirs, $(SAMPLES_SRC))
+SAMPLES=$(call gen-bin, $(basename $(SAMPLES_SRC)))
 $(SAMPLES): %:%.o
 	$(CXX) $(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans -o $@ $^
 build: $(SAMPLES)
 
 
-
-YANS_PYTHON_SRC= \
-	$(SIMULATOR_PYTHON_SRC) \
-	$(MODELS_PYTHON_SRC) \
-	$(NULL)
-
-
-
-
+# below are generic rules.
 
 TMP_DIRS=$(sort $(DIRS))
 dirs: $(TMP_DIRS)
