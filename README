@@ -25,20 +25,31 @@ The current implementation features:
      included it in the simulator distribution.
    - a set of python bindings.
 
-3) How to build 
----------------
+3) How to build on x86
+----------------------
 
 If you want to use the python bindings, you need:
    - python (tested with 2.3 and 2.4) (see http://www.python.org)
-   - Boost (tested with 1.32.0) (see http://www.boost.org)
+   - Boost (tested with 1.32.0 and 1.33.1) (see http://www.boost.org)
 Otherwise, you need:
    - gcc (tested with 3.4 and 4.0.2)
    - GNU make (tested with 3.80)
 
 All of these should be available on standard linux distributions. Make
 sure you install the -devel packages associated to these packages. Fedora
-Core 3 and 4 have been tested and work. (You might need to adjust the
-path to the python headers in Makefile: PYTHON_INCLUDES=python_path).
+Core 3 and 4 have been tested and work.
+
+What you might be tempted to change in the Makefile:
+PYTHON_PREFIX_INC=/usr/include/python2.3
+PYTHON_PREFIX_LIB=/usr/lib
+PYTHON_BIN=/usr/bin/python2.3
+BOOST_PREFIX_LIB=/usr/lib
+BOOST_PREFIX_INC=/usr/include
+Change them to point where your dependencies are installed. If you do
+not want to build them and do not need the python modules, you can
+disable the python code by editing the line:
+all: dirs build build-python
+and removing the "build-python" item
 
 Once the dependencies are installed, you can build the thing with a
 simple "make" command. The binaries are build in the "bin" directory.
@@ -60,7 +71,33 @@ my event class now=5.000000
 my event class now=6.000000
 
 
-4) TODO
+4) How to build on other platforms
+----------------------------------
+
+4.1 Darwin ppc64 (tiger)
+------------------------
+Tiger comes with python installed. You need to install boost
+(tested with 1.33.1). gcc 4.0.2 (apple darwin tiger version)
+has been used. Our tests show that it does not work with
+optimization levels higher than -O0 so, don't try the others.
+
+mathieu@maigret:~/yans-current>make PLATFORM=ppc64-darwin-gcc
+Generating dependency information.
+mkdir -p bin/python;
+mkdir -p bin/python/yans;
+[...]
+g++ -Wall -Werror -O0 -gdwarf-2 -I./simulator -I./src/thread -I./test -I./src/common -I./src/host -I./src/arp -I./src/ethernet -I./src/ipv4 -I./src/os-model -I./src/apps  -DRUN_SELF_TESTS=1 -I/usr/include/python2.3 -I/Users/mathieu/include/boost-1_33_1 -fno-common -c -o bin/python/export-thread.o python/export-thread.cc
+cp python/test-thread.py bin/python/test-thread.py
+g++ -w -bundle -bundle_loader /usr/bin/python2.3 -L/usr/lib -lpython -L/Users/mathieu/lib -lboost_python -lyans -L./bin -o bin/python/_modelsmodule.so bin/python/yans-models.o bin/python/export-thread.o
+
+Once the thing is built, you can run the samples:
+
+mathieu@maigret:~/yans-current>./bin/src/samples/main-simulator
+notified at 10s
+
+Just don't forget to set the DYN_LIBRARY_PATH and PYTHONPATH
+
+5) TODO
 -------
 
 In no particular order:
@@ -82,9 +119,9 @@ In no particular order:
 	> quiet mode should dump to some file like testname-output/testname.log
 	> or .stat
 - counter/statistics facility for models -- related to logging
-- timers
+- timers: ability to cancel events.
   
-5) Contributing/Using
+6) Contributing/Using
 ---------------------
 
 If you are interested in:
