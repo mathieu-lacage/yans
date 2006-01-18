@@ -11,9 +11,9 @@ endif
 
 ifeq ($(PLATFORM), ppc64-darwin-gcc)
 gen-lib-name=$(addprefix lib, $(addsuffix .dylib, $1))
-gen-lib-build-flags=-fPIC
+gen-lib-build-flags=-fno-common
 gen-lib-link-flags=-dynamiclib
 gen-pymod-name=$(addsuffix module.so, $1)
-gen-pymod-build-flags=-I$(PYTHON_PREFIX_INC) -I$(BOOST_PREFIX_INC)
+gen-pymod-build-flags=-I$(PYTHON_PREFIX_INC) -I$(BOOST_PREFIX_INC) -fno-common
 gen-pymod-link-flags=-w -bundle -bundle_loader $(PYTHON_BIN) -L$(PYTHON_PREFIX_LIB) -lpython -L$(BOOST_PREFIX_LIB) -lboost_python
 endif
