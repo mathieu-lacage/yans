@@ -50,6 +50,7 @@ YANS_SRC= \
 	src/common/tag-manager.cc \
 	src/common/utils.cc \
 	src/common/population-analysis.cc \
+	src/common/data-writer.cc \
 	src/ipv4/tag-ipv4.cc \
 	src/ipv4/ipv4-end-point.cc \
 	src/ipv4/ipv4-end-points.cc \
@@ -73,7 +74,6 @@ YANS_SRC= \
 	src/host/network-interface-tracer.cc \
 	src/host/loopback-interface.cc \
 	src/host/host-tracer.cc \
-	src/os-model/write-file.cc \
 	src/ethernet/cable.cc \
 	src/ethernet/chunk-mac-crc.cc \
 	src/ethernet/chunk-mac-llc-snap.cc \
