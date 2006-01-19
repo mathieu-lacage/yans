@@ -20,7 +20,8 @@
  */
 
 #include <string>
-#include "write-file.h"
+#include "host.h"
+#include "data-writer.h"
 #include "network-interface-tracer.h"
 #include "network-interface.h"
 #include "packet.h"
@@ -34,19 +35,19 @@ NetworkInterfaceTracer::NetworkInterfaceTracer (Host *host, NetworkInterface *in
 	  m_interface (interface),
 	  m_enable_all (false)
 {
-	std::string *filename = new std::string ("/logs/");
+	std::string *filename = new std::string (*host->m_root);
+	filename->append ("/logs/");
 	filename->append (*(interface->get_name ()));
-	m_file = new WriteFile (host);
-	m_file->open (filename);
+	m_file = new DataWriter ();
+	m_file->open (filename->c_str ());
 	delete filename;
 	write_pcap_header ();
 	m_write_callback = make_callback (&NetworkInterfaceTracer::write_data, this);
 }
 NetworkInterfaceTracer::~NetworkInterfaceTracer ()
 {
-	m_file->close ();
 	delete m_file;
-	m_file = (WriteFile *)0xdeadbeaf;
+	m_file = (DataWriter *)0xdeadbeaf;
 	delete m_write_callback;
 }
 
@@ -105,7 +106,8 @@ NetworkInterfaceTracer::trace_rx_mac (Packet *packet)
 uint32_t
 NetworkInterfaceTracer::write_data (uint8_t *buffer, uint32_t size)
 {
-	return m_file->write (buffer, size);
+	m_file->write (buffer, size);
+	return size;
 }
 
 void 

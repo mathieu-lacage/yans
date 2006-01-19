@@ -29,7 +29,7 @@ namespace yans {
 
 class Host;
 class Packet;
-class WriteFile;
+class DataWriter;
 class Buffer;
 class NetworkInterface;
 
@@ -53,7 +53,7 @@ private:
 
 	Host *m_host;
 	NetworkInterface *m_interface;
-	WriteFile *m_file;
+	DataWriter *m_file;
 	bool m_enable_all;
 	Callback<uint32_t (uint8_t *, uint32_t)> *m_write_callback;
 };
