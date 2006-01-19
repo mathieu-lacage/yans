@@ -457,9 +457,10 @@ void ChunkTcp::remove_from (Buffer *buffer)
 		}
 	}
 
-	uint16_t checksum = utils_checksum_calculate (m_initial_checksum, 
-						      buffer->peek_data (),
-						      buffer->get_size ());
+	uint16_t checksum;
+	checksum = utils_checksum_calculate (m_initial_checksum, 
+					     buffer->peek_data (),
+					     buffer->get_size ());
 	checksum = utils_checksum_complete (checksum);
 	if (checksum == 0) {
 		m_is_checksum_ok = 1;
