@@ -70,6 +70,8 @@ private:
 };
 
 DataWriterPrivate::DataWriterPrivate ()
+	: m_read (0),
+	  m_write (0)
 {}
 DataWriterPrivate::~DataWriterPrivate ()
 {
