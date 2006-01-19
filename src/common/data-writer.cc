@@ -52,7 +52,6 @@ public:
 	~DataWriterPrivate ();
 
 	void open (char const *filename);
-	int get_fd (void);
 	void store (uint8_t *buffer, uint32_t size);
 private:
 	bool is_empty (void);
@@ -86,12 +85,6 @@ DataWriterPrivate::open (char const *filename)
 {
 	m_fd = ::open (filename, O_WRONLY | O_CREAT | O_TRUNC | O_NONBLOCK, S_IRUSR | S_IWUSR);
 	assert (m_fd != -1);
-}
-
-int
-DataWriterPrivate::get_fd (void)
-{
-	return m_fd;
 }
 
 #define min(a,b) ((a)<(b)?(a):(b))
