@@ -83,6 +83,7 @@ DataWriterPrivate::write (uint8_t *buffer, uint32_t size)
 		uint32_t to_copy = min (BUFFER_SIZE - m_current, size);
 		memcpy (m_data + m_current, buffer, to_copy);
 		size -= to_copy;
+		m_current += to_copy;
 		buffer += to_copy;
 		if (m_current == BUFFER_SIZE) {
 			ssize_t written = ::write (m_fd, m_data, BUFFER_SIZE);
