@@ -56,8 +56,7 @@ public:
 
 private:
 	typedef std::vector<NetworkInterface *>::iterator NetworkInterfacesI;
-	friend class ReadFile;
-	friend class WriteFile;
+ 	friend class NetworkInterfaceTracer;
 
 	NetworkInterfaces m_interfaces;
 	Ipv4Route *m_routing_table;
