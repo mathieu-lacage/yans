@@ -21,7 +21,7 @@
 
 #include "buffer.h"
 
-#define TRACE_BUFFER 1
+#define noTRACE_BUFFER 1
 
 #ifdef TRACE_BUFFER
 #include <iostream>
@@ -38,26 +38,75 @@ std::cout << "BUFFER TRACE " << Simulator::now_s () << " " << x << std::endl;
 
 namespace yans {
 
+uint32_t Buffer::m_total_start = 0;
+uint32_t Buffer::m_total_end = 0;
 
 Buffer::Buffer ()
 {
-	m_current = 0;
+	m_start = get_prefered_start ();
 	m_size = 0;
-	m_buffer = 0;
+	m_current = 0;
+
+	if (get_prefered_size () > 0) {
+		TRACE ("allocating size="<<get_prefered_size ()<<", at="<<m_start);
+		m_data = alloc_and_zero (get_prefered_size ());
+	} else {
+		m_data = 0;
+	}
+	m_real_size = 0;
+	m_total_added_start = 0;
+	m_total_added_end = 0;
 }
 
 Buffer::~Buffer ()
 {
-	delete [] m_buffer;
-	m_buffer = (uint8_t *)0xdeadbeaf;
+	if (m_data != 0) {
+		delete [] m_data;
+	}
+	m_data = (uint8_t *)0xdeadbeaf;
+	m_real_size = 0xdeadbeaf;
+
+	m_start = 0xdeadbeaf;
 	m_current = 0xdeadbeaf;
 	m_size = 0xdeadbeaf;
+
+	record_buffer_stats (m_total_added_start, m_total_added_end);
+	m_total_added_start = 0xdeadbeaf;
+	m_total_added_end = 0xdeadbeaf;
+}
+
+void
+Buffer::record_buffer_stats (uint32_t start, uint32_t end)
+{
+	TRACE ("record stats start="<<start<<", end="<<end);
+	if (start > m_total_start) {
+		m_total_start = start;
+	}
+	if (end > m_total_end) {
+		m_total_end = end;
+	}
+}
+uint32_t
+Buffer::get_prefered_start (void)
+{
+	return m_total_start;
+}
+uint32_t
+Buffer::get_prefered_size (void)
+{
+	return m_total_start+m_total_end;
+}
+
+uint8_t *
+Buffer::get_start (void) const
+{
+	return &m_data[m_start];
 }
 
 uint8_t *
 Buffer::peek_data (void)
 {
-	return m_buffer;
+	return get_start ();
 }
 uint32_t 
 Buffer::get_size (void) const
@@ -68,22 +117,60 @@ Buffer::get_size (void) const
 void 
 Buffer::add_at_start (uint32_t start)
 {
+	m_total_added_start += start;
+	if (m_start >= start) {
+		m_start -= start;
+		m_size += start;
+		m_current = 0;
+		return;
+	}
 	uint32_t new_size = m_size + start;
+	if (new_size <= m_real_size) {
+		memmove (m_data+start, get_start (), m_size);
+		m_start = 0;
+		m_size = new_size;
+		m_current = 0;
+		return;
+	}
 	uint8_t *new_buffer = alloc_and_zero (new_size);
-	memcpy (new_buffer+start, m_buffer, m_size);
-	delete [] m_buffer;
-	m_buffer = new_buffer;
+
+	memcpy (new_buffer+start, get_start (), m_size);
+
+	delete [] m_data;
+	m_data = new_buffer;
+	m_real_size = new_size;
+
+	m_start = 0;
 	m_size = new_size;
 	m_current = 0;
 }
 void 
 Buffer::add_at_end (uint32_t end)
 {
+	m_total_added_end += end;
+	if (m_start + m_size + end < m_real_size) {
+		m_size += end;
+		m_current = 0;
+		return;
+	}
 	uint32_t new_size = m_size + end;
+	if (new_size <= m_real_size) {
+		uint32_t new_start = m_real_size - (m_size + end);
+		memmove (m_data+new_start, m_data+m_start, m_size);
+		m_start = new_start;
+		m_size += end;
+		m_current = 0;
+		return;
+	}
 	uint8_t *new_buffer = alloc_and_zero (new_size);
-	memcpy (new_buffer, m_buffer, m_size);
-	delete [] m_buffer;
-	m_buffer = new_buffer;
+
+	memcpy (new_buffer, get_start (), m_size);
+
+	delete [] m_data;
+	m_data = new_buffer;
+	m_real_size = new_size;
+
+	m_start = 0;
 	m_size = new_size;
 	m_current = 0;
 }
@@ -91,13 +178,12 @@ void
 Buffer::remove_at_start (uint32_t start)
 {
 	if (m_size <= start) {
-		delete [] m_buffer;
-		m_buffer = 0;
+		m_start += m_size;
 		m_size = 0;
 		m_current = 0;
 		return;
 	}
-	memmove (m_buffer, m_buffer+start, m_size-start);
+	m_start += start;
 	m_size -= start;
 	m_current = 0;
 }
@@ -105,8 +191,6 @@ void
 Buffer::remove_at_end (uint32_t end)
 {
 	if (m_size <= end) {
-		delete [] m_buffer;
-		m_buffer = 0;
 		m_size = 0;
 		m_current = 0;
 		return;
@@ -143,14 +227,15 @@ void
 Buffer::write_u8 (uint8_t data)
 {
 	assert (m_current + 1 <= m_size);
-	m_buffer[m_current] = data;
+	uint8_t *buffer = get_start ();
+	buffer[m_current] = data;
 	m_current++;
 }
 void 
 Buffer::write_u16 (uint16_t data)
 {
 	assert (m_current + 2 <= m_size);
-	uint16_t *buffer = (uint16_t *)(m_buffer + m_current);
+	uint16_t *buffer = (uint16_t *)(get_start () + m_current);
 	*buffer = data;
 	m_current += 2;
 }
@@ -158,7 +243,7 @@ void
 Buffer::write_u32 (uint32_t data)
 {
 	assert (m_current + 4 <= m_size);
-	uint32_t *buffer = (uint32_t *)(m_buffer + m_current);
+	uint32_t *buffer = (uint32_t *)(get_start () + m_current);
 	*buffer = data;
 	m_current += 4;
 }
@@ -166,16 +251,17 @@ void
 Buffer::write (uint8_t const *data, uint16_t size)
 {
 	assert (m_current + size <= m_size);
-	memcpy (m_buffer+m_current, data, size);
+	memcpy (get_start ()+m_current, data, size);
 	m_current += size;
 }
 void 
 Buffer::write_hton_u16 (uint16_t data)
 {
 	assert (m_current + 2 <= m_size);
-	m_buffer[m_current] = (data >> 8) & 0xff;
+	uint8_t *buffer = get_start ();
+	buffer[m_current] = (data >> 8) & 0xff;
 	m_current++;
-	m_buffer[m_current] = (data >> 0) & 0xff;
+	buffer[m_current] = (data >> 0) & 0xff;
 	m_current++;
 }
 
@@ -183,13 +269,14 @@ void
 Buffer::write_hton_u32 (uint32_t data)
 {
 	assert (m_current + 4 <= m_size);
-	m_buffer[m_current] = (data >> 24)  & 0xff;
+	uint8_t *buffer = get_start ();
+	buffer[m_current] = (data >> 24)  & 0xff;
 	m_current++;
-	m_buffer[m_current] = (data >> 16)  & 0xff;
+	buffer[m_current] = (data >> 16)  & 0xff;
 	m_current++;
-	m_buffer[m_current] = (data >> 8) & 0xff;
+	buffer[m_current] = (data >> 8) & 0xff;
 	m_current++;
-	m_buffer[m_current] = (data >> 0) & 0xff;
+	buffer[m_current] = (data >> 0) & 0xff;
 	m_current++;
 }
 
@@ -197,7 +284,8 @@ uint8_t
 Buffer::read_u8 (void)
 {
 	assert (m_current + 1 <= m_size);
-	uint8_t retval = m_buffer[m_current];
+	uint8_t *buffer = get_start ();
+	uint8_t retval = buffer[m_current];
 	m_current++;
 	return retval;
 }
@@ -205,7 +293,7 @@ uint16_t
 Buffer::read_u16 (void)
 {
 	assert (m_current + 2 <= m_size);
-	uint16_t *buffer = (uint16_t *)(m_buffer + m_current);
+	uint16_t *buffer = (uint16_t *)(get_start () + m_current);
 	uint16_t retval = *buffer;
 	m_current += 2;
 	return retval;
@@ -214,7 +302,7 @@ uint32_t
 Buffer::read_u32 (void)
 {
 	assert (m_current + 4 <= m_size);
-	uint32_t *buffer = (uint32_t *)(m_buffer + m_current);
+	uint32_t *buffer = (uint32_t *)(get_start () + m_current);
 	uint32_t retval = *buffer;
 	m_current += 4;
 	return retval;
@@ -223,7 +311,7 @@ void
 Buffer::read (uint8_t *buffer, uint16_t size)
 {
 	assert (m_current + size <= m_size);
-	memcpy (buffer, m_buffer+m_current, size);
+	memcpy (buffer, get_start ()+m_current, size);
 	m_current += size;
 }
 
@@ -232,9 +320,10 @@ Buffer::read_ntoh_u16 (void)
 {
 	assert (m_current + 2 <= m_size);
 	uint16_t retval = 0;
-	retval |= m_buffer[m_current] << 8;
+	uint8_t *buffer = get_start ();
+	retval |= buffer[m_current] << 8;
 	m_current++;
-	retval |= m_buffer[m_current] << 0;
+	retval |= buffer[m_current] << 0;
 	m_current++;
 	return retval;
 }
@@ -244,13 +333,14 @@ Buffer::read_ntoh_u32 (void)
 {
 	assert (m_current + 4 <= m_size);
 	uint32_t retval = 0;
-	retval |= m_buffer[m_current] << 24;
+	uint8_t *buffer = get_start ();
+	retval |= buffer[m_current] << 24;
 	m_current++;
-	retval |= m_buffer[m_current] << 16;
+	retval |= buffer[m_current] << 16;
 	m_current++;
-	retval |= m_buffer[m_current] << 8;
+	retval |= buffer[m_current] << 8;
 	m_current++;
-	retval |= m_buffer[m_current] << 0;
+	retval |= buffer[m_current] << 0;
 	m_current++;
 	return retval;
 }

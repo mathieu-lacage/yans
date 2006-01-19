@@ -63,9 +63,21 @@ public:
 
 private:
 	uint8_t *alloc_and_zero (uint32_t size) const;
+	uint8_t *get_start (void) const;
+
+	static uint32_t get_prefered_start (void);
+	static uint32_t get_prefered_size (void);
+	static void record_buffer_stats (uint32_t start, uint32_t end);
+	static uint32_t m_total_start;
+	static uint32_t m_total_end;
+
 	uint32_t m_size;
 	uint32_t m_current;
-	uint8_t *m_buffer;
+	uint32_t m_start;
+	uint8_t *m_data;
+	uint32_t m_real_size;
+	uint32_t m_total_added_start;
+	uint32_t m_total_added_end;
 };
 
 }; // namespace yans
