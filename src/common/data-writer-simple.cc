@@ -39,6 +39,8 @@ std::cout << "DATA WRITER TRACE " << this << " " << x << std::endl;
 # define TRACE(format,...)
 #endif /* TRACE_DATA_WRITER */
 
+#define BUFFER_SIZE (4096)
+
 
 namespace yans {
 
@@ -50,6 +52,8 @@ public:
 	void open (char const *filename);
 	void write (uint8_t *buffer, uint32_t size);
 private:
+	uint8_t m_data[BUFFER_SIZE];
+	uint32_t m_current;
 	int m_fd;
 };
 
@@ -64,14 +68,28 @@ DataWriterPrivate::~DataWriterPrivate ()
 void
 DataWriterPrivate::open (char const *filename)
 {
-	m_fd = ::open (filename, O_WRONLY | O_CREAT | O_TRUNC | O_NONBLOCK, S_IRUSR | S_IWUSR);
+	m_fd = ::open (filename, O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
 	assert (m_fd != -1);
 }
+
+#ifndef min
+#define min(a,b) ((a)<(b)?(a):(b))
+#endif /* min */
 
 void
 DataWriterPrivate::write (uint8_t *buffer, uint32_t size)
 {
-	::write (m_fd, buffer, size);
+	while (size > 0) {
+		uint32_t to_copy = min (BUFFER_SIZE - m_current, size);
+		memcpy (m_data + m_current, buffer, to_copy);
+		size -= to_copy;
+		buffer += to_copy;
+		if (m_current == BUFFER_SIZE) {
+			ssize_t written = ::write (m_fd, m_data, BUFFER_SIZE);
+			assert (written == BUFFER_SIZE);
+			m_current = 0;
+		}
+	}
 }
 
 DataWriter::DataWriter ()
