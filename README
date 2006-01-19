@@ -72,6 +72,9 @@ notes:
   - make sure PYTHONPATH points to where _simulatormodule.so is
     located
 
+Note: the python bindings do not seem to work. We welcome 
+contributions to help us fix this problem.
+
 4) TODO
 -------
 
