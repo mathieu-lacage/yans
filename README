@@ -64,6 +64,13 @@ Tiger comes with python installed. You need to install boost
 (tested with 1.33.1). gcc 4.0.2 (apple darwin tiger version)
 has been used. Our tests show that it does not work with
 optimization levels higher than -O0 so, don't try the others.
+Python 2.3 does not seem to work very well on darwin so, we
+recommend you use only python 2.4.
+
+Make sure you set in the Makefile:
+PYTHON_PREFIX_INC=/System/Library/Frameworks/Python.framework/Versions/2.4/include/python2.4
+PYTHON_BIN=/usr/bin/python2.4
+PYTHON_PREFIX_LIB does not really need to be set.
 
 build command: "make PLATFORM=ppc64-darwin-gcc"
 notes: 
@@ -72,8 +79,6 @@ notes:
   - make sure PYTHONPATH points to where _simulatormodule.so is
     located
 
-Note: the python bindings do not seem to work. We welcome 
-contributions to help us fix this problem.
 
 4) TODO
 -------
