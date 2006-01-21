@@ -49,7 +49,8 @@ private:
 	~FiberScheduler ();
 	bool is_all_fibers_dead (void);
 	bool is_deadlock (void);
-	Fiber *select_next_fiber (void);
+	Fiber *peek_next_fiber (void);
+	Fiber *remove_next_fiber (void);
 
 	typedef std::list<Fiber *> Fibers;
 	static FiberScheduler *m_instance;

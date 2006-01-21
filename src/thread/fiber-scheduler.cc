@@ -99,7 +99,7 @@ FiberScheduler::schedule (void)
 		prev = m_current;
 		m_current = 0;
 
-		next = select_next_fiber ();
+		next = peek_next_fiber ();
 		if (next != 0) {
 			Simulator::insert_in_s (40e-3, make_event (&FiberScheduler::schedule, this));
 		}
@@ -107,7 +107,7 @@ FiberScheduler::schedule (void)
 		prev->switch_to (m_context);
 	} else {
 		TRACE_LEAVE_MAIN ();
-		next = select_next_fiber ();
+		next = remove_next_fiber ();
 		if (next != 0) {
 			m_current = next;
 			TRACE_ENTER (m_current);
@@ -120,7 +120,17 @@ FiberScheduler::schedule (void)
 }
 
 Fiber *
-FiberScheduler::select_next_fiber (void)
+FiberScheduler::peek_next_fiber (void)
+{
+	if (!m_active.empty ()) {
+		Fiber *fiber = m_active.front ();
+		return fiber;
+	}
+	return 0;
+}
+
+Fiber *
+FiberScheduler::remove_next_fiber (void)
 {
 	if (!m_active.empty ()) {
 		Fiber *fiber = m_active.front ();
