@@ -179,23 +179,23 @@ SimulatorPrivate::insert_at_destroy (Event *event)
 
 
 
-bool Simulator::m_destroyed = false;
-
+SimulatorPrivate *Simulator::m_priv = 0;
 
 SimulatorPrivate *
 Simulator::get_priv (void)
 {
-	assert (!m_destroyed);
-	static SimulatorPrivate *priv = new SimulatorPrivate ();
-	TRACE_S ("priv " << priv);
-	return priv;
+	if (m_priv == 0) {
+		m_priv = new SimulatorPrivate ();
+	}
+	TRACE_S ("priv " << m_priv);
+	return m_priv;
 }
 
 void
 Simulator::destroy (void)
 {
-	delete get_priv ();
-	m_destroyed = true;
+	delete m_priv;
+	m_priv = 0;
 }
 
 void 

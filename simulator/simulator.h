@@ -69,7 +69,7 @@ private:
 	Simulator ();
 	~Simulator ();
 	static SimulatorPrivate *get_priv (void);
-	static bool m_destroyed;
+	static SimulatorPrivate *m_priv;
 };
 
 }; // namespace yans
