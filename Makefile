@@ -162,6 +162,7 @@ SAMPLES_SRC= \
 	src/samples/main-simple.cc \
 	src/samples/main-router.cc \
 	src/samples/main-tcp.cc \
+	src/samples/main-thread.cc \
 	$(NULL)
 
 DIRS += $(call gen-dirs, $(SAMPLES_SRC))
