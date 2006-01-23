@@ -183,7 +183,7 @@ $(SUBDIRS):
 	@$(MAKE) -C $@
 
 $(TOP_BUILD_DIR)/%.o:%.s
-        $(AS) $(ASFLAGS) -o $@ $<
+	$(AS) $(ASFLAGS) -o $@ $<
 $(TOP_BUILD_DIR)/%.py:%.py
 	cp $< $@
 $(TOP_BUILD_DIR)/%.o:%.cc
