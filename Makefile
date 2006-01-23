@@ -16,7 +16,7 @@ INCLUDES=\
  -I$(TOP_SRC_DIR)/src/os-model \
  -I$(TOP_SRC_DIR)/src/apps \
  $(NULL)
-FLAGS=-Wall -Werror -O0 -gdwarf-2
+FLAGS=-Wall -Werror -O0 -g2
 PYTHON_PREFIX_INC=/usr/include/python2.3
 PYTHON_PREFIX_LIB=/usr/lib
 PYTHON_BIN=/usr/bin/python2.3
@@ -36,7 +36,7 @@ YANS_SRC= \
 	simulator/event-heap.cc \
 	simulator/event.cc \
 	simulator/simulator.cc \
-	src/thread/fiber-context-$(PLATFORM).cc \
+	$(FIBER_CONTEXT_PLATFORM) \
 	src/thread/semaphore.cc \
 	src/thread/fiber.cc \
 	src/thread/fiber-scheduler.cc \
@@ -180,7 +180,8 @@ $(TMP_DIRS):
 $(SUBDIRS):
 	@$(MAKE) -C $@
 
-
+$(TOP_BUILD_DIR)/%.o:%.s
+        $(AS) $(ASFLAGS) -o $@ $<
 $(TOP_BUILD_DIR)/%.py:%.py
 	cp $< $@
 $(TOP_BUILD_DIR)/%.o:%.cc
