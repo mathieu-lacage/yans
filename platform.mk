@@ -10,7 +10,7 @@ gen-pymod-link-flags=-L$(PYTHON_PREFIX_LIB) -L$(BOOST_PREFIX_LIB) -lboost_python
 endif
 
 ifeq ($(PLATFORM), ppc-darwin-gcc)
-FIBER_CONTEXT_PLATFORM= 
+FIBER_CONTEXT_PLATFORM= \
 	src/thread/fiber-context-ppc-darwin-gcc.c \
 	src/thread/ppc-darwin-gcc-switch.s \
 	$(NULL)

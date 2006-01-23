@@ -1,4 +1,7 @@
 include ./functions.mk
+
+all: dirs build build-python
+
 include ./platform.mk
 
 TOP_BUILD_DIR=$(TOP)/bin
@@ -27,7 +30,6 @@ BOOST_PREFIX_INC=/usr/include
 LDFLAGS=
 CXXFLAGS+=$(FLAGS) $(INCLUDES) $(DEFINES)
 CFLAGS+=$(FLAGS) $(INCLUDES) $(DEFINES)
-all: dirs build build-python
 
 
 # building of libyans.so
