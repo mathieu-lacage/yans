@@ -47,6 +47,11 @@ fiber_context_new (void (*callback) (void *),
 	stack_end --; 
 	*stack_end = (uint32_t)callback;
 	stack_end -= 2;
+	/* saved registers area. f14 to f31 */
+	for (tmp = 0; tmp < (18*2); tmp++) {
+		stack_end --;
+		*stack_end = 0;
+	}
 	/* saved registers area. r3 */
 	stack_end --;
 	*stack_end = (uint32_t) data;
