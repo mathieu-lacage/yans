@@ -28,7 +28,11 @@ public:
 
   void wait_until_notify (void) {
     m_sem->down ();
+    register double test_float = 200.0;
     m_osem->up ();
+    if (test_float != 200.0) {
+      TRACE ("Float problem !!");
+    }
   }
 private:
   virtual void run (void) {
@@ -52,11 +56,7 @@ public:
 private:
   virtual void run (void) {
     TRACE ("C run");
-    register double test_float = 200.0;
     m_b->wait_until_notify ();
-    if (test_float != 200.0) {
-      TRACE ("Float problem !!");
-    }
     TRACE ("C completed");
   }
   B* m_b;
