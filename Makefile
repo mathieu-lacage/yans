@@ -161,16 +161,17 @@ SAMPLES_SRC= \
 	samples/main-router.cc \
 	samples/main-tcp.cc \
 	samples/main-thread.cc \
-	python/test-simulator.py \
-	python/test-thread.py \
-	python/test-simulator-gc.py \
+	samples/test-simulator.py \
+	samples/test-thread.py \
+	samples/test-simulator-gc.py \
 	$(NULL)
 
 DIRS += $(call gen-dirs, $(SAMPLES_SRC))
-SAMPLES=$(call gen-bin, $(basename $(SAMPLES_SRC)))
-$(SAMPLES): %:%.o
+SAMPLES_CPP=$(call gen-bin, $(basename $(filter %.cc,$(SAMPLES_SRC))))
+$(SAMPLES_CPP): %:%.o
 	$(CXX) $(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans -o $@ $^
-build: $(SAMPLES)
+SAMPLES_PY=$(call gen-bin, $(filter %.py,$(SAMPLES_SRC)))
+build: $(SAMPLES_CPP) $(SAMPLES_PY)
 
 
 # below are generic rules.
