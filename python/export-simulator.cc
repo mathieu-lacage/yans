@@ -21,44 +21,68 @@
 
 #include <boost/python.hpp>
 #include "simulator.h"
-#include "event-wrap.h"
+#include "function-holder.h"
+#include "event.h"
 
 using namespace yans;
 using namespace boost::python;
 
+class FunctionHolderEvent : public Event {
+public:
+	FunctionHolderEvent (FunctionHolder *holder)
+		: m_holder (holder) {}
+	virtual ~FunctionHolderEvent () {
+		delete m_holder;
+	}
+	virtual void notify (void) {
+		object function = m_holder->get_function ();
+		object context = m_holder->get_context ();
+		function (context);
+		delete this;
+	}
+private:
+	FunctionHolder *m_holder;
+};
+
+
 void 
-simu_insert_in_s (double delta, std::auto_ptr<EventWrap> ev)
+simu_insert_in_s (double delta, std::auto_ptr<FunctionHolder> holder)
 {
-	Simulator::insert_in_s (delta, ev.get ());
-	ev.release ();
+	Event *ev = new FunctionHolderEvent (holder.get ());
+	Simulator::insert_in_s (delta, ev);
+	holder.release ();
 }
 
 void 
-simu_insert_in_us (uint64_t delta, std::auto_ptr<EventWrap> ev)
+simu_insert_in_us (uint64_t delta, std::auto_ptr<FunctionHolder> holder)
 {
-	Simulator::insert_in_us (delta, ev.get ());
-	ev.release ();
+	Event *ev = new FunctionHolderEvent (holder.get ());
+	Simulator::insert_in_us (delta, ev);
+	holder.release ();
 }
 
 void 
-simu_insert_at_s (double at, std::auto_ptr<EventWrap> ev)
+simu_insert_at_s (double at, std::auto_ptr<FunctionHolder> holder)
 {
-	Simulator::insert_at_s (at, ev.get ());
-	ev.release ();
+	Event *ev = new FunctionHolderEvent (holder.get ());
+	Simulator::insert_at_s (at, ev);
+	holder.release ();
 }
 
 void 
-simu_insert_at_us (uint64_t at, std::auto_ptr<EventWrap> ev)
+simu_insert_at_us (uint64_t at, std::auto_ptr<FunctionHolder> holder)
 {
-	Simulator::insert_at_us (at, ev.get ());
-	ev.release ();
+	Event *ev = new FunctionHolderEvent (holder.get ());
+	Simulator::insert_at_us (at, ev);
+	holder.release ();
 }
 
 void 
-simu_insert_later (std::auto_ptr<EventWrap> ev)
+simu_insert_later (std::auto_ptr<FunctionHolder> holder)
 {
-	Simulator::insert_later (ev.get ());
-	ev.release ();
+	Event *ev = new FunctionHolderEvent (holder.get ());
+	Simulator::insert_later (ev);
+	holder.release ();
 }
 
 void 

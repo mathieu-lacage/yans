@@ -1,15 +1,15 @@
 from _simulator import *;
 
+class MyFunctionHolder:
+    def set_event (self, function, *args):
+        self.m_function = function
+        self.m_args = args
+    def call (self):
+        self.m_function (*(self.m_args))
 
-class __MyEvent__(Event):
-    def set_callback (self, function, *args):
-        self.__function_ = function;
-        self.__args_ = args;
-    def notify (self):
-        self.__function_ (*self.__args_);
-        
 def make_event(function, *args):
-    ev = __MyEvent__ ();
-    ev.set_callback (function, *args);
+    holder = MyFunctionHolder ()
+    holder.set_event (function, *args)
+    ev = FunctionHolder (MyFunctionHolder.call, holder)
     return ev
 

@@ -21,10 +21,10 @@
 #include <boost/python.hpp>
 
 void export_simulator (void);
-void export_event (void);
+void export_function_holder (void);
 
 BOOST_PYTHON_MODULE(_simulator)
 {
 	export_simulator ();
-	export_event ();
+	export_function_holder ();
 }

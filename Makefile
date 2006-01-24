@@ -120,7 +120,7 @@ build: $(MAIN_TEST)
 SIMULATOR_PYTHON_SRC= \
 	python/yans-simulator.cc \
 	python/export-simulator.cc \
-	python/export-event.cc \
+	python/function-holder.cc \
 	python/yans/__init__.py \
 	python/yans/simulator/__init__.py \
 	$(NULL)
