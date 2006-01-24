@@ -22,36 +22,24 @@ class B : public yans::Thread {
 public:
   B () : yans::Thread ("B"), 
 	 m_sem (new yans::Semaphore (0)),
-	 m_osem (new yans::Semaphore (0)),
-	 m_oosem (new yans::Semaphore (0))
+	 m_osem (new yans::Semaphore (0))
   {}
-  ~B () {delete m_sem; delete m_osem; delete m_oosem;}
+  ~B () {delete m_sem; delete m_osem;}
 
   void wait_until_notify (void) {
     m_sem->down ();
-    register double test_float = 200.0;
     m_osem->up ();
-    m_oosem->down ();
-    if (test_float != 200.0) {
-      TRACE ("Float problem !!");
-    }
   }
 private:
   virtual void run (void) {
     TRACE ("B run");
-    register double test_float = 100.0;
     sleep_s (10.0);
     m_sem->up ();
     m_osem->down ();
-    if (test_float != 100.0) {
-      TRACE ("Float problem !!");
-    }
-    m_oosem->up ();
     TRACE ("B run completed");
   }
   yans::Semaphore *m_sem;
   yans::Semaphore *m_osem;
-  yans::Semaphore *m_oosem;
 };
 
 class C : public yans::Thread {
