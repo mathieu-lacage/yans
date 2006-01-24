@@ -33,9 +33,13 @@ public:
 private:
   virtual void run (void) {
     TRACE ("B run");
+    double test_float = 100.0;
     sleep_s (10.0);
     m_sem->up ();
     m_osem->down ();
+    if (test_float != 100.0) {
+      TRACE ("Float problem !!");
+    }
     TRACE ("B run completed");
   }
   yans::Semaphore *m_sem;
@@ -48,7 +52,11 @@ public:
 private:
   virtual void run (void) {
     TRACE ("C run");
+    double test_float = 200.0;
     m_b->wait_until_notify ();
+    if (test_float != 200.0) {
+      TRACE ("Float problem !!");
+    }
     TRACE ("C completed");
   }
   B* m_b;
