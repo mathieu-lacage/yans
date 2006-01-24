@@ -26,10 +26,10 @@
 #include "thread.h"
 #include "buffer.h"
 #include "tcp-buffer.h"
+#include "callback-test.h"
 #if 0
 #include "utils.h"
 #include "fiber-scheduler.h"
-#include "callback-test.h"
 #include "tcp-pieces.h"
 #endif
 
@@ -41,14 +41,12 @@ TestManager::TestManager ()
 	: m_verbose (false)
 {
 #if 0
-	ADD_TEST (TcpPiecesTest, "TcpPieces");
-	ADD_TEST (BufferTest, "Buffer");
 	ADD_TEST (UtilsTest, "Utils");
 #ifdef SIMULATOR_FIBER
 	ADD_TEST (TestFiberScheduler, "FiberScheduler");
 #endif
-	ADD_TEST (CallbackTest, "Callback");
 #endif
+	ADD_TEST (CallbackTest, "Callback");
 	ADD_TEST (ThreadTest, "Thread");
 	ADD_TEST (BufferTest, "Buffer");
 	ADD_TEST (TcpBufferTest, "TcpBuffer");
