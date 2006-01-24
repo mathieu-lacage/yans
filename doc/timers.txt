@@ -1,0 +1,312 @@
+The "Timer" API should have some kind of support for 
+"event cancelation": that is, the ability of avoiding
+being notified when the event which was scheduled earlier
+expires.
+
+There are two solutions to this problem:
+   1) add a Simulator::remove method which removes the targeted
+      event from the Simulator event list. 
+   2) create a new type of event which checks its "canceled"
+      flag before invoking the user's callback.
+
+It is hard to tell which of these solutions is the most efficient
+because:
+  - with 1), the "cancel" operation is not constant-time but
+    it might make the following inserts faster because the 
+    simulator will have a smaller event list.
+  - with 2), the "cancel" operation is constant-time but it
+    might make the following inserts slower because the
+    event list will be bigger.
+
+Both alternatives were tested on the new ns-2 802.11 codebase.
+No significative difference was found in terms of performance
+even though 1) seemed to consistently perform slightly better
+(1 to 5% faster). This example might not be very representative
+because the crux of the simulation time is spent in PHY-level
+calculations which means that changes to the behavior of the 
+scheduler have little impact on the overall performance.
+
+The fact that it is hard to tell before hand which approach will
+be faster probably means that we should offer both solutions and
+leave the decision model developers. We should make it easy to 
+switch from one type of "cancel" to the other such that model
+developers can try and choose the most efficient solution 
+depending on their models and simulation scenarios.
+
+API for solution 1)
+-------------------
+
+class Simulator {
+public:
+      static void remove (Event *event);
+};
+
+class EventTcc : public Event {
+public:
+      void destroy (void);
+};
+
+EventTcc *make_event (...);
+
+sample user code:
+
+EventTcc *m_event_to_cancel = make_event (&Foo::expired);
+Simulator::insert_in_s (10.0, m_event_to_cancel);
+
+...
+
+if (m_event_to_cancel != 0) {
+   // event is still running.
+   Simulator::remove (m_event_to_cancel);
+   m_event_to_cancel->destroy ();
+   m_event_to_cancel = 0;
+}
+
+...
+
+void Foo::expired (void) {
+   m_event_to_cancel = 0;
+}
+
+This sample code assumes that the user uses the make_event
+function to create his event which means that the resources
+associated to the event are freed by EventTcc::destroy. Of 
+course, the user is free not to use this implementation of
+the Event class.
+
+
+API for solution 2)
+-------------------
+
+The simplest possible way to implement solution 2) is by
+defining a CancelableEvent class and its cancel method.
+
+class CancelableEvent : public Event {
+public:
+	void cancel_and_destroy (void);
+private:
+	bool m_canceled;
+};
+
+CancelableEvent *make_cancelable_event (...);
+
+sample user code:
+
+CancelableEvent *m_event_to_cancel = make_cancelable_event (&Foo::expired);
+Simulator::insert_in_s (10.0, m_event_to_cancel);
+
+...
+
+if (m_event_to_cancel != 0) {
+   // event is still running.
+   m_event_to_cancel->cancel_and_destroy ();
+   m_event_to_cancel = 0;
+}
+
+...
+
+void Foo::expired (void) {
+   m_event_to_cancel = 0;
+}
+
+
+The major advantage of this solution is that it looks very similar to
+solution 1) which means that users should be able to switch from
+one to the other.
+
+
+Another API for solution 2)
+---------------------------
+
+While the API presented above is simple and does the job, it requires 
+quite a bit of not-so-nice/ugly-looking code to deal properly with 
+resource management. The crux of the problem is that the user is 
+requested to maintain correctly the state of the m_event_to_cancel
+variable by assigning 0 to it when the variable goes out of scope.
+We could mitigate this problem by adding a is_canceled method on the
+CancelableEvent class (which would be utterly trivial) but doing
+this without forcing the user to nullify the m_event_to_cancel
+variable would lead to common bugs where the user is trying to
+invoke is_canceled on a deleted CancelableEvent class.
+
+The only way to solve this problem is to create a wrapper class
+around CancelableEvent which would hold a pointer to the event. 
+Something like this:
+
+class EventHolder {
+public:
+   void cancel (void);
+   bool is_running (void);
+private:
+   void notify (void);
+   CancelableEvent *m_event;
+};
+
+void
+EventHolder::cancel (void)
+{
+   m_event->cancel ();
+   m_event = 0;
+}
+
+bool
+EventHolder::is_running (void)
+{
+   if (m_event == 0) {
+       return false;
+   } else {
+       return true;
+   }
+}
+
+void
+EventHolder::notify (void)
+{
+   // invoke user's callback.
+   delete m_event;
+   m_event = 0;
+}
+
+
+user code:
+
+MyClass::MyClass () 
+{
+   m_holder = new EventHolder ();
+}
+
+MyClass::~MyClass ()
+{
+   delete m_holder;
+}
+
+void MyClass::callback (...)
+{
+   // event expired.
+}
+
+...
+
+if (m_holder->is_running ()) {
+   // do something.
+}
+
+This type of design has two problems: 
+  2.1 - we need to provide a way for the user to tell the Holder which 
+    method or function to call back. 
+  2.2 - we need to provide a way for the user to schedule the Holder's
+    event.
+
+--------------------------------
+To solve 2.2, we need to either get access to the Holder's event and
+invoke Simulator::insert_* directly or duplicate the Simulator::insert_*
+API on the Holder. Specifically, either:
+
+class EventHolder {
+public:
+   Event *start (void);
+};
+
+Event *
+EventHolder::start (void)
+{
+   m_event = // create new event;
+   return m_event;
+}
+
+...
+
+Simulator::insert_in_s (10.0, m_holder->start ());
+
+or:
+
+class EventHolder {
+public:
+   void start_in_s  (double in);
+   void start_in_us (double in);
+   void start_at_s  (double at);
+   void start_at_us (uint64_t at);
+};
+
+void 
+EventHolder::start_in_s  (double in)
+{
+   m_event = // create new event;
+   Simulator::insert_in_s (in, m_event);
+}
+
+...
+
+m_holder->start_in_s (10.0);
+
+Clearly, none, of the alternative is very nice: duplicating the 
+Simulator API does not sound great. Exposing the internal Event *
+pointer to allow the users to pass it to the Simulator::insert_* 
+might be a bit less bad but does not sound right.
+
+The only thing such an API is missing is maybe something like this:
+class EventHolder {
+public:
+   double get_expiration_time (void);
+   double get_schedule_time (void);
+};
+
+which cannot be implemented unless the entire Simulator::insert_* API is
+duplicated on the EventHolder. However, the new 802.11 code does not
+seem to use this sort of get_*_time method so, we probably do not need
+them.
+
+--------------------------------
+2.1 covers quite a lot of features. One of the really great thing about
+the normal Event and its make_event () functions is the ability to
+create continuation-like events. i.e., at any point, you can make
+an event call any of your methods with any argument. The only
+restriction is that the return value of the method called is ignored
+(which is not surprising: what could the Simulator::run method
+do with a return value out of Event::notify ?).
+
+Idealy, the possibility to associate per-event arguments to the
+callback method should be kept for our EventHolder class. This would
+require something similar to this:
+
+class EventHolder {
+public:
+   Event *create_event (method_arg1, method_arg2);
+};
+
+EventHolder *make_holder (method_pointer *, class_pointer *);
+
+...
+
+MyClass::MyClass ()
+{
+   m_holder = make_holder (&MyClass::callback, this);
+}
+
+MyClass::~MyClass ()
+{
+   delete m_holder;
+}
+
+void
+MyClass:callback (arg1, arg2)
+{
+   // event expired
+}
+
+...
+
+if (!m_holder->is_running ()) {
+   Simulator::insert_in_s (10.0, m_holder->create_event (arg1, arg2));
+}
+
+...
+
+if (m_holder->is_running ()) {
+   m_holder->cancel ();
+}
+
+
+This solution requires quite a bit of template magic to work correctly
+but it makes it possible to have very a nice-looking user-side API. Of course,
+better names for classes and methods need to be found.
