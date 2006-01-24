@@ -123,8 +123,6 @@ SIMULATOR_PYTHON_SRC= \
 	python/export-event.cc \
 	python/yans/__init__.py \
 	python/yans/simulator/__init__.py \
-	python/test-simulator.py \
-	python/test-simulator-gc.py \
 	$(NULL)
 SIMULATOR_PYTHON_OBJ=$(call gen-obj, $(SIMULATOR_PYTHON_SRC))
 LIB_SIMULATOR_PYTHON=$(TOP_BUILD_DIR)/python/$(call gen-pymod-name, _simulator)
@@ -139,7 +137,6 @@ build-python: $(LIB_SIMULATOR_PYTHON)
 MODELS_PYTHON_SRC= \
 	python/yans-models.cc \
 	python/export-thread.cc \
-	python/test-thread.py \
 	$(NULL)
 #	python/export-packet.cc \
 #	python/export-ipv4-address.cc \
@@ -157,13 +154,16 @@ build-python: $(LIB_MODELS_PYTHON)
 
 # building of sample applications
 SAMPLES_SRC= \
-	src/samples/main-simulator.cc \
-	src/samples/main-forwarding-simulator.cc \
-	src/samples/main-forwarding-simulator-template.cc \
-	src/samples/main-simple.cc \
-	src/samples/main-router.cc \
-	src/samples/main-tcp.cc \
-	src/samples/main-thread.cc \
+	samples/main-simulator.cc \
+	samples/main-forwarding-simulator.cc \
+	samples/main-forwarding-simulator-template.cc \
+	samples/main-simple.cc \
+	samples/main-router.cc \
+	samples/main-tcp.cc \
+	samples/main-thread.cc \
+	python/test-simulator.py \
+	python/test-thread.py \
+	python/test-simulator-gc.py \
 	$(NULL)
 
 DIRS += $(call gen-dirs, $(SAMPLES_SRC))
