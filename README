@@ -57,7 +57,7 @@ and removing the "build-python" item
 Nothing special: just type "make". The x86 target is built by 
 default.
 
-3.2 Darwin ppc64 (tiger) build
+3.2 Darwin ppc (tiger) build
 ------------------------------
 
 Tiger comes with python installed. You need to install boost
@@ -72,12 +72,15 @@ PYTHON_PREFIX_INC=/System/Library/Frameworks/Python.framework/Versions/2.4/inclu
 PYTHON_BIN=/usr/bin/python2.4
 PYTHON_PREFIX_LIB does not really need to be set.
 
-build command: "make PLATFORM=ppc64-darwin-gcc"
+build command: "make PLATFORM=ppc-darwin-gcc"
 notes: 
   - make sure DYN_LIBRARY_PATH points to where libyans.dylib is
     located
   - make sure PYTHONPATH points to where _simulatormodule.so is
     located
+
+Please, note that this build should work on both ppc64 and ppc32
+machines (i.e., G4s and G5s).
 
 
 4) TODO
