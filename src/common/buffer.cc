@@ -50,10 +50,11 @@ Buffer::Buffer ()
 	if (get_prefered_size () > 0) {
 		TRACE ("allocating size="<<get_prefered_size ()<<", at="<<m_start);
 		m_data = alloc_and_zero (get_prefered_size ());
+		m_real_size = get_prefered_size ();
 	} else {
 		m_data = 0;
+		m_real_size = 0;
 	}
-	m_real_size = 0;
 	m_total_added_start = 0;
 	m_total_added_end = 0;
 }
