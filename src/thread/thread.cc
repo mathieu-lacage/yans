@@ -100,11 +100,69 @@ private:
 };
 
 
+class B : public yans::Thread {
+public:
+	B () : yans::Thread ("B"), 
+	       m_sem (new yans::Semaphore (0)),
+	       m_osem (new yans::Semaphore (0)),
+	       m_oosem (new yans::Semaphore (0)),
+	       m_is_bad (false)
+	{}
+	~B () {delete m_sem; delete m_osem; delete m_oosem;}
+
+	void wait_until_notify (void) {
+		m_sem->down ();
+		register double test_float = 200.0;
+		m_osem->up ();
+		m_oosem->down ();
+		if (test_float != 200.0) {
+			TRACE ("Float problem !!");
+			m_is_bad = true;
+		}
+	}
+	bool is_bad (void) {
+		return m_is_bad;
+	}
+private:
+	virtual void run (void) {
+		TRACE ("B run");
+		register double test_float = 100.0;
+		sleep_s (10.0);
+		m_sem->up ();
+		m_osem->down ();
+		if (test_float != 100.0) {
+			m_is_bad = true;
+			TRACE ("Float problem !!");
+		}
+		m_oosem->up ();
+		TRACE ("B run completed");
+	}
+	yans::Semaphore *m_sem;
+	yans::Semaphore *m_osem;
+	yans::Semaphore *m_oosem;
+	bool m_is_bad;
+};
+
+class C : public yans::Thread {
+public:
+  C (B *b) : yans::Thread ("C"), m_b (b) {}
+private:
+  virtual void run (void) {
+    TRACE ("C run");
+    m_b->wait_until_notify ();
+    TRACE ("C completed");
+  }
+  B* m_b;
+};
+
+
 ThreadTest::ThreadTest ()
 {}
 bool 
 ThreadTest::run_tests (void)
 {
+	bool ok = true;
+
 	Thread *a = new A ();
 
 	TRACE ("a created");
@@ -117,7 +175,21 @@ ThreadTest::run_tests (void)
 
 	Simulator::destroy ();
 
-	return true;
+	B *b = new B ();
+	C *c = new C (b);
+
+	yans::Simulator::run ();
+
+	yans::Simulator::destroy ();
+
+	if (b->is_bad ()) {
+		ok = false;
+	}
+
+	delete b;
+	delete c;
+
+	return ok;
 }
 
 }; // namespace yans
