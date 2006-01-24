@@ -1,6 +1,9 @@
 PLATFORM=i386-linux-gcc
 
 ifeq ($(PLATFORM), i386-linux-gcc)
+FIBER_CONTEXT_PLATFORM= \
+	src/thread/fiber-context-i386-linux-gcc.c \
+	$(NULL)
 gen-lib-name=$(addprefix lib, $(addsuffix .so, $1))
 gen-lib-build-flags=-fPIC
 gen-lib-link-flags=-shared
