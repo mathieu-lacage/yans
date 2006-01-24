@@ -4,6 +4,14 @@
 #include <stdlib.h>
 #include <assert.h>
 
+/*
+ * This code is based on the following documents:
+ * "Introduction to Max OS X ABI Function Call Guide" available online at:
+ * http://developer.apple.com/documentation/DeveloperTools/Conceptual/LowLevelABI/index.html
+ * and: 
+ * "Programming Environments Manual for 32-Bit Implementations of the PowerPC Architecture"
+ */
+
 struct FiberContext {
 	uint8_t *stack;
 	uint32_t r1;
