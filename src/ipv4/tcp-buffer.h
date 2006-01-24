@@ -87,6 +87,7 @@ class TcpBufferTest : public Test {
 public:
 	virtual bool run_tests (void);
 private:
+	bool test_buffer (uint32_t start);
 	Packet *create_one_packet (uint32_t size);
 	bool check_front_data (TcpBuffer *pieces, uint32_t expected_data, int line);
 };

@@ -364,57 +364,57 @@ TcpBufferTest::check_front_data (TcpBuffer *buffer, uint32_t expected_data, int 
 	}
 	return true;
 }
-bool 
-TcpBufferTest::run_tests (void)
+bool
+TcpBufferTest::test_buffer (uint32_t start)
 {
 	bool ok = true;
-
 	TcpBuffer *buffer = new TcpBuffer ();
+	buffer->set_start (start);
 	buffer->set_size (100);
 	Packet *piece;
 	CHECK_FRONT_DATA (buffer, 0);
 	piece = create_one_packet (1);
-	buffer->add_at (piece, 0);
+	buffer->add_at (piece, start+0);
 	piece->unref ();
 	CHECK_FRONT_DATA (buffer, 1);
 
 	piece = create_one_packet (1);
-	buffer->add_at (piece, 0);
+	buffer->add_at (piece, start+0);
 	piece->unref ();
 	CHECK_FRONT_DATA (buffer, 1);
 
 	piece = create_one_packet (1);
-	buffer->add_at (piece, 1);
+	buffer->add_at (piece, start+1);
 	piece->unref ();
 	CHECK_FRONT_DATA (buffer, 2);
 
 	piece = create_one_packet (1);
-	buffer->add_at (piece, 0);
+	buffer->add_at (piece, start+0);
 	piece->unref ();
 	CHECK_FRONT_DATA (buffer, 2);
 
 	piece = create_one_packet (6);
-	buffer->add_at (piece, 2);
+	buffer->add_at (piece, start+2);
 	piece->unref ();
 	CHECK_FRONT_DATA (buffer, 8);
 
 	piece = create_one_packet (3);
-	buffer->add_at (piece, 3);
+	buffer->add_at (piece, start+3);
 	piece->unref ();
 	CHECK_FRONT_DATA (buffer, 8);
 
 	piece = create_one_packet (3);
-	buffer->add_at (piece, 15);
+	buffer->add_at (piece, start+15);
 	piece->unref ();
 	CHECK_FRONT_DATA (buffer, 8);
 
 	piece = create_one_packet (6);
-	buffer->add_at (piece, 8);
+	buffer->add_at (piece, start+8);
 	piece->unref ();
 	CHECK_FRONT_DATA (buffer, 14);
 
 	piece = create_one_packet (1);
-	buffer->add_at (piece, 14);
+	buffer->add_at (piece, start+14);
 	piece->unref ();
 	CHECK_FRONT_DATA (buffer, 18);
 
@@ -422,32 +422,52 @@ TcpBufferTest::run_tests (void)
 	CHECK_FRONT_DATA (buffer, 1);
 
 	piece = create_one_packet (99);
-	buffer->add_at (piece, 17); // 18/17
+	buffer->add_at (piece, start+17); // 18/17
 	piece->unref ();
 	CHECK_FRONT_DATA (buffer, 99);
 
 	/* here, we hit the buffer size limit. */
 	piece = create_one_packet (2);
-	buffer->add_at (piece, 116);
+	buffer->add_at (piece, start+116);
 	piece->unref ();
 	CHECK_FRONT_DATA (buffer, 100);
 
 	buffer->set_size (102);
 	piece = create_one_packet (1);
-	buffer->add_at (piece, 117);
+	buffer->add_at (piece, start+117);
 	piece->unref ();
 	CHECK_FRONT_DATA (buffer, 101);
 
 	piece = create_one_packet (99);
-	buffer->add_at (piece, 117);
+	buffer->add_at (piece, start+117);
 	piece->unref ();
 	CHECK_FRONT_DATA (buffer, 102);
 
 	piece = create_one_packet (1);
-	buffer->add_at (piece, 17);
+	buffer->add_at (piece, start+17);
 	piece->unref ();
 	CHECK_FRONT_DATA (buffer, 102);
+	return ok;
+}
+bool 
+TcpBufferTest::run_tests (void)
+{
+	bool ok = true;
 
+	ok = test_buffer (0);
+	if (!ok) {
+		goto out;
+	}
+	ok = test_buffer (1);
+	if (!ok) {
+		goto out;
+	}
+	ok = test_buffer (100);
+	if (!ok) {
+		goto out;
+	}
+
+ out:
 	return ok;
 }
 
