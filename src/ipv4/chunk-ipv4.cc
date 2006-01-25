@@ -23,6 +23,7 @@
 #include "chunk-ipv4.h"
 #include "utils.h"
 #include "buffer.h"
+#include <cassert>
 
 #define TRACE_CHUNK_IPV4 1
 

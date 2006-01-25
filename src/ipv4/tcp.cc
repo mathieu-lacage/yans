@@ -30,6 +30,7 @@
 #include "tcp-connection.h"
 #include "event.tcc"
 #include "ipv4-end-points.h"
+#include <cassert>
 
 #ifdef TCP_USE_BSD
 #include "tcp-bsd-connection.h"

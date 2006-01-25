@@ -23,6 +23,7 @@
 
 #include "chunk-mac-llc-snap.h"
 #include "buffer.h"
+#include <cassert>
 
 #define noTRACE_CHUNK_LLC_SNAP 1
 

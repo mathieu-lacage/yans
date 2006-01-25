@@ -21,6 +21,7 @@
 
 #include "tcp-buffer.h"
 #include "packet.h"
+#include <cassert>
 
 
 #define nopeTRACE_TCP_BUFFER 1

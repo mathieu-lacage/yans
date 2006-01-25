@@ -24,6 +24,7 @@
 #include "fiber-context.h"
 #include "simulator.h"
 #include "event.tcc"
+#include <cassert>
 
 #define noSCHED_DEBUG 1
 

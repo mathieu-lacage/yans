@@ -21,6 +21,7 @@
 
 #include "ipv4-route.h"
 #include "ipv4.h"
+#include <cassert>
 
 namespace yans {
 

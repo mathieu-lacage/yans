@@ -28,6 +28,7 @@
 #include "ipv4-end-points.h"
 #include "host-tracer.h"
 #include "host.h"
+#include <cassert>
 
 namespace yans {
 

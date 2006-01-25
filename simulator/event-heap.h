@@ -24,6 +24,7 @@
 
 #include <list>
 #include <utility>
+#include <stdint.h>
 
 namespace yans {
 

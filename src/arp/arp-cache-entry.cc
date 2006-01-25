@@ -23,6 +23,7 @@
 #include "arp.h"
 #include "arp-cache-entry.h"
 #include "packet.h"
+#include <cassert>
 
 namespace yans {
 

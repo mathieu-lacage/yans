@@ -29,6 +29,7 @@
 #include "host-tracer.h"
 #include "chunk-icmp.h"
 #include "defrag-state.h"
+#include <cassert>
 
 
 #define noTRACE_IPV4 1
