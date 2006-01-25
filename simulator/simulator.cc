@@ -130,6 +130,7 @@ SimulatorPrivate::insert_in_us (Event *event, uint64_t delta)
 void 
 SimulatorPrivate::insert_at_us (Event *event, uint64_t time)
 {
+	assert (time >= m_clock->get_current_us ());
 	m_event_heap->insert_at_us (event, time);
 }
 uint64_t 
@@ -143,15 +144,13 @@ SimulatorPrivate::insert_in_s (Event *event, double delta)
 	uint64_t now_us = m_clock->get_current_us ();
 	int64_t delta_us = (int64_t)(delta * 1000000.0);
 	uint64_t us = now_us + delta_us;
-	assert (us > 0);
 	m_event_heap->insert_at_us (event, us);
 }
 void 
 SimulatorPrivate::insert_at_s (Event *event, double time)
 {
-	assert (time > 0);
 	int64_t us = (int64_t)(time * 1000000.0);
-	assert (us > 0);
+	assert (us >= 0);
 	m_event_heap->insert_at_us (event, (uint64_t)us);
 }
 double 
