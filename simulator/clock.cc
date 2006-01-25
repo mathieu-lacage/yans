@@ -39,7 +39,6 @@ Clock::get_current_us (void)
 void 
 Clock::update_current_us (uint64_t new_time)
 {
-	assert (new_time > 0);
 	assert (new_time >= m_current_us);
 	m_current_us = new_time;
 }

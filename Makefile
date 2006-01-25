@@ -117,40 +117,26 @@ build: $(MAIN_TEST)
 
 
 # building of python bindings.
-SIMULATOR_PYTHON_SRC= \
+YANS_PYTHON_SRC= \
 	python/yans-simulator.cc \
 	python/export-simulator.cc \
 	python/function-holder.cc \
 	python/yans/__init__.py \
 	python/yans/simulator/__init__.py \
-	$(NULL)
-SIMULATOR_PYTHON_OBJ=$(call gen-obj, $(SIMULATOR_PYTHON_SRC))
-LIB_SIMULATOR_PYTHON=$(TOP_BUILD_DIR)/python/$(call gen-pymod-name, _simulator)
-$(SIMULATOR_PYTHON_OBJ): CXXFLAGS+=$(call gen-pymod-build-flags)
-$(LIB_SIMULATOR_PYTHON): LDFLAGS+=$(call gen-pymod-link-flags) -lyans -L$(TOP_BUILD_DIR)
-$(LIB_SIMULATOR_PYTHON): $(SIMULATOR_PYTHON_OBJ)
-	$(CXX) $(LDFLAGS) -o $@ $(filter %.o,$^)
-DIRS += $(call gen-dirs, $(SIMULATOR_PYTHON_SRC))
-build-python: $(LIB_SIMULATOR_PYTHON)
-
-# building of python models bindings
-MODELS_PYTHON_SRC= \
-	python/yans-models.cc \
 	python/export-thread.cc \
+	python/export-periodic-generator.cc \
+	python/export-packet.cc \
+	python/test-periodic-generator.py \
 	$(NULL)
-#	python/export-packet.cc \
-#	python/export-ipv4-address.cc \
-#	python/export-periodic-generator.cc \
-#	python/test-periodic-generator.py \
-
-MODELS_PYTHON_OBJ=$(call gen-obj, $(MODELS_PYTHON_SRC))
-LIB_MODELS_PYTHON=$(TOP_BUILD_DIR)/python/$(call gen-pymod-name, _models)
-$(MODELS_PYTHON_OBJ): CXXFLAGS+=$(call gen-pymod-build-flags)
-$(LIB_MODELS_PYTHON): LDFLAGS+=$(call gen-pymod-link-flags) -lyans -L$(TOP_BUILD_DIR)
-$(LIB_MODELS_PYTHON): $(MODELS_PYTHON_OBJ)
+YANS_PYTHON_OBJ=$(call gen-obj, $(YANS_PYTHON_SRC))
+LIB_YANS_PYTHON=$(TOP_BUILD_DIR)/python/$(call gen-pymod-name, _yans)
+$(YANS_PYTHON_OBJ): CXXFLAGS+=$(call gen-pymod-build-flags)
+$(LIB_YANS_PYTHON): LDFLAGS+=$(call gen-pymod-link-flags) -lyans -L$(TOP_BUILD_DIR)
+$(LIB_YANS_PYTHON): $(YANS_PYTHON_OBJ)
 	$(CXX) $(LDFLAGS) -o $@ $(filter %.o,$^)
-DIRS += $(call gen-dirs, $(MODELS_PYTHON_SRC))
-build-python: $(LIB_MODELS_PYTHON)
+DIRS += $(call gen-dirs, $(YANS_PYTHON_SRC))
+build-python: $(LIB_YANS_PYTHON)
+
 
 # building of sample applications
 SAMPLES_SRC= \

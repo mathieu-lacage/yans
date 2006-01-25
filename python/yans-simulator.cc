@@ -22,9 +22,16 @@
 
 void export_simulator (void);
 void export_function_holder (void);
+void export_thread (void);
+void export_packet (void);
+void export_periodic_generator (void);
 
-BOOST_PYTHON_MODULE(_simulator)
+
+BOOST_PYTHON_MODULE(_yans)
 {
 	export_simulator ();
 	export_function_holder ();
+	export_thread ();
+	export_packet ();
+	export_periodic_generator ();
 }

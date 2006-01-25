@@ -26,5 +26,5 @@ FunctionHolder::get_context (void)
 void 
 export_function_holder (void)
 {
-	class_<FunctionHolder, std::auto_ptr<FunctionHolder>, boost::noncopyable> ("FunctionHolder", init<object, object> ());
+	class_<FunctionHolder, boost::noncopyable> ("FunctionHolder", init<object, object> ());
 }
