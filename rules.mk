@@ -1,20 +1,24 @@
 # below are generic rules.
 
+define gen-gcc-dep
+-Wp$(COMMA)-M$(COMMA)-MP$(COMMA)-MM$(COMMA)-MT$(COMMA)$(strip $(2))$(COMMA)-MF$(COMMA)$(call gen-dep, $(1))
+endef
+
 define CXXOBJ_template
 $(2): $(1)
-	$(CXX) $(3) -Wp,-M,-MP,-MM,-MT,$$(strip $(2)),-MF,$$(call gen-dep, $(1)) -c -o $(2) $(1)
+	@$(call display-compile,$(CXX) $(3) $$(call gen-gcc-dep,$(1),$(2)) -c -o $(2) $(1))
 endef
 define COBJ_template
 $(2): $(1)
-	$(CC) $(3) -Wp,-M,-MP,-MM,-MT,$$(strip $(2)),-MF,$$(call gen-dep, $(1)) -c -o $(2) $(1)
+	@$(call display-compile,$(CC) $(3) $$(call gen-gcc-dep,$(1),$(2)) -c -o $(2) $(1))
 endef
 define PYOBJ_template
 $(2): $(1)
-	cp $(1) $(2)
+	@$(call display-compile,cp $(1) $(2))
 endef
 define ASOBJ_template
 $(2): $(1)
-	$(AS) $(3) -o $(2) $(1)
+	@$(call display-compile,$(AS) $(3) -o $(2) $(1))
 endef
 
 define OUTPUT_template
@@ -59,7 +63,7 @@ $$(foreach src,$$(ASSRC),                          \
 	)                                          \
 )
 $$($(1)_OUTPUT): $$($(1)_OBJ)
-	$$(CXX) $$($(1)_LDFLAGS) -o $$@ $$(filter %.o,$$^)
+	@$(call display-compile,$$(CXX) $$($(1)_LDFLAGS) -o $$@ $$(filter %.o,$$^))
 endef
 
 $(foreach output,$(ALL),$(eval $(call OUTPUT_template,$(output))))
