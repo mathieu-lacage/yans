@@ -25,6 +25,7 @@ void export_function_holder (void);
 void export_thread (void);
 void export_packet (void);
 void export_periodic_generator (void);
+void export_traffic_analyser (void);
 
 
 BOOST_PYTHON_MODULE(_yans)
@@ -34,4 +35,5 @@ BOOST_PYTHON_MODULE(_yans)
 	export_thread ();
 	export_packet ();
 	export_periodic_generator ();
+	export_traffic_analyser ();
 }

@@ -3,10 +3,16 @@
 #include <boost/python.hpp>
 #include "periodic-generator.h"
 #include "export-callback.tcc"
+#include "callback.tcc"
 #include "packet.h"
 
 using namespace boost::python;
 using namespace yans;
+
+void set_send_callback_cpp (PeriodicGenerator *self, Callback<void (Packet *)> *callback)
+{
+	self->set_send_callback (callback);
+}
 
 void set_send_callback_python (PeriodicGenerator *self, FunctionHolder holder)
 {
@@ -22,4 +28,5 @@ void export_periodic_generator (void)
 	generator.def ("stop_at", &PeriodicGenerator::stop_at);
 
 	generator.def ("set_send_callback", &set_send_callback_python);
+	generator.def ("set_send_callback", &set_send_callback_cpp);
 }

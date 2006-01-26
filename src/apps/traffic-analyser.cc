@@ -20,7 +20,7 @@
  */
 
 
-#include "traffic-analyzer.h"
+#include "traffic-analyser.h"
 #include "population-analysis.h"
 #include "packet.h"
 #include "simulator.h"
@@ -28,13 +28,13 @@
 
 namespace yans {
 
-TrafficAnalyzer::TrafficAnalyzer ()
+TrafficAnalyser::TrafficAnalyser ()
 {
 	m_previous_arrival = -1.0;
 	m_data = new PopulationAnalysis ();
 	m_inter_arrival_time = new PopulationAnalysis ();
 }
-TrafficAnalyzer::~TrafficAnalyzer ()
+TrafficAnalyser::~TrafficAnalyser ()
 {
 	delete m_data;
 	delete m_inter_arrival_time;
@@ -42,7 +42,7 @@ TrafficAnalyzer::~TrafficAnalyzer ()
 
 
 void 
-TrafficAnalyzer::receive (Packet *packet)
+TrafficAnalyser::receive (Packet *packet)
 {
 	m_data->add_term (packet->get_size ());
 	double now = Simulator::now_s ();
@@ -53,7 +53,7 @@ TrafficAnalyzer::receive (Packet *packet)
 }
 
 void 
-TrafficAnalyzer::print_stats (void)
+TrafficAnalyser::print_stats (void)
 {
 	std::cout << "received " << m_data->get_n () << " packets." << std::endl
 		  << " packet size avg: " << m_data->get_mean () << ", std dev: " << m_data->get_standard_deviation () << std::endl

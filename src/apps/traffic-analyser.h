@@ -20,8 +20,8 @@
  */
 
 
-#ifndef TRAFFIC_ANALYZER_H
-#define TRAFFIC_ANALYZER_H
+#ifndef TRAFFIC_ANALYSER_H
+#define TRAFFIC_ANALYSER_H
 
 #include <stdint.h>
 
@@ -30,10 +30,10 @@ namespace yans {
 class Packet;
 class PopulationAnalysis;
 
-class TrafficAnalyzer {
+class TrafficAnalyser {
 public:
-	TrafficAnalyzer ();
-	~TrafficAnalyzer ();
+	TrafficAnalyser ();
+	~TrafficAnalyser ();
 
 	void receive (Packet *packet);
 
@@ -49,4 +49,4 @@ private:
 
 
 
-#endif /* TRAFFIC_ANALYZER_H */
+#endif /* TRAFFIC_ANALYSER_H */

@@ -85,7 +85,7 @@ YANS_SRC= \
 	src/apps/tcp-source.cc \
 	src/apps/tcp-sink.cc \
 	src/apps/periodic-generator.cc \
-	src/apps/traffic-analyzer.cc \
+	src/apps/traffic-analyser.cc \
 	test/test.cc \
 	$(NULL)
 YANS_CXXFLAGS=$(CXXFLAGS) $(call gen-lib-build-flags)
@@ -161,6 +161,7 @@ YANS_PYTHON_SRC= \
 	python/yans/simulator/__init__.py \
 	python/export-thread.cc \
 	python/export-periodic-generator.cc \
+	python/export-traffic-analyser.cc \
 	python/export-packet.cc \
 	python/test-periodic-generator.py \
 	samples/test-simulator.py \

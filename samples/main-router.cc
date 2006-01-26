@@ -29,7 +29,7 @@
 #include "host-tracer.h"
 #include "network-interface-tracer.h"
 #include "periodic-generator.h"
-#include "traffic-analyzer.h"
+#include "traffic-analyser.h"
 
 using namespace yans;
 
@@ -117,20 +117,20 @@ int main (int argc, char *argv[])
 	generator->stop_at (10.0);
 	generator->set_send_callback (make_callback (&UdpSource::send, source));
 
-	TrafficAnalyzer *analyzer = new TrafficAnalyzer ();
-	sink->set_receive_callback (make_callback (&TrafficAnalyzer::receive, analyzer));
+	TrafficAnalyser *analyser = new TrafficAnalyser ();
+	sink->set_receive_callback (make_callback (&TrafficAnalyser::receive, analyser));
 
 	/* run simulation */
 	Simulator::run ();
 
-	analyzer->print_stats ();
+	analyser->print_stats ();
 
 
 	/* destroy network */
 	delete source;
 	delete generator;
 	delete sink;
-	delete analyzer;
+	delete analyser;
 	delete hclient;
 	delete hserver;
 	delete hrouter;
