@@ -1,7 +1,6 @@
+all: build
+
 include ./functions.mk
-
-all: dirs build build-python
-
 include ./platform.mk
 
 TOP_BUILD_DIR=$(TOP)/bin
@@ -89,31 +88,68 @@ YANS_SRC= \
 	src/apps/traffic-analyzer.cc \
 	test/test.cc \
 	$(NULL)
+YANS_CXXFLAGS=$(CXXFLAGS) $(call gen-lib-build-flags)
+YANS_CFLAGS=$(CFLAGS) $(call gen-lib-build-flags)
+YANS_LDFLAGS=$(LDFLAGS) $(call gen-lib-link-flags)
+YANS_OUTPUT=$(TOP_BUILD_DIR)/$(call gen-lib-name, yans)
 ifeq ($(TCP),bsd)
 YANS_SRC += \
 	src/ipv4/tcp-bsd/tcp-bsd-connection.cc
-CXXFLAGS += -DTCP_USE_BSD
-CXXFLAGS += -I$(TOP_SRC_DIR)/src/ipv4/tcp-bsd/
+YANS_CXXFLAGS += -DTCP_USE_BSD
+YANS_CXXFLAGS += -I$(TOP_SRC_DIR)/src/ipv4/tcp-bsd/
 endif
-YANS_OBJ=$(call gen-obj, $(YANS_SRC))
-LIB_YANS=$(TOP_BUILD_DIR)/$(call gen-lib-name, yans)
-$(YANS_OBJ): CXXFLAGS += $(call gen-lib-build-flags)
-$(YANS_OBJ): CFLAGS += $(call gen-lib-build-flags)
-$(LIB_YANS): LDFLAGS += $(call gen-lib-link-flags)
-$(LIB_YANS): $(YANS_OBJ)
-	$(CXX) $(LDFLAGS) -o $@ $(filter %.o,$^)
-DIRS += $(call gen-dirs, $(YANS_SRC))
-build: $(LIB_YANS)
 
 
 # building of main-test
-MAIN_TEST_SRC=test/main-test.cc
-MAIN_TEST_OBJ=$(call gen-obj, $(MAIN_TEST_SRC))
-MAIN_TEST=$(call gen-bin, test/main-test)
-$(MAIN_TEST): $(MAIN_TEST_OBJ)
-	$(CXX) $(CXXFLAGS) -lyans -L$(TOP_BUILD_DIR) -o $@ $^
-DIRS += $(call gen-dirs, $(YANS_SRC))
-build: $(MAIN_TEST)
+TEST_SRC=test/main-test.cc
+TEST_OUTPUT=$(call gen-bin, test/main-test)
+TEST_CXXFLAGS=$(CXXFLAGS)
+TEST_LDFLAGS=$(LDFLAGS) -lyans -L$(TOP_BUILD_DIR)
+
+# building of sample applications
+SAMPLE_CXX_SIMU_SRC= \
+	samples/main-forwarding-simulator.cc \
+	$(NULL)
+SAMPLE_CXX_SIMU_OUTPUT=$(call gen-bin, $(basename $(SAMPLE_CXX_SIMU_SRC)))
+SAMPLE_CXX_SIMU_CXXFLAGS=$(CXXFLAGS)
+SAMPLE_CXX_SIMU_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans
+
+SAMPLE_CXX_SIMUTEMP_SRC= \
+	samples/main-forwarding-simulator-template.cc \
+	$(NULL)
+SAMPLE_CXX_SIMUTEMP_OUTPUT=$(call gen-bin, $(basename $(SAMPLE_CXX_SIMUTEMP_SRC)))
+SAMPLE_CXX_SIMUTEMP_CXXFLAGS=$(CXXFLAGS)
+SAMPLE_CXX_SIMUTEMP_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans
+
+SAMPLE_CXX_SIMPLE_SRC= \
+	samples/main-simple.cc \
+	$(NULL)
+SAMPLE_CXX_SIMPLE_OUTPUT=$(call gen-bin, $(basename $(SAMPLE_CXX_SIMPLE_SRC)))
+SAMPLE_CXX_SIMPLE_CXXFLAGS=$(CXXFLAGS)
+SAMPLE_CXX_SIMPLE_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans
+
+SAMPLE_CXX_ROUTER_SRC= \
+	samples/main-router.cc \
+	$(NULL)
+SAMPLE_CXX_ROUTER_OUTPUT=$(call gen-bin, $(basename $(SAMPLE_CXX_ROUTER_SRC)))
+SAMPLE_CXX_ROUTER_CXXFLAGS=$(CXXFLAGS)
+SAMPLE_CXX_ROUTER_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans
+
+SAMPLE_CXX_TCP_SRC= \
+	samples/main-tcp.cc \
+	$(NULL)
+SAMPLE_CXX_TCP_OUTPUT=$(call gen-bin, $(basename $(SAMPLE_CXX_TCP_SRC)))
+SAMPLE_CXX_TCP_CXXFLAGS=$(CXXFLAGS)
+SAMPLE_CXX_TCP_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans
+
+SAMPLE_CXX_THREAD_SRC= \
+	samples/main-thread.cc \
+	$(NULL)
+SAMPLE_CXX_TREAD_OUTPUT=$(call gen-bin, $(basename $(SAMPLE_CXX_THREAD_SRC)))
+SAMPLE_CXX_TREAD_CXXFLAGS=$(CXXFLAGS)
+SAMPLE_CXX_TREAD_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans
+
+
 
 
 # building of python bindings.
@@ -127,76 +163,25 @@ YANS_PYTHON_SRC= \
 	python/export-periodic-generator.cc \
 	python/export-packet.cc \
 	python/test-periodic-generator.py \
-	$(NULL)
-YANS_PYTHON_OBJ=$(call gen-obj, $(YANS_PYTHON_SRC))
-LIB_YANS_PYTHON=$(TOP_BUILD_DIR)/python/$(call gen-pymod-name, _yans)
-$(YANS_PYTHON_OBJ): CXXFLAGS+=$(call gen-pymod-build-flags)
-$(LIB_YANS_PYTHON): LDFLAGS+=$(call gen-pymod-link-flags) -lyans -L$(TOP_BUILD_DIR)
-$(LIB_YANS_PYTHON): $(YANS_PYTHON_OBJ)
-	$(CXX) $(LDFLAGS) -o $@ $(filter %.o,$^)
-DIRS += $(call gen-dirs, $(YANS_PYTHON_SRC))
-build-python: $(LIB_YANS_PYTHON)
-
-
-# building of sample applications
-SAMPLES_SRC= \
-	samples/main-simulator.cc \
-	samples/main-forwarding-simulator.cc \
-	samples/main-forwarding-simulator-template.cc \
-	samples/main-simple.cc \
-	samples/main-router.cc \
-	samples/main-tcp.cc \
-	samples/main-thread.cc \
 	samples/test-simulator.py \
 	samples/test-thread.py \
 	samples/test-simulator-gc.py \
 	$(NULL)
-
-DIRS += $(call gen-dirs, $(SAMPLES_SRC))
-SAMPLES_CPP=$(call gen-bin, $(basename $(filter %.cc,$(SAMPLES_SRC))))
-$(SAMPLES_CPP): %:%.o
-	$(CXX) $(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans -o $@ $^
-SAMPLES_PY=$(call gen-bin, $(filter %.py,$(SAMPLES_SRC)))
-build: $(SAMPLES_CPP) $(SAMPLES_PY)
+YANS_PYTHON_OUTPUT=$(TOP_BUILD_DIR)/python/$(call gen-pymod-name, _yans)
+YANS_PYTHON_CXXFLAGS=$(CXXFLAGS) $(call gen-pymod-build-flags)
+YANS_PYTHON_LDFLAGS=$(LDFLAGS) $(call gen-pymod-link-flags) -lyans -L$(TOP_BUILD_DIR)
 
 
-# below are generic rules.
+ALL= \
+	YANS \
+	TEST \
+	SAMPLE_CXX_SIMPLE \
+	SAMPLE_CXX_ROUTER \
+	SAMPLE_CXX_TCP \
+	SAMPLE_CXX_SIMU \
+	SAMPLE_CXX_SIMUTEMP \
+	SAMPLE_CXX_THREAD \
+	YANS_PYTHON \
+	$(NULL)
 
-TMP_DIRS=$(sort $(DIRS))
-dirs: $(TMP_DIRS)
-$(TMP_DIRS):
-	mkdir -p $@;
-
-.PHONY: $(SUBDIRS)
-$(SUBDIRS):
-	@$(MAKE) -C $@
-
-$(TOP_BUILD_DIR)/%.o:%.s
-	$(AS) $(ASFLAGS) -o $@ $<
-$(TOP_BUILD_DIR)/%.py:%.py
-	cp $< $@
-$(TOP_BUILD_DIR)/%.o:%.cc
-	$(CXX) $(CXXFLAGS) -c -o $@ $<
-$(TOP_BUILD_DIR)/%.o:%.c
-	$(CC) $(CFLAGS) -c -o $@ $<
-
-clean: depsclean
-	find ./ -name '*~'|xargs rm -f 2>/dev/null;
-	rm -rf $(TOP_BUILD_DIR) 2>/dev/null;
-
-depsclean:
-	rm -f .deps 2>/dev/null
-
-.deps:
-	@echo "Generating dependency information.";
-	@rm -f .deps 2>/dev/null; touch .deps;
-	@-for f in `find . -name '*.c'`; do \
-		TARGET=`echo $(TOP_BUILD_DIR)/$$f|sed -e 's/\.c$$/\.o/' -e 's/\/\.\//\//'`; \
-		$(CC) $(CFLAGS) -E -M -MP -MM -MT $$TARGET $$f 2>/dev/null >> .deps; \
-	done;
-	@-for f in `find . -name '*.cc'`; do \
-		TARGET=`echo $(TOP_BUILD_DIR)/$$f|sed -e 's/\.cc$$/\.o/' -e 's/\/\.\//\//'`; \
-		$(CXX) $(CXXFLAGS) -E -M -MP -MM -MT $$TARGET $$f 2>/dev/null >> .deps; \
-	done;
-
--include .deps
+include rules.mk
