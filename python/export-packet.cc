@@ -2,7 +2,6 @@
 
 #include <boost/python.hpp>
 #include "packet.h"
-#include "export-callback.tcc"
 
 using namespace boost::python;
 using namespace yans;
