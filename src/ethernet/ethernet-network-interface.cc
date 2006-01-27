@@ -45,7 +45,9 @@ std::cout << "ETHERNET TRACE " << Simulator::now_s () << " " << x << std::endl;
 namespace yans {
 
 EthernetNetworkInterface::EthernetNetworkInterface (char const *name)
-	: m_name (new std::string (name))
+	: m_name (new std::string (name)),
+	  m_cable (0),
+	  m_tracer (0)
 {
 	m_arp = new Arp (this);
 	m_arp->set_sender (make_callback (&EthernetNetworkInterface::send_data, this),
@@ -57,12 +59,16 @@ EthernetNetworkInterface::~EthernetNetworkInterface ()
 {
 	delete m_name;
 	m_name = (std::string *)0xdeadbeaf;
-	m_cable->unref ();
-	m_cable = (Cable *)0xdeadbeaf;
 	delete m_arp;
 	m_arp = (Arp *)0xdeadbeaf;
-	delete m_tracer;
-	m_tracer = (NetworkInterfaceTracer *)0xdeadbeaf;
+	if (m_cable != 0) {
+		m_cable->unref ();
+		m_cable = (Cable *)0xdeadbeaf;
+	}
+	if (m_tracer != 0) {
+		delete m_tracer;
+		m_tracer = (NetworkInterfaceTracer *)0xdeadbeaf;
+	}
 }
 void 
 EthernetNetworkInterface::set_mtu (uint16_t mtu)
