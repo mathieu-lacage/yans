@@ -36,7 +36,7 @@ class Callback;
 
 
 template<typename R>
-class Callback<R ()> {
+class Callback<R (void)> {
 public:
 	virtual ~Callback () {}
 	virtual R operator() (void) = 0;
@@ -71,6 +71,7 @@ public:
 		return (m_obj->*m_function) ();
 	}
 private:
+	Callback0 () {}
 	T *m_obj;
 	F m_function;
 };
@@ -88,6 +89,7 @@ public:
 		return (m_obj->*m_function) (a1);
 	}
 private:
+	Callback1 () {}
 	T *m_obj;
 	F m_function;
 };
@@ -105,6 +107,7 @@ public:
 		return (m_obj->*m_function) (a1, a2);
 	}
 private:
+	Callback2 () {}
 	T *m_obj;
 	F m_function;
 };
