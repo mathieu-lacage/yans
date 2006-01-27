@@ -31,26 +31,28 @@ namespace yans {
 
 class empty {};
 
+class CallbackBase {};
+
 template<typename R, typename T1 = empty, typename T2 = empty>
-class Callback;
+class Callback : public CallbackBase {};
 
 
 template<typename R>
-class Callback<R (void)> {
+class Callback<R (void)> : public CallbackBase {
 public:
 	virtual ~Callback () {}
 	virtual R operator() (void) = 0;
 };
 
 template<typename R, typename T1>
-class Callback<R (T1)> {
+class Callback<R (T1)> : public CallbackBase {
  public:
 	virtual ~Callback () {}
 	virtual R operator() (T1) = 0;
 };
 
 template<typename R, typename T1, typename T2>
-class Callback<R (T1, T2)> {
+class Callback<R (T1, T2)> : public CallbackBase {
  public:
 	virtual ~Callback () {}
 	virtual R operator() (T1, T2) = 0;
