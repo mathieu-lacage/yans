@@ -13,5 +13,6 @@ void export_cable (void)
 		boost::noncopyable> 
 		cable
 		("Cable", init<double, double> ());
+	cable.def (init<> ());
 	cable.def ("connect_to", &Cable::connect_to);
 }
