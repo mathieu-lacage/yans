@@ -5,6 +5,7 @@ from _yans import PeriodicGenerator
 from _yans import TrafficAnalyser
 from _yans import Packet
 from _yans import Ipv4Address
+from _yans import Ipv4Mask
 from _yans import MacAddress
 from _yans import Host
 from _yans import NetworkInterface
