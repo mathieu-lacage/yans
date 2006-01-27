@@ -176,6 +176,7 @@ YANS_PYTHON_SRC= \
 	samples/test-simulator.py \
 	samples/test-thread.py \
 	samples/test-simulator-gc.py \
+	samples/test-simple.py \
 	$(NULL)
 YANS_PYTHON_OUTPUT=$(TOP_BUILD_DIR)/python/$(call gen-pymod-name, _yans)
 YANS_PYTHON_CXXFLAGS=$(CXXFLAGS) $(call gen-pymod-build-flags)
