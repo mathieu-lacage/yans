@@ -27,7 +27,7 @@ template<>
 struct ExportCallbackTraits<yans::Packet*>
 {
 	typedef boost::shared_ptr<yans::Packet> type;
-	static type make_arg(yans::Packet *packet )
+	static type make_arg(yans::Packet *packet)
 	{
 		packet->ref ();
 		return boost::shared_ptr<yans::Packet> (packet, PacketDeleter ());

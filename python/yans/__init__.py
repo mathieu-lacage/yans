@@ -4,6 +4,14 @@ from simulator import *
 from _yans import PeriodicGenerator
 from _yans import TrafficAnalyser
 from _yans import Packet
+from _yans import Ipv4Address
+from _yans import MacAddress
+from _yans import Host
+from _yans import NetworkInterface
+from _yans import EthernetNetworkInterface
+from _yans import Cable
+from _yans import UdpSource;
+from _yans import UdpSink;
 
 
 class MyPyFunction0Holder:
@@ -20,22 +28,13 @@ class MyPyFunctionNHolder:
         self.m_function (*self.m_args)
 
 def make_callback(function, *args):
-    if inspect.ismethod (function):
-        name = "_yans.make_" + function.im_class.__name__ + "_" + function.__name__ + "_callback"
-        command = name + '(args[0])';
-    else:
-        name = method.__name__ + "_callback"
-        command = name + '()'
-    print "eval " + command
-    holder = eval (command)
     try:
         if inspect.ismethod (function):
-            name = "yans.make_" + function.im_class.__name__ + "_" + function.__name__ + "_callback"
+            name = "_yans." + function.im_class.__name__ + "_" + function.__name__ + "_callback"
             command = name + '(args[0])';
         else:
-            name = "yans.make_" + method.__name__ + "_callback"
+            name = "_yans." + method.__name__ + "_callback"
             command = name + '()'
-        print "eval " + command
         holder = eval (command)
     except:
         if len(args) == 0:

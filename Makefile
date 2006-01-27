@@ -18,7 +18,7 @@ INCLUDES=\
  -I$(TOP_SRC_DIR)/src/os-model \
  -I$(TOP_SRC_DIR)/src/apps \
  $(NULL)
-FLAGS=-Wall -Werror -O0 -g2
+FLAGS=-Wall -Werror -O0 -gdwarf-2 -g3
 PYTHON_PREFIX_INC=/usr/include/python2.3
 PYTHON_PREFIX_LIB=/usr/lib
 PYTHON_BIN=/usr/bin/python2.3
@@ -160,9 +160,18 @@ YANS_PYTHON_SRC= \
 	python/yans/__init__.py \
 	python/yans/simulator/__init__.py \
 	python/export-thread.cc \
+	python/export-callback.cc \
 	python/export-periodic-generator.cc \
 	python/export-traffic-analyser.cc \
 	python/export-packet.cc \
+	python/export-ipv4-address.cc \
+	python/export-mac-address.cc \
+	python/export-host.cc \
+	python/export-udp-sink.cc \
+	python/export-udp-source.cc \
+	python/export-network-interface.cc \
+	python/export-ethernet-network-interface.cc \
+	python/export-cable.cc \
 	python/test-periodic-generator.py \
 	samples/test-simulator.py \
 	samples/test-thread.py \

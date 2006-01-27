@@ -23,9 +23,18 @@
 void export_simulator (void);
 void export_function_holder (void);
 void export_thread (void);
+void export_callback (void);
 void export_packet (void);
 void export_periodic_generator (void);
 void export_traffic_analyser (void);
+void export_host (void);
+void export_udp_source (void);
+void export_udp_sink (void);
+void export_ipv4_address (void);
+void export_mac_address (void);
+void export_network_interface (void);
+void export_ethernet_network_interface (void);
+void export_cable (void);
 
 
 BOOST_PYTHON_MODULE(_yans)
@@ -33,7 +42,16 @@ BOOST_PYTHON_MODULE(_yans)
 	export_simulator ();
 	export_function_holder ();
 	export_thread ();
+	export_callback ();
 	export_packet ();
 	export_periodic_generator ();
 	export_traffic_analyser ();
+	export_host ();
+	export_udp_source ();
+	export_udp_sink ();
+	export_ipv4_address ();
+	export_mac_address ();
+	export_network_interface ();
+	export_ethernet_network_interface ();
+	export_cable ();
 }
