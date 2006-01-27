@@ -9,7 +9,7 @@ generator.stop_at (10.0)
 
 analyser = TrafficAnalyser ()
 generator.set_send_callback (make_callback (TrafficAnalyser.receive, analyser))
-generator.set_packet_interval (0.01)
+generator.set_packet_interval (0.000001)
 
 simulator.run ()
 analyser.print_stats ()

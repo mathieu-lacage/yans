@@ -52,8 +52,8 @@ public:
 	virtual R operator() (T1 a1) {
 		object function = m_holder.get_function ();
 		object context = m_holder.get_context ();
-		function (context, 
-			  ExportCallbackTraits<T1>::make_arg (a1));
+		return function (context, 
+				 ExportCallbackTraits<T1>::make_arg (a1));
 	}
 private:
 	FunctionHolder m_holder;
