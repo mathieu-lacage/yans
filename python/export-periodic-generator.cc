@@ -9,13 +9,13 @@
 using namespace boost::python;
 using namespace yans;
 #include <iostream>
-void set_send_callback_cpp (PeriodicGenerator *self, std::auto_ptr<CallbackBase> callback)
+static void set_send_callback_cpp (PeriodicGenerator *self, std::auto_ptr<CallbackBase> callback)
 {
 	self->set_send_callback (static_cast<Callback<void (Packet *)> *> (callback.get ()));
 	callback.release ();
 }
 
-void set_send_callback_python (PeriodicGenerator *self, FunctionHolder holder)
+static void set_send_callback_python (PeriodicGenerator *self, FunctionHolder holder)
 {
 	self->set_send_callback (new ExportCallback1<void, Packet *> (holder));
 }
