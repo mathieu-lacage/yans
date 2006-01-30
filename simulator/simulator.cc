@@ -24,6 +24,7 @@
 #include "event-heap.h"
 #include "event.h"
 #include <math.h>
+#include <cassert>
 
 #define noTRACE_SIMU 1
 

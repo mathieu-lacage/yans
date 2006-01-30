@@ -28,7 +28,7 @@
 #include "simulator.h"
 #include "event.tcc"
 
-#include <iostream>
+#include <cassert>
 
 namespace yans {
 
