@@ -9,7 +9,6 @@ using namespace yans;
 void export_network_interface (void)
 {
 	class_<NetworkInterface, 
-		std::auto_ptr<NetworkInterface>, 
 		boost::noncopyable> 
 		interface 
 		("NetworkInterface", no_init);
