@@ -21,6 +21,7 @@
 
 #include "loopback-interface.h"
 #include "ipv4.h"
+#include <cassert>
 
 namespace yans {
 

@@ -21,6 +21,7 @@
 
 #include "chunk-icmp.h"
 #include "buffer.h"
+#include <cassert>
 
 namespace yans {
 

@@ -22,6 +22,7 @@
 #include "semaphore.h"
 #include "fiber-scheduler.h"
 #include "fiber.h"
+#include <cassert>
 
 #define noTRACE_SEM 1
 

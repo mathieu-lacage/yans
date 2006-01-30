@@ -24,6 +24,7 @@
 #include "network-interface.h"
 #include "chunk-arp.h"
 #include "packet.h"
+#include <cassert>
 
 #define noTRACE_ARP 1
 

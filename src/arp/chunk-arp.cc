@@ -21,6 +21,7 @@
 
 #include "chunk-arp.h"
 #include "buffer.h"
+#include <cassert>
 
 namespace yans {
 

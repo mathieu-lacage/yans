@@ -25,6 +25,7 @@
 #include "write-file.h"
 #include "callback.tcc"
 #include "tag-manager.h"
+#include <cassert>
 
 #define TRACE_PACKET 1
 

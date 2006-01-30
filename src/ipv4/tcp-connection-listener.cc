@@ -28,6 +28,7 @@
 #include "ipv4-route.h"
 #include "tcp.h"
 #include "ipv4-end-point.h"
+#include <cassert>
 
 namespace yans {
 
