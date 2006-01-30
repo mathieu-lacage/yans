@@ -58,6 +58,7 @@ private:
 };
 
 DataWriterPrivate::DataWriterPrivate ()
+	: m_current (0)
 {}
 DataWriterPrivate::~DataWriterPrivate ()
 {
