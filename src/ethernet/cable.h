@@ -23,7 +23,6 @@
 #define CABLE_H
 
 #include <list>
-#include "ref-count.tcc"
 
 namespace yans {
 
@@ -42,9 +41,6 @@ public:
 	 */
 	Cable (double length, double bandwidth);
 
-	void ref (void);
-	void unref (void);
-
 	void connect_to (EthernetNetworkInterface *a,
 			 EthernetNetworkInterface *b);
 
@@ -55,7 +51,6 @@ private:
 	static const double SPEED_OF_LIGHT;
 	EthernetNetworkInterface *m_a;
 	EthernetNetworkInterface *m_b;
-	RefCount<Cable> m_ref;
 	double m_length;
 	double m_bandwidth;
 };

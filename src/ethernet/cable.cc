@@ -31,27 +31,15 @@ namespace yans {
 const double Cable::SPEED_OF_LIGHT = 300000000;
 
 Cable::Cable ()
-	: m_ref (this),
-	  m_length (100.0),
+	: m_length (100.0),
 	  m_bandwidth (1000000)
 {}
 
 Cable::Cable (double length, double bandwidth)
-	: m_ref (this),
-	  m_length (length),
+	: m_length (length),
 	  m_bandwidth (bandwidth)
 {}
 
-void
-Cable::ref (void)
-{
-	m_ref.ref ();
-}
-void
-Cable::unref (void)
-{
-	m_ref.unref ();
-}
 
 void 
 Cable::connect_to (EthernetNetworkInterface *a,

@@ -47,10 +47,8 @@ int main (int argc, char *argv[])
 	eth_router_server->set_mac_address (MacAddress ("00:00:00:00:00:04"));
 	Cable *client_cable = new Cable ();
 	client_cable->connect_to (eth_client, eth_router_client);
-	client_cable->unref ();
 	Cable *server_cable = new Cable ();
 	server_cable->connect_to (eth_server, eth_router_server);
-	server_cable->unref ();
 
 	/* associate ipv4 addresses to the ethernet network elements */
 	eth_client->set_ipv4_address (Ipv4Address ("192.168.0.2"));
@@ -127,6 +125,10 @@ int main (int argc, char *argv[])
 
 
 	/* destroy network */
+	delete eth_client;
+	delete eth_server;
+	delete client_cable;
+	delete server_cable;
 	delete source;
 	delete generator;
 	delete sink;

@@ -62,10 +62,7 @@ EthernetNetworkInterface::~EthernetNetworkInterface ()
 	m_name = (std::string *)0xdeadbeaf;
 	delete m_arp;
 	m_arp = (Arp *)0xdeadbeaf;
-	if (m_cable != 0) {
-		m_cable->unref ();
-		m_cable = (Cable *)0xdeadbeaf;
-	}
+	m_cable = (Cable *)0xdeadbeaf;
 	if (m_tracer != 0) {
 		delete m_tracer;
 		m_tracer = (NetworkInterfaceTracer *)0xdeadbeaf;
@@ -166,7 +163,6 @@ EthernetNetworkInterface::send (Packet *packet, Ipv4Address dest)
 void 
 EthernetNetworkInterface::connect_to (Cable *cable)
 {
-	cable->ref ();
 	m_cable = cable;
 }
 void 

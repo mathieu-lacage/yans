@@ -63,11 +63,6 @@ Host::~Host ()
 	delete m_udp;
 	delete m_tcp;
 	delete m_tracer;
-	for (NetworkInterfacesI i = m_interfaces.begin (); 
-	     i != m_interfaces.end (); 
-	     i++) {
-		delete (*i);
-	}
 	m_interfaces.erase (m_interfaces.begin (), m_interfaces.end ());
 }
 
