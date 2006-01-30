@@ -34,6 +34,7 @@ class SocketUdp;
 class Udp;
 class Tcp;
 class HostTracer;
+class LoopbackInterface;
 
 typedef std::vector<NetworkInterface *> NetworkInterfaces;
 typedef std::vector<NetworkInterface *>::const_iterator NetworkInterfacesCI;
@@ -64,6 +65,7 @@ private:
 	Udp *m_udp;
 	Tcp *m_tcp;
 	HostTracer *m_tracer;
+	LoopbackInterface *m_loopback;
 	std::string *m_root;
 };
 

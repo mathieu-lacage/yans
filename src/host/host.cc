@@ -44,13 +44,13 @@ Host::Host (char const *path)
 	m_tcp->set_ipv4 (m_ipv4);
 
 	m_routing_table = new Ipv4Route ();
-	LoopbackInterface *loopback = new LoopbackInterface ();
-	add_interface (loopback);
-	loopback->set_ipv4_address (Ipv4Address::get_loopback ());
-	loopback->set_ipv4_mask (Ipv4Mask::get_loopback ());
-	loopback->set_up ();
+	m_loopback = new LoopbackInterface ();
+	add_interface (m_loopback);
+	m_loopback->set_ipv4_address (Ipv4Address::get_loopback ());
+	m_loopback->set_ipv4_mask (Ipv4Mask::get_loopback ());
+	m_loopback->set_up ();
 	m_routing_table->add_host_route_to (Ipv4Address::get_loopback (),
-					    loopback);
+					    m_loopback);
 	m_root = new std::string (path);
 	m_tracer = new HostTracer (0);
 }
@@ -63,6 +63,7 @@ Host::~Host ()
 	delete m_udp;
 	delete m_tcp;
 	delete m_tracer;
+	delete m_loopback;
 	m_interfaces.erase (m_interfaces.begin (), m_interfaces.end ());
 }
 
