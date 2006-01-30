@@ -19,9 +19,9 @@ INCLUDES=\
  -I$(TOP_SRC_DIR)/src/apps \
  $(NULL)
 FLAGS=-Wall -Werror -O0 -gdwarf-2 -g3
-PYTHON_PREFIX_INC=/usr/include/python2.4
+PYTHON_PREFIX_INC=/usr/include/python2.3
 PYTHON_PREFIX_LIB=/usr/lib
-PYTHON_BIN=/usr/bin/python2.4
+PYTHON_BIN=/usr/bin/python2.3
 BOOST_PREFIX_LIB=/usr/lib
 BOOST_PREFIX_INC=/usr/include
 #TCP=bsd
