@@ -30,6 +30,9 @@ hserver = Host ('server')
 hclient.add_interface (eth_client)
 hserver.add_interface (eth_server)
 
+hclient.get_routing_table ().set_default_route (server_address, eth_client);
+hserver.get_routing_table ().set_default_route (client_address, eth_server);
+
 source = UdpSource (hclient)
 source.bind (client_address, 1025)
 source.set_peer (server_address, 1026)
