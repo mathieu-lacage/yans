@@ -29,6 +29,8 @@ hclient = Host ('client')
 hserver = Host ('server')
 hclient.add_interface (eth_client)
 hserver.add_interface (eth_server)
+eth_client.get_tracer ().enable_all ();
+eth_server.get_tracer ().enable_all ();
 
 hclient.get_routing_table ().set_default_route (server_address, eth_client);
 hserver.get_routing_table ().set_default_route (client_address, eth_server);
@@ -36,17 +38,17 @@ hserver.get_routing_table ().set_default_route (client_address, eth_server);
 source = UdpSource (hclient)
 source.bind (client_address, 1025)
 source.set_peer (server_address, 1026)
-source.unbind_at (11.0)
+source.unbind_at (110.0)
 
 sink = UdpSink (hserver)
 sink.bind (server_address, 1026)
-sink.unbind_at (11.0)
+sink.unbind_at (110.0)
 
 generator = PeriodicGenerator ()
-generator.set_packet_interval (0.01)
+generator.set_packet_interval (0.0001)
 generator.set_packet_size (100)
 generator.start_at (1.0)
-generator.stop_at (10.0)
+generator.stop_at (100.0)
 generator.set_send_callback (make_callback (UdpSource.send, source))
 
 analyser = TrafficAnalyser ()

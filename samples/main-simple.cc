@@ -61,8 +61,8 @@ int main (int argc, char *argv[])
 	//hserver->get_tracer ()->enable_all ();
 	hclient->add_interface (eth_client);
 	hserver->add_interface (eth_server);
-	eth_client->get_tracer ()->enable_all ();
-	eth_server->get_tracer ()->enable_all ();
+	//eth_client->get_tracer ()->enable_all ();
+	//eth_server->get_tracer ()->enable_all ();
 
 	/* setup the routing tables. */
 	hclient->get_routing_table ()->set_default_route (Ipv4Address ("192.168.0.2"),
@@ -74,18 +74,18 @@ int main (int argc, char *argv[])
 	UdpSource *source = new UdpSource (hclient);
 	source->bind (Ipv4Address ("192.168.0.3"), 1025);
 	source->set_peer (Ipv4Address ("192.168.0.2"), 1026);
-	source->unbind_at (11.0);
+	source->unbind_at (110.0);
 	/* create udp sink endpoint. */
 	UdpSink *sink = new UdpSink (hserver);
 	sink->bind (Ipv4Address ("192.168.0.2"), 1026);
-	sink->unbind_at (11.0);
+	sink->unbind_at (110.0);
 
 
 	PeriodicGenerator *generator = new PeriodicGenerator ();
-	generator->set_packet_interval (0.01);
+	generator->set_packet_interval (0.00001);
 	generator->set_packet_size (100);
 	generator->start_at (1.0);
-	generator->stop_at (10.0);
+	generator->stop_at (500.0);
 	generator->set_send_callback (make_callback (&UdpSource::send, source));
 
 	TrafficAnalyser *analyser = new TrafficAnalyser ();

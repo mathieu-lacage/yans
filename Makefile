@@ -18,7 +18,7 @@ INCLUDES=\
  -I$(TOP_SRC_DIR)/src/os-model \
  -I$(TOP_SRC_DIR)/src/apps \
  $(NULL)
-FLAGS=-Wall -Werror -O0 -gdwarf-2 -g3
+FLAGS=-Wall -Werror -O3 -gdwarf-2 -g3
 PYTHON_PREFIX_INC=/usr/include/python2.3
 PYTHON_PREFIX_LIB=/usr/lib
 PYTHON_BIN=/usr/bin/python2.3
