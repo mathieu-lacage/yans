@@ -10,9 +10,13 @@ void export_ethernet_network_interface (void)
 {
 	class_<EthernetNetworkInterface, 
 		bases<NetworkInterface>, 
+		std::auto_ptr<EthernetNetworkInterface>,
 		boost::noncopyable> 
 		ethernet
 		("EthernetNetworkInterface", 
 		 init<char const *> ());
+	implicitly_convertible<std::auto_ptr<EthernetNetworkInterface>,
+		std::auto_ptr<NetworkInterface> >();
+
 	ethernet.def ("set_mtu", &EthernetNetworkInterface::set_mtu);
 }

@@ -8,7 +8,11 @@ using namespace yans;
 
 void export_network_interface (void)
 {
-	class_<NetworkInterface, boost::noncopyable> interface ("NetworkInterface", no_init);
+	class_<NetworkInterface, 
+		std::auto_ptr<NetworkInterface>, 
+		boost::noncopyable> 
+		interface 
+		("NetworkInterface", no_init);
 	interface.def ("set_mac_address", &NetworkInterface::set_mac_address);
 	interface.def ("set_ipv4_address", &NetworkInterface::set_ipv4_address);
 	interface.def ("set_ipv4_mask", &NetworkInterface::set_ipv4_mask);

@@ -57,6 +57,7 @@ EthernetNetworkInterface::EthernetNetworkInterface (char const *name)
 
 EthernetNetworkInterface::~EthernetNetworkInterface ()
 {
+	assert (m_name != (std::string *)0xdeadbeaf);
 	delete m_name;
 	m_name = (std::string *)0xdeadbeaf;
 	delete m_arp;
