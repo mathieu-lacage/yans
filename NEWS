@@ -1,3 +1,10 @@
+Release 0.5 (2006-30-01)
+-----------
+
+This release features:
+   - improved python binding
+   - build fixes for older libcs
+
 Release 0.4 (2006-24-01)
 -----------
 
