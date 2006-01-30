@@ -79,6 +79,10 @@ UdpSource::send (Packet *packet)
 	/* route packet. */
 	Ipv4Route *routing_table = m_host->get_routing_table ();
 	Route *route = routing_table->lookup (m_peer_address);
+	if (route == 0) {
+		// no route to send packet to. !
+		return;
+	}
 	TagOutIpv4 *tag = new TagOutIpv4 (route);
 	tag->set_sport (m_end_point->get_local_port ());
 	tag->set_dport (m_peer_port);
