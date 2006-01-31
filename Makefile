@@ -53,6 +53,7 @@ YANS_SRC= \
 	src/common/population-analysis.cc \
 	src/common/data-writer.cc \
 	src/common/callback-test.cc \
+	src/common/traced-variable-test.cc \
 	src/ipv4/tag-ipv4.cc \
 	src/ipv4/ipv4-end-point.cc \
 	src/ipv4/ipv4-end-points.cc \

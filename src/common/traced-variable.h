@@ -73,6 +73,9 @@ public:
 		--*this;
 		return old;
 	}
+	operator uint32_t () const {
+		return get ();
+	}
 
 
 	void assign (uint32_t var) {
@@ -89,6 +92,7 @@ private:
 	uint32_t m_var;
 	ChangeNotifyCallback *m_callback;
 };
+
 
 TracedVariable &operator += (TracedVariable &lhs, TracedVariable const &rhs) {
 	uint32_t new_var =  lhs.get () + rhs.get ();
@@ -120,42 +124,20 @@ TracedVariable &operator >>= (TracedVariable &lhs, TracedVariable const &rhs) {
 	lhs.assign (new_var);
 	return lhs;
 }
-
-TracedVariable const operator + (TracedVariable lhs, TracedVariable const &rhs) {
-	return lhs += rhs;
+TracedVariable &operator &= (TracedVariable &lhs, TracedVariable const &rhs) {
+	uint32_t new_var =  lhs.get () & rhs.get ();
+	lhs.assign (new_var);
+	return lhs;
 }
-TracedVariable const operator - (TracedVariable lhs, TracedVariable const &rhs) {
-	return lhs -= rhs;
+TracedVariable &operator |= (TracedVariable &lhs, TracedVariable const &rhs) {
+	uint32_t new_var =  lhs.get () | rhs.get ();
+	lhs.assign (new_var);
+	return lhs;
 }
-TracedVariable const operator * (TracedVariable lhs, TracedVariable const &rhs) {
-	return lhs *= rhs;
-}
-TracedVariable const operator / (TracedVariable lhs, TracedVariable const &rhs) {
-	return lhs /= rhs;
-}
-TracedVariable const operator << (TracedVariable lhs, TracedVariable const &rhs) {
-	return lhs <<= rhs;
-}
-TracedVariable const operator >> (TracedVariable lhs, TracedVariable const &rhs) {
-	return lhs >>= rhs;
-}
-bool operator == (TracedVariable const &a, TracedVariable const &b) {
-	return (a.get () == b.get ())?true:false;
-}
-bool operator != (TracedVariable const &a, TracedVariable const &b) {
-	return (a.get () != b.get ())?true:false;
-}
-bool operator < (TracedVariable const &a, TracedVariable const &b) {
-	return (a.get () < b.get ())?true:false;
-}
-bool operator <= (TracedVariable const &a, TracedVariable const &b) {
-	return (a.get () <= b.get ())?true:false;
-}
-bool operator > (TracedVariable const &a, TracedVariable const &b) {
-	return (a.get () > b.get ())?true:false;
-}
-bool operator >= (TracedVariable const &a, TracedVariable const &b) {
-	return (a.get () >= b.get ())?true:false;
+TracedVariable &operator ^= (TracedVariable &lhs, TracedVariable const &rhs) {
+	uint32_t new_var =  lhs.get () ^ rhs.get ();
+	lhs.assign (new_var);
+	return lhs;
 }
 
 }; // namespace yans
