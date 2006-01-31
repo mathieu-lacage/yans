@@ -20,14 +20,15 @@
  */
 
 #include "traced-variable-test.h"
-#include "traced-variable.h"
+#include "traced-variable.tcc"
 
 namespace yans {
 
 bool 
 TracedVariableTest::run_tests (void)
 {
-	TracedVariable var, ovar;
+	TracedVariable<uint32_t> var, ovar, tmp;
+	uint32_t utmp;
 	var = 10;
 	ovar = var;
 
@@ -75,7 +76,6 @@ TracedVariableTest::run_tests (void)
 	var--;
 	--var;
 
-	TracedVariable tmp;
 	tmp = var + ovar;
 	tmp = var - ovar;
 	tmp = var / ovar;
@@ -127,7 +127,6 @@ TracedVariableTest::run_tests (void)
 	tmp ^= 1;
 
 
-	uint32_t utmp;
 	utmp = var + ovar;
 	utmp = var - ovar;
 	utmp = var / ovar;
