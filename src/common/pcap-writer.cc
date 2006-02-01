@@ -38,17 +38,20 @@ enum {
 
 PcapWriter::PcapWriter ()
 {
+	m_writer = 0;
 	m_write_callback = make_callback (&PcapWriter::write_data, this);
 }
 PcapWriter::~PcapWriter ()
 {
 	delete m_write_callback;
+	delete m_writer;
 }
 
-void 
-PcapWriter::set_data_writer (DataWriter *writer)
+void
+PcapWriter::open (char const *name)
 {
-	m_writer = writer;
+	m_writer = new DataWriter ();
+	m_writer->open (name);
 }
 
 void 
@@ -66,12 +69,14 @@ PcapWriter::write_header_ethernet (void)
 void 
 PcapWriter::write_packet (Packet *packet)
 {
-	uint64_t current = Simulator::now_us ();
-	write_32 ((current >> 32) & 0xffffffff);
-	write_32 (current & 0xffffffff);
-	write_32 (packet->get_size ());
-	write_32 (packet->get_size ());
-	packet->write (m_write_callback);
+	if (m_writer != 0) {
+		uint64_t current = Simulator::now_us ();
+		write_32 ((current >> 32) & 0xffffffff);
+		write_32 (current & 0xffffffff);
+		write_32 (packet->get_size ());
+		write_32 (packet->get_size ());
+		packet->write (m_write_callback);
+	}
 }
 
 void

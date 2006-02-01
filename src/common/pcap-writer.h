@@ -35,7 +35,7 @@ public:
 	PcapWriter ();
 	~PcapWriter ();
 
-	void set_data_writer (DataWriter *writer);
+	void open (char const *name);
 
 	void write_header_ethernet (void);
 
