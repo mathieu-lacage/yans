@@ -24,6 +24,7 @@ The current implementation features:
      debugged but, due to licensing incompatibility reasons, we have not
      included it in the simulator distribution.
    - a set of python bindings.
+   - an extensive packet logging/variable tracing framework.
 
 3) Build instructions
 ---------------------
@@ -103,7 +104,6 @@ In no particular order:
 	> etc.) Simulator should output this by default to stdout and if run in
 	> quiet mode should dump to some file like testname-output/testname.log
 	> or .stat
-- counter/statistics facility for models -- related to logging
 - timers: ability to cancel events.
 - renames:
   - Host -> Node
