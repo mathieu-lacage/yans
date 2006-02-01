@@ -31,7 +31,7 @@ public:
 	void mark_dead (void);
 	Packet *mark_alive (MacAddress mac_address);
 	void mark_wait_reply (Packet *waiting);
-	void update_wait_reply (Packet *waiting);
+	Packet *update_wait_reply (Packet *waiting);
 
 	bool is_dead (void);
 	bool is_alive (void);

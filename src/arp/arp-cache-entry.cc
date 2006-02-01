@@ -73,7 +73,7 @@ ArpCacheEntry::mark_alive (MacAddress mac_address)
 	return waiting;
 }
 
-void
+Packet *
 ArpCacheEntry::update_wait_reply (Packet *waiting)
 {
 	assert (m_state == WAIT_REPLY);
@@ -82,9 +82,9 @@ ArpCacheEntry::update_wait_reply (Packet *waiting)
 	 * replace it with this one.
 	 */
 	Packet *old = m_waiting;
-	old->unref ();
 	waiting->ref ();
 	m_waiting = waiting;
+	return old;
 }
 void 
 ArpCacheEntry::mark_wait_reply (Packet *waiting)
