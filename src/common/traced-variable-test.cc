@@ -21,14 +21,24 @@
 
 #include "traced-variable-test.h"
 #include "traced-variable.tcc"
+#include "callback.tcc"
 
 namespace yans {
+
+class Foo {
+public:
+	void notify (uint64_t old_val, uint64_t new_val) {}
+};
 
 bool 
 TracedVariableTest::run_tests (void)
 {
-	TracedVariable<uint32_t> var, ovar, tmp;
+	UiTracedVariable<uint32_t> var, ovar, tmp;
 	uint32_t utmp;
+	Foo *foo = new Foo ();
+	
+	var.set_callback (make_callback (&Foo::notify, foo));
+
 	var = 10;
 	ovar = var;
 
@@ -176,9 +186,6 @@ TracedVariableTest::run_tests (void)
 	utmp &= 1;
 	utmp |= 1;
 	utmp ^= 1;
-
-	
-
 
 	return true;
 }
