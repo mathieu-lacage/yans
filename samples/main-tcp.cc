@@ -26,8 +26,6 @@
 #include "simulator.h"
 #include "tcp-source.h"
 #include "tcp-sink.h"
-#include "host-tracer.h"
-#include "network-interface-tracer.h"
 #include "periodic-generator.h"
 #include "traffic-analyser.h"
 #include "event.h"

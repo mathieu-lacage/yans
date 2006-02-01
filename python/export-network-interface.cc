@@ -2,7 +2,6 @@
 
 #include <boost/python.hpp>
 #include "network-interface.h"
-#include "network-interface-tracer.h"
 
 using namespace boost::python;
 using namespace yans;

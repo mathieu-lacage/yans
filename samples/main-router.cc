@@ -26,8 +26,6 @@
 #include "simulator.h"
 #include "udp-source.h"
 #include "udp-sink.h"
-#include "host-tracer.h"
-#include "network-interface-tracer.h"
 #include "periodic-generator.h"
 #include "traffic-analyser.h"
 
