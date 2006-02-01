@@ -71,16 +71,6 @@ int main (int argc, char *argv[])
 	hclient = new Host ("client");
 	hserver = new Host ("server");
 	hrouter = new Host ("router");
-	//hclient->get_tracer ()->enable_all ();
-	//hserver->get_tracer ()->enable_all ();
-	hclient->add_interface (eth_client);
-	hserver->add_interface (eth_server);
-	hrouter->add_interface (eth_router_client);
-	hrouter->add_interface (eth_router_server);
-	eth_client->get_tracer ()->enable_all ();
-	eth_server->get_tracer ()->enable_all ();
-	eth_router_client->get_tracer ()->enable_all ();
-	eth_router_server->get_tracer ()->enable_all ();
 	eth_client->set_mtu (980);
 	eth_router_server->set_mtu (979);
 
