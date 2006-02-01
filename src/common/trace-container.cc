@@ -20,7 +20,6 @@
  */
 
 #include "trace-container.h"
-#include "traced-variable.tcc"
 #include "packet-logger.h"
 #include <utility>
 
@@ -48,10 +47,20 @@ TraceContainer::set_ui_variable_callback (char const *name, Callback<void (uint6
 }
 void 
 TraceContainer::set_si_variable_callback (char const *name, Callback<void (int64_t, int64_t)> *callback)
-{}
+{
+	for (SiListI i = m_si_list.begin (); i != m_si_list.end (); i++) {
+		if ((*i).second == name) {
+			(*i).first->set_callback (callback);
+			return;
+		}
+	}
+	assert (false);
+}
 void 
 TraceContainer::set_f_variable_callback (char const *name, Callback<void (double, double)> *callback)
-{}
+{
+	assert (false);
+}
 void 
 TraceContainer::set_packet_logger_callback (char const *name, Callback<void (Packet *)> *callback)
 {
@@ -75,10 +84,18 @@ TraceContainer::register_ui_variable (char const *name, UiTracedVariableBase *va
 }
 void 
 TraceContainer::register_si_variable (char const *name, SiTracedVariableBase *var)
-{}
+{
+	// ensure unicity
+	for (SiListI i = m_si_list.begin (); i != m_si_list.end (); i++) {
+		assert ((*i).second != name);
+	}
+	m_si_list.push_back (std::make_pair (var, name));
+}
 void 
 TraceContainer::register_f_variable (char const *name, FTracedVariableBase *var)
-{}
+{
+	assert (false);
+}
 
 void 
 TraceContainer::register_packet_logger (char const *name, PacketLogger *logger)

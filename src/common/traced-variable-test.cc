@@ -20,7 +20,8 @@
  */
 
 #include "traced-variable-test.h"
-#include "traced-variable.tcc"
+#include "ui-traced-variable.tcc"
+#include "si-traced-variable.tcc"
 #include "callback.tcc"
 
 namespace yans {
@@ -30,8 +31,8 @@ public:
 	void notify (uint64_t old_val, uint64_t new_val) {}
 };
 
-bool 
-TracedVariableTest::run_tests (void)
+void
+TracedVariableTest::run_unsigned_tests (void)
 {
 	UiTracedVariable<uint32_t> var, ovar, tmp;
 	uint32_t utmp;
@@ -186,6 +187,49 @@ TracedVariableTest::run_tests (void)
 	utmp &= 1;
 	utmp |= 1;
 	utmp ^= 1;
+}
+
+void
+TracedVariableTest::run_signed_unsigned_tests (void)
+{
+	unsigned short utmp = 10;
+	unsigned int uitmp = 7;
+	short stmp = 5;
+	utmp = stmp;
+	utmp += stmp;
+	uitmp = utmp;
+	utmp = uitmp;
+
+	UiTracedVariable<unsigned short> uvar = 10;
+	UiTracedVariable<unsigned int> uivar = 5;
+	SiTracedVariable<short> svar = 5;
+	SiTracedVariable<int> sivar = 5;
+	uvar = svar;
+	svar = uvar;
+	uvar += svar;
+	svar += uvar;
+
+	uvar = sivar;
+	sivar = uvar;
+	uvar += sivar;
+	sivar += uvar;
+
+	uivar = uvar;
+	uvar = uivar;
+	uivar += uvar;
+	uvar += uivar;
+
+	sivar = svar;
+	svar = sivar;
+	sivar += svar;
+	svar += sivar;
+}
+
+bool 
+TracedVariableTest::run_tests (void)
+{
+	run_unsigned_tests ();
+	run_signed_unsigned_tests ();
 
 	return true;
 }

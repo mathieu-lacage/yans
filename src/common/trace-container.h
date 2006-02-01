@@ -22,7 +22,9 @@
 #ifndef TRACE_CONTAINER_H
 #define TRACE_CONTAINER_H
 
-#include "traced-variable.tcc"
+#include "ui-traced-variable.tcc"
+#include "si-traced-variable.tcc"
+#include "f-traced-variable.tcc"
 #include "callback.tcc"
 #include <list>
 #include <string>

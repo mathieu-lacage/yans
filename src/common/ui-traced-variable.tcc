@@ -19,8 +19,8 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#ifndef TRACED_VARIABLE_TCC
-#define TRACED_VARIABLE_TCC
+#ifndef UI_TRACED_VARIABLE_TCC
+#define UI_TRACED_VARIABLE_TCC
 
 #include "callback.tcc"
 #include <stdint.h>
@@ -55,60 +55,9 @@ protected:
 private:
 	ChangeNotifyCallback *m_callback;
 };
-class SiTracedVariableBase {
-public:
-	typedef Callback<void (int64_t, int64_t)> ChangeNotifyCallback;
 
-	SiTracedVariableBase ()
-		: m_callback (0) {}
-
-	~SiTracedVariableBase () {
-		if (m_callback != 0) {
-			m_callback = (ChangeNotifyCallback *)0xdeadbeaf;
-			delete m_callback;
-		}
-	}
-
-	void set_callback(ChangeNotifyCallback *callback) {
-		assert (m_callback == 0);
-		m_callback = callback;
-	}
-protected:
-	void notify (int64_t old_val, int64_t new_val) {
-		if (m_callback != 0) {
-			(*m_callback) (old_val, new_val);
-		}
-	}
-private:
-	ChangeNotifyCallback *m_callback;
-};
-class FTracedVariableBase {
-public:
-	typedef Callback<void (double, double)> ChangeNotifyCallback;
-
-	FTracedVariableBase ()
-		: m_callback (0) {}
-
-	~FTracedVariableBase () {
-		if (m_callback != 0) {
-			m_callback = (ChangeNotifyCallback *)0xdeadbeaf;
-			delete m_callback;
-		}
-	}
-
-	void set_callback(ChangeNotifyCallback *callback) {
-		assert (m_callback == 0);
-		m_callback = callback;
-	}
-protected:
-	void notify (double old_val, double new_val) {
-		if (m_callback != 0) {
-			(*m_callback) (old_val, new_val);
-		}
-	}
-private:
-	ChangeNotifyCallback *m_callback;
-};
+template <typename T>
+class SiTracedVariable;
 
 
 template <typename T>
@@ -121,9 +70,14 @@ public:
 		: m_var (var)
 	{}
 
-
-	UiTracedVariable &operator = (UiTracedVariable const &o) {
-		assign (o.m_var);
+	template <typename TT>
+	UiTracedVariable &operator = (UiTracedVariable<TT> const &o) {
+		assign (o.get ());
+		return *this;
+	}
+	template <typename TT>
+	UiTracedVariable &operator = (SiTracedVariable<TT> const &o) {
+		assign (o.get ());
 		return *this;
 	}
 	UiTracedVariable &operator++ () {
@@ -256,4 +210,4 @@ UiTracedVariable<T> &operator ^= (UiTracedVariable<T> &lhs, U const &rhs) {
 
 }; // namespace yans
 
-#endif /* TRACED_VARIABLE_TCC */
+#endif /* UI_TRACED_VARIABLE_TCC */

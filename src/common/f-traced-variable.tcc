@@ -19,20 +19,44 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#ifndef TRACED_VARIABLE_TEST_H
-#define TRACED_VARIABLE_TEST_H
+#ifndef F_TRACED_VARIABLE_TCC
+#define F_TRACED_VARIABLE_TCC
 
-#ifdef RUN_SELF_TESTS
-#include "test.h"
+#include "callback.tcc"
+#include <stdint.h>
+#include <cassert>
+
 namespace yans {
-class TracedVariableTest: public Test {
+
+class FTracedVariableBase {
 public:
-	void run_unsigned_tests (void);
-	void run_signed_unsigned_tests (void);
-	virtual bool run_tests (void);
+	typedef Callback<void (double, double)> ChangeNotifyCallback;
+
+	FTracedVariableBase ()
+		: m_callback (0) {}
+
+	~FTracedVariableBase () {
+		if (m_callback != 0) {
+			m_callback = (ChangeNotifyCallback *)0xdeadbeaf;
+			delete m_callback;
+		}
+	}
+
+	void set_callback(ChangeNotifyCallback *callback) {
+		assert (m_callback == 0);
+		m_callback = callback;
+	}
+protected:
+	void notify (double old_val, double new_val) {
+		if (m_callback != 0) {
+			(*m_callback) (old_val, new_val);
+		}
+	}
+private:
+	ChangeNotifyCallback *m_callback;
 };
+
+
 }; // namespace yans
 
-#endif /* RUN_SELF_TESTS */
-
-#endif /* TRACED_VARIABLE_TEST_H */
+#endif /* F_TRACED_VARIABLE_TCC */
