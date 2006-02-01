@@ -16,10 +16,5 @@ void export_network_interface (void)
 	interface.def ("set_mac_address", &NetworkInterface::set_mac_address);
 	interface.def ("set_ipv4_address", &NetworkInterface::set_ipv4_address);
 	interface.def ("set_ipv4_mask", &NetworkInterface::set_ipv4_mask);
-	interface.def ("set_up", &NetworkInterface::set_up);
-
-	class_<NetworkInterfaceTracer, boost::noncopyable> tracer 
-		("NetworkInterfaceTracer", no_init);
-	tracer.def ("enable_all", &NetworkInterfaceTracer::enable_all);
-							    
+	interface.def ("set_up", &NetworkInterface::set_up);							    
 }
