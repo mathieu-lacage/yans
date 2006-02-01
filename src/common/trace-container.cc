@@ -19,15 +19,16 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "traced-variable-container.h"
+#include "trace-container.h"
 #include "traced-variable.tcc"
+#include "packet-logger.h"
 #include <utility>
 
 namespace yans {
 
-TracedVariableContainer::TracedVariableContainer ()
+TraceContainer::TraceContainer ()
 {}
-TracedVariableContainer::~TracedVariableContainer ()
+TraceContainer::~TraceContainer ()
 {
 	m_ui_list.erase (m_ui_list.begin (), m_ui_list.end ());
 	m_si_list.erase (m_si_list.begin (), m_si_list.end ());
@@ -35,7 +36,7 @@ TracedVariableContainer::~TracedVariableContainer ()
 }
 
 void 
-TracedVariableContainer::set_ui_callback (char const *name, Callback<void (uint64_t, uint64_t)> *callback)
+TraceContainer::set_ui_variable_callback (char const *name, Callback<void (uint64_t, uint64_t)> *callback)
 {
 	for (UiListI i = m_ui_list.begin (); i != m_ui_list.end (); i++) {
 		if ((*i).second == name) {
@@ -45,14 +46,24 @@ TracedVariableContainer::set_ui_callback (char const *name, Callback<void (uint6
 	assert (false);
 }
 void 
-TracedVariableContainer::set_si_callback (char const *name, Callback<void (int64_t, int64_t)> *callback)
+TraceContainer::set_si_variable_callback (char const *name, Callback<void (int64_t, int64_t)> *callback)
 {}
 void 
-TracedVariableContainer::set_f_callback (char const *name, Callback<void (double, double)> *callback)
+TraceContainer::set_f_variable_callback (char const *name, Callback<void (double, double)> *callback)
 {}
+void 
+TraceContainer::set_packet_logger_callback (char const *name, Callback<void (Packet *)> *callback)
+{
+	for (PacketLoggerListI i = m_packet_logger_list.begin (); i != m_packet_logger_list.end (); i++) {
+		if ((*i).second == name) {
+			(*i).first->set_callback (callback);
+		}
+	}
+	assert (false);	
+}
 
 void 
-TracedVariableContainer::register_ui_variable (UiTracedVariableBase *var, char const *name)
+TraceContainer::register_ui_variable (char const *name, UiTracedVariableBase *var)
 {
 	// ensure unicity
 	for (UiListI i = m_ui_list.begin (); i != m_ui_list.end (); i++) {
@@ -61,11 +72,22 @@ TracedVariableContainer::register_ui_variable (UiTracedVariableBase *var, char c
 	m_ui_list.push_back (std::make_pair (var, name));
 }
 void 
-TracedVariableContainer::register_si_variable (SiTracedVariableBase *var, char const *name)
+TraceContainer::register_si_variable (char const *name, SiTracedVariableBase *var)
 {}
 void 
-TracedVariableContainer::register_f_variable (FTracedVariableBase *var, char const *name)
+TraceContainer::register_f_variable (char const *name, FTracedVariableBase *var)
 {}
+
+void 
+TraceContainer::register_packet_logger (char const *name, PacketLogger *logger)
+{
+	// ensure unicity
+	for (PacketLoggerListI i = m_packet_logger_list.begin (); i != m_packet_logger_list.end (); i++) {
+		assert ((*i).second != name);
+	}
+	m_packet_logger_list.push_back (std::make_pair (logger, name));
+}
+
 
 
 }; // namespace yans

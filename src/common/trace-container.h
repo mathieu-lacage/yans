@@ -19,8 +19,8 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#ifndef TRACED_VARIABLE_CONTAINER_H
-#define TRACED_VARIABLE_CONTAINER_H
+#ifndef TRACE_CONTAINER_H
+#define TRACE_CONTAINER_H
 
 #include "traced-variable.tcc"
 #include "callback.tcc"
@@ -29,18 +29,23 @@
 
 namespace yans {
 
-class TracedVariableContainer {
+class Packet;
+class PacketLogger;
+
+class TraceContainer {
 public:
-	TracedVariableContainer ();
-	~TracedVariableContainer ();
+	TraceContainer ();
+	~TraceContainer ();
 
-	void set_ui_callback (char const *name, Callback<void (uint64_t, uint64_t)> *callback);
-	void set_si_callback (char const *name, Callback<void (int64_t, int64_t)> *callback);
-	void set_f_callback (char const *name, Callback<void (double, double)> *callback);
+	void set_ui_variable_callback (char const *name, Callback<void (uint64_t, uint64_t)> *callback);
+	void set_si_variable_callback (char const *name, Callback<void (int64_t, int64_t)> *callback);
+	void set_f_variable_callback (char const *name, Callback<void (double, double)> *callback);
+	void set_packet_logger_callback (char const *name, Callback<void (Packet *)> *callback);
 
-	void register_ui_variable (UiTracedVariableBase *var, char const *name);
-	void register_si_variable (SiTracedVariableBase *var, char const *name);
-	void register_f_variable (FTracedVariableBase *var, char const *name);
+	void register_ui_variable (char const *name, UiTracedVariableBase *var);
+	void register_si_variable (char const *name, SiTracedVariableBase *var);
+	void register_f_variable (char const *name, FTracedVariableBase *var);
+	void register_packet_logger (char const *name, PacketLogger *logger);
 private:
 	typedef std::list<std::pair<UiTracedVariableBase *, std::string> > UiList;
 	typedef std::list<std::pair<UiTracedVariableBase *, std::string> >::iterator UiListI;
@@ -48,10 +53,13 @@ private:
 	typedef std::list<std::pair<SiTracedVariableBase *, std::string> >::iterator SiListI;
 	typedef std::list<std::pair<FTracedVariableBase *, std::string> > FList;
 	typedef std::list<std::pair<FTracedVariableBase *, std::string> >::iterator FListI;
+	typedef std::list<std::pair<PacketLogger *, std::string> > PacketLoggerList;
+	typedef std::list<std::pair<PacketLogger *, std::string> >::iterator PacketLoggerListI;
 
 	UiList m_ui_list;
 	SiList m_si_list;
 	FList m_f_list;
+	PacketLoggerList m_packet_logger_list;
 };
 
 }; // namespace yans
