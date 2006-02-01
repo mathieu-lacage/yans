@@ -97,6 +97,14 @@ TcpSink::stop_listen_now (void)
 	}
 }
 
+void 
+TcpSink::register_trace (TraceContainer *container)
+{
+	if (m_connection != 0) {
+		m_connection->register_trace (container);
+	}
+}
+
 void
 TcpSink::transmitted (void)
 {}

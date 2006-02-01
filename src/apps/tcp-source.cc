@@ -93,6 +93,14 @@ TcpSource::send (Packet *packet)
 	m_connection->send (packet);
 }
 
+void 
+TcpSource::register_trace (TraceContainer *container)
+{
+	if (m_connection != 0) {
+		m_connection->register_trace (container);
+	}
+}
+
 
 /* return true on success. */
 bool 

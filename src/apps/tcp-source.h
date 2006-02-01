@@ -31,6 +31,7 @@ class Host;
 class Ipv4EndPoint;
 class TcpConnection;
 class Packet;
+class TraceContainer;
 
 class TcpSource {
  public:
@@ -42,6 +43,7 @@ class TcpSource {
 	void start_connect_at (Ipv4Address address, uint16_t port, double at);
 	void start_disconnect_at (double at);
 	void send (Packet *packet);
+	void register_trace (TraceContainer *container);
  private:
 	bool should_accept (Ipv4Address from, uint16_t from_port);
 	void connect_completed (void);

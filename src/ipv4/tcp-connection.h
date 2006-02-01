@@ -33,6 +33,7 @@ class Ipv4;
 class Host;
 class Ipv4EndPoint;
 class Route;
+class TraceContainer;
 
 
 class TcpConnection {
@@ -52,6 +53,8 @@ public:
 	virtual void set_end_point (Ipv4EndPoint *end_point) = 0;
 	virtual void set_route (Route *route) = 0;
 	virtual void set_destroy_handler (TcpConnectionDestroy *handler) = 0;
+
+	virtual void register_trace (TraceContainer *container) = 0;
 
 	virtual void set_callbacks (ConnectCompletedCallback *connect_completed,
 				    DisConnectRequestedCallback *disconnect_requested,

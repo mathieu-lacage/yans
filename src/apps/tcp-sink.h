@@ -34,6 +34,7 @@ class Packet;
 class Ipv4EndPoint;
 class TcpConnection;
 class TcpConnectionListener;
+class TraceContainer;
 
 class TcpSink {
 public:
@@ -47,6 +48,7 @@ public:
 	bool bind (Ipv4Address address, uint16_t port);
 
 	void stop_listen_at (double at);
+	void register_trace (TraceContainer *container);
 private:
 	bool should_accept (Ipv4Address from, uint16_t from_port);
 	void connection_created (TcpConnection *connection, Ipv4EndPoint *end_point);
