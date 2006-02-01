@@ -62,6 +62,7 @@ DataWriterPrivate::DataWriterPrivate ()
 {}
 DataWriterPrivate::~DataWriterPrivate ()
 {
+	::write (m_fd, m_data, m_current);
 	::close (m_fd);
 }
 
