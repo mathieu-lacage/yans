@@ -41,6 +41,7 @@ TraceContainer::set_ui_variable_callback (char const *name, Callback<void (uint6
 	for (UiListI i = m_ui_list.begin (); i != m_ui_list.end (); i++) {
 		if ((*i).second == name) {
 			(*i).first->set_callback (callback);
+			return;
 		}
 	}
 	assert (false);
@@ -57,6 +58,7 @@ TraceContainer::set_packet_logger_callback (char const *name, Callback<void (Pac
 	for (PacketLoggerListI i = m_packet_logger_list.begin (); i != m_packet_logger_list.end (); i++) {
 		if ((*i).second == name) {
 			(*i).first->set_callback (callback);
+			return;
 		}
 	}
 	assert (false);	
