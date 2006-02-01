@@ -39,7 +39,7 @@ class Tag;
 
 class Packet {
 public:
-	typedef Callback<uint32_t (uint8_t *, uint32_t)> PacketReadWriteCallback;
+	typedef Callback<void (uint8_t *, uint32_t)> PacketReadWriteCallback;
 	Packet ();
 	~Packet ();
 

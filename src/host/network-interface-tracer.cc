@@ -103,11 +103,10 @@ NetworkInterfaceTracer::trace_rx_mac (Packet *packet)
 	packet->write (m_write_callback);
 }
 
-uint32_t
+void
 NetworkInterfaceTracer::write_data (uint8_t *buffer, uint32_t size)
 {
 	m_file->write (buffer, size);
-	return size;
 }
 
 void 

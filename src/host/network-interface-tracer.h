@@ -49,13 +49,13 @@ private:
 	void write_packet_header (uint32_t size);
 	void write_32 (uint32_t data);
 	void write_16 (uint16_t data);
-	uint32_t write_data (uint8_t *buffer, uint32_t size);
+	void write_data (uint8_t *buffer, uint32_t size);
 
 	Host *m_host;
 	NetworkInterface *m_interface;
 	DataWriter *m_file;
 	bool m_enable_all;
-	Callback<uint32_t (uint8_t *, uint32_t)> *m_write_callback;
+	Callback<void (uint8_t *, uint32_t)> *m_write_callback;
 };
 
 }; // namespace yans

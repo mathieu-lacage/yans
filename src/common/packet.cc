@@ -165,12 +165,7 @@ Packet::write (PacketReadWriteCallback *callback) const
 {
 	uint8_t *data = m_buffer->peek_data ();
 	uint32_t to_write = get_size ();
-	uint32_t written = 0;
-	while (written < to_write) {
-		uint32_t just_written = (*callback) (data, to_write - written);
-		written += just_written;
-		data += just_written;
-	}
+	(*callback) (data, to_write);
 }
 
 void 
@@ -179,12 +174,7 @@ Packet::read (PacketReadWriteCallback *callback,
 {
 	m_buffer->add_at_start (to_read);
 	uint8_t *data = m_buffer->peek_data ();
-	uint32_t read = 0;
-	while (read < to_read) {
-		uint32_t just_read = (*callback) (data, to_read - read);
-		read += just_read;
-		data += just_read;
-	}	
+	(*callback) (data, to_read);
 }
 
 
