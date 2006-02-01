@@ -72,7 +72,9 @@ int main (int argc, char *argv[])
 	PcapWriter *client_pcap = new PcapWriter ();
 	PcapWriter *server_pcap = new PcapWriter ();
 	client_pcap->open ("client-log-eth0");
+	client_pcap->write_header_ethernet ();
 	server_pcap->open ("server-log-eth0");
+	server_pcap->write_header_ethernet ();
 	client_trace->set_packet_logger_callback ("ethernet-send", 
 						  make_callback (&PcapWriter::write_packet,
 								 client_pcap));
@@ -104,7 +106,7 @@ int main (int argc, char *argv[])
 
 
 	PeriodicGenerator *generator = new PeriodicGenerator ();
-	generator->set_packet_interval (0.00001);
+	generator->set_packet_interval (0.001);
 	generator->set_packet_size (100);
 	generator->start_at (1.0);
 	generator->stop_at (500.0);
