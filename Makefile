@@ -55,6 +55,7 @@ YANS_SRC= \
 	src/common/callback-test.cc \
 	src/common/traced-variable-test.cc \
 	src/common/traced-variable-container.cc \
+	src/common/pcap-writer.cc \
 	src/ipv4/tag-ipv4.cc \
 	src/ipv4/ipv4-end-point.cc \
 	src/ipv4/ipv4-end-points.cc \
