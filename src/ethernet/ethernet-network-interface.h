@@ -28,6 +28,8 @@ namespace yans {
 
 class Arp;
 class Cable;
+class TraceContainer;
+class PacketLogger;
 
 class EthernetNetworkInterface : public NetworkInterface {
 public:
@@ -37,7 +39,6 @@ public:
 	void set_mtu (uint16_t mtu);
 
 	virtual void set_host (Host *host);
-	virtual NetworkInterfaceTracer *get_tracer (void);
 
 	virtual void set_mac_address (MacAddress self);
 	virtual MacAddress get_mac_address (void);
@@ -60,6 +61,8 @@ public:
 	void connect_to (Cable *cable);
 	void recv (Packet *packet);
 
+	void register_trace (TraceContainer *container);
+
  private:
 	void send_data (Packet *packet, MacAddress dest);
 	void send_arp (Packet *packet, MacAddress dest);
@@ -80,8 +83,9 @@ public:
 	bool m_up;
 	Cable *m_cable;
 	Host *m_host;
-	NetworkInterfaceTracer *m_tracer;
 	uint16_t m_mtu;
+	PacketLogger *m_send_logger;
+	PacketLogger *m_recv_logger;
 };
 
 }; // namespace yans

@@ -27,8 +27,9 @@
 #include "packet.h"
 #include "ipv4.h"
 #include "host.h"
-#include "network-interface-tracer.h"
 #include "callback.tcc"
+#include "packet-logger.h"
+#include "trace-container.h"
 
 #define noTRACE_ETHERNET 1
 
@@ -46,13 +47,14 @@ namespace yans {
 
 EthernetNetworkInterface::EthernetNetworkInterface (char const *name)
 	: m_name (new std::string (name)),
-	  m_cable (0),
-	  m_tracer (0)
+	  m_cable (0)
 {
 	m_arp = new Arp (this);
 	m_arp->set_sender (make_callback (&EthernetNetworkInterface::send_data, this),
 			   make_callback (&EthernetNetworkInterface::send_arp, this));
 	m_mtu = 1000;
+	m_send_logger = new PacketLogger ();
+	m_recv_logger = new PacketLogger ();
 }
 
 EthernetNetworkInterface::~EthernetNetworkInterface ()
@@ -63,10 +65,8 @@ EthernetNetworkInterface::~EthernetNetworkInterface ()
 	delete m_arp;
 	m_arp = (Arp *)0xdeadbeaf;
 	m_cable = (Cable *)0xdeadbeaf;
-	if (m_tracer != 0) {
-		delete m_tracer;
-		m_tracer = (NetworkInterfaceTracer *)0xdeadbeaf;
-	}
+	delete m_send_logger;
+	delete m_recv_logger;
 }
 void 
 EthernetNetworkInterface::set_mtu (uint16_t mtu)
@@ -78,12 +78,6 @@ void
 EthernetNetworkInterface::set_host (Host *host)
 {
 	m_host = host;
-	m_tracer = new NetworkInterfaceTracer (host, this);
-}
-NetworkInterfaceTracer *
-EthernetNetworkInterface::get_tracer (void)
-{
-	return m_tracer;
 }
 void 
 EthernetNetworkInterface::set_mac_address (MacAddress self)
@@ -168,8 +162,8 @@ EthernetNetworkInterface::connect_to (Cable *cable)
 void 
 EthernetNetworkInterface::recv (Packet *packet)
 {
-	m_tracer->trace_rx_mac (packet);
 	TRACE ("rx init size="<<packet->get_size ());
+	m_recv_logger->log (packet);
 	ChunkMacLlcSnap header;
 	ChunkMacCrc trailer;
 	packet->remove (&header);
@@ -194,6 +188,14 @@ EthernetNetworkInterface::recv (Packet *packet)
 }
 
 void 
+EthernetNetworkInterface::register_trace (TraceContainer *container)
+{
+	container->register_packet_logger ("ethernet-send", m_send_logger);
+	container->register_packet_logger ("ethernet-recv", m_recv_logger);
+	m_arp->register_trace (container);
+}
+
+void 
 EthernetNetworkInterface::send_data (Packet *packet, MacAddress dest)
 {
 	TRACE ("tx init size="<<packet->get_size ());
@@ -211,7 +213,7 @@ EthernetNetworkInterface::send_data (Packet *packet, MacAddress dest)
 	TRACE ("tx header size="<<packet->get_size ());
 	packet->add (&trailer);
 	TRACE ("tx final size="<<packet->get_size ());
-	m_tracer->trace_tx_mac (packet);
+	m_send_logger->log (packet);
 	m_cable->send (packet, this);
 }
 
@@ -233,7 +235,7 @@ EthernetNetworkInterface::send_arp (Packet *packet, MacAddress dest)
 	TRACE ("tx header size="<<packet->get_size ());
 	packet->add (&trailer);
 	TRACE ("tx final size="<<packet->get_size ());
-	m_tracer->trace_tx_mac (packet);
+	m_send_logger->log (packet);
 	m_cable->send (packet, this);
 }
 
