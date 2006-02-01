@@ -19,6 +19,11 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
+/*
+ * Documentation kindly pointed out by Tom Henderson:
+ * http://wiki.ethereal.com/Development/LibpcapFileFormat
+ */
+
 #include "pcap-writer.h"
 #include "callback.tcc"
 #include "simulator.h"
@@ -26,6 +31,10 @@
 #include "data-writer.h"
 
 namespace yans {
+
+enum {
+	PCAP_ETHERNET = 1
+};
 
 PcapWriter::PcapWriter ()
 {
@@ -51,7 +60,7 @@ PcapWriter::write_header_ethernet (void)
 	write_32 (0);
 	write_32 (0);
 	write_32 (0xffff);
-	write_32 (1);
+	write_32 (PCAP_ETHERNET);
 }
 
 void 
