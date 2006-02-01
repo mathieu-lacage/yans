@@ -32,6 +32,8 @@ namespace yans {
 class Packet;
 class NetworkInterface;
 class ArpCacheEntry;
+class PacketLogger;
+class TraceContainer;
 
 class Arp {
  public:
@@ -54,6 +56,8 @@ class Arp {
 	void send_data (Packet *packet, Ipv4Address to);
 	/* receive an ARP packet. */
 	void recv_arp (Packet *packet);
+
+	void register_trace (TraceContainer *container);
 private:
 	typedef Sgi::hash_map<Ipv4Address, ArpCacheEntry *, Ipv4AddressHash> ArpCache;
 	typedef Sgi::hash_map<Ipv4Address, ArpCacheEntry *, Ipv4AddressHash>::iterator ArpCacheI;
@@ -69,6 +73,7 @@ private:
 	double m_dead_timeout;
 	double m_wait_reply_timeout;
 	ArpCache m_arp_cache;
+	PacketLogger *m_drop;
 };
 
 }; // namespace yans

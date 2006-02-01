@@ -22,6 +22,8 @@
 #include "arp.h"
 #include "arp-cache-entry.h"
 #include "network-interface.h"
+#include "packet-logger.h"
+#include "trace-container.h"
 #include "chunk-arp.h"
 #include "packet.h"
 #include <cassert>
@@ -44,7 +46,8 @@ Arp::Arp (NetworkInterface *interface)
 	: m_interface (interface),
 	  m_alive_timeout (1200.0),
 	  m_dead_timeout (100.0),
-	  m_wait_reply_timeout (1.0)
+	  m_wait_reply_timeout (1.0),
+	  m_drop (new PacketLogger ())
 {}
 Arp::~Arp ()
 {
@@ -56,6 +59,14 @@ Arp::~Arp ()
 	delete m_send_arp;
 	m_send_data = 0;
 	m_send_arp = 0;
+	delete m_drop;
+	m_drop = 0;
+}
+
+void 
+Arp::register_trace (TraceContainer *container)
+{
+	container->register_packet_logger ("arp-drop", m_drop);
 }
 
 void 
@@ -144,16 +155,20 @@ Arp::send_data (Packet *packet, Ipv4Address to)
 			} else if (entry->is_wait_reply ()) {
 				TRACE ("wait reply for " << to << " expired -- drop");
 				entry->mark_dead ();
+				m_drop->log (packet);
 			}
 		} else {
 			if (entry->is_dead ()) {
 				TRACE ("dead entry for " << to << " valid -- drop");
+				m_drop->log (packet);
 			} else if (entry->is_alive ()) {
 				TRACE ("alive entry for " << to << " valid -- send");
 				(*m_send_data) (packet, entry->get_mac_address ());
 			} else if (entry->is_wait_reply ()) {
 				TRACE ("wait reply for " << to << " valid -- drop previous");
-				entry->update_wait_reply (packet);
+				Packet *old = entry->update_wait_reply (packet);
+				m_drop->log (old);
+				old->unref ();
 			}
 		}
 	} else {
@@ -194,9 +209,11 @@ Arp::recv_arp (Packet *packet)
 				// at poisening my arp cache.
 				TRACE ("got reply from " << arp.get_source_ipv4_address () << 
 				       " for non-waiting entry -- drop");
+				m_drop->log (packet);
 			}
 		} else {
 			TRACE ("got reply for unknown entry -- drop");
+			m_drop->log (packet);
 		}
 	}
 }
