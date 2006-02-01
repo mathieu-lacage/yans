@@ -27,10 +27,11 @@
 #include "udp-source.h"
 #include "udp-sink.h"
 #include "host-tracer.h"
-#include "network-interface-tracer.h"
 #include "periodic-generator.h"
 #include "traffic-analyser.h"
 #include "callback.tcc"
+#include "pcap-writer.h"
+#include "trace-container.h"
 
 using namespace yans;
 
@@ -61,8 +62,29 @@ int main (int argc, char *argv[])
 	//hserver->get_tracer ()->enable_all ();
 	hclient->add_interface (eth_client);
 	hserver->add_interface (eth_server);
-	//eth_client->get_tracer ()->enable_all ();
-	//eth_server->get_tracer ()->enable_all ();
+
+	TraceContainer *client_trace = new TraceContainer ();
+	TraceContainer *server_trace = new TraceContainer ();
+	eth_client->register_trace(client_trace);
+	eth_server->register_trace (server_trace);
+
+
+	PcapWriter *client_pcap = new PcapWriter ();
+	PcapWriter *server_pcap = new PcapWriter ();
+	client_pcap->open ("client-log-eth0");
+	server_pcap->open ("server-log-eth0");
+	client_trace->set_packet_logger_callback ("ethernet-send", 
+						  make_callback (&PcapWriter::write_packet,
+								 client_pcap));
+	client_trace->set_packet_logger_callback ("ethernet-recv", 
+						  make_callback (&PcapWriter::write_packet,
+								 client_pcap));
+	server_trace->set_packet_logger_callback ("ethernet-send", 
+						  make_callback (&PcapWriter::write_packet,
+								 server_pcap));
+	server_trace->set_packet_logger_callback ("ethernet-recv", 
+						  make_callback (&PcapWriter::write_packet,
+								 server_pcap));
 
 	/* setup the routing tables. */
 	hclient->get_routing_table ()->set_default_route (Ipv4Address ("192.168.0.2"),
@@ -107,6 +129,10 @@ int main (int argc, char *argv[])
 	delete analyser;
 	delete hclient;
 	delete hserver;
+	delete client_pcap;
+	delete server_pcap;
+	delete client_trace;
+	delete server_trace;
 	Simulator::destroy ();
 
 	return 0;
