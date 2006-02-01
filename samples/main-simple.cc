@@ -34,6 +34,25 @@
 
 using namespace yans;
 
+PcapWriter *
+setup_pcap_trace (EthernetNetworkInterface *interface, char const *name)
+{
+	TraceContainer *trace = new TraceContainer ();
+	interface->register_trace(trace);
+
+	PcapWriter *pcap = new PcapWriter ();
+	pcap->open (name);
+	pcap->write_header_ethernet ();
+	trace->set_packet_logger_callback ("ethernet-send", 
+					   make_callback (&PcapWriter::write_packet,
+							  pcap));
+	trace->set_packet_logger_callback ("ethernet-recv", 
+					   make_callback (&PcapWriter::write_packet,
+							  pcap));
+	delete trace;
+	return pcap;
+}
+
 int main (int argc, char *argv[])
 {
 	/* setup the ethernet network itself. */
@@ -61,29 +80,8 @@ int main (int argc, char *argv[])
 	hserver->add_interface (eth_server);
 
 	/* setup tracing for eth0-level interfaces in pcap files. */
-	TraceContainer *client_trace = new TraceContainer ();
-	TraceContainer *server_trace = new TraceContainer ();
-	eth_client->register_trace(client_trace);
-	eth_server->register_trace (server_trace);
-
-	PcapWriter *client_pcap = new PcapWriter ();
-	PcapWriter *server_pcap = new PcapWriter ();
-	client_pcap->open ("client-log-eth0");
-	client_pcap->write_header_ethernet ();
-	server_pcap->open ("server-log-eth0");
-	server_pcap->write_header_ethernet ();
-	client_trace->set_packet_logger_callback ("ethernet-send", 
-						  make_callback (&PcapWriter::write_packet,
-								 client_pcap));
-	client_trace->set_packet_logger_callback ("ethernet-recv", 
-						  make_callback (&PcapWriter::write_packet,
-								 client_pcap));
-	server_trace->set_packet_logger_callback ("ethernet-send", 
-						  make_callback (&PcapWriter::write_packet,
-								 server_pcap));
-	server_trace->set_packet_logger_callback ("ethernet-recv", 
-						  make_callback (&PcapWriter::write_packet,
-								 server_pcap));
+	PcapWriter *client_pcap = setup_pcap_trace (eth_client, "client-log-eth0");
+	PcapWriter *server_pcap = setup_pcap_trace (eth_server, "server-log-eth0");
 
 	/* setup the routing tables. */
 	hclient->get_routing_table ()->set_default_route (Ipv4Address ("192.168.0.2"),
@@ -130,8 +128,6 @@ int main (int argc, char *argv[])
 	delete hserver;
 	delete client_pcap;
 	delete server_pcap;
-	delete client_trace;
-	delete server_trace;
 	Simulator::destroy ();
 
 	return 0;

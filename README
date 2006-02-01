@@ -95,7 +95,6 @@ In no particular order:
 - 802.11 model
 - port to other architectures/OSes:
    - x86-64 linux
-   - ppc osx
    - x86 win32
 - rng
 - simulator performance statistics output. i.e.:
@@ -106,6 +105,8 @@ In no particular order:
 	> or .stat
 - counter/statistics facility for models -- related to logging
 - timers: ability to cancel events.
+- renames:
+  - Host -> Node
   
 5) Contributing/Using
 ---------------------
