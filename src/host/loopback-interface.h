@@ -35,7 +35,6 @@ public:
 	virtual ~LoopbackInterface ();
 
 	virtual void set_host (Host *host);
-	virtual NetworkInterfaceTracer *get_tracer (void);
 
 	virtual uint16_t get_mtu (void);
 	virtual std::string const *get_name (void);
