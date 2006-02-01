@@ -26,7 +26,6 @@
 #include "simulator.h"
 #include "udp-source.h"
 #include "udp-sink.h"
-#include "host-tracer.h"
 #include "periodic-generator.h"
 #include "traffic-analyser.h"
 #include "callback.tcc"
@@ -58,16 +57,14 @@ int main (int argc, char *argv[])
 	Host *hclient, *hserver;
 	hclient = new Host ("client");
 	hserver = new Host ("server");
-	//hclient->get_tracer ()->enable_all ();
-	//hserver->get_tracer ()->enable_all ();
 	hclient->add_interface (eth_client);
 	hserver->add_interface (eth_server);
 
+	/* setup tracing for eth0-level interfaces in pcap files. */
 	TraceContainer *client_trace = new TraceContainer ();
 	TraceContainer *server_trace = new TraceContainer ();
 	eth_client->register_trace(client_trace);
 	eth_server->register_trace (server_trace);
-
 
 	PcapWriter *client_pcap = new PcapWriter ();
 	PcapWriter *server_pcap = new PcapWriter ();

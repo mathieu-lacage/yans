@@ -26,7 +26,6 @@
 #include "loopback-interface.h"
 #include "udp.h"
 #include "tcp.h"
-#include "host-tracer.h"
 
 namespace yans {
 
@@ -52,7 +51,6 @@ Host::Host (char const *path)
 	m_routing_table->add_host_route_to (Ipv4Address::get_loopback (),
 					    m_loopback);
 	m_root = new std::string (path);
-	m_tracer = new HostTracer (0);
 }
 
 Host::~Host ()
@@ -62,7 +60,6 @@ Host::~Host ()
 	delete m_routing_table;
 	delete m_udp;
 	delete m_tcp;
-	delete m_tracer;
 	delete m_loopback;
 	m_interfaces.erase (m_interfaces.begin (), m_interfaces.end ());
 }
@@ -108,12 +105,6 @@ Tcp *
 Host::get_tcp (void)
 {
 	return m_tcp;
-}
-
-HostTracer *
-Host::get_tracer (void)
-{
-	return m_tracer;
 }
 
 }; // namespace yans

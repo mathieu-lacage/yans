@@ -33,7 +33,6 @@ class NetworkInterface;
 class SocketUdp;
 class Udp;
 class Tcp;
-class HostTracer;
 class LoopbackInterface;
 
 typedef std::vector<NetworkInterface *> NetworkInterfaces;
@@ -53,18 +52,14 @@ public:
 	Udp *get_udp (void);
 	Tcp *get_tcp (void);
 
-	HostTracer *get_tracer (void);
-
 private:
 	typedef std::vector<NetworkInterface *>::iterator NetworkInterfacesI;
- 	friend class NetworkInterfaceTracer;
 
 	NetworkInterfaces m_interfaces;
 	Ipv4Route *m_routing_table;
 	Ipv4 *m_ipv4;
 	Udp *m_udp;
 	Tcp *m_tcp;
-	HostTracer *m_tracer;
 	LoopbackInterface *m_loopback;
 	std::string *m_root;
 };

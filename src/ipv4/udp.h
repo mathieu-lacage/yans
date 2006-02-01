@@ -33,6 +33,8 @@ class Ipv4EndPoints;
 class Ipv4EndPoint;
 class Host;
 class Packet;
+class PacketLogger;
+class TraceContainer;
 
 class Udp {
 public:
@@ -41,6 +43,8 @@ public:
 
 	void set_host (Host *host);
 	void set_ipv4 (Ipv4 *ipv4);
+
+	void register_trace (TraceContainer *container);
 
 	Ipv4EndPoint *allocate (void);
 	Ipv4EndPoint *allocate (Ipv4Address address);
@@ -56,6 +60,8 @@ public:
 	Ipv4 *m_ipv4;
 	Host *m_host;
 	Ipv4EndPoints *m_end_points;
+	PacketLogger *m_send_logger;
+	PacketLogger *m_recv_logger;
 };
 
 }; // namespace yans

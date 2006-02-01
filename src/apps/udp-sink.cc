@@ -24,7 +24,6 @@
 #include "host.h"
 #include "ipv4-end-point.h"
 #include "packet.h"
-#include "host-tracer.h"
 #include "simulator.h"
 #include "event.tcc"
 
@@ -78,7 +77,6 @@ UdpSink::unbind_at (double at)
 void
 UdpSink::receive (Packet *packet, Chunk *chunk)
 {
-	m_host->get_tracer ()->trace_rx_app (packet);
 	if (m_callback != 0) {
 		(*m_callback) (packet);
 	}

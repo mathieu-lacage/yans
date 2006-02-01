@@ -37,6 +37,9 @@ class IcmpTransportProtocol;
 class Route;
 class DefragStates;
 class ChunkIpv4;
+class PacketLogger;
+class TraceContainer;
+
 
 class Ipv4 {
 public:
@@ -49,6 +52,8 @@ public:
 
 	void set_protocol (uint8_t protocol);
 	void send (Packet *packet);
+
+	void register_trace (TraceContainer *container);
 
 	/* invoked from higher-layers. */
 	void register_transport_protocol (TransportProtocolCallback *callback, uint8_t protocol);
@@ -78,6 +83,8 @@ private:
 	TransportProtocolCallback *m_icmp_callback;
 	uint16_t m_identification;
 	DefragStates *m_defrag_states;
+	PacketLogger *m_send_logger;
+	PacketLogger *m_recv_logger;
 };
 
 }; // namespace yans 

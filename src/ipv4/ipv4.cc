@@ -26,9 +26,10 @@
 #include "ipv4-route.h"
 #include "host.h"
 #include "tag-ipv4.h"
-#include "host-tracer.h"
 #include "chunk-icmp.h"
 #include "defrag-state.h"
+#include "packet-logger.h"
+#include "trace-container.h"
 #include <cassert>
 
 
@@ -56,6 +57,8 @@ Ipv4::Ipv4 ()
 	m_default_ttl = 64;
 	m_defrag_states = new DefragStates ();
 	m_identification = 0;
+	m_send_logger = new PacketLogger ();
+	m_recv_logger = new PacketLogger ();
 }
 Ipv4::~Ipv4 ()
 {
@@ -66,6 +69,15 @@ Ipv4::~Ipv4 ()
 		delete (*i).second;
 	}
 	m_protocols.erase (m_protocols.begin (), m_protocols.end ());
+	delete m_send_logger;
+	delete m_recv_logger;
+}
+
+void 
+Ipv4::register_trace (TraceContainer *container)
+{
+	container->register_packet_logger ("ipv4-send", m_send_logger);
+	container->register_packet_logger ("ipv4-recv", m_recv_logger);
 }
 
 void 
@@ -134,7 +146,7 @@ Ipv4::send_real_out (Packet *packet, ChunkIpv4 *ip, Route const *route)
 	packet->add (ip);
 	NetworkInterface *out_interface = route->get_interface ();
 	assert (packet->get_size () <= out_interface->get_mtu ());
-	m_host->get_tracer ()->trace_tx_ipv4 (packet);
+	m_send_logger->log (packet);
 	if (route->is_gateway ()) {
 		out_interface->send (packet, route->get_gateway ());
 	} else {
@@ -306,7 +318,7 @@ Ipv4::receive_packet (Packet *packet, ChunkIpv4 *ip, NetworkInterface *interface
 void 
 Ipv4::receive (Packet *packet, NetworkInterface *interface)
 {
-	m_host->get_tracer ()->trace_rx_ipv4 (packet);
+	m_recv_logger->log (packet);
 	ChunkIpv4 ip_header;
 	packet->remove (&ip_header);
 

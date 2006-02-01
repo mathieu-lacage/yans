@@ -77,9 +77,7 @@ YANS_SRC= \
 	src/arp/arp-cache-entry.cc \
 	src/host/host.cc \
 	src/host/network-interface.cc \
-	src/host/network-interface-tracer.cc \
 	src/host/loopback-interface.cc \
-	src/host/host-tracer.cc \
 	src/ethernet/cable.cc \
 	src/ethernet/chunk-mac-crc.cc \
 	src/ethernet/chunk-mac-llc-snap.cc \

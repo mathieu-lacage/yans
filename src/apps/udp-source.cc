@@ -26,7 +26,6 @@
 #include "host.h"
 #include "udp.h"
 #include "tag-ipv4.h"
-#include "host-tracer.h"
 #include "simulator.h"
 #include "event.tcc"
 
@@ -90,7 +89,6 @@ UdpSource::send (Packet *packet)
 	tag->set_saddress (m_end_point->get_local_address ());
 	packet->add_tag (TagOutIpv4::get_tag (), tag);
 	/* send packet. */
-	m_host->get_tracer ()->trace_tx_app (packet);
 	m_host->get_udp ()->send (packet);
 }
 
