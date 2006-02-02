@@ -29,8 +29,51 @@
 #include "periodic-generator.h"
 #include "traffic-analyser.h"
 #include "event.h"
+#include "trace-container.h"
+#include "callback-event.tcc"
+#include <iostream>
 
 using namespace yans;
+
+class MyTcpTrace {
+public:
+	void start_connect (TcpSource *source, Ipv4Address address, uint16_t port) 
+	{
+		source->start_connect_now (address, port);
+
+		TraceContainer *container = new TraceContainer ();
+		source->register_trace (container);
+		container->set_ui_variable_callback ("tcp-snd-nxt",
+						     make_callback (&MyTcpTrace::notify_snd_nxt_change,
+								    this));
+		container->set_ui_variable_callback ("tcp-snd-wnd",
+						     make_callback (&MyTcpTrace::notify_snd_wnd_change,
+								    this));
+		container->set_ui_variable_callback ("tcp-snd-cwnd",
+						     make_callback (&MyTcpTrace::notify_snd_cwnd_change,
+								    this));
+		container->set_ui_variable_callback ("tcp-snd-ssthresh",
+						     make_callback (&MyTcpTrace::notify_snd_ssthresh_change,
+								    this));
+		delete container;
+	}
+	void notify_snd_nxt_change (uint64_t old_val, uint64_t new_val)
+	{
+		std::cout << "snd_nxt="<<old_val<<"->"<<new_val<<std::endl;
+	}
+	void notify_snd_wnd_change (uint64_t old_val, uint64_t new_val)
+	{
+		std::cout << "snd_wnd="<<old_val<<"->"<<new_val<<std::endl;
+	}
+	void notify_snd_cwnd_change (uint64_t old_val, uint64_t new_val)
+	{
+		std::cout << "snd_cwnd="<<old_val<<"->"<<new_val<<std::endl;
+	}
+	void notify_snd_ssthresh_change (uint64_t old_val, uint64_t new_val)
+	{
+		std::cout << "snd_ssthresh="<<old_val<<"->"<<new_val<<std::endl;
+	}
+};
 
 int main (int argc, char *argv[])
 {
@@ -66,8 +109,16 @@ int main (int argc, char *argv[])
 
 	TcpSource *source = new TcpSource (hclient);
 	source->bind (Ipv4Address ("192.168.0.3"), 1025);
-	source->start_connect_at (Ipv4Address ("192.168.0.2"), 1026, 1.0);
 	source->start_disconnect_at (11.0);
+
+	/* setup tcp tracing at source 
+	 * we must wait until we call start_connection on the source
+	 * to connect the trace because the underlying connection
+	 * object which we want to trace does not exist before.
+	 */
+	MyTcpTrace *tcp_trace = new MyTcpTrace ();
+	Simulator::insert_at_s (1.0, make_event (&MyTcpTrace::start_connect, tcp_trace, 
+						 source, Ipv4Address ("192.168.0.2"), (uint16_t)1026));
 
 	TcpSink *sink = new TcpSink (hserver);
 	sink->bind (Ipv4Address ("192.168.0.2"), 1026);
@@ -100,6 +151,7 @@ int main (int argc, char *argv[])
 	delete analyser;
 	delete hclient;
 	delete hserver;
+	delete tcp_trace;
 	Simulator::destroy ();
 
 	return 0;
