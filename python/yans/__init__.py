@@ -15,6 +15,8 @@ from _yans import UdpSource
 from _yans import UdpSink
 from _yans import PcapWriter
 from _yans import TraceContainer
+from _yans import TcpSource
+from _yans import TcpSink
 
 
 

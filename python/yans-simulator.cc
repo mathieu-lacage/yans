@@ -38,6 +38,8 @@ void export_cable (void);
 void export_ipv4_route (void);
 void export_pcap_writer (void);
 void export_trace_container (void);
+void export_tcp_source (void);
+void export_tcp_sink (void);
 
 
 BOOST_PYTHON_MODULE(_yans)
@@ -60,4 +62,6 @@ BOOST_PYTHON_MODULE(_yans)
 	export_ipv4_route ();
 	export_pcap_writer ();
 	export_trace_container ();
+	export_tcp_source ();
+	export_tcp_sink ();
 }
