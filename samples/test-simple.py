@@ -29,8 +29,6 @@ hclient = Host ('client')
 hserver = Host ('server')
 hclient.add_interface (eth_client)
 hserver.add_interface (eth_server)
-eth_client.get_tracer ().enable_all ();
-eth_server.get_tracer ().enable_all ();
 
 hclient.get_routing_table ().set_default_route (server_address, eth_client);
 hserver.get_routing_table ().set_default_route (client_address, eth_server);
@@ -45,7 +43,7 @@ sink.bind (server_address, 1026)
 sink.unbind_at (110.0)
 
 generator = PeriodicGenerator ()
-generator.set_packet_interval (0.0001)
+generator.set_packet_interval (0.01)
 generator.set_packet_size (100)
 generator.start_at (1.0)
 generator.stop_at (100.0)

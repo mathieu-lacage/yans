@@ -8,7 +8,7 @@
 
 using namespace boost::python;
 using namespace yans;
-#include <iostream>
+
 static void set_send_callback_cpp (PeriodicGenerator *self, std::auto_ptr<CallbackBase> callback)
 {
 	self->set_send_callback (static_cast<Callback<void (Packet *)> *> (callback.get ()));

@@ -36,6 +36,8 @@ void export_network_interface (void);
 void export_ethernet_network_interface (void);
 void export_cable (void);
 void export_ipv4_route (void);
+void export_pcap_writer (void);
+void export_trace_container (void);
 
 
 BOOST_PYTHON_MODULE(_yans)
@@ -56,4 +58,6 @@ BOOST_PYTHON_MODULE(_yans)
 	export_ethernet_network_interface ();
 	export_cable ();
 	export_ipv4_route ();
+	export_pcap_writer ();
+	export_trace_container ();
 }

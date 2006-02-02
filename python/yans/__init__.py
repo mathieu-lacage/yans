@@ -11,8 +11,11 @@ from _yans import Host
 from _yans import NetworkInterface
 from _yans import EthernetNetworkInterface
 from _yans import Cable
-from _yans import UdpSource;
-from _yans import UdpSink;
+from _yans import UdpSource
+from _yans import UdpSink
+from _yans import PcapWriter
+from _yans import TraceContainer
+
 
 
 class MyPyFunction0Holder:

@@ -101,9 +101,9 @@ public:
 	virtual void operator() (T1 a1, T2 a2) {
 		object function = m_holder.get_function ();
 		object context = m_holder.get_context ();
-		return function (context, 
-				 ExportCallbackTraits<T1>::make_arg (a1), 
-				 ExportCallbackTraits<T2>::make_arg (a2));
+		function (context, 
+			  ExportCallbackTraits<T1>::make_arg (a1), 
+			  ExportCallbackTraits<T2>::make_arg (a2));
 	}
 private:
 	FunctionHolder m_holder;
