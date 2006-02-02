@@ -69,6 +69,10 @@ int main (int argc, char *argv[])
 	hclient = new Host ("client");
 	hserver = new Host ("server");
 	hrouter = new Host ("router");
+	hclient->add_interface (eth_client);
+	hserver->add_interface (eth_server);
+	hrouter->add_interface (eth_router_client);
+	hrouter->add_interface (eth_router_server);
 	eth_client->set_mtu (980);
 	eth_router_server->set_mtu (979);
 
