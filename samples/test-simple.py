@@ -2,6 +2,22 @@
 
 from yans import *
 
+def setup_pcap_trace(interface, name):
+    container = TraceContainer ()
+    interface.register_trace (container)
+    #container.print_debug ()
+    writer = PcapWriter ()
+    writer.open (name)
+    writer.write_header_ethernet ()
+    container.set_packet_logger_callback ("ethernet-send",
+                                          make_callback (PcapWriter.write_packet,
+                                                         writer))
+    container.set_packet_logger_callback ("ethernet-recv",
+                                          make_callback (PcapWriter.write_packet,
+                                                         writer))
+    del container
+    return writer
+
 client_mac_address = MacAddress ('00:00:00:00:00:01')
 server_mac_address = MacAddress ('00:00:00:00:00:02')
 client_address = Ipv4Address ('192.168.0.3')
@@ -23,6 +39,9 @@ eth_server.set_ipv4_address (server_address)
 eth_server.set_ipv4_mask (netmask)
 eth_client.set_up ()
 eth_server.set_up ()
+
+client_writer = setup_pcap_trace (eth_client, "client-eth0")
+server_writer = setup_pcap_trace (eth_server, "server-eth0")
 
 
 hclient = Host ('client')
@@ -68,5 +87,7 @@ del client_mac_address
 del server_mac_address
 del eth_client
 del eth_server
+del client_writer
+del server_writer
 
 simulator.destroy ()

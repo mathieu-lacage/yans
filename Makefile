@@ -177,6 +177,8 @@ YANS_PYTHON_SRC= \
 	python/export-ipv4-route.cc \
 	python/export-trace-container.cc \
 	python/export-pcap-writer.cc \
+	python/export-tcp-source.cc \
+	python/export-tcp-sink.cc \
 	python/test-periodic-generator.py \
 	samples/test-simulator.py \
 	samples/test-thread.py \
