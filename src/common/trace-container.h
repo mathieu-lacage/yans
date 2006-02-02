@@ -48,6 +48,8 @@ public:
 	void register_si_variable (char const *name, SiTracedVariableBase *var);
 	void register_f_variable (char const *name, FTracedVariableBase *var);
 	void register_packet_logger (char const *name, PacketLogger *logger);
+
+	void print_debug (void);
 private:
 	typedef std::list<std::pair<UiTracedVariableBase *, std::string> > UiList;
 	typedef std::list<std::pair<UiTracedVariableBase *, std::string> >::iterator UiListI;
