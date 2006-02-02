@@ -34,12 +34,15 @@ public:
 
 	FTracedVariableBase ()
 		: m_callback (0) {}
+	FTracedVariableBase (FTracedVariableBase const &o)
+		: m_callback (0) {}
+	FTracedVariableBase &operator = (FTracedVariableBase const &o) {
+		return *this;
+	}
 
 	~FTracedVariableBase () {
-		if (m_callback != 0) {
-			m_callback = (ChangeNotifyCallback *)0xdeadbeaf;
-			delete m_callback;
-		}
+		delete m_callback;
+		m_callback = (ChangeNotifyCallback *)0xdeadbeaf;
 	}
 
 	void set_callback(ChangeNotifyCallback *callback) {
@@ -48,7 +51,7 @@ public:
 	}
 protected:
 	void notify (double old_val, double new_val) {
-		if (m_callback != 0) {
+		if (old_val != new_val && m_callback != 0) {
 			(*m_callback) (old_val, new_val);
 		}
 	}

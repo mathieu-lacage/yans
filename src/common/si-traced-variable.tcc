@@ -34,12 +34,15 @@ public:
 
 	SiTracedVariableBase ()
 		: m_callback (0) {}
+	SiTracedVariableBase (SiTracedVariableBase const &o)
+		: m_callback (0) {}
+	SiTracedVariableBase &operator = (SiTracedVariableBase const &o) {
+		return *this;
+	}
 
 	~SiTracedVariableBase () {
-		if (m_callback != 0) {
-			m_callback = (ChangeNotifyCallback *)0xdeadbeaf;
-			delete m_callback;
-		}
+		delete m_callback;
+		m_callback = (ChangeNotifyCallback *)0xdeadbeaf;
 	}
 
 	void set_callback(ChangeNotifyCallback *callback) {
@@ -48,7 +51,7 @@ public:
 	}
 protected:
 	void notify (int64_t old_val, int64_t new_val) {
-		if (m_callback != 0) {
+		if (old_val != new_val && m_callback != 0) {
 			(*m_callback) (old_val, new_val);
 		}
 	}

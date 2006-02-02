@@ -34,12 +34,16 @@ public:
 
 	UiTracedVariableBase ()
 		: m_callback (0) {}
+	UiTracedVariableBase (UiTracedVariableBase const &o)
+		: m_callback (0) {}
+	UiTracedVariableBase &operator = (UiTracedVariableBase const &o) {
+		return *this;
+	}
+
 
 	~UiTracedVariableBase () {
-		if (m_callback != 0) {
-			m_callback = (ChangeNotifyCallback *)0xdeadbeaf;
-			delete m_callback;
-		}
+		delete m_callback;
+		m_callback = (ChangeNotifyCallback *)0xdeadbeaf;
 	}
 
 	void set_callback(ChangeNotifyCallback *callback) {
@@ -48,7 +52,7 @@ public:
 	}
 protected:
 	void notify (uint64_t old_val, uint64_t new_val) {
-		if (m_callback != 0) {
+		if (old_val != new_val && m_callback != 0) {
 			(*m_callback) (old_val, new_val);
 		}
 	}
