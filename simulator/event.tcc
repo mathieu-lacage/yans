@@ -86,6 +86,30 @@ private:
 	T2 m_a2;
 };
 
+template<typename T, typename T1, typename T2, typename T3>
+class EventCallback3 : public Event {
+public:
+	typedef void (T::*F)(T1, T2, T3);
+
+	EventCallback3 (T *obj, F function, T1 a1, T2 a2, T3 a3) 
+		: m_obj (obj), 
+		  m_function (function),
+		  m_a1 (a1),
+		  m_a2 (a2),
+		  m_a3 (a3)
+	{ }
+	virtual void notify (void) { 
+		(m_obj->*m_function) (m_a1, m_a2, m_a3);
+		delete this;
+	}
+private:
+	T* m_obj;
+	F m_function;
+	T1 m_a1;
+	T2 m_a2;
+	T3 m_a3;
+};
+
 
 template<typename T>
 EventCallback0<T> *make_event(void (T::*f) (void), T* t) {
@@ -102,6 +126,10 @@ EventCallback1<T, T1 &> *make_event(void (T::*f) (T1 &), T* t, T1 &a1) {
 template<typename T, typename T1, typename T2>
 EventCallback2<T, T1, T2> *make_event(void (T::*f) (T1, T2), T* t, T1 a1, T2 a2) {
 	return new EventCallback2<T, T1, T2>(t, f, a1, a2);
+}
+template<typename T, typename T1, typename T2, typename T3>
+EventCallback3<T, T1, T2, T3> *make_event(void (T::*f) (T1, T2, T3), T* t, T1 a1, T2 a2, T3 a3) {
+	return new EventCallback3<T, T1, T2, T3>(t, f, a1, a2, a3);
 }
 
 class StaticEvent : public Event {
