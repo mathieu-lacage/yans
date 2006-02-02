@@ -17,6 +17,7 @@ from _yans import PcapWriter
 from _yans import TraceContainer
 from _yans import TcpSource
 from _yans import TcpSink
+from _yans import Thread
 
 
 
