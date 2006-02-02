@@ -28,7 +28,7 @@
 #include "packet.h"
 #include "callback-event.tcc"
 
-#define TRACE_TCP_SINK 1
+#define noTRACE_TCP_SINK 1
 
 #ifdef TRACE_TCP_SINK
 #include <iostream>
