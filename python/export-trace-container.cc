@@ -25,6 +25,7 @@ void export_trace_container (void)
 	class_<TraceContainer, boost::noncopyable> container ("TraceContainer");
 	container.def ("set_ui_variable_callback", &set_ui_variable_callback_cpp);
 	container.def ("set_ui_variable_callback", &set_ui_variable_callback_python);
+	container.def ("print_debug", &TraceContainer::print_debug);
 #if 0
 	void set_si_variable_callback (char const *name, Callback<void (int64_t, int64_t)> *callback);
 	void set_f_variable_callback (char const *name, Callback<void (double, double)> *callback);
