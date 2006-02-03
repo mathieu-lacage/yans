@@ -22,7 +22,6 @@
 #ifndef SIMULATOR_H
 #define SIMULATOR_H
 
-#include "block.h"
 #include <stdint.h>
 
 namespace yans {
@@ -46,7 +45,7 @@ public:
 	/* this is a blocking call which will return
 	 * only when the simulation ends.
 	 */
-	static void run (void) BLOCK;
+	static void run (void);
 	/* This is a non-blocking call which will 
 	 * unblock the run method.
 	 */
