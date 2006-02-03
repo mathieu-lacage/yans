@@ -80,15 +80,22 @@ DIST_DIR=$(PACKAGE_NAME)-$(PACKAGE_VERSION)
 ALL_DIST_TARGETS=$(addprefix $(DIST_DIR)/,$(ALL_DIST))
 ALL_DIST_DIRS=$(call gen-dirs, $(ALL_DIST_TARGETS))
 $(DIST_OUTPUT): $(ALL_DIST_DIRS) $(ALL_DIST_TARGETS)
-	tar zcf $@ $(DIST_DIR)
-	@rm -rf $(DIST_DIR)
+	@echo "Building $@ ..."
+	@tar zcf $@ $(DIST_DIR)
 $(ALL_DIST_TARGETS): $(DIST_DIR)/%:%
 	@cp $< $@
 $(ALL_DIST_DIRS):
 	@mkdir -p $@
-dist: $(DIST_OUTPUT)
+predist:
+	rm -rf $(DIST_DIR)
+dist: predist $(DIST_OUTPUT)
+	rm -rf $(DIST_DIR)
 distcheck: dist
 	tar zxf $(DIST_OUTPUT)
+	cd $(DIST_DIR) && make
+	rm -rf $(DIST_DIR)
+fastdist: $(DIST_OUTPUT)
+fastdistcheck: fastdist
 	cd $(DIST_DIR) && make
 	rm -rf $(DIST_DIR)
 
