@@ -3,6 +3,8 @@ all: build
 include ./functions.mk
 include ./platform.mk
 
+PACKAGE_NAME=yans
+PACKAGE_VERSION=0.6
 TOP_BUILD_DIR=$(TOP)/bin
 TOP_SRC_DIR=$(TOP)
 DEFINES=-DRUN_SELF_TESTS=1
@@ -30,6 +32,12 @@ LDFLAGS=
 CXXFLAGS+=$(FLAGS) $(INCLUDES) $(DEFINES)
 CFLAGS+=$(FLAGS) $(INCLUDES) $(DEFINES)
 
+PACKAGE_DIST= \
+	platform.mk \
+	rules.mk \
+	functions.mk \
+	Makefile \
+	$(NULL)
 
 # building of libyans.so
 YANS_SRC= \
@@ -89,6 +97,73 @@ YANS_SRC= \
 	src/apps/periodic-generator.cc \
 	src/apps/traffic-analyser.cc \
 	test/test.cc \
+	$(NULL)
+YANS_HDR = \
+	test/test.h \
+	simulator/event.h \
+	simulator/event.tcc \
+	simulator/simulator.h \
+	simulator/callback-event.tcc \
+	simulator/clock.h \
+	simulator/event-heap.h \
+	src/common/buffer.h \
+	src/common/data-writer.h \
+	src/common/pcap-writer.h \
+	src/common/traced-variable-test.h \
+	src/common/callback-test.h \
+	src/common/ipv4-address.h \
+	src/common/population-analysis.h \
+	src/common/utils.h \
+	src/common/chunk-constant-data.h \
+	src/common/mac-address.h \
+	src/common/sgi-hashmap.h \
+	src/common/chunk-fake-data.h \
+	src/common/packet.h \
+	src/common/tag-manager.h \
+	src/common/chunk.h \
+	src/common/packet-logger.h \
+	src/common/trace-container.h \
+	src/common/callback.tcc \
+	src/common/ref-count.tcc \
+	src/common/ui-traced-variable.tcc \
+	src/common/si-traced-variable.tcc \
+	src/common/f-traced-variable.tcc \
+	src/ipv4/chunk-icmp.h \
+	src/ipv4/defrag-state.h \
+	src/ipv4/ipv4-route.h \
+	src/ipv4/tcp-connection-listener.h \
+	src/ipv4/chunk-ipv4.h \
+	src/ipv4/ipv4-end-point.h \
+	src/ipv4/tag-ipv4.h \
+	src/ipv4/tcp.h \
+	src/ipv4/chunk-tcp.h \
+	src/ipv4/ipv4-end-points.h \
+	src/ipv4/tcp-buffer.h \
+	src/ipv4/chunk-udp.h \
+	src/ipv4/ipv4.h \
+	src/ipv4/tcp-connection.h \
+	src/ipv4/udp.h \
+	src/arp/arp-cache-entry.h \
+	src/arp/arp.h \
+	src/arp/chunk-arp.h \
+	src/apps/periodic-generator.h \
+	src/apps/tcp-source.h \
+	src/apps/udp-sink.h \
+	src/apps/tcp-sink.h \
+	src/apps/traffic-analyser.h \
+	src/apps/udp-source.h \
+	src/host/host.h \
+	src/host/loopback-interface.h \
+	src/host/network-interface.h \
+	src/ethernet/cable.h \
+	src/ethernet/chunk-mac-crc.h \
+	src/ethernet/chunk-mac-llc-snap.h \
+	src/ethernet/ethernet-network-interface.h \
+	src/thread/fiber-context.h \
+	src/thread/fiber.h \
+	src/thread/fiber-scheduler.h \
+	src/thread/semaphore.h \
+	src/thread/thread.h \
 	$(NULL)
 YANS_CXXFLAGS=$(CXXFLAGS) $(call gen-lib-build-flags)
 YANS_CFLAGS=$(CFLAGS) $(call gen-lib-build-flags)
@@ -184,6 +259,11 @@ YANS_PYTHON_SRC= \
 	samples/test-thread.py \
 	samples/test-simulator-gc.py \
 	samples/test-simple.py \
+	$(NULL)
+YANS_PYTHON_HDR= \
+	python/function-holder.h \
+	python/export-callback.tcc \
+	python/export-callback-traits.tcc \
 	$(NULL)
 YANS_PYTHON_OUTPUT=$(TOP_BUILD_DIR)/python/$(call gen-pymod-name, _yans)
 YANS_PYTHON_CXXFLAGS=$(CXXFLAGS) $(call gen-pymod-build-flags)

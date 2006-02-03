@@ -14,6 +14,6 @@ gen-obj= $(strip $(call gen-bin, \
 	$(addsuffix .o, $(basename $(filter %.cc,$1))) \
 	$(filter %.py,$1) \
 ))
-gen-dirs=$(strip $(sort $(dir $(call gen-obj, $1))))
+gen-dirs=$(strip $(sort $(dir $1)))
 
 display-compile=$(if $(VERBOSE),echo '$(1)' && $(1),echo 'Building $$@ ...' && $(1))

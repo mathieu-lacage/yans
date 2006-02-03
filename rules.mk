@@ -27,6 +27,9 @@ $(1)_OBJ = $$(call gen-obj, $$($(1)_SRC))
 ALL_OBJ += $$($(1)_OBJ)
 ALL_SRC += $$($(1)_SRC)
 ALL_DEP += $$(call gen-dep, $$($(1)_SRC))
+ALL_DIST += $$($(1)_SRC)
+ALL_DIST += $$($(1)_HDR)
+ALL_DIST += $$($(1)_DIST)
 CSRC=$$(filter %.c, $$($(1)_SRC))
 CXXSRC=$$(filter %.cc, $$($(1)_SRC))
 ASSRC=$$(filter %.s, $$($(1)_SRC))
@@ -70,7 +73,26 @@ $(foreach output,$(ALL),$(eval $(call OUTPUT_template,$(output))))
 
 build: all_dirs $(ALL_OUTPUT)
 
-ALL_DIRS=$(sort $(call gen-dirs, $(ALL_SRC)))
+# dist/distcheck support
+ALL_DIST += $(PACKAGE_DIST)
+DIST_OUTPUT=$(PACKAGE_NAME)-$(PACKAGE_VERSION).tar.gz
+DIST_DIR=$(PACKAGE_NAME)-$(PACKAGE_VERSION)
+ALL_DIST_TARGETS=$(addprefix $(DIST_DIR)/,$(ALL_DIST))
+ALL_DIST_DIRS=$(call gen-dirs, $(ALL_DIST_TARGETS))
+$(DIST_OUTPUT): $(ALL_DIST_DIRS) $(ALL_DIST_TARGETS)
+	tar zcf $@ $(DIST_DIR)
+	@rm -rf $(DIST_DIR)
+$(ALL_DIST_TARGETS): $(DIST_DIR)/%:%
+	@cp $< $@
+$(ALL_DIST_DIRS):
+	@mkdir -p $@
+dist: $(DIST_OUTPUT)
+distcheck: dist
+	tar zxf $(DIST_OUTPUT)
+	cd $(DIST_DIR) && make
+	rm -rf $(DIST_DIR)
+
+ALL_DIRS=$(call gen-dirs, $(call gen-obj, $(ALL_SRC)))
 all_dirs: $(ALL_DIRS)
 $(ALL_DIRS):
 	mkdir -p $@
