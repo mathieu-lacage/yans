@@ -22,7 +22,6 @@
 #include "packet.h"
 #include "chunk.h"
 #include "buffer.h"
-#include "write-file.h"
 #include "callback.tcc"
 #include "tag-manager.h"
 #include <cassert>
