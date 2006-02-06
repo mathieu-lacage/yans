@@ -19,7 +19,7 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "dynamic-mac-handler.h"
+#include "mac-handler.h"
 
 MacCancelableEvent::MacCancelableEvent ()
 	: m_canceled (false),
@@ -92,3 +92,37 @@ DynamicMacHandler::handle (Event *e)
 	}
 	delete ev;
 }
+
+
+StaticMacHandler::StaticMacHandler (MacLow80211 *mac, StaticMacRxHandler handler)
+	: m_mac (mac) , m_handler (handler)
+{}
+StaticMacHandler::~StaticMacHandler ()
+{}
+void 
+StaticMacHandler::start (double delay)
+{
+	// XXX: I am not sure why we need to re-initialize the Event.
+	m_event.uid_ = 0;
+	Scheduler::instance ().schedule (this, &m_event, delay);
+}
+double
+StaticMacHandler::now (void)
+{
+	return Scheduler::instance ().clock ();
+}
+bool
+StaticMacHandler::isRunning (void)
+{
+	if (m_event.time_ > now ()) {
+		return true;
+	} else {
+		return false;
+	}
+}
+void 
+StaticMacHandler::handle (Event *e)
+{
+	(m_mac->*m_handler) ();
+}
+

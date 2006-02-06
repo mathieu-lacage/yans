@@ -68,6 +68,8 @@
 
 #include <stdint.h>
 
+class Packet;
+
 #define HDR_MAC_80211(p) ((hdr_mac_80211 *)hdr_mac::access(p))
 
 enum mac_80211_packet_type {
@@ -77,39 +79,86 @@ enum mac_80211_packet_type {
 	MAC_80211_ACK
 };
 
+enum mac_80211_data_type {
+	MAC_80211_BEACON,
+	MAC_80211_ASSOCIATTION_REQUEST,
+	MAC_80211_ASSOCIATTION_RESPONSE,
+	MAC_80211_DISASSOCIATION,
+	MAC_80211_REASSOCIATION_REQUEST,
+	MAC_80211_REASSOCIATION_RESPONSE,
+	MAC_80211_PROBE_REQUEST,
+	MAC_80211_PROBE_RESPONSE,
+	MAC_80211_AUTHENTICATION,
+	MAC_80211_DEAUTHENTICATION
+};
+
 class hdr_mac_80211 {
  public:
 	void initialize (void);
 
-	int getTxMode (void);
+	int getTxMode (void) const;
 	void setTxMode (int mode);
 
 	/* return 0 for broadcast. */
-	int getDestination (void);
-	int getSource (void);
-	uint16_t getDataType (void);
-	enum mac_80211_packet_type getType (void);
-	double getDuration (void);
-	int getSequence (void);
-	bool isRetry (void);
+	int getDestination (void) const;
+	int getFinalDestination (void) const;
+	int getSource (void) const;
+	enum mac_80211_data_type getDataType (void) const;
+	enum mac_80211_packet_type getType (void) const;
+	double getDuration (void) const;
+	int getSequence (void) const;
+	bool isRetry (void) const;
 
 	void setDestination (int destination);
+	void setFinalDestination (int destination);
 	void setSource (int source);
-	void setDataType (uint16_t type);
+	void setDataType (enum mac_80211_data_type type);
 	void setType (enum mac_80211_packet_type type);
 	void setDuration (double duration);
 	void setSequence (int sequence);
 	void setRetry (void);
+
+	const char *getDataTypeString (void) const;
+	const char *getTypeString (void) const;
 	
  private:
 	enum mac_80211_packet_type m_type;
+	enum mac_80211_data_type m_dataType;
 	double m_duration;
-	int m_sequence;
-	uint16_t m_dataType;
+	/* this is a hack to avoid growing 
+	 * larger than the normal Mac header. 
+	 */
+	int m_sequence : 10;
+	int m_txMode   : 10;
 	int m_destination;
+	int m_finalDestination;
 	int m_source;
-	int m_txMode;
 	bool m_retry;
 };
+
+
+void setSequence (Packet *packet, int sequence);
+void increaseSize (Packet *packet, int increment);
+void decreaseSize (Packet *packet, int decrement);
+void setSize (Packet *packet, int size);
+void setTxMode (Packet *packet, int mode);
+void setDestination (Packet *packet, int destination);	
+void setFinalDestination (Packet *packet, int destination);
+void setDuration (Packet *packet, double duration);
+void setSource (Packet *packet, int source);
+void setType (Packet *packet, enum mac_80211_packet_type type);
+void setRetry (Packet *packet);
+void initialize (Packet *packet);
+
+
+int getSize (Packet *packet);
+double getDuration (Packet *packet);
+bool isRetry (Packet *packet);
+int getSequence (Packet *packet);
+int getDestination (Packet *packet);
+int getFinalDestination (Packet *packet);
+int getSource (Packet *packet);
+int getTxMode (Packet *packet);
+enum mac_80211_packet_type getType (Packet *packet);
 
 #endif /* HDRMAC_80211 */

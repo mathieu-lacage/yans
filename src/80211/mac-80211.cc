@@ -90,9 +90,9 @@ Mac80211::hdr_dst (char* hdr, int dst)
 {
 	class hdr_mac_80211 *mac_header = reinterpret_cast<class hdr_mac_80211 *>(hdr);
 	if (dst != -2) {
-		mac_header->setDestination (dst);
+		mac_header->setFinalDestination (dst);
 	}
-	return mac_header->getDestination ();
+	return mac_header->getFinalDestination ();
 }
 int 
 Mac80211::hdr_src (char* hdr, int src)
@@ -107,9 +107,9 @@ int
 Mac80211::hdr_type(char *hdr, u_int16_t type)
 {
 	class hdr_mac_80211 *mac_header = reinterpret_cast<class hdr_mac_80211 *>(hdr);
-
+	// XXX ? what is this data type sued for ?
 	if (type != 0) {
-		mac_header->setDataType (type );
+		mac_header->setDataType ((enum mac_80211_data_type)type);
 	}
 	return (int)mac_header->getDataType ();
 }
@@ -126,6 +126,22 @@ Mac80211::command(int argc, const char*const* argv)
 	if (argc == 3 &&
 	    strcmp(argv[1], "netif") == 0) {
 		m_low->completeConstruction (peekPhy80211 ());
+	}
+	if (argc >= 3) {
+		if (strcmp (argv[1], "mode") == 0) {
+			if (strcmp (argv[2], "adhoc") == 0) {
+				//m_high = 0;
+			}
+			if (argc == 3) {
+				// bad
+			} else if (strcmp (argv[2], "station-passive") == 0) {
+				//m_high = new MacHighStation (argv[3]);
+			} else if (strcmp (argv[2], "station-active") == 0) {
+				//m_high = new MacHighStation (argv[3]);
+			} else if (strcmp (argv[2], "access-point") == 0) {
+				//m_high = new MacHighAccessPoint (argv[3]);
+			}
+		}
 	}
 	return retval;
 }

@@ -153,7 +153,6 @@ private:
 	double calculateChunkSuccessRate (double snir, double delay, TransmissionMode *mode);
 	void appendEvent (PhyRxEvent *event);
 
-	int    getSize (Packet *packet);
 	int    getPayloadMode (Packet *packet);
 	int    getHeaderMode (Packet *packet);
 	double dBmToW (double dBm);

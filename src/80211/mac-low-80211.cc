@@ -198,43 +198,6 @@ MacLow80211::getSelf (void)
 {
 	return m_mac->addr ();
 }
-int 
-MacLow80211::getDestination (Packet *packet)
-{
-	int destination = HDR_MAC_80211 (packet)->getDestination ();
-	return destination;
-}
-int 
-MacLow80211::getSource (Packet *packet)
-{
-	int source = HDR_MAC_80211 (packet)->getSource ();
-	return source;
-}
-int 
-MacLow80211::getTxMode (Packet *packet)
-{
-	int txMode = HDR_MAC_80211 (packet)->getTxMode ();
-	return txMode;
-}
-enum mac_80211_packet_type
-MacLow80211::getType (Packet *packet)
-{
-	enum mac_80211_packet_type type;
-	type = HDR_MAC_80211 (packet)->getType ();
-	return type;
-}
-bool
-MacLow80211::isRetry (Packet *packet)
-{
-	bool isRetry = HDR_MAC_80211 (packet)->isRetry ();
-	return isRetry;
-}
-int
-MacLow80211::getSequence (Packet *packet)
-{
-	int sequence = HDR_MAC_80211 (packet)->getSequence ();
-	return sequence;
-}
 int
 MacLow80211::getDataHeaderSize (void)
 {
@@ -320,79 +283,12 @@ MacLow80211::getLastStartRx (void)
 {
 	return m_mac->peekPhy80211 ()->getLastRxStartTime ();
 }
-int
-MacLow80211::getSize (Packet *packet)
-{
-	return HDR_CMN (packet)->size ();
-}
-void
-MacLow80211::setSize (Packet *packet, int size)
-{
-	HDR_CMN (packet)->size () = size;
-}
-double
-MacLow80211::getDuration (Packet *packet)
-{
-	return HDR_MAC_80211 (packet)->getDuration ();
-}
-void
-MacLow80211::increaseSize (Packet *packet, int increment)
-{
-	HDR_CMN (packet)->size () += increment;
-	//cout << "increase " << packet << " by " << increment << endl;
-}
-void
-MacLow80211::decreaseSize (Packet *packet, int decrement)
-{
-	HDR_CMN (packet)->size () -= decrement;
-	//cout << "decrease " << packet << " by " << decrement << endl;
-}
 
 double
 MacLow80211::calculateTxDuration (int mode, int size)
 {
 	double duration = m_mac->peekPhy80211 ()->calculateTxDuration (mode, size);
 	return duration;
-}
-void
-MacLow80211::setTxMode (Packet *packet, int mode)
-{
-	HDR_MAC_80211 (packet)->setTxMode (mode);
-}
-void
-MacLow80211::setDestination (Packet *packet, int destination)
-{
-	HDR_MAC_80211 (packet)->setDestination (destination);
-}
-void
-MacLow80211::setDuration (Packet *packet, double duration)
-{
-	HDR_MAC_80211 (packet)->setDuration (duration);
-}
-void
-MacLow80211::setSource (Packet *packet, int source)
-{
-	HDR_MAC_80211 (packet)->setSource (source);
-}
-void
-MacLow80211::setType (Packet *packet, enum mac_80211_packet_type type)
-{
-	HDR_MAC_80211 (packet)->setType (type);
-}
-void
-MacLow80211::setSequence (Packet *packet, int sequence)
-{
-	HDR_MAC_80211 (packet)->setSequence (sequence);
-}
-void
-MacLow80211::setRetry (Packet *packet)
-{
-	HDR_MAC_80211 (packet)->setRetry ();
-}
-void
-MacLow80211::initialize (Packet *packet)
-{
-	HDR_MAC_80211 (packet)->initialize ();
 }
 
 /****************************************************
@@ -452,26 +348,6 @@ MacLow80211::getRTSforPacket (Packet *data)
 	duration += calculateTxDuration (txMode, getSize (data));
 	setDuration (packet, duration);
 	return packet;
-}
-void
-MacLow80211::setExpectedCTSSource (int source)
-{
-	m_expectedCTSSource = source;
-}
-int
-MacLow80211::getExpectedCTSSource (void)
-{
-	return m_expectedCTSSource;
-}
-void
-MacLow80211::setExpectedACKSource (int source)
-{
-	m_expectedACKSource = source;
-}
-int
-MacLow80211::getExpectedACKSource (void)
-{
-	return m_expectedACKSource;
 }
 
 double
@@ -1004,7 +880,6 @@ MacLow80211::sendDataAfterCTS (class MacCancelableEvent *macEvent)
 	
 	setTxMode (m_currentTxPacket, txMode);
 	setDuration (m_currentTxPacket, event->getDuration () - txDuration - getSIFS ());
-	setExpectedACKSource (getDestination (m_currentTxPacket));
 	setSequence (m_currentTxPacket, m_sequence);
 	m_mac->forwardDown (m_currentTxPacket->copy ());
 	dealWithInputQueue ();

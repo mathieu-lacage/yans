@@ -84,7 +84,7 @@ public:
 	PhyRxEvent (Packet *packet, class Phy80211 *phy)
 	{
 		m_payloadMode = phy->getPayloadMode (packet);
-		m_size = phy->getSize (packet);
+		m_size = ::getSize (packet);
 		m_startTime = phy->now ();
 		m_endTime = m_startTime + phy->calculatePacketDuration (getHeaderMode (),
 									m_payloadMode,
@@ -465,11 +465,6 @@ int
 Phy80211::getPayloadMode (Packet *packet)
 {
 	return HDR_MAC_80211 (packet)->getTxMode ();
-}
-int
-Phy80211::getSize (Packet *packet)
-{
-	return HDR_CMN (packet)->size ();
 }
 double 
 Phy80211::getPreambleDuration (void)

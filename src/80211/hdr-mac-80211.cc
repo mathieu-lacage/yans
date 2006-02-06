@@ -35,37 +35,42 @@ hdr_mac_80211::initialize (void)
 }
 
 int 
-hdr_mac_80211::getDestination (void)
+hdr_mac_80211::getDestination (void) const
 {
 	return m_destination;
 }
 int 
-hdr_mac_80211::getSource (void)
+hdr_mac_80211::getFinalDestination (void) const
+{
+	return m_finalDestination;
+}
+int 
+hdr_mac_80211::getSource (void) const
 {
 	return m_source;
 }
-uint16_t 
-hdr_mac_80211::getDataType (void)
+enum mac_80211_data_type
+hdr_mac_80211::getDataType (void) const
 {
 	return m_dataType;
 }
 enum mac_80211_packet_type 
-hdr_mac_80211::getType (void)
+hdr_mac_80211::getType (void) const
 {
 	return m_type;
 }
 double 
-hdr_mac_80211::getDuration (void)
+hdr_mac_80211::getDuration (void) const
 {
 	return m_duration;
 }
 int 
-hdr_mac_80211::getSequence (void)
+hdr_mac_80211::getSequence (void) const
 {
 	return m_sequence;
 }
 bool
-hdr_mac_80211::isRetry (void)
+hdr_mac_80211::isRetry (void) const
 {
 	return m_retry;
 }
@@ -76,12 +81,17 @@ hdr_mac_80211::setDestination (int destination)
 	m_destination = destination;
 }
 void 
+hdr_mac_80211::setFinalDestination (int destination)
+{
+	m_finalDestination = destination;
+}
+void 
 hdr_mac_80211::setSource (int source)
 {
 	m_source = source;
 }
 void 
-hdr_mac_80211::setDataType (uint16_t dataType)
+hdr_mac_80211::setDataType (enum mac_80211_data_type dataType)
 {
 	m_dataType = dataType;
 }
@@ -113,7 +123,163 @@ hdr_mac_80211::setTxMode (int mode)
 }
 
 int
-hdr_mac_80211::getTxMode (void)
+hdr_mac_80211::getTxMode (void) const
 {
 	return m_txMode;
+}
+
+#define FOO(x) case MAC_80211_ ## x: return #x; break;
+
+const char *
+hdr_mac_80211::getDataTypeString (void) const
+{
+	switch (m_dataType) {
+		FOO (BEACON);
+		FOO (ASSOCIATTION_REQUEST);
+		FOO (ASSOCIATTION_RESPONSE);
+		FOO (DISASSOCIATION);
+		FOO (REASSOCIATION_REQUEST);
+		FOO (REASSOCIATION_RESPONSE);
+		FOO (PROBE_REQUEST);
+		FOO (PROBE_RESPONSE);
+		FOO (AUTHENTICATION);
+		FOO (DEAUTHENTICATION);
+	}
+	return "deadbeaf";
+}
+const char *
+hdr_mac_80211::getTypeString (void) const
+{
+	switch (m_type) {
+		FOO (RTS);
+		FOO (CTS);
+		FOO (DATA);
+		FOO (ACK);
+	}
+	return "deadbeaf";
+}
+
+#undef FOO
+
+
+int 
+getDestination (Packet *packet)
+{
+	int destination = HDR_MAC_80211 (packet)->getDestination ();
+	return destination;
+}
+int 
+getFinalDestination (Packet *packet)
+{
+	int destination = HDR_MAC_80211 (packet)->getFinalDestination ();
+	return destination;
+}
+int 
+getSource (Packet *packet)
+{
+	int source = HDR_MAC_80211 (packet)->getSource ();
+	return source;
+}
+int 
+getTxMode (Packet *packet)
+{
+	int txMode = HDR_MAC_80211 (packet)->getTxMode ();
+	return txMode;
+}
+enum mac_80211_packet_type
+getType (Packet *packet)
+{
+	enum mac_80211_packet_type type;
+	type = HDR_MAC_80211 (packet)->getType ();
+	return type;
+}
+bool
+isRetry (Packet *packet)
+{
+	bool isRetry = HDR_MAC_80211 (packet)->isRetry ();
+	return isRetry;
+}
+int
+getSequence (Packet *packet)
+{
+	int sequence = HDR_MAC_80211 (packet)->getSequence ();
+	return sequence;
+}
+int
+getSize (Packet *packet)
+{
+	return HDR_CMN (packet)->size ();
+}
+
+
+
+double
+getDuration (Packet *packet)
+{
+	return HDR_MAC_80211 (packet)->getDuration ();
+}
+
+
+
+void
+setSize (Packet *packet, int size)
+{
+	HDR_CMN (packet)->size () = size;
+}
+void
+increaseSize (Packet *packet, int increment)
+{
+	HDR_CMN (packet)->size () += increment;
+	//cout << "increase " << packet << " by " << increment << endl;
+}
+void
+decreaseSize (Packet *packet, int decrement)
+{
+	HDR_CMN (packet)->size () -= decrement;
+	//cout << "decrease " << packet << " by " << decrement << endl;
+}
+void
+setTxMode (Packet *packet, int mode)
+{
+	HDR_MAC_80211 (packet)->setTxMode (mode);
+}
+void
+setDestination (Packet *packet, int destination)
+{
+	HDR_MAC_80211 (packet)->setDestination (destination);
+}
+void
+setDuration (Packet *packet, double duration)
+{
+	HDR_MAC_80211 (packet)->setDuration (duration);
+}
+void
+setSource (Packet *packet, int source)
+{
+	HDR_MAC_80211 (packet)->setSource (source);
+}
+void
+setFinalDestination (Packet *packet, int destination)
+{
+	HDR_MAC_80211 (packet)->setFinalDestination (destination);
+}
+void
+setType (Packet *packet, enum mac_80211_packet_type type)
+{
+	HDR_MAC_80211 (packet)->setType (type);
+}
+void
+setSequence (Packet *packet, int sequence)
+{
+	HDR_MAC_80211 (packet)->setSequence (sequence);
+}
+void
+setRetry (Packet *packet)
+{
+	HDR_MAC_80211 (packet)->setRetry ();
+}
+void
+initialize (Packet *packet)
+{
+	HDR_MAC_80211 (packet)->initialize ();
 }

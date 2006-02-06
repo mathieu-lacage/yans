@@ -18,8 +18,8 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef DYNAMIC_MAC_HANDLER
-#define DYNAMIC_MAC_HANDLER
+#ifndef MAC_HANDLER
+#define MAC_HANDLER
 
 #include "mac-low-80211.h"
 #include "scheduler.h"
@@ -55,4 +55,20 @@ private:
 };
 
 
-#endif /* DYNAMIC_MAC_HANDLER */
+class StaticMacHandler : public Handler
+{
+public:
+	typedef void (MacLow80211::*StaticMacRxHandler) (void);
+	StaticMacHandler (MacLow80211 *mac, StaticMacRxHandler handler);
+	virtual ~StaticMacHandler ();
+	void start (double delay);
+	virtual void handle (Event *e);
+	bool isRunning (void);
+private:
+	double now (void);
+	MacLow80211 *m_mac;
+	StaticMacRxHandler m_handler;
+	Event m_event;
+};
+
+#endif /* MAC_HANDLER */

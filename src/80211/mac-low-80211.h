@@ -59,10 +59,6 @@ private:
 	int getACKSize (void) const;
 	int getRTSSize (void) const;
 	int getCTSSize (void) const;
-	int getDestination (Packet *packet);
-	int getSource (Packet *packet);
-	int getTxMode (Packet *packet);
-	enum mac_80211_packet_type getType (Packet *packet);
 
 	int getDataHeaderSize (void);
 	double getSIFS (void);
@@ -74,30 +70,11 @@ private:
 
 	double getLastSNR (void);
 	double getLastStartRx (void);
-	void setSize (Packet *packet, int size);
-	int getSize (Packet *packet);
-	double getDuration (Packet *packet);
-	void increaseSize (Packet *packet, int increment);
-	void decreaseSize (Packet *packet, int decrement);
 	double calculateTxDuration (int mode, int size);
-	void setTxMode (Packet *packet, int mode);
-	void setDestination (Packet *packet, int destination);	
-	void setDuration (Packet *packet, double duration);
-	void setSource (Packet *packet, int source);
-	void setType (Packet *packet, enum mac_80211_packet_type type);
-	void setRetry (Packet *packet);
-	void initialize (Packet *packet);
-	bool isRetry (Packet *packet);
-	void setSequence (Packet *packet, int sequence);
-	int getSequence (Packet *packet);
 	Packet *getRTSPacket (void);
 	Packet *getCTSPacket (void);
 	Packet *getACKPacket (void);
 	Packet *getRTSforPacket (Packet *data);
-	void setExpectedCTSSource (int source);
-	int getExpectedCTSSource (void);
-	void setExpectedACKSource (int source);
-	int getExpectedACKSource (void);
 	double pickBackoffDelay (void);
 	double pickBackoffDelayInCaseOfFailure (void);
 	int calculateNewFailedCW (int CW);
