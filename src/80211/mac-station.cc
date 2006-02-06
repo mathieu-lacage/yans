@@ -19,7 +19,24 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "sta-rate-control.h"
+#include "mac-station.h"
 
-StaRateControl::~StaRateControl ()
+MacStation::MacStation ()
+	: m_sequence (0)
 {}
+
+
+MacStation::~MacStation ()
+{}
+
+
+void
+MacStation::setLastRxSequence (int sequence)
+{
+	m_sequence = sequence;
+}
+int
+MacStation::getLastRxSequence (void)
+{
+	return m_sequence;
+}

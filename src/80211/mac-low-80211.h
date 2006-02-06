@@ -29,7 +29,7 @@ class RngUniform;
 class Backoff;
 class Mac80211;
 class MacQueue80211e;
-class RateControl;
+class MacStation;
 class DynamicMacHandler;
 class MacCancelableEvent;
 class StaticMacHandler;
@@ -54,6 +54,7 @@ public:
 
 private:
 	double now (void);
+	MacStation *lookupStation (int address);
 
 	int getACKSize (void) const;
 	int getRTSSize (void) const;
@@ -84,6 +85,11 @@ private:
 	void setDuration (Packet *packet, double duration);
 	void setSource (Packet *packet, int source);
 	void setType (Packet *packet, enum mac_80211_packet_type type);
+	void setRetry (Packet *packet);
+	void initialize (Packet *packet);
+	bool isRetry (Packet *packet);
+	void setSequence (Packet *packet, int sequence);
+	int getSequence (Packet *packet);
 	Packet *getRTSPacket (void);
 	Packet *getCTSPacket (void);
 	Packet *getACKPacket (void);
@@ -126,6 +132,7 @@ private:
 
 	Packet *m_currentTxPacket;
 	/* XXX init all */
+	int m_sequence;
 	int m_expectedCTSSource;
 	int m_expectedACKSource;
 	int m_CW;
@@ -133,7 +140,6 @@ private:
 	int m_SLRC;
 	Mac80211 *m_mac;
 	MacQueue80211e *m_queue;
-	RateControl *m_rateControl;
 	DynamicMacHandler *m_ACKTimeoutBackoffHandler;
 	DynamicMacHandler *m_CTSTimeoutBackoffHandler;
 	StaticMacHandler *m_accessBackoffHandler;

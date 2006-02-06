@@ -18,35 +18,24 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef RATE_CONTROL_H
-#define RATE_CONTROL_H
+#ifndef MAC_STATIONS_H
+#define MAC_STATIONS_H
 
 #include <map>
 
-class RateControl {
+class MacStation;
+
+class MacStations {
 public:
-	RateControl (class StaRateControlFactory *m_factory);
-	~RateControl ();
-	void reportRxOk (int source, double SNR, int mode);
+	MacStations ();
+	virtual ~MacStations ();
+  
+	MacStation *lookup (int address);
 
-	void reportRTSFailed (int destination);
-	void reportDataFailed (int destination);
-	void reportRTSOk (int destination, double ctsSNR, int ctsMode);
-	void reportDataOk (int destination, double ackSNR, int ackMode);
-
-	void reportFinalRTSFailed (int destination);
-	void reportFinalDataFailed (int destination);
-
-	int getDataMode (int destination, int size);
-	int getRTSMode (int destination);
-	int getBroadcastDataMode (int size);
 private:
-	class StaRateControl *peekRateControl (int destination);
-
-	class StaRateControlFactory *m_factory;
-	class StaRateControl *m_broadcast;
-	std::map <int, class StaRateControl *, std::less<int> > m_destinations;
+	std::map <int, class MacStation *, std::less<int> > m_addresses;
+	virtual class MacStation *createStation (void) = 0;
 };
 
 
-#endif /* RATE_CONTROL_H */
+#endif /* MAC_STATIONS_H */

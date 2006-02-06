@@ -28,6 +28,12 @@
  */
 static char foo[sizeof (hdr_mac)-sizeof (hdr_mac_80211)+1];
 
+void
+hdr_mac_80211::initialize (void)
+{
+	m_retry = false;
+}
+
 int 
 hdr_mac_80211::getDestination (void)
 {
@@ -57,6 +63,11 @@ int
 hdr_mac_80211::getSequence (void)
 {
 	return m_sequence;
+}
+bool
+hdr_mac_80211::isRetry (void)
+{
+	return m_retry;
 }
 
 void 
@@ -89,7 +100,11 @@ hdr_mac_80211::setSequence (int sequence)
 {
 	m_sequence = sequence;
 }
-
+void
+hdr_mac_80211::setRetry (void)
+{
+	m_retry = true;
+}
 
 void
 hdr_mac_80211::setTxMode (int mode)

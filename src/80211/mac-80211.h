@@ -24,6 +24,8 @@
 
 #include "mac.h"
 
+class MacStation;
+class MacStations;
 class Phy80211;
 class MacLow80211;
 class Packet;
@@ -45,7 +47,9 @@ public:
 	Phy80211 *peekPhy80211 (void);
 	void forwardUp (class Packet *packet);
 	void forwardDown (class Packet *packet);
+	MacStation *lookupStation (int address);
 private:
+	MacStations *m_stations;
 	MacLow80211 *m_low;
 };
 

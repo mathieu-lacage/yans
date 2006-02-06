@@ -79,6 +79,8 @@ enum mac_80211_packet_type {
 
 class hdr_mac_80211 {
  public:
+	void initialize (void);
+
 	int getTxMode (void);
 	void setTxMode (int mode);
 
@@ -89,6 +91,7 @@ class hdr_mac_80211 {
 	enum mac_80211_packet_type getType (void);
 	double getDuration (void);
 	int getSequence (void);
+	bool isRetry (void);
 
 	void setDestination (int destination);
 	void setSource (int source);
@@ -96,6 +99,7 @@ class hdr_mac_80211 {
 	void setType (enum mac_80211_packet_type type);
 	void setDuration (double duration);
 	void setSequence (int sequence);
+	void setRetry (void);
 	
  private:
 	enum mac_80211_packet_type m_type;
@@ -104,9 +108,8 @@ class hdr_mac_80211 {
 	uint16_t m_dataType;
 	int m_destination;
 	int m_source;
-
 	int m_txMode;
-	
+	bool m_retry;
 };
 
 #endif /* HDRMAC_80211 */

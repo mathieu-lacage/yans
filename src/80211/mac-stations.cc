@@ -19,18 +19,21 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#ifndef STA_RATE_CONTROL_FACTORY_H
-#define STA_RATE_CONTROL_FACTORY_H
+#include "mac-stations.h"
 
-class StaRateControlFactory {
-public:
-	virtual ~StaRateControlFactory () = 0;
-	class StaRateControl *createBroadcastStaRateControl (void);
-	class StaRateControl *createStaRateControl (void);
-private:
-	virtual class StaRateControl *createBroadcast (void) = 0;
-	virtual class StaRateControl *create (void) = 0;
 
-};
+MacStations::MacStations ()
+{}
 
-#endif /* STA_RATE_CONTROL_FACTORY_H */
+MacStations::~MacStations ()
+{}
+
+MacStation *
+MacStations::lookup (int address)
+{
+	if (m_addresses[address] == 0) {
+		m_addresses[address] = createStation ();
+	}
+	return m_addresses[address];
+}
+

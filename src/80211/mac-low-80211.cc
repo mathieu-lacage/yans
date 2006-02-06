@@ -24,8 +24,7 @@
 #include "hdr-mac-80211.h"
 #include "mac-80211.h"
 #include "phy-80211.h"
-#include "rate-control.h"
-#include "arf-rate-control.h"
+#include "mac-station.h"
 #include "dynamic-mac-handler.h"
 #include "static-mac-handler.h"
 #include "backoff.h"
@@ -183,7 +182,6 @@ MacLow80211::MacLow80211 (class Mac80211 *mac)
 	: m_currentTxPacket (0),
 	  m_mac (mac),
 	  m_queue (new MacQueue80211e (10.0 /* XXX */)),
-	  m_rateControl (new RateControl (new ArfStaRateControlFactory ())),
 	  m_ACKTimeoutBackoffHandler (new DynamicMacHandler (this, &MacLow80211::ACKTimeout)),
 	  m_CTSTimeoutBackoffHandler (new DynamicMacHandler (this, &MacLow80211::CTSTimeout)),
 	  m_accessBackoffHandler (new StaticMacHandler (this, &MacLow80211::initialBackoffTimeout)),
@@ -196,6 +194,7 @@ MacLow80211::MacLow80211 (class Mac80211 *mac)
 	resetCW ();
 	m_SSRC = 0;
 	m_SLRC = 0;
+	m_sequence = 0;
 }
 
 void 
@@ -215,7 +214,6 @@ MacLow80211::completeConstruction (Phy80211 *phy)
 MacLow80211::~MacLow80211 ()
 {
 	delete m_queue;
-	delete m_rateControl;
 	delete m_ACKTimeoutBackoffHandler;
 	delete m_accessBackoffHandler;
 	delete m_sendCTSHandler;
@@ -229,6 +227,11 @@ MacLow80211::~MacLow80211 ()
  *  Accessor methods
  ****************************************************/
 
+MacStation *
+MacLow80211::lookupStation (int address)
+{
+	return m_mac->lookupStation (address);
+}
 Phy80211 *
 MacLow80211::peekPhy80211 (void)
 {
@@ -279,6 +282,18 @@ MacLow80211::getType (Packet *packet)
 	enum mac_80211_packet_type type;
 	type = HDR_MAC_80211 (packet)->getType ();
 	return type;
+}
+bool
+MacLow80211::isRetry (Packet *packet)
+{
+	bool isRetry = HDR_MAC_80211 (packet)->isRetry ();
+	return isRetry;
+}
+int
+MacLow80211::getSequence (Packet *packet)
+{
+	int sequence = HDR_MAC_80211 (packet)->getSequence ();
+	return sequence;
 }
 int
 MacLow80211::getDataHeaderSize (void)
@@ -424,6 +439,21 @@ MacLow80211::setType (Packet *packet, enum mac_80211_packet_type type)
 {
 	HDR_MAC_80211 (packet)->setType (type);
 }
+void
+MacLow80211::setSequence (Packet *packet, int sequence)
+{
+	HDR_MAC_80211 (packet)->setSequence (sequence);
+}
+void
+MacLow80211::setRetry (Packet *packet)
+{
+	HDR_MAC_80211 (packet)->setRetry ();
+}
+void
+MacLow80211::initialize (Packet *packet)
+{
+	HDR_MAC_80211 (packet)->initialize ();
+}
 
 /****************************************************
  *  Slightly smarter methods below.
@@ -470,7 +500,7 @@ MacLow80211::getRTSforPacket (Packet *data)
 	Packet *packet = getRTSPacket ();
 	setSource (packet, getSelf ());
 	setDestination (packet, getDestination (data));
-	int txMode = m_rateControl->getRTSMode (getDestination (data));
+	int txMode = lookupStation (getDestination (data))->getRTSMode ();
 	setTxMode (packet, txMode);
 	double duration = 3 * getSIFS ();
 	/* XXX: the duration is calculated as if the RTS 
@@ -594,8 +624,8 @@ MacLow80211::sendPacket (Packet *txPacket)
 {
 	if (getSize (txPacket) > getRTSCTSThreshold ()) {
 		/* send an RTS for this packet. */
-		TRACE ("tx RTS");
 		Packet *packet = getRTSforPacket (txPacket);
+		TRACE ("tx RTS with mode %d", getTxMode (packet));
 		double txDuration = calculateTxDuration (getTxMode (packet), getSize (packet));
 		double backoffDelay = pickBackoffDelayInCaseOfFailure ();
 		double backoffStart = now () + txDuration + getCTSTimeoutDuration ();
@@ -603,14 +633,12 @@ MacLow80211::sendPacket (Packet *txPacket)
 		m_backoff->start (backoffStart, backoffDelay);
 		m_CTSTimeoutBackoffHandler->start (new MacCancelableEvent (),
 						   timerDelay);
-		setExpectedCTSSource (getDestination (packet));
 		m_mac->forwardDown (packet);
 	} else {
 		/* send this packet directly. No RTS is needed. */
-		TRACE ("tx DATA to %d", getDestination (txPacket));
 		setSource (txPacket, getSelf ());
-		int txMode = m_rateControl->getDataMode (getDestination (txPacket),
-							 getSize (txPacket));
+		int txMode = lookupStation (getDestination (txPacket))->getDataMode (getSize (txPacket));
+		TRACE ("tx DATA to %d with mode %d", getDestination (txPacket), txMode);
 		double txDuration = calculateTxDuration (txMode, getSize (txPacket));
 		double backoffStart = now () + txDuration + getACKTimeoutDuration ();
 		double backoffDelay = pickBackoffDelayInCaseOfFailure ();
@@ -621,7 +649,7 @@ MacLow80211::sendPacket (Packet *txPacket)
 
 		setTxMode (txPacket, txMode);
 		setDuration (txPacket, getACKTimeoutDuration () + getSIFS ());
-		setExpectedACKSource (getDestination (txPacket));
+		setSequence (txPacket, m_sequence);
 		m_mac->forwardDown (txPacket);
 	}
 }
@@ -632,12 +660,14 @@ MacLow80211::startTransmission (void)
 	 * start a new transmission.
 	 */
 	Packet *packet = m_queue->dequeue ();
+	m_sequence++; /* see ieee 802.11-1999 7.1.3.4.1 p40 */
+	m_sequence %= 4096;
 	increaseSize (packet, getDataHeaderSize ());
 	setType (packet, MAC_80211_DATA);
 	if (getDestination (packet) == ((int)MAC_BROADCAST)) {
 		/* broadcast packets do not require an ACK. */
-		TRACE ("tx broadcast");
-		int txMode = m_rateControl->getBroadcastDataMode (getSize (packet));
+		int txMode = 0; // XXXX
+		TRACE ("tx broadcast with mode %d", txMode);
 		setTxMode (packet, txMode);
 		setDuration (packet, 0);
 		double backoffStart = now ();
@@ -651,6 +681,7 @@ MacLow80211::startTransmission (void)
 		 */
 		dealWithInputQueue ();
 	} else {
+		initialize (packet);
 		m_currentTxPacket = packet;
 		sendPacket (packet);
 	}
@@ -778,9 +809,8 @@ MacLow80211::receive (class Packet *packet)
 		dealWithInputQueue ();
 		return;
 	}
-	m_rateControl->reportRxOk (getSource (packet), 
-				   getLastSNR (), 
-				   getTxMode (packet));
+	lookupStation (getSource (packet))->reportRxOk (getLastSNR (),
+							 getTxMode (packet));
 	bool isNavZero = m_backoff->isNavZero (now ());
 	m_backoff->notifyNav (now (), getDuration (packet));
 
@@ -796,9 +826,19 @@ MacLow80211::receive (class Packet *packet)
 	} else if (getType (packet) == MAC_80211_DATA) {
 		decreaseSize (packet, getDataHeaderSize ());
 		if (getDestination (packet) == getSelf ()) {
-			TRACE ("rx DATA from %d", getSource (packet));
+			// send ACK.
 			m_sendACKHandler->start (new SendACKEvent (packet), getSIFS ());
-			m_mac->forwardUp (packet);
+			
+			// filter duplicates
+			MacStation *station = lookupStation (getSource (packet));
+			if (isRetry (packet) &&
+			    getSequence (packet) == station->getLastRxSequence ()) {
+				TRACE ("rx DATA duplicate from %d", getSource (packet));
+			} else {
+				TRACE ("rx DATA from %d", getSource (packet));
+				m_mac->forwardUp (packet);
+			}
+			station->setLastRxSequence (getSequence (packet));
 		} else if (getDestination (packet) == ((int)MAC_BROADCAST)) {
 			TRACE ("rx broadcast from %d", getSource (packet));
 			m_mac->forwardUp (packet);
@@ -810,32 +850,30 @@ MacLow80211::receive (class Packet *packet)
 	} else if (getType (packet) == MAC_80211_CTS &&
 		   getDestination (packet) == getSelf () &&
 		   m_CTSTimeoutBackoffHandler->isRunning () &&
-		   getSource (packet) == getExpectedCTSSource () &&
 		   m_currentTxPacket &&
+		   // XXX getEndTime fucked up.
 		   getLastStartRx () <= m_CTSTimeoutBackoffHandler->getEndTime ()) {
 		TRACE ("rx CTS from %d", getSource (packet));
 		m_CTSTimeoutBackoffHandler->cancel ();
 		m_backoff->cancel ();
 		m_sendDataHandler->start (new SendDataEvent (packet), getSIFS ());
-		m_rateControl->reportRTSOk (getSource (packet),
-					    getLastSNR (),
-					    getTxMode (packet));
+		lookupStation (getSource (packet))->reportRTSOk (getLastSNR (),
+								 getTxMode (packet));
 		dropPacket (packet);
 		dealWithInputQueue ();
 	} else if (getType (packet) == MAC_80211_ACK &&
 		   getDestination (packet) == getSelf () &&
 		   m_ACKTimeoutBackoffHandler->isRunning () &&
-		   getSource (packet) == getExpectedACKSource () &&
 		   m_currentTxPacket &&
+		   // XXX getEndTime fucked up.
 		   getLastStartRx () <= m_ACKTimeoutBackoffHandler->getEndTime ()) {
 		// XXX assert other timers not running.
 		TRACE ("rx ACK from %d", getSource (packet));
 		resetCW ();
 		m_ACKTimeoutBackoffHandler->cancel ();
 		m_backoff->cancel ();
-		m_rateControl->reportDataOk (getSource (packet),
-					     getLastSNR (),
-					     getTxMode (packet));
+		lookupStation (getSource (packet))->reportDataOk (getLastSNR (),
+								 getTxMode (packet));
 		m_currentTxPacket = 0;
 		dropPacket (packet);
 		dealWithInputQueue ();
@@ -870,7 +908,7 @@ MacLow80211::ACKTimeout (class MacCancelableEvent *event)
 		 * the max retry count has been reached.
 		 * drop the packet and try to process another one.
 		 */
-		m_rateControl->reportFinalDataFailed (getDestination (m_currentTxPacket));
+		lookupStation (getDestination (m_currentTxPacket))->reportFinalDataFailed ();
 		dropCurrentTxPacket ();
 		dealWithInputQueue ();
 	} else {
@@ -878,7 +916,8 @@ MacLow80211::ACKTimeout (class MacCancelableEvent *event)
 		 * We re-send it again with a different txMode
 		 * and different duration.
 		 */
-		m_rateControl->reportDataFailed (getDestination (m_currentTxPacket));
+		setRetry (m_currentTxPacket);
+		lookupStation (getDestination (m_currentTxPacket))->reportDataFailed ();
 		sendPacket (m_currentTxPacket);
 	}
 }
@@ -907,14 +946,14 @@ MacLow80211::CTSTimeout (class MacCancelableEvent *event)
 		 * the max retry count has been reached.
 		 * drop the current packet.
 		 */
-		m_rateControl->reportFinalRTSFailed (getDestination (m_currentTxPacket));
+		lookupStation (getDestination (m_currentTxPacket))->reportFinalRTSFailed ();
 		dropCurrentTxPacket ();
 		dealWithInputQueue ();
 	} else {
 		/* the transmission of the RTS failed.
 		 * re-send the RTS with a new txmode/duration.
 		 */
-		m_rateControl->reportRTSFailed (getDestination (m_currentTxPacket));
+		lookupStation (getDestination (m_currentTxPacket))->reportRTSFailed ();
 		sendPacket (m_currentTxPacket);
 	}
 }
@@ -949,8 +988,8 @@ MacLow80211::sendCTS_AfterRTS (class MacCancelableEvent *macEvent)
 	/* send a CTS when you receive a RTS 
 	 * right after SIFS.
 	 */
-	TRACE ("tx CTS");
 	SendCTSEvent *event = static_cast<SendCTSEvent *> (macEvent);
+	TRACE ("tx CTS with mode %d", event->getTxMode ());
 	Packet * cts = getCTSPacket ();
 	setDestination (cts, event->getSource ());
 	double ctsDuration = calculateTxDuration (event->getTxMode (), getSize (cts));
@@ -967,7 +1006,7 @@ MacLow80211::sendACK_AfterData (class MacCancelableEvent *macEvent)
 	 * a packet after SIFS. 
 	 */
 	SendACKEvent *event = static_cast<SendACKEvent *> (macEvent);
-	TRACE ("tx ACK to %d", event->getSource ());
+	TRACE ("tx ACK to %d with mode %d", event->getSource (), event->getTxMode ());
 	Packet * ack = getACKPacket ();
 	setDestination (ack, event->getSource ());
 	setDuration (ack, 0);
@@ -986,12 +1025,13 @@ MacLow80211::sendDataAfterCTS (class MacCancelableEvent *macEvent)
 	/* send the third step in a 
 	 * RTS/CTS/DATA/ACK hanshake 
 	 */
-	TRACE ("tx DATA to %d", getDestination (m_currentTxPacket));
 	assert (m_currentTxPacket);
 	SendDataEvent *event = static_cast<SendDataEvent *> (macEvent);
 
-	int txMode = m_rateControl->getDataMode (getDestination (m_currentTxPacket),
-						 getSize (m_currentTxPacket));
+	int txMode = lookupStation (getDestination (m_currentTxPacket))->getDataMode (getSize (m_currentTxPacket));
+	TRACE ("tx DATA to %d with mode %d", 
+	       getDestination (m_currentTxPacket),
+	       txMode);
 	double txDuration = calculateTxDuration (txMode, getSize (m_currentTxPacket));
 	double backoffStart = now () + txDuration + getACKTimeoutDuration ();
 	double backoffDelay = pickBackoffDelayInCaseOfFailure ();
@@ -1003,6 +1043,7 @@ MacLow80211::sendDataAfterCTS (class MacCancelableEvent *macEvent)
 	setTxMode (m_currentTxPacket, txMode);
 	setDuration (m_currentTxPacket, event->getDuration () - txDuration - getSIFS ());
 	setExpectedACKSource (getDestination (m_currentTxPacket));
+	setSequence (m_currentTxPacket, m_sequence);
 	m_mac->forwardDown (m_currentTxPacket);
 	dealWithInputQueue ();
 }

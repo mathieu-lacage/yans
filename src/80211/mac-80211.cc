@@ -23,6 +23,7 @@
 #include "mac-low-80211.h"
 #include "phy-80211.h"
 #include "hdr-mac-80211.h"
+#include "arf-mac-stations.h"
 
 #include <iostream>
 
@@ -40,6 +41,7 @@ public:
 
 Mac80211::Mac80211 ()
 	: Mac (),
+	  m_stations (new ArfMacStations ()),
 	  m_low (new MacLow80211 (this))
 {}
 
@@ -143,4 +145,10 @@ Mac80211::recv (Packet *p, Handler *h)
 		assert (FALSE);
 		break;
 	}
+}
+
+MacStation *
+Mac80211::lookupStation (int address)
+{
+	return m_stations->lookup (address);
 }

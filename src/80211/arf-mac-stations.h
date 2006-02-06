@@ -18,23 +18,18 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef STA_RATE_CONTROL_H
-#define STA_RATE_CONTROL_H
+#ifndef ARF_MAC_STATIONS_H
+#define ARF_MAC_STATIONS_H
 
-class StaRateControl {
+#include "mac-stations.h"
+
+class ArfMacStations : public MacStations {
 public:
-	virtual ~StaRateControl ();
-
-	virtual void reportRxOk (double SNR, int mode) = 0;
-
-	virtual void reportRTSFailed (void) = 0;
-	virtual void reportDataFailed (void) = 0;
-	virtual void reportRTSOk (double ctsSNR, int ctsMode) = 0;
-	virtual void reportDataOk (double ackSNR, int ackMode) = 0;
-	virtual void reportFinalRTSFailed (void) = 0;
-	virtual void reportFinalDataFailed (void) = 0;
-	virtual int getDataMode (int size) = 0;
-	virtual int getRTSMode (void) = 0;
+	ArfMacStations ();
+	virtual ~ArfMacStations ();
+private:
+	virtual class MacStation *createStation (void);
 };
 
-#endif /* STA_RATE_CONTROL_H */
+
+#endif /* ARF_MAC_STATIONS_H */

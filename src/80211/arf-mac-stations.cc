@@ -19,20 +19,20 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "sta-rate-control.h"
-#include "arf-rate-control.h"
-#include "sta-rate-control-factory.h"
+#include "mac-stations.h"
+#include "mac-station.h"
+#include "arf-mac-stations.h"
 
 #include <assert.h>
 
-class ArfRateControl : public StaRateControl 
+class ArfMacStation : public MacStation
 {
 public:
-	ArfRateControl (int min_timer_timeout,
+	ArfMacStation (int min_timer_timeout,
 			int min_success_threshold,
 			int max_rate,
 			int min_rate);
-	virtual ~ArfRateControl ();
+	virtual ~ArfMacStation ();
 
 	virtual void reportRxOk (double SNR, int mode);
 
@@ -80,7 +80,7 @@ protected:
 	void setSuccessThreshold (int success_threshold);
 };
 
-ArfRateControl::ArfRateControl (int min_timer_timeout,
+ArfMacStation::ArfMacStation (int min_timer_timeout,
 				int min_success_threshold,
 				int max_rate,
 				int min_rate)
@@ -103,11 +103,11 @@ ArfRateControl::ArfRateControl (int min_timer_timeout,
         m_recovery_scenario = "1000000000000000000000";
         m_normal_scenario   = "01010101010101010101010";
 }
-ArfRateControl::~ArfRateControl ()
+ArfMacStation::~ArfMacStation ()
 {}
 
 void 
-ArfRateControl::reportRTSFailed (void)
+ArfMacStation::reportRTSFailed (void)
 {}
 /**
  * It is important to realize that "recovery" mode starts after failure of
@@ -119,7 +119,7 @@ ArfRateControl::reportRTSFailed (void)
  * transmission, be it an initial transmission or a retransmission.
  */
 void 
-ArfRateControl::reportDataFailed (void)
+ArfMacStation::reportDataFailed (void)
 {
         m_timer++;
         m_failed++;
@@ -153,11 +153,11 @@ ArfRateControl::reportDataFailed (void)
         }
 }
 void 
-ArfRateControl::reportRxOk (double SNR, int mode)
+ArfMacStation::reportRxOk (double SNR, int mode)
 {}
-void ArfRateControl::reportRTSOk (double ctsSNR, int ctsMode)
+void ArfMacStation::reportRTSOk (double ctsSNR, int ctsMode)
 {}
-void ArfRateControl::reportDataOk (double ackSNR, int ackMode)
+void ArfMacStation::reportDataOk (double ackSNR, int ackMode)
 {
 	m_timer++;
         m_success++;
@@ -174,45 +174,45 @@ void ArfRateControl::reportDataOk (double ackSNR, int ackMode)
         }
 
 }
-void ArfRateControl::reportFinalRTSFailed (void)
+void ArfMacStation::reportFinalRTSFailed (void)
 {}
-void ArfRateControl::reportFinalDataFailed (void)
+void ArfMacStation::reportFinalDataFailed (void)
 {}
-int ArfRateControl::getDataMode (int size)
+int ArfMacStation::getDataMode (int size)
 {
 	return m_rate;
 }
-int ArfRateControl::getRTSMode (void)
+int ArfMacStation::getRTSMode (void)
 {
 	return 0;
 }
 
-void ArfRateControl::reportRecoveryFailure (void)
+void ArfMacStation::reportRecoveryFailure (void)
 {}
-void ArfRateControl::reportFailure (void)
+void ArfMacStation::reportFailure (void)
 {}
-int ArfRateControl::getMinTimerTimeout (void)
+int ArfMacStation::getMinTimerTimeout (void)
 {
         return m_min_timer_timeout;
 }
-int ArfRateControl::getMinSuccessThreshold (void)
+int ArfMacStation::getMinSuccessThreshold (void)
 {
         return m_min_success_threshold;
 }
-int ArfRateControl::getTimerTimeout (void)
+int ArfMacStation::getTimerTimeout (void)
 {
         return m_timer_timeout;
 }
-int ArfRateControl::getSuccessThreshold (void)
+int ArfMacStation::getSuccessThreshold (void)
 {
         return m_success_threshold;
 }
-void ArfRateControl::setTimerTimeout (int timer_timeout)
+void ArfMacStation::setTimerTimeout (int timer_timeout)
 {
         assert (timer_timeout >= m_min_timer_timeout);
         m_timer_timeout = timer_timeout;
 }
-void ArfRateControl::setSuccessThreshold (int success_threshold)
+void ArfMacStation::setSuccessThreshold (int success_threshold)
 {
         assert (success_threshold >= m_min_success_threshold);
         m_success_threshold = success_threshold;
@@ -221,48 +221,15 @@ void ArfRateControl::setSuccessThreshold (int success_threshold)
 
 
 
-class BroadcastRateControl : public StaRateControl 
-{
-public:
-	BroadcastRateControl ()
-	{}
-	virtual ~BroadcastRateControl ()
-	{}
-	virtual void reportRxOk (double SNR, int mode)
-	{}
-	virtual void reportRTSFailed (void)
-	{}
-	virtual void reportDataFailed (void) 
-	{}
-	virtual void reportRTSOk (double ctsSNR, int ctsMode)
-	{}
-	virtual void reportDataOk (double ackSNR, int ackMode)
-	{}
-	virtual void reportFinalRTSFailed (void)
-	{}
-	virtual void reportFinalDataFailed (void)
-	{}
-	virtual int getDataMode (int size)
-	{ return 0; }
-	virtual int getRTSMode (void)
-	{ return 0;}
-};
 
-ArfStaRateControlFactory::ArfStaRateControlFactory ()
+ArfMacStations::ArfMacStations ()
 {}
-ArfStaRateControlFactory::~ArfStaRateControlFactory ()
+ArfMacStations::~ArfMacStations ()
 {}
-
-class StaRateControl *
-ArfStaRateControlFactory::createBroadcast (void)
-{
-	return new BroadcastRateControl ();
-}
-
-class StaRateControl *
-ArfStaRateControlFactory::create (void)
+MacStation *
+ArfMacStations::createStation (void)
 {
 	/* XXX: use mac to access user and PHY params. */
-	return new ArfRateControl (15, 10, 0, 5);
+	return new ArfMacStation (15, 10, 0, 5);
 }
 
