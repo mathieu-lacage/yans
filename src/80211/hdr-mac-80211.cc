@@ -103,7 +103,8 @@ hdr_mac_80211::getTID (void) const
 double 
 hdr_mac_80211::getTxopLimit (void) const
 {
-	return m_txopLimit * 1000000;
+	double retval = m_txopLimit * 32.0 / 1000000.0;
+	return retval;
 }
 bool 
 hdr_mac_80211::isBlockAck (void) const
@@ -200,7 +201,8 @@ hdr_mac_80211::setTID (uint8_t tid)
 void
 hdr_mac_80211::setTxopLimit (double txopLimit)
 {
-	unsigned int usec = (unsigned int) floor (txopLimit * 1000000);
+	unsigned int usec = (unsigned int) lrint (floor (txopLimit / 32.0 * 1000000.0));
+	assert (usec <= 0xff);
 	m_txopLimit = usec;
 }
 void 
