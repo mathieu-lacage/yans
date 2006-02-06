@@ -158,11 +158,16 @@ MacLow::forwardDown (Packet *packet)
 {
 	double txDuration = calculateTxDuration (getTxMode (packet), getSize (packet));
 	double durationId = getDuration (packet);
+	enum mac_80211_packet_type type = getType (packet);
 	m_container->forwardToPhy (packet);
 	/* Note that it is really important to notify the NAV 
-	 * thing after forwarding the packet to the PHY.
+	 * thing _after_ forwarding the packet to the PHY.
+	 * but we must perform the calculations _before_ passing
+	 * the thing to the PHY (I think I remember the PHY does
+	 * some nasty things to the underlying memory of the 
+	 * packet)
 	 */
-	notifyNav (now ()+txDuration, durationId);
+	notifyNav (now ()+txDuration, durationId, type, getSelf ());
 }
 int 
 MacLow::getSelf (void)
@@ -433,37 +438,43 @@ MacLow::isNavZero (double now)
 }
 
 void
-MacLow::notifyNav (double now, double duration)
+MacLow::notifyNav (double nowTime, double duration, 
+		   enum mac_80211_packet_type type,
+		   int source)
 {
-	/* XXX 
-	 * We should be dealing specially with the CF-Poll and CF-End
-	 * DurationIDs. Specifically, we need to reset unconditionally
-	 * the NAV value in this case. But this should be done
-	 * only for QSTAs. Hrm. Damned.
-	 * Also, we should consdier the subtile case of RTS/CTS.
+	/* XXX
+	 * We might need to do something special for the
+	 * subtle case of RTS/CTS. I don't know what.
+	 *
 	 * See section 9.9.2.2.1, 802.11e/D12.1
 	 */
-
-	assert (m_lastNavStart < now);
+	assert (m_lastNavStart < nowTime);
 	double oldNavStart = m_lastNavStart;
 	double oldNavEnd = oldNavStart + m_lastNavDuration;
-	double newNavStart = now;
+	double newNavStart = nowTime;
 	double newNavEnd = newNavStart + duration;
+
+	if (type == MAC_80211_MGT_CFPOLL &&
+	    source == m_container->getBSSID ()) {
+		for (NavListenerCI i = m_navListeners.begin (); i != m_navListeners.end (); i++) {
+			(*i)->navReset (newNavStart);
+		}
+		return;
+	}
+
 	if (oldNavEnd > newNavStart) {
 		/* The two NAVs overlap */
 		if (newNavEnd > oldNavEnd) {
 			double delta = newNavEnd - oldNavEnd;
 			m_lastNavDuration += delta;
-			vector<MacLowNavListener *>::const_iterator i;
-			for (i = m_navListeners.begin (); i != m_navListeners.end (); i++) {
+			for (NavListenerCI i = m_navListeners.begin (); i != m_navListeners.end (); i++) {
 				(*i)->navContinue (delta);
 			}
 		}
 	} else {
 		m_lastNavStart = newNavStart;
 		m_lastNavDuration = duration;
-		vector<MacLowNavListener *>::const_iterator i;
-		for (i = m_navListeners.begin (); i != m_navListeners.end (); i++) {
+		for (NavListenerCI i = m_navListeners.begin (); i != m_navListeners.end (); i++) {
 			(*i)->navStart (newNavStart, duration);
 		}
 	}
@@ -625,7 +636,7 @@ MacLow::receive (Packet *packet)
 					getTxMode (packet));
 	bool isPrevNavZero = isNavZero (now ());
 	TRACE ("duration/id: %f", getDuration (packet));
-	notifyNav (now (), getDuration (packet));
+	notifyNav (now (), getDuration (packet), getType (packet), getSource (packet));
 
 	double monitorDelay = 0.0;
 

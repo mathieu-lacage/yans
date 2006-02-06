@@ -81,6 +81,9 @@ class DcfNavListener : public MacLowNavListener
 public:
 	DcfNavListener (Dcf *dcf)
 		: m_dcf (dcf) {}
+	virtual void navReset (double now) {
+		m_dcf->navReset (now);
+	}
 	virtual void navStart (double now, double duration) {
 		m_dcf->navStart (now, duration);
 	}
@@ -115,7 +118,7 @@ Dcf::Dcf (MacContainer *container, MacDcfParameters *parameters)
 	MacLow *low = container->macLow ();
 	m_phyListener = new DcfPhyListener (this);
 	m_navListener = new DcfNavListener (this);
-	m_accessTimer = new StaticHandler<Dcf> (this, &Dcf::accessTimeout);
+	m_accessTimer = new DynamicHandler<Dcf> (this, &Dcf::accessTimeout);
 	low->registerNavListener (m_navListener);
 	phy->registerListener (m_phyListener);
 	resetCW ();
@@ -200,7 +203,7 @@ Dcf::registerAccessListener (DcfAccessListener *listener)
 
 
 void 
-Dcf::accessTimeout (void)
+Dcf::accessTimeout (MacCancelableEvent *event)
 {
 	double delayUntilAccessGranted  = getDelayUntilAccessGranted (now ());
 	if (delayUntilAccessGranted > 0) {
@@ -391,6 +394,24 @@ Dcf::updateBackoff (double time)
 /***************************************************************
  *     Notification methods.
  ***************************************************************/ 
+void
+Dcf::navReset (double navReset)
+{
+	double previousDelayUntilAccessGranted = getDelayUntilAccessGranted (navReset);
+	m_lastNavStart = navReset;
+	m_lastNavDuration = 0.0;
+	double newDelayUntilAccessGranted = getDelayUntilAccessGranted (navReset);
+	if (newDelayUntilAccessGranted < previousDelayUntilAccessGranted &&
+	    m_accessTimer->isRunning () &&
+	    m_accessTimer->getEndTime () > newDelayUntilAccessGranted) {
+		/* This is quite unfortunate but we need to cancel the access timer
+		 * because it seems that this NAV reset has brought the time of
+		 * possible access closer to us than expected.
+		 */
+		m_accessTimer->cancel ();
+		m_accessTimer->start (newDelayUntilAccessGranted);
+	}
+}
 void
 Dcf::navStart (double navStart, double duration)
 {

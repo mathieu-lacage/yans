@@ -83,6 +83,8 @@ private:
 	void finishCap (void);
 	void doCurrentTxop (void);
 
+	void sendCfPollTo (int destination, uint8_t tsid, double duration);
+
 	double getMaxTxopDuration (void);
 	double duration (int size, int mode);
 	double calculateMediumTime (TSpec const *tspec);

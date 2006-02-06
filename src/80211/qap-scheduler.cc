@@ -485,13 +485,20 @@ QapScheduler::doCurrentTxop (void)
 
 	TRACE ("start txop for %d until %f", (*m_txopIterator).getDestination (), m_txopEnd);
 	
-	int destination = (*m_txopIterator).getDestination ();
+	sendCfPollTo ((*m_txopIterator).getDestination (), 
+		      tspec->getTSID (),
+		      txopDuration);
+}
+
+void
+QapScheduler::sendCfPollTo (int destination, uint8_t tsid, double txopDuration)
+{
 	Packet *packet = getPacketFor (destination);
 	setSize (packet, getPacketSize (MAC_80211_MGT_CFPOLL));
 	setType (packet, MAC_80211_MGT_CFPOLL);
 	setTxopLimit (packet, txopDuration);
 	setNoAck (packet);
-	setTID (packet, tspec->getTSID ());
+	setTID (packet, tsid);
 	setFragmentNumber (packet, 0);
 	uint16_t sequence = m_container->macTxMiddle ()->getNextSequenceNumberFor (packet);
 	setSequenceNumber (packet, sequence);
@@ -510,6 +517,16 @@ QapScheduler::finishCap (void)
 {
 	TRACE ("finish CAP");
 	low ()->disableBusyMonitoring ();
+
+	/* notify all stations that the previous txop was finished 
+	 * before its normal end such that contention-based access
+	 * can resume.
+	 */
+	double cfPollDuration = m_container->phy ()->calculateTxDuration (0, getPacketSize (MAC_80211_MGT_CFPOLL));
+	double cfPollEnd = now () + cfPollDuration;
+	if (cfPollEnd < m_capEnd) {
+		sendCfPollTo (m_container->selfAddress (), 0, 0.0);
+	}
 }
 
 void

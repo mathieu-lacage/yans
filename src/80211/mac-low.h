@@ -82,6 +82,7 @@ public:
 	virtual ~MacLowNavListener ();
 	virtual void navStart (double now, double duration) = 0;
 	virtual void navContinue (double duration) = 0;
+	virtual void navReset (double now) = 0;
 };
 
 class MacLow {
@@ -169,7 +170,9 @@ private:
 	double calculateOverallTxTime (void);
 	int getCtsTxModeForRts (int to,  int rtsTxMode);
 	int getAckTxModeForData (int to, int dataTxMode);
-	void notifyNav (double now, double duration);
+	void notifyNav (double now, double duration,
+			enum mac_80211_packet_type type,
+			int source);
 	bool isNavZero (double now);
 	
 	Packet *getRTSPacket (void);
@@ -192,6 +195,7 @@ private:
 	MacContainer *m_container;
 	MacLowReceptionListener *m_receptionListener;
 	MacLowTransmissionListener *m_transmissionListener;
+	typedef vector<MacLowNavListener *>::const_iterator NavListenerCI;
 	vector<MacLowNavListener *> m_navListeners;
 	MacLowBusyMonitoringListener *m_monitoringListener;
 

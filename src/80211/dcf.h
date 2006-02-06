@@ -66,7 +66,7 @@ private:
 	friend class DcfPhyListener;
 	friend class DcfNavListener;
 
-	void accessTimeout (void);
+	void accessTimeout (MacCancelableEvent *ev);
 
 	/* trivial helpers */
 	void resetCW (void);
@@ -91,6 +91,7 @@ private:
 	void notifyTxStart (double now, double duration);
 	void notifySleep (double now);
 	void notifyWakeup (double now);
+	void navReset (double now);
 	void navStart (double now, double duration);
 	void navContinue (double duration);
 
@@ -99,7 +100,7 @@ private:
 	MacDcfParameters   *m_parameters;
 	DcfPhyListener *m_phyListener;
 	DcfNavListener *m_navListener;
-	StaticHandler<Dcf> *m_accessTimer;
+	DynamicHandler<Dcf> *m_accessTimer;
 	DcfAccessListener *m_listener;
 
 	int m_CW;
