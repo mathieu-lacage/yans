@@ -47,6 +47,7 @@ class MacContainer
 	MacStations *stations (void);
 
 	int selfAddress (void);
+	int getBSSID (void);
 	void forwardToPhy (Packet *packet);
 	void forwardToLL (Packet *packet);
 
@@ -60,6 +61,7 @@ class MacContainer
 	void setMacRxMiddle (MacRxMiddle *middle);
 	void setMacTxMiddle (MacTxMiddle *middle);
 	void setMacHigh (MacHigh *high);
+	void setBSSID (int bssid);
  private:
 	Mac80211 *nsMac (void);
 	MacParameters *m_parameters;
@@ -70,6 +72,7 @@ class MacContainer
 	Phy80211 *m_phy;
 	Mac80211 *m_nsMac;
 	MacStations *m_stations;
+	int m_bssid;
 };
 
 #endif /* MAC_CONTAINER_H */

@@ -64,6 +64,11 @@ MacContainer::stations (void)
 	return m_stations;
 }
 
+int
+MacContainer::getBSSID (void)
+{
+	return m_bssid;
+}
 int 
 MacContainer::selfAddress (void)
 {
@@ -118,4 +123,9 @@ void
 MacContainer::setMacHigh (MacHigh *high)
 {
 	m_high = high;
+}
+void
+MacContainer::setBSSID (int bssid)
+{
+	m_bssid = bssid;
 }
