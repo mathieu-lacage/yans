@@ -360,10 +360,10 @@ Dcf::startBackoff (void)
 		if (m_accessTimer->isRunning ()) {
 			TRACE ("no access needed because timer running.");
 		} 
-		if (m_listener->accessNeeded ()) {
+		if (!m_listener->accessNeeded ()) {
 			TRACE ("no access needed.");
-		} 
-		TRACE ("BUG");
+		}
+		TRACE ("no access needed for now.");
 	}
 }
 double
