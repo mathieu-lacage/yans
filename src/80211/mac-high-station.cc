@@ -36,7 +36,7 @@
 #include "packet.h"
 
 #ifndef STATION_TRACE
-#define STATION_TRACE 1
+#define nopeSTATION_TRACE 1
 #endif /* STATION_TRACE */
 
 #ifdef STATION_TRACE

@@ -29,7 +29,7 @@
 #include "mac-station.h"
 
 #ifndef AP_TRACE
-#define AP_TRACE 1
+#define nopeAP_TRACE 1
 #endif /* AP_TRACE */
 
 #ifdef AP_TRACE

@@ -40,7 +40,7 @@
 #include "packet.h"
 
 #ifndef QAP_TRACE
-#define QAP_TRACE 1
+#define nopeQAP_TRACE 1
 #endif /* QAP_TRACE */
 
 #ifdef QAP_TRACE
@@ -312,8 +312,10 @@ MacHighQap::gotAddTsRequest (Packet *packet)
 	TSpecRequest *request = *(reinterpret_cast<TSpecRequest **> (packet->accessdata ()));
 	TSpec *tspec = request->getTSpec ();
 	if (m_scheduler->addTsRequest (tspec)) {
+		TRACE ("accept tspec for tsid %u from %u", tspec->getTSID (), getSource (packet));
 		queueAddTsResponseOk (getSource (packet), request);
 	} else {
+		TRACE ("refuse tspec for tsid %u from %u", tspec->getTSID (), getSource (packet));
 		queueAddTsResponseRefused (getSource (packet), request);
 	}	
 }
@@ -325,8 +327,10 @@ MacHighQap::gotDelTsRequest (Packet *packet)
 	TSpecRequest *request = *(reinterpret_cast<TSpecRequest **> (packet->accessdata ()));
 	TSpec *tspec = request->getTSpec ();
 	if (m_scheduler->delTsRequest (getSource (packet), tspec)) {
+		TRACE ("accept del tspec for tsid %u from %u", tspec->getTSID (), getSource (packet));
 		queueDelTsResponseOk (getSource (packet), request);
 	} else {
+		TRACE ("refuse del tspec for tsid %u from %u", tspec->getTSID (), getSource (packet));
 		queueDelTsResponseRefused (getSource (packet), request);
 	}	
 }
