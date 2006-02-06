@@ -68,10 +68,6 @@ private:
 	void gotACK (double snr, int txMode);
 	void missedACK (void);
 	void startNext (void);
-	void gotBlockAckStart (double snr);
-	void gotBlockAck (int sequence);
-	void gotBlockAckEnd (void);
-	void missedBlockAck (void);
 
 	MacContainer *m_container;
 	uint8_t m_currentTsid;

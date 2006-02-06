@@ -91,18 +91,6 @@ public:
 	virtual void startNext (void) {
 		m_txop->startNext ();
 	}
-	virtual void gotBlockAckStart (double snr) {
-		m_txop->gotBlockAckStart (snr);
-	}
-	virtual void gotBlockAck (int sequence) {
-		m_txop->gotBlockAck (sequence);
-	}
-	virtual void gotBlockAckEnd (void) {
-		m_txop->gotBlockAckEnd ();
-	}
-	virtual void missedBlockAck (void) {
-		m_txop->missedBlockAck ();
-	}
 
 private:
 	DcaTxop *m_txop;
@@ -399,19 +387,6 @@ DcaTxop::startNext (void)
 	low ()->setData (fragment);
 	low ()->startTransmission ();
 }
-void 
-DcaTxop::gotBlockAckStart (double snr)
-{}
-void 
-DcaTxop::gotBlockAck (int sequence)
-{}
-void 
-DcaTxop::gotBlockAckEnd (void)
-{}
-void 
-DcaTxop::missedBlockAck (void)
-{}
-
 
 void
 DcaTxop::dropCurrentPacket (void)

@@ -55,10 +55,6 @@ private:
 	void gotACK (double snr, int txMode);
 	void missedACK (void);
 	void startNext (void);
-	void gotBlockAckStart (double snr);
-	void gotBlockAck (int sequence);
-	void gotBlockAckEnd (void);
-	void missedBlockAck (void);
 
 	bool needRTS (void);
 	bool needFragmentation (void);
