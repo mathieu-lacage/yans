@@ -25,61 +25,6 @@
 
 #include <assert.h>
 
-class ArfMacStation : public MacStation
-{
-public:
-	ArfMacStation (MacStations *stations,
-		       int min_timer_timeout,
-		       int min_success_threshold);
-	virtual ~ArfMacStation ();
-
-	virtual void reportRxOk (double SNR, int mode);
-
-	virtual void reportRTSFailed (void);
-	virtual void reportDataFailed (void);
-	virtual void reportRTSOk (double ctsSNR, int ctsMode);
-	virtual void reportDataOk (double ackSNR, int ackMode);
-	virtual void reportFinalRTSFailed (void);
-	virtual void reportFinalDataFailed (void);
-	virtual int getDataMode (int size);
-	virtual int getRTSMode (void);
-
-private:
-	int m_timer;
-	int m_success;
-	int m_failed;
-	bool m_recovery;
-	int m_retry;
-	
-	int m_timer_timeout;
-	int m_success_threshold;
-
-	int m_rate;
-	
-	int m_min_timer_timeout;
-	int m_min_success_threshold;
-	
-	char *m_normal_scenario;
-	char *m_recovery_scenario;
-	
-private:
-	virtual void reportRecoveryFailure (void);
-	virtual void reportFailure (void);
-
-	int getMaxRate (void);
-	int getMinRate (void);
-	
-protected:
-	int getMinTimerTimeout (void);
-	int getMinSuccessThreshold (void);
-	
-	int getTimerTimeout (void);
-	int getSuccessThreshold (void);
-	
-	void setTimerTimeout (int timer_timeout);
-	void setSuccessThreshold (int success_threshold);
-};
-
 ArfMacStation::ArfMacStation (MacStations *stations,
 			      int min_timer_timeout,
 			      int min_success_threshold)
@@ -138,7 +83,7 @@ ArfMacStation::reportDataFailed (void)
 
         if (m_recovery) {
                 assert (m_retry >= 1);
-                assert (m_retry - 1 <= strlen (m_recovery_scenario));
+                assert (((size_t)m_retry - 1) <= strlen (m_recovery_scenario));
                 if (m_recovery_scenario[m_retry-1] == '1') {
                         reportRecoveryFailure ();
                         if (m_rate != getMinRate ()) {
@@ -149,7 +94,7 @@ ArfMacStation::reportDataFailed (void)
                 m_timer = 0;
         } else {
                 assert (m_retry >= 1);
-                assert (m_retry - 1 <= strlen (m_normal_scenario));
+                assert (((size_t)m_retry - 1) <= strlen (m_normal_scenario));
                 if (m_normal_scenario[m_retry-1] == '1') {
                         reportFailure ();
                         if (m_rate != getMinRate ()) {

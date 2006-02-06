@@ -30,6 +30,7 @@
 #include "mac-rx-middle.h"
 #include "mac-parameters.h"
 #include "arf-mac-stations.h"
+#include "aarf-mac-stations.h"
 #include "mac-container.h"
 
 #include <iostream>
@@ -99,7 +100,8 @@ Mac80211::startContainer (void)
 	m_container = new MacContainer (this);
 	Phy80211 *phy = static_cast <class Phy80211 *> (netif_);
 	m_container->setPhy (phy);
-	MacStations *stations = new ArfMacStations (m_container);
+	MacStations *stations = new AarfMacStations (m_container);
+	//MacStations *stations = new ArfMacStations (m_container);
 	m_container->setStations (stations);
 	MacParameters *parameters = new MacParameters (m_container);
 	m_container->setParameters (parameters);
