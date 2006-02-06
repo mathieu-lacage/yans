@@ -275,8 +275,9 @@ MacHighStation::receiveFromMacLow (Packet *packet)
 			Packet::free (packet);
 			break;
 		case MAC_80211_MGT_CFPOLL:
-			break;
 			gotCFPoll (packet);
+			Packet::free (packet);
+			break;
 		case MAC_80211_DATA:
 			TRACE ("forward up from %d", getSource (packet));
 			container ()->forwardToLL (packet);
