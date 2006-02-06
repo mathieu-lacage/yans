@@ -159,7 +159,7 @@ hdr_mac_80211::setType (enum mac_80211_packet_type type)
 void 
 hdr_mac_80211::setDuration (double duration)
 {
-	if (fabs (duration) < 1e-6) {
+	if (duration < 1e-6) {
 		duration = 0.0;
 	}
 	assert (duration >= 0);
@@ -474,6 +474,39 @@ initialize (Packet *packet)
 
 
 
+bool 
+isData (Packet *packet)
+{
+	if (getType (packet) == MAC_80211_DATA) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+bool 
+isControl (Packet *packet)
+{
+	if (getType (packet) == MAC_80211_CTL_RTS     ||
+	    getType (packet) == MAC_80211_CTL_CTS     ||
+	    getType (packet) == MAC_80211_CTL_ACK     ||
+	    getType (packet) == MAC_80211_CTL_BACKREQ ||
+	    getType (packet) == MAC_80211_CTL_BACKRESP) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+bool 
+isManagement (Packet *packet)
+{
+	if (isData (packet) || isControl (packet)) {
+		return false;
+	} else {
+		return true;
+	}
+}
 
 
 

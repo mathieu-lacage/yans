@@ -208,6 +208,10 @@ bool isQos (Packet *packet);
 
 uint8_t getRequestedTID (Packet *packet);
 
+bool isData (Packet *packet);
+bool isManagement (Packet *packet);
+bool isControl (Packet *packet);
+
 enum ac_e {
 	AC_BK = 0x1,
 	AC_BE = 0x0,
