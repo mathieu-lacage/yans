@@ -1,0 +1,246 @@
+This file contains a bunch of notes-to-self. Some
+of them might be of interest to other developers.
+
+1) backoff and ACK tx.
+----------------------
+
+There is a small performance issue related to ACK tx. The
+following scenario explains it:
+  - A send data to B
+  - B receives last bit of data from A
+  - B forwards data to upper layers
+  - B schedules ACK tx to A a bit later
+  - B high layers decide that they need to send
+    a packet before B has finished sending the last
+    bit of the ACK to A
+  - B MAC receives packet from higher layers and starts
+    a backoff because the medium is busy.
+
+Q: is the last item legal from the POV of the spec ?
+Q: if you replace the last item by an item such as:
+  - B MAC receives packet from higher layers, sees it
+    is txing an ACK, wait until end-of-ACK+DIFS to 
+    try to tx the data from the higher layers.
+   This might save you a backoff for station B. Is 
+   this legal from the POV of the spec ? Is this
+   desirable ?
+
+2) EDCA TXOP for high and low UP at the same time.
+--------------------------------------------------
+
+There is a problem if you consider that the spec requires
+that if two ACs with different UP get access to the medium
+at the same time, the one with higher priority wins.
+
+First, it is clear that the "at the same time" requirement
+is pretty much a corner case which happens very rarely in
+the real world and it is hard to define this statement
+in a reasonably rigorous way. 
+
+However, for a simulator like ns, this statement has a clear 
+meaning: "any event which occurs when the clock does not
+change occurs at the same time" and, unfortunatly, it 
+is quite possible to imagine (hopefully rare) scenarios 
+where two events scheduled to happen at the exact same time
+both generate packets to be sent immediately in different ACs.
+
+To make the _right_ decision as requested by the spec would
+require the MAC to be able to look at its queues and decide
+which one wins when all the events for a given constant 
+clock have been triggered and before the clock is increased.
+Clearly, that would require the addition of a single method
+to the Scheduler which would look like:
+void scheduleBeforeClockChange (Handler *h);
+However, I am not sure that handling correctly this corner
+case if necessary here so we can probably safely ignore this
+issue.
+
+3) ACK of duplicate packets
+---------------------------
+
+Q: Should I ACK duplicate packets/fragments ?
+A: I need to because if I get a duplicate, it is
+because the sender has decided to send the same 
+packet twice which is because my ACK to him got 
+lost. In this case, if I don't ACK the duplicate,
+the sender will believe the packet has not been
+received correctly so it will attempt a new 
+retransmission.
+
+4) inactivity timeout and buffered frames
+-----------------------------------------
+
+Q: Should I forward the buffered BlockAck frames
+before sending a DELBA when the inactivity timer
+expires ?
+A: we just dump them for now.
+
+5) incomplete MSDU in buffer when buffer is full
+------------------------------------------------
+
+Q: if I receive a QoS frame with the BlockAck policy
+and if the BlockAck buffer at the receiver is full
+after receiving this packet and if there is no complete
+MSDU in the BlockAck buffer, what should I do ? Should
+I dump anyway the incomplete MSDU (namely, all of its
+fragments) ? 
+A: for now, we dump the incomplete MSDU.
+
+
+5) QoS
+-------
+
+Requirements:
+  - allow the use of both 802.11 devices and 802.11e devices at the same
+    time
+  - support Mandatory aspects of 802.11e for now. This includes:
+     - access differentiation through "Access Categories".
+     - access differentiation through TSPEC granting by the QoS AP.
+
+5.0 acronyms
+------------
+
+AC: Access Category
+UP: User Priority
+TID: Traffic Identifier (field of a MAC packet)
+TSID: Traffic Stream Identifier
+TSPEC: Traffic Specification
+       (describes how to map a TSID
+        to a set of QoS requirements and to a UP)
+TS: Traffic Stream
+TCLAS: Traffic Classification 
+       (describes how to map any packet 
+        received from the higher-layers 
+        to a given TS.)
+
+5.1 ACs.
+--------
+
+Each Mac has 4 queues which contend for the medium:
+ AC_BE: Best Effort
+ AC_BK: Background
+ AC_VO: Voice
+ AC_VI: Video
+Each queue is set a bunch of parameters by the BEACON
+and PROBE_RESPONSE frames.
+  - AIFSN
+  - TXOP limit
+  - ECWmin
+  - ECWmax
+
+UPs are mapped to ACs with section 9.1.3.1, table 20.23
+
+UP --> AC
+
+5.2 TSs
+-------
+
+UP <--> TSID <--> QoS requirement
+
+Each packet contains a TID field which is used to identify to which
+QoS stream this packet belongs.
+
+int getUP (int TID) {
+	int UP;
+	if (TID < 8) {
+		UP = TID;
+	} else {
+		int TSID = TID;
+		UP = TSPEC[TSID].UP;
+	}
+	return UP;
+}
+
+
+to manage TSs, there are 4 message types:
+ADDTS_REQUEST:  QSTA --> QAP
+ADDTS_RESPONSE: QSTA <-- QAP
+DELTS_REQUEST:  QSTA --> QAP
+DELTS_RESPONSE: QSTA <-- QAP
+
+A TCLAS is necessary only if you want to map 
+downlink traffic (QAP --> QSTA) to a TSPEC.
+Typically, this would be used to ensure that
+the incomming traffic from a distant telephony
+application to yourself gets proper treatment 
+on the 802.11e network.
+
+5.3 how we export this functionality
+------------------------------------
+
+The MAC supports 2 methods which are also exported
+to tcl.
+/* tspec: describes the requested QoS.
+ * tclass: describes the AP tclass if 
+ *         downlink traffic is requested.
+ * tsid: contains the tsid allocated by the MAC if
+ *       the TSPEC is granted. This tsid should be
+ *       used to mark the user-level packets' prio_
+ *       field. In this case, the tsid is always higher
+ *       than or equal to 8.
+ * returns OK if TS is granted, FALSE otherwise.
+ */
+int requestTS  (TSPEC const *tspec, 
+		TCLAS const *tclas,
+		int *tsid);
+int releaseTS  (int tsid);
+
+If the prio_ field of a packet is marked with a value higher
+than 8, we copy this value in the MAC-level TID field and use
+the UP associated to the TSPEC for this TSID.
+If the prio_ field of a packet is marked with a value strictly
+lower than 8, we use this as the UP of the packet and copy it
+to the MAC-level TID field of the packet.
+
+
+
+3) EDCA admission control
+-------------------------
+
+ASSOCIATION_RESPONSE frames contain a bit field which indicates
+whether or not each AC requires admission control. AC_BE and 
+AC_BK are recommended to not require admission control.
+
+To request admission control with the QAP, the QSTA sends an
+ADDTS_REQUEST with:
+  - admission_category = EDCA
+  - UP
+  - fields to allow the QAP to calculate the "Medium Time"
+
+QAP replies with ADDTS_RESPONSE which returns the allocated
+"Medium Time". 
+
+QSTA maintains admitted_time and used_time (see 9.9.3.1.2)
+to keep track of what fraction of the medium it uses. If
+used_time gets bigger than admitted_time, QSTA must
+stop transmission for this AC (until admitted_time gets refilled)
+or start using the AC parameters of the lower-priority AC which 
+does not require admission control.
+
+4) HCCA scheduling facts
+------------------------
+
+- QAP cannot revoke a TS after it was granted to a QSTA until
+  inactivity time expires.
+- only QSTA can revoke a granted TS.
+
+5) HCCA implementation
+----------------------
+
+- need a new MacLow for HCCA at QSTA and QAP.
+- HCCA needs a queue on a per-TS basis.
+- need to think about mixed-mode scheduling HMME when you need to
+  tx in EDCA some HCCA packets and when some other EDCA packets were
+  already present. i.e., how do you take packets from the TS queues ?
+
+
+Access Category Admission Control
+---------------------------------
+
+This is not implemented. It would require:
+each Edca-Txop:
+  - sends ADDTS and stores response mediumTime and delay
+  - verify that delay is not expired
+  - verify that allocated mediumTime is not depleted.
+  - switch to lower-priority parameters if needed in either
+    case.

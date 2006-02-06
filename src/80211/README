@@ -1,0 +1,211 @@
+This directory contains code to implement a new 802.11 PHY and MAC 
+layer for ns-2.
+
+1) The models.
+--------------
+
+1.1) PHY models
+---------------
+
+The PHY layer implements three different models:
+  - a BER-based model (slow, accurate),
+  - a SNRT-based model (faster, less accurate), and
+  - an Energy-based model (event faster, event less accurate)
+
+A discussion of the various simulation models used in various simulators
+can be found in "Effects of Wireless Physical Layer Modeling in Mobile 
+Ad Hoc Networks" by Mineo Takai, Jay Martin and Rajive Bagrodia. Reading
+this paper before trying to read the rest of this documentation is
+highly recommended.
+
+ Definitions:
+   - SNIR (Signal to Noise Interference Ratio) = S / (Nf + Ni)
+   - S (Signal)
+   - Nf (Noise floor) = 
+   - Ni (Noise Interference) = sum over all signals (minus 
+     the current) of their energy
+
+1.1.1 Energy-based model
+------------------------
+
+How we receive a packet:
+  - if the energy of the first bit of the arriving packet is
+    higher than rxThreshold, lock reception on this packet.
+  - if any packet is received during the reception of another
+    packet, it is dumped immediately.
+
+1.1.2 SNRT-based model
+----------------------
+
+How we receive a packet:
+  - if the energy of the first bit of the arriving packet is
+    higher than rxThreshold, lock reception on this packet.
+  - if any packet is received during the reception of another
+    packet, it is dumped immediately.
+  - when the last bit of a packet onto which reception was locked
+    is received, calculate the SNIR of this last bit.
+  - if the SNIR is higher than snrThreshold, mark the packet
+    as received correctly.
+  - if the SNIR is lower, mark it as received incorectly.
+
+1.1.1) BER-based model
+----------------------
+
+ How it receives a packet:
+   - if the SNIR of the first bit of the arriving packet is higher
+     than rxThreshold, lock reception onto this packet.
+   - when the last bit of a locked packet is received, parse
+     the event history to reconstruct the piecewise SNIR function
+     during reception of this packet. 
+   - Use the piecewise SNIR function to calculate the probability
+     of receiving correctly each chunk of data over which the
+     SNIR is constant and the transmission mode is the same.
+     Specifically, this is done with 
+        P_i = (1-BER_i)^nbits_i
+        where :
+           - nbits_i is the number of bits over which the SNIR
+             and the transmission mode is constant.
+           - BER_i is the BER calculated from a constant SNIR.
+             Of course, it depends on the current transmission 
+             mode 
+   - calculate the PER = 1-product (P_i)
+   - draw a random number in a uniform distribution between 0
+     and 1. 
+   - if the random number is higher than PER, the packet is 
+     received correctly. Otherwise, it is received with errors.
+
+
+1.2) MAC model.
+---------------
+
+The MAC layer was designed to implement all of the IEEE 802.11
+specification. The goal is to implement:
+  - IEEE 802.11 1999
+  - IEEE 802.11 A 1999
+  - IEEE 802.11 B 1999
+  - IEEE 802.11 E/D9
+
+2) Major Architecture decisions.
+--------------------------------
+
+* It is impossible to cancel a transmission once it has been started 
+by the MAC. Specifically, you cannot go to sleep during a transmission.
+This is impossible for at least the two following reasons but I am 
+pretty sure that a lot of code has been written with this assumption
+in mind so giving up on this requirement will be very hard if not
+impossible without a full rewrite:
+
+    - once a Tx packet has been sent on the wireless medium,
+      the other stations have started received it. canceling
+      the tx would mean notifying all the stations listening
+      on the medium and there is no framework to do this in 
+      ns-2. The receiving stations have also not been designed
+      to handle interrupted RX because of interrupted TX.
+
+
+* It is possible for the PHY to interrupt packet reception for
+a transmission.
+
+* As much as possible, we try to avoid generating end-of-transmission
+events. These end-of-transmission events are lazily evaluated when a 
+"client" wants to know the state of the PHY or the MAC. This idea is 
+described in a paper published at mswim'04: "scalable simulation of 
+large-scale wireless networks with bounded inaccuracies" by 
+Whengrong Ji, Junlan Zhou,Mineo Takai and Rajive Bagrodia.
+
+3) PHY architecture.
+--------------------
+
+3.1 Introduction
+----------------
+
+The two PHY models are implemented by the two subclasses of
+the Phy80211 class which implements the core 802.11 state 
+machine. The core state machine is:
+                 ________
+                 |  TX  | +---------
+                 --------          |
+                   | +             |
+                   | |             |
+                   + |             |
+ _________       ________       ________
+ | SLEEP | ----+ | IDLE | ----+ | SYNC |
+ |       | +---- |      | +---- |      |
+ ---------       --------       --------
+     +                             |
+     |_____________________________|
+
+
+In all PHYs, we have tree types of events:
+  - start of reception (first bit of a packet is received)
+  - end of reception (last bit of a packet is received)
+  - start of transmission (the first bit of a packet is
+    sent on the medium).
+
+3.2 
+----
+
+Do we need to detail the implementation of the PHYs ?
+
+4) MAC architecture.
+--------------------
+
+The MAC architecture is a bit complicated because we want to support
+both the normal 802.11 protocol and the 802.11e extensions in the same
+codebase.
+
+4.1 802.11 
+-----------
+
+_____________________________________________________
+|                  MacHigh                          |
+-----------------------------------------------------
+        |                                    +
+        |                                    |
+        +                                    |
+__________________                           |
+| MacQueue80211e |   +---\                   |
+------------------      -------              |
+        |               |     |       _______________
+        |               | Dcf |       | MacRxMiddle |
+	+               |     |       ---------------
+__________________      -------              +
+|    DcaTxop     |   +---/                   |
+------------------                           |
+        |                                    |
+        |                                    |
+        +                                    |
+_____________________________________________________
+|                     MacLow                        |
+-----------------------------------------------------
+
+The MacHigh handles all of the functions related to Management
+frames. Namely, in am IBSS network, we have a STA-specific MacHigh 
+and an AP-specific MacHigh. The STA-specific MacHigh associates
+with the AP and synchronizes with the beacons. The AP-specific
+MacHigh generates the beacons and handles associated STAs (for
+example, by forwarding packets from STA to STA).
+
+A 802.11e AP MacHigh contains the 802.11e scheduler.
+
+The MacLow handles the low-level transmission functions. 
+Specifically, it generates the RTS/CTS and ACK frames, the proper
+SIFS timing for bursting/fragments.
+
+The DcaTxop handles retransmissions, fragmentation, and bursting
+(i.e., OAR). It is notified by the Dcf whenever access to the
+medium has been granted. The Dcf implements the Distributed
+Coordination Function: it performs backoff whenever needed
+and keeps accurately track of the access time.
+
+The MacRxMiddle performs defragmentation and duplicate elimination.
+
+
+4.2 802.11e
+-----------
+
+A diagram which explains this is really complicated so it is included
+in overall-2.dia. This is a vector graphic which you should be able
+to visualize with the "dia" application. overall-2.pdf can also be 
+useful.
+
