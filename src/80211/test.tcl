@@ -108,21 +108,23 @@ set-qbss-mode 2 nodes
 set tspec [new TSPEC]
 $tspec TSID 1
 proc addts-granted-callback {tspec tsid} {
+    global ::ns
+    global ::nodes
     set tcp [new Agent/TCP]
     $tcp set prio_ tsid
     $tcp set class_ 2
     set sink [new Agent/TCPSink]
     $ns attach-agent $nodes(0) $tcp
-    $ns attach-agent $nodes(1) $sink
+    $ns attach-agent $nodes(2) $sink
     $ns connect $tcp $sink
     set ftp [new Application/FTP]
     $ftp attach-agent $tcp
     $ns at 3.0 "$ftp start" 
 
-    puts "tspec granted";
+    puts "tspec granted for tsid $tsid";
 }
 proc addts-refused-callback {tspec tsid} {
-    puts "tspec refused";
+    puts "tspec refused for tsid $tsid";
 }
 addts-request $nodes(1) $tspec addts-granted-callback addts-refused-callback
 
@@ -147,7 +149,7 @@ $ns attach-agent $nodes(1) $sink
 $ns connect $tcp $sink
 set ftp [new Application/FTP]
 $ftp attach-agent $tcp
-$ns at 3.0 "$ftp start" 
+#$ns at 3.0 "$ftp start" 
 
 $ns at 300 "puts \"End of simulation.\"; $ns halt"
 puts "Starting Simulation..."
