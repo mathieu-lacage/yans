@@ -43,9 +43,9 @@
 #ifdef DCA_TXOP_TRACE
 # define TRACE(format, ...) \
   printf ("DCA TXOP %d " format "\n", m_container->selfAddress (), ## __VA_ARGS__);
-#else /* DCF_TRACE */
+#else /* DCA_TXOP_TRACE */
 # define TRACE(format, ...)
-#endif /* DCF_TRACE */
+#endif /* DCA_TXOP_TRACE */
 
 
 class MyDcaAccessListener : public DcfAccessListener {
