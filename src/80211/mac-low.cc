@@ -34,7 +34,7 @@
 #include <iostream>
 
 #ifndef MAC_LOW_TRACE
-#define nopeMAC_LOW_TRACE 1
+#define MAC_LOW_TRACE 1
 #endif
 
 #ifdef MAC_LOW_TRACE
@@ -114,7 +114,9 @@ private:
 
 MacLow::MacLow (MacContainer *container)
 	: m_container (container),
-	  m_ACKTimeoutHandler (new DynamicHandler<MacLow> (this, &MacLow::ACKTimeout)),
+	  m_normalAckTimeoutHandler (new DynamicHandler<MacLow> (this, &MacLow::normalAckTimeout)),
+	  m_fastAckTimeoutHandler (new StaticHandler<MacLow> (this, &MacLow::fastAckTimeout)),
+	  m_fastAckFailedTimeoutHandler (new StaticHandler<MacLow> (this, &MacLow::fastAckFailedTimeout)),
 	  m_CTSTimeoutHandler (new DynamicHandler<MacLow> (this, &MacLow::CTSTimeout)),
 	  m_sendCTSHandler (new DynamicHandler<MacLow> (this, &MacLow::sendCTS_AfterRTS)),
 	  m_sendACKHandler (new DynamicHandler<MacLow> (this, &MacLow::sendACK_AfterData)),
@@ -131,7 +133,9 @@ MacLow::MacLow (MacContainer *container)
 
 MacLow::~MacLow ()
 {
-	delete m_ACKTimeoutHandler;
+	delete m_normalAckTimeoutHandler;
+	delete m_fastAckTimeoutHandler;
+	delete m_fastAckFailedTimeoutHandler;
 	delete m_CTSTimeoutHandler;
 	delete m_sendCTSHandler;
 	delete m_sendACKHandler;
@@ -294,10 +298,12 @@ MacLow::sendDataPacket (void)
 		double monitorDelay = txDuration + parameters ()->getPIFS ();
 		m_busyMonitorHandler->start (monitorDelay);
 	}
-	if (m_waitACK) {
+	if (waitNormalAck ()) {
 		double timerDelay = txDuration + parameters ()->getACKTimeoutDuration ();
-		m_ACKTimeoutHandler->start (new MacCancelableEvent (),
-					    timerDelay);
+		m_normalAckTimeoutHandler->start (timerDelay);
+	} else if (waitFastAck ()) {
+		double timerDelay = txDuration + parameters ()->getPIFS ();
+		m_fastAckTimeoutHandler->start (timerDelay);
 	}
 	setTxMode (txPacket, m_dataTxMode);
 	double duration;
@@ -306,14 +312,14 @@ MacLow::sendDataPacket (void)
 	} else {
 		int ackTxMode = getAckTxModeForData (getDestination (txPacket), m_dataTxMode);
 		duration = 0.0;
-		if (m_waitACK) {
+		if (waitAck ()) {
 			duration += parameters ()->getSIFS ();
 			duration += calculateTxDuration (ackTxMode, parameters ()->getACKSize ());
 		}
 		if (m_nextSize > 0) {
 			duration += parameters ()->getSIFS ();
 			duration += calculateTxDuration (m_dataTxMode, m_nextSize);
-			if (m_waitACK) {
+			if (waitAck ()) {
 				duration += parameters ()->getSIFS ();
 				duration += calculateTxDuration (ackTxMode, parameters ()->getACKSize ());
 			}
@@ -325,7 +331,7 @@ MacLow::sendDataPacket (void)
 
 
 void
-MacLow::sendCTS_AfterRTS (class MacCancelableEvent *macEvent)
+MacLow::sendCTS_AfterRTS (MacCancelableEvent *macEvent)
 {
 	/* send a CTS when you receive a RTS 
 	 * right after SIFS.
@@ -344,7 +350,7 @@ MacLow::sendCTS_AfterRTS (class MacCancelableEvent *macEvent)
 }
 
 void
-MacLow::sendACK_AfterData (class MacCancelableEvent *macEvent)
+MacLow::sendACK_AfterData (MacCancelableEvent *macEvent)
 {
 	/* send an ACK when you receive 
 	 * a packet after SIFS. 
@@ -363,7 +369,7 @@ MacLow::sendACK_AfterData (class MacCancelableEvent *macEvent)
 }
 
 void
-MacLow::sendDataAfterCTS (class MacCancelableEvent *macEvent)
+MacLow::sendDataAfterCTS (MacCancelableEvent *macEvent)
 {
 	/* send the third step in a 
 	 * RTS/CTS/DATA/ACK hanshake 
@@ -379,12 +385,14 @@ MacLow::sendDataAfterCTS (class MacCancelableEvent *macEvent)
 	       getSequenceControl (m_currentTxPacket),
 	       getTID (m_currentTxPacket));
 	double txDuration = calculateTxDuration (m_dataTxMode, getSize (m_currentTxPacket));
-	if (m_waitACK) {
+	if (waitNormalAck ()) {
 		double timerDelay = txDuration + parameters ()->getACKTimeoutDuration ();
-		m_ACKTimeoutHandler->start (new MacCancelableEvent (),
-					    timerDelay);
+		m_normalAckTimeoutHandler->start (timerDelay);
+	} else if (waitFastAck ()) {
+		double timerDelay = txDuration + parameters ()->getPIFS ();
+		m_fastAckTimeoutHandler->start (timerDelay);
 	}
-	
+
 	setTxMode (m_currentTxPacket, m_dataTxMode);
 	double duration = event->getDuration ();
 	duration -= txDuration;
@@ -410,13 +418,27 @@ MacLow::busyMonitor (MacCancelableEvent *macEvent)
 }
 
 void
-MacLow::ACKTimeout (class MacCancelableEvent *event)
+MacLow::normalAckTimeout (MacCancelableEvent *event)
 {
 	m_transmissionListener->missedACK ();
 }
+void
+MacLow::fastAckFailedTimeout (void)
+{
+	m_transmissionListener->missedACK ();
+	TRACE ("fast Ack busy but missed");
+}
+void
+MacLow::fastAckTimeout ()
+{
+	if (peekPhy ()->getState () == Phy80211::IDLE) {
+		TRACE ("fast Ack idle missed");
+		m_transmissionListener->missedACK ();
+	}
+}
 
 void
-MacLow::CTSTimeout (class MacCancelableEvent *event)
+MacLow::CTSTimeout (MacCancelableEvent *event)
 {
 	m_currentTxPacket = 0;
 	m_transmissionListener->missedCTS ();
@@ -487,12 +509,40 @@ MacLow::calculateOverallTxTime (void)
 		txTime += parameters ()->getSIFS () * 2;
 	}
 	txTime += calculateTxDuration (m_dataTxMode, getSize (m_currentTxPacket));
-	if (m_waitACK) {
+	if (waitAck ()) {
 		int ackTxMode = getAckTxModeForData (getDestination (m_currentTxPacket), m_dataTxMode);
 		txTime += parameters ()->getSIFS ();
 		txTime += calculateTxDuration (ackTxMode, parameters ()->getACKSize ());
 	}
 	return txTime;
+}
+
+bool
+MacLow::waitAck (void)
+{
+	if (m_waitAck == ACK_NONE) {
+		return false;
+	} else {
+		return true;
+	}
+}
+bool
+MacLow::waitNormalAck (void)
+{
+	if (m_waitAck == ACK_NORMAL) {
+		return true;
+	} else {
+		return false;
+	}
+}
+bool
+MacLow::waitFastAck (void)
+{
+	if (m_waitAck == ACK_FAST) {
+		return true;
+	} else {
+		return false;
+	}
 }
 
 /****************************************************************************
@@ -543,7 +593,7 @@ MacLow::startTransmission (void)
 		increaseSize (m_currentTxPacket, parameters ()->getDataHeaderSize ());
 	}
 
-	if (m_nextSize > 0 && !m_waitACK) {
+	if (m_nextSize > 0 && !waitAck ()) {
 		// we need to start the afterSIFS timeout now.
 		double delay = calculateOverallTxTime ();
 		delay += parameters ()->getSIFS ();
@@ -560,16 +610,20 @@ MacLow::startTransmission (void)
 	assert (peekPhy ()->getState () == Phy80211::TX);	
 }
 
-
+void 
+MacLow::enableFastAck (void)
+{
+	m_waitAck = ACK_FAST;
+}
 void 
 MacLow::enableACK (void)
 {
-	m_waitACK = true;
+	m_waitAck = ACK_NORMAL;
 }
 void 
 MacLow::disableACK (void)
 {
-	m_waitACK = false;
+	m_waitAck = ACK_NONE;
 }
 void 
 MacLow::enableRTS (void)
@@ -617,16 +671,22 @@ MacLow::registerNavListener (MacLowNavListener *listener)
 void 
 MacLow::receive (Packet *packet)
 {
+	double monitorDelay = 0.0;
+
 	/* A packet is received from the PHY.
 	 * When we have handled this packet,
 	 * we handle any packet present in the
 	 * packet queue.
 	 */
 	if (HDR_CMN (packet)->error ()) {
-		//TRACE_VERBOSE ("rx failed from %d",
-		//getSource (packet));
+		TRACE ("rx failed from %d",
+		       getSource (packet));
 		dropPacket (packet);
-		return;
+		if (waitFastAck ()) {
+			m_fastAckFailedTimeoutHandler->start (parameters ()->getSIFS ());
+		}
+		monitorDelay += parameters ()->getPIFS ();
+		goto out;
 	}
 	m_receptionListener->gotPacket (getSource (packet),
 					getLastSNR (),
@@ -635,7 +695,6 @@ MacLow::receive (Packet *packet)
 	TRACE ("duration/id: %f", getDuration (packet));
 	notifyNav (now (), getDuration (packet), getType (packet), getSource (packet));
 
-	double monitorDelay = 0.0;
 
 	if (getType (packet) == MAC_80211_CTL_RTS) {
 		/* XXX see section 9.9.2.2.1 802.11e/D12.1 */
@@ -665,9 +724,11 @@ MacLow::receive (Packet *packet)
 		dropPacket (packet);
 	} else if (getType (packet) == MAC_80211_CTL_ACK &&
 		   getDestination (packet) == getSelf () &&
-		   m_ACKTimeoutHandler->isRunning ()) {
+		   waitAck ()) {
 		TRACE ("rx ACK from %d", getSource (packet));
-		m_ACKTimeoutHandler->cancel ();
+		if (waitNormalAck ()) {
+			m_normalAckTimeoutHandler->cancel ();
+		}
 		m_transmissionListener->gotACK (getLastSNR (), getTxMode (packet));
 		dropPacket (packet);
 		if (m_nextSize > 0) {
@@ -705,6 +766,7 @@ MacLow::receive (Packet *packet)
 			monitorDelay += parameters ()->getPIFS ();
 		}
 	}
+ out:
 	if (monitorDelay > 0 && m_monitorBusy) {
 		m_busyMonitorHandler->start (monitorDelay);
 	}

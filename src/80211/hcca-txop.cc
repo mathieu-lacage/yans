@@ -174,15 +174,16 @@ HccaTxop::txCurrent (void)
 		TRACE ("send to %d", getDestination (m_currentTxPacket));
 	}
 	low ()->disableRTS ();
-	low ()->enableACK ();
+	low ()->enableFastAck ();
 	low ()->enableOverrideDurationId (getDurationIdLeft ());
 	low ()->setDataTransmissionMode (station->getDataMode (getSize (m_currentTxPacket)));
 	low ()->setData (m_currentTxPacket->copy ());
 	low ()->setTransmissionListener (m_transmissionListener);
 	low ()->startTransmission ();
 	return true;
+
  tryToSendQosNull:
-	
+	// XXX ??
 	return false;
 }
 
@@ -284,6 +285,7 @@ HccaTxop::missedCTS (void)
 void 
 HccaTxop::gotACK (double snr, int txMode)
 {
+	TRACE ("got ack from %d", getDestination (m_currentTxPacket));
 	MacStation *station = lookupDestStation (m_currentTxPacket);
 	station->reportDataOk (snr, txMode);
 	m_SLRC = 0;
@@ -298,10 +300,13 @@ HccaTxop::missedACK (void)
 		 * retransmission does not work, we have a big problem
 		 * so we stop our txop.
 		 */
+		TRACE ("missed ack from %d -- dropping packet", getDestination (m_currentTxPacket));
 		dropCurrentPacket ();
 		// XXX should we attempt to tx a CF-END ?
 	} else {
-		setRetry (m_currentTxPacket);		
+		TRACE ("missed ack from %d -- retry packet", getDestination (m_currentTxPacket));
+		setRetry (m_currentTxPacket);
+		txCurrent ();
 	}
 }
 void 

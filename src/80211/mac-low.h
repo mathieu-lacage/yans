@@ -93,6 +93,20 @@ public:
 	/* If ACK is enabled, we wait ACKTimeout for an ACK.
 	 */
 	void enableACK (void);
+	/* If FastAck is enabled, we:
+	 *   - wait PIFS after end-of-tx. If idle, report
+	 *     FastAckMissed.
+	 *   - if busy at end-of-tx+PIFS, wait end-of-rx
+	 *   - if Ack ok at end-of-rx, report FastAck ok.
+	 *   - if Ack not ok at end-of-rx, report FastAckMissed
+	 *     at end-of-rx+SIFS.
+	 * This is really complicated but it is needed for
+	 * proper HCCA support.
+	 */
+	void enableFastAck (void);
+	/* disable either Ack or FastAck, depending on
+	 * which Ack method was enabled.
+	 */
 	void disableACK (void);
 
 	/* If RTS is enabled, we wait CTSTimeout for a CTS.
@@ -164,6 +178,9 @@ private:
 	Phy80211 *peekPhy (void);
 	void forwardDown (Packet *packet);
 	int getSelf (void);
+	bool waitAck (void);
+	bool waitNormalAck (void);
+	bool waitFastAck (void);
 	double getLastSNR (void);
 	double calculateTxDuration (int mode, int size);
 	double calculateOverallTxTime (void);
@@ -179,7 +196,9 @@ private:
 	Packet *getACKPacket (void);
 	Packet *getRTSforPacket (Packet *data);	
 
-	void ACKTimeout (MacCancelableEvent *event);
+	void normalAckTimeout (MacCancelableEvent *event);
+	void fastAckTimeout (void);
+	void fastAckFailedTimeout (void);
 	void CTSTimeout (MacCancelableEvent *event);
 	void sendCTS_AfterRTS (MacCancelableEvent *macEvent);
 	void sendACK_AfterData (MacCancelableEvent *macEvent);
@@ -198,7 +217,9 @@ private:
 	vector<MacLowNavListener *> m_navListeners;
 	MacLowBusyMonitoringListener *m_monitoringListener;
 
-	DynamicHandler<MacLow> *m_ACKTimeoutHandler;
+	DynamicHandler<MacLow> *m_normalAckTimeoutHandler;
+	StaticHandler<MacLow>  *m_fastAckTimeoutHandler;
+	StaticHandler<MacLow>  *m_fastAckFailedTimeoutHandler;
 	DynamicHandler<MacLow> *m_CTSTimeoutHandler;
 	DynamicHandler<MacLow> *m_sendCTSHandler;
 	DynamicHandler<MacLow> *m_sendACKHandler;
@@ -209,7 +230,11 @@ private:
 	Packet *m_currentTxPacket;
 
 	int m_nextSize;
-	bool m_waitACK;
+	enum {
+		ACK_NONE,
+		ACK_NORMAL,
+		ACK_FAST
+	} m_waitAck;
 	bool m_monitorBusy;
 	bool m_sendRTS;
 	int m_dataTxMode;
