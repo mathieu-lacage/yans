@@ -30,8 +30,8 @@
 class MacContainer;
 class TSpec;
 class Packet;
-class MyMacLowBusyMonitoringListener;
-class MyMacLowTransmissionListener;
+class MyBeaconMacLowTransmissionListener;
+class MyCfPollMacLowTransmissionListener;
 class Phy80211;
 class MacParameters;
 class MacLow;
@@ -72,19 +72,23 @@ public:
 	Dcf *createDcf (enum ac_e ac);
 
 private:
-	friend class MyMacLowBusyMonitoringListener;
-	friend class MyMacLowTransmissionListener;
+	friend class MyBeaconMacLowTransmissionListener;
+	friend class MyCfPollMacLowTransmissionListener;
 
-	void busyTimeout (void);
-	void accessTimer (MacCancelableEvent *event);
+	void gotCfPollAck (void);
+	void missedCfPollAck (void);
+	void capStartTimer (MacCancelableEvent *event);
 	void beaconTxNextData (void);
 	void beaconTimer (MacCancelableEvent *event);
+	void txopStartTimer (MacCancelableEvent *event);
+
+
 	void startCap (void);
 	void finishCap (void);
-	void doCurrentTxop (void);
+	void startCurrentTxop (void);
+	void nextTxop (void);
 
 	void sendCfPollTo (int destination, uint8_t tsid, double duration);
-
 	double getMaxTxopDuration (void);
 	double duration (int size, int mode);
 	double calculateMediumTime (TSpec const *tspec);
@@ -105,17 +109,18 @@ private:
 
 	MacContainer *m_container;
 	MacHighQap *m_high;
-	MyMacLowBusyMonitoringListener *m_busyListener;
-	MyMacLowTransmissionListener *m_beaconTxListener;
-	DynamicHandler<QapScheduler> *m_access;
+	MyBeaconMacLowTransmissionListener *m_beaconTxListener;
+	MyCfPollMacLowTransmissionListener *m_cfPollTxListener;
+	DynamicHandler<QapScheduler> *m_capStart;
 	DynamicHandler<QapScheduler> *m_beacon;
+	DynamicHandler<QapScheduler> *m_txopStart;
 
 	std::list<Txop> m_admitted;
 	std::list<Txop>::const_iterator m_txopIterator;
-	double m_txopEnd;
-	double m_capEnd;
-	double m_capStart;
-	double m_nextBeaconStart;
+	double m_txopEndTime;
+	double m_capEndTime;
+	double m_capStartTime;
+	double m_nextBeaconStartTime;
 	double m_currentServiceInterval;
 	uint32_t m_sequence;
 	MacDcfParameters *m_dcfParameters[4];

@@ -109,35 +109,53 @@ Txop::operator == (Txop const & o) const
 }
 
 
-class MyMacLowBusyMonitoringListener : public MacLowBusyMonitoringListener {
+
+class MyBeaconMacLowTransmissionListener : public MacLowTransmissionListener {
 public:
-	MyMacLowBusyMonitoringListener (QapScheduler *scheduler) 
+	MyBeaconMacLowTransmissionListener (QapScheduler *scheduler)
 		: m_scheduler (scheduler)
 	{}
+	virtual ~MyBeaconMacLowTransmissionListener () {}
 
-	virtual ~MyMacLowBusyMonitoringListener () {}
-
-	virtual void gotBusyTimeout (void) {
-		m_scheduler->busyTimeout ();
+	virtual void gotCTS (double snr, int txMode) {
+		assert (false);
 	}
-
+	virtual void missedCTS (void) {
+		assert (false);
+	}
+	virtual void gotACK (double snr, int txMode) {
+		assert (false);
+	}
+	virtual void missedACK (void) {
+		assert (false);
+	}
+	virtual void startNext (void) {
+		m_scheduler->beaconTxNextData ();
+	}
 private:
 	QapScheduler *m_scheduler;
 };
-
-class MyMacLowTransmissionListener : public MacLowTransmissionListener {
+class MyCfPollMacLowTransmissionListener : public MacLowTransmissionListener {
 public:
-	MyMacLowTransmissionListener (QapScheduler *scheduler)
+	MyCfPollMacLowTransmissionListener (QapScheduler *scheduler)
 		: m_scheduler (scheduler)
 	{}
-	virtual ~MyMacLowTransmissionListener () {}
+	virtual ~MyCfPollMacLowTransmissionListener () {}
 
-	virtual void gotCTS (double snr, int txMode) {}
-	virtual void missedCTS (void) {}
-	virtual void gotACK (double snr, int txMode) {}
-	virtual void missedACK (void) {}
+	virtual void gotCTS (double snr, int txMode) {
+		assert (false);
+	}
+	virtual void missedCTS (void) {
+		assert (false);
+	}
+	virtual void gotACK (double snr, int txMode) {
+		m_scheduler->gotCfPollAck ();
+	}
+	virtual void missedACK (void) {
+		m_scheduler->missedCfPollAck ();
+	}
 	virtual void startNext (void) {
-		m_scheduler->beaconTxNextData ();
+		assert (false);
 	}
 private:
 	QapScheduler *m_scheduler;
@@ -149,10 +167,11 @@ QapScheduler::QapScheduler (MacContainer *container)
 	  m_sequence (0),
 	  m_currentServiceInterval (0.0)
 {
-	m_busyListener = new MyMacLowBusyMonitoringListener (this);
-	m_beaconTxListener = new MyMacLowTransmissionListener (this);
-	m_access = new DynamicHandler<QapScheduler> (this, &QapScheduler::accessTimer);
+	m_beaconTxListener = new MyBeaconMacLowTransmissionListener (this);
+	m_cfPollTxListener = new MyCfPollMacLowTransmissionListener (this);
+	m_capStart = new DynamicHandler<QapScheduler> (this, &QapScheduler::capStartTimer);
 	m_beacon = new DynamicHandler<QapScheduler> (this, &QapScheduler::beaconTimer);
+	m_txopStart = new DynamicHandler<QapScheduler> (this, &QapScheduler::txopStartTimer);
 	m_beacon->start (parameters ()->getBeaconInterval ());
 
 	m_dcfParameters[AC_BE] = new MacDcfParameters (container);
@@ -459,7 +478,11 @@ QapScheduler::delTsRequest (int destination, TSpec *tspec)
 		setCurrentServiceInterval (minMaxServiceInterval);
 	}
 
-	// update scheduling timers. XXX
+	/* XXX The scheduling timers will be updated at the 
+	 * next Beacon boundary. Maybe we need to trigger an update
+	 * of the timers now.
+	 */
+	
 
 	// notify client.
 	return false;
@@ -468,19 +491,46 @@ QapScheduler::delTsRequest (int destination, TSpec *tspec)
 void 
 QapScheduler::gotQosNull (Packet *packet)
 {
-
+	TRACE ("got QosNull from %d", getSource (packet));
+	/* The txop holder notifies us that it has
+	 * finished using the medium so we can reuse
+	 * any txop time left for other txops.
+	 */
+	nextTxop ();
+}
+void 
+QapScheduler::gotCfPollAck (void)
+{
+	TRACE ("got CfPoll Ack from %d", (*m_txopIterator).getDestination ());
+	/* We don't have anything to do here since this event 
+	 * notifies us of the fact that the target QSTA of the 
+	 * txop has effectively taken ownership of the medium
+	 * for the duration of the txop.
+	 * So, we wait for either a QosNull event or the 
+	 * end-of-txop event.
+	 */
+}
+void 
+QapScheduler::missedCfPollAck (void)
+{
+	TRACE ("missed CfPoll Ack from %d", (*m_txopIterator).getDestination ());
+	/* Our target QSTA has not taken ownership of the 
+	 * medium so we skip to the next txop if there is
+	 * one.
+	 */
+	nextTxop ();
 }
 
 void
-QapScheduler::doCurrentTxop (void)
+QapScheduler::startCurrentTxop (void)
 {
 	assert (m_txopIterator != m_admitted.end ());
 
 	TSpec *tspec = (*m_txopIterator).getTSpec ();
 
 	double txopDuration = calculateTxopDuration (getCurrentServiceInterval (), tspec);
-	m_txopEnd = now () + txopDuration;
-	if (m_txopEnd > m_capEnd) {
+	m_txopEndTime = now () + txopDuration;
+	if (m_txopEndTime > m_capEndTime) {
 		TRACE ("impossible to finish txop before end of CAP");
 		/* we cannot finish all the txops during the CAP.
 		 * This is probably because one of the txops stole
@@ -491,11 +541,29 @@ QapScheduler::doCurrentTxop (void)
 		return;
 	}
 
-	TRACE ("start txop for %d until %f", (*m_txopIterator).getDestination (), m_txopEnd);
+	TRACE ("start txop for %d until %f", (*m_txopIterator).getDestination (), m_txopEndTime);
 	
 	sendCfPollTo ((*m_txopIterator).getDestination (), 
 		      tspec->getTSID (),
 		      txopDuration);
+
+	/* XXX start a timer for end-of-txop. */
+}
+
+void
+QapScheduler::nextTxop (void)
+{
+	m_txopIterator++;
+	if (m_txopIterator == m_admitted.end ()) {
+		finishCap ();
+	} else {
+		startCurrentTxop ();
+		std::list<Txop>::const_iterator i_copy (m_txopIterator);
+		i_copy++;
+		if (i_copy != m_admitted.end ()) {
+			m_txopStart->start (m_txopEndTime - now () + parameters ()->getPIFS ());
+		}
+	}
 }
 
 void
@@ -510,13 +578,13 @@ QapScheduler::sendCfPollTo (int destination, uint8_t tsid, double txopDuration)
 	setFragmentNumber (packet, 0);
 	uint16_t sequence = m_container->macTxMiddle ()->getNextSequenceNumberFor (packet);
 	setSequenceNumber (packet, sequence);
-	low ()->disableACK ();
+	low ()->enableSuperFastAck ();
 	low ()->disableRTS ();
 	low ()->enableOverrideDurationId (txopDuration);
 	low ()->setDataTransmissionMode (0);
 	low ()->disableNextData ();
 	low ()->setData (packet);
-	low ()->setTransmissionListener (NullMacLowTransmissionListener::instance ());
+	low ()->setTransmissionListener (m_cfPollTxListener);
 	low ()->startTransmission ();	
 }
 
@@ -524,7 +592,6 @@ void
 QapScheduler::finishCap (void)
 {
 	TRACE ("finish CAP");
-	low ()->disableBusyMonitoring ();
 
 	/* notify all stations that the previous txop was finished 
 	 * before its normal end such that contention-based access
@@ -532,7 +599,7 @@ QapScheduler::finishCap (void)
 	 */
 	double cfPollDuration = m_container->phy ()->calculateTxDuration (0, getPacketSize (MAC_80211_MGT_CFPOLL));
 	double cfPollEnd = now () + cfPollDuration;
-	if (cfPollEnd < m_capEnd) {
+	if (cfPollEnd < m_capEndTime) {
 		sendCfPollTo (m_container->selfAddress (), 0, 0.0);
 	}
 }
@@ -541,37 +608,42 @@ void
 QapScheduler::startCap (void)
 {
 	TRACE ("start CAP");
-	m_capStart = now ();
-	double capEnd = m_capStart + getCurrentTotalCapTime ();
-	m_capEnd = min (capEnd, m_nextBeaconStart);
+	m_capStartTime = now ();
+	double capEnd = m_capStartTime + getCurrentTotalCapTime ();
+	m_capEndTime = min (capEnd, m_nextBeaconStartTime);
 	m_txopIterator = m_admitted.begin ();
 
-	low ()->setBusyMonitoringListener (m_busyListener);
-	low ()->enableBusyMonitoring ();
 
-	doCurrentTxop ();
+	startCurrentTxop ();
 
 	/* Schedule an access for the next service interval. */
 	double nextCapStart = now () + getCurrentServiceInterval ();
-	if (nextCapStart < m_nextBeaconStart) {
-		m_access->start (getCurrentServiceInterval ());
+	if (nextCapStart < m_nextBeaconStartTime) {
+		m_capStart->start (getCurrentServiceInterval ());
 	}
 }
 
 void
-QapScheduler::busyTimeout (void)
+QapScheduler::txopStartTimer (MacCancelableEvent *event)
 {
-	TRACE ("busy timeout for TXOP from %d", (*m_txopIterator).getDestination ());
-	m_txopIterator++;
-	if (m_txopIterator == m_admitted.end ()) {
-		finishCap ();
-	} else {
-		doCurrentTxop ();
+	// XXX: can we ignore the NAV here ?
+	if (phy ()->getState () != Phy80211::IDLE ||
+	    phy ()->getStateDuration () < parameters ()->getPIFS ()) {
+		/* Somehow, we got delayed so we need to wait
+		 * until next idle+PIFS.
+		 */
+		TRACE ("cannot start txop now. restart delay.");
+		double nextTxopStartDelay = 0.0;
+		nextTxopStartDelay += phy ()->getDelayUntilIdle ();
+		nextTxopStartDelay += parameters ()->getPIFS ();
+		m_txopStart->start (nextTxopStartDelay);
+		return;
 	}
+	nextTxop ();
 }
 
 void
-QapScheduler::accessTimer (MacCancelableEvent *event)
+QapScheduler::capStartTimer (MacCancelableEvent *event)
 {
 	/* Invoked at the start of a CAP to send the first 
 	 * CF-Poll of the CAP.
@@ -583,10 +655,10 @@ QapScheduler::accessTimer (MacCancelableEvent *event)
 		 * until next idle+PIFS.
 		 */
 		TRACE ("cannot start CAP now. restart delay.");
-		double nextAccessDelay = 0.0;
-		nextAccessDelay += phy ()->getDelayUntilIdle ();
-		nextAccessDelay += parameters ()->getPIFS ();
-		m_access->start (nextAccessDelay);
+		double nextCapStartDelay = 0.0;
+		nextCapStartDelay += phy ()->getDelayUntilIdle ();
+		nextCapStartDelay += parameters ()->getPIFS ();
+		m_capStart->start (nextCapStartDelay);
 		return;
 	}
 
@@ -607,10 +679,10 @@ QapScheduler::beaconTxNextData (void)
 	}
 	if (phy ()->getState () != Phy80211::IDLE) {
 		TRACE ("cannot start CAP now. restart delay.");
-		double nextAccessDelay = 0.0;
-		nextAccessDelay += phy ()->getDelayUntilIdle ();
-		nextAccessDelay += parameters ()->getPIFS ();
-		m_access->start (nextAccessDelay);
+		double nextCapStartDelay = 0.0;
+		nextCapStartDelay += phy ()->getDelayUntilIdle ();
+		nextCapStartDelay += parameters ()->getPIFS ();
+		m_capStart->start (nextCapStartDelay);
 		return;
 	}
 
@@ -658,5 +730,5 @@ QapScheduler::beaconTimer (MacCancelableEvent *event)
 
 	/* schedule an access for the next beacon. */
 	m_beacon->start (parameters ()->getBeaconInterval ());
-	m_nextBeaconStart = now () + parameters ()->getBeaconInterval ();
+	m_nextBeaconStartTime = now () + parameters ()->getBeaconInterval ();
 }
