@@ -207,7 +207,7 @@ bool
 Phy80211::isDefined (char const *varName)
 {
 	Tcl& tcl=Tcl::instance();
-	tcl.evalf ("catch \"Phy/80211/Ber set %s\" val", varName);
+	tcl.evalf ("catch \"Phy/80211 set %s\" val", varName);
 	if (strcmp ((char *)tcl.result (), "0") == 0) {
 		return true;
 	} else {
@@ -218,7 +218,7 @@ void
 Phy80211::define (char const *varName, uint32_t defaultValue)
 {
 	Tcl& tcl=Tcl::instance();
-	tcl.evalf ("Phy/80211/Ber set %s %u", 
+	tcl.evalf ("Phy/80211 set %s %u", 
 		   varName, defaultValue);
 }
 
@@ -231,6 +231,11 @@ Phy80211::initialize (char const *varName, uint32_t *variable, uint32_t defaultV
 	bind (varName, variable);
 }
 
+int
+Phy80211::selfAddress (void)
+{
+	return node_->address ();
+}
 
 double 
 Phy80211::dBmToW (double dBm)

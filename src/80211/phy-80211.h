@@ -112,6 +112,7 @@ protected:
 	TransmissionMode *getMode (int mode);
 	double calculateNoiseFloor (double signalSpread);
 	void setLastRxSNR (double snr);
+	int selfAddress (void);
 private:
 	enum {
 		standard_80211_unknown = 0,
