@@ -89,6 +89,7 @@ MacHighAdhoc::enqueueFromLL (Packet *packet, int macDestination)
 {
 	TRACE ("enqueue %d to %d (%d)", getSize (packet), 
 	       macDestination, m_queue->size ());
+	setSource (packet, m_interface->getMacAddress ());
 	setType (packet, MAC_80211_DATA);
 	setFinalDestination (packet, macDestination);
 	setDestination (packet, getFinalDestination (packet));
