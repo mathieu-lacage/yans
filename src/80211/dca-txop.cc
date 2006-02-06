@@ -270,7 +270,8 @@ DcaTxop::accessGrantedNow (void)
 		low ()->setData (m_currentTxPacket);
 		low ()->startTransmission ();
 		m_currentTxPacket = 0;
-		m_dcf->notifyAccessOk ();
+		m_dcf->notifyAccessOngoingOk ();
+		m_dcf->notifyAccessFinished ();
 		TRACE ("tx broadcast");
 	} else {
 		int dataTxMode = lookupDestStation (m_currentTxPacket)->getDataMode (getSize (m_currentTxPacket));
@@ -325,11 +326,12 @@ DcaTxop::missedCTS (void)
 	if (m_SSRC > parameters ()->getMaxSSRC ()) {
 		station->reportFinalRTSFailed ();
 		// to reset the dcf.
-		m_dcf->notifyAccessOk ();
+		m_dcf->notifyAccessOngoingErrorButOk ();
+		m_dcf->notifyAccessFinished ();
 		dropCurrentPacket ();
 	} else {
-		m_dcf->notifyAccessFailed ();
-		m_dcf->requestAccess ();
+		m_dcf->notifyAccessOngoingError ();
+		m_dcf->notifyAccessFinished ();
 	}
 }
 void 
@@ -348,7 +350,8 @@ DcaTxop::gotACK (double snr, int txMode)
 		 */
 		Packet::free (m_currentTxPacket);
 		m_currentTxPacket = 0;
-		m_dcf->notifyAccessOk ();
+		m_dcf->notifyAccessOngoingOk ();
+		m_dcf->notifyAccessFinished ();
 	}
 }
 void 
@@ -361,12 +364,13 @@ DcaTxop::missedACK (void)
 	if (m_SLRC > parameters ()->getMaxSLRC ()) {
 		station->reportFinalDataFailed ();
 		// to reset the dcf.
-		m_dcf->notifyAccessOk ();
+		m_dcf->notifyAccessOngoingErrorButOk ();
+		m_dcf->notifyAccessFinished ();
 		dropCurrentPacket ();
 	} else {
 		setRetry (m_currentTxPacket);
-		m_dcf->notifyAccessFailed ();
-		m_dcf->requestAccess ();
+		m_dcf->notifyAccessOngoingError ();
+		m_dcf->notifyAccessFinished ();
 	}
 	
 }

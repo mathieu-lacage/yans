@@ -58,8 +58,12 @@ public:
 	~Dcf ();
 
 	void requestAccess (void);
-	void notifyAccessOk (void);
-	void notifyAccessFailed (void);
+
+	void notifyAccessFinished (void);
+	void notifyAccessOngoingError (void);
+	void notifyAccessOngoingErrorButOk (void);
+	void notifyAccessOngoingOk (void);
+
 	void registerAccessListener (DcfAccessListener *listener);
 
 	MacDcfParameters *parameters (void);
