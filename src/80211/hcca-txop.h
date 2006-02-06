@@ -56,6 +56,7 @@ private:
 	MacStation *lookupDestStation (Packet *packet) const;
 	bool enoughTimeFor (Packet *packet);
 	bool enoughTimeFor (double duration);
+	double getDurationIdLeft (void);
 	void startTxop (double txopLimit);
 	bool isTxopFinished (void);
 	void setCurrentTsid (uint8_t tsid);

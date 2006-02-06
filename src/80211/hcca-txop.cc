@@ -166,6 +166,7 @@ HccaTxop::txCurrent (void)
 	}
 	low ()->disableRTS ();
 	low ()->enableACK ();
+	low ()->enableOverrideDurationId (getDurationIdLeft ());
 	low ()->setDataTransmissionMode (station->getDataMode (getSize (m_currentTxPacket)));
 	low ()->setData (m_currentTxPacket);
 	low ()->setTransmissionListener (m_transmissionListener);
@@ -190,6 +191,12 @@ HccaTxop::startTxop (double txopLimit)
 {
 	m_txopLimit = txopLimit;
 	m_txopStart = now ();
+}
+
+double
+HccaTxop::getDurationIdLeft (void)
+{
+	return now () - m_txopStart + m_txopLimit;
 }
 
 bool
