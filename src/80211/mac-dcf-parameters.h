@@ -23,6 +23,8 @@
 
 #include <stdint.h>
 
+#include "hdr-mac-80211.h"
+
 class MacContainer;
 
 class MacDcfParameters {
@@ -43,10 +45,16 @@ public:
 	void setCWmax (uint16_t CWmin);
 	void setTxopLimit (double txopLimit);
 	void setAIFSN (uint8_t AIFSN);
-	void setACM (uint8_t ACM);
-private:
-	MacContainer *m_container;
+	void setACM (bool enabled);
 
+
+
+	void writeTo (uint8_t buffer[4], enum ac_e ac);
+	void readFrom (uint8_t const buffer[4]);
+private:
+	uint8_t log2 (uint16_t c);
+
+	MacContainer *m_container;
 	double m_txopLimit;
 	uint16_t m_CWmin;
 	uint16_t m_CWmax;

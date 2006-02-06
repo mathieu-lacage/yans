@@ -42,7 +42,7 @@ private:
 	Packet *gotBlockAckReq (Packet *packet);
 
 	OriginatorRxStatus *lookupQos (int source, int TID);
-	OriginatorRxStatus *lookup (int source);
+	OriginatorRxStatus *lookupNqos (int source);
 	OriginatorRxStatus *lookup (Packet *packet);
 	bool handleDuplicates (Packet *packet, OriginatorRxStatus *originator);
 	bool handleFragments (Packet *packet, OriginatorRxStatus *originator);

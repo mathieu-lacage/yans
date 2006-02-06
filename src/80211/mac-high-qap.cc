@@ -55,14 +55,14 @@
 MacHighQap::MacHighQap (MacContainer *container)
 	: MacHighAp (container)
 {
+	m_scheduler = new QapScheduler (container);
+
 	createAC (AC_BE);
 	createAC (AC_BK);
 	createAC (AC_VI);
 	createAC (AC_VO);
 
 	m_hcca = new HccaTxop (container);
-
-	m_scheduler = new QapScheduler (container);
 }
 MacHighQap::~MacHighQap ()
 {}
@@ -74,43 +74,20 @@ MacHighQap::parameters (void)
 }
 
 void
-MacHighQap::addEDCAparameters (Packet *packet)
-{
-	packet->allocdata (4*4);
-	unsigned char *buffer = packet->accessdata ();
-
-	// XXX should probably store these in the EDCF
-	// scheduler and ask for them here rather
-	// than getting them from our own param array.
-	for (uint8_t ac = 0; ac < 4; ac++) {
-		uint8_t AIFSN = m_staDcfParameters[ac].AIFSN;
-		uint8_t ACM = (m_staDcfParameters[ac].ACM)?1:0;
-		*buffer = AIFSN | (ACM << 4) | (ac << 5);
-		buffer++;
-		uint8_t ECWmin = m_staDcfParameters[ac].ECWmin;
-		uint8_t ECWmax = m_staDcfParameters[ac].ECWmax;
-		*buffer = ECWmin | (ECWmax << 4);
-		buffer++;
-		uint16_t txop = m_staDcfParameters[ac].txop;
-		*buffer = (txop & 0xff);
-		buffer++;
-		*buffer = (txop >> 8);
-		buffer++;
-	}
-}
-
-void
 MacHighQap::createAC (enum ac_e ac)
 {
 	MacQueue80211e *queue = new MacQueue80211e (container ()->parameters ());
-	MacDcfParameters *dcfParameters = new MacDcfParameters (container ());
-	Dcf *dcf = new Dcf (container (), dcfParameters);
+	Dcf *dcf = m_scheduler->createDcf (ac);
 	new DcaTxop (dcf, queue, container ());
 
 	m_dcfQueues[ac] = queue;
-	m_dcfParameters = dcfParameters;
 	m_dcfs[ac] = dcf;
 }
+
+
+/*
+  start of code copied from MacHighQStation
+ */
 
 void
 MacHighQap::createTS (TSpec *tspec)
@@ -155,6 +132,56 @@ MacHighQap::isTsActive (uint8_t tsid)
 	}
 }
 
+void
+MacHighQap::enqueueToLow (Packet *packet)
+{
+	/* There is a magic -1 here. It is here because in
+	 * tspec-request.cc:notifyRequestGranted, we have
+	 * a +1. The + and - one are there because we want to
+	 * allow the prio IPv6 field to be zero if it has never
+	 * been set or non-zero in which case it is supposed to
+	 * indicate the number of the target TID+1. 
+	 * This is really quite tricky.
+	 */
+	int requestedTID = getRequestedTID (packet);
+	if (requestedTID == 0) {
+		/* unmarked so we assume AC_BE unless we have
+		 * a management frame in which case it should be
+		 * AC_VO. see 9.1.3.1 802.11e/D12.1
+		 */
+		if (isManagement (packet)) {
+			setAC (packet, AC_VO);
+			queueAC (AC_VO, packet);
+		} else {
+			setAC (packet, AC_BE);
+			queueAC (AC_BE, packet);
+		}
+		return;
+	} else {
+		requestedTID --;
+	}
+	if (requestedTID < 8) {
+		/* XXX we assume that there is no form of
+		 * Access Control for any Access Category.
+		 * Of course, this is wrong but we can
+		 * implement it later.
+		 */
+		setTID (packet, requestedTID);
+		queueAC (getAC (packet), packet);
+	} else {
+		if (isTsActive (requestedTID)) {
+			setTID (packet, requestedTID);
+			queueTS (requestedTID, packet);
+		} else {
+			// XXX if we have not created this TS
+			// yet, we should probably drop this packet.
+		}
+	}
+}
+
+/*
+  end of code copied from MacHighQStation
+ */
 
 
 void 
@@ -197,7 +224,7 @@ MacHighQap::sendAssociationResponseOk (int destination)
 	Packet *packet = getPacketFor (destination);
 	setSize (packet, parameters ()->getPacketSize (MAC_80211_MGT_ASSOCIATION_RESPONSE));
 	setType (packet, MAC_80211_MGT_ASSOCIATION_RESPONSE);
-	addEDCAparameters (packet);
+	m_scheduler->storeEdcaParametersInPacket (packet);
 	setAC (packet, AC_VO);
 	queueAC (AC_VO, packet);
 }
@@ -208,7 +235,7 @@ MacHighQap::sendReAssociationResponseOk (int destination)
 	Packet *packet = getPacketFor (destination);
 	setSize (packet, parameters ()->getPacketSize (MAC_80211_MGT_REASSOCIATION_RESPONSE));
 	setType (packet, MAC_80211_MGT_REASSOCIATION_RESPONSE);
-	addEDCAparameters (packet);
+	m_scheduler->storeEdcaParametersInPacket (packet);
 	setAC (packet, AC_VO);
 	queueAC (AC_VO, packet);
 }
@@ -316,53 +343,6 @@ void
 MacHighQap::forwardQueueToLow (Packet *packet)
 {
 	int requestedTID = getRequestedTID (packet);
-	if (requestedTID < 8) {
-		/* XXX we assume that there is no form of
-		 * Access Control for any Access Category.
-		 * Of course, this is wrong but we can
-		 * implement it later.
-		 */
-		setTID (packet, requestedTID);
-		queueAC (getAC (packet), packet);
-	} else {
-		if (isTsActive (requestedTID)) {
-			setTID (packet, requestedTID);
-			queueTS (requestedTID, packet);
-		} else {
-			// XXX if we have not created this TS
-			// yet, we should probably drop this packet.
-		}
-	}
-}
-
-void
-MacHighQap::enqueueToLow (Packet *packet)
-{
-	/* There is a magic -1 here. It is here because in
-	 * tspec-request.cc:notifyRequestGranted, we have
-	 * a +1. The + and - one are there because we want to
-	 * allow the prio IPv6 field to be zero if it has never
-	 * been set or non-zero in which case it is supposed to
-	 * indicate the number of the target TID+1. 
-	 * This is really quite tricky.
-	 */
-	int requestedTID = getRequestedTID (packet);
-	if (requestedTID == 0) {
-		/* unmarked so we assume AC_BE unless we have
-		 * a management frame in which case it should be
-		 * AC_VO. see 9.1.3.1 802.11e/D12.1
-		 */
-		if (isManagement (packet)) {
-			setAC (packet, AC_VO);
-			queueAC (AC_VO, packet);
-		} else {
-			setAC (packet, AC_BE);
-			queueAC (AC_BE, packet);
-		}
-		return;
-	} else {
-		requestedTID --;
-	}
 	if (requestedTID < 8) {
 		/* XXX we assume that there is no form of
 		 * Access Control for any Access Category.

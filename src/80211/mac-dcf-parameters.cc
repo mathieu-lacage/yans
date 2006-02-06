@@ -109,8 +109,73 @@ MacDcfParameters::setAIFSN (uint8_t AIFSN)
 {
 	m_AIFSN = AIFSN;
 }
+
 void 
-MacDcfParameters::setACM (uint8_t ACM)
+MacDcfParameters::setACM (bool enabled)
 {
+	m_ACM = enabled;
+}
+
+uint8_t
+MacDcfParameters::log2 (uint16_t v)
+{
+	uint8_t log = 0;
+	while (v >>= 1) {
+		log++;
+	}
+	return log;
+}
+
+void
+MacDcfParameters::writeTo (uint8_t buffer[4], enum ac_e ac)
+{
+	uint8_t ACM = ((m_ACM)?1:0) << 3;
+	uint8_t AIFSN = m_AIFSN << 4;
+	uint8_t ACI;
+	switch (ac) {
+	case AC_BE:
+		ACI = 0;
+		break;
+	case AC_BK:
+		ACI = 1;
+		break;
+	case AC_VI:
+		ACI = 2;
+		break;
+	case AC_VO:
+		ACI = 3;
+		break;
+	default:
+		/* quiet compiler warning */
+		ACI = 4;
+		assert (false);
+		break;
+	}
+	ACI <<= 1;
+	buffer[0] = AIFSN | ACM | ACI;
+
+	uint8_t ECWmin = log2 (m_CWmin) << 4;
+	uint8_t ECWmax = log2 (m_CWmax);
+	buffer[1] = ECWmin | ECWmax;
+
+	long int txopLimit = lrint (m_txopLimit * 32e-6);
+	buffer[2] = (txopLimit >> 8) & 0xff;
+	buffer[3] = (txopLimit >> 0) & 0xff;
+}
+
+void
+MacDcfParameters::readFrom (uint8_t const buffer[4])
+{
+	uint8_t AIFSN = (buffer[0] >> 4) & 0x0f;
+	uint8_t ACM   = (buffer[0] >> 3) & 0x01;
+	//uint8_t ACI   = (buffer[0] >> 1) & 0x03;
+	uint8_t ECWmin = (buffer[1] >> 4) & 0x0f;
+	uint8_t ECWmax = (buffer[1] >> 0) & 0x0f;
+	uint16_t txopLimit = (buffer[2] << 8) | buffer[3];
+
+	m_AIFSN = AIFSN;
 	m_ACM = (ACM == 1)?true:false;
+	m_CWmin = (1<<ECWmin) - 1;
+	m_CWmax = (1<<ECWmax) - 1;
+	m_txopLimit = txopLimit / 32e-6;
 }

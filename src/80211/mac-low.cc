@@ -375,10 +375,12 @@ MacLow::sendDataAfterCTS (class MacCancelableEvent *macEvent)
 	assert (m_currentTxPacket);
 	SendEvent *event = static_cast<SendEvent *> (macEvent);
 
-	TRACE ("tx %s to %d with mode %d", 
+	TRACE ("tx %s to %d with mode %d seq=0x%x tid=%u", 
 	       getTypeString (m_currentTxPacket),
 	       getDestination (m_currentTxPacket),
-	       m_dataTxMode);
+	       m_dataTxMode, 
+	       getSequenceControl (m_currentTxPacket),
+	       getTID (m_currentTxPacket));
 	double txDuration = calculateTxDuration (m_dataTxMode, getSize (m_currentTxPacket));
 	if (m_waitACK) {
 		double timerDelay = txDuration + parameters ()->getACKTimeoutDuration ();

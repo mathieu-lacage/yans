@@ -28,7 +28,7 @@
 #include "mac-traces.h"
 
 #ifndef MAC_MIDDLE_TRACE
-#define MAC_MIDDLE_TRACE 1
+#define nopeMAC_MIDDLE_TRACE 1
 #endif /* MAC_MIDDLE_TRACE */
 
 #ifdef MAC_MIDDLE_TRACE
@@ -249,7 +249,7 @@ MacRxMiddle::lookupQos (int source, int TID)
 }
 
 OriginatorRxStatus *
-MacRxMiddle::lookup (int source) 
+MacRxMiddle::lookupNqos (int source) 
 {
 	OriginatorRxStatus *originator;
 	originator = m_originatorStatus[source];
@@ -267,7 +267,7 @@ MacRxMiddle::lookup (Packet *packet)
 	if (isQos (packet)) {
 		originator = lookupQos (getSource (packet), getTID (packet));
 	} else {
-		originator = lookup (getSource (packet));
+		originator = lookupNqos (getSource (packet));
 	}
 	return originator;
 }
@@ -276,7 +276,9 @@ bool
 MacRxMiddle::handleDuplicates (Packet *packet, OriginatorRxStatus *originator)
 {
 	if (originator->getLastSequenceControl () == getSequenceControl (packet)) {
-		TRACE ("dump duplicate 0x%x", getSequenceControl (packet));
+		TRACE ("dump duplicate seq=0x%x tid=%u", 
+		       getSequenceControl (packet),
+		       getTID (packet));
 		dropPacket (packet);
 		return true;
 	}
@@ -428,13 +430,18 @@ MacRxMiddle::gotData (Packet *packet)
 		if (!handleDuplicates (packet, originator) &&
 		    //!handleBlockAck (packet, originator) &&
 		    !handleFragments (packet, originator)) {
-			TRACE ("forwarding data from %d", getSource (packet));
+			TRACE ("forwarding data from %d seq=0x%x tid=%u", 
+			       getSource (packet), getSequenceControl (packet),
+			       getTID (packet));
 			originator->setSequenceControl (getSequenceControl (packet));
 			forwardToHigh (packet);
 		}
 		break;
 	default:
-		TRACE ("forwarding %s", getTypeString (packet));
+		TRACE ("forwarding %s seq=0x%x tid=%u",
+		       getTypeString (packet), 
+		       getSequenceControl (packet),
+		       getTID (packet));
 		originator->setSequenceControl (getSequenceControl (packet));
 		forwardToHigh (packet);
 		break;

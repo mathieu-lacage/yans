@@ -58,8 +58,11 @@
 #include "qap-scheduler.h"
 #include "mac-container.h"
 #include "mac-parameters.h"
+#include "mac-dcf-parameters.h"
+#include "mac-high-qap.h"
 #include "mac-low.h"
 #include "tspec.h"
+#include "dcf.h"
 
 Txop::Txop (int destination, TSpec *tspec)
 	: m_destination (destination),
@@ -127,14 +130,82 @@ private:
 
 
 QapScheduler::QapScheduler (MacContainer *container)
-	: m_container (container)
+	: m_container (container),
+	  m_sequence (0)
 {
 	m_busyListener = new MyMacLowBusyMonitoringListener (this);
 	m_beaconTxListener = new MyMacLowTransmissionListener (this);
 	m_access = new DynamicHandler<QapScheduler> (this, &QapScheduler::accessTimer);
 	m_beacon = new DynamicHandler<QapScheduler> (this, &QapScheduler::beaconTimer);
 	m_beacon->start (parameters ()->getBeaconInterval ());
+
+	m_dcfParameters[AC_BE] = new MacDcfParameters (container);
+	m_dcfParameters[AC_BK] = new MacDcfParameters (container);
+	m_dcfParameters[AC_VI] = new MacDcfParameters (container);
+	m_dcfParameters[AC_VO] = new MacDcfParameters (container);
+
+	/* default parameters from section 7.3.2.14 802.11e/D12.1*/
+	uint16_t CWmin;
+	uint16_t CWmax;
+	if (true) {
+		/* 802.11a */
+		CWmin = 15;
+		CWmax = 1023;
+		m_dcfParameters[AC_VO]->setTxopLimit (1.504e-3);
+		m_dcfParameters[AC_VI]->setTxopLimit (3.008e-3);
+	} else {
+		/* 802.11b */
+		CWmin = 31;
+		CWmax = 1023;
+		m_dcfParameters[AC_VO]->setTxopLimit (3.264e-3);
+		m_dcfParameters[AC_VI]->setTxopLimit (6.016e-3);
+	}
+
+	m_dcfParameters[AC_BK]->setACM (false);
+	m_dcfParameters[AC_BK]->setAIFSN (7);
+	m_dcfParameters[AC_BK]->setCWmin (CWmin);
+	m_dcfParameters[AC_BK]->setCWmax (CWmax);
+	m_dcfParameters[AC_BK]->setTxopLimit (0.0);
+
+	m_dcfParameters[AC_BE]->setACM (false);
+	m_dcfParameters[AC_BE]->setAIFSN (3);
+	m_dcfParameters[AC_BE]->setCWmin (CWmin);
+	m_dcfParameters[AC_BE]->setCWmax (CWmax);
+	m_dcfParameters[AC_BE]->setTxopLimit (0.0);
+
+	m_dcfParameters[AC_VI]->setACM (false);
+	m_dcfParameters[AC_VI]->setAIFSN (2);
+	m_dcfParameters[AC_VI]->setCWmin ((CWmin+1)/2-1);
+	m_dcfParameters[AC_VI]->setCWmax ((CWmin));
+
+	m_dcfParameters[AC_VO]->setACM (false);
+	m_dcfParameters[AC_VO]->setAIFSN (2);
+	m_dcfParameters[AC_VO]->setCWmin ((CWmin+1)/4-1);
+	m_dcfParameters[AC_VO]->setCWmax ((CWmin+1)/2-1);
+
 }
+
+void
+QapScheduler::storeEdcaParametersInPacket (Packet *packet)
+{
+	packet->allocdata (4*4);
+	unsigned char *buffer = packet->accessdata ();
+
+	for (uint8_t ac = 0; ac < 4; ac++) {
+		m_dcfParameters[ac]->writeTo (buffer, (enum ac_e)ac);
+		buffer += 4;
+	}
+}
+
+Dcf *
+QapScheduler::createDcf (enum ac_e ac)
+{
+	MacDcfParameters *dcfParameters = new MacDcfParameters (m_container);
+	*dcfParameters = *(m_dcfParameters[ac]);
+	Dcf *dcf = new Dcf (m_container, dcfParameters);
+	return dcf;
+}
+
 
 Packet *
 QapScheduler::getPacketFor (int destination)
@@ -373,7 +444,11 @@ QapScheduler::doCurrentTxop (void)
 	Packet *packet = getPacketFor (destination);
 	setSize (packet, getPacketSize (MAC_80211_MGT_CFPOLL));
 	setType (packet, MAC_80211_MGT_CFPOLL);
-	setAC (packet, AC_BE);
+	setAC (packet, AC_SPECIAL);
+	setSequenceNumber (packet, m_sequence);
+	setFragmentNumber (packet, 0);
+	m_sequence++;
+	m_sequence %= 4096;
 	low ()->disableACK ();
 	low ()->disableRTS ();
 	low ()->enableOverrideDurationId (txopDuration);
@@ -485,7 +560,12 @@ QapScheduler::beaconTimer (MacCancelableEvent *event)
 	Packet *packet = getPacketFor (MAC_BROADCAST);
 	setSize (packet, getPacketSize (MAC_80211_MGT_BEACON));
 	setType (packet, MAC_80211_MGT_BEACON);
-	setAC (packet, AC_BE);
+	storeEdcaParametersInPacket (packet);
+	setAC (packet, AC_SPECIAL);
+	setSequenceNumber (packet, m_sequence);
+	setFragmentNumber (packet, 0);
+	m_sequence++;
+	m_sequence %= 4096;
 	low ()->disableACK ();
 	low ()->disableRTS ();
 	low ()->disableOverrideDurationId ();

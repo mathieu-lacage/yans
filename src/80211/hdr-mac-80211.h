@@ -224,10 +224,43 @@ bool isManagement (enum mac_80211_packet_type type);
 bool isControl (enum mac_80211_packet_type type);
 
 enum ac_e {
-	AC_BK = 0x1,
-	AC_BE = 0x0,
-	AC_VI = 0x2,
-	AC_VO = 0x3
+	AC_BE = 0,
+	AC_BK = 1,
+	AC_VI = 2,
+	AC_VO = 3,
+	/* This special AC is reserved to allow the QAP to send
+	 * frames without queuing them in any of the AC or TS 
+	 * queues. It is speficically used to send all the 
+	 * management frames which require precise timing such as:
+	 *  - BEACON
+	 *  - CF-Poll
+	 * The reason why we do not re-use any of the other AC_*
+	 * is because the frames we want to send cannot suffer from
+	 * being pushed in a queue (they need to be sent immediately)
+	 * and they _must_ all share a single sequence counter at
+	 * the receiver side (since, per section 9.2.9 of the 802.11e
+	 * standard, duplicate detection is done on a per-TID basis).
+	 *
+	 * This explanation is not very clear but the bottomline is 
+	 * that, if you try to bypass the AC and TS queues, you need
+	 * to maintain your own monotonically increasing sequence
+	 * counter and you need to assign it to a specific TID. Thus
+	 * the idea of re-using an otherwise unused TID which belongs
+	 * to the Voice category. If you don't do that,
+	 * the receiver's duplicate detection algorithm will burst
+	 * in flames and randomly drop non-duplicate packets.
+	 *
+	 * Another solution might have been to extract the sequence
+	 * counter from one of the existing queues, re-use its TID
+	 * for our special frames and increase its sequence counter
+	 * accordingly. This would probably be rather tricky to 
+	 * implement and seems much less clean that using this magic
+	 * TID.
+	 *
+	 * Big thanks to the unknown member of the 802.11e commitee 
+	 * who decided to keep some spare Access Categories.
+	 */
+	AC_SPECIAL = 4
 };
 char const *getTypeString (Packet *packet);
 char const *getAcString (Packet *packet);

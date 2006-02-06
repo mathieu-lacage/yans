@@ -546,6 +546,9 @@ getAcString (Packet *packet)
 	case AC_VO:
 		str = "AC_VO";
 		break;
+	case AC_SPECIAL:
+		str = "AC_SPECIAL";
+		break;
 	}
 	return str;
 }
@@ -590,6 +593,9 @@ setAC (Packet *packet, enum ac_e ac)
 		break;
 	case AC_VO:
 		tid = 6;
+		break;
+	case AC_SPECIAL:
+		tid = 7;
 		break;
 	}
 	setTID (packet, tid);

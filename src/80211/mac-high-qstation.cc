@@ -90,24 +90,8 @@ MacHighQStation::updateEDCAParameters (unsigned char const *buffer)
 		return;
 	}
 	for (uint8_t i = 0; i < 4; i++) {
-		uint8_t AIFSN = *buffer & 0x0f;
-		uint8_t ACM = (*buffer >> 4) & 0x1;
-		uint8_t ACI = (*buffer >> 5) & 0x3;
-		buffer++;
-		uint8_t ECWmin = (*buffer & 0x0f);
-		uint8_t ECWmax = (*buffer >> 4) & 0x0f;
-		uint16_t CWmin = (1<<ECWmin)-1;
-		uint16_t CWmax = (1<<ECWmax)-1;
-		buffer++;
-		uint16_t txop = buffer[0] | (buffer[1]<<8);
-		double txopLimit = txop * 32e-6;
-		buffer += 2;
-		enum ac_e ac = (enum ac_e) ACI;
-		m_dcfParameters[ac]->setCWmin (CWmin);
-		m_dcfParameters[ac]->setCWmax (CWmax);
-		m_dcfParameters[ac]->setTxopLimit (txopLimit);
-		m_dcfParameters[ac]->setAIFSN (AIFSN);
-		m_dcfParameters[ac]->setACM (ACM);
+		m_dcfParameters[i]->readFrom (buffer);
+		buffer += 4;
 	}
 }
 
@@ -199,9 +183,11 @@ MacHighQStation::enqueueToLow (Packet *packet)
 		 * Of course, this is wrong but we can
 		 * implement it later.
 		 */
+		TRACE ("sending thru AC %d", requestedTID);
 		setTID (packet, requestedTID);
 		queueAC (getAC (packet), packet);
 	} else {
+		TRACE ("sending thru TS %d", requestedTID);
 		if (isTsActive (requestedTID)) {
 			setTID (packet, requestedTID);
 			queueTS (requestedTID, packet);

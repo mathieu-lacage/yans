@@ -37,15 +37,6 @@ class HccaTxop;
 class QapScheduler;
 class TSpec;
 
-class DcfParameters {
-public:
-	uint8_t AIFSN;
-	bool ACM;
-	uint8_t ECWmin;
-	uint8_t ECWmax;
-	uint16_t txop;
-};
-
 class MacHighQap : public MacHighAp {
 public:
 	MacHighQap (MacContainer *container);
@@ -55,9 +46,12 @@ public:
 	virtual void delTsRequest (TSpecRequest *request);
 
 	/* to be used by the qap-scheduler. */
-	void addEDCAparameters (Packet *packet);
+	void updateEdcaParameters (MacDcfParameters *parameters, enum ac_e ac);
 
  private:
+	friend class MyDcfParametersListener;
+
+	void parametersChanged (MacDcfParameters *parameters, enum ac_e ac);
 	MacParameters *parameters (void);
 	Packet *getPacketFor (int destination);
 	void createAC (enum ac_e ac);
@@ -88,10 +82,9 @@ public:
 	virtual void gotDelTsRequest (Packet *packet);
 	virtual void gotCFPoll (Packet *packet);
 
-	MacDcfParameters *m_dcfParameters;
+	MacDcfParameters *m_dcfParameters[4];
 	MacQueue80211e *m_dcfQueues[4];
 	Dcf *m_dcfs[4];
-	DcfParameters m_staDcfParameters[4];
 	HccaTxop *m_hcca;
 	QapScheduler *m_scheduler;
 	std::map<uint8_t, pair<TSpec *, MacQueue80211e *>, std::less<uint8_t> > m_ts;

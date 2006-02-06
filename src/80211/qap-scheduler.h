@@ -36,6 +36,9 @@ class Phy80211;
 class MacParameters;
 class MacLow;
 class MacCancelableEvent;
+class MacHighQap;
+class MacDcfParameters;
+class Dcf;
 
 class Txop {
 public:
@@ -64,6 +67,9 @@ public:
 	bool addTsRequest (TSpec *tspec);
 	bool delTsRequest (int destination, TSpec *tspec);
 	void gotQosNull (Packet *packet);
+
+	void storeEdcaParametersInPacket (Packet *packet);
+	Dcf *createDcf (enum ac_e ac);
 
 private:
 	friend class MyMacLowBusyMonitoringListener;
@@ -95,6 +101,7 @@ private:
 	Packet *getPacketFor (int to);
 
 	MacContainer *m_container;
+	MacHighQap *m_high;
 	MyMacLowBusyMonitoringListener *m_busyListener;
 	MyMacLowTransmissionListener *m_beaconTxListener;
 	DynamicHandler<QapScheduler> *m_access;
@@ -107,6 +114,8 @@ private:
 	double m_capStart;
 	double m_nextBeaconStart;
 	double m_currentServiceInterval;
+	uint32_t m_sequence;
+	MacDcfParameters *m_dcfParameters[4];
 };
 
 #endif /* QAP_SCHEDULER_H */
