@@ -130,34 +130,39 @@ Mac80211::command(int argc, const char*const* argv)
 				startContainer ();
 				MacHigh *high = new MacHighAdhoc (m_container);
 				m_container->setMacHigh (high);
+				m_container->setBSSID (0xffffffff);
 				return TCL_OK;
 			} else if (strcmp (argv[2], "access-point") == 0) {
 				startContainer ();
 				MacHigh *high = new MacHighNqap (m_container);
 				m_container->setMacHigh (high);
+				m_container->setBSSID (addr ());
 				return TCL_OK;
 			} else if (strcmp (argv[2], "qaccess-point") == 0) {
 				startContainer ();
 				MacHigh *high = new MacHighQap (m_container);
 				m_container->setMacHigh (high);
+				m_container->setBSSID (addr ());
 				return TCL_OK;
 			}
 		}
 	} else if (argc == 4) {
-		if (strcmp (argv[1], "mode") == 0 &&
-		    strcmp (argv[2], "station") == 0) {
-			int ap = atoi (argv[3]);
-			startContainer ();
-			MacHigh *high = new MacHighNQStation (m_container, ap);
-			m_container->setMacHigh (high);
-			return TCL_OK;
-		} else if (strcmp (argv[1], "mode") == 0 &&
-		    strcmp (argv[2], "qstation") == 0) {
-			int ap = atoi (argv[3]);
-			startContainer ();
-			MacHigh *high = new MacHighQStation (m_container, ap);
-			m_container->setMacHigh (high);
-			return TCL_OK;
+		if (strcmp (argv[1], "mode") == 0) {
+			if (strcmp (argv[2], "station") == 0) {
+				int ap = atoi (argv[3]);
+				startContainer ();
+				MacHigh *high = new MacHighNQStation (m_container, ap);
+				m_container->setMacHigh (high);
+				m_container->setBSSID (ap);
+				return TCL_OK;
+			} else if (strcmp (argv[2], "qstation") == 0) {
+				int ap = atoi (argv[3]);
+				startContainer ();
+				MacHigh *high = new MacHighQStation (m_container, ap);
+				m_container->setMacHigh (high);
+				m_container->setBSSID (ap);
+				return TCL_OK;
+			}
 		}
 	} else if (argc == 5) {
 		TclObject *obj;
