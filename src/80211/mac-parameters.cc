@@ -297,19 +297,25 @@ MacParameters::getFragmentationThreshold (void)
 double
 MacParameters::getCTSTimeoutDuration (void)
 {
-	/* XXX */
+	/* The Cts_Timeout is specified in the Annex C (Formal description of MAC 
+	   operation, see details on the Trsp timer setting at page 346)
+	*/
 	double ctsTimeout = getSIFS ();
 	ctsTimeout += calculateBaseTxDuration (getCTSSize ());
 	ctsTimeout += 2 * getMaxPropagationDelay ();
+	ctsTimeout += getSlotTime ();
 	return ctsTimeout;
 }
 double
 MacParameters::getACKTimeoutDuration (void)
 {
-	/* XXX */
+	/* The Ack_Timeout is specified in the Annex C (Formal description of MAC 
+	   operation, see details on the Trsp timer setting at page 346)
+	*/
 	double ackTimeout = getSIFS ();
 	ackTimeout += calculateBaseTxDuration (getACKSize ());
 	ackTimeout += 2 * getMaxPropagationDelay ();
+	ackTimeout += getSlotTime ();
 	return ackTimeout;
 }
 
