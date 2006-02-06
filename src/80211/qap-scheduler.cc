@@ -494,9 +494,14 @@ QapScheduler::gotQosNull (Packet *packet)
 	TRACE ("got QosNull from %d", getSource (packet));
 	/* The txop holder notifies us that it has
 	 * finished using the medium so we can reuse
-	 * any txop time left for other txops.
+	 * any txop time left for other txops. Thus,
+	 * we schedule a start txop for end-of-ack-tx+SIFS
 	 */
-	nextTxop ();
+	m_txopStart->cancel ();
+	double nextTxopStartDelay = 0.0;
+	nextTxopStartDelay += getDuration (packet);
+	nextTxopStartDelay += parameters ()->getPIFS ();
+	m_txopStart->start (nextTxopStartDelay);
 }
 void 
 QapScheduler::gotCfPollAck (void)
