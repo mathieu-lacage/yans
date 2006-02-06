@@ -26,6 +26,7 @@
 #include <map>
 
 #include "hdr-mac-80211.h"
+#include "mac-handler.tcc"
 
 class MacContainer;
 class MacQueue80211e;
@@ -59,7 +60,7 @@ private:
 	bool enoughTimeFor (Packet *packet);
 	bool enoughTimeFor (double duration);
 	double getDurationIdLeft (void);
-	void startTxop (double txopLimit);
+	void initializeTxop (double txopLimit, int tsid);
 	bool isTxopFinished (void);
 	void setCurrentTsid (uint8_t tsid);
 	uint8_t getCurrentTsid (void);
@@ -69,7 +70,7 @@ private:
 	MacParameters *parameters (void);
 	void tryToSendQosNull (void);
 
-
+	void txopStartTimer (void);
 	void gotCTS (double snr, int txMode);
 	void missedCTS (void);
 	void gotACK (double snr, int txMode);
@@ -82,8 +83,9 @@ private:
 	uint8_t m_currentTsid;
 	int m_SLRC;
 	double m_txopLimit;
-	double m_txopStart;
+	double m_txopStartTime;
 	Packet *m_currentTxPacket;
+	StaticHandler<HccaTxop> *m_txopStart;
 	MacLowTransmissionListener *m_transmissionListener;
 	MacLowTransmissionListener *m_qosNullTransmissionListener;
 	std::map<uint8_t, MacQueue80211e *, std::less<uint8_t> >m_tsQueues;

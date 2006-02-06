@@ -114,6 +114,7 @@ HccaTxop::HccaTxop (MacContainer *container)
 {
 	m_transmissionListener = new MyTransmissionListener (this);
 	m_qosNullTransmissionListener = new MyQosNullTransmissionListener (this);
+	m_txopStart = new StaticHandler<HccaTxop> (this, &HccaTxop::txopStartTimer);
 }
 
 MacLow *
@@ -258,29 +259,36 @@ void
 HccaTxop::tsAccessGranted (uint8_t tsid, double txopLimit)
 {
 	TRACE ("access granted for tsid %d for %f seconds", tsid, txopLimit);
-	startTxop (txopLimit);
-	setCurrentTsid (tsid);
-	txCurrent ();
+	initializeTxop (txopLimit, tsid);
+	m_txopStart->start (parameters ()->getSIFS ());
 }
 
+
 void
-HccaTxop::startTxop (double txopLimit)
+HccaTxop::txopStartTimer (void)
+{
+	TRACE ("starting txop");
+	txCurrent ();
+}
+void
+HccaTxop::initializeTxop (double txopLimit, int tsid)
 {
 	m_txopLimit = txopLimit;
-	m_txopStart = now ();
+	m_txopStartTime = now ();
+	setCurrentTsid (tsid);
 }
 
 double
 HccaTxop::getDurationIdLeft (void)
 {
-	return now () - m_txopStart + m_txopLimit;
+	return now () - m_txopStartTime + m_txopLimit;
 }
 
 bool
 HccaTxop::enoughTimeFor (double duration)
 {
 	double end = now () + duration;
-	double txopEnd = m_txopStart + m_txopLimit;
+	double txopEnd = m_txopStartTime + m_txopLimit;
 	if (end > txopEnd) {
 		return false;
 	} else {
@@ -296,7 +304,7 @@ HccaTxop::parameters (void)
 bool 
 HccaTxop::isTxopFinished (void)
 {
-	double left = m_txopLimit - (now () - m_txopStart);
+	double left = m_txopLimit - (now () - m_txopStartTime);
 	if (left > 0.0) {
 		return false;
 	} else {
