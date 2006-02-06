@@ -104,6 +104,7 @@ class hdr_mac_80211 {
 	enum mac_80211_packet_type getType (void) const;
 	double getDuration (void) const;
 	int getSequence (void) const;
+	int getFragmentNumber (void) const;
 	bool isRetry (void) const;
 
 	void setDestination (int destination);
@@ -113,6 +114,7 @@ class hdr_mac_80211 {
 	void setType (enum mac_80211_packet_type type);
 	void setDuration (double duration);
 	void setSequence (int sequence);
+	void setFragmentNumber (int fragmentNumber);
 	void setRetry (void);
 
 	char const *getTypeString (void) const;
@@ -135,6 +137,7 @@ class hdr_mac_80211 {
 
 
 void setSequence (Packet *packet, int sequence);
+void setFragmentNumber (Packet *packet, int fragment);
 void increaseSize (Packet *packet, int increment);
 void decreaseSize (Packet *packet, int decrement);
 void setSize (Packet *packet, int size);
@@ -152,6 +155,7 @@ int getSize (Packet *packet);
 double getDuration (Packet *packet);
 bool isRetry (Packet *packet);
 int getSequence (Packet *packet);
+int getFragmentNumber (Packet *packet);
 int getDestination (Packet *packet);
 int getFinalDestination (Packet *packet);
 int getSource (Packet *packet);

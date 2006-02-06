@@ -39,7 +39,10 @@ public:
 	void setLastRxSequence (int sequence);
 	int getLastRxSequence (void);
 
+	// reception-related method
 	virtual void reportRxOk (double SNR, int mode) = 0;
+
+	// transmission-related methods
 	virtual void reportRTSFailed (void) = 0;
 	virtual void reportDataFailed (void) = 0;
 	virtual void reportRTSOk (double ctsSNR, int ctsMode) = 0;

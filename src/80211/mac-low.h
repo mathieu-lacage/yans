@@ -38,15 +38,23 @@ public:
 	TransmissionListener ();
 	virtual ~TransmissionListener ();
 
-	virtual void gotCTS (double snr);
+	virtual void gotCTS (double snr, int txMode);
 	virtual void missedCTS (void);
-	virtual void gotACK (double snr);
+	virtual void gotACK (double snr, int txMode);
 	virtual void missedACK (void);
 	virtual void txCompletedAndSIFS (void);
 	virtual void gotBlockAckStart (double snr);
 	virtual void gotBlockAck (int sequence);
 	virtual void gotBlockAckEnd (void);
 	virtual void missedBlockAck (void);
+};
+
+class ReceptionListener {
+public:
+	ReceptionListener ();
+	virtual ~ReceptionListener ();
+
+	virtual void gotData (Packet *packet, double snr);
 };
 
 class NavListener {
@@ -81,6 +89,7 @@ public:
 	void enableRTS (void);
 	void disableRTS (void);
 
+	void setReceptionListener (ReceptionListener *listener);
 	void setTransmissionListener (TransmissionListener *listener);
 
 	/* This txmode is applied to _every_ packet sent after
@@ -141,6 +150,7 @@ private:
 
 	Packet *m_currentTxPacket;
 
+	ReceptionListener *m_receptionListener;
 	TransmissionListener *m_transmissionListener;
 	vector<NavListener *> m_navListeners;
 

@@ -30,6 +30,8 @@ class Packet;
 class MacLow;
 class MacParameters;
 class TransmissionListener;
+class MacStation;
+class MacHigh;
 
 class DcaTxop 
 {
@@ -42,9 +44,9 @@ private:
 
 	/* event handlers */
 	void accessGrantedNow (void);
-	void gotCTS (double snr);
+	void gotCTS (double snr, int txMode);
 	void missedCTS (void);
-	void gotACK (double snr);
+	void gotACK (double snr, int txMode);
 	void missedACK (void);
 	void txCompletedAndSIFS (void);
 	void gotBlockAckStart (double snr);
@@ -52,17 +54,27 @@ private:
 	void gotBlockAckEnd (void);
 	void missedBlockAck (void);
 
+	bool needRTS (void);
+	bool needFragmentation (void);
+	int getNFragments (void);
+	int getLastFragmentSize (void);
+	int getFragmentSize (void);
+	bool isLastFragment (void);
+	void nextFragment (void);
+	Packet *getFragmentPacket (void);
 	void dropCurrentPacket (void);
-
+	MacStation *lookupDestStation (Packet *packet);
 
 	Dcf *m_dcf;
 	MacQueue80211e *m_queue;
 	MacLow *m_low;
+	MacHigh *m_high;
 	Packet *m_currentTxPacket;
 	MacParameters *m_parameters;
 	TransmissionListener *m_transmissionListener;
 	int m_SSRC;
 	int m_SLRC;
+	int m_fragmentNumber;
 	uint16_t m_sequence;
 };
 

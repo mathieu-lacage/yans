@@ -28,6 +28,8 @@
 #include "mac-parameters.h"
 #include "mac-low.h"
 #include "mac-queue-80211e.h"
+#include "mac-station.h"
+#include "mac-high.h"
 
 class MyAccessListener : public DcfAccessListener {
 public:
@@ -51,14 +53,14 @@ public:
 		  
 	virtual ~MyTransmissionListener () {}
 
-	virtual void gotCTS (double snr) {
-		m_txop->gotCTS (snr);
+	virtual void gotCTS (double snr, int txMode) {
+		m_txop->gotCTS (snr, txMode);
 	}
 	virtual void missedCTS (void) {
 		m_txop->missedCTS ();
 	}
-	virtual void gotACK (double snr) {
-		m_txop->gotACK (snr);
+	virtual void gotACK (double snr, int txMode) {
+		m_txop->gotACK (snr, txMode);
 	}
 	virtual void missedACK (void) {
 		m_txop->missedACK ();
@@ -99,6 +101,73 @@ DcaTxop::DcaTxop (Dcf *dcf, MacQueue80211e *queue, MacLow *low, MacParameters *p
 	m_transmissionListener = new MyTransmissionListener (this);
 }
 
+bool
+DcaTxop::needRTS (void)
+{
+	if (getSize (m_currentTxPacket) > m_parameters->getRTSCTSThreshold ()) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+bool
+DcaTxop::needFragmentation (void)
+{
+	if (getSize (m_currentTxPacket) > m_parameters->getFragmentationThreshold ()) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+int
+DcaTxop::getNFragments (void)
+{
+	int nFragments = getSize (m_currentTxPacket) / m_parameters->getFragmentationThreshold () + 1;
+	return nFragments;
+}
+void
+DcaTxop::nextFragment (void)
+{
+	m_fragmentNumber++;
+}
+
+int
+DcaTxop::getLastFragmentSize (void)
+{
+	int lastFragmentSize = getSize (m_currentTxPacket) % m_parameters->getFragmentationThreshold ();
+	return lastFragmentSize;
+}
+
+int
+DcaTxop::getFragmentSize (void)
+{
+	return m_parameters->getFragmentationThreshold ();
+}
+bool
+DcaTxop::isLastFragment (void) 
+{
+	if (m_fragmentNumber == getNFragments ()) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+Packet *
+DcaTxop::getFragmentPacket (void)
+{
+	Packet *fragment = m_currentTxPacket->copy ();
+	if (isLastFragment ()) {
+		setSize (fragment, getLastFragmentSize ());
+	} else {
+		setSize (fragment, getFragmentSize ());
+	}
+	setFragmentNumber (fragment, m_fragmentNumber);
+	return fragment;
+}
+
 void
 DcaTxop::accessGrantedNow (void)
 {
@@ -107,76 +176,94 @@ DcaTxop::accessGrantedNow (void)
 			return;
 		}
 		m_currentTxPacket = m_queue->dequeue ();
+		m_sequence++;
+		m_sequence %= 4096;
+		setSequence (m_currentTxPacket, m_sequence);
+		m_SSRC = 0;
+		m_SLRC = 0;
+		m_fragmentNumber = 0;
 	}
+	int txMode;
 	if (getDestination (m_currentTxPacket) == (int)MAC_BROADCAST) {
 		m_low->disableRTS ();
 		m_low->disableACK ();
-		//XXX
-		m_low->setTransmissionMode (0);
+		txMode = 0;
 	} else {
-		if (getSize (m_currentTxPacket) > m_parameters->getRTSCTSThreshold ()) {
+		if (needRTS ()) {
 			m_low->enableRTS ();
-			//XXX
-			m_low->setTransmissionMode (0);
+			txMode = lookupDestStation (m_currentTxPacket)->getRTSMode ();
 		} else {
 			m_low->disableRTS ();
-			//XXX
-			m_low->setTransmissionMode (0);
+			txMode = lookupDestStation (m_currentTxPacket)->getDataMode (getSize (m_currentTxPacket));
 		}
 		m_low->enableACK ();
 	}
-
-	m_sequence++;
-	m_sequence %= 4096;
-
-	setSequence (m_currentTxPacket, m_sequence);
+	m_low->setTransmissionMode (txMode);
 
 	m_low->setTransmissionListener (m_transmissionListener);
-	m_low->startTransmission (m_currentTxPacket->copy ());
+
+	if (needFragmentation ()) {
+		if (isLastFragment ()) {
+			m_low->disableWaitForSIFS ();
+		} else {
+			m_low->enableWaitForSIFS ();
+		}
+		Packet *fragment = getFragmentPacket ();
+		// XXX: we are missing correct duration calculation
+		// we need to add the txtime for the next fragment here.
+		m_low->startTransmission (fragment);
+	} else {
+		m_low->disableWaitForSIFS ();
+		m_low->startTransmission (m_currentTxPacket->copy ());
+	}
 }
 
 
 void 
-DcaTxop::gotCTS (double snr)
+DcaTxop::gotCTS (double snr, int txMode)
 {
-	//XXX
+	MacStation *station = lookupDestStation (m_currentTxPacket);
+	station->reportRTSOk (snr, txMode);
 	m_SSRC = 0;
-	m_low->setTransmissionMode (0);
+	// tx mode for data packet.
+	m_low->setTransmissionMode (station->getDataMode (getSize (m_currentTxPacket)));
 }
 void 
 DcaTxop::missedCTS (void)
 {
+	MacStation *station = lookupDestStation (m_currentTxPacket);
+	station->reportRTSFailed ();
 	m_SSRC++;
 	if (m_SSRC > m_parameters->getMaxSSRC ()) {
+		station->reportFinalRTSFailed ();
 		// to reset the dcf.
 		m_dcf->notifyAccessOk ();
 		dropCurrentPacket ();
 	} else {
-		//XXX
-		m_low->setTransmissionMode (0);
-
 		m_dcf->notifyAccessFailed ();
 		m_dcf->requestAccess ();
 	}
 }
 void 
-DcaTxop::gotACK (double snr)
+DcaTxop::gotACK (double snr, int txMode)
 {
+	MacStation *station = lookupDestStation (m_currentTxPacket);
+	station->reportDataOk (snr, txMode);
 	m_SLRC = 0;
 	m_dcf->notifyAccessOk ();
 }
 void 
 DcaTxop::missedACK (void)
 {
+	MacStation *station = lookupDestStation (m_currentTxPacket);
+	station->reportDataFailed ();
 	m_SLRC++;
 	if (m_SLRC > m_parameters->getMaxSLRC ()) {
+		station->reportFinalDataFailed ();
 		// to reset the dcf.
 		m_dcf->notifyAccessOk ();
 		dropCurrentPacket ();		
 	} else {
-		//XXX
-		m_low->setTransmissionMode (0);
-
 		m_dcf->notifyAccessFailed ();
 		m_dcf->requestAccess ();
 	}
@@ -184,7 +271,21 @@ DcaTxop::missedACK (void)
 }
 void 
 DcaTxop::txCompletedAndSIFS (void)
-{}
+{
+	/* this callback is used only for fragments. */
+	MacStation *station = lookupDestStation (m_currentTxPacket);
+	m_low->disableRTS ();
+	nextFragment ();
+	if (isLastFragment ()) {
+		m_low->disableWaitForSIFS ();
+	} else {
+		m_low->enableWaitForSIFS ();
+	}
+	Packet *fragment = getFragmentPacket ();
+	m_low->setTransmissionMode (station->getDataMode (getSize (fragment)));
+	m_fragmentNumber++;
+	m_low->startTransmission (fragment);
+}
 void 
 DcaTxop::gotBlockAckStart (double snr)
 {}
@@ -204,4 +305,9 @@ DcaTxop::dropCurrentPacket (void)
 {
 	Packet::free (m_currentTxPacket);
 	m_currentTxPacket = 0;
+}
+MacStation *
+DcaTxop::lookupDestStation (Packet *packet)
+{
+	return m_high->lookupStation (getDestination (packet));
 }

@@ -142,6 +142,12 @@ MacParameters::getRTSCTSThreshold (void)
 	/* XXX */
 	return 0;
 }
+int
+MacParameters::getFragmentationThreshold (void)
+{
+	/* XXX */
+	return 1;
+}
 double
 MacParameters::getCTSTimeoutDuration (void)
 {

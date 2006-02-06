@@ -54,6 +54,7 @@ public:
 	int getMaxSSRC (void);
 	int getMaxSLRC (void);
 	int getRTSCTSThreshold (void);
+	int getFragmentationThreshold (void);
 	double getCTSTimeoutDuration (void);
 	double getACKTimeoutDuration (void);
 

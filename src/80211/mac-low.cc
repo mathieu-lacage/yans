@@ -392,13 +392,13 @@ MacLow::sendDataAfterCTS (class MacCancelableEvent *macEvent)
 void
 MacLow::ACKTimeout (class MacCancelableEvent *event)
 {
-	m_listener->missedACK ();
+	m_transmissionListener->missedACK ();
 }
 
 void
 MacLow::CTSTimeout (class MacCancelableEvent *event)
 {
-	m_listener->missedCTS ();
+	m_transmissionListener->missedCTS ();
 }
 
 
@@ -446,9 +446,14 @@ MacLow::disableRTS (void)
 	m_sendRTS = false;
 }
 void 
-MacLow::setListener (EventListener *listener)
+MacLow::setTransmissionListener (TransmissionListener *listener)
 {
-	m_listener = listener;
+	m_transmissionListener = listener;
+}
+void 
+MacLow::setReceptionListener (ReceptionListener *listener)
+{
+	m_receptionListener = listener;
 }
 void 
 MacLow::setTransmissionMode (int txMode)
@@ -464,6 +469,8 @@ MacLow::registerNavListener (NavListener *listener)
 void
 MacLow::startTransmission (Packet *packet)
 {
+	/* XXX: notify NAV listeners for this packet too. */
+
 	/* access backoff completed. start a new transmission.
 	 */
 	assert (peekPhy ()->getState () == Phy80211::IDLE);
@@ -528,7 +535,7 @@ MacLow::receive (Packet *packet)
 		   m_currentTxPacket) {
 		TRACE ("rx CTS from %d", getSource (packet));
 		m_CTSTimeoutHandler->cancel ();
-		m_listener->gotCTS (getLastSNR ());
+		m_transmissionListener->gotCTS (getLastSNR (), getTxMode (packet));
 		m_sendDataHandler->start (new SendDataEvent (packet), parameters ()->getSIFS ());
 		dropPacket (packet);
 		//dealWithInputQueue ();
@@ -539,7 +546,7 @@ MacLow::receive (Packet *packet)
 		// XXX assert other timers not running.
 		TRACE ("rx ACK from %d", getSource (packet));
 		m_ACKTimeoutHandler->cancel ();
-		m_listener->gotACK (getLastSNR ());
+		m_transmissionListener->gotACK (getLastSNR (), getTxMode (packet));
 		Packet::free (m_currentTxPacket);
 		m_currentTxPacket = 0;
 		dropPacket (packet);
@@ -562,12 +569,12 @@ MacLow::receive (Packet *packet)
 				TRACE ("rx DATA duplicate from %d", getSource (packet));
 			} else {
 				TRACE ("rx DATA from %d", getSource (packet));
-				m_high->receiveFromMacLow (packet);
+				m_receptionListener->gotData (packet, getLastSNR ());
 			}
 			station->setLastRxSequence (getSequence (packet));
 		} else if (getDestination (packet) == ((int)MAC_BROADCAST)) {
 			TRACE ("rx broadcast from %d", getSource (packet));
-			m_high->receiveFromMacLow (packet);
+			m_receptionListener->gotData (packet, getLastSNR ());
 			//dealWithInputQueue ();
 		} else {
 			TRACE_VERBOSE ("rx not-for-me from %d", getSource (packet));

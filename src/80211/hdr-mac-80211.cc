@@ -70,6 +70,11 @@ hdr_mac_80211::getSequence (void) const
 {
 	return m_sequence;
 }
+int 
+hdr_mac_80211::getFragmentNumber (void) const
+{
+	return m_fragment;
+}
 bool
 hdr_mac_80211::isRetry (void) const
 {
@@ -112,6 +117,11 @@ void
 hdr_mac_80211::setSequence (int sequence)
 {
 	m_sequence = sequence;
+}
+void 
+hdr_mac_80211::setFragmentNumber (int fragmentNumber)
+{
+	m_fragment = fragmentNumber;
 }
 void
 hdr_mac_80211::setRetry (void)
@@ -202,6 +212,12 @@ getSequence (Packet *packet)
 	return sequence;
 }
 int
+getFragmentNumber (Packet *packet)
+{
+	int fragmentNumber = HDR_MAC_80211 (packet)->getFragmentNumber ();
+	return fragmentNumber;
+}
+int
 getSize (Packet *packet)
 {
 	return HDR_CMN (packet)->size ();
@@ -270,6 +286,11 @@ void
 setSequence (Packet *packet, int sequence)
 {
 	HDR_MAC_80211 (packet)->setSequence (sequence);
+}
+void
+setFragmentNumber (Packet *packet, int fragmentNumber)
+{
+	HDR_MAC_80211 (packet)->setFragmentNumber (fragmentNumber);
 }
 void
 setRetry (Packet *packet)
