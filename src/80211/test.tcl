@@ -64,16 +64,6 @@ set ftp [new Application/FTP]
 $ftp attach-agent $tcp
 $ns at 3.0 "$ftp start" 
 
-set tcp [new Agent/TCP]
-$tcp set class_ 2
-set sink [new Agent/TCPSink]
-$ns attach-agent $node(2) $tcp
-$ns attach-agent $node(3) $sink
-$ns connect $tcp $sink
-set ftp [new Application/FTP]
-$ftp attach-agent $tcp
-$ns at 4.0 "$ftp start" 
-
 
 $ns at 300 "puts \"End of simulation.\"; $ns halt"
 puts "Starting Simulation..."

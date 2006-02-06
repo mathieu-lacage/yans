@@ -73,6 +73,7 @@ private:
 
 	double getLastSNR (void);
 	double getLastStartRx (void);
+	void setSize (Packet *packet, int size);
 	int getSize (Packet *packet);
 	double getDuration (Packet *packet);
 	void increaseSize (Packet *packet, int increment);

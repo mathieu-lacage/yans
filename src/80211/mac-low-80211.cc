@@ -34,7 +34,7 @@
 #include <iostream>
 
 #define nopeMAC_DEBUG 1
-#define nopeMAC_TRACE 1
+#define MAC_TRACE 1
 #define nopeMAC_TRACE_VERBOSE 1
 
 #ifdef MAC_DEBUG
@@ -370,6 +370,11 @@ MacLow80211::getSize (Packet *packet)
 {
 	return HDR_CMN (packet)->size ();
 }
+void
+MacLow80211::setSize (Packet *packet, int size)
+{
+	HDR_CMN (packet)->size () = size;
+}
 double
 MacLow80211::getDuration (Packet *packet)
 {
@@ -436,6 +441,7 @@ Packet *
 MacLow80211::getRTSPacket (void)
 {
 	Packet *packet = Packet::alloc ();
+	setSize (packet, getRTSSize ());
 	setSource (packet, getSelf ());
 	setType (packet, MAC_80211_RTS);
 	return packet;
@@ -444,6 +450,7 @@ Packet *
 MacLow80211::getCTSPacket (void)
 {
 	Packet *packet = Packet::alloc ();
+	setSize (packet, getCTSSize ());
 	setSource (packet, getSelf ());
 	setType (packet, MAC_80211_CTS);
 	return packet;
@@ -452,6 +459,7 @@ Packet *
 MacLow80211::getACKPacket (void)
 {
 	Packet *packet = Packet::alloc ();
+	setSize (packet, getACKSize ());
 	setSource (packet, getSelf ());
 	setType (packet, MAC_80211_ACK);
 	return packet;
@@ -584,7 +592,7 @@ MacLow80211::getXIFSLeft (void)
 void
 MacLow80211::sendPacket (Packet *txPacket)
 {
-	if (getSize (txPacket) < getRTSCTSThreshold ()) {
+	if (getSize (txPacket) > getRTSCTSThreshold ()) {
 		/* send an RTS for this packet. */
 		TRACE ("tx RTS");
 		Packet *packet = getRTSforPacket (txPacket);
@@ -945,7 +953,7 @@ MacLow80211::sendCTS_AfterRTS (class MacCancelableEvent *macEvent)
 	SendCTSEvent *event = static_cast<SendCTSEvent *> (macEvent);
 	Packet * cts = getCTSPacket ();
 	setDestination (cts, event->getSource ());
-	double ctsDuration = calculateTxDuration (getCTSSize (), event->getTxMode ());
+	double ctsDuration = calculateTxDuration (event->getTxMode (), getSize (cts));
 	setDuration (cts, event->getDuration () - ctsDuration - getSIFS ());
 	setTxMode (cts, event->getTxMode ());
 	m_mac->forwardDown (cts);
