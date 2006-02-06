@@ -106,6 +106,7 @@ set-qbss-mode 2 nodes
 #set-adhoc-mode nodes
 
 set tspec [new TSPEC]
+$tspec TSID 1
 proc addts-granted-callback {tspec tsid} {
     set tcp [new Agent/TCP]
     $tcp set prio_ tsid
@@ -123,7 +124,7 @@ proc addts-granted-callback {tspec tsid} {
 proc addts-refused-callback {tspec tsid} {
     puts "tspec refused";
 }
-#addts-request $nodes(1) $tspec addts-granted-callback addts-refused-callback
+addts-request $nodes(1) $tspec addts-granted-callback addts-refused-callback
 
 $nodes(0) set X_ 0.0
 $nodes(0) set Y_ 0.0
