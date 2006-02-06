@@ -182,11 +182,12 @@ EdcaTxop::calculateCurrentTxDuration (void)
 	} else {
 		int dataTxMode = lookupDestStation (m_currentTxPacket)->getDataMode (getSize (m_currentTxPacket));
 		if (m_firstPacketInBurst && needRTS ()) {
-			int txMode = lookupDestStation (m_currentTxPacket)->getRTSMode ();
+			int rtsTxMode = lookupDestStation (m_currentTxPacket)->getRTSMode ();
 			txDuration += parameters ()->getSIFS () * 2;
-			txDuration += calculateTxDuration (parameters ()->getPacketSize (MAC_80211_CTL_RTS), 0);
+			txDuration += calculateTxDuration (parameters ()->getPacketSize (MAC_80211_CTL_RTS), rtsTxMode);
 			txDuration += calculateTxDuration (parameters ()->getPacketSize (MAC_80211_CTL_CTS), 0);
 		}
+		txDuration += calculateTxDuration (getSize (m_currentTxPacket), dataTxMode);
 		txDuration += parameters ()->getSIFS ();
 		txDuration += calculateTxDuration (parameters ()->getPacketSize (MAC_80211_CTL_ACK), 0);
 	}
@@ -200,6 +201,7 @@ EdcaTxop::calculateNextTxDuration (Packet *packet)
 		txDuration += calculateTxDuration (getSize (packet), 0);
 	} else {
 		int dataTxMode = lookupDestStation (packet)->getDataMode (getSize (packet));
+		txDuration += calculateTxDuration (getSize (packet), dataTxMode);
 		txDuration += parameters ()->getSIFS ();
 		txDuration += calculateTxDuration (parameters ()->getPacketSize (MAC_80211_CTL_ACK), 0);
 	}

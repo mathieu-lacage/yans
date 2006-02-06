@@ -703,7 +703,6 @@ MacLow::receive (Packet *packet)
 		if (isPrevNavZero &&
 		    getDestination (packet) == getSelf ()) {
 			TRACE ("rx RTS from %d -- schedule CTS", getSource (packet));
-			int ctsTxMode = getCtsTxModeForRts (getSource (packet), getTxMode (packet));
 			m_sendCTSHandler->start (new SendEvent (packet), parameters ()->getSIFS ());
 		} else {
 			TRACE ("rx RTS from %d -- cannot schedule CTS", getSource (packet));
@@ -743,7 +742,6 @@ MacLow::receive (Packet *packet)
 			if (!isNoAck (packet)) {
 				TRACE ("rx unicast/send_ack from %d", getSource (packet));
 				m_sendACKHandler->start (new SendEvent (packet), parameters ()->getSIFS ());
-				int ackTxMode = getAckTxModeForData (getSource (packet), getTxMode (packet));
 			} else {
 				TRACE ("rx unicast/no_ack from %d", getSource (packet));
 			}
