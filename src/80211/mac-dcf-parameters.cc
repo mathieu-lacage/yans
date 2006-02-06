@@ -158,7 +158,7 @@ MacDcfParameters::writeTo (uint8_t buffer[4], enum ac_e ac)
 	uint8_t ECWmax = log2 (m_CWmax);
 	buffer[1] = ECWmin | ECWmax;
 
-	long int txopLimit = lrint (m_txopLimit * 32e-6);
+	long int txopLimit = lrint (m_txopLimit / 32e-6);
 	buffer[2] = (txopLimit >> 8) & 0xff;
 	buffer[3] = (txopLimit >> 0) & 0xff;
 }
@@ -177,5 +177,5 @@ MacDcfParameters::readFrom (uint8_t const buffer[4])
 	m_ACM = (ACM == 1)?true:false;
 	m_CWmin = (1<<ECWmin) - 1;
 	m_CWmax = (1<<ECWmax) - 1;
-	m_txopLimit = txopLimit / 32e-6;
+	m_txopLimit = txopLimit * 32e-6;
 }
