@@ -5,7 +5,7 @@ $ns use-scheduler Heap
 
 set nodeConstructor [new NodeConstructor];
 set interfaceConstructor [new TclNetInterfaceConstructor80211];
-set channel [new TclSimpleBroadcastChannel];
+set channel [new TclFreeSpaceBroadcastChannel];
 
 set nodes(0) [$nodeConstructor create-node];
 set nodes(1) [$nodeConstructor create-node];
