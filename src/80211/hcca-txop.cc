@@ -403,6 +403,8 @@ HccaTxop::gotACK (double snr, int txMode)
 void 
 HccaTxop::missedACK (void)
 {
+	MacStation *station = lookupDestStation (m_currentTxPacket);
+	station->reportDataFailed ();
 	m_SLRC++;
 	if (m_SLRC > 1) {
 		/* For HCCA, I consider that if the first
