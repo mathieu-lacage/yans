@@ -182,9 +182,9 @@ private:
 	Packet *getRTSforPacket (Packet *data);	
 
 	void normalAckTimeout (MacCancelableEvent *event);
-	void fastAckTimeout (void);
-	void superFastAckTimeout (void);
-	void fastAckFailedTimeout (void);
+	void fastAckTimeout (MacCancelableEvent *event);
+	void superFastAckTimeout (MacCancelableEvent *event);
+	void fastAckFailedTimeout (MacCancelableEvent *event);
 	void CTSTimeout (MacCancelableEvent *event);
 	void sendCTS_AfterRTS (MacCancelableEvent *macEvent);
 	void sendACK_AfterData (MacCancelableEvent *macEvent);
@@ -202,9 +202,9 @@ private:
 	vector<MacLowNavListener *> m_navListeners;
 
 	DynamicHandler<MacLow> *m_normalAckTimeoutHandler;
-	StaticHandler<MacLow>  *m_fastAckTimeoutHandler;
-	StaticHandler<MacLow>  *m_superFastAckTimeoutHandler;
-	StaticHandler<MacLow>  *m_fastAckFailedTimeoutHandler;
+	DynamicHandler<MacLow> *m_fastAckTimeoutHandler;
+	DynamicHandler<MacLow> *m_superFastAckTimeoutHandler;
+	DynamicHandler<MacLow> *m_fastAckFailedTimeoutHandler;
 	DynamicHandler<MacLow> *m_CTSTimeoutHandler;
 	DynamicHandler<MacLow> *m_sendCTSHandler;
 	DynamicHandler<MacLow> *m_sendACKHandler;

@@ -111,9 +111,9 @@ private:
 MacLow::MacLow (MacContainer *container)
 	: m_container (container),
 	  m_normalAckTimeoutHandler (new DynamicHandler<MacLow> (this, &MacLow::normalAckTimeout)),
-	  m_fastAckTimeoutHandler (new StaticHandler<MacLow> (this, &MacLow::fastAckTimeout)),
-	  m_superFastAckTimeoutHandler (new StaticHandler<MacLow> (this, &MacLow::superFastAckTimeout)),
-	  m_fastAckFailedTimeoutHandler (new StaticHandler<MacLow> (this, &MacLow::fastAckFailedTimeout)),
+	  m_fastAckTimeoutHandler (new DynamicHandler<MacLow> (this, &MacLow::fastAckTimeout)),
+	  m_superFastAckTimeoutHandler (new DynamicHandler<MacLow> (this, &MacLow::superFastAckTimeout)),
+	  m_fastAckFailedTimeoutHandler (new DynamicHandler<MacLow> (this, &MacLow::fastAckFailedTimeout)),
 	  m_CTSTimeoutHandler (new DynamicHandler<MacLow> (this, &MacLow::CTSTimeout)),
 	  m_sendCTSHandler (new DynamicHandler<MacLow> (this, &MacLow::sendCTS_AfterRTS)),
 	  m_sendACKHandler (new DynamicHandler<MacLow> (this, &MacLow::sendACK_AfterData)),
@@ -408,13 +408,13 @@ MacLow::normalAckTimeout (MacCancelableEvent *event)
 	m_transmissionListener->missedACK ();
 }
 void
-MacLow::fastAckFailedTimeout (void)
+MacLow::fastAckFailedTimeout (MacCancelableEvent *event)
 {
 	m_transmissionListener->missedACK ();
 	TRACE ("fast Ack busy but missed");
 }
 void
-MacLow::fastAckTimeout ()
+MacLow::fastAckTimeout (MacCancelableEvent *event)
 {
 	if (peekPhy ()->getState () == Phy80211::IDLE) {
 		TRACE ("fast Ack idle missed");
@@ -422,7 +422,7 @@ MacLow::fastAckTimeout ()
 	}
 }
 void
-MacLow::superFastAckTimeout ()
+MacLow::superFastAckTimeout (MacCancelableEvent *event)
 {
 	if (peekPhy ()->getState () == Phy80211::IDLE) {
 		TRACE ("super fast Ack failed");
@@ -649,6 +649,18 @@ MacLow::disableRTS (void)
 void 
 MacLow::setTransmissionListener (MacLowTransmissionListener *listener)
 {
+	/* the cancels below should not be really needed in 
+	 * a perfect world but the QapScheduler steals ownership
+	 * of the medium to the edca-txop which cannot complete
+	 * any transaction left.
+	 */
+	m_waitSIFSHandler->cancel ();
+	m_normalAckTimeoutHandler->cancel ();
+	m_CTSTimeoutHandler->cancel ();
+	m_fastAckFailedTimeoutHandler->cancel ();
+	m_fastAckTimeoutHandler->cancel ();
+	m_superFastAckTimeoutHandler->cancel ();
+
 	m_transmissionListener = listener;
 }
 void 
