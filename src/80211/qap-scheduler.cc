@@ -352,7 +352,8 @@ QapScheduler::addTsRequest (TSpec *tspec)
 	tspec->setMediumTime (calculateMediumTime (tspec));
 	double maximumServiceInterval = getMaximumServiceInterval (tspec);
 	double newServiceInterval;
-	if (getCurrentServiceInterval () < maximumServiceInterval) {
+	if (getCurrentServiceInterval () > 0.0 &&
+	    getCurrentServiceInterval () < maximumServiceInterval) {
 		newServiceInterval = getCurrentServiceInterval ();
 	} else {
 		newServiceInterval = maximumServiceInterval;

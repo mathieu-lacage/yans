@@ -109,6 +109,7 @@ MacHighAp::receiveFromMacLow (Packet *packet)
 		case MAC_80211_MGT_ADDTS_REQUEST:
 			gotAddTsRequest (packet);
 			Packet::free (packet);
+			break;
 		case MAC_80211_MGT_DELTS_REQUEST:
 			gotDelTsRequest (packet);
 			Packet::free (packet);
