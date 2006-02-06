@@ -36,6 +36,18 @@
 #include "mac-stations.h"
 #include "mac-station.h"
 
+#ifndef HCCA_TXOP_TRACE
+#define HCCA_TXOP_TRACE 1
+#endif /* HCCA_TXOP_TRACE */
+
+#ifdef HCCA_TXOP_TRACE
+# define TRACE(format, ...) \
+	printf ("HCCA TRACE %d %f " format "\n", m_container->selfAddress (), \
+                Scheduler::instance ().clock (), ## __VA_ARGS__);
+#else /* HCCA_TXOP_TRACE */
+# define TRACE(format, ...)
+#endif /* HCCA_TXOP_TRACE */
+
 
 class MyTransmissionListener : public MacLowTransmissionListener {
 public:
@@ -175,6 +187,7 @@ HccaTxop::txCurrent (void)
 void 
 HccaTxop::tsAccessGranted (uint8_t tsid, double txopLimit)
 {
+	TRACE ("access granted for tsid %d for %f seconds", tsid, txopLimit);
 	startTxop (txopLimit);
 	setCurrentTsid (tsid);
 	txCurrent ();
