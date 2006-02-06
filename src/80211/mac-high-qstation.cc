@@ -27,7 +27,7 @@
 #include "mac-dcf-parameters.h"
 #include "mac-queue-80211e.h"
 #include "mac-container.h"
-#include "dca-txop.h"
+#include "edca-txop.h"
 #include "hcca-txop.h"
 #include "hdr-mac-80211.h"
 #include "tspec-request.h"
@@ -66,7 +66,7 @@ MacHighQStation::createAC (enum ac_e ac)
 	MacQueue80211e *queue = new MacQueue80211e (container ()->parameters ());
 	MacDcfParameters *dcfParameters = new MacDcfParameters (container ());
 	Dcf *dcf = new Dcf (container (), dcfParameters);
-	new DcaTxop (dcf, queue, container ());
+	new EdcaTxop (dcf, queue, container ());
 
 	m_dcfQueues[ac] = queue;
 	m_dcfParameters[ac] = dcfParameters;
