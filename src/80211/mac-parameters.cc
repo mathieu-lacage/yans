@@ -157,6 +157,9 @@ MacParameters::getManagementPayloadSize (enum mac_80211_packet_type type)
 		// QOS CFPOLL has no data.
 		size = 0;
 		break;
+	case MAC_80211_MGT_QOSNULL:
+		size = 0;
+		break;
 	case MAC_80211_MGT_BEACON:
 		size = getBeaconSize ();
 		break;
