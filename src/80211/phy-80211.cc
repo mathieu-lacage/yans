@@ -521,6 +521,25 @@ Phy80211::getSystemLoss (void)
 {
 	return m_systemLoss;
 }
+double 
+Phy80211::getEndOfTx (void)
+{
+	return m_endTx;
+}
+double 
+Phy80211::getEndOfRx (void)
+{
+	return m_endRx;
+}
+double
+Phy80211::max (double a, double b)
+{
+	if (a > b) {
+		return a;
+	} else {
+		return b;
+	}
+}
 
 void
 Phy80211::addTxRxMode (TransmissionMode *mode)
@@ -754,7 +773,7 @@ Phy80211::startRx (Packet *packet)
 		if (power > dBmToW (m_rxThreshold)) {
 			// sync to signal
 			notifyRxStart (now (), event->getDuration ());
-			switchToSyncFromIdle ();
+			switchToSyncFromIdle (event->getDuration ());
 			m_endRxHandler->start (event, packet, 
 					       event->getDuration ());
 		} else {
@@ -961,12 +980,13 @@ Phy80211::switchToTx (double txDuration)
 	STATE_AT (now ());
 }
 void
-Phy80211::switchToSyncFromIdle (void)
+Phy80211::switchToSyncFromIdle (double rxDuration)
 {
 	assert (getState () == Phy80211::IDLE);
 	assert (!m_rxing);
 	m_previousStateChangeTime = now ();
 	m_rxing = true;
+	m_endRx = now () + rxDuration;
 	assert (getState () == Phy80211::SYNC);
 	STATE_FROM (Phy80211::IDLE);
 	STATE_TO (Phy80211::SYNC);
@@ -1078,7 +1098,26 @@ Phy80211::getStateDuration (void)
 double 
 Phy80211::getDelayUntilIdle (void)
 {
-	return 0.0;
+	double retval;
+
+	switch (getState ()) {
+	case SYNC:
+		retval = getEndOfRx () - now ();
+		break;
+	case TX:
+		retval = getEndOfTx () - now ();
+		break;
+	case IDLE:
+		retval = 0.0;
+		break;
+	case SLEEP:
+		assert (false);
+		// quiet compiler.
+		retval = 0.0;
+		break;
+	}
+	retval = max (retval, 0.0);
+	return retval;
 }
 
 Channel *

@@ -133,10 +133,13 @@ private:
 	double       m_maxPacketDuration;
 
 	void switchToTx (double txDuration);
-	void switchToSyncFromIdle (void);
+	void switchToSyncFromIdle (double rxDuration);
 	void switchToSleep (void);
 	void switchToIdleFromSleep (void);
 	void switchToIdleFromSync (void);
+
+	double getEndOfTx (void);
+	double getEndOfRx (void);
 
 	void startTx (Packet *p);
 	void startRx (Packet *p);
@@ -165,6 +168,7 @@ private:
 	double getSystemLoss (void);
 	double getLambda (void);
 	double now (void);
+	double max (double a, double b);
 	char const *stateToString (enum Phy80211State state);
 
 	bool isDefined (char const *varName);
@@ -191,6 +195,7 @@ private:
 	bool m_sleeping;
 	bool m_rxing;
 	double m_endTx;
+	double m_endRx;
 	double m_previousStateChangeTime;
 };
 
