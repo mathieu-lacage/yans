@@ -131,15 +131,14 @@ $tspec set nominalMSDUSize 72
 # bytes per second
 $tspec set meanDataRate 18000
 $tspec set peakDataRate 18000 
-proc addts-granted-callback {tspec tsid} {
+proc addts-granted-callback0 {tspec tsid} {
     global ::ns
     global ::nodes
     set udp0 [new Agent/UDP];         # A UDP agent
-    $udp0 set packetSize_ 32
     $ns attach-agent $nodes(0) $udp0; # on node $n0
     set cbr0 [new Application/Traffic/CBR]; # A CBR traffic generator agent
     $cbr0 attach-agent $udp0; # attached to the UDP agent
-    $cbr0 set packetSize_ 32
+    $cbr0 set packetSize_ 72
     $cbr0 set interval_ 0.004
     $udp0 set class_ 0; # actually, the default, but. . .
     $udp0 set prio_ $tsid
@@ -153,10 +152,48 @@ proc addts-granted-callback {tspec tsid} {
 
     puts "tspec granted for tsid $tsid";
 }
-proc addts-refused-callback {tspec tsid} {
+proc addts-refused-callback0 {tspec tsid} {
     puts "tspec refused for tsid $tsid";
 }
-addts-request $nodes(0) $tspec addts-granted-callback addts-refused-callback
+addts-request $nodes(0) $tspec addts-granted-callback0 addts-refused-callback0
+
+
+set tspec [new TSPEC]
+$tspec set minimumServiceInterval 0.0
+$tspec set maximumServiceInterval 0.0
+# ms
+$tspec set delayBound 0.125
+# bytes
+$tspec set nominalMSDUSize 72
+# bytes per second
+$tspec set meanDataRate 18000
+$tspec set peakDataRate 18000 
+proc addts-granted-callback1 {tspec tsid} {
+    global ::ns
+    global ::nodes
+    set udp1 [new Agent/UDP];         # A UDP agent
+    $ns attach-agent $nodes(1) $udp1; # on node $n0
+    set cbr1 [new Application/Traffic/CBR]; # A CBR traffic generator agent
+    $cbr1 attach-agent $udp1; # attached to the UDP agent
+    $cbr1 set packetSize_ 72
+    $cbr1 set interval_ 0.004
+    $udp1 set class_ 0; # actually, the default, but. . .
+    $udp1 set prio_ $tsid
+    
+    set null1 [new Agent/Null]; # Its sink
+    $ns attach-agent $nodes(2) $null1; # on node  
+
+    $ns connect $udp1 $null1
+    $ns at 3.0 "$cbr1 start"
+#    $ns at 3.0 "$cbr0 stop"
+
+    puts "tspec granted for tsid $tsid";
+}
+proc addts-refused-callback1 {tspec tsid} {
+    puts "tspec refused for tsid $tsid";
+}
+addts-request $nodes(1) $tspec addts-granted-callback1 addts-refused-callback1
+
 
 $nodes(0) set X_ 0.0
 $nodes(0) set Y_ 0.0
