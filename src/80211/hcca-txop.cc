@@ -177,7 +177,7 @@ HccaTxop::txCurrent (void)
 	low ()->enableACK ();
 	low ()->enableOverrideDurationId (getDurationIdLeft ());
 	low ()->setDataTransmissionMode (station->getDataMode (getSize (m_currentTxPacket)));
-	low ()->setData (m_currentTxPacket);
+	low ()->setData (m_currentTxPacket->copy ());
 	low ()->setTransmissionListener (m_transmissionListener);
 	low ()->startTransmission ();
 	return true;
