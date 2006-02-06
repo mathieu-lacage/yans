@@ -255,7 +255,7 @@ int
 MacParameters::getRTSCTSThreshold (void)
 {
 	/* XXX */
-	return 0;
+	return 1000;
 }
 int
 MacParameters::getFragmentationThreshold (void)
