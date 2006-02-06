@@ -124,6 +124,7 @@ MacHighAp::receiveFromMacLow (Packet *packet)
 			break;
 		case MAC_80211_MGT_CFPOLL:
 			gotCFPoll (packet);
+			Packet::free (packet);
 			break;
 		case MAC_80211_DATA:
 			if (station->isAssociated ()) {
