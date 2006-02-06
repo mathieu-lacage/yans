@@ -64,6 +64,20 @@
 #include "tspec.h"
 #include "dcf.h"
 
+
+#ifndef QAP_SCHEDULER_TRACE
+#define QAP_SCHEDULER_TRACE 1
+#endif /* QAP_SCHEDULER_TRACE */
+
+#ifdef QAP_SCHEDULER_TRACE
+# define TRACE(format, ...) \
+	printf ("SCHED TRACE %d %f " format "\n", m_container->selfAddress (), \
+                Scheduler::instance ().clock (), ## __VA_ARGS__);
+#else /* QAP_SCHEDULER_TRACE */
+# define TRACE(format, ...)
+#endif /* QAP_SCHEDULER_TRACE */
+
+
 Txop::Txop (int destination, TSpec *tspec)
 	: m_destination (destination),
 	  m_tspec (tspec)
@@ -373,6 +387,7 @@ QapScheduler::addTsRequest (TSpec *tspec)
 	}
 	/* The new schedule should be okay. We need to advertise it now. */
 	setCurrentServiceInterval (newServiceInterval);
+	TRACE ("new SI is: %f", newServiceInterval);
 	// need to move around source dest XXX
 	m_admitted.push_back (Txop (0, tspec));
 	return true;
@@ -381,10 +396,6 @@ QapScheduler::addTsRequest (TSpec *tspec)
 bool
 QapScheduler::delTsRequest (int destination, TSpec *tspec)
 {
-	/* We assume that pointer equality means tspec equality.
-	 * This is wrong. XXX
-	 */
-
 	// remove TS.
 	list<Txop>::iterator item = std::find (m_admitted.begin (), m_admitted.end (), 
 					  Txop (destination, tspec));
@@ -441,6 +452,8 @@ QapScheduler::doCurrentTxop (void)
 		finishCap ();
 		return;
 	}
+
+	TRACE ("start txop from %d", (*m_txopIterator).getDestination ());
 	
 	int destination = (*m_txopIterator).getDestination ();
 	Packet *packet = getPacketFor (destination);
@@ -464,12 +477,14 @@ QapScheduler::doCurrentTxop (void)
 void
 QapScheduler::finishCap (void)
 {
+	TRACE ("finish CAP");
 	low ()->disableBusyMonitoring ();
 }
 
 void
 QapScheduler::startCap (void)
 {
+	TRACE ("start CAP");
 	m_capStart = now ();
 	double capEnd = m_capStart + getCurrentTotalCapTime ();
 	m_capEnd = min (capEnd, m_nextBeaconStart);
@@ -492,6 +507,7 @@ QapScheduler::startCap (void)
 void
 QapScheduler::busyTimeout (void)
 {
+	TRACE ("busy timeout for TXOP from %d", (*m_txopIterator).getDestination ());
 	doCurrentTxop ();
 	m_txopIterator++;
 	if (m_txopIterator == m_admitted.end ()) {
@@ -511,10 +527,11 @@ QapScheduler::accessTimer (MacCancelableEvent *event)
 		/* Somehow, we got delayed so we need to wait
 		 * until next idle+PIFS.
 		 */
-		double nextAccess = now ();
-		nextAccess += phy ()->getDelayUntilIdle ();
-		nextAccess += parameters ()->getPIFS ();
-		m_access->start (nextAccess);
+		TRACE ("cannot start CAP now. restart delay.");
+		double nextAccessDelay = 0.0;
+		nextAccessDelay += phy ()->getDelayUntilIdle ();
+		nextAccessDelay += parameters ()->getPIFS ();
+		m_access->start (nextAccessDelay);
 		return;
 	}
 
@@ -534,10 +551,11 @@ QapScheduler::beaconTxNextData (void)
 		return;
 	}
 	if (phy ()->getState () != Phy80211::IDLE) {
-		double nextAccess = now ();
-		nextAccess += phy ()->getDelayUntilIdle ();
-		nextAccess += parameters ()->getPIFS ();
-		m_access->start (nextAccess);
+		TRACE ("cannot start CAP now. restart delay.");
+		double nextAccessDelay = 0.0;
+		nextAccessDelay += phy ()->getDelayUntilIdle ();
+		nextAccessDelay += parameters ()->getPIFS ();
+		m_access->start (nextAccessDelay);
 		return;
 	}
 
@@ -552,12 +570,15 @@ QapScheduler::beaconTimer (MacCancelableEvent *event)
 		/* Somehow, we got delayed so we need to wait
 		 * until next idle+PIFS.
 		 */
-		double nextBeacon = now ();
-		nextBeacon += phy ()->getDelayUntilIdle ();
-		nextBeacon += parameters ()->getPIFS ();
-		m_beacon->start (nextBeacon);
+		TRACE ("beacon delay. Must have PIFS idle.");
+		double nextBeaconDelay = 0.0;
+		nextBeaconDelay += phy ()->getDelayUntilIdle ();
+		nextBeaconDelay += parameters ()->getPIFS ();
+		m_beacon->start (nextBeaconDelay);
 		return;		
 	}
+
+	TRACE ("sending beacon");
 	
 	Packet *packet = getPacketFor (MAC_BROADCAST);
 	setSize (packet, getPacketSize (MAC_80211_MGT_BEACON));
