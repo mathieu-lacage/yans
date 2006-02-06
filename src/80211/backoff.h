@@ -22,47 +22,65 @@
 #ifndef BACKOFF_H
 #define BACKOFF_H
 
-#include "phy-80211.h"
-
 class MacLow;
+class Phy80211;
+class BackoffPhyListener;
+class BackoffNavListener;
+class MacLowParameters;
 
-class Backoff : public Phy80211Listener
+class DcfAccessListener {
+public:
+	DcfAccessListener ();
+
+	virtual void accessGrantedNow (void);
+};
+
+
+class Dcf
 {
  public:
-	Backoff (MacLow *mac);
+	Backoff (Phy80211 *phy, MacLow *mac, MacLowParameters *parameters);
 	~Backoff ();
-	void start (double backoffStart, double backoffDuration);
-	void cancel (void);
-	bool isCompleted (double now);
-	double getDelayUntilEnd (double now);
-	bool isNavZero (double now) const;
-	double getDelayUntilNavZero (double now) const;
-	/* Return how many seconds we believe we have left until the
-	 * backoff expires. If the backoff has already expired, 
-	 * this method returns zero.
-	 */
-	double getDelayUntilAccessAllowed (double now) const;
 
+	void requestAccess (void);
+	void notifyAccessOk (void);
+	void notifyAccessFailed (void);
+	void registerAcessListener (DcfAccessListener *listener);
+
+private:
+	friend class BackoffPhyListener;
+	friend class BackoffNavListener;
+
+	void accessTimeout (void);
+
+	/* trivial helpers */
 	bool wasLastRxOk (void) const;
 	double getLastRxEndTime (void) const;
 	double getLastTxEndTime (void) const;
-
-	void notifyNav (double start, double duration);
-	virtual void notifyRxStart (double now, double duration);
-	virtual void notifyRxEnd (double now, bool receivedOk);
-	virtual void notifyTxStart (double now, double duration);
-	virtual void notifySleep (double now);
-	virtual void notifyWakeup (double now);
-
-private:
-	double max (double a, double b) const;
+	double mostRecent (double a, double b) const;
 	double mostRecent (double a, double b, double c) const;
-	void updateBackoff (double time);
 	double getDIFS (void) const;
 	double getEIFS (void) const;
-	double getAccessAllowedStart (void) const;
 
-	MacLow *m_mac;
+	/* time calculation helpers */
+	void recordBackoffstarted (double backoffStart, double backoffDuration);
+	double getDelayUntilAccessAllowed (double now) const;
+	double getAccessAllowedStart (void) const;
+	void updateBackoff (double time);
+
+	/* notification methods. */
+	void notifyRxStart (double now, double duration);
+	void notifyRxEnd (double now, bool receivedOk);
+	void notifyTxStart (double now, double duration);
+	void notifySleep (double now);
+	void notifyWakeup (double now);
+	void notifyNav (double now, double duration);
+
+
+	MacLowParameters   *m_parameters;
+	BackoffPhyListener *m_phyListener;
+	BackoffNavListener *m_navListener;
+
 	double m_backoffStart;
 	double m_backoffLeft;
 	double m_lastNavStart;

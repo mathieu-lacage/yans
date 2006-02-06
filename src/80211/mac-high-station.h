@@ -22,7 +22,7 @@
 #define MAC_HIGH_STATION
 
 #include "mac-high.h"
-#include "static-handler.tcc"
+#include "mac-handler.tcc"
 
 class Mac80211;
 class MacLow;

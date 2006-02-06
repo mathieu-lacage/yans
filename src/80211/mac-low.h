@@ -23,104 +23,139 @@
 
 #include "hdr-mac-80211.h"
 #include "phy-80211.h"
-#include "static-handler.tcc"
+#include "mac-handler.tcc"
 
 class Packet;
-class RngUniform;
-class Backoff;
 class Mac80211;
-class MacQueue80211e;
 class MacStation;
 class MacHigh;
-class DynamicMacHandler;
-class MacCancelableEvent;
 class MacHigh;
 class Phy80211;
 class MacLowParameters;
 
+class EventListener {
+public:
+	EventListener ();
+	virtual ~EventListener ();
+	void gotCTS (double snr);
+	void missedCTS (void);
+	void gotACK (double snr);
+	void missedACK (void);
+	void txCompletedAndSIFS (void);
+	void gotBlockAckStart (double snr);
+	void gotBlockAck (int sequence);
+	void gotBlockAckEnd (void);
+	void missedBlockAck (void);
+};
+
+class NavListener {
+public:
+	NavListener ();
+	virtual ~NavListener ();
+	void gotNav (double now, double nav);
+};
+
 class MacLow {
 public:
-	MacLow (Mac80211 *mac, MacHigh *high, Phy80211 *phy, 
+	MacLow (Mac80211 *mac, MacHigh *high, Phy80211 *phy,
 		MacLowParameters *parameters);
 	~MacLow ();
 
-	void enqueue (Packet *packet);
+	/* notify the EventListener after end-of-handshake+SIFS. 
+	 * If ACK is enabled, end-of-handshake is defined to be 
+	 * the end of reception of the ACK. Otherwise,
+	 * it is the end of transmission of the main packet.
+	 */
+	void enableWaitForSIFS (void);
+	void disableWaitForSIFS (void);
+
+	/* If ACK is enabled, we wait ACKTimeout for an ACK.
+	 */
+	void enableACK (void);
+	void disableACK (void);
+
+	/* If RTS is enabled, we wait CTSTimeout for a CTS.
+	 * Otherwise, no RTS is sent.
+	 */
+	void enableRTS (void);
+	void disableRTS (void);
+
+	void setListener (EventListener *listener);
+
+	/* This txmode is applied to _every_ packet sent after
+	 * this call. If you want to use a different txMode
+	 * for a RTS and its subsequent DATA frame, you need
+	 * to call this method twice, once before the start
+	 * of the transmission for the RTS and once when the
+	 * gotCTS method is called for the DATA.
+	 */
+	void setTransmissionMode (int txMode);
+
+	void startTransmission (Packet *packet);
+	void startBlockAckReqTransmission (int to, int tid);
+
 	void receive (Packet *packet);
-	void flush (void);
 
-	Phy80211 *peekPhy (void);
-
-	double getEIFS (void);
-	double getDIFS (void);
-
-	int getSelf (void);
+	void registerNavListener (NavListener *listener);
 
 private:
+	void dropPacket (Packet *packet);
 	MacLowParameters *parameters (void);
-	void forwardDown (Packet *packet);
 	double now (void);
 	MacStation *lookupStation (int address);
+	Phy80211 *peekPhy (void);
+	void forwardDown (Packet *packet);
+	int getSelf (void);
+	double getEIFS (void);
+	double getDIFS (void);
+	double getLastSNR (void);
+	double getLastStartRx (void);
+	double calculateTxDuration (int mode, int size);
+	void notifyNav (double now, double duration);
+	bool isNavZero (double now);
 
 	bool isData (Packet *packet);
 	bool isManagement (Packet *packet);
 	
-	double getLastSNR (void);
-	double getLastStartRx (void);
-	double calculateTxDuration (int mode, int size);
 	Packet *getRTSPacket (void);
 	Packet *getCTSPacket (void);
 	Packet *getACKPacket (void);
-	Packet *getRTSforPacket (Packet *data);
-	double pickBackoffDelay (void);
-	double pickBackoffDelayInCaseOfFailure (void);
-	int calculateNewFailedCW (int CW);
-	void resetCW (void);
-	void updateFailedCW (void);
-	void dropPacket (Packet *packet);
-	void dropCurrentTxPacket (void);
-	double max (double a, double b);
-	double getXIFSLeft (void);
-	void increaseSequence (void);
+	Packet *getRTSforPacket (Packet *data);	
 
-
-	void sendRTSForPacket (Packet *packet);
-	void sendDataPacket (Packet *packet);
-	void sendCurrentTxPacket (void);
-	void startTransmission (void);
-	void dealWithInputQueue (void);
-
-	/* the event handlers. */
 	void ACKTimeout (MacCancelableEvent *event);
 	void CTSTimeout (MacCancelableEvent *event);
 	void sendCTS_AfterRTS (MacCancelableEvent *macEvent);
 	void sendACK_AfterData (MacCancelableEvent *macEvent);
 	void sendDataAfterCTS (MacCancelableEvent *macEvent);
-	void initialBackoffTimeout (void);
 
-	
+	void sendRTSForPacket (Packet *packet);
+	void sendDataPacket (Packet *packet);
+	void sendCurrentTxPacket (void);
+	void startTransmission (void);
 
-
-	Packet *m_currentTxPacket;
 	/* XXX init all */
-	int m_sequence;
-	int m_expectedCTSSource;
-	int m_expectedACKSource;
-	int m_CW;
-	int m_SSRC;
-	int m_SLRC;
 	Mac80211 *m_mac;
 	MacHigh *m_high;
 	Phy80211 *m_phy;
+
+	Packet *m_currentTxPacket;
+
+	EventListener *m_listener;
+	vector<NavListener *> m_navListeners;
+
+	DynamicHandler<MacLow> *m_ACKTimeoutHandler;
+	DynamicHandler<MacLow> *m_CTSTimeoutHandler;
+	DynamicHandler<MacLow> *m_sendCTSHandler;
+	DynamicHandler<MacLow> *m_sendACKHandler;
+	DynamicHandler<MacLow> *m_sendDataHandler;
+
 	MacLowParameters *m_parameters;
-	MacQueue80211e *m_queue;
-	DynamicMacHandler *m_ACKTimeoutBackoffHandler;
-	DynamicMacHandler *m_CTSTimeoutBackoffHandler;
-	StaticHandler<MacLow> *m_accessBackoffHandler;
-	DynamicMacHandler *m_sendCTSHandler;
-	DynamicMacHandler *m_sendACKHandler;
-	DynamicMacHandler *m_sendDataHandler;
-	Backoff *m_backoff;
-	RngUniform *m_random;
+
+
+	bool m_waitSIFS;
+	bool m_waitACK;
+	bool m_sendRTS;
+	int m_txMode;
 };
 
 #endif /* MAC_LOW_H */

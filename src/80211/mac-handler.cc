@@ -19,7 +19,7 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "mac-handler.h"
+#include "mac-handler.tcc"
 
 MacCancelableEvent::MacCancelableEvent ()
 	: m_canceled (false),
@@ -39,57 +39,5 @@ double
 MacCancelableEvent::getStartTime (void)
 {
 	return m_startTime;
-}
-
-DynamicMacHandler::DynamicMacHandler (class MacLow *mac, DynamicMacRxHandler handler)
-	: m_mac (mac) , m_handler (handler),
-	  m_event (0), m_end (0.0)
-{}
-DynamicMacHandler::~DynamicMacHandler ()
-{}
-void 
-DynamicMacHandler::start (class MacCancelableEvent *e, double delay)
-{
-	m_event = e;
-	m_end = Scheduler::instance ().clock () + delay;
-	Scheduler::instance ().schedule (this, e, delay);
-}
-bool 
-DynamicMacHandler::isRunning (void)
-{
-	if (m_event != 0 &&
-	    !m_event->isCanceled ()) {
-		return true;
-	} else {
-		return false;
-	}
-}
-double
-DynamicMacHandler::getEndTime (void)
-{
-	if (isRunning ()) {
-		return m_end;
-	} else {
-		return 0.0;
-	}
-}
-void 
-DynamicMacHandler::cancel (void)
-{
-	if (isRunning ()) {
-		m_event->cancel ();
-		m_event = 0;
-	}
-}
-
-void 
-DynamicMacHandler::handle (Event *e)
-{
-	MacCancelableEvent *ev = static_cast<MacCancelableEvent *> (e);
-	if (!ev->isCanceled ()) {
-		m_event = 0;
-		(m_mac->*m_handler) (ev);
-	}
-	delete ev;
 }
 
