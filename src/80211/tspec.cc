@@ -45,8 +45,8 @@ TSpec::TSpec ()
 	initialize ("suspensionInterval", &m_suspensionInterval, 1.0);
 	initialize ("serviceStartTime", &m_serviceStartTime, 1.0);
 	initialize ("minimumDataRate", &m_minimumDataRate, 100000);
-	initialize ("meanDataRate", &m_meanDataRate, 100000);
-	initialize ("peakDataRate", &m_peakDataRate, 100000);
+	initialize ("meanDataRate", &m_meanDataRate, 10000);
+	initialize ("peakDataRate", &m_peakDataRate, 10000);
 	initialize ("burstSize", &m_burstSize, 4000);
 	initialize ("delayBound", &m_delayBound, 0.0);
 	initialize ("minimumPhyMode", &m_minimumPhyMode, 0);
