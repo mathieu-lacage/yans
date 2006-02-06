@@ -367,7 +367,7 @@ QapScheduler::doCurrentTxop (void)
 		return;
 	}
 	
-	int destination;
+	int destination = (*m_txopIterator).getDestination ();
 	Packet *packet = getPacketFor (destination);
 	setSize (packet, getPacketSize (MAC_80211_MGT_CFPOLL));
 	setType (packet, MAC_80211_MGT_CFPOLL);

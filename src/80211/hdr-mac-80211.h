@@ -73,7 +73,7 @@ class Packet;
 #define HDR_MAC_80211(p) ((hdr_mac_80211 *)hdr_mac::access(p))
 
 enum mac_80211_packet_type {
-	MAC_80211_CTL_RTS,
+	MAC_80211_CTL_RTS = 0,
 	MAC_80211_CTL_CTS,
 	MAC_80211_CTL_ACK,
 	MAC_80211_CTL_BACKREQ,

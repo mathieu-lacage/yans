@@ -74,11 +74,13 @@ MacParameters::getPacketSize (enum mac_80211_packet_type type)
 	case MAC_80211_CTL_BACKREQ:
 	case MAC_80211_CTL_BACKRESP:
 		/* not implemented */
+		size = 0;
 		assert (false);
 		break;
 
 	case MAC_80211_DATA:
 		/* cannot happen since assert at start of method */
+		size = 0;
 		assert (false);
 		break;
 
@@ -103,6 +105,10 @@ MacParameters::getPacketSize (enum mac_80211_packet_type type)
 	case MAC_80211_MGT_DELTS_RESPONSE:
 		size = getMgtHeaderSize ();
 		size += getManagementPayloadSize (type);
+		break;
+	default:
+		assert (false);
+		break;
 	}
 
 	assert (size < getMaxMSDUSize ());
@@ -142,7 +148,9 @@ MacParameters::getManagementPayloadSize (enum mac_80211_packet_type type)
 	case MAC_80211_MGT_DELBA_RESPONSE:
 	case MAC_80211_MGT_AUTHENTICATION:
 	case MAC_80211_MGT_DEAUTHENTICATION:
+	case MAC_80211_MGT_DISASSOCIATION:
 		// XXX not implemented
+		size = 0;
 		assert (false);
 		break;
 	case MAC_80211_MGT_CFPOLL:
@@ -157,8 +165,6 @@ MacParameters::getManagementPayloadSize (enum mac_80211_packet_type type)
 		break;
 	case MAC_80211_MGT_ASSOCIATION_RESPONSE:
 		size = getAssociationResponseSize ();
-		break;
-	case MAC_80211_MGT_DISASSOCIATION:
 		break;
 	case MAC_80211_MGT_REASSOCIATION_REQUEST:
 		size = getReAssociationRequestSize ();
@@ -212,11 +218,6 @@ int
 MacParameters::getDataHeaderSize (void)
 {
 	return 3*2+4*6+4;
-}
-int 
-MacParameters::getMgtHeaderSize (void)
-{
-	return 2+2+6+6+6+2+4;
 }
 double
 MacParameters::getPIFS (void)
@@ -413,4 +414,9 @@ MacParameters::getProbeRequestSize (void)
 	return 34+//max ssid
 		10+//supported rates
 		0;
+}
+int 
+MacParameters::getMgtHeaderSize (void)
+{
+	return 2+2+6+6+6+2+4;
 }
