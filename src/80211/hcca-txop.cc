@@ -218,11 +218,13 @@ HccaTxop::txCurrent (void)
 	if (m_currentTxPacket == 0) {
 		if (queue->isEmpty ()) {
 			TRACE ("queue empty");
-			goto tryToSendQosNull;
+			tryToSendQosNull ();
+			return false;
 		}
 		if (!enoughTimeFor (queue->peekNextPacket ())) {
 			TRACE ("not enough time to complete next packet");
-			goto tryToSendQosNull;
+			tryToSendQosNull ();
+			return false;
 		}
 		assert (m_currentTxPacket == 0);
 		m_currentTxPacket = queue->dequeue ();
@@ -242,8 +244,10 @@ HccaTxop::txCurrent (void)
 		 * some special frame ?
 		 */
 		TRACE ("not enough time for current packet.");
-		goto tryToSendQosNull;
+		tryToSendQosNull ();
+		return false;
 	}
+
 
 	MacStation *station = lookupDestStation (m_currentTxPacket);
 	int txMode = station->getDataMode (getSize (m_currentTxPacket));
@@ -264,10 +268,6 @@ HccaTxop::txCurrent (void)
 	low ()->setTransmissionListener (m_transmissionListener);
 	low ()->startTransmission ();
 	return true;
-
- tryToSendQosNull:
-	tryToSendQosNull ();
-	return false;
 }
 
 void 

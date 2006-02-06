@@ -708,7 +708,7 @@ MacLow::receive (Packet *packet)
 		if (waitFastAck ()) {
 			m_fastAckFailedTimeoutHandler->start (parameters ()->getSIFS ());
 		}
-		goto out;
+		return;
 	}
 	m_receptionListener->gotPacket (getSource (packet),
 					getLastSNR (),
@@ -774,7 +774,6 @@ MacLow::receive (Packet *packet)
 			dropPacket (packet);
 		}
 	}
- out:
 	return;
 }
 
