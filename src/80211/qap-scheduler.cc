@@ -461,6 +461,7 @@ QapScheduler::doCurrentTxop (void)
 	Packet *packet = getPacketFor (destination);
 	setSize (packet, getPacketSize (MAC_80211_MGT_CFPOLL));
 	setType (packet, MAC_80211_MGT_CFPOLL);
+	setTxopLimit (packet, txopDuration);
 	setNoAck (packet);
 	setTID (packet, tspec->getTSID ());
 	setFragmentNumber (packet, 0);
