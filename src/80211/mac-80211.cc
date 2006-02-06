@@ -81,6 +81,7 @@ Mac80211::forwardDown (class Packet *packet)
  *  - has different behavior depending on the value of the 
  *    default-valued argument (set vs get)
  *  - first argument is a char *hdr while it should be a Packet *
+ *  - uses the magic values -2 and 0.
  *
  * *sigh*
  */
@@ -113,6 +114,10 @@ Mac80211::hdr_type(char *hdr, u_int16_t type)
 	return (int)mac_header->getDataType ();
 }
 
+/* This method is overriden to allow us to hook into
+ * the construction process of the MAC object such that
+ * we can complete construction of our own C++ objects.
+ */
 int 
 Mac80211::command(int argc, const char*const* argv)
 {

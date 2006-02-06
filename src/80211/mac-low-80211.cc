@@ -554,6 +554,14 @@ MacLow80211::getXIFSLeft (void)
 	return left;
 }
 
+void
+MacLow80211::increaseSequence (void)
+{
+	/* see ieee 802.11-1999 7.1.3.4.1 p40 */
+	m_sequence++;
+	m_sequence %= 4096;
+}
+
 
 /********************************************************
  *  These are helper functions used by the core timers.
@@ -595,7 +603,7 @@ MacLow80211::sendDataPacket (Packet *txPacket)
 	m_mac->forwardDown (txPacket);
 }
 void
-MacLow80211::sendPacket (void)
+MacLow80211::sendCurrentTxPacket (void)
 {
 	if (getSize (m_currentTxPacket) > getRTSCTSThreshold ()) {
 		sendRTSForPacket (m_currentTxPacket);
@@ -610,8 +618,7 @@ MacLow80211::startTransmission (void)
 	 * start a new transmission.
 	 */
 	Packet *packet = m_queue->dequeue ();
-	m_sequence++; /* see ieee 802.11-1999 7.1.3.4.1 p40 */
-	m_sequence %= 4096;
+	increaseSequence ();
 	increaseSize (packet, getDataHeaderSize ());
 	setType (packet, MAC_80211_DATA);
 	if (getDestination (packet) == ((int)MAC_BROADCAST)) {
@@ -634,7 +641,7 @@ MacLow80211::startTransmission (void)
 		initialize (packet);
 		assert (m_currentTxPacket == 0);
 		m_currentTxPacket = packet;
-		sendPacket ();
+		sendCurrentTxPacket ();
 	}
 }
 
@@ -872,7 +879,7 @@ MacLow80211::ACKTimeout (class MacCancelableEvent *event)
 		 */
 		setRetry (m_currentTxPacket);
 		lookupStation (getDestination (m_currentTxPacket))->reportDataFailed ();
-		sendPacket ();
+		sendCurrentTxPacket ();
 	}
 }
 
@@ -908,7 +915,7 @@ MacLow80211::CTSTimeout (class MacCancelableEvent *event)
 		 * re-send the RTS with a new txmode/duration.
 		 */
 		lookupStation (getDestination (m_currentTxPacket))->reportRTSFailed ();
-		sendPacket ();
+		sendCurrentTxPacket ();
 	}
 }
 void 

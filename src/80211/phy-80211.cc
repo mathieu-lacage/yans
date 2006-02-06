@@ -533,8 +533,9 @@ Phy80211::recv(Packet *packet, Handler *)
 	}
 }
 /* this two methods used to be called by the parent Phy
- * from Phy::recv but since we override Phy::rev,
- * we can implement empty stubs for these methods.
+ * from Phy::recv but since we override Phy::recv,
+ * we can implement empty stubs for these methods since
+ * they will never be called.
  */
 void Phy80211::sendDown(Packet *packet)
 {}

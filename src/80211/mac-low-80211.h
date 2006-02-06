@@ -113,11 +113,12 @@ private:
 	double getCTSTimeoutDuration (void);
 	double getACKTimeoutDuration (void);
 	double getXIFSLeft (void);
+	void increaseSequence (void);
 
 
 	void sendRTSForPacket (Packet *packet);
 	void sendDataPacket (Packet *packet);
-	void sendPacket (void);
+	void sendCurrentTxPacket (void);
 	void startTransmission (void);
 	void dealWithInputQueue (void);
 
