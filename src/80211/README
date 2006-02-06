@@ -128,62 +128,53 @@ The MAC architecture is a bit complicated because we want to support
 both the normal 802.11 protocol and the 802.11e extensions in the same
 codebase.
 
+For a normal 802.11 network, the MAC will look like this:
+_____________________________________________________
+|                  MacHigh                          |
+-----------------------------------------------------
+        |                                    +
+        |                                    |
+        +                                    |
+__________________                           |
+| MacQueue80211e |   +---\                   |
+------------------      -------              |
+        |               |     |       _______________
+        |               | Dcf |       | MacRxMiddle |
+	+               |     |       ---------------
+__________________      -------              +
+|    DcaTxop     |   +---/                   |
+------------------                           |
+        |                                    |
+        |                                    |
+        +                                    |
+_____________________________________________________
+|                     MacLow                        |
+-----------------------------------------------------
 
+The MacHigh handles all of the functions related to Management
+frames. Namely, in am IBSS network, we have a STA-specific MacHigh 
+and an AP-specific MacHigh. The STA-specific MacHigh associates
+with the AP and synchronizes with the beacons. The AP-specific
+MacHigh generates the beacons and handles associated STAs (for
+example, by forwarding packets from STA to STA).
 
-The MAC is split is many pieces:
-  - Mac80211 is the object which encapsulates the whole MAC stack
-    for the rest of ns-2.
-  - MacLow80211 is the object which implements the low-level parts
-    of the ieee 802.11 MAC protocol. Specifically, it handles 
-    RTS/RTS handshakes, and DATA/ACK handshakes with proper timing.
+A 802.11e AP MacHigh contains the 802.11e scheduler.
 
-4.1) MacLow80211.
------------------
+The MacLow handles the low-level transmission functions. 
+Specifically, it generates the RTS/CTS and ACK frames, the proper
+SIFS timing for bursting/fragments.
 
-This code deals with the following external events:
-  - reception of packet from PHY: occurs when the last bit of a packet
-    has been received by the PHY. The PHY reports the reception status
-    of the packet.
-  - reception of packet from Mac: occurs when the higher-level protocol
-    layers push a packet to the MacLow for transmission on the wireless 
-    medium.
-This object also generates internaly quite a few events:
-  - "ACK timeout": when a data transmission which requires an ACK has been
-    initiated, and no ACK packet has been received during ACKTimeout 
-    after the end of transmission. This event occurs at the expected end 
-    of the backoff which must be started after the ACK Timeout.
-  - "CTS timeout": when a RTS has been sent and no CTS has been received
-    during CTSTimeout after the end of transmission of the RTS. This 
-    event occurs at the expected end of the backoff which must be started 
-    after the CTS Timeout.
-  - "send data after CTS": a CTS has been received after a RTS. This
-    event happens after SIFS after the end of reception of the CTS.
-  - "send CTS after RTS": a RTS has been received. This event happens
-    after SIFS after the end of reception of the RTS.
-  - "send ACK after data": a DATA packet which requires an ACK has
-    been received. This event happens after SIFS after the end of 
-    reception of the DATA.
-  - "end of access backoff": this event happens at the expected end of
-    the backoff started to access the medium to start a fresh 
-    transmission.
-Three of these events deal with "end of backoff events":
-  - "ACK timeout"
-  - "CTS timeout"
-  - "end of access backoff"
-The really tricky bit of code which is present in this MAC is related to
-the way these events are dealt with. Specifically, because the MAC
-cannot continuously update its state (because of the lack of "end of 
-transmission" events most notably), it needs to:
-  - re-calculate its past state from the "state history" recorded
-    by the PHY since the start of the backoff
-  - evaluate whether or not the backoff is really completed based on 
-    the "state history".
-  - if the backoff is not really completed, restart the timer to
-    trigger at the newly expected end of backoff.
-This idea is described in a paper published at mswim'04: "scalable
-simulation of large-scale wireless networks with bounded inaccuracies"
-by Whengrong Ji, Junlan Zhou,Mineo Takai and Rajive Bagrodia.
+The DcaTxop handles retransmissions, fragmentation, and bursting
+(i.e., OAR). It is notified by the Dcf whenever access to the
+medium has been granted. The Dcf implements the Distributed
+Coordination Function: it performs backoff whenever needed
+and keeps accurately track of the access time.
 
-The code which calculates the backoff duration is located in the Backoff
-class.
+The MacRxMiddle performs defragmentation and duplicate elimination.
+
+Every module presented here works without using end-of-tx events 
+when possible (specifically, the Dcf module). This idea is described 
+in a paper published at mswim'04: "scalable simulation of large-scale 
+wireless networks with bounded inaccuracies" by Whengrong Ji, 
+Junlan Zhou,Mineo Takai and Rajive Bagrodia.
 
