@@ -1,87 +1,5 @@
-#
-#
-# Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr> 
-#         for the Planete project (http://www-sop.inria.fr/planete)
-#
+source 80211/utils.tcl
 
-
-# set all nodes in station mode except for
-# the ap which is set to ap mode.
-#   - the first argument must be the address of
-#     the tentative ap.
-#   - the second argument must be the name of
-#     the array which holds all the nodes.
-proc set-bss-mode {ap arrayName} {
-    upvar $arrayName nodes
-    for {set i 0} {$i < [array size nodes]} {incr i} {
-	set node $nodes($i)
-	for {set j 0} {$j < [$node set nifs_]} {incr j} {
-	    set mac [$node set mac_($j)]
-	    if {$i == $ap} {
-		$mac mode access-point
-	    } else {
-		$mac mode station $ap
-	    }
-	}
-    }
-}
-
-# set all nodes in QoS station mode except for
-# the ap which is set to QoS ap mode.
-#   - the first argument must be the address of
-#     the tentative ap.
-#   - the second argument must be the name of
-#     the array which holds all the nodes.
-proc set-qbss-mode {ap arrayName} {
-    upvar $arrayName nodes
-    for {set i 0} {$i < [array size nodes]} {incr i} {
-	set node $nodes($i)
-	for {set j 0} {$j < [$node set nifs_]} {incr j} {
-	    set mac [$node set mac_($j)]
-	    if {$i == $ap} {
-		$mac mode qaccess-point
-	    } else {
-		$mac mode qstation $ap
-	    }
-	}
-    }
-}
-
-
-# set all nodes in adhoc mode.
-#   - the first and only argument must be 
-#     the name of the array which holds
-#     all the nodes.
-proc set-adhoc-mode {arrayName} {
-    upvar $arrayName nodes
-    for {set i 0} {$i < [array size nodes]} {incr i} {
-	set node $nodes($i)
-	for {set j 0} {$j < [$node set nifs_]} {incr j} {
-	    set mac [$node set mac_($j)]
-	    $mac mode adhoc
-	}
-    }
-}
-
-proc addts-request {node tspec granted_callback refused_callback} {
-    for {set j 0} {$j < [$node set nifs_]} {incr j} {
-	set mac [$node set mac_($j)]
-	$mac addts-request $tspec $granted_callback $refused_callback
-    }    
-}
-
-
-#################################################################
-#################################################################
-
-
-#################################################################
-# Multicast simulation.
-# No way this is ever going to work.
-#set ns [new Simulator -multicast on]
-#set group [Node allocaddr]
-#set mproto DM          
-#set mrthandle [$ns mrtproto $mproto] 
 
 #################################################################
 # Normal Unicast simulation.
@@ -175,14 +93,13 @@ proc addts-granted-callback0 {tspec tsid} {
 
     $ns connect $udp0 $null0
     $ns at 3.0 "$cbr0 start"
-#    $ns at 3.0 "$cbr0 stop"
 
     puts "tspec granted for tsid $tsid";
 }
 proc addts-refused-callback0 {tspec tsid} {
     puts "tspec refused for tsid $tsid";
 }
-#addts-request $nodes(0) $tspec addts-granted-callback0 addts-refused-callback0
+addts-request $nodes(0) $tspec addts-granted-callback0 addts-refused-callback0
 
 
 set tspec [new TSPEC]
@@ -212,57 +129,15 @@ proc addts-granted-callback1 {tspec tsid} {
 
     $ns connect $udp1 $null1
     $ns at 3.0 "$cbr1 start"
-#    $ns at 3.0 "$cbr0 stop"
 
     puts "tspec granted for tsid $tsid";
 }
 proc addts-refused-callback1 {tspec tsid} {
     puts "tspec refused for tsid $tsid";
 }
-#addts-request $nodes(1) $tspec addts-granted-callback1 addts-refused-callback1
+addts-request $nodes(1) $tspec addts-granted-callback1 addts-refused-callback1
 #########################################################
 
-
-
-#########################################################
-#    Multicast testing.
-#    No way this is ever going to work.
-# setup udp multicast receivers.
-#set rcvr1 [new Agent/LossMonitor]
-#set rcvr2 [new Agent/LossMonitor]
-#$ns at 1.0 "$nodes(1) join-group $rcvr1 $group" 
-#$ns at 1.0 "$nodes(2) join-group $rcvr2 $group" 
-
-
-# setup udp multicast source.
-#set n0 $nodes(0)
-#set udp [new Agent/UDP]    
-#$ns attach-agent $n0 $udp 
-#set src [new Application/Traffic/CBR]        
-#$src attach-agent $udp
-#$udp set dst_addr_ $group
-#$udp set dst_port_ 0
-#$ns at 3.0 "$src start"
-#
-#########################################################
-
-
-#########################################################
-#   Normal tcp testing for 802.11
-# setup tcp receiver
-set sink [new Agent/TCPSink]
-$ns attach-agent $nodes(1) $sink
-# setup tcp source.
-set tcp [new Agent/TCP]
-$tcp set class_ 2
-$ns attach-agent $nodes(0) $tcp
-set ftp [new Application/FTP]
-$ftp attach-agent $tcp
-# connect tcp source to receiver
-$ns connect $tcp $sink
-# start source.
-$ns at 3.0 "$ftp start" 
-#########################################################
 
 $ns at 300 "puts \"End of simulation.\"; $ns halt"
 puts "Starting Simulation..."
