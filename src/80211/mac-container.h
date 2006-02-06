@@ -27,6 +27,7 @@ class MacStations;
 class MacParameters;
 class MacLow;
 class MacRxMiddle;
+class MacTxMiddle;
 class MacHigh;
 class Phy80211;
 class Mac80211;
@@ -40,6 +41,7 @@ class MacContainer
 	MacParameters *parameters (void);
 	MacLow *macLow (void);
 	MacRxMiddle *macRxMiddle (void);
+	MacTxMiddle *macTxMiddle (void);
 	MacHigh *macHigh (void);
 	Phy80211 *phy (void);
 	MacStations *stations (void);
@@ -56,12 +58,14 @@ class MacContainer
 	void setParameters (MacParameters *parameters);
 	void setMacLow (MacLow *low);
 	void setMacRxMiddle (MacRxMiddle *middle);
+	void setMacTxMiddle (MacTxMiddle *middle);
 	void setMacHigh (MacHigh *high);
  private:
 	Mac80211 *nsMac (void);
 	MacParameters *m_parameters;
 	MacLow *m_low;
 	MacRxMiddle *m_middle;
+	MacTxMiddle *m_txMiddle;
 	MacHigh *m_high;
 	Phy80211 *m_phy;
 	Mac80211 *m_nsMac;

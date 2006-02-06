@@ -43,6 +43,11 @@ MacContainer::macRxMiddle (void)
 {
 	return m_middle;
 }
+MacTxMiddle *
+MacContainer::macTxMiddle (void)
+{
+	return m_txMiddle;
+}
 MacHigh *
 MacContainer::macHigh (void)
 {
@@ -103,6 +108,11 @@ void
 MacContainer::setMacRxMiddle (MacRxMiddle *middle)
 {
 	m_middle = middle;
+}
+void 
+MacContainer::setMacTxMiddle (MacTxMiddle *middle)
+{
+	m_txMiddle = middle;
 }
 void 
 MacContainer::setMacHigh (MacHigh *high)

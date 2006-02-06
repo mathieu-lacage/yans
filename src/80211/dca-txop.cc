@@ -33,6 +33,7 @@
 #include "mac-high.h"
 #include "mac-container.h"
 #include "mac-traces.h"
+#include "mac-tx-middle.h"
 
 
 #define nopeDCA_TXOP_TRACE 1
@@ -104,8 +105,7 @@ DcaTxop::DcaTxop (Dcf *dcf, MacQueue80211e *queue, MacContainer *container)
 	  m_container (container),
 	  m_currentTxPacket (0),
 	  m_SSRC (0),
-	  m_SLRC (0),
-	  m_sequence (0)
+	  m_SLRC (0)
 {
 	m_dcf->registerAccessListener (new MyAccessListener (this));
 	m_transmissionListener = new MyTransmissionListener (this);
@@ -247,9 +247,8 @@ DcaTxop::accessGrantedNow (void)
 		m_currentTxPacket = m_queue->dequeue ();
 		initialize (m_currentTxPacket);
 		assert (m_currentTxPacket != 0);
-		m_sequence++;
-		m_sequence %= 4096;
-		setSequenceNumber (m_currentTxPacket, m_sequence);
+		uint16_t sequence = m_container->macTxMiddle ()->getNextSequenceNumberFor (m_currentTxPacket);
+		setSequenceNumber (m_currentTxPacket, sequence);
 		m_SSRC = 0;
 		m_SLRC = 0;
 		m_fragmentNumber = 0;

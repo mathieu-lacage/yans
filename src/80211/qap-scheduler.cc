@@ -63,6 +63,7 @@
 #include "mac-low.h"
 #include "tspec.h"
 #include "dcf.h"
+#include "mac-tx-middle.h"
 
 
 #ifndef QAP_SCHEDULER_TRACE
@@ -462,10 +463,9 @@ QapScheduler::doCurrentTxop (void)
 	setType (packet, MAC_80211_MGT_CFPOLL);
 	setNoAck (packet);
 	setAC (packet, AC_SPECIAL);
-	setSequenceNumber (packet, m_sequence);
 	setFragmentNumber (packet, 0);
-	m_sequence++;
-	m_sequence %= 4096;
+	uint16_t sequence = m_container->macTxMiddle ()->getNextSequenceNumberFor (packet);
+	setSequenceNumber (packet, sequence);
 	low ()->disableACK ();
 	low ()->disableRTS ();
 	low ()->enableOverrideDurationId (txopDuration);
@@ -586,10 +586,9 @@ QapScheduler::beaconTimer (MacCancelableEvent *event)
 	setType (packet, MAC_80211_MGT_BEACON);
 	storeEdcaParametersInPacket (packet);
 	setAC (packet, AC_SPECIAL);
-	setSequenceNumber (packet, m_sequence);
 	setFragmentNumber (packet, 0);
-	m_sequence++;
-	m_sequence %= 4096;
+	uint16_t sequence = m_container->macTxMiddle ()->getNextSequenceNumberFor (packet);
+	setSequenceNumber (packet, sequence);
 	low ()->disableACK ();
 	low ()->disableRTS ();
 	low ()->disableOverrideDurationId ();

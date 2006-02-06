@@ -50,7 +50,7 @@ private:
 	void forwardToHigh (Packet *packet);
 	bool sequenceControlSmaller (int seqa, int seqb);
 
-
+	
 
 	std::map <int, OriginatorRxStatus *, std::less<int> > m_originatorStatus;
 	std::map <std::pair<int,int>, OriginatorRxStatus *, std::less<std::pair<int,int> > > m_qosOriginatorStatus;

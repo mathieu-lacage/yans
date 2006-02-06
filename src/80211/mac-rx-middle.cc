@@ -166,9 +166,17 @@ OriginatorRxStatus *
 MacRxMiddle::lookup (Packet *packet)
 {
 	OriginatorRxStatus *originator;
-	if (isQos (packet)) {
+	if (isQos (packet) &&
+            isData (packet) &&
+            getDestination (packet) != ((int)MAC_BROADCAST)) {
+                /* only for qos data broadcast frames */
 		originator = lookupQos (getSource (packet), getTID (packet));
 	} else {
+                /* - management frames
+                 * - qos data broadcast frames
+                 * - nqos data frames
+                 * see section 7.1.3.4.1
+                 */
 		originator = lookupNqos (getSource (packet));
 	}
 	return originator;

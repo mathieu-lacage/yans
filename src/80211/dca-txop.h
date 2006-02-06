@@ -71,13 +71,11 @@ private:
 	Dcf *m_dcf;
 	MacQueue80211e *m_queue;
 	MacContainer *m_container;
-
 	Packet *m_currentTxPacket;
 	MacLowTransmissionListener *m_transmissionListener;
 	int m_SSRC;
 	int m_SLRC;
 	int m_fragmentNumber;
-	uint16_t m_sequence;
 };
 
 

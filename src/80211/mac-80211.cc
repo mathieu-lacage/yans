@@ -29,6 +29,7 @@
 #include "hdr-mac-80211.h"
 #include "mac-low.h"
 #include "mac-rx-middle.h"
+#include "mac-tx-middle.h"
 #include "mac-parameters.h"
 #include "arf-mac-stations.h"
 #include "aarf-mac-stations.h"
@@ -111,6 +112,8 @@ Mac80211::startContainer (void)
 	m_container->setMacLow (low);
 	MacRxMiddle *middle = new MacRxMiddle (m_container);
 	m_container->setMacRxMiddle (middle);
+	MacTxMiddle *txMiddle = new MacTxMiddle ();
+	m_container->setMacTxMiddle (txMiddle);
 }
 
 
