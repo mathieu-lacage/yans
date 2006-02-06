@@ -37,7 +37,6 @@ hdr_mac_80211::initialize (void)
 	m_moreFragments = 0;
 	m_sequenceControl = 0;
 	m_ackMode = ACK_NORMAL;
-	m_qos = 0;
 }
 
 
@@ -530,6 +529,27 @@ getTypeString (Packet *packet)
 	return HDR_MAC_80211 (packet)->getTypeString ();
 }
 
+char const *
+getAcString (Packet *packet)
+{
+	char *str;
+       	switch (getAC (packet)) {
+	case AC_BK:
+		str = "AC_BK";
+		break;
+	case AC_BE:
+		str = "AC_BE";
+		break;
+	case AC_VI:
+		str = "AC_VI";
+		break;
+	case AC_VO:
+		str = "AC_VO";
+		break;
+	}
+	return str;
+}
+
 
 enum ac_e 
 getAC (Packet *packet)
@@ -553,4 +573,24 @@ getAC (Packet *packet)
 		assert (false);
 		return AC_BK;
 	}
+}
+void 
+setAC (Packet *packet, enum ac_e ac)
+{
+	uint8_t tid;
+       	switch (ac) {
+	case AC_BK:
+		tid = 1;
+		break;
+	case AC_BE:
+		tid = 0;
+		break;
+	case AC_VI:
+		tid = 4;
+		break;
+	case AC_VO:
+		tid = 6;
+		break;
+	}
+	setTID (packet, tid);
 }

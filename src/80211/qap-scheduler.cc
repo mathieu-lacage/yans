@@ -127,11 +127,13 @@ private:
 
 
 QapScheduler::QapScheduler (MacContainer *container)
+	: m_container (container)
 {
 	m_busyListener = new MyMacLowBusyMonitoringListener (this);
 	m_beaconTxListener = new MyMacLowTransmissionListener (this);
 	m_access = new DynamicHandler<QapScheduler> (this, &QapScheduler::accessTimer);
 	m_beacon = new DynamicHandler<QapScheduler> (this, &QapScheduler::beaconTimer);
+	m_beacon->start (parameters ()->getBeaconInterval ());
 }
 
 Packet *
@@ -371,6 +373,7 @@ QapScheduler::doCurrentTxop (void)
 	Packet *packet = getPacketFor (destination);
 	setSize (packet, getPacketSize (MAC_80211_MGT_CFPOLL));
 	setType (packet, MAC_80211_MGT_CFPOLL);
+	setAC (packet, AC_BE);
 	low ()->disableACK ();
 	low ()->disableRTS ();
 	low ()->enableOverrideDurationId (txopDuration);
@@ -482,6 +485,7 @@ QapScheduler::beaconTimer (MacCancelableEvent *event)
 	Packet *packet = getPacketFor (MAC_BROADCAST);
 	setSize (packet, getPacketSize (MAC_80211_MGT_BEACON));
 	setType (packet, MAC_80211_MGT_BEACON);
+	setAC (packet, AC_BE);
 	low ()->disableACK ();
 	low ()->disableRTS ();
 	low ()->disableOverrideDurationId ();

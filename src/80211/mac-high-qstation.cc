@@ -114,6 +114,10 @@ MacHighQStation::updateEDCAParameters (unsigned char const *buffer)
 void
 MacHighQStation::queueAC (enum ac_e ac, Packet *packet)
 {
+	TRACE ("queue seq 0x%x to %d (ac=%s)", 
+	       getSequenceControl (packet), 
+	       getDestination (packet),
+	       getAcString (packet));
 	m_dcfQueues[ac]->enqueue (packet);
 	m_dcfs[ac]->requestAccess ();
 }
@@ -121,13 +125,14 @@ MacHighQStation::queueAC (enum ac_e ac, Packet *packet)
 void 
 MacHighQStation::delTsRequest (TSpecRequest *request)
 {
-	Packet *addts = getPacketFor (getApAddress ());
-	setType (addts, MAC_80211_MGT_ADDTS_REQUEST);
-	addts->allocdata (sizeof (request));
-	unsigned char *buffer = addts->accessdata ();
+	Packet *delts = getPacketFor (getApAddress ());
+	setType (delts, MAC_80211_MGT_DELTS_REQUEST);
+	delts->allocdata (sizeof (request));
+	unsigned char *buffer = delts->accessdata ();
 	*((TSpecRequest **)buffer) = request;
 	// XXX for now, send through AC_BE queue.
-	queueAC (AC_BE, addts);
+	setAC (delts, AC_BE);
+	queueAC (AC_BE, delts);
 }
 void 
 MacHighQStation::addTsRequest (TSpecRequest *request)
@@ -138,6 +143,7 @@ MacHighQStation::addTsRequest (TSpecRequest *request)
 	unsigned char *buffer = addts->accessdata ();
 	*((TSpecRequest **)buffer) = request;
 	// XXX for now, send through AC_BE queue.
+	setAC (addts, AC_BE);
 	queueAC (AC_BE, addts);
 }
 
@@ -177,8 +183,10 @@ MacHighQStation::enqueueToLow (Packet *packet)
 		 * AC_VO. see 9.1.3.1 802.11e/D12.1
 		 */
 		if (isManagement (packet)) {
+			setAC (packet, AC_VO);
 			queueAC (AC_VO, packet);
 		} else {
+			setAC (packet, AC_BE);
 			queueAC (AC_BE, packet);
 		}
 		return;

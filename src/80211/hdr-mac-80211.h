@@ -230,6 +230,8 @@ enum ac_e {
 	AC_VO = 0x3
 };
 char const *getTypeString (Packet *packet);
+char const *getAcString (Packet *packet);
+void setAC (Packet *packet, enum ac_e ac);
 enum ac_e getAC (Packet *packet);
 
 #endif /* HDRMAC_80211 */

@@ -198,6 +198,7 @@ MacHighQap::sendAssociationResponseOk (int destination)
 	setSize (packet, parameters ()->getPacketSize (MAC_80211_MGT_ASSOCIATION_RESPONSE));
 	setType (packet, MAC_80211_MGT_ASSOCIATION_RESPONSE);
 	addEDCAparameters (packet);
+	setAC (packet, AC_VO);
 	queueAC (AC_VO, packet);
 }
 
@@ -208,6 +209,7 @@ MacHighQap::sendReAssociationResponseOk (int destination)
 	setSize (packet, parameters ()->getPacketSize (MAC_80211_MGT_REASSOCIATION_RESPONSE));
 	setType (packet, MAC_80211_MGT_REASSOCIATION_RESPONSE);
 	addEDCAparameters (packet);
+	setAC (packet, AC_VO);
 	queueAC (AC_VO, packet);
 }
 
@@ -217,6 +219,7 @@ MacHighQap::sendProbeResponse (int destination)
 	Packet *packet = getPacketFor (destination);
 	setSize (packet, parameters ()->getPacketSize (MAC_80211_MGT_PROBE_RESPONSE));
 	setType (packet, MAC_80211_MGT_PROBE_RESPONSE);
+	setAC (packet, AC_VO);
 	queueAC (AC_VO, packet);
 }
 
@@ -233,6 +236,7 @@ MacHighQap::queueTsResponse (int destination, TSpecRequest *request,
 	*((enum mac_80211_request_status *)buffer) = status;
 	buffer += sizeof (status);
 	*((TSpecRequest **)buffer) = request;
+	setAC (packet, AC_VO);
 	queueAC (AC_VO, packet);
 }
 
@@ -349,8 +353,10 @@ MacHighQap::enqueueToLow (Packet *packet)
 		 * AC_VO. see 9.1.3.1 802.11e/D12.1
 		 */
 		if (isManagement (packet)) {
+			setAC (packet, AC_VO);
 			queueAC (AC_VO, packet);
 		} else {
+			setAC (packet, AC_BE);
 			queueAC (AC_BE, packet);
 		}
 		return;
