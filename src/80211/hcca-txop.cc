@@ -293,7 +293,8 @@ HccaTxop::txCurrent (void)
 		low ()->enableNextData (getSize (nextPacket), txMode);
 		TRACE ("send to %d burst next", getDestination (m_currentTxPacket));
 	} else {
-		low ()->disableNextData ();
+		// reserve the qosnull for next packet
+		low ()->enableNextData (parameters ()->getPacketSize (MAC_80211_MGT_QOSNULL), txMode);
 		TRACE ("send last to %d", getDestination (m_currentTxPacket));
 	}
 	low ()->disableRTS ();
