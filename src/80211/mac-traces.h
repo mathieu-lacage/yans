@@ -31,12 +31,14 @@
 #define noQAP_TRACE
 
 /* */
-#define MAC_LOW_TRACE
+#define noMAC_LOW_TRACE
 #define noDCF_TRACE
 #define noDCA_TXOP_TRACE
 #define noMAC_MIDDLE_TRACE
 #define noHCCA_TXOP_TRACE
 
 #define noQAP_SCHEDULER_TRACE
+
+#define noPHY_SNRT_TRACE
 
 #endif /* MAC_TRACES_H */
