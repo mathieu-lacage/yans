@@ -4,33 +4,6 @@
 #         for the Planete project (http://www-sop.inria.fr/planete)
 #
 
-set ns [new Simulator]
-$ns use-scheduler Heap
-
-$ns node-config \
-    -adhocRouting DumbAgent \
-    -llType LL \
-    -macType Mac/Mac80211 \
-    -ifqType Queue/DropTail \
-    -ifqLen 50 \
-    -antType  Antenna/OmniAntenna \
-    -propType Propagation/TwoRayGround \
-    -phyType Phy/Phy80211 \
-    -channel [new Channel/Channel80211] \
-    -topoInstance [new Topography] \
-    -agentTrace OFF \
-    -routerTrace OFF \
-    -macTrace OFF \
-    -movementTrace OFF 
-
-create-god 2
-
-$ns trace-all [open test.tr w]
-
-set nodes(0) [$ns node]
-set nodes(1) [$ns node]
-set nodes(2) [$ns node]
-set nodes(3) [$ns node]
 
 # set all nodes in station mode except for
 # the ap which is set to ap mode.
@@ -68,25 +41,53 @@ proc set-adhoc-mode {arrayName} {
     }
 }
 
-#set-bss-mode 1 nodes
 
-set-adhoc-mode nodes
+#################################################################
+#################################################################
+
+set ns [new Simulator]
+$ns use-scheduler Heap
+
+$ns node-config \
+    -adhocRouting DumbAgent \
+    -llType LL \
+    -macType Mac/Mac80211 \
+    -ifqType Queue/DropTail \
+    -ifqLen 50 \
+    -antType  Antenna/OmniAntenna \
+    -propType Propagation/TwoRayGround \
+    -phyType Phy/Phy80211 \
+    -channel [new Channel/Channel80211] \
+    -topoInstance [new Topography] \
+    -agentTrace OFF \
+    -routerTrace OFF \
+    -macTrace OFF \
+    -movementTrace OFF 
+
+create-god 2
+
+$ns trace-all [open test.tr w]
+
+set nodes(0) [$ns node]
+set nodes(1) [$ns node]
+set nodes(2) [$ns node]
+
+set-bss-mode 2 nodes
+
+#set-adhoc-mode nodes
 
 $nodes(0) set X_ 0.0
 $nodes(0) set Y_ 0.0
 $nodes(0) set Z_ 0.0
 
-$nodes(1) set X_ 300.0
+$nodes(1) set X_ 200.0
 $nodes(1) set Y_ 0.0
 $nodes(1) set Z_ 0.0
 
 $nodes(2) set X_ 0.0
-$nodes(2) set Y_ 300.0
+$nodes(2) set Y_ 200.0
 $nodes(2) set Z_ 0.0
 
-$nodes(3) set X_ 300.0
-$nodes(3) set Y_ 300.0
-$nodes(3) set Z_ 0.0
 
 
 

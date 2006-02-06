@@ -35,8 +35,8 @@
 #include <iostream>
 
 #define nopeMAC_DEBUG 1
-#define MAC_TRACE 1
-#define MAC_TRACE_VERBOSE 1
+#define nopeMAC_TRACE 1
+#define nopeMAC_TRACE_VERBOSE 1
 
 #ifdef MAC_DEBUG
 # define DEBUG(format, ...) \
@@ -177,6 +177,7 @@ MacLow::peekPhy (void)
 void
 MacLow::forwardDown (Packet *packet)
 {
+	HDR_CMN (packet)->direction () = hdr_cmn::DOWN;
 	m_mac->downtarget ()->recv (packet, (Handler *)0);
 }
 

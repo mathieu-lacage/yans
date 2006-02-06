@@ -23,7 +23,7 @@
 #include "phy-80211.h"
 #include "mac-80211.h"
 
-#define MAC_DEBUG 1
+#define nopeMAC_DEBUG 1
 
 #ifdef MAC_DEBUG
 # define DEBUG(format, ...) \
