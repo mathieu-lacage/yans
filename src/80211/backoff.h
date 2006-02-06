@@ -24,12 +24,12 @@
 
 #include "phy-80211.h"
 
-class MacLow80211;
+class MacLow;
 
 class Backoff : public Phy80211Listener
 {
  public:
-	Backoff (MacLow80211 *mac);
+	Backoff (MacLow *mac);
 	~Backoff ();
 	void start (double backoffStart, double backoffDuration);
 	void cancel (void);
@@ -62,7 +62,7 @@ private:
 	double getEIFS (void) const;
 	double getAccessAllowedStart (void) const;
 
-	MacLow80211 *m_mac;
+	MacLow *m_mac;
 	double m_backoffStart;
 	double m_backoffLeft;
 	double m_lastNavStart;

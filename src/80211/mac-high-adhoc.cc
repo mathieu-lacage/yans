@@ -25,7 +25,7 @@
 MacHighAdhoc::MacHighAdhoc (Mac80211 *mac, Phy80211 *phy)
 	: MacHigh (mac, phy)
 {
-	m_low = new MacLow80211 (mac, this, phy);
+	m_low = new MacLow (mac, this, phy);
 }
 MacHighAdhoc::~MacHighAdhoc ()
 {}

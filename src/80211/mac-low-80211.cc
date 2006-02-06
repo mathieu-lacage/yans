@@ -119,18 +119,18 @@ private:
 };
 
 
-MacLow80211::MacLow80211 (Mac80211 *mac, MacHigh *high, Phy80211 *phy)
+MacLow::MacLow (Mac80211 *mac, MacHigh *high, Phy80211 *phy)
 	: m_currentTxPacket (0),
 	  m_mac (mac),
 	  m_high (high),
 	  m_phy (phy),
 	  m_queue (new MacQueue80211e (10.0 /* XXX */)),
-	  m_ACKTimeoutBackoffHandler (new DynamicMacHandler (this, &MacLow80211::ACKTimeout)),
-	  m_CTSTimeoutBackoffHandler (new DynamicMacHandler (this, &MacLow80211::CTSTimeout)),
-	  m_accessBackoffHandler (new StaticHandler<MacLow80211> (this, &MacLow80211::initialBackoffTimeout)),
-	  m_sendCTSHandler (new DynamicMacHandler (this, &MacLow80211::sendCTS_AfterRTS)),
-	  m_sendACKHandler (new DynamicMacHandler (this, &MacLow80211::sendACK_AfterData)),
-	  m_sendDataHandler (new DynamicMacHandler (this, &MacLow80211::sendDataAfterCTS)),
+	  m_ACKTimeoutBackoffHandler (new DynamicMacHandler (this, &MacLow::ACKTimeout)),
+	  m_CTSTimeoutBackoffHandler (new DynamicMacHandler (this, &MacLow::CTSTimeout)),
+	  m_accessBackoffHandler (new StaticHandler<MacLow> (this, &MacLow::initialBackoffTimeout)),
+	  m_sendCTSHandler (new DynamicMacHandler (this, &MacLow::sendCTS_AfterRTS)),
+	  m_sendACKHandler (new DynamicMacHandler (this, &MacLow::sendACK_AfterData)),
+	  m_sendDataHandler (new DynamicMacHandler (this, &MacLow::sendDataAfterCTS)),
 	  m_backoff (new Backoff (this)),
 	  m_random (new RngUniform ())
 {
@@ -149,7 +149,7 @@ MacLow80211::MacLow80211 (Mac80211 *mac, MacHigh *high, Phy80211 *phy)
 	DEBUG ("CWmax %d", getCWmax ());
 }
 
-MacLow80211::~MacLow80211 ()
+MacLow::~MacLow ()
 {
 	delete m_queue;
 	delete m_ACKTimeoutBackoffHandler;
@@ -166,60 +166,60 @@ MacLow80211::~MacLow80211 ()
  ****************************************************/
 
 MacStation *
-MacLow80211::lookupStation (int address)
+MacLow::lookupStation (int address)
 {
 	return m_high->lookupStation (address);
 }
 Phy80211 *
-MacLow80211::peekPhy (void)
+MacLow::peekPhy (void)
 {
 	return m_phy;
 }
 void
-MacLow80211::forwardDown (Packet *packet)
+MacLow::forwardDown (Packet *packet)
 {
 	m_mac->downtarget ()->recv (packet, (Handler *)0);
 }
 
 int
-MacLow80211::getACKSize (void) const
+MacLow::getACKSize (void) const
 {
 	return 2+2+6+4;
 }
 int
-MacLow80211::getRTSSize (void) const
+MacLow::getRTSSize (void) const
 {
 	return 2+2+6+6+4;
 }
 int
-MacLow80211::getCTSSize (void) const
+MacLow::getCTSSize (void) const
 {
 	return 2+2+6+4;
 }
 int 
-MacLow80211::getSelf (void)
+MacLow::getSelf (void)
 {
 	return m_mac->addr ();
 }
 int
-MacLow80211::getDataHeaderSize (void)
+MacLow::getDataHeaderSize (void)
 {
 	return 3*2+4*6+4;
 }
 double 
-MacLow80211::getSIFS (void)
+MacLow::getSIFS (void)
 {
 	/* XXX 802.11a */
 	return 16e-6;
 }
 double 
-MacLow80211::getSlotTime (void)
+MacLow::getSlotTime (void)
 {
 	/* XXX 802.11a */
 	return 9e-6;
 }
 double 
-MacLow80211::getEIFS (void)
+MacLow::getEIFS (void)
 {
 	/* 802.11 section 9.2.10 */
 	// XXX check with regard to 802.11a
@@ -228,67 +228,67 @@ MacLow80211::getEIFS (void)
 		getDIFS ();
 }
 double 
-MacLow80211::getDIFS (void)
+MacLow::getDIFS (void)
 {
 	/* 802.11 section 9.2.10 */
 	return getSIFS () + 2 * getSlotTime ();
 }
 int
-MacLow80211::getCWmin (void)
+MacLow::getCWmin (void)
 {
 	/* XXX 802.11a */
 	return 15;
 }
 int
-MacLow80211::getCWmax (void)
+MacLow::getCWmax (void)
 {
 	/* XXX 802.11a */
 	return 1023;
 }
 int 
-MacLow80211::getMaxSSRC (void)
+MacLow::getMaxSSRC (void)
 {
 	/* XXX */
 	return 7;
 }
 
 int 
-MacLow80211::getMaxSLRC (void)
+MacLow::getMaxSLRC (void)
 {
 	/* XXX */
 	return 7;
 }
 int 
-MacLow80211::getRTSCTSThreshold (void)
+MacLow::getRTSCTSThreshold (void)
 {
 	/* XXX */
 	return 0;
 }
 double
-MacLow80211::getCTSTimeoutDuration (void)
+MacLow::getCTSTimeoutDuration (void)
 {
 	/* XXX */
 	return getSIFS () + peekPhy ()->calculateTxDuration (0, getCTSSize ());;
 }
 double
-MacLow80211::getACKTimeoutDuration (void)
+MacLow::getACKTimeoutDuration (void)
 {
 	/* XXX */
 	return getSIFS () + peekPhy ()->calculateTxDuration (0, getACKSize ());
 }
 double 
-MacLow80211::getLastSNR (void)
+MacLow::getLastSNR (void)
 {
 	return peekPhy ()->getLastRxSNR ();
 }
 double 
-MacLow80211::getLastStartRx (void)
+MacLow::getLastStartRx (void)
 {
 	return peekPhy ()->getLastRxStartTime ();
 }
 
 double
-MacLow80211::calculateTxDuration (int mode, int size)
+MacLow::calculateTxDuration (int mode, int size)
 {
 	double duration = peekPhy ()->calculateTxDuration (mode, size);
 	return duration;
@@ -299,7 +299,7 @@ MacLow80211::calculateTxDuration (int mode, int size)
  ***************************************************/
 
 double
-MacLow80211::now (void)
+MacLow::now (void)
 {
 	double now;
 	now = Scheduler::instance ().clock ();
@@ -307,7 +307,7 @@ MacLow80211::now (void)
 }
 
 Packet *
-MacLow80211::getRTSPacket (void)
+MacLow::getRTSPacket (void)
 {
 	Packet *packet = Packet::alloc ();
 	setSize (packet, getRTSSize ());
@@ -316,7 +316,7 @@ MacLow80211::getRTSPacket (void)
 	return packet;
 }
 Packet *
-MacLow80211::getCTSPacket (void)
+MacLow::getCTSPacket (void)
 {
 	Packet *packet = Packet::alloc ();
 	setSize (packet, getCTSSize ());
@@ -325,7 +325,7 @@ MacLow80211::getCTSPacket (void)
 	return packet;
 }
 Packet *
-MacLow80211::getACKPacket (void)
+MacLow::getACKPacket (void)
 {
 	Packet *packet = Packet::alloc ();
 	setSize (packet, getACKSize ());
@@ -334,7 +334,7 @@ MacLow80211::getACKPacket (void)
 	return packet;
 }
 Packet *
-MacLow80211::getRTSforPacket (Packet *data)
+MacLow::getRTSforPacket (Packet *data)
 {
 	Packet *packet = getRTSPacket ();
 	setSource (packet, getSelf ());
@@ -354,25 +354,25 @@ MacLow80211::getRTSforPacket (Packet *data)
 }
 
 double
-MacLow80211::pickBackoffDelayInCaseOfFailure (void)
+MacLow::pickBackoffDelayInCaseOfFailure (void)
 {
 	int futureCW = calculateNewFailedCW (m_CW);
 	double delay = floor (m_random->pick () * futureCW) * getSlotTime ();
 	return delay;
 }
 double
-MacLow80211::pickBackoffDelay (void)
+MacLow::pickBackoffDelay (void)
 {
 	double delay = floor (m_random->pick () * m_CW) * getSlotTime ();
 	return delay;
 }
 void
-MacLow80211::resetCW (void)
+MacLow::resetCW (void)
 {
 	m_CW = getCWmin ();
 }
 int
-MacLow80211::calculateNewFailedCW (int CW)
+MacLow::calculateNewFailedCW (int CW)
 {
 	CW *= 2;
 	if (CW > getCWmax ()) {
@@ -381,19 +381,19 @@ MacLow80211::calculateNewFailedCW (int CW)
 	return CW;
 }
 void
-MacLow80211::updateFailedCW (void)
+MacLow::updateFailedCW (void)
 {
 	m_CW = calculateNewFailedCW (m_CW);
 }
 
 void
-MacLow80211::dropPacket (Packet *packet)
+MacLow::dropPacket (Packet *packet)
 {
 	/* XXX: push in drop queue. */
 	Packet::free (packet);
 }
 void
-MacLow80211::dropCurrentTxPacket (void)
+MacLow::dropCurrentTxPacket (void)
 {
 	/* XXX: push in drop queue. */
 	dropPacket (m_currentTxPacket);
@@ -402,7 +402,7 @@ MacLow80211::dropCurrentTxPacket (void)
 
 
 double 
-MacLow80211::max (double a, double b)
+MacLow::max (double a, double b)
 {
 	if (a >= b) {
 		return a;
@@ -413,7 +413,7 @@ MacLow80211::max (double a, double b)
 
 
 double
-MacLow80211::getXIFSLeft (void)
+MacLow::getXIFSLeft (void)
 {
 	double XIFS;
 	if (m_backoff->wasLastRxOk ()) {
@@ -429,7 +429,7 @@ MacLow80211::getXIFSLeft (void)
 }
 
 void
-MacLow80211::increaseSequence (void)
+MacLow::increaseSequence (void)
 {
 	/* see ieee 802.11-1999 7.1.3.4.1 p40 */
 	m_sequence++;
@@ -442,7 +442,7 @@ MacLow80211::increaseSequence (void)
  *******************************************************/
 
 void
-MacLow80211::sendRTSForPacket (Packet *txPacket)
+MacLow::sendRTSForPacket (Packet *txPacket)
 {
 	/* send an RTS for this packet. */
 	Packet *packet = getRTSforPacket (txPacket);
@@ -457,7 +457,7 @@ MacLow80211::sendRTSForPacket (Packet *txPacket)
 	forwardDown (packet);
 }
 void
-MacLow80211::sendDataPacket (Packet *txPacket)
+MacLow::sendDataPacket (Packet *txPacket)
 {
 	/* send this packet directly. No RTS is needed. */
 	setSource (txPacket, getSelf ());
@@ -477,7 +477,7 @@ MacLow80211::sendDataPacket (Packet *txPacket)
 	forwardDown (txPacket);
 }
 void
-MacLow80211::sendCurrentTxPacket (void)
+MacLow::sendCurrentTxPacket (void)
 {
 	if (getSize (m_currentTxPacket) > getRTSCTSThreshold ()) {
 		sendRTSForPacket (m_currentTxPacket);
@@ -486,7 +486,7 @@ MacLow80211::sendCurrentTxPacket (void)
 	}
 }
 void
-MacLow80211::startTransmission (void)
+MacLow::startTransmission (void)
 {
 	/* access backoff completed.
 	 * start a new transmission.
@@ -520,7 +520,7 @@ MacLow80211::startTransmission (void)
 }
 
 void
-MacLow80211::dealWithInputQueue (void)
+MacLow::dealWithInputQueue (void)
 {
 	if (m_queue->isEmpty ()) {
 		TRACE_VERBOSE ("deal -- queue empty");
@@ -615,7 +615,7 @@ MacLow80211::dealWithInputQueue (void)
  *******************************************************/
 
 void 
-MacLow80211::enqueue (class Packet *packet)
+MacLow::enqueue (class Packet *packet)
 {
 	/* A packet is received from the MAC
 	 * and the higher-level layers.
@@ -627,7 +627,7 @@ MacLow80211::enqueue (class Packet *packet)
 	dealWithInputQueue ();
 }
 void
-MacLow80211::flush (void)
+MacLow::flush (void)
 {
 	Packet *packet;
 	packet = m_queue->dequeue ();
@@ -638,7 +638,7 @@ MacLow80211::flush (void)
 
 }
 void 
-MacLow80211::receive (class Packet *packet)
+MacLow::receive (class Packet *packet)
 {
 	/* A packet is received from the PHY.
 	 * When we have handled this packet,
@@ -729,7 +729,7 @@ MacLow80211::receive (class Packet *packet)
 }
 
 void
-MacLow80211::ACKTimeout (class MacCancelableEvent *event)
+MacLow::ACKTimeout (class MacCancelableEvent *event)
 {
 	if (!m_backoff->isCompleted (now ())) {
 		m_ACKTimeoutBackoffHandler->start (new MacCancelableEvent (), 
@@ -767,7 +767,7 @@ MacLow80211::ACKTimeout (class MacCancelableEvent *event)
 }
 
 void
-MacLow80211::CTSTimeout (class MacCancelableEvent *event)
+MacLow::CTSTimeout (class MacCancelableEvent *event)
 {
 	if (!m_backoff->isCompleted (now ())) {
 		m_CTSTimeoutBackoffHandler->start (new MacCancelableEvent (),
@@ -802,7 +802,7 @@ MacLow80211::CTSTimeout (class MacCancelableEvent *event)
 	}
 }
 void 
-MacLow80211::initialBackoffTimeout (void)
+MacLow::initialBackoffTimeout (void)
 {
 	if (m_queue->isEmpty ()) {
 		/* The packet which was queued for transmission
@@ -827,7 +827,7 @@ MacLow80211::initialBackoffTimeout (void)
 }
 
 void
-MacLow80211::sendCTS_AfterRTS (class MacCancelableEvent *macEvent)
+MacLow::sendCTS_AfterRTS (class MacCancelableEvent *macEvent)
 {
 	/* send a CTS when you receive a RTS 
 	 * right after SIFS.
@@ -844,7 +844,7 @@ MacLow80211::sendCTS_AfterRTS (class MacCancelableEvent *macEvent)
 }
 
 void
-MacLow80211::sendACK_AfterData (class MacCancelableEvent *macEvent)
+MacLow::sendACK_AfterData (class MacCancelableEvent *macEvent)
 {
 	/* send an ACK when you receive 
 	 * a packet after SIFS. 
@@ -864,7 +864,7 @@ MacLow80211::sendACK_AfterData (class MacCancelableEvent *macEvent)
 }
 
 void
-MacLow80211::sendDataAfterCTS (class MacCancelableEvent *macEvent)
+MacLow::sendDataAfterCTS (class MacCancelableEvent *macEvent)
 {
 	/* send the third step in a 
 	 * RTS/CTS/DATA/ACK hanshake 

@@ -37,10 +37,10 @@ class MacCancelableEvent;
 class MacHigh;
 class Phy80211;
 
-class MacLow80211 {
+class MacLow {
 public:
-	MacLow80211 (Mac80211 *mac, MacHigh *high, Phy80211 *phy);
-	~MacLow80211 ();
+	MacLow (Mac80211 *mac, MacHigh *high, Phy80211 *phy);
+	~MacLow ();
 
 	void enqueue (Packet *packet);
 	void receive (Packet *packet);
@@ -124,7 +124,7 @@ private:
 	MacQueue80211e *m_queue;
 	DynamicMacHandler *m_ACKTimeoutBackoffHandler;
 	DynamicMacHandler *m_CTSTimeoutBackoffHandler;
-	StaticHandler<MacLow80211> *m_accessBackoffHandler;
+	StaticHandler<MacLow> *m_accessBackoffHandler;
 	DynamicMacHandler *m_sendCTSHandler;
 	DynamicMacHandler *m_sendACKHandler;
 	DynamicMacHandler *m_sendDataHandler;

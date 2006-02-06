@@ -37,7 +37,7 @@
 
 
 
-Backoff::Backoff (MacLow80211 *mac)
+Backoff::Backoff (MacLow *mac)
 	: m_mac (mac),
 	  m_backoffStart (0.0),
 	  m_backoffLeft (0.0),

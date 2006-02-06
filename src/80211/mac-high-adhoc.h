@@ -23,7 +23,7 @@
 
 #include "mac-high.h"
 
-class MacLow80211;
+class MacLow;
 class Mac80211;
 class Phy80211;
 class Packet;
@@ -41,7 +41,7 @@ public:
 	virtual void notifyAckReceivedFor (Packet *packet);
 	virtual void receiveFromMacLow (Packet *packet);
 private:
-	MacLow80211 *m_low;
+	MacLow *m_low;
 };
 
 #endif /* MAC_HIGH_ADHOC_H */

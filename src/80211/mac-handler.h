@@ -39,8 +39,8 @@ private:
 class DynamicMacHandler : public Handler
 {
 public:
-	typedef void (MacLow80211::*DynamicMacRxHandler)(class MacCancelableEvent *event);
-	DynamicMacHandler (class MacLow80211 *mac, DynamicMacRxHandler handler);
+	typedef void (MacLow::*DynamicMacRxHandler)(class MacCancelableEvent *event);
+	DynamicMacHandler (class MacLow *mac, DynamicMacRxHandler handler);
 	virtual ~DynamicMacHandler ();
 	void start (class MacCancelableEvent *e, double delay);
 	bool isRunning (void);
@@ -48,7 +48,7 @@ public:
 	void cancel (void);
 	virtual void handle (Event *e);
 private:
-	MacLow80211 *m_mac;
+	MacLow *m_mac;
 	DynamicMacRxHandler m_handler;
 	MacCancelableEvent *m_event;
 	double m_end;

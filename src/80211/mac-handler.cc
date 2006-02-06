@@ -41,7 +41,7 @@ MacCancelableEvent::getStartTime (void)
 	return m_startTime;
 }
 
-DynamicMacHandler::DynamicMacHandler (class MacLow80211 *mac, DynamicMacRxHandler handler)
+DynamicMacHandler::DynamicMacHandler (class MacLow *mac, DynamicMacRxHandler handler)
 	: m_mac (mac) , m_handler (handler),
 	  m_event (0), m_end (0.0)
 {}
