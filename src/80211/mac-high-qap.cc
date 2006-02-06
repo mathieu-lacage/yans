@@ -309,7 +309,7 @@ void
 MacHighQap::gotAddTsRequest (Packet *packet)
 {
 	/* request send by a STA */
-	TSpecRequest *request = reinterpret_cast<TSpecRequest *> (packet->accessdata ());
+	TSpecRequest *request = *(reinterpret_cast<TSpecRequest **> (packet->accessdata ()));
 	TSpec *tspec = request->getTSpec ();
 	if (m_scheduler->addTsRequest (tspec)) {
 		queueAddTsResponseOk (getSource (packet), request);

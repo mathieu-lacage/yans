@@ -250,7 +250,7 @@ QapScheduler::parameters (void)
 double
 QapScheduler::duration (int size, int mode)
 {
-	double txDuration = m_container->phy ()->calculateTxDuration (size, mode);
+	double txDuration = m_container->phy ()->calculateTxDuration (mode, size);
 	return txDuration;
 }
 
