@@ -79,7 +79,8 @@ private:
 
 
 HccaTxop::HccaTxop (MacContainer *container)
-	: m_container (container)
+	: m_container (container),
+	  m_currentTxPacket (0)
 {
 	m_transmissionListener = new MyTransmissionListener (this);
 }
@@ -112,6 +113,7 @@ HccaTxop::enoughTimeFor (Packet *packet)
 	low ()->setDataTransmissionMode (station->getDataMode (getSize (packet)));
 	low ()->setData (packet);
 	double duration = low ()->calculateHandshakeDuration ();
+	low ()->clearData ();
 	if (enoughTimeFor (duration)) {
 		return false;
 	}

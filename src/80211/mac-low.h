@@ -122,6 +122,7 @@ public:
 
 	/* store the data packet to transmit. */
 	void setData (Packet *packet);
+	void clearData (void);
 
 	/* store the transmission listener. */
 	void setTransmissionListener (MacLowTransmissionListener *listener);

@@ -500,6 +500,11 @@ MacLow::setData (Packet *packet)
 	assert (m_currentTxPacket == 0);
 	m_currentTxPacket = packet;
 }
+void
+MacLow::clearData (void)
+{
+	m_currentTxPacket = 0;
+}
 
 void 
 MacLow::enableNextData (int size)
