@@ -123,8 +123,8 @@ MacHighAp::receiveFromMacLow (Packet *packet)
 			Packet::free (packet);
 			break;
 		case MAC_80211_MGT_CFPOLL:
-			break;
 			gotCFPoll (packet);
+			break;
 		case MAC_80211_DATA:
 			if (station->isAssociated ()) {
 				TRACE ("forward up from %d", getSource (packet));
