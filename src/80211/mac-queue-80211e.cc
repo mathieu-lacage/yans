@@ -73,7 +73,7 @@ MacQueue80211e::cleanup (void)
 	m_queue.erase (tmp.base (), m_queue.end ());
 }
 
-class Packet *
+Packet *
 MacQueue80211e::dequeue (void)
 {
 	cleanup ();
@@ -84,6 +84,18 @@ MacQueue80211e::dequeue (void)
 		return packet;
 	}
 	return NULL;
+}
+
+Packet *
+MacQueue80211e::peekNextPacket (void)
+{
+	cleanup ();
+	if (m_queue.empty ()) {
+		Packet *packet;
+		packet = m_queue.back ().first;
+		return packet;
+	}
+	return 0;
 }
 
 bool

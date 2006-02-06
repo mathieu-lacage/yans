@@ -71,12 +71,12 @@ void
 TclTSpecRequest::notifyRequestGranted (void)
 {
 	Tcl& tcl=Tcl::instance();
-	tcl.evalf ("%s %s %d", m_grantedCallback, m_tclTspec, getTSpec ()->getTSID ());
+	tcl.evalf ("%s %s %d", m_grantedCallback, m_tclTspec, getTSpec ()->getTSID ()+1);
 }
 void 
 TclTSpecRequest::notifyRequestRefused (void)
 {
 	Tcl& tcl=Tcl::instance();
-	tcl.evalf ("%s %s %d", m_refusedCallback, m_tclTspec, getTSpec ()->getTSID ());
+	tcl.evalf ("%s %s %d", m_refusedCallback, m_tclTspec, getTSpec ()->getTSID ()+1);
 }
 

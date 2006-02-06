@@ -21,6 +21,8 @@
 #ifndef MAC_HIGH_QSTATION_H
 #define MAC_HIGH_QSTATION_H
 
+#include <map>
+
 #include "mac-high-station.h"
 #include "hdr-mac-80211.h"
 
@@ -31,6 +33,8 @@ class Dcf;
 class MacDcfParameters;
 class MacQueue80211e;
 class HccaTxop;
+class TSpec;
+class TSpecRequest;
 
 class MacHighQStation : public MacHighStation {
 public:
@@ -51,12 +55,16 @@ private:
 
 	void updateEDCAParameters (unsigned char const *buffer);
 	void createAC (enum ac_e ac);
-	bool isStreamActive (uint8_t TSID);
+	void createTS (TSpec *tspec);
+	bool isTsActive (uint8_t TSID);
+	void queueTS (uint8_t tsid, Packet *packet);
+	void queueAC (enum ac_e ac, Packet *packet);
 
 	MacQueue80211e *m_dcfQueues[4];
 	MacDcfParameters *m_dcfParameters[4];
 	Dcf *m_dcfs[4];
 	HccaTxop *m_hcca;
+	std::map<uint8_t, pair<TSpec *, MacQueue80211e *>, std::less<uint8_t> > m_ts;
 };
 
 #endif /* MAC_HIGH_QSTATION_H */

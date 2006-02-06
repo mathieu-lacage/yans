@@ -23,19 +23,25 @@
 #define HCCA_TXOP_H
 
 #include <stdint.h>
+#include <map>
 
 #include "hdr-mac-80211.h"
 
 class MacContainer;
 class MacQueue80211e;
 class Packet;
+class MacLowTransmissionListener;
+class MacLow;
+class MacStation;
 
 class HccaTxop 
 {
 public:
 	HccaTxop (MacContainer *container);
 
-	void streamAccessGranted (uint8_t TSID, double txopLimit);
+	void tsAccessGranted (uint8_t TSID, double txopLimit);
+	// XXX what is this method ? 
+	// remove it ?
 	void acAccessGranted (enum ac_e ac, double txopLimit);
 
 	void addStream (MacQueue80211e *queue, uint8_t TSID);
@@ -44,7 +50,39 @@ public:
 	void addAccessCategory (MacQueue80211e *queue, enum ac_e accessCategory);
 	void deleteAccessCategory (enum ac_e accessCategory);
 private:
+	friend class MyTransmissionListener;
+
+	MacLow *low (void) const;
+	double now (void) const;
+	MacStation *lookupDestStation (Packet *packet) const;
+	bool enoughTimeFor (Packet *packet);
+	bool enoughTimeFor (double duration);
+	void startTxop (double txopLimit);
+	bool isTxopFinished (void);
+	void setCurrentTsid (uint8_t tsid);
+	uint8_t getCurrentTsid (void);
+	bool txCurrent (void);
+	void dropCurrentPacket (void);
+
+	void gotCTS (double snr, int txMode);
+	void missedCTS (void);
+	void gotACK (double snr, int txMode);
+	void missedACK (void);
+	void startNext (void);
+	void gotBlockAckStart (double snr);
+	void gotBlockAck (int sequence);
+	void gotBlockAckEnd (void);
+	void missedBlockAck (void);
+
 	MacContainer *m_container;
+	uint8_t m_currentTsid;
+	int m_SLRC;
+	double m_txopLimit;
+	double m_txopStart;
+	Packet *m_currentTxPacket;
+	MacLowTransmissionListener *m_transmissionListener;
+	std::map<uint8_t, MacQueue80211e *, std::less<uint8_t> >m_tsQueues;
+	std::map<enum ac_e, MacQueue80211e *, std::less<enum ac_e> >m_acQueues;
 };
 
 #endif /* HCCA_TXOP_H */

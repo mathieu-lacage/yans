@@ -39,7 +39,7 @@ public:
 	virtual void missedCTS (void) = 0;
 	virtual void gotACK (double snr, int txMode) = 0;
 	virtual void missedACK (void) = 0;
-	virtual void txCompletedAndSIFS (void) = 0;
+	virtual void startNext (void) = 0;
 	virtual void gotBlockAckStart (double snr) = 0;
 	virtual void gotBlockAck (int sequence) = 0;
 	virtual void gotBlockAckEnd (void) = 0;
@@ -73,14 +73,6 @@ public:
 	MacLow (MacContainer *container);
 	~MacLow ();
 
-	/* notify the EventListener after end-of-handshake+SIFS. 
-	 * If ACK is enabled, end-of-handshake is defined to be 
-	 * the end of reception of the ACK. Otherwise,
-	 * it is the end of transmission of the main packet.
-	 */
-	void enableWaitForSIFS (void);
-	void disableWaitForSIFS (void);
-
 	/* If ACK is enabled, we wait ACKTimeout for an ACK.
 	 */
 	void enableACK (void);
@@ -92,22 +84,38 @@ public:
 	void enableRTS (void);
 	void disableRTS (void);
 
-	void setReceptionListener (MacLowReceptionListener *listener);
-	void setTransmissionListener (MacLowTransmissionListener *listener);
+	/* If NextData is enabled, we add the transmission duration
+	 * of the nextData to the durationId and we notify the
+	 * transmissionListener at the end of the current
+	 * transmission + SIFS.
+	 */
+	void enableNextData (int size);
+	void disableNextData (void);
 
-	void setAdditionalDuration (double duration);
-	double getDataTransmissionDuration (int size);
-
+	/* store the transmission mode for the frames to transmit.
+	 */
 	void setDataTransmissionMode (int txMode);
 	void setRtsTransmissionMode (int txMode);
 
-	void startTransmission (Packet *packet);
-	void startBlockAckReqTransmission (int to, int tid);
+	/* store the data packet to transmit. */
+	void setData (Packet *packet);
 
+	/* store the transmission listener. */
+	void setTransmissionListener (MacLowTransmissionListener *listener);
+
+	/* returns how much time the transmission of the data 
+	 * as currently configured will take.
+	 */
+	double calculateHandshakeDuration (void);
+
+	/* start the transmission of the currently-stored data. */
+	void startTransmission (void);
+	
+	void setReceptionListener (MacLowReceptionListener *listener);
 	void receive (Packet *packet);
 
 	void registerNavListener (MacLowNavListener *listener);
-
+	void startBlockAckReqTransmission (int to, int tid);
 private:
 	void dropPacket (Packet *packet);
 	MacParameters *parameters (void);
@@ -139,10 +147,9 @@ private:
 	void sendDataAfterCTS (MacCancelableEvent *macEvent);
 	void waitSIFSAfterEndTx (MacCancelableEvent *macEvent);
 
-	void sendRTSForPacket (Packet *packet);
-	void sendDataPacket (Packet *packet);
+	void sendRTSForPacket (void);
+	void sendDataPacket (void);
 	void sendCurrentTxPacket (void);
-	void startTransmission (void);
 
 	MacContainer *m_container;
 	MacLowReceptionListener *m_receptionListener;
@@ -158,12 +165,11 @@ private:
 
 	Packet *m_currentTxPacket;
 
-	bool m_waitSIFS;
+	int m_nextSize;
 	bool m_waitACK;
 	bool m_sendRTS;
 	int m_dataTxMode;
 	int m_rtsTxMode;
-	double m_additionalDuration;
 	double m_lastNavStart;
 	double m_lastNavDuration;
 };

@@ -30,6 +30,8 @@
 #include "dca-txop.h"
 #include "hcca-txop.h"
 #include "hdr-mac-80211.h"
+#include "tspec-request.h"
+#include "tspec.h"
 
 
 #ifndef QSTATION_TRACE
@@ -71,10 +73,21 @@ MacHighQStation::createAC (enum ac_e ac)
 	m_dcfs[ac] = dcf;
 }
 
+void
+MacHighQStation::createTS (TSpec *tspec)
+{
+	MacQueue80211e *queue = new MacQueue80211e (container ()->parameters ());
+	m_ts[tspec->getTSID ()] = make_pair (tspec, queue);
+	m_hcca->addStream (queue, tspec->getTSID ());
+}
+
 
 void
 MacHighQStation::updateEDCAParameters (unsigned char const *buffer)
 {
+	if (buffer == 0) {
+		return;
+	}
 	for (uint8_t i = 0; i < 4; i++) {
 		uint8_t AIFSN = *buffer & 0x0f;
 		uint8_t ACM = (*buffer >> 4) & 0x1;
@@ -97,23 +110,67 @@ MacHighQStation::updateEDCAParameters (unsigned char const *buffer)
 	}
 }
 
-bool
-MacHighQStation::isStreamActive (uint8_t TSID)
+void
+MacHighQStation::queueAC (enum ac_e ac, Packet *packet)
 {
-	// XXX
-	return true;
+	m_dcfQueues[ac]->enqueue (packet);
+	m_dcfs[ac]->requestAccess ();
 }
+
 
 void 
 MacHighQStation::addTsRequest (TSpecRequest *request)
 {
-	
+	Packet *addts = getPacketFor (getApAddress ());
+	setType (addts, MAC_80211_MGT_ADDTS_REQUEST);
+	/* The first byte of the data area is reserved
+	 * to hold the TS status response from the QAP.
+	 */
+	addts->allocdata (sizeof (request)+1);
+	unsigned char *buffer = addts->accessdata ();
+	buffer++;
+	*((TSpecRequest **)buffer) = request;
+	// XXX for now, send through AC_BE queue.
+	queueAC (AC_BE, addts);
+}
+
+bool
+MacHighQStation::isTsActive (uint8_t tsid)
+{
+	assert (tsid >= 8);
+	if (m_ts[tsid].first == 0) {
+		return false;
+	} else {
+		return true;
+	}
+}
+
+void
+MacHighQStation::queueTS (uint8_t tsid, Packet *packet)
+{
+	assert (isTsActive (tsid));
+	m_ts[tsid].second->enqueue (packet);
 }
 
 void 
 MacHighQStation::enqueueToLow (Packet *packet)
 {
+	/* There is a magic -1 here. It is here because in
+	 * tspec-request.cc:notifyRequestGranted, we have
+	 * a +1. The + and - one are there because we want to
+	 * allow the prio IPv6 field to be zero if it has never
+	 * been set or non-zero in which case it is supposed to
+	 * indicate the number of the target TID+1. 
+	 * This is really quite tricky.
+	 */
 	int requestedTID = getRequestedTID (packet);
+	if (requestedTID == 0) {
+		/* unmarked so we assume AC_BE */
+		queueAC (AC_BE, packet);
+		return;
+	} else {
+		requestedTID --;
+	}
 	if (requestedTID < 8) {
 		/* XXX we assume that there is no form of
 		 * Access Control for any Access Category.
@@ -121,14 +178,14 @@ MacHighQStation::enqueueToLow (Packet *packet)
 		 * implement it later.
 		 */
 		setTID (packet, requestedTID);
-		//m_dcfQueues[getAC (packet)]->enqueue (packet);
-		//m_dcfs[getAC (packet)]->requestAccess ();
+		queueAC (getAC (packet), packet);
 	} else {
-		if (isStreamActive (requestedTID)) {
+		if (isTsActive (requestedTID)) {
 			setTID (packet, requestedTID);
-			//m_streamQueues[requestedTID]->enqueue (packet);
+			queueTS (requestedTID, packet);
 		} else {
-			// XXX ?
+			// XXX if we have not created this TS
+			// yet, we should probably drop this packet.
 		}
 	}
 }
@@ -137,7 +194,7 @@ void
 MacHighQStation::gotCFPoll (Packet *packet)
 {
 	if (getTID (packet) > 8) {
-		m_hcca->streamAccessGranted (getTID (packet), getTxopLimit (packet));
+		m_hcca->tsAccessGranted (getTID (packet), getTxopLimit (packet));
 	} else {
 		m_hcca->acAccessGranted (getAC (packet), getTxopLimit (packet));
 	}
@@ -160,7 +217,20 @@ MacHighQStation::gotBeacon (Packet *packet)
 }
 void 
 MacHighQStation::gotAddTsResponse (Packet *packet)
-{}
+{
+	unsigned char *buffer = packet->accessdata ();
+	uint8_t status = *buffer;
+	buffer++;
+	TSpecRequest *request = *((TSpecRequest **)buffer);
+	if (status == 0) {
+		TRACE ("granted TS");
+		createTS (request->getTSpec ());
+		request->notifyGranted ();
+	} else {
+		TRACE ("refused TS");
+		request->notifyRefused ();
+	}
+}
 void 
 MacHighQStation::gotDelTsResponse (Packet *packet)
 {}

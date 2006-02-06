@@ -67,6 +67,12 @@ MacHighStation::parameters (void)
 	return container ()->parameters ();
 }
 
+int 
+MacHighStation::getApAddress (void)
+{
+	return m_apAddress;
+}
+
 
 Packet *
 MacHighStation::getPacketFor (int destination)

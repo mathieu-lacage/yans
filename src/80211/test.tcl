@@ -39,7 +39,7 @@ proc set-qbss-mode {ap arrayName} {
 	for {set j 0} {$j < [$node set nifs_]} {incr j} {
 	    set mac [$node set mac_($j)]
 	    if {$i == $ap} {
-		$mac mode qaccess-point
+		$mac mode access-point
 	    } else {
 		$mac mode qstation $ap
 	    }

@@ -88,8 +88,8 @@ public:
 	virtual void missedACK (void) {
 		m_txop->missedACK ();
 	}
-	virtual void txCompletedAndSIFS (void) {
-		m_txop->txCompletedAndSIFS ();
+	virtual void startNext (void) {
+		m_txop->startNext ();
 	}
 	virtual void gotBlockAckStart (double snr) {
 		m_txop->gotBlockAckStart (snr);
@@ -195,6 +195,21 @@ DcaTxop::isLastFragment (void)
 	}
 }
 
+int
+DcaTxop::getNextFragmentSize (void) 
+{
+	if (isLastFragment ()) {
+		return 0;
+	}
+	
+	int nextFragmentNumber = m_fragmentNumber + 1;
+	if (nextFragmentNumber == (getNFragments () - 1)) {
+		return getLastFragmentSize ();
+	} else {
+		return getFragmentSize ();
+	}
+}
+
 Packet *
 DcaTxop::getFragmentPacket (void)
 {
@@ -260,8 +275,9 @@ DcaTxop::accessGrantedNow (void)
 		low ()->disableACK ();
 		low ()->setDataTransmissionMode (0);
 		low ()->setTransmissionListener (m_transmissionListener);
-		low ()->disableWaitForSIFS ();
-		low ()->startTransmission (m_currentTxPacket);
+		low ()->disableNextData ();
+		low ()->setData (m_currentTxPacket);
+		low ()->startTransmission ();
 		m_currentTxPacket = 0;
 		m_dcf->notifyAccessOk ();
 		TRACE ("tx broadcast");
@@ -275,14 +291,13 @@ DcaTxop::accessGrantedNow (void)
 			Packet *fragment = getFragmentPacket ();
 			if (isLastFragment ()) {
 				TRACE ("fragmenting last fragment %d", getSize (fragment));
-				low ()->disableWaitForSIFS ();
+				low ()->disableNextData ();
 			} else {
 				TRACE ("fragmenting %d", getSize (fragment));
-				low ()->enableWaitForSIFS ();
+				low ()->enableNextData (getNextFragmentSize ());
 			}
-			// XXX: we are missing correct duration calculation
-			// we need to add the txtime for the next fragment here.
-			low ()->startTransmission (fragment);
+			low ()->setData (fragment);
+			low ()->startTransmission ();
 		} else {
 			if (needRTS ()) {
 				low ()->enableRTS ();
@@ -293,8 +308,9 @@ DcaTxop::accessGrantedNow (void)
 				low ()->disableRTS ();
 				TRACE ("tx unicast mode %d", dataTxMode);
 			}
-			low ()->disableWaitForSIFS ();
-			low ()->startTransmission (m_currentTxPacket->copy ());
+			low ()->disableNextData ();
+			low ()->setData (m_currentTxPacket->copy ());
+			low ()->startTransmission ();
 		}
 	}
 }
@@ -357,27 +373,29 @@ DcaTxop::missedACK (void)
 		m_dcf->notifyAccessOk ();
 		dropCurrentPacket ();
 	} else {
+		setRetry (m_currentTxPacket);
 		m_dcf->notifyAccessFailed ();
 		m_dcf->requestAccess ();
 	}
 	
 }
 void 
-DcaTxop::txCompletedAndSIFS (void)
+DcaTxop::startNext (void)
 {
-	TRACE ("SIFS after tx complete");
+	TRACE ("start next packet");
 	/* this callback is used only for fragments. */
 	MacStation *station = lookupDestStation (m_currentTxPacket);
 	low ()->disableRTS ();
 	nextFragment ();
 	if (isLastFragment ()) {
-		low ()->disableWaitForSIFS ();
+		low ()->disableNextData ();
 	} else {
-		low ()->enableWaitForSIFS ();
+		low ()->enableNextData (getNextFragmentSize ());
 	}
 	Packet *fragment = getFragmentPacket ();
 	low ()->setDataTransmissionMode (station->getDataMode (getSize (fragment)));
-	low ()->startTransmission (fragment);
+	low ()->setData (fragment);
+	low ()->startTransmission ();
 }
 void 
 DcaTxop::gotBlockAckStart (double snr)

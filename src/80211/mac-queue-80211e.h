@@ -54,13 +54,15 @@ public:
 
 	void enqueue (Packet *packet);
 	void enqueueToHead (Packet *packet);
-	class Packet *dequeue (void);
+	Packet *dequeue (void);
 
 	void flush (void);
 
 	bool isEmpty (void);
 
 	int size (void);
+
+	Packet *peekNextPacket (void);
 
 private:
 	void cleanup (void);

@@ -22,7 +22,7 @@
 #include "mac-80211.h"
 #include "mac-high-access-point.h"
 #include "mac-high-nqstation.h"
-//#include "mac-high-qstation.h"
+#include "mac-high-qstation.h"
 #include "mac-high-adhoc.h"
 #include "phy-80211.h"
 #include "hdr-mac-80211.h"
@@ -148,7 +148,9 @@ Mac80211::command(int argc, const char*const* argv)
 		} else if (strcmp (argv[1], "mode") == 0 &&
 		    strcmp (argv[2], "qstation") == 0) {
 			int ap = atoi (argv[3]);
-			//m_high = new MacHighQStation (this, peekPhy80211 (), ap);
+			startContainer ();
+			MacHigh *high = new MacHighQStation (m_container, ap);
+			m_container->setMacHigh (high);
 			return TCL_OK;
 		}
 	} else if (argc == 5) {

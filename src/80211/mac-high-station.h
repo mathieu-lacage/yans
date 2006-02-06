@@ -39,7 +39,10 @@ public:
 	virtual void receiveFromMacLow (Packet *packet);
 	virtual void notifyAckReceivedFor (Packet *packet);
 
- private:
+protected:
+	Packet *getPacketFor (int destination);
+	int getApAddress (void);
+private:
 	virtual void enqueueToLow (Packet *packet) = 0;
 	virtual void gotCFPoll (Packet *packet) = 0;
 	virtual void gotBeacon (Packet *packet) = 0;
@@ -62,7 +65,6 @@ public:
 	bool isAssociated (void);
 	void setAssociated (void);
 	void setDisAssociated (void);
-	Packet *getPacketFor (int destination);
 	MacParameters *parameters (void);
 
 	MacQueue80211e *m_associationQueue;

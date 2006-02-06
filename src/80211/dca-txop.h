@@ -54,7 +54,7 @@ private:
 	void missedCTS (void);
 	void gotACK (double snr, int txMode);
 	void missedACK (void);
-	void txCompletedAndSIFS (void);
+	void startNext (void);
 	void gotBlockAckStart (double snr);
 	void gotBlockAck (int sequence);
 	void gotBlockAckEnd (void);
@@ -64,6 +64,7 @@ private:
 	bool needFragmentation (void);
 	int getNFragments (void);
 	int getLastFragmentSize (void);
+	int getNextFragmentSize (void);
 	int getFragmentSize (void);
 	bool isLastFragment (void);
 	void nextFragment (void);
