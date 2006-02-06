@@ -30,6 +30,17 @@
  */
 static char foo[sizeof (hdr_mac)-sizeof (hdr_mac_80211)+1];
 
+Packet *
+hdr_mac_80211::create (int source)
+{
+	Packet *packet = Packet::alloc ();
+	HDR_CMN (packet)->ptype () = PT_MAC;
+        HDR_MAC_80211 (packet)->setSource (source);
+	HDR_MAC_80211 (packet)->initialize ();
+        return packet;
+
+}
+
 void
 hdr_mac_80211::initialize (void)
 {
@@ -270,6 +281,12 @@ hdr_mac_80211::getTypeString (void) const
  ********************************************************/
 
 
+uint32_t 
+getUID (Packet *packet)
+{
+	uint32_t uid = (uint32_t)HDR_CMN (packet)->uid ();
+	return uid;
+}
 int 
 getDestination (Packet *packet)
 {
@@ -528,7 +545,12 @@ bool isControl (enum mac_80211_packet_type type)
 char const *
 getTypeString (Packet *packet)
 {
-	return HDR_MAC_80211 (packet)->getTypeString ();
+	packet_t type = HDR_CMN (packet)->ptype ();
+	if (type == PT_MAC) {
+		return HDR_MAC_80211 (packet)->getTypeString ();
+	} else {
+		return packet_info.name (type);
+	}
 }
 
 char const *

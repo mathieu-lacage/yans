@@ -105,6 +105,7 @@ set-qbss-mode 2 nodes
 #set-bss-mode 2 nodes
 #set-adhoc-mode nodes
 
+TSPEC set maximumServiceInterval 200e-3
 set tspec [new TSPEC]
 proc addts-granted-callback {tspec tsid} {
     global ::ns

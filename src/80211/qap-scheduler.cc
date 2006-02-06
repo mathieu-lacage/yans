@@ -226,8 +226,7 @@ QapScheduler::createDcf (enum ac_e ac)
 Packet *
 QapScheduler::getPacketFor (int destination)
 {
-	Packet *packet = Packet::alloc ();
-	setSource (packet, m_container->selfAddress ());
+	Packet *packet = hdr_mac_80211::create (m_container->selfAddress ());
 	setFinalDestination (packet, destination);
 	setDestination (packet, destination);
 	return packet;
@@ -393,7 +392,7 @@ QapScheduler::addTsRequest (TSpec *tspec)
 		 * packet. This is probably due to a MinimumServiceInterval
 		 * which was not correctly set in the tspec.
 		 */
-		TRACE ("Refused new stream. Txop too large (%f > %f). Probably because of wrong MinimumServiceInterval",
+		TRACE ("Refused new stream. Txop too large (%f > %f). Probably because of wrong MaximumServiceInterval",
 		       txopDuration,
 		       getMaxTxopDuration ());
 		return false;

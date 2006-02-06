@@ -98,7 +98,7 @@ MacHighQStation::updateEDCAParameters (unsigned char const *buffer)
 void
 MacHighQStation::queueAC (enum ac_e ac, Packet *packet)
 {
-	TRACE ("queue %s to %d thru %s", 
+	TRACE ("queue \"%s\" to %d thru %s", 
 	       getTypeString (packet), 
 	       getDestination (packet),
 	       getAcString (packet));
@@ -155,7 +155,9 @@ MacHighQStation::addTsRequest (TSpecRequest *request)
 		tspec->setMaximumServiceInterval (tspec->getDelayBound () / maxRetriesPossible);
 	}
 	if (tspec->getMinimumServiceInterval () > tspec->getMaximumServiceInterval ()) {
-		TRACE ("invalid tspec: min SI > max SI");
+		TRACE ("invalid tspec: min SI (%f) > max SI (%f)",
+		       tspec->getMinimumServiceInterval (),
+		       tspec->getMaximumServiceInterval ());
 		request->notifyRefused ();
 		return;
 	}

@@ -109,6 +109,8 @@ enum mac_80211_request_status {
 
 class hdr_mac_80211 {
  public:
+	static Packet *create (int source);
+
 	void initialize (void);
 
 	int getTxMode (void) const;
@@ -196,6 +198,7 @@ void setMoreFragments (Packet *packet, bool moreFragments);
 void initialize (Packet *packet);
 
 
+uint32_t getUID (Packet *packet);
 int getSize (Packet *packet);
 double getDuration (Packet *packet);
 bool isRetry (Packet *packet);

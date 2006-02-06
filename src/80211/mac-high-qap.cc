@@ -220,8 +220,7 @@ MacHighQap::addTsRequest (TSpecRequest *request)
 Packet *
 MacHighQap::getPacketFor (int destination)
 {
-	Packet *packet = Packet::alloc ();
-	setSource (packet, container ()->selfAddress ());
+	Packet *packet = hdr_mac_80211::create (container ()->selfAddress ());
 	setFinalDestination (packet, destination);
 	setDestination (packet, destination);
 	return packet;

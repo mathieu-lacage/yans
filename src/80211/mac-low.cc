@@ -219,27 +219,24 @@ MacLow::now (void)
 Packet *
 MacLow::getRTSPacket (void)
 {
-	Packet *packet = Packet::alloc ();
+	Packet *packet = hdr_mac_80211::create (getSelf ());
 	setSize (packet, parameters ()->getRTSSize ());
-	setSource (packet, getSelf ());
 	setType (packet, MAC_80211_CTL_RTS);
 	return packet;
 }
 Packet *
 MacLow::getCTSPacket (void)
 {
-	Packet *packet = Packet::alloc ();
+	Packet *packet = hdr_mac_80211::create (getSelf ());
 	setSize (packet, parameters ()->getCTSSize ());
-	setSource (packet, getSelf ());
 	setType (packet, MAC_80211_CTL_CTS);
 	return packet;
 }
 Packet *
 MacLow::getACKPacket (void)
 {
-	Packet *packet = Packet::alloc ();
+	Packet *packet = hdr_mac_80211::create (getSelf ());
 	setSize (packet, parameters ()->getACKSize ());
-	setSource (packet, getSelf ());
 	setType (packet, MAC_80211_CTL_ACK);
 	return packet;
 }
