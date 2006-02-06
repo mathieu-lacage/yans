@@ -179,11 +179,6 @@ MacLow::getLastSNR (void)
 {
 	return peekPhy ()->getLastRxSNR ();
 }
-double 
-MacLow::getLastStartRx (void)
-{
-	return peekPhy ()->getLastRxStartTime ();
-}
 double
 MacLow::calculateTxDuration (int mode, int size)
 {

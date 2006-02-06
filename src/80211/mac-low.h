@@ -165,7 +165,6 @@ private:
 	void forwardDown (Packet *packet);
 	int getSelf (void);
 	double getLastSNR (void);
-	double getLastStartRx (void);
 	double calculateTxDuration (int mode, int size);
 	double calculateOverallTxTime (void);
 	int getCtsTxModeForRts (int to,  int rtsTxMode);
