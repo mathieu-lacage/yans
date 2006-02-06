@@ -29,7 +29,6 @@
 #include "dynamic-mac-handler.h"
 #include "static-mac-handler.h"
 #include "backoff.h"
-#include "phy-event-list.h"
 #include "rng-uniform.h"
 
 #include <iostream>
