@@ -110,6 +110,10 @@ MacHighQap::destroyTS (uint8_t tsid)
 void
 MacHighQap::queueAC (enum ac_e ac, Packet *packet)
 {
+	TRACE ("queue %s to %d thru %s", 
+	       getTypeString (packet), 
+	       getDestination (packet),
+	       getAcString (packet));
 	m_dcfQueues[ac]->enqueue (packet);
 	m_dcfs[ac]->requestAccess ();
 }
@@ -117,6 +121,10 @@ MacHighQap::queueAC (enum ac_e ac, Packet *packet)
 void
 MacHighQap::queueTS (uint8_t tsid, Packet *packet)
 {
+	TRACE ("queue %s to %d thru tsid %d", 
+	       getTypeString (packet), 
+	       getDestination (packet),
+	       getTID (packet));
 	assert (isTsActive (tsid));
 	m_ts[tsid].second->enqueue (packet);
 }
@@ -149,13 +157,14 @@ MacHighQap::enqueueToLow (Packet *packet)
 		 * a management frame in which case it should be
 		 * AC_VO. see 9.1.3.1 802.11e/D12.1
 		 */
+		enum ac_e ac;
 		if (isManagement (packet)) {
-			setAC (packet, AC_VO);
-			queueAC (AC_VO, packet);
+			ac = AC_VO;
 		} else {
-			setAC (packet, AC_BE);
-			queueAC (AC_BE, packet);
+			ac = AC_BE;
 		}
+		setAC (packet, ac);
+		queueAC (ac, packet);
 		return;
 	} else {
 		requestedTID --;
