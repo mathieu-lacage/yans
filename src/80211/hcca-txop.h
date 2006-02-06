@@ -33,6 +33,7 @@ class Packet;
 class MacLowTransmissionListener;
 class MacLow;
 class MacStation;
+class MacParameters;
 
 class HccaTxop 
 {
@@ -50,6 +51,7 @@ public:
 	void deleteAccessCategory (enum ac_e accessCategory);
 private:
 	friend class MyTransmissionListener;
+	friend class MyQosNullTransmissionListener;
 
 	MacLow *low (void) const;
 	double now (void) const;
@@ -63,11 +65,17 @@ private:
 	uint8_t getCurrentTsid (void);
 	bool txCurrent (void);
 	void dropCurrentPacket (void);
+	Packet *getQosNullFor (int destination);
+	MacParameters *parameters (void);
+	void tryToSendQosNull (void);
+
 
 	void gotCTS (double snr, int txMode);
 	void missedCTS (void);
 	void gotACK (double snr, int txMode);
 	void missedACK (void);
+	void gotQosNullAck (void);
+	void missedQosNullAck (void);
 	void startNext (void);
 
 	MacContainer *m_container;
@@ -77,6 +85,7 @@ private:
 	double m_txopStart;
 	Packet *m_currentTxPacket;
 	MacLowTransmissionListener *m_transmissionListener;
+	MacLowTransmissionListener *m_qosNullTransmissionListener;
 	std::map<uint8_t, MacQueue80211e *, std::less<uint8_t> >m_tsQueues;
 	std::map<enum ac_e, MacQueue80211e *, std::less<enum ac_e> >m_acQueues;
 };

@@ -36,6 +36,7 @@
 #include "mac-stations.h"
 #include "mac-station.h"
 #include "mac-tx-middle.h"
+#include "mac-parameters.h"
 
 #ifndef HCCA_TXOP_TRACE
 #define HCCA_TXOP_TRACE 1
@@ -78,12 +79,41 @@ private:
 	HccaTxop *m_txop;
 };
 
+class MyQosNullTransmissionListener : public MacLowTransmissionListener {
+public:
+	MyQosNullTransmissionListener (HccaTxop *txop)
+		: MacLowTransmissionListener (),
+		  m_txop (txop) {}
+		  
+	virtual ~MyQosNullTransmissionListener () {}
+
+	virtual void gotCTS (double snr, int txMode) {
+		assert (false);
+	}
+	virtual void missedCTS (void) {
+		assert (false);
+	}
+	virtual void gotACK (double snr, int txMode) {
+		m_txop->gotQosNullAck ();
+	}
+	virtual void missedACK (void) {
+		m_txop->missedQosNullAck ();
+	}
+	virtual void startNext (void) {
+		assert (false);
+	}
+
+private:
+	HccaTxop *m_txop;
+};
+
 
 HccaTxop::HccaTxop (MacContainer *container)
 	: m_container (container),
 	  m_currentTxPacket (0)
 {
 	m_transmissionListener = new MyTransmissionListener (this);
+	m_qosNullTransmissionListener = new MyQosNullTransmissionListener (this);
 }
 
 MacLow *
@@ -107,7 +137,7 @@ bool
 HccaTxop::enoughTimeFor (Packet *packet)
 {
 	low ()->disableRTS ();
-	low ()->enableACK ();
+	low ()->enableFastAck ();
 	low ()->disableNextData ();
 	
 	MacStation *station = lookupDestStation (packet);
@@ -127,6 +157,43 @@ HccaTxop::getCurrentTsid (void)
 {
 	return m_currentTsid;
 }
+Packet *
+HccaTxop::getQosNullFor (int destination)
+{
+	Packet *packet = hdr_mac_80211::create (m_container->selfAddress ());
+	setDestination (packet, destination);
+	setFinalDestination (packet, destination);
+	setType (packet, MAC_80211_MGT_QOSNULL);
+	setSize (packet, parameters ()->getPacketSize (MAC_80211_MGT_QOSNULL));
+}
+void
+HccaTxop::tryToSendQosNull (void)
+{
+	Packet *qosNull = getQosNullFor (m_container->getBSSID ());
+
+	/* calculate whether or not we have enough time. at rate 0. */
+	low ()->disableRTS ();
+	low ()->enableFastAck ();
+	low ()->disableNextData ();
+	MacStation *station = lookupDestStation (qosNull);
+	low ()->setDataTransmissionMode (0);
+	low ()->setData (qosNull);
+	double duration = low ()->calculateHandshakeDuration ();
+	low ()->clearData ();
+	if (!enoughTimeFor (duration)) {
+		Packet::free (qosNull);
+		return;
+	}
+	low ()->disableNextData ();
+	low ()->disableRTS ();
+	low ()->enableSuperFastAck ();
+	low ()->disableOverrideDurationId ();
+	low ()->setDataTransmissionMode (0);
+	low ()->setData (qosNull);
+	low ()->setTransmissionListener (m_qosNullTransmissionListener);
+	low ()->startTransmission ();	
+
+}
 bool
 HccaTxop::txCurrent (void)
 {
@@ -136,7 +203,7 @@ HccaTxop::txCurrent (void)
 	if (m_currentTxPacket == 0) {
 		if (queue->isEmpty ()) {
 			TRACE ("queue empty");
-			return false;
+			goto tryToSendQosNull;
 		}
 		if (!enoughTimeFor (queue->peekNextPacket ())) {
 			TRACE ("not enough time to complete next packet");
@@ -171,7 +238,7 @@ HccaTxop::txCurrent (void)
 		TRACE ("send to %d burst next", getDestination (m_currentTxPacket));
 	} else {
 		low ()->disableNextData ();
-		TRACE ("send to %d", getDestination (m_currentTxPacket));
+		TRACE ("send last to %d", getDestination (m_currentTxPacket));
 	}
 	low ()->disableRTS ();
 	low ()->enableFastAck ();
@@ -183,7 +250,8 @@ HccaTxop::txCurrent (void)
 	return true;
 
  tryToSendQosNull:
-	// XXX ??
+	tryToSendQosNull ();
+ out:
 	return false;
 }
 
@@ -219,6 +287,11 @@ HccaTxop::enoughTimeFor (double duration)
 	} else {
 		return true;
 	}
+}
+MacParameters *
+HccaTxop::parameters (void)
+{
+	return m_container->parameters ();
 }
 
 bool 
@@ -281,6 +354,27 @@ void
 HccaTxop::missedCTS (void)
 {
 	assert (false);
+}
+void 
+HccaTxop::gotQosNullAck (void)
+{
+	TRACE ("got QosNull Ack  from %d", m_container->getBSSID ());
+	/* There is not much to do since this means that
+	 * we have successfully transmitted ownership of the
+	 * medium to the QAP.
+	 */
+}
+void 
+HccaTxop::missedQosNullAck (void)
+{
+	TRACE ("missed QosNull Ack from %d", m_container->getBSSID ());
+	/* We are not sure the QAP has correctly received the
+	 * QosNull frame we sent to relinquish ownership of the medium
+	 * so we try to trigger a retransmission of the QosNull now
+	 * and until either it is received correctly or we don't have
+	 * any time left in the txop.
+	 */
+	tryToSendQosNull ();
 }
 void 
 HccaTxop::gotACK (double snr, int txMode)
