@@ -19,48 +19,37 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#ifndef NODE_EMPTY_H
-#define NODE_EMPTY_H
+#include "net-interface-constructor.h"
+#include "broadcast-channel.h"
+#include "node-empty.h"
 
-#include "node.h"
-#include <list>
+NetInterface::NetInterface ()
+{}
+NetInterface::~NetInterface ()
+{}
 
-class Packet;
-class Agent;
-class Classifier;
-class NetInterface;
+void
+NetInterface::connectTo (BroadcastChannel *channel, NodeEmpty *node)
+{
+	m_channel = channel;
+	m_node = node;
+}
+
+void 
+NetInterface::sendDownToChannel (Packet *packet)
+{
+	m_channel->sendDown (packet, this);
+}
+
+void
+NetInterface::sendUpToNode (Packet *packet)
+{
+	m_node->receiveFromInterface (packet, this);
+}
 
 
-class NodeEmpty : public TclObject {
-public:
-	NodeEmpty ();
-	virtual ~NodeEmpty ();
+NetInterfaceConstructor::NetInterfaceConstructor ()
+{}
+NetInterfaceConstructor::~NetInterfaceConstructor ()
+{}
 
-	int getAddress (void);
-
-	// XXX this should be something like sendDownToInterface
-	void sendDown (Packet *packet);
-	void receiveFromInterface (Packet *packet, NetInterface *interface);
-
-	int command(int argc, const char*const* argv);
-private:
-	void attachAgent (Agent *agent);
-	int allocUid (void);
-
-	static int m_uid;
-	int m_address;
-	Classifier *m_demux;
-	Classifier *m_entry;
-	NetInterface *m_interface;
-	NsObject *m_interfaceConnector;
-
-	double m_x;
-	double m_y;
-	double m_z;
-
-	double m_speedX;
-	double m_speedY;
-	double m_speedZ;
-};
-
-#endif /* NODE_EMPTY_H */

@@ -19,24 +19,39 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "node-empty.h"
 #include "classifier.h"
 
-static class NodeEmptyClass: public TclClass {
-public:
-        NodeEmptyClass() : TclClass("NodeEmpty") {}
-        TclObject* create(int, const char*const*) {
-                return (new NodeEmpty ());
-        }
-} class_NodeEmpty;
+#include "node-empty.h"
+#include "broadcast-channel.h"
+#include "net-interface-constructor.h"
+
+namespace {
+	class InterfaceConnector : public NsObject {
+	public:
+		InterfaceConnector (NodeEmpty *node)
+			: m_node (node) {}
+		virtual ~InterfaceConnector () {}
+
+		virtual void recv(Packet*packet, Handler* callback = 0) {
+			// XXX we don't deal with packet callbacks here.
+			m_node->sendDown (packet);
+		}
+	private:
+		NodeEmpty *m_node;
+	};
+}
 
 int NodeEmpty::m_uid = 0;
-
 
 NodeEmpty::NodeEmpty ()
 	: m_address (allocUid ()),
 	  m_demux (0)
-{}
+{
+	m_interfaceConnector = new InterfaceConnector (this);
+	m_entry = static_cast <Classifier *> (TclObject::New ("Classifier/Addr"));
+	m_demux = static_cast <Classifier *> (TclObject::New ("Classifier/Port"));
+	// add notification route ?
+}
 
 NodeEmpty::~NodeEmpty ()
 {}
@@ -55,22 +70,25 @@ NodeEmpty::getAddress (void)
 }
 
 void
+NodeEmpty::sendDown (Packet *packet)
+{
+	m_interface->sendDown (packet);
+}
+
+void 
+NodeEmpty::receiveFromInterface (Packet *packet, NetInterface *interface)
+{
+	m_entry->recv (packet, 0);
+}
+
+void
 NodeEmpty::attachAgent (Agent *agent)
 {
-	// maintain agent list ?
-
-	agent->addr () = getAddress ();
-
-	if (m_demux == 0) {
-		m_demux = static_cast <Classifier *> (TclObject::New ("Classifier/Port"));
-		// add notification route ?
-	}
-
 	Agent *nullAgent = static_cast <Agent *> (TclObject::New ("Agent/Null"));
-	int port = m_demux->allocPort (nullAgent);
-	agent->dport () = port;
+	agent->dport () = m_demux->allocPort (nullAgent);
+	agent->addr () = getAddress ();
+	agent->target (m_interfaceConnector);
 
-	// add agent notification ?
 #if 0
 	Node instproc attach { agent { port "" } } {
 	$self instvar agents_ address_ dmux_ 
@@ -129,13 +147,19 @@ NodeEmpty::command(int argc, const char*const* argv)
 				goto out;
 			}
 			return TCL_OK;
+		} else if (strcmp (argv[1], "add-interface") == 0) {
+			NetInterfaceConstructor *constructor = static_cast <NetInterfaceConstructor *> (lookup (argv[2]));
+			BroadcastChannel *channel = static_cast <BroadcastChannel *> (lookup (argv[3]));
+			m_interface = constructor->createInterface ();
+			m_interface->connectTo (channel, this);
+			return TCL_OK;
 		}
 	} else if (argc == 3) {
 		if (strcmp (argv[1], "attach-agent") == 0) {
 			Agent *agent = static_cast <Agent *> (lookup (argv[2]));
 			attachAgent (agent);
 			return TCL_OK;
-		}
+		} 
 	}
  out:
 	printf ("argv: %s/%s/%s \n", argv[0], argv[1], argv[2]);

@@ -19,48 +19,35 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#ifndef NODE_EMPTY_H
-#define NODE_EMPTY_H
+#include "simple-net-interface-constructor.h"
 
-#include "node.h"
-#include <list>
+SimpleNetInterface::SimpleNetInterface ()
+	: NetInterface ()
+{}
+SimpleNetInterface::~SimpleNetInterface ()
+{}
 
-class Packet;
-class Agent;
-class Classifier;
-class NetInterface;
+void 
+SimpleNetInterface::sendDown (Packet *packet)
+{
+	sendDownToChannel (packet);
+}
+void 
+SimpleNetInterface::sendUp (Packet *packet)
+{
+	sendUpToNode (packet);
+}
 
 
-class NodeEmpty : public TclObject {
-public:
-	NodeEmpty ();
-	virtual ~NodeEmpty ();
 
-	int getAddress (void);
 
-	// XXX this should be something like sendDownToInterface
-	void sendDown (Packet *packet);
-	void receiveFromInterface (Packet *packet, NetInterface *interface);
+SimpleNetInterfaceConstructor::SimpleNetInterfaceConstructor ()
+{}
+SimpleNetInterfaceConstructor::~SimpleNetInterfaceConstructor ()
+{}
 
-	int command(int argc, const char*const* argv);
-private:
-	void attachAgent (Agent *agent);
-	int allocUid (void);
-
-	static int m_uid;
-	int m_address;
-	Classifier *m_demux;
-	Classifier *m_entry;
-	NetInterface *m_interface;
-	NsObject *m_interfaceConnector;
-
-	double m_x;
-	double m_y;
-	double m_z;
-
-	double m_speedX;
-	double m_speedY;
-	double m_speedZ;
-};
-
-#endif /* NODE_EMPTY_H */
+NetInterface *
+SimpleNetInterfaceConstructor::createInterface (void)
+{
+	return new SimpleNetInterface ();
+}

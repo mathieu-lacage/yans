@@ -7,10 +7,14 @@ set ns [new Simulator]
 $ns use-scheduler Heap
 
 set nodeConstructor [new NodeConstructor];
+set interfaceConstructor [new SimpleNetInterfaceConstructor];
+set channel [new SimpleBroadcastChannel];
 
 set nodea [$nodeConstructor create-node];
+$nodea add-interface $interfaceConstructor $channel
 
 set nodeb [$nodeConstructor create-node];
+$nodeb add-interface $interfaceConstructor $channel
 
 $nodea set-var x 0.0;
 $nodeb set-var y 0.0;
@@ -30,3 +34,5 @@ $ftp attach-agent $source
 # start source at 3.0
 $ns at 3.0 "$ftp start" 
 
+$ns at 100.0 "$ftp stop; $ns halt;"
+$ns run

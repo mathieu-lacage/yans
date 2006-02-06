@@ -19,48 +19,44 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#ifndef NODE_EMPTY_H
-#define NODE_EMPTY_H
-
-#include "node.h"
 #include <list>
 
-class Packet;
-class Agent;
-class Classifier;
-class NetInterface;
+#include "packet.h"
+
+#include "simple-broadcast-channel.h"
+#include "net-interface-constructor.h"
 
 
-class NodeEmpty : public TclObject {
-public:
-	NodeEmpty ();
-	virtual ~NodeEmpty ();
+SimpleBroadcastChannel::SimpleBroadcastChannel ()
+{}
+SimpleBroadcastChannel::~SimpleBroadcastChannel ()
+{}
 
-	int getAddress (void);
+void 
+SimpleBroadcastChannel::sendDown (Packet *packet, NetInterface *caller)
+{
+	std::list<NetInterface *>::iterator tmp;
+	bool needToCopy = false;
+	/* We could add a simple propagation delay to each packet 
+	 * being received here.
+	 */
+	for (tmp = m_interfaces.begin (); tmp != m_interfaces.end (); tmp++) {
+		if ((*tmp) != caller) {
+			Packet *p;
+			if (needToCopy) {
+				p = packet->copy ();
+			} else {
+				p = packet;
+				needToCopy = true;
+			}
+			(*tmp)->sendUp (p);
+		}
+	}
+}
 
-	// XXX this should be something like sendDownToInterface
-	void sendDown (Packet *packet);
-	void receiveFromInterface (Packet *packet, NetInterface *interface);
+void 
+SimpleBroadcastChannel::registerInterface (NetInterface *interface)
+{
+	m_interfaces.push_back (interface);
+}
 
-	int command(int argc, const char*const* argv);
-private:
-	void attachAgent (Agent *agent);
-	int allocUid (void);
-
-	static int m_uid;
-	int m_address;
-	Classifier *m_demux;
-	Classifier *m_entry;
-	NetInterface *m_interface;
-	NsObject *m_interfaceConnector;
-
-	double m_x;
-	double m_y;
-	double m_z;
-
-	double m_speedX;
-	double m_speedY;
-	double m_speedZ;
-};
-
-#endif /* NODE_EMPTY_H */
