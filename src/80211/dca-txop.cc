@@ -59,7 +59,7 @@
 
 
 #ifndef DCA_TXOP_TRACE
-#define DCA_TXOP_TRACE 1
+#define nopeDCA_TXOP_TRACE 1
 #endif /* DCA_TXOP_TRACE */
 
 #ifdef DCA_TXOP_TRACE

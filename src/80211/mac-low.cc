@@ -60,7 +60,7 @@
 #include <iostream>
 
 #ifndef MAC_LOW_TRACE
-#define MAC_LOW_TRACE 1
+#define nopeMAC_LOW_TRACE 1
 #endif
 
 #ifdef MAC_LOW_TRACE
