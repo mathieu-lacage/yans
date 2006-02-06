@@ -1,0 +1,183 @@
+This directory contains code to implement a new 802.11 PHY and MAC 
+layer for ns-2.
+
+1) The models.
+--------------
+
+1.1) PHY model.
+---------------
+
+The PHY layer implements a BER-based simulation model. A discussion
+of various the various simulation models used in various simulators
+can be found in "Effects of Wireless Physical Layer Modeling in Mobile 
+Ad Hoc Networks" by Mineo Takai, Jay Martin and Rajive Bagrodia.
+ Definitions:
+   - SNIR (Signal to Noise Interference Ratio) = S / (Nf + Ni)
+   - S (Signal)
+   - Nf (Noise floor) = 
+   - Ni (Noise Interference) = sum over all signals (minus 
+     the current) of their energy
+ How it receives a packet:
+   - if the SNIR of the first bit of the arriving packet is higher
+     than rxThreshold, lock reception onto this packet.
+   - when the last bit of a locked packet is received, parse
+     the event history to reconstruct the piecewise SNIR function
+     during reception of this packet. 
+   - Use the piecewise SNIR function to calculate the probability
+     of receiving correctly each chunk of data over which the
+     SNIR is constant and the transmission mode is the same.
+     Specifically, this is done with 
+        P_i = (1-BER_i)^nbits_i
+        where :
+           - nbits_i is the number of bits over which the SNIR
+             and the transmission mode is constant.
+           - BER_i is the BER calculated from a constant SNIR.
+             Of course, it depends on the current transmission 
+             mode 
+   - calculate the PER = 1-product (P_i)
+   - draw a random number in a uniform distribution between 0
+     and 1. 
+   - if the random number is higher than PER, the packet is 
+     received correctly. Otherwise, it is received with errors.
+
+
+1.2) MAC model.
+---------------
+
+The MAC layer was designed to implement all of the IEEE 802.11
+specification. The goal is to implement:
+  - IEEE 802.11 1999
+  - IEEE 802.11 A 1999
+  - IEEE 802.11 B 1999
+  - IEEE 802.11 E/D9
+
+2) Major Architecture decisions.
+--------------------------------
+
+* It is impossible to cancel a transmission once it has been started 
+by the MAC. Specifically, you cannot go to sleep during a transmission.
+This is impossible for at least the two following reasons but I am 
+pretty sure that a lot of code has been written with this assumption
+in mind so giving up on this requirement will be very hard if not
+impossible without a full rewrite:
+
+    - once a Tx packet has been sent on the wireless medium,
+      the other stations have started received it. canceling
+      the tx would mean notifying all the stations listening
+      on the medium and there is no framework to do this in 
+      ns-2. The receiving stations have also not been designed
+      to handle interrupted RX because of interrupted TX.
+
+
+* It is possible for the PHY to interrupt packet reception for
+a transmission.
+
+* Both the PHY and MAC never generate end-of-transmission events
+so the state of the PHY and the MAC is not calculated when events
+are received. Instead, it is lazily evaluated when a "client"
+wants to know the state of the PHY or the MAC.
+
+3) PHY architecture.
+--------------------
+
+The PHY receives three types of events:
+  - start of reception (first bit of a packet is received)
+  - end of reception (last bit of a packet is received)
+  - start of transmission (the first bit of a packet is
+    sent on the medium).
+
+It maintains two lists of events:
+  - a "reception list": it contains an entry for each packet
+    which is sensed on the medium. Each entry identifies the
+    packet, its size, its transmission modes, its transmission
+    power, its start and end reception time. The list is sorted
+    by increasing start of reception time.
+    This list is used exclusively to calculate the piecewise 
+    SNIR function upon the "end of reception" event. Whenever
+    an element is appended to this list, we try to get rid of 
+    the events which are old enough that they will never 
+    interfere with any other packet received later. This is
+    done with a "max packet size".
+
+  - a "state list": each state change in the PHY is recorded 
+    in this list. This list is used exclusively by the MAC to
+    calculate the backoff durations. As such, this list does not
+    grow when no backoff is underway and is emptied whenever
+    a backoff is completed of canceled.
+
+Its state machine is:
+                 ________
+                 |  TX  | +---------
+                 --------          |
+                   | +             |
+                   | |             |
+                   + |             |
+ _________       ________       ________
+ | SLEEP | ----+ | IDLE | ----+ | SYNC |
+ |       | +---- |      | +---- |      |
+ ---------       --------       --------
+     +                             |
+     |_____________________________|
+
+
+
+4) MAC architecture.
+--------------------
+
+The MAC is split is many pieces:
+  - Mac80211 is the object which encapsulates the whole MAC stack
+    for the rest of ns-2.
+  - MacLow80211 is the object which implements the low-level parts
+    of the ieee 802.11 MAC protocol. Specifically, it handles 
+    RTS/RTS handshakes, and DATA/ACK handshakes with proper timing.
+
+4.1) MacLow80211.
+-----------------
+
+This code deals with the following external events:
+  - reception of packet from PHY: occurs when the last bit of a packet
+    has been received by the PHY. The PHY reports the reception status
+    of the packet.
+  - reception of packet from Mac: occurs when the higher-level protocol
+    layers push a packet to the MacLow for transmission on the wireless 
+    medium.
+This object also generates internaly quite a few events:
+  - "ACK timeout": when a data transmission which requires an ACK has been
+    initiated, and no ACK packet has been received during ACKTimeout 
+    after the end of transmission. This event occurs at the expected end 
+    of the backoff which must be started after the ACK Timeout.
+  - "CTS timeout": when a RTS has been sent and no CTS has been received
+    during CTSTimeout after the end of transmission of the RTS. This 
+    event occurs at the expected end of the backoff which must be started 
+    after the CTS Timeout.
+  - "send data after CTS": a CTS has been received after a RTS. This
+    event happens after SIFS after the end of reception of the CTS.
+  - "send CTS after RTS": a RTS has been received. This event happens
+    after SIFS after the end of reception of the RTS.
+  - "send ACK after data": a DATA packet which requires an ACK has
+    been received. This event happens after SIFS after the end of 
+    reception of the DATA.
+  - "end of access backoff": this event happens at the expected end of
+    the backoff started to access the medium to start a fresh 
+    transmission.
+Three of these events deal with "end of backoff events":
+  - "ACK timeout"
+  - "CTS timeout"
+  - "end of access backoff"
+The really tricky bit of code which is present in this MAC is related to
+the way these events are dealt with. Specifically, because the MAC
+cannot continuously update its state (because of the lack of "end of 
+transmission" events most notably), it needs to:
+  - re-calculate its past state from the "state history" recorded
+    by the PHY since the start of the backoff
+  - evaluate whether or not the backoff is really completed based on 
+    the "state history".
+  - if the backoff is not really completed, restart the timer to
+    trigger at the newly expected end of backoff.
+This idea is described in a paper published at mswim'04: "scalable
+simulation of large-scale wireless networks with bounded inaccuracies"
+by Whengrong Ji, Junlan Zhou,Mineo Takai and Rajive Bagrodia.
+
+The code which calculates the backoff duration is located in the Backoff
+class.
+
