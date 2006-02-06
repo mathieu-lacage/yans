@@ -48,10 +48,8 @@ public:
 	MacCancelableEvent ();
 	bool isCanceled (void);
 	void cancel (void);
-	double getStartTime (void);
 private:
 	bool m_canceled;
-	double m_startTime;
 };
 
 template<typename TYPE>

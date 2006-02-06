@@ -43,8 +43,7 @@
 #include "mac-handler.tcc"
 
 MacCancelableEvent::MacCancelableEvent ()
-	: m_canceled (false),
-	  m_startTime (Scheduler::instance ().clock ())
+	: m_canceled (false)
 {}
 bool 
 MacCancelableEvent::isCanceled (void) 
@@ -55,10 +54,5 @@ void
 MacCancelableEvent::cancel (void)
 {
 	m_canceled = true;
-}
-double
-MacCancelableEvent::getStartTime (void)
-{
-	return m_startTime;
 }
 
