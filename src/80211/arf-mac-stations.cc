@@ -41,10 +41,6 @@ ArfMacStation::ArfMacStation (MacStations *stations,
         m_recovery = false;
         m_retry = 0;
         m_timer = 0;
-
-        /* 1/2 */
-        m_recovery_scenario = "1000000000000000000000";
-        m_normal_scenario   = "01010101010101010101010";
 }
 ArfMacStation::~ArfMacStation ()
 {}
@@ -59,6 +55,27 @@ ArfMacStation::getMinRate (void)
 {
 	return 0;
 }
+
+bool 
+ArfMacStation::needRecoveryFallback (void)
+{
+	if (m_retry == 1) {
+		return true;
+	} else {
+		return false;
+	}
+}
+bool 
+ArfMacStation::needNormalFallback (void)
+{
+	int retry_mod = (m_retry - 1) % 2;
+	if (retry_mod == 1) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
 
 
 void 
@@ -83,24 +100,20 @@ ArfMacStation::reportDataFailed (void)
 
         if (m_recovery) {
                 assert (m_retry >= 1);
-                assert (((size_t)m_retry - 1) <= strlen (m_recovery_scenario));
-                if (m_recovery_scenario[m_retry-1] == '1') {
+                if (needRecoveryFallback ()) {
                         reportRecoveryFailure ();
                         if (m_rate != getMinRate ()) {
                                 m_rate--;
                         }
-                } else if (m_recovery_scenario[m_retry-1] == '0') {
                 }
                 m_timer = 0;
         } else {
                 assert (m_retry >= 1);
-                assert (((size_t)m_retry - 1) <= strlen (m_normal_scenario));
-                if (m_normal_scenario[m_retry-1] == '1') {
+                if (needNormalFallback ()) {
                         reportFailure ();
                         if (m_rate != getMinRate ()) {
                                 m_rate--;
                         }
-                } else if (m_normal_scenario[m_retry-1] == '0') {
                 }
                 if (m_retry >= 2) {
                         m_timer = 0;

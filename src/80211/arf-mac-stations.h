@@ -69,15 +69,15 @@ private:
 	int m_min_timer_timeout;
 	int m_min_success_threshold;
 	
-	char *m_normal_scenario;
-	char *m_recovery_scenario;
-	
 private:
 	virtual void reportRecoveryFailure (void);
 	virtual void reportFailure (void);
 
 	int getMaxRate (void);
 	int getMinRate (void);
+
+	bool needRecoveryFallback (void);
+	bool needNormalFallback (void);
 	
 protected:
 	int getMinTimerTimeout (void);
