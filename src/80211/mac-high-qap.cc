@@ -349,6 +349,11 @@ MacHighQap::gotCFPoll (Packet *packet)
 	// XXX not implemented
 	assert (false);
 }
+void 
+MacHighQap::gotQosNull (Packet *packet)
+{
+	m_scheduler->gotQosNull (packet);
+}
 
 
 void

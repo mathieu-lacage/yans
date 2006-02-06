@@ -131,9 +131,13 @@ MacHighNqap::gotDelTsRequest (Packet *packet)
 {
 	assert (false);
 }
-
 void 
 MacHighNqap::gotCFPoll (Packet *packet)
+{
+	assert (false);
+}
+void 
+MacHighNqap::gotQosNull (Packet *packet)
 {
 	assert (false);
 }

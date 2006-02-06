@@ -52,6 +52,7 @@ private:
 	virtual void gotAddTsRequest (Packet *packet);
 	virtual void gotDelTsRequest (Packet *packet);
 	virtual void gotCFPoll (Packet *packet);
+	virtual void gotQosNull (Packet *packet);
 
 	MacDcfParameters *m_dcfParameters;
 	MacQueue80211e *m_queue;

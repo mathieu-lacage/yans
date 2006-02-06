@@ -47,6 +47,7 @@ public:
 	virtual void gotAddTsRequest (Packet *packet) = 0;
 	virtual void gotDelTsRequest (Packet *packet) = 0;
 	virtual void gotCFPoll (Packet *packet) = 0;
+	virtual void gotQosNull (Packet *packet) = 0;
 };
 
 #endif /* MAC_HIGH_AP */
