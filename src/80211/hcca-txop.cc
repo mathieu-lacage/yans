@@ -114,10 +114,7 @@ HccaTxop::enoughTimeFor (Packet *packet)
 	low ()->setData (packet);
 	double duration = low ()->calculateHandshakeDuration ();
 	low ()->clearData ();
-	if (enoughTimeFor (duration)) {
-		return false;
-	}
-	return true;
+	return enoughTimeFor (duration);
 }
 void
 HccaTxop::setCurrentTsid (uint8_t tsid)
@@ -137,9 +134,11 @@ HccaTxop::txCurrent (void)
 
 	if (m_currentTxPacket == 0) {
 		if (queue->isEmpty ()) {
+			TRACE ("queue empty");
 			return false;
 		}
 		if (!enoughTimeFor (queue->peekNextPacket ())) {
+			TRACE ("not enough time to complete next packet");
 			goto tryToSendQosNull;
 		}
 		assert (m_currentTxPacket == 0);
@@ -151,6 +150,7 @@ HccaTxop::txCurrent (void)
 		 * XXX shouldn't we ask for a longer txop with
 		 * some special frame ?
 		 */
+		TRACE ("not enough time for current packet.");
 		goto tryToSendQosNull;
 	}
 
@@ -159,8 +159,10 @@ HccaTxop::txCurrent (void)
 		// burst for next packet ?
 		Packet *nextPacket = queue->peekNextPacket ();
 		low ()->enableNextData (getSize (nextPacket));
+		TRACE ("send to %d burst next", getDestination (m_currentTxPacket));
 	} else {
 		low ()->disableNextData ();
+		TRACE ("send to %d", getDestination (m_currentTxPacket));
 	}
 	low ()->disableRTS ();
 	low ()->enableACK ();
