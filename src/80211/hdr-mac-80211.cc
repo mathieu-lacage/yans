@@ -159,7 +159,7 @@ hdr_mac_80211::setType (enum mac_80211_packet_type type)
 void 
 hdr_mac_80211::setDuration (double duration)
 {
-	if (fabs (duration) < 1e6) {
+	if (fabs (duration) < 1e-6) {
 		duration = 0.0;
 	}
 	assert (duration >= 0);
