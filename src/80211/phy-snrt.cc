@@ -59,6 +59,7 @@ PhySnrt::PhySnrt ()
 	m_endRxHandler = new DynamicHandler<PhySnrt> (this, &PhySnrt::endRx);
 	m_rxPacket = 0;
 	m_snrThreshold = 1;
+	m_currentNI = 0.0;
 }
 
 PhySnrt::~PhySnrt ()
@@ -110,12 +111,12 @@ PhySnrt::startRx (Packet *packet)
 	appendRxEvent (rxDuration, power);
 	switch (getState ()) {
 	case Phy80211::SYNC:
-		TRACE ("drop packet because already in sync");
+		TRACE ("drop packet because already in sync (power: %e until %f)", power, now () + rxDuration);
 		assert (m_rxPacket != 0);
 		Packet::free (packet);
 		break;
 	case Phy80211::TX:
-		TRACE ("drop packet because already in tx");
+		TRACE ("drop packet because already in tx (power: %e until %f)", power, now () + rxDuration);
 		Packet::free (packet);
 		break;
 	case Phy80211::SLEEP:
@@ -126,7 +127,7 @@ PhySnrt::startRx (Packet *packet)
 		
 		if (power > dBmToW (getRxThreshold ())) {
 			// sync to signal
-			TRACE ("sync on packet");
+			TRACE ("sync on packet (power: %e until %f)", power, now () + rxDuration);
 			notifyRxStart (now (), rxDuration);
 			switchToSyncFromIdle (rxDuration);
 			m_rxPacket = packet;
@@ -135,7 +136,7 @@ PhySnrt::startRx (Packet *packet)
 			/* if the energy of the signal is smaller than rxThreshold,
 			 * this packet is not synced upon.
 			 */
-			TRACE ("drop packet");
+			TRACE ("drop packet (power: %e until %f)", power, now () + rxDuration);
 			Packet::free (packet);
 		}
 	} break;
@@ -148,9 +149,11 @@ PhySnrt::endRx (MacCancelableEvent *ev)
 	assert (getState () == Phy80211::SYNC);
 
 	double power = calculatePower (m_rxPacket);
+	double ni = getCurrentNi ();
 	double snr = SNR (power, 
-			  getCurrentNi () - power, 
+			  ni - power, 
 			  getMode (getPayloadMode (m_rxPacket)));
+	TRACE ("end rx (snr=%e/%e=%f)", power, ni - power, snr)
 	setLastRxSNR (snr);
 
 	bool receivedOk;
@@ -160,9 +163,9 @@ PhySnrt::endRx (MacCancelableEvent *ev)
 		receivedOk = false;
 	}
 	if (receivedOk) {
-		HDR_CMN (m_rxPacket)->error () = 1;
-	} else {
 		HDR_CMN (m_rxPacket)->error () = 0;
+	} else {
+		HDR_CMN (m_rxPacket)->error () = 1;
 	}
 	HDR_CMN (m_rxPacket)->direction() = hdr_cmn::UP;
 	
