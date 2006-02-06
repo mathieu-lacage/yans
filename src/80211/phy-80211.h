@@ -101,6 +101,8 @@ public:
 
 	double calculateTxDuration (Packet *packet);
 	double calculateTxDuration (int payloadMode, int size);
+
+	int getNModes (void);
 private:
 	friend class PhyRxEvent;
 	class NIChange {

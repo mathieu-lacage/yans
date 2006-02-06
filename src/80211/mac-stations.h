@@ -24,17 +24,21 @@
 #include <map>
 
 class MacStation;
+class Mac80211;
 
 class MacStations {
 public:
-	MacStations ();
+	MacStations (Mac80211 *mac);
 	virtual ~MacStations ();
   
 	MacStation *lookup (int address);
 
+	int getNModes (void);
+
 private:
 	std::map <int, class MacStation *, std::less<int> > m_addresses;
 	virtual class MacStation *createStation (void) = 0;
+	Mac80211 *m_mac;
 };
 
 

@@ -20,9 +20,12 @@
  */
 
 #include "mac-stations.h"
+#include "mac-80211.h"
+#include "phy-80211.h"
 
 
-MacStations::MacStations ()
+MacStations::MacStations (Mac80211 *mac)
+	:m_mac (mac)
 {}
 
 MacStations::~MacStations ()
@@ -35,5 +38,11 @@ MacStations::lookup (int address)
 		m_addresses[address] = createStation ();
 	}
 	return m_addresses[address];
+}
+
+int 
+MacStations::getNModes (void)
+{
+	return m_mac->peekPhy80211 ()->getNModes ();
 }
 

@@ -34,7 +34,7 @@
 
 #define nopeMAC_DEBUG 1
 #define MAC_TRACE 1
-#define nopeMAC_TRACE_VERBOSE 1
+#define MAC_TRACE_VERBOSE 1
 
 #ifdef MAC_DEBUG
 # define DEBUG(format, ...) \
@@ -56,66 +56,6 @@
 #else /* MAC_TRACE_VERBOSE */
 # define TRACE_VERBOSE(format, ...)
 #endif /* MAC_TRACE_VERBOSE */
-
-/* The core idea behind the MAC is to defer every event 
- * as much as possible so that multiple events are coalesced
- * together.
- * The mac has one input queue which contains an entry for
- * each packet to be send by the MAC. It also stores internally
- * a single packet which is the packet it is currently trying 
- * to send. When a packet is added to this queue, the MAC is 
- * notified. The MAC has three states: (four if you add SLEEP)
- *   - BUSY_TX
- *   - BUSY_ACCESS
- *   - IDLE
- *
- *
- * The BUSY_TX state represents the MAC trying to send a data packet.
- * This state starts when the first bit of an RTS or the DATA packet 
- * is sent. It ends when either the packet is successfully transmitted
- * or when its retry count has expired.
- * The BUSY_TX state does not cover the interval where the MAC is
- * contending for the medium for the first time with a DEFER/BACKOFF but
- * it covers the BACKOFF intervals for the transmission retries.
- *
- *
- * The BUSY_ACCESS state represents the MAC trying to access the 
- * medium to start the transmission of a packet. This covers
- * the DIFS/EIFS defer and the initial BACKOFF. During this state,
- * a timeout is running which is supposed to be triggered at the end
- * of the BACKOFF. When the timeout expires, the MAC switches to 
- * BUSY_TX if a packet is still present in the MAC input queue.
- * It switches to IDLE otherwise.
- *
- *
- * The IDLE state represents a MAC which has no packets to send.
- *
- * When the MAC receives a new packet in its input queue:
- *  - If it is in the BUSY_TX state, the MAC does nothing
- *  - If it is in IDLE state and if its PHY is IDLE,
- *    and if the NAV counter is zero, the MAC immediately tries
- *    to send this packet. Switch to BUSY_TX state.
- *  - If it is in IDLE state and if its PHY is SYNCed, 
- *    the MAC does nothing.
- *  - If it is in IDLE and Phy is TXing (the MAC is merely 
- *    replying to an RTS with a CTS or to a DATA with an 
- *    ACK), the MAC switches to BUSY_ACCESS
- *  - If it is in BUSY_ACCESS state, the MAC does nothing.
- *
- * If the MAC is IDLE and it receives a packet from the PHY,
- * it must check if a packet is present in the input
- * queue and switch to BUSY_ACCESS in this case.
- *
- * When the MAC is about to leave the BUSY_TX state, it must check
- * whether a packet is available in its input queue. If so, it enters
- * immediately the BUSY_ACCESS state.
- *
- * When the MAC is about to leave BUSY_ACCESS, it checks whether
- * a packet is still available in its input queue. If so, we switch
- * to BUSY_TX state.
- *
- */
-
 
 class SendCTSEvent : public MacCancelableEvent
 {
@@ -893,7 +833,7 @@ MacLow80211::ACKTimeout (class MacCancelableEvent *event)
 		TRACE_VERBOSE ("ACK timeout not finished");
 		return;
 	}
-	TRACE_VERBOSE ("ACK timeout");
+	TRACE_VERBOSE ("ACK timeout SLRC %d", m_SLRC);
 
 	/* access backoff and ACK timeout completed. 
 	 * - update retry counters

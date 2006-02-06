@@ -23,9 +23,11 @@
 
 #include "mac-stations.h"
 
+class Mac80211;
+
 class ArfMacStations : public MacStations {
 public:
-	ArfMacStations ();
+	ArfMacStations (Mac80211 *mac);
 	virtual ~ArfMacStations ();
 private:
 	virtual class MacStation *createStation (void);

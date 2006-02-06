@@ -20,9 +20,11 @@
  */
 
 #include "mac-station.h"
+#include "mac-stations.h"
 
-MacStation::MacStation ()
-	: m_sequence (0)
+MacStation::MacStation (MacStations *stations)
+	: m_sequence (0),
+	  m_stations (stations)
 {}
 
 
@@ -39,4 +41,10 @@ int
 MacStation::getLastRxSequence (void)
 {
 	return m_sequence;
+}
+
+int
+MacStation::getNModes (void)
+{
+	return m_stations->getNModes ();
 }

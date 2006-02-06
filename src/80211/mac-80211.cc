@@ -41,7 +41,7 @@ public:
 
 Mac80211::Mac80211 ()
 	: Mac (),
-	  m_stations (new ArfMacStations ()),
+	  m_stations (new ArfMacStations (this)),
 	  m_low (new MacLow80211 (this))
 {}
 

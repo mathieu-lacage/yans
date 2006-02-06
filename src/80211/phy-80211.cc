@@ -444,6 +444,11 @@ Phy80211::getLastRxStartTime (void)
 {
 	return m_rxStartTime;
 }
+int 
+Phy80211::getNModes (void)
+{
+	return m_modes.size ();
+}
 double
 Phy80211::now (void)
 {

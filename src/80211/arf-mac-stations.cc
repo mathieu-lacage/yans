@@ -28,10 +28,9 @@
 class ArfMacStation : public MacStation
 {
 public:
-	ArfMacStation (int min_timer_timeout,
-			int min_success_threshold,
-			int max_rate,
-			int min_rate);
+	ArfMacStation (MacStations *stations,
+		       int min_timer_timeout,
+		       int min_success_threshold);
 	virtual ~ArfMacStation ();
 
 	virtual void reportRxOk (double SNR, int mode);
@@ -54,9 +53,7 @@ private:
 	
 	int m_timer_timeout;
 	int m_success_threshold;
-	int m_max_rate;
-	int m_min_rate;
-	
+
 	int m_rate;
 	
 	int m_min_timer_timeout;
@@ -68,6 +65,9 @@ private:
 private:
 	virtual void reportRecoveryFailure (void);
 	virtual void reportFailure (void);
+
+	int getMaxRate (void);
+	int getMinRate (void);
 	
 protected:
 	int getMinTimerTimeout (void);
@@ -80,18 +80,16 @@ protected:
 	void setSuccessThreshold (int success_threshold);
 };
 
-ArfMacStation::ArfMacStation (int min_timer_timeout,
-				int min_success_threshold,
-				int max_rate,
-				int min_rate)
+ArfMacStation::ArfMacStation (MacStations *stations,
+			      int min_timer_timeout,
+			      int min_success_threshold)
+	: MacStation (stations)
 {
         m_min_timer_timeout = min_timer_timeout;
         m_min_success_threshold = min_success_threshold;
-        m_max_rate = max_rate;
-        m_min_rate = min_rate;
         m_success_threshold = m_min_success_threshold;
         m_timer_timeout = m_min_timer_timeout;
-        m_rate = m_min_rate;
+        m_rate = getMinRate ();
 
         m_success = 0;
         m_failed = 0;
@@ -105,6 +103,18 @@ ArfMacStation::ArfMacStation (int min_timer_timeout,
 }
 ArfMacStation::~ArfMacStation ()
 {}
+
+int 
+ArfMacStation::getMaxRate (void)
+{
+	return getNModes ();
+}
+int 
+ArfMacStation::getMinRate (void)
+{
+	return 0;
+}
+
 
 void 
 ArfMacStation::reportRTSFailed (void)
@@ -131,7 +141,7 @@ ArfMacStation::reportDataFailed (void)
                 assert (m_retry - 1 <= strlen (m_recovery_scenario));
                 if (m_recovery_scenario[m_retry-1] == '1') {
                         reportRecoveryFailure ();
-                        if (m_rate != m_min_rate) {
+                        if (m_rate != getMinRate ()) {
                                 m_rate--;
                         }
                 } else if (m_recovery_scenario[m_retry-1] == '0') {
@@ -142,7 +152,7 @@ ArfMacStation::reportDataFailed (void)
                 assert (m_retry - 1 <= strlen (m_normal_scenario));
                 if (m_normal_scenario[m_retry-1] == '1') {
                         reportFailure ();
-                        if (m_rate != m_min_rate) {
+                        if (m_rate != getMinRate ()) {
                                 m_rate--;
                         }
                 } else if (m_normal_scenario[m_retry-1] == '0') {
@@ -166,7 +176,7 @@ void ArfMacStation::reportDataOk (double ackSNR, int ackMode)
         m_retry = 0;
         if ((m_success == getSuccessThreshold () ||
              m_timer == getTimerTimeout ()) &&
-            (m_rate < (m_max_rate - 1))) {
+            (m_rate < (getMaxRate () - 1))) {
                 m_rate++;
                 m_timer = 0;
                 m_success = 0;
@@ -222,7 +232,8 @@ void ArfMacStation::setSuccessThreshold (int success_threshold)
 
 
 
-ArfMacStations::ArfMacStations ()
+ArfMacStations::ArfMacStations (Mac80211 *mac)
+	: MacStations (mac)
 {}
 ArfMacStations::~ArfMacStations ()
 {}
@@ -230,6 +241,6 @@ MacStation *
 ArfMacStations::createStation (void)
 {
 	/* XXX: use mac to access user and PHY params. */
-	return new ArfMacStation (15, 10, 0, 5);
+	return new ArfMacStation (this, 15, 10);
 }
 

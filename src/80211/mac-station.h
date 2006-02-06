@@ -21,9 +21,11 @@
 #ifndef MAC_STATION_H
 #define MAC_STATION_H
 
+class MacStations;
+
 class MacStation {
 public:
-	MacStation ();
+	MacStation (MacStations *stations);
 
 	virtual ~MacStation ();
 
@@ -40,8 +42,11 @@ public:
 	virtual int getDataMode (int size) = 0;
 	virtual int getRTSMode (void) = 0;
 
- private:
+protected:
+	int getNModes (void);
+private:
 	int m_sequence;
+	MacStations *m_stations;
 };
 
 #endif /* MAC_STA_H */
