@@ -165,6 +165,7 @@ HccaTxop::getQosNullFor (int destination)
 	setFinalDestination (packet, destination);
 	setType (packet, MAC_80211_MGT_QOSNULL);
 	setSize (packet, parameters ()->getPacketSize (MAC_80211_MGT_QOSNULL));
+	return packet;
 }
 void
 HccaTxop::tryToSendQosNull (void)
@@ -175,7 +176,6 @@ HccaTxop::tryToSendQosNull (void)
 	low ()->disableRTS ();
 	low ()->enableFastAck ();
 	low ()->disableNextData ();
-	MacStation *station = lookupDestStation (qosNull);
 	low ()->setDataTransmissionMode (0);
 	low ()->setData (qosNull);
 	double duration = low ()->calculateHandshakeDuration ();
@@ -251,7 +251,6 @@ HccaTxop::txCurrent (void)
 
  tryToSendQosNull:
 	tryToSendQosNull ();
- out:
 	return false;
 }
 
