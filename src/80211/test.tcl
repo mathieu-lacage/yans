@@ -74,6 +74,17 @@ proc addts-request {node tspec granted_callback refused_callback} {
 #################################################################
 #################################################################
 
+
+#################################################################
+# Multicast simulation.
+# No way this is ever going to work.
+#set ns [new Simulator -multicast on]
+#set group [Node allocaddr]
+#set mproto DM          
+#set mrthandle [$ns mrtproto $mproto] 
+
+#################################################################
+# Normal Unicast simulation.
 set ns [new Simulator]
 $ns use-scheduler Heap
 
@@ -100,10 +111,26 @@ $ns trace-all [open test.tr w]
 set nodes(0) [$ns node]
 set nodes(1) [$ns node]
 set nodes(2) [$ns node]
+$nodes(0) set X_ 0.0
+$nodes(0) set Y_ 0.0
+$nodes(0) set Z_ 0.0
 
-set-qbss-mode 2 nodes
-#set-bss-mode 2 nodes
+$nodes(1) set X_ 200.0
+$nodes(1) set Y_ 0.0
+$nodes(1) set Z_ 0.0
+
+$nodes(2) set X_ 0.0
+$nodes(2) set Y_ 200.0
+$nodes(2) set Z_ 0.0
+
+
+#set-qbss-mode 2 nodes
+set-bss-mode 2 nodes
 #set-adhoc-mode nodes
+
+
+#########################################################
+#      802.11e testing. Setup 2 TSs.
 
 #
 # This is the canonical PCM coding for telephony networks:
@@ -155,7 +182,7 @@ proc addts-granted-callback0 {tspec tsid} {
 proc addts-refused-callback0 {tspec tsid} {
     puts "tspec refused for tsid $tsid";
 }
-addts-request $nodes(0) $tspec addts-granted-callback0 addts-refused-callback0
+#addts-request $nodes(0) $tspec addts-granted-callback0 addts-refused-callback0
 
 
 set tspec [new TSPEC]
@@ -192,31 +219,50 @@ proc addts-granted-callback1 {tspec tsid} {
 proc addts-refused-callback1 {tspec tsid} {
     puts "tspec refused for tsid $tsid";
 }
-addts-request $nodes(1) $tspec addts-granted-callback1 addts-refused-callback1
+#addts-request $nodes(1) $tspec addts-granted-callback1 addts-refused-callback1
+#########################################################
 
 
-$nodes(0) set X_ 0.0
-$nodes(0) set Y_ 0.0
-$nodes(0) set Z_ 0.0
 
-$nodes(1) set X_ 200.0
-$nodes(1) set Y_ 0.0
-$nodes(1) set Z_ 0.0
-
-$nodes(2) set X_ 0.0
-$nodes(2) set Y_ 200.0
-$nodes(2) set Z_ 0.0
+#########################################################
+#    Multicast testing.
+#    No way this is ever going to work.
+# setup udp multicast receivers.
+#set rcvr1 [new Agent/LossMonitor]
+#set rcvr2 [new Agent/LossMonitor]
+#$ns at 1.0 "$nodes(1) join-group $rcvr1 $group" 
+#$ns at 1.0 "$nodes(2) join-group $rcvr2 $group" 
 
 
+# setup udp multicast source.
+#set n0 $nodes(0)
+#set udp [new Agent/UDP]    
+#$ns attach-agent $n0 $udp 
+#set src [new Application/Traffic/CBR]        
+#$src attach-agent $udp
+#$udp set dst_addr_ $group
+#$udp set dst_port_ 0
+#$ns at 3.0 "$src start"
+#
+#########################################################
+
+
+#########################################################
+#   Normal tcp testing for 802.11
+# setup tcp receiver
+set sink [new Agent/TCPSink]
+$ns attach-agent $nodes(1) $sink
+# setup tcp source.
 set tcp [new Agent/TCP]
 $tcp set class_ 2
-set sink [new Agent/TCPSink]
 $ns attach-agent $nodes(0) $tcp
-$ns attach-agent $nodes(1) $sink
-$ns connect $tcp $sink
 set ftp [new Application/FTP]
 $ftp attach-agent $tcp
+# connect tcp source to receiver
+$ns connect $tcp $sink
+# start source.
 #$ns at 3.0 "$ftp start" 
+#########################################################
 
 $ns at 300 "puts \"End of simulation.\"; $ns halt"
 puts "Starting Simulation..."
