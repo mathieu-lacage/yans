@@ -105,6 +105,11 @@ public:
 	int getNModes (void);
 private:
 	friend class PhyRxEvent;
+	enum {
+		standard_80211_unknown = 0,
+		standard_80211_b = 1,
+		standard_80211_a = 2,
+	};
 	class NIChange {
 	public:
 		NIChange (double time, double delta);

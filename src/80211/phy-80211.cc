@@ -273,18 +273,16 @@ Phy80211::Phy80211 ()
 	if (isClassDefined ("Phy/Phy80211", "standard")) {
 		bind ("standard", (unsigned int *)&m_standard);
 	} else {
-		m_standard = 2;
+		m_standard = standard_80211_a;
 	}
-	if (m_standard == 0) {
-		cout << "nothing" << endl;
-	} else if (m_standard == 1) {
-		cout << "802.11b" << endl;
+	if (m_standard == standard_80211_unknown) {
+		
+	} else if (m_standard == standard_80211_b) {
 		// XXX
 		m_frequency = 2.4e9;
 		m_plcpPreambleDelay = 144e-6;
 		m_plcpHeaderLength = 48;
-	} else if (m_standard == 2) {
-		cout << "802.11a" << endl;
+	} else if (m_standard == standard_80211_a) {
 		m_frequency = 5e9;
 		m_plcpHeaderLength = 4 + 1 + 12 + 1 + 6 + 16 + 6;
 		m_plcpPreambleDelay = 20e-6;
