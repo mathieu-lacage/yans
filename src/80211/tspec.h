@@ -69,6 +69,8 @@ public:
 	double getSurplusBandwidthAllowance (void);
 	double getMediumTime (void);
 
+	virtual int command(int argc, const char*const* argv);
+
 private:
 	// XXX ?
 	void setNominalMSDUSize (uint16_t size);
@@ -114,9 +116,6 @@ private:
 	void initialize (char const *varName, uint16_t *variable, uint16_t defaultValue);
 	void initialize (char const *varName, double *variable, double defaultValue);
 	bool isDefined (char const *varName);
-
-	virtual int command(int argc, const char*const* argv);
-
 };
 
 
