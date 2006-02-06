@@ -35,6 +35,7 @@
 #include "mac-container.h"
 #include "mac-stations.h"
 #include "mac-station.h"
+#include "mac-tx-middle.h"
 
 #ifndef HCCA_TXOP_TRACE
 #define HCCA_TXOP_TRACE 1
@@ -143,6 +144,14 @@ HccaTxop::txCurrent (void)
 		}
 		assert (m_currentTxPacket == 0);
 		m_currentTxPacket = queue->dequeue ();
+		assert (m_currentTxPacket != 0);
+		initialize (m_currentTxPacket);
+		uint16_t sequence = m_container->macTxMiddle ()->getNextSequenceNumberFor (m_currentTxPacket);
+		setSequenceNumber (m_currentTxPacket, sequence);
+		TRACE ("dequeued %d to %d seq: 0x%x", 
+		       getSize (m_currentTxPacket), 
+		       getDestination (m_currentTxPacket),
+		       getSequenceControl (m_currentTxPacket));
 	}
 	if (!enoughTimeFor (m_currentTxPacket)) {
 		/* we don't have enough time to transmit the
