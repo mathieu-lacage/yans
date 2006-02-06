@@ -26,7 +26,7 @@
 #include "mac-stations.h"
 #include "mac-station.h"
 
-#define MAC_MIDDLE_TRACE 1
+#define nopeMAC_MIDDLE_TRACE 1
 
 #ifdef MAC_MIDDLE_TRACE
 # define TRACE(format, ...) \
@@ -222,7 +222,7 @@ MacRxMiddle::sequenceControlSmaller (int seqca, int seqcb)
 	int seqa = seqca >> 4;
 	int seqb = seqcb >> 4;
 	int delta = seqb - seqa;
-	printf ("seqb: %d, seqa: %d, delta: %d\n", seqb, seqa, delta);
+	TRACE ("seqb: %d, seqa: %d, delta: %d", seqb, seqa, delta);
 	if (delta <= 0 && delta < -2048) {
 		return true;
 	} else if (delta >= 0 && delta < 2048) {
@@ -416,6 +416,7 @@ MacRxMiddle::gotData (Packet *packet)
 	switch (getType (packet)) {
 	case MAC_80211_MGT_ADDBA_REQUEST:
 		TRACE ("got addba req");
+		originator->setSequenceControl (getSequenceControl (packet));
 		dropPacket (packet);
 		break;
 	case MAC_80211_DATA:
@@ -425,11 +426,13 @@ MacRxMiddle::gotData (Packet *packet)
 		    //!handleBlockAck (packet, originator) &&
 		    !handleFragments (packet, originator)) {
 			TRACE ("forwarding data from %d", getSource (packet));
+			originator->setSequenceControl (getSequenceControl (packet));
 			forwardToHigh (packet);
 		}
 		break;
 	default:
 		TRACE ("forwarding %s", getTypeString (packet));
+		originator->setSequenceControl (getSequenceControl (packet));
 		forwardToHigh (packet);
 		break;
 	}

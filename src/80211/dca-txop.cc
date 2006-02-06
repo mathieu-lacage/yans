@@ -34,7 +34,7 @@
 #include "mac-container.h"
 
 
-#define DCA_TXOP_TRACE 1
+#define nopeDCA_TXOP_TRACE 1
 
 #ifdef DCA_TXOP_TRACE
 # define TRACE(format, ...) \

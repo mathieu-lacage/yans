@@ -117,7 +117,7 @@ int
 MacParameters::getFragmentationThreshold (void)
 {
 	/* XXX */
-	int fragThreshold = 400;
+	int fragThreshold = 2000;
 	// if this assert is not verified, we cannot ensure
 	// that every MSDU will be fragmented in less than 
 	// 16 packets.

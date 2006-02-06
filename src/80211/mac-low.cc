@@ -32,7 +32,7 @@
 
 #include <iostream>
 
-#define MAC_TRACE 1
+#define nopeMAC_TRACE 1
 
 #ifdef MAC_TRACE
 # define TRACE(format, ...) \
