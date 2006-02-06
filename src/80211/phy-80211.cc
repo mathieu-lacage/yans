@@ -468,8 +468,8 @@ Phy80211::startTx (Packet *packet)
 	 *    prevent it.
 	 *  - we are idle
 	 */
-	assert (getState () != Phy80211::SLEEP &&
-		getState () != Phy80211::TX);
+	assert (getState () == Phy80211::IDLE ||
+		getState () == Phy80211::SYNC);
 
 	if (getState () == Phy80211::SYNC) {
 		cancelRx ();
