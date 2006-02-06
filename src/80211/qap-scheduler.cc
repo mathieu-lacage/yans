@@ -386,13 +386,21 @@ QapScheduler::addTsRequest (TSpec *tspec)
 	}
 	double capTime = 0.0;
 	double txopDuration = calculateTxopDuration (newServiceInterval, tspec);
-	if (txopDuration > getMaxTxopDuration ()) {
+	while (txopDuration > getMaxTxopDuration () &&
+	       newServiceInterval > 0.008) {
 		/* The txop duration for this TS is larger than 
 		 * what can be encoded in the txoplimit of the cfpoll 
-		 * packet. This is probably due to a MinimumServiceInterval
-		 * which was not correctly set in the tspec.
+		 * packet.
+		 * We need to adjust the service interval to decrease
+		 * the length of the TXOP.
 		 */
-		TRACE ("Refused new stream. Txop too large (%f > %f). Probably because of wrong MaximumServiceInterval",
+		newServiceInterval -= 0.001;
+		txopDuration = calculateTxopDuration (newServiceInterval, tspec);
+	}
+	if (newServiceInterval <= 0.008) {
+		TRACE ("Refused new stream. Something is wrong in the tspec parameters.\n"
+		       "\tCalculated SI: %f txop: %f max txop: %f",
+		       newServiceInterval,
 		       txopDuration,
 		       getMaxTxopDuration ());
 		return false;
