@@ -548,6 +548,7 @@ QapScheduler::startCurrentTxop (void)
 
 	TRACE ("start txop for %d until %f", (*m_txopIterator).getDestination (), m_txopEndTime);
 	
+	low ()->enableSuperFastAck ();
 	sendCfPollTo ((*m_txopIterator).getDestination (), 
 		      tspec->getTSID (),
 		      txopDuration);
@@ -583,7 +584,6 @@ QapScheduler::sendCfPollTo (int destination, uint8_t tsid, double txopDuration)
 	setFragmentNumber (packet, 0);
 	uint16_t sequence = m_container->macTxMiddle ()->getNextSequenceNumberFor (packet);
 	setSequenceNumber (packet, sequence);
-	low ()->enableSuperFastAck ();
 	low ()->disableRTS ();
 	low ()->enableOverrideDurationId (txopDuration);
 	low ()->setDataTransmissionMode (0);
@@ -605,6 +605,7 @@ QapScheduler::finishCap (void)
 	double cfPollDuration = m_container->phy ()->calculateTxDuration (0, getPacketSize (MAC_80211_MGT_CFPOLL));
 	double cfPollEnd = now () + cfPollDuration;
 	if (cfPollEnd < m_capEndTime) {
+		low ()->disableACK ();
 		sendCfPollTo (m_container->selfAddress (), 0, 0.0);
 	}
 }
