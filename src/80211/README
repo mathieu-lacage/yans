@@ -7,9 +7,10 @@ layer for ns-2.
 1.1) PHY models
 ---------------
 
-The PHY layer implements two different models:
-  - a BER-based model, and
-  - a SNRT-based model
+The PHY layer implements three different models:
+  - a BER-based model (slow, accurate),
+  - a SNRT-based model (faster, less accurate), and
+  - an Energy-based model (event faster, event less accurate)
 
 A discussion of the various simulation models used in various simulators
 can be found in "Effects of Wireless Physical Layer Modeling in Mobile 
@@ -17,15 +18,39 @@ Ad Hoc Networks" by Mineo Takai, Jay Martin and Rajive Bagrodia. Reading
 this paper before trying to read the rest of this documentation is
 highly recommended.
 
-1.1.1) BER-based model
-----------------------
-
  Definitions:
    - SNIR (Signal to Noise Interference Ratio) = S / (Nf + Ni)
    - S (Signal)
    - Nf (Noise floor) = 
    - Ni (Noise Interference) = sum over all signals (minus 
      the current) of their energy
+
+1.1.1 Energy-based model
+------------------------
+
+How we receive a packet:
+  - if the energy of the first bit of the arriving packet is
+    higher than rxThreshold, lock reception on this packet.
+  - if any packet is received during the reception of another
+    packet, it is dumped immediately.
+
+1.1.2 SNRT-based model
+----------------------
+
+How we receive a packet:
+  - if the energy of the first bit of the arriving packet is
+    higher than rxThreshold, lock reception on this packet.
+  - if any packet is received during the reception of another
+    packet, it is dumped immediately.
+  - when the last bit of a packet onto which reception was locked
+    is received, calculate the SNIR of this last bit.
+  - if the SNIR is higher than snrThreshold, mark the packet
+    as received correctly.
+  - if the SNIR is lower, mark it as received incorectly.
+
+1.1.1) BER-based model
+----------------------
+
  How it receives a packet:
    - if the SNIR of the first bit of the arriving packet is higher
      than rxThreshold, lock reception onto this packet.
@@ -48,15 +73,6 @@ highly recommended.
      and 1. 
    - if the random number is higher than PER, the packet is 
      received correctly. Otherwise, it is received with errors.
-
-1.1.2 SNRT-based model
-----------------------
-
-How we receive a packet:
-  - if the energy of the first bit of the arriving packet is
-    higher than rxThreshold, lock reception on this packet.
-  - if any packet is received during the reception of another
-    packet, it is dumped immediately.
 
 
 1.2) MAC model.
@@ -120,38 +136,16 @@ machine. The core state machine is:
      |_____________________________|
 
 
-In both PHYs, we have tree types of events:
+In all PHYs, we have tree types of events:
   - start of reception (first bit of a packet is received)
   - end of reception (last bit of a packet is received)
   - start of transmission (the first bit of a packet is
     sent on the medium).
 
-3.2 BER-based PHY
------------------
+3.2 
+----
 
-It maintains two lists of events:
-  - a "reception list": it contains an entry for each packet
-    which is sensed on the medium. Each entry identifies the
-    packet, its size, its transmission modes, its transmission
-    power, its start and end reception time. The list is sorted
-    by increasing start of reception time.
-    This list is used exclusively to calculate the piecewise 
-    SNIR function upon the "end of reception" event. Whenever
-    an element is appended to this list, we try to get rid of 
-    the events which are old enough that they will never 
-    interfere with any other packet received later. This is
-    done with a "max packet size".
-
-  - a "state list": each state change in the PHY is recorded 
-    in this list. This list is used exclusively by the MAC to
-    calculate the backoff durations. As such, this list does not
-    grow when no backoff is underway and is emptied whenever
-    a backoff is completed or canceled.
-
-3.3 SNRT-based PHY
-------------------
-
-
+Do we need to detail the implementation of the PHYs ?
 
 4) MAC architecture.
 --------------------
@@ -210,5 +204,8 @@ The MacRxMiddle performs defragmentation and duplicate elimination.
 4.2 802.11e
 -----------
 
-
+A diagram which explains this is really complicated so it is included
+in overall-2.dia. This is a vector graphic which you should be able
+to visualize with the "dia" application. overall-2.pdf can also be 
+useful.
 
