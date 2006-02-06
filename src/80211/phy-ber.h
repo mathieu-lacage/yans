@@ -63,7 +63,7 @@ private:
 private:
 	list<PhyRxEvent *> m_rxEventList;
 	EndRxHandler *m_endRxHandler;
-	RngUniform *m_random;
+	static RngUniform *m_random;
 
 	friend class PhyRxEvent;
 };

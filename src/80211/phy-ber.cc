@@ -224,12 +224,14 @@ private:
  *       The real BER calculation code.
  ****************************************************************/
 
+RngUniform *PhyBer::m_random = new RngUniform ();
 
 PhyBer::PhyBer ()
 	: Phy80211 (),
-	  m_random (new RngUniform ()),
 	  m_endRxHandler (new EndRxHandler (this, &PhyBer::endRx))
-{}
+{
+
+}
 
 PhyBer::~PhyBer ()
 {
