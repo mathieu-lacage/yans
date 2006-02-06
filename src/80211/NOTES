@@ -1,3 +1,6 @@
+This file contains a bunch of notes-to-self. Some
+of them might be of interest to other developers.
+
 1) backoff and ACK tx.
 ----------------------
 
@@ -142,7 +145,7 @@ int getUP (int TID) {
 	if (TID < 8) {
 		UP = TID;
 	} else {
-5~		int TSID = TID;
+		int TSID = TID;
 		UP = TSPEC[TSID].UP;
 	}
 	return UP;

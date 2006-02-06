@@ -4,13 +4,22 @@ layer for ns-2.
 1) The models.
 --------------
 
-1.1) PHY model.
+1.1) PHY models
 ---------------
 
-The PHY layer implements a BER-based simulation model. A discussion
-of various the various simulation models used in various simulators
+The PHY layer implements two different models:
+  - a BER-based model, and
+  - a SNRT-based model
+
+A discussion of the various simulation models used in various simulators
 can be found in "Effects of Wireless Physical Layer Modeling in Mobile 
-Ad Hoc Networks" by Mineo Takai, Jay Martin and Rajive Bagrodia.
+Ad Hoc Networks" by Mineo Takai, Jay Martin and Rajive Bagrodia. Reading
+this paper before trying to read the rest of this documentation is
+highly recommended.
+
+1.1.1) BER-based model
+----------------------
+
  Definitions:
    - SNIR (Signal to Noise Interference Ratio) = S / (Nf + Ni)
    - S (Signal)
@@ -39,6 +48,15 @@ Ad Hoc Networks" by Mineo Takai, Jay Martin and Rajive Bagrodia.
      and 1. 
    - if the random number is higher than PER, the packet is 
      received correctly. Otherwise, it is received with errors.
+
+1.1.2 SNRT-based model
+----------------------
+
+How we receive a packet:
+  - if the energy of the first bit of the arriving packet is
+    higher than rxThreshold, lock reception on this packet.
+  - if any packet is received during the reception of another
+    packet, it is dumped immediately.
 
 
 1.2) MAC model.
@@ -72,19 +90,44 @@ impossible without a full rewrite:
 * It is possible for the PHY to interrupt packet reception for
 a transmission.
 
-* Both the PHY and MAC never generate end-of-transmission events
-so the state of the PHY and the MAC is not calculated when events
-are received. Instead, it is lazily evaluated when a "client"
-wants to know the state of the PHY or the MAC.
+* As much as possible, we try to avoid generating end-of-transmission
+events. These end-of-transmission events are lazily evaluated when a 
+"client" wants to know the state of the PHY or the MAC. This idea is 
+described in a paper published at mswim'04: "scalable simulation of 
+large-scale wireless networks with bounded inaccuracies" by 
+Whengrong Ji, Junlan Zhou,Mineo Takai and Rajive Bagrodia.
 
 3) PHY architecture.
 --------------------
 
-The PHY receives three types of events:
+3.1 Introduction
+----------------
+
+The two PHY models are implemented by the two subclasses of
+the Phy80211 class which implements the core 802.11 state 
+machine. The core state machine is:
+                 ________
+                 |  TX  | +---------
+                 --------          |
+                   | +             |
+                   | |             |
+                   + |             |
+ _________       ________       ________
+ | SLEEP | ----+ | IDLE | ----+ | SYNC |
+ |       | +---- |      | +---- |      |
+ ---------       --------       --------
+     +                             |
+     |_____________________________|
+
+
+In both PHYs, we have tree types of events:
   - start of reception (first bit of a packet is received)
   - end of reception (last bit of a packet is received)
   - start of transmission (the first bit of a packet is
     sent on the medium).
+
+3.2 BER-based PHY
+-----------------
 
 It maintains two lists of events:
   - a "reception list": it contains an entry for each packet
@@ -103,21 +146,10 @@ It maintains two lists of events:
     in this list. This list is used exclusively by the MAC to
     calculate the backoff durations. As such, this list does not
     grow when no backoff is underway and is emptied whenever
-    a backoff is completed of canceled.
+    a backoff is completed or canceled.
 
-Its state machine is:
-                 ________
-                 |  TX  | +---------
-                 --------          |
-                   | +             |
-                   | |             |
-                   + |             |
- _________       ________       ________
- | SLEEP | ----+ | IDLE | ----+ | SYNC |
- |       | +---- |      | +---- |      |
- ---------       --------       --------
-     +                             |
-     |_____________________________|
+3.3 SNRT-based PHY
+------------------
 
 
 
@@ -128,7 +160,9 @@ The MAC architecture is a bit complicated because we want to support
 both the normal 802.11 protocol and the 802.11e extensions in the same
 codebase.
 
-For a normal 802.11 network, the MAC will look like this:
+4.1 802.11 
+-----------
+
 _____________________________________________________
 |                  MacHigh                          |
 -----------------------------------------------------
@@ -172,9 +206,9 @@ and keeps accurately track of the access time.
 
 The MacRxMiddle performs defragmentation and duplicate elimination.
 
-Every module presented here works without using end-of-tx events 
-when possible (specifically, the Dcf module). This idea is described 
-in a paper published at mswim'04: "scalable simulation of large-scale 
-wireless networks with bounded inaccuracies" by Whengrong Ji, 
-Junlan Zhou,Mineo Takai and Rajive Bagrodia.
+
+4.2 802.11e
+-----------
+
+
 
