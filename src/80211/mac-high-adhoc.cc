@@ -79,8 +79,3 @@ MacHighAdhoc::now (void)
 	return Scheduler::instance ().clock ();
 }
 
-bool
-MacHighAdhoc::accessNeeded (void)
-{
-	return !m_queue->isEmpty ();
-}

@@ -141,11 +141,16 @@ Dcf::requestAccess (void)
 		 * a timer when the txop notifies us of the end-of-access.
 		 */
 		TRACE ("accessing. will be notified.");
+	} else if (m_accessTimer->isRunning ()) {
+		/* we don't need to do anything because we have an access
+		 * timer which will expire soon.
+		 */
+		TRACE ("access timer running. will be notified");
 	} else if (isBackoffNotCompleted (now ()) && !m_accessTimer->isRunning ()) {
 		/* start timer for ongoing backoff.
 		 */
+		TRACE ("request access X delayed for %f at %f", delayUntilAccessGranted, now ());
 		m_accessTimer->start (delayUntilAccessGranted);
-		TRACE ("access delayed for %f at %f", delayUntilAccessGranted, now ());
 	} else if (m_container->phy ()->getState () != Phy80211::IDLE) {
 		/* someone else has accessed the medium.
 		 * generate a backoff, start timer.
@@ -155,8 +160,9 @@ Dcf::requestAccess (void)
 		/* medium is IDLE, we have no backoff running but we 
 		 * need to wait a bit before accessing the medium.
 		 */
+		TRACE ("request access Y delayed for %f at %f", delayUntilAccessGranted, now ());
+		assert (!m_accessTimer->isRunning ());
 		m_accessTimer->start (delayUntilAccessGranted);
-		TRACE ("access delayed for %f at %f", delayUntilAccessGranted, now ());
 	} else {
 		/* we can access the medium now.
 		 */
@@ -198,6 +204,7 @@ Dcf::accessTimeout (void)
 	double delayUntilAccessGranted  = getDelayUntilAccessGranted (now ());
 	if (delayUntilAccessGranted > 0) {
 		TRACE ("timeout access delayed for %f at %f", delayUntilAccessGranted, now ());
+		assert (!m_accessTimer->isRunning ());
 		m_accessTimer->start (delayUntilAccessGranted);
 	} else {
 		TRACE ("timeout access granted at %f", now ());

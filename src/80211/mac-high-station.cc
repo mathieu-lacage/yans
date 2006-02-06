@@ -26,33 +26,65 @@
 #include "mac-station.h"
 #include "mac-low.h"
 #include "mac-queue-80211e.h"
-#include "mac-low-parameters.h"
+#include "mac-dcf-parameters.h"
+#include "dcf.h"
+#include "dca-txop.h"
 #include "mac-parameters.h"
+#include "mac-container.h"
 
 #include "packet.h"
 
-#define nopeSTATION_TRACE 1
+#define STATION_TRACE 1
 
 #ifdef STATION_TRACE
 # define TRACE(format, ...) \
-	printf ("STA TRACE %d " format "\n", getSelf (), ## __VA_ARGS__);
+	printf ("STA TRACE %d %f " format "\n", container ()->selfAddress (), \
+                Scheduler::instance ().clock (), ## __VA_ARGS__);
 #else /* STATION_TRACE */
 # define TRACE(format, ...)
 #endif /* STATION_TRACE */
 
 
-MacHighStation::MacHighStation (Mac80211 *mac, Phy80211 *phy, int apAddress)
-	: MacHigh (mac, phy)
+MacHighStation::MacHighStation (MacContainer *container, int apAddress)
+	: MacHigh (container)
 {
-	m_lowParameters = new MacLowParameters (phy);
-	m_low = new MacLow (mac, this, phy, m_lowParameters);
+	m_dcfParameters = new MacDcfParameters (container);
+	m_dcf = new Dcf (container, m_dcfParameters);
+	m_dcfQueue = new MacQueue80211e (container->parameters ());
+	new DcaTxop (m_dcf, m_dcfQueue, container);
+
+	m_associationQueue = new MacQueue80211e (container->parameters ());
+
 	m_apAddress = apAddress;
 	m_associated = false;
-	m_associationQueue = new MacQueue80211e (10.0);
 	m_lastBeaconRx = 0.0;
 }
 MacHighStation::~MacHighStation ()
 {}
+
+MacParameters *
+MacHighStation::parameters (void)
+{
+	return container ()->parameters ();
+}
+
+void
+MacHighStation::enqueueToLow (Packet *packet)
+{
+	m_dcfQueue->enqueue (packet);
+	m_dcf->requestAccess ();
+}
+
+Packet *
+MacHighStation::getPacketFor (int destination)
+{
+        Packet *packet = Packet::alloc ();
+        setSource (packet, container ()->selfAddress ());
+        setFinalDestination (packet, destination);
+        setDestination (packet, destination);
+        return packet;
+}
+
 
 void
 MacHighStation::sendAssociationRequest (void)
@@ -61,7 +93,7 @@ MacHighStation::sendAssociationRequest (void)
 	Packet *packet = getPacketFor (destination);
 	setSize (packet, parameters ()->getAssociationRequestSize ());
 	setType (packet, MAC_80211_MGT_ASSOCIATION_REQUEST);
-	m_low->enqueue (packet);
+	enqueueToLow (packet);
 }
 
 void
@@ -71,7 +103,7 @@ MacHighStation::sendReAssociationRequest (void)
 	Packet *packet = getPacketFor (destination);
 	setSize (packet, parameters ()->getReAssociationRequestSize ());
 	setType (packet, MAC_80211_MGT_REASSOCIATION_REQUEST);
-	m_low->enqueue (packet);
+	enqueueToLow (packet);
 }
 
 void
@@ -81,7 +113,7 @@ MacHighStation::sendProbeRequest (void)
 	Packet *packet = getPacketFor (destination);
 	setSize (packet, parameters ()->getProbeRequestSize ());
 	setType (packet, MAC_80211_MGT_PROBE_REQUEST);
-	m_low->enqueue (packet);
+	enqueueToLow (packet);
 }
 
 void
@@ -94,7 +126,7 @@ MacHighStation::tryToEnsureAssociated (void)
 	if (isBeaconMissed ()) {
 		TRACE ("missed too many beacons");
 		// XXX
-		m_low->flush ();
+		m_dcfQueue->flush ();
 		setDisAssociated ();
 		sendProbeRequest ();
 	} else if (!isAssociated ()) {
@@ -108,7 +140,7 @@ MacHighStation::emptyAssociationQueue (void)
 	Packet *packet;
 	packet = m_associationQueue->dequeue ();
 	while (packet != NULL) {
-		m_low->enqueue (packet);
+		enqueueToLow (packet);
 		packet = m_associationQueue->dequeue ();
 		n++;
 	}
@@ -165,32 +197,22 @@ void
 MacHighStation::enqueueFromLL (Packet *packet)
 {
 	tryToEnsureAssociated ();
-	setSource (packet, getSelf ());
+	setSource (packet, container ()->selfAddress ());
 	setDestination (packet, m_apAddress);
 	setType (packet, MAC_80211_DATA);
 	if (isAssociated ()) {
 		TRACE ("send to %d thru %d", getFinalDestination (packet), getDestination (packet));
-		m_low->enqueue (packet);
+		enqueueToLow (packet);
 	} else {
 		TRACE ("temporarily queue");
 		m_associationQueue->enqueue (packet);
 	}
 }
 
-
-void 
-MacHighStation::receiveFromPhy (Packet *packet)
-{
-	/* If we had multiple MacLow, we would need 
-	 * to choose the right one here.
-	 */
-	m_low->receive (packet);
-}
-
 void 
 MacHighStation::receiveFromMacLow (Packet *packet)
 {
-	if (getFinalDestination (packet) == getSelf () || 
+	if (getFinalDestination (packet) == container ()->selfAddress () || 
 	    getFinalDestination (packet) == (int)MAC_BROADCAST) {
 		switch (getType (packet)) {
 		case MAC_80211_MGT_BEACON:
@@ -234,7 +256,7 @@ MacHighStation::receiveFromMacLow (Packet *packet)
 			break;
 		case MAC_80211_DATA:
 			TRACE ("forward up from %d", getSource (packet));
-			forwardUp (packet);
+			container ()->forwardToLL (packet);
 			break;
 		default:
 			assert (false);

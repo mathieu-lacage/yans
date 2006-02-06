@@ -35,12 +35,20 @@ MacQueue80211e::~MacQueue80211e ()
 {}
 
 void 
-MacQueue80211e::enqueue (class Packet *packet)
+MacQueue80211e::enqueue (Packet *packet)
 {
 	cleanup ();
 	double now;
 	now = Scheduler::instance ().clock ();
 	m_queue.push_front (pair<Packet *, double> (packet, now));
+}
+void 
+MacQueue80211e::enqueueToHead (Packet *packet)
+{
+	cleanup ();
+	double now;
+	now = Scheduler::instance ().clock ();
+	m_queue.push_back (pair<Packet *, double> (packet, now));
 }
 
 void
@@ -90,4 +98,15 @@ int
 MacQueue80211e::size (void)
 {
 	return m_queue.size ();
+}
+
+void
+MacQueue80211e::flush (void)
+{
+	list <pair <Packet *, double> >::iterator tmp;
+	for (tmp = m_queue.begin (); tmp != m_queue.end (); tmp++) {
+		Packet::free ((*tmp).first);
+		tmp++;
+	}
+	m_queue.erase (m_queue.begin (), m_queue.end ());
 }

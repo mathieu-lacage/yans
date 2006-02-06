@@ -40,8 +40,6 @@ public:
 	virtual void notifyAckReceivedFor (Packet *packet);
 	virtual void receiveFromMacLow (Packet *packet);
 private:
-	friend class MyDcfAccessNeedListener;
-	bool accessNeeded (void);
 	double now (void);
 	MacQueue80211e *m_queue;
 	Dcf *m_dcf;

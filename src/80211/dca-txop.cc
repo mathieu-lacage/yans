@@ -249,7 +249,10 @@ DcaTxop::accessGrantedNow (void)
 		m_SSRC = 0;
 		m_SLRC = 0;
 		m_fragmentNumber = 0;
-		TRACE ("dequeued %d to %d", getSize (m_currentTxPacket), getDestination (m_currentTxPacket));
+		TRACE ("dequeued %d to %d seq: 0x%x", 
+		       getSize (m_currentTxPacket), 
+		       getDestination (m_currentTxPacket),
+		       getSequenceControl (m_currentTxPacket));
 	}
 	if (getDestination (m_currentTxPacket) == (int)MAC_BROADCAST) {
 		low ()->disableRTS ();
@@ -330,6 +333,8 @@ DcaTxop::gotACK (double snr, int txMode)
 	m_SLRC = 0;
 	if (!needFragmentation () ||
 	    isLastFragment ()) {
+		m_container->macHigh ()->notifyAckReceivedFor (m_currentTxPacket);
+
 		/* we are not fragmenting or we are done fragmenting
 		 * so we can get rid of that packet now.
 		 */

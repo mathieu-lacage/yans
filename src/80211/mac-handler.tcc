@@ -85,8 +85,20 @@ template <typename TYPE>
 void 
 StaticHandler<TYPE>::start (double delay)
 {
-	// XXX: I am not sure why we need to re-initialize the Event.
+	/* we need to re-initialize the uid_ to make sure 
+	 * the scheduler believes the event is brand new. 
+	 * If you do not do this, veeeeery bad things will
+	 * happen. Trust me: you don't want to do it.
+	 * Ok, you don't want to trust me:
+	 *   - if uid_ is not >= 0, the scheduler aborts (assert)
+	 *   - if time_ is not re-initialized, and if you try
+	 *     to re-schedule this very same StaticHandler from
+	 *     its handler (call start from handler), you will
+	 *     see a very confused scheduler.
+	 * Been there, done that.
+	 */
 	m_event.uid_ = 0;
+	m_event.time_ = 0.0;
 	Scheduler::instance ().schedule (this, &m_event, delay);
 }
 template <typename TYPE>

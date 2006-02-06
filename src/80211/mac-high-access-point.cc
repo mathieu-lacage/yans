@@ -24,34 +24,47 @@
 #include "arf-mac-stations.h"
 #include "mac-stations.h"
 #include "mac-station.h"
-#include "mac-low.h"
 #include "mac-parameters.h"
-#include "mac-low-parameters.h"
+#include "mac-dcf-parameters.h"
+#include "dcf.h"
+#include "dca-txop.h"
+#include "mac-container.h"
+#include "mac-queue-80211e.h"
+#include "hdr-mac-80211.h"
 
 #include "packet.h"
 
 
-#define nopeAP_TRACE 1
+#define AP_TRACE 1
 
 #ifdef AP_TRACE
 # define TRACE(format, ...) \
-	printf ("AP TRACE %d " format "\n", getSelf (), ## __VA_ARGS__);
+	printf ("AP TRACE %d %f " format "\n", container ()->selfAddress (), \
+                Scheduler::instance ().clock (), ## __VA_ARGS__);
 #else /* AP_TRACE */
 # define TRACE(format, ...)
 #endif /* AP_TRACE */
 
 
-MacHighAccessPoint::MacHighAccessPoint (Mac80211 *mac, Phy80211 *phy)
-	: MacHigh (mac, phy)
+MacHighAccessPoint::MacHighAccessPoint (MacContainer *container)
+	: MacHigh (container)
 {
-	m_lowParameters = new MacLowParameters (phy);
-	m_low = new MacLow (mac, this, phy, m_lowParameters);
-	m_lowBeacon = new MacLow (mac, this, phy, m_lowParameters);
+	m_dcfParameters = new MacDcfParameters (container);
+	m_dcf = new Dcf (container, m_dcfParameters);
+	m_queue = new MacQueue80211e (container->parameters ());
+	new DcaTxop (m_dcf, m_queue, container);
+
 	m_sendBeaconTimer = new StaticHandler<MacHighAccessPoint> (this, &MacHighAccessPoint::sendBeacon);
 	m_sendBeaconTimer->start (parameters ()->getBeaconInterval ());
 }
 MacHighAccessPoint::~MacHighAccessPoint ()
 {}
+
+MacParameters *
+MacHighAccessPoint::parameters (void)
+{
+	return container ()->parameters ();
+}
 
 void
 MacHighAccessPoint::sendBeacon (void)
@@ -64,7 +77,8 @@ MacHighAccessPoint::sendBeacon (void)
 	       getDestination (packet), 
 	       getFinalDestination (packet), 
 	       getSource (packet));
-	m_lowBeacon->enqueue (packet);
+	m_queue->enqueueToHead (packet);
+	m_dcf->requestAccess ();
 
 	m_sendBeaconTimer->start (parameters ()->getBeaconInterval ());
 }
@@ -73,7 +87,7 @@ Packet *
 MacHighAccessPoint::getPacketFor (int destination)
 {
 	Packet *packet = Packet::alloc ();
-	setSource (packet, getSelf ());
+	setSource (packet, container ()->selfAddress ());
 	setFinalDestination (packet, destination);
 	setDestination (packet, destination);
 	return packet;
@@ -113,7 +127,7 @@ MacHighAccessPoint::notifyAckReceivedFor (Packet *packet)
 	    getType (packet) == MAC_80211_MGT_REASSOCIATION_RESPONSE) {
 		// should check association response status.
 		TRACE ("associated %d", getDestination (packet));
-		lookupStation (getDestination (packet))->recordAssociated ();
+		container ()->stations ()->lookup (getDestination (packet))->recordAssociated ();
 	}
 }
 
@@ -125,34 +139,25 @@ MacHighAccessPoint::queueToLow (Packet *packet)
 	       getDestination (packet), 
 	       getFinalDestination (packet), 
 	       getSource (packet));
-	m_low->enqueue (packet);
+	m_queue->enqueue (packet);
+	m_dcf->requestAccess ();
 }
 
 
 void 
 MacHighAccessPoint::enqueueFromLL (Packet *packet)
 {
-	setSource (packet, getSelf ());
+	setSource (packet, container ()->selfAddress ());
 	setDestination (packet, getFinalDestination (packet));
 	setType (packet, MAC_80211_DATA);
 	queueToLow (packet);
 }
 
 void 
-MacHighAccessPoint::receiveFromPhy (Packet *packet)
-{
-	/* If we had multiple MacLow, we would need 
-	 * to choose the right one here.
-	 */
-	m_low->receive (packet);
-}
-
-
-void 
 MacHighAccessPoint::receiveFromMacLow (Packet *packet)
 {
-	if (getFinalDestination (packet) == getSelf () &&
-	    getDestination (packet) == getSelf ()) {
+	if (getFinalDestination (packet) == container ()->selfAddress () &&
+	    getDestination (packet) == container ()->selfAddress ()) {
 		switch (getType (packet)) {
 		case MAC_80211_MGT_BEACON:
 		case MAC_80211_MGT_ASSOCIATION_RESPONSE:
@@ -187,19 +192,19 @@ MacHighAccessPoint::receiveFromMacLow (Packet *packet)
 			break;
 		case MAC_80211_DATA:
 			TRACE ("forward up from %d", getSource (packet));
-			forwardUp (packet);
+			container ()->forwardToLL (packet);
 			break;
 		default:
 			break;
 		}
-	} else if (getDestination (packet) == getSelf () &&
+	} else if (getDestination (packet) == container ()->selfAddress () &&
 		   getFinalDestination (packet) == ((int)MAC_BROADCAST)) {
 		TRACE ("forward broadcast from %d", getSource (packet));
 		setDestination (packet, getFinalDestination (packet));
 		queueToLow (packet->copy ());
-		forwardUp (packet);
-	} else if (getDestination (packet) == getSelf ()) {
-		MacStation *station = lookupStation (getSource (packet));
+		container ()->forwardToLL (packet);
+	} else if (getDestination (packet) == container ()->selfAddress ()) {
+		MacStation *station = container ()->stations ()->lookup (getSource (packet));
 		if (station->isAssociated ()) {
 			// forward to target station.
 			TRACE ("%d associated: forwarding packet", getSource (packet));

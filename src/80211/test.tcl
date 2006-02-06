@@ -72,9 +72,9 @@ set nodes(0) [$ns node]
 set nodes(1) [$ns node]
 set nodes(2) [$ns node]
 
-#set-bss-mode 2 nodes
+set-bss-mode 2 nodes
 
-set-adhoc-mode nodes
+#set-adhoc-mode nodes
 
 $nodes(0) set X_ 0.0
 $nodes(0) set Y_ 0.0
