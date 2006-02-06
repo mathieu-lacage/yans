@@ -443,7 +443,8 @@ QapScheduler::doCurrentTxop (void)
 
 	double txopDuration = calculateTxopDuration (getCurrentServiceInterval (), tspec);
 	m_txopEnd = now () + txopDuration;
-	if (m_txopEnd >= m_capEnd) {
+	if (m_txopEnd > m_capEnd) {
+		TRACE ("impossible to finish txop before end of CAP");
 		/* we cannot finish all the txops during the CAP.
 		 * This is probably because one of the txops stole
 		 * some medium time.
@@ -453,12 +454,13 @@ QapScheduler::doCurrentTxop (void)
 		return;
 	}
 
-	TRACE ("start txop from %d", (*m_txopIterator).getDestination ());
+	TRACE ("start txop for %d until %f", (*m_txopIterator).getDestination (), m_txopEnd);
 	
 	int destination = (*m_txopIterator).getDestination ();
 	Packet *packet = getPacketFor (destination);
 	setSize (packet, getPacketSize (MAC_80211_MGT_CFPOLL));
 	setType (packet, MAC_80211_MGT_CFPOLL);
+	setNoAck (packet);
 	setAC (packet, AC_SPECIAL);
 	setSequenceNumber (packet, m_sequence);
 	setFragmentNumber (packet, 0);
@@ -495,8 +497,6 @@ QapScheduler::startCap (void)
 
 	doCurrentTxop ();
 
-	m_txopIterator++;
-
 	/* Schedule an access for the next service interval. */
 	double nextCapStart = now () + getCurrentServiceInterval ();
 	if (nextCapStart < m_nextBeaconStart) {
@@ -508,10 +508,11 @@ void
 QapScheduler::busyTimeout (void)
 {
 	TRACE ("busy timeout for TXOP from %d", (*m_txopIterator).getDestination ());
-	doCurrentTxop ();
 	m_txopIterator++;
 	if (m_txopIterator == m_admitted.end ()) {
 		finishCap ();
+	} else {
+		doCurrentTxop ();
 	}
 }
 
@@ -604,4 +605,5 @@ QapScheduler::beaconTimer (MacCancelableEvent *event)
 
 	/* schedule an access for the next beacon. */
 	m_beacon->start (parameters ()->getBeaconInterval ());
+	m_nextBeaconStart = now () + parameters ()->getBeaconInterval ();
 }
