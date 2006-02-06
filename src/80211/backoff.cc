@@ -45,6 +45,7 @@ Backoff::Backoff (MacLow80211 *mac)
 	  m_lastNavDuration (0.0),
 	  m_lastRxStart (0.0),
 	  m_lastRxDuration (0.0),
+	  m_lastRxReceivedOk (true),
 	  m_lastRxEnd (0.0),
 	  m_lastTxStart (0.0),
 	  m_lastTxDuration (0.0),

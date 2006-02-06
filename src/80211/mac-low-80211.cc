@@ -186,6 +186,8 @@ MacLow80211::MacLow80211 (class Mac80211 *mac)
 	  m_random (new RngUniform ())
 {
 	resetCW ();
+	m_SSRC = 0;
+	m_SLRC = 0;
 }
 
 void 
