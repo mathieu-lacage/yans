@@ -41,6 +41,7 @@
  */
 
 #include <math.h>
+#include <cassert>
 
 #include "mac-dcf-parameters.h"
 #include "mac-parameters.h"

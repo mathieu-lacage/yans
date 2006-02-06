@@ -43,6 +43,7 @@
 #ifndef PHY_80211_H
 #define PHY_80211_H
 
+#include <stdint.h>
 #include <vector>
 
 class FreeSpacePropagation;
