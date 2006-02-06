@@ -111,11 +111,11 @@ Mac80211::command(int argc, const char*const* argv)
 		if (strcmp (argv[1], "mode") == 0) {
 			if (strcmp (argv[2], "adhoc") == 0) {
 				m_high = new MacHighAdhoc (this, peekPhy80211 ());
-				m_parameters = new MacParameters (peekPhy80211 ());
+				m_parameters = new MacParameters (this, peekPhy80211 ());
 				return TCL_OK;
 			} else if (strcmp (argv[2], "access-point") == 0) {
 				m_high = new MacHighAccessPoint (this, peekPhy80211 ());
-				m_parameters = new MacParameters (peekPhy80211 ());
+				m_parameters = new MacParameters (this, peekPhy80211 ());
 				return TCL_OK;
 			}
 		}
@@ -124,7 +124,7 @@ Mac80211::command(int argc, const char*const* argv)
 		    strcmp (argv[2], "station") == 0) {
 			int ap = atoi (argv[3]);
 			m_high = new MacHighStation (this, peekPhy80211 (), ap);
-			m_parameters = new MacParameters (peekPhy80211 ());
+			m_parameters = new MacParameters (this, peekPhy80211 ());
 			return TCL_OK;
 		}
 	}

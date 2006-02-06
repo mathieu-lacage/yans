@@ -36,7 +36,7 @@
 
 #define nopeMAC_DEBUG 1
 #define MAC_TRACE 1
-#define nopeMAC_TRACE_VERBOSE 1
+#define MAC_TRACE_VERBOSE 1
 
 #ifdef MAC_DEBUG
 # define DEBUG(format, ...) \
@@ -140,14 +140,6 @@ MacLow::MacLow (Mac80211 *mac, MacHigh *high, Phy80211 *phy)
 	m_SLRC = 0;
 	m_sequence = 0;
 	phy->registerListener (m_backoff);
-	DEBUG ("slot %f", getSlotTime ());
-	DEBUG ("SIFS %f", getSIFS ());
-	DEBUG ("DIFS %f", getDIFS ());
-	DEBUG ("EIFS %f", getEIFS ());
-	DEBUG ("ACK timeout %f", getACKTimeoutDuration ());
-	DEBUG ("CTS timeout %f", getCTSTimeoutDuration ());
-	DEBUG ("CWmin %d", getCWmin ());
-	DEBUG ("CWmax %d", getCWmax ());
 }
 
 MacLow::~MacLow ()
@@ -651,6 +643,8 @@ MacLow::receive (class Packet *packet)
 		Packet::free (m_currentTxPacket);
 		m_currentTxPacket = 0;
 		dropPacket (packet);
+		// always start a backoff when we correctly receive a packet.
+		m_backoff->start (now (), pickBackoffDelay ());
 		dealWithInputQueue ();
 	} else {
 		// data or mgmt packet

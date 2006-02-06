@@ -21,15 +21,42 @@
 
 #include "mac-parameters.h"
 #include "phy-80211.h"
+#include "mac-80211.h"
 
-MacParameters::MacParameters (Phy80211 *phy)
-	: m_phy (phy)
-{}
+#define MAC_DEBUG 1
+
+#ifdef MAC_DEBUG
+# define DEBUG(format, ...) \
+	printf ("DEBUG %d " format "\n", getSelf (), ## __VA_ARGS__);
+#else /* MAC_DEBUG */
+# define DEBUG(format, ...)
+#endif /* MAC_DEBUG */
+
+
+MacParameters::MacParameters (Mac80211 *mac, Phy80211 *phy)
+	: m_mac (mac), 
+	  m_phy (phy)
+{
+	DEBUG ("slot %f", getSlotTime ());
+	DEBUG ("SIFS %f", getSIFS ());
+	DEBUG ("DIFS %f", getDIFS ());
+	DEBUG ("EIFS %f", getEIFS ());
+	DEBUG ("ACK timeout %f", getACKTimeoutDuration ());
+	DEBUG ("CTS timeout %f", getCTSTimeoutDuration ());
+	DEBUG ("CWmin %d", getCWmin ());
+	DEBUG ("CWmax %d", getCWmax ());
+}
 
 Phy80211 *
 MacParameters::peekPhy (void)
 {
 	return m_phy;
+}
+
+int
+MacParameters::getSelf (void)
+{
+	return m_mac->addr ();
 }
 
 int

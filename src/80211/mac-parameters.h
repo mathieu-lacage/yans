@@ -22,10 +22,11 @@
 #define MAC_PARAMETERS_H
 
 class Phy80211;
+class Mac80211;
 
 class MacParameters {
 public:
-	MacParameters (Phy80211 *phy);
+	MacParameters (Mac80211 *mac, Phy80211 *phy);
 	
 	int getACKSize (void) const;
 	int getRTSSize (void) const;
@@ -59,7 +60,9 @@ public:
 	double getEIFS (void);
 	double getDIFS (void);
 private:
+	int getSelf (void);
 	Phy80211 *peekPhy (void);
+	Mac80211 *m_mac;
 	Phy80211 *m_phy;
 };
 
