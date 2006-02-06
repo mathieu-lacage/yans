@@ -29,6 +29,8 @@ class Packet;
 class Agent;
 class Classifier;
 class NetInterface;
+class NetInterfaceConstructor;
+class BroadcastChannel;
 
 
 class NodeEmpty : public TclObject {
@@ -45,6 +47,7 @@ public:
 	int command(int argc, const char*const* argv);
 private:
 	void attachAgent (Agent *agent);
+	void addInterface (NetInterfaceConstructor *constructor, BroadcastChannel *channel);
 	int allocUid (void);
 
 	static int m_uid;

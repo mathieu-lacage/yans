@@ -126,6 +126,14 @@ NodeEmpty::attachAgent (Agent *agent)
 #endif
 }
 
+void
+NodeEmpty::addInterface (NetInterfaceConstructor *constructor, BroadcastChannel *channel)
+{
+	m_interface = constructor->createInterface ();
+	m_interface->connectTo (channel, this);
+	channel->registerInterface (m_interface);
+}
+
 int 
 NodeEmpty::command(int argc, const char*const* argv)
 {
@@ -150,8 +158,7 @@ NodeEmpty::command(int argc, const char*const* argv)
 		} else if (strcmp (argv[1], "add-interface") == 0) {
 			NetInterfaceConstructor *constructor = static_cast <NetInterfaceConstructor *> (lookup (argv[2]));
 			BroadcastChannel *channel = static_cast <BroadcastChannel *> (lookup (argv[3]));
-			m_interface = constructor->createInterface ();
-			m_interface->connectTo (channel, this);
+			addInterface (constructor, channel);
 			return TCL_OK;
 		}
 	} else if (argc == 3) {
@@ -162,6 +169,5 @@ NodeEmpty::command(int argc, const char*const* argv)
 		} 
 	}
  out:
-	printf ("argv: %s/%s/%s \n", argv[0], argv[1], argv[2]);
 	return TclObject::command (argc, argv);
 }
