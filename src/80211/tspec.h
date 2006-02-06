@@ -74,6 +74,7 @@ public:
 	double getSurplusBandwidthAllowance (void) const;
 	double getMediumTime (void) const;
 
+	void setTsid (int tsid);
 	void setMediumTime (double mediumTime);
 
 	virtual int command(int argc, const char*const* argv);

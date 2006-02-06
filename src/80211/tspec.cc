@@ -319,3 +319,8 @@ TSpec::setMediumTime (double mediumTime)
 {
 	m_mediumTime = mediumTime;
 }
+void
+TSpec::setTsid (int tsid)
+{
+	m_TSID = tsid;
+}
