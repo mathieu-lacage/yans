@@ -116,6 +116,7 @@ MacLow::MacLow (MacContainer *container)
 	: m_container (container),
 	  m_normalAckTimeoutHandler (new DynamicHandler<MacLow> (this, &MacLow::normalAckTimeout)),
 	  m_fastAckTimeoutHandler (new StaticHandler<MacLow> (this, &MacLow::fastAckTimeout)),
+	  m_superFastAckTimeoutHandler (new StaticHandler<MacLow> (this, &MacLow::superFastAckTimeout)),
 	  m_fastAckFailedTimeoutHandler (new StaticHandler<MacLow> (this, &MacLow::fastAckFailedTimeout)),
 	  m_CTSTimeoutHandler (new DynamicHandler<MacLow> (this, &MacLow::CTSTimeout)),
 	  m_sendCTSHandler (new DynamicHandler<MacLow> (this, &MacLow::sendCTS_AfterRTS)),
@@ -304,6 +305,9 @@ MacLow::sendDataPacket (void)
 	} else if (waitFastAck ()) {
 		double timerDelay = txDuration + parameters ()->getPIFS ();
 		m_fastAckTimeoutHandler->start (timerDelay);
+	} else if (waitSuperFastAck ()) {
+		double timerDelay = txDuration + parameters ()->getPIFS ();
+		m_superFastAckTimeoutHandler->start (timerDelay);
 	}
 	setTxMode (txPacket, m_dataTxMode);
 	double duration;
@@ -391,6 +395,9 @@ MacLow::sendDataAfterCTS (MacCancelableEvent *macEvent)
 	} else if (waitFastAck ()) {
 		double timerDelay = txDuration + parameters ()->getPIFS ();
 		m_fastAckTimeoutHandler->start (timerDelay);
+	} else if (waitSuperFastAck ()) {
+		double timerDelay = txDuration + parameters ()->getPIFS ();
+		m_superFastAckTimeoutHandler->start (timerDelay);
 	}
 
 	setTxMode (m_currentTxPacket, m_dataTxMode);
@@ -434,6 +441,17 @@ MacLow::fastAckTimeout ()
 	if (peekPhy ()->getState () == Phy80211::IDLE) {
 		TRACE ("fast Ack idle missed");
 		m_transmissionListener->missedACK ();
+	}
+}
+void
+MacLow::superFastAckTimeout ()
+{
+	if (peekPhy ()->getState () == Phy80211::IDLE) {
+		TRACE ("super fast Ack failed");
+		m_transmissionListener->missedACK ();
+	} else {
+		TRACE ("super fast Ack ok");
+		m_transmissionListener->gotACK (0.0, 0);
 	}
 }
 
@@ -544,6 +562,15 @@ MacLow::waitFastAck (void)
 		return false;
 	}
 }
+bool
+MacLow::waitSuperFastAck (void)
+{
+	if (m_waitAck == ACK_SUPER_FAST) {
+		return true;
+	} else {
+		return false;
+	}
+}
 
 /****************************************************************************
  *        API methods below.
@@ -610,6 +637,11 @@ MacLow::startTransmission (void)
 	assert (peekPhy ()->getState () == Phy80211::TX);	
 }
 
+void 
+MacLow::enableSuperFastAck (void)
+{
+	m_waitAck = ACK_SUPER_FAST;
+}
 void 
 MacLow::enableFastAck (void)
 {
@@ -729,7 +761,9 @@ MacLow::receive (Packet *packet)
 		if (waitNormalAck ()) {
 			m_normalAckTimeoutHandler->cancel ();
 		}
-		m_transmissionListener->gotACK (getLastSNR (), getTxMode (packet));
+		if (waitNormalAck () || waitFastAck ()) {
+			m_transmissionListener->gotACK (getLastSNR (), getTxMode (packet));
+		}
 		dropPacket (packet);
 		if (m_nextSize > 0) {
 			m_waitSIFSHandler->start (new MacCancelableEvent (), parameters ()->getSIFS ());

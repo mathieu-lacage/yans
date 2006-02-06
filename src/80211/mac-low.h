@@ -37,6 +37,10 @@ public:
 
 	virtual void gotCTS (double snr, int txMode) = 0;
 	virtual void missedCTS (void) = 0;
+	/* Do not rely on the gotAck method to be
+	 * given valid parameters when SuperFastAck is
+	 * enabled.
+	 */
 	virtual void gotACK (double snr, int txMode) = 0;
 	virtual void missedACK (void) = 0;
 	virtual void startNext (void) = 0;
@@ -104,6 +108,11 @@ public:
 	 * proper HCCA support.
 	 */
 	void enableFastAck (void);
+	/* If SuperFastAck is enabled, we:
+	 *   - if busy at end-of-tx+PIFS, report gotAck
+	 *   - if idle at end-of-tx+PIFS, report missedAck
+	 */
+	void enableSuperFastAck (void);
 	/* disable either Ack or FastAck, depending on
 	 * which Ack method was enabled.
 	 */
@@ -181,6 +190,7 @@ private:
 	bool waitAck (void);
 	bool waitNormalAck (void);
 	bool waitFastAck (void);
+	bool waitSuperFastAck (void);
 	double getLastSNR (void);
 	double calculateTxDuration (int mode, int size);
 	double calculateOverallTxTime (void);
@@ -198,6 +208,7 @@ private:
 
 	void normalAckTimeout (MacCancelableEvent *event);
 	void fastAckTimeout (void);
+	void superFastAckTimeout (void);
 	void fastAckFailedTimeout (void);
 	void CTSTimeout (MacCancelableEvent *event);
 	void sendCTS_AfterRTS (MacCancelableEvent *macEvent);
@@ -219,6 +230,7 @@ private:
 
 	DynamicHandler<MacLow> *m_normalAckTimeoutHandler;
 	StaticHandler<MacLow>  *m_fastAckTimeoutHandler;
+	StaticHandler<MacLow>  *m_superFastAckTimeoutHandler;
 	StaticHandler<MacLow>  *m_fastAckFailedTimeoutHandler;
 	DynamicHandler<MacLow> *m_CTSTimeoutHandler;
 	DynamicHandler<MacLow> *m_sendCTSHandler;
@@ -233,7 +245,8 @@ private:
 	enum {
 		ACK_NONE,
 		ACK_NORMAL,
-		ACK_FAST
+		ACK_FAST,
+		ACK_SUPER_FAST
 	} m_waitAck;
 	bool m_monitorBusy;
 	bool m_sendRTS;
