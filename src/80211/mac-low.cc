@@ -264,7 +264,6 @@ Packet *
 MacLow::getRTSforPacket (Packet *data)
 {
 	Packet *packet = getRTSPacket ();
-	setSource (packet, getSelf ());
 	setDestination (packet, getDestination (data));
 	setTxMode (packet, m_rtsTxMode);
 	double duration;
@@ -303,7 +302,6 @@ MacLow::sendDataPacket (void)
 {
 	/* send this packet directly. No RTS is needed. */
 	Packet *txPacket = m_currentTxPacket;
-	setSource (txPacket, getSelf ());
 	TRACE ("tx %s to %d with mode %d", getTypeString (txPacket), getDestination (txPacket), m_dataTxMode);
 	double txDuration = calculateTxDuration (m_dataTxMode, getSize (txPacket));
 	if (waitNormalAck ()) {
