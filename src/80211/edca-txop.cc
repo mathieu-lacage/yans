@@ -209,7 +209,12 @@ EdcaTxop::calculateNextTxDuration (Packet *packet)
 double
 EdcaTxop::enoughCurrentTime (void)
 {
-	return enoughTime (calculateCurrentTxDuration ());
+	if (enoughTime (calculateCurrentTxDuration ()) ||
+	    m_dcf->parameters ()->getTxopLimit () == 0.0) {
+		return true;
+	} else {
+		return false;
+	}
 }
 double
 EdcaTxop::enoughTime (double txDuration)
@@ -256,8 +261,8 @@ EdcaTxop::tryToSendOnePacket (void)
 		return;
 	}
 
-	bool nextData;
-	if (!m_queue->isEmpty ()) {
+	if (!m_queue->isEmpty () &&
+	    m_dcf->parameters ()->getTxopLimit () > 0.0) {
 		Packet *packet = m_queue->peekNextPacket ();
 		int nextTxMode = lookupDestStation (packet)->getDataMode (getSize (packet));
 		double txDuration = calculateNextTxDuration (packet);
@@ -283,7 +288,7 @@ EdcaTxop::tryToSendOnePacket (void)
 		low ()->setData (m_currentTxPacket);
 		m_currentTxPacket = 0;
 		m_dcf->notifyAccessOngoingOk ();
-		if (!nextData) {
+		if (m_lastPacketInBurst) {
 			m_dcf->notifyAccessFinished ();
 		}
 		TRACE ("tx broadcast");
