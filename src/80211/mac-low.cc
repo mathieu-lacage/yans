@@ -672,13 +672,17 @@ MacLow::receive (Packet *packet)
 			decreaseSize (packet, parameters ()->getDataHeaderSize ());
 		}
 		if (getDestination (packet) == getSelf ()) {
-			TRACE ("rx unicast from %d", getSource (packet));
-			m_sendACKHandler->start (new SendEvent (packet), parameters ()->getSIFS ());
-			m_receptionListener->gotData (packet);
-			monitorDelay += parameters ()->getSIFS ();
-			int ackTxMode = getAckTxModeForData (getSource (packet), getTxMode (packet));
-			monitorDelay += calculateTxDuration (ackTxMode, parameters ()->getACKSize ());
+			if (!isNoAck (packet)) {
+				TRACE ("rx unicast/send_ack from %d", getSource (packet));
+				m_sendACKHandler->start (new SendEvent (packet), parameters ()->getSIFS ());
+				monitorDelay += parameters ()->getSIFS ();
+				int ackTxMode = getAckTxModeForData (getSource (packet), getTxMode (packet));
+				monitorDelay += calculateTxDuration (ackTxMode, parameters ()->getACKSize ());
+			} else {
+				TRACE ("rx unicast/no_ack from %d", getSource (packet));
+			}
 			monitorDelay += parameters ()->getPIFS ();
+			m_receptionListener->gotData (packet);
 		} else if (getDestination (packet) == ((int)MAC_BROADCAST)) {
 			TRACE ("rx broadcast from %d", getSource (packet));
 			m_receptionListener->gotData (packet);
