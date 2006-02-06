@@ -147,9 +147,9 @@ uint8_t
 MacDcfParameters::log2 (uint16_t v)
 {
 	uint8_t log = 0;
-	while (v >>= 1) {
+	do {
 		log++;
-	}
+	} while (v >>= 1);
 	return log;
 }
 
