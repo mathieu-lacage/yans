@@ -32,7 +32,6 @@ class MacStation;
 
 class MacLowTransmissionListener {
 public:
-	MacLowTransmissionListener ();
 	virtual ~MacLowTransmissionListener ();
 
 	virtual void gotCTS (double snr, int txMode) = 0;
@@ -40,32 +39,39 @@ public:
 	virtual void gotACK (double snr, int txMode) = 0;
 	virtual void missedACK (void) = 0;
 	virtual void startNext (void) = 0;
-	virtual void gotBlockAckStart (double snr) = 0;
-	virtual void gotBlockAck (int sequence) = 0;
-	virtual void gotBlockAckEnd (void) = 0;
-	virtual void missedBlockAck (void) = 0;
+
+private:
+	MacLowTransmissionListener ();
 };
 
 class MacLowReceptionListener {
 public:
-	MacLowReceptionListener ();
 	virtual ~MacLowReceptionListener ();
 
 	virtual void gotPacket (int from, double snr, int txMode) = 0;
 	virtual void gotData (Packet *packet) = 0;
-	/* return the BlockAckResp. If 0 is returned,
-	 * the MacLow will send back a simple ACK to the
-	 * originator.
-	 */
-	virtual Packet *gotBlockAckReq (Packet *packet) = 0;
+	// XXX should implement this.
+	// virtual void missedData (Packet *packet) = 0;
+
+private:
+	MacLowReceptionListener ();
+};
+
+class MacLowBusyMonitoringListener {
+public:
+	virtual ~MacLowBusyMonitoringListener ();
+	virtual void gotBusyTimeout (void) = 0;
+private:
+	MacLowBusyMonitoringListener ();
 };
 
 class MacLowNavListener {
 public:
-	MacLowNavListener ();
 	virtual ~MacLowNavListener ();
 	virtual void navStart (double now, double duration) = 0;
 	virtual void navContinue (double duration) = 0;
+private:
+	MacLowNavListener ();
 };
 
 class MacLow {
@@ -92,6 +98,13 @@ public:
 	void enableNextData (int size);
 	void disableNextData (void);
 
+	/* If we enable this, we ignore all other durationId 
+	 * calculation and simply force the packet's durationId
+	 * field to this value.
+	 */
+	void enableOverrideDurationId (double durationId);
+	void disableOverrideDurationId (void);
+
 	/* store the transmission mode for the frames to transmit.
 	 */
 	void setDataTransmissionMode (int txMode);
@@ -110,12 +123,27 @@ public:
 
 	/* start the transmission of the currently-stored data. */
 	void startTransmission (void);
+
+
+	void receive (Packet *packet);
 	
 	void setReceptionListener (MacLowReceptionListener *listener);
-	void receive (Packet *packet);
+
+
+	/* If "Busy Monitoring" is enabled, the MacLow notifies
+	 * the ReceptionListeners whenever the medium stays IDLE
+	 * longer than PIFS.
+	 * "Busy Monitoring" starts after the next transmission
+	 * or reception which happens after calling this method.
+	 */
+	void enableBusyMonitoring (void);
+	void disableBusyMonitoring (void);
+
+	void setBusyMonitoringListener (MacLowBusyMonitoringListener *listener);
+
+
 
 	void registerNavListener (MacLowNavListener *listener);
-	void startBlockAckReqTransmission (int to, int tid);
 private:
 	void dropPacket (Packet *packet);
 	MacParameters *parameters (void);
@@ -128,12 +156,10 @@ private:
 	double getLastStartRx (void);
 	double calculateTxDuration (int mode, int size);
 	double calculateOverallTxTime (void);
+	int getCtsTxModeForRts (int to,  int rtsTxMode);
+	int getAckTxModeForData (int to, int dataTxMode);
 	void notifyNav (double now, double duration);
 	bool isNavZero (double now);
-
-	bool isData (Packet *packet);
-	bool isManagement (Packet *packet);
-	bool isCtl (Packet *packet);
 	
 	Packet *getRTSPacket (void);
 	Packet *getCTSPacket (void);
@@ -146,6 +172,7 @@ private:
 	void sendACK_AfterData (MacCancelableEvent *macEvent);
 	void sendDataAfterCTS (MacCancelableEvent *macEvent);
 	void waitSIFSAfterEndTx (MacCancelableEvent *macEvent);
+	void busyMonitor (MacCancelableEvent *macEvent);
 
 	void sendRTSForPacket (void);
 	void sendDataPacket (void);
@@ -155,6 +182,7 @@ private:
 	MacLowReceptionListener *m_receptionListener;
 	MacLowTransmissionListener *m_transmissionListener;
 	vector<MacLowNavListener *> m_navListeners;
+	MacLowBusyMonitoringListener *m_monitoringListener;
 
 	DynamicHandler<MacLow> *m_ACKTimeoutHandler;
 	DynamicHandler<MacLow> *m_CTSTimeoutHandler;
@@ -162,16 +190,19 @@ private:
 	DynamicHandler<MacLow> *m_sendACKHandler;
 	DynamicHandler<MacLow> *m_sendDataHandler;
 	DynamicHandler<MacLow> *m_waitSIFSHandler;
+	DynamicHandler<MacLow> *m_busyMonitorHandler;
 
 	Packet *m_currentTxPacket;
 
 	int m_nextSize;
 	bool m_waitACK;
+	bool m_monitorBusy;
 	bool m_sendRTS;
 	int m_dataTxMode;
 	int m_rtsTxMode;
 	double m_lastNavStart;
 	double m_lastNavDuration;
+	double m_overrideDurationId;
 };
 
 #endif /* MAC_LOW_H */
