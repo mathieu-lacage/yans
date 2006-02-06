@@ -68,7 +68,7 @@
 /* All the state transitions are marked by these macros. */
 #ifdef PHY80211_STATE_DEBUG
 #  define STATE_FROM(from) \
-     printf ("PHY TRACE %d from %s", this->node_->address (), stateToString (from));
+     printf ("PHY TRACE %d from %s", selfAddress (), stateToString (from));
 #  define STATE_TO(to) \
      printf (" to %s", stateToString (to));
 #  define STATE_AT(at) \
