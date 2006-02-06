@@ -36,8 +36,15 @@ public:
 	bool isAssociated (void);
 	void recordAssociated (void);
 
-	void setLastRxSequence (int sequence);
-	int getLastRxSequence (void);
+	void setLastSequenceNumber (int sequence, int fragment);
+	int getLastSequenceControl (void);
+	int getLastSequenceNumber (void);
+	int getLastFragmentNumber (void);
+	void setLastSequenceNumber (int TID, int sequence, int fragment);
+	int getLastSequenceNumber (int TID);
+	int getLastFragmentNumber (int TID);
+	int getLastSequenceControl (int TID);
+	
 
 	// reception-related method
 	virtual void reportRxOk (double SNR, int mode) = 0;

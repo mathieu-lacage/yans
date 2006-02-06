@@ -54,7 +54,13 @@ public:
 	ReceptionListener ();
 	virtual ~ReceptionListener ();
 
-	virtual void gotData (Packet *packet, double snr);
+	virtual void gotPacket (double snr, int txMode);
+	virtual void gotData (Packet *packet);
+	/* return the BlockAckResp. If 0 is returned,
+	 * the MacLow will send back a simple ACK to the
+	 * originator.
+	 */
+	virtual Packet *gotBlockAckReq (Packet *packet);
 };
 
 class NavListener {
@@ -66,7 +72,7 @@ public:
 
 class MacLow {
 public:
-	MacLow (Mac80211 *mac, MacHigh *high, Phy80211 *phy,
+	MacLow (Mac80211 *mac, Phy80211 *phy,
 		MacLowParameters *parameters);
 	~MacLow ();
 
@@ -116,8 +122,6 @@ private:
 	Phy80211 *peekPhy (void);
 	void forwardDown (Packet *packet);
 	int getSelf (void);
-	double getEIFS (void);
-	double getDIFS (void);
 	double getLastSNR (void);
 	double getLastStartRx (void);
 	double calculateTxDuration (int mode, int size);
@@ -145,7 +149,6 @@ private:
 
 	/* XXX init all */
 	Mac80211 *m_mac;
-	MacHigh *m_high;
 	Phy80211 *m_phy;
 
 	Packet *m_currentTxPacket;

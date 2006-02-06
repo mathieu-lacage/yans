@@ -76,6 +76,8 @@ enum mac_80211_packet_type {
 	MAC_80211_CTL_RTS,
 	MAC_80211_CTL_CTS,
 	MAC_80211_CTL_ACK,
+	MAC_80211_CTL_BACKREQ,
+	MAC_80211_CTL_BACKRESP,
 	MAC_80211_DATA,
 	MAC_80211_MGT_BEACON,
 	MAC_80211_MGT_ASSOCIATION_REQUEST,
@@ -103,9 +105,13 @@ class hdr_mac_80211 {
 	uint16_t getDataType (void) const;
 	enum mac_80211_packet_type getType (void) const;
 	double getDuration (void) const;
-	int getSequence (void) const;
-	int getFragmentNumber (void) const;
+	bool getMoreFragments (void) const;
 	bool isRetry (void) const;
+	int getSequenceControl (void) const;
+	int getTID (void) const;
+	bool isBlockAck (void) const;
+	bool isNoAck (void) const;
+	bool isNormalAck (void) const;
 
 	void setDestination (int destination);
 	void setFinalDestination (int destination);
@@ -113,30 +119,46 @@ class hdr_mac_80211 {
 	void setDataType (uint16_t type);
 	void setType (enum mac_80211_packet_type type);
 	void setDuration (double duration);
-	void setSequence (int sequence);
+	void setSequenceNumber (int sequence);
 	void setFragmentNumber (int fragmentNumber);
+	void setMoreFragments (bool);
 	void setRetry (void);
+	void setTID (int tid);
+	void setNoAck (void);
+	void setBlockAck (void);
+	void setNormalAck (void);
 
 	char const *getTypeString (void) const;
 	
  private:
+	enum {
+		ACK_NORMAL,
+		ACK_NO,
+		ACK_BLOCK
+	};
 	enum mac_80211_packet_type m_type;
 	/* this is a hack to avoid growing 
 	 * larger than the normal Mac header. 
 	 */
-	unsigned int m_dataType : 16;
-	unsigned int m_duration : 16;
-	unsigned int m_sequence : 12;
-	unsigned int m_fragment : 4;
-	unsigned int m_retry    : 1;
-	unsigned int m_txMode   : 10;
+	unsigned int m_dataType        : 16;
+	unsigned int m_duration        : 16;
+	unsigned int m_sequenceControl : 16;
+	unsigned int m_retry           : 1;
+	unsigned int m_moreFragments   : 1;
+	unsigned int m_txMode          : 10;
+	unsigned int m_tid             : 4;
+	unsigned int m_ackMode         : 2;
 	int m_destination;
 	int m_finalDestination;
 	int m_source;
 };
 
 
-void setSequence (Packet *packet, int sequence);
+void setTID (Packet *packet, int tid);
+void setNoAck (Packet *packet);
+void setBlockAck (Packet *packet);
+void setNormalAck (Packet *packet);
+void setSequenceNumber (Packet *packet, int sequence);
 void setFragmentNumber (Packet *packet, int fragment);
 void increaseSize (Packet *packet, int increment);
 void decreaseSize (Packet *packet, int decrement);
@@ -148,19 +170,27 @@ void setDuration (Packet *packet, double duration);
 void setSource (Packet *packet, int source);
 void setType (Packet *packet, enum mac_80211_packet_type type);
 void setRetry (Packet *packet);
+void setMoreFragments (Packet *packet, bool moreFragments);
 void initialize (Packet *packet);
 
 
 int getSize (Packet *packet);
 double getDuration (Packet *packet);
 bool isRetry (Packet *packet);
-int getSequence (Packet *packet);
-int getFragmentNumber (Packet *packet);
+int getSequenceControl (Packet *packet);
 int getDestination (Packet *packet);
 int getFinalDestination (Packet *packet);
 int getSource (Packet *packet);
 int getTxMode (Packet *packet);
 enum mac_80211_packet_type getType (Packet *packet);
+bool getMoreFragments (Packet *packet);
+int getTID (Packet *packet);
+bool isBlockAck (Packet *packet);
+bool isNoAck (Packet *packet);
+bool isNormalAck (Packet *packet);
+
+
+
 char const *getTypeString (Packet *packet);
 
 #endif /* HDRMAC_80211 */

@@ -32,8 +32,21 @@ void
 hdr_mac_80211::initialize (void)
 {
 	m_retry = 0;
+	m_moreFragments = 0;
+	m_sequenceControl = 0;
+	m_ackMode = ACK_NORMAL;
 }
 
+
+/*********************************************************
+ * Getters.
+ ********************************************************/
+
+int
+hdr_mac_80211::getTxMode (void) const
+{
+	return m_txMode;
+}
 int 
 hdr_mac_80211::getDestination (void) const
 {
@@ -66,20 +79,45 @@ hdr_mac_80211::getDuration (void) const
 	return realDuration / 1e6;
 }
 int 
-hdr_mac_80211::getSequence (void) const
+hdr_mac_80211::getSequenceControl (void) const
 {
-	return m_sequence;
+	return m_sequenceControl;
 }
-int 
-hdr_mac_80211::getFragmentNumber (void) const
+bool
+hdr_mac_80211::getMoreFragments (void) const
 {
-	return m_fragment;
+	return (m_moreFragments)?true:false;
 }
 bool
 hdr_mac_80211::isRetry (void) const
 {
 	return (m_retry)?true:false;
 }
+int 
+hdr_mac_80211::getTID (void) const
+{
+	return m_tid;
+}
+bool 
+hdr_mac_80211::isBlockAck (void) const
+{
+	return (m_ackMode == ACK_BLOCK)?true:false;
+}
+bool 
+hdr_mac_80211::isNoAck (void) const 
+{
+	return (m_ackMode == ACK_NO)?true:false;
+}
+bool 
+hdr_mac_80211::isNormalAck (void) const
+{
+	return (m_ackMode == ACK_NORMAL)?true:false;
+}
+
+
+/*********************************************************
+ * Setters.
+ ********************************************************/
 
 void 
 hdr_mac_80211::setDestination (int destination)
@@ -114,14 +152,14 @@ hdr_mac_80211::setDuration (double duration)
 	m_duration = realDuration;
 }
 void 
-hdr_mac_80211::setSequence (int sequence)
+hdr_mac_80211::setSequenceNumber (int sequence)
 {
-	m_sequence = sequence;
+	m_sequenceControl |= (sequence << 4);
 }
 void 
 hdr_mac_80211::setFragmentNumber (int fragmentNumber)
 {
-	m_fragment = fragmentNumber;
+	m_sequenceControl |= fragmentNumber & 0x0f;
 }
 void
 hdr_mac_80211::setRetry (void)
@@ -134,12 +172,37 @@ hdr_mac_80211::setTxMode (int mode)
 {
 	m_txMode = mode;
 }
-
-int
-hdr_mac_80211::getTxMode (void) const
+void
+hdr_mac_80211::setMoreFragments (bool moreFragments)
 {
-	return m_txMode;
+	m_moreFragments = moreFragments?1:0;
 }
+void 
+hdr_mac_80211::setTID (int tid)
+{
+	m_tid = tid;
+}
+void 
+hdr_mac_80211::setNoAck (void)
+{
+	m_ackMode = ACK_NO;
+}
+void 
+hdr_mac_80211::setBlockAck (void) 
+{
+	m_ackMode = ACK_BLOCK;
+}
+void 
+hdr_mac_80211::setNormalAck (void)
+{
+	m_ackMode = ACK_NORMAL;
+}
+
+
+/*********************************************************
+ * enum to string conversion.
+ ********************************************************/
+
 
 #define FOO(x) case MAC_80211_ ## x: return #x; break;
 
@@ -150,6 +213,8 @@ hdr_mac_80211::getTypeString (void) const
 		FOO (CTL_RTS);
 		FOO (CTL_CTS);
 		FOO (CTL_ACK);
+		FOO (CTL_BACKREQ);
+		FOO (CTL_BACKRESP);
 		FOO (DATA);
 		FOO (MGT_BEACON);
 		FOO (MGT_ASSOCIATION_REQUEST);
@@ -166,6 +231,11 @@ hdr_mac_80211::getTypeString (void) const
 }
 
 #undef FOO
+
+
+/*********************************************************
+ * Helper Getters
+ ********************************************************/
 
 
 int 
@@ -206,16 +276,16 @@ isRetry (Packet *packet)
 	return isRetry;
 }
 int
-getSequence (Packet *packet)
+getSequenceControl (Packet *packet)
 {
-	int sequence = HDR_MAC_80211 (packet)->getSequence ();
+	int sequence = HDR_MAC_80211 (packet)->getSequenceControl ();
 	return sequence;
 }
-int
-getFragmentNumber (Packet *packet)
+bool
+getMoreFragments (Packet *packet)
 {
-	int fragmentNumber = HDR_MAC_80211 (packet)->getFragmentNumber ();
-	return fragmentNumber;
+	bool moreFragments = HDR_MAC_80211 (packet)->getMoreFragments ();
+	return moreFragments;
 }
 int
 getSize (Packet *packet)
@@ -227,14 +297,54 @@ getDuration (Packet *packet)
 {
 	return HDR_MAC_80211 (packet)->getDuration ();
 }
-char const *
-getTypeString (Packet *packet)
+int 
+getTID (Packet *packet)
 {
-	return HDR_MAC_80211 (packet)->getTypeString ();
+	return HDR_MAC_80211 (packet)->getTID ();
+}
+bool 
+isBlockAck (Packet *packet)
+{
+	return HDR_MAC_80211 (packet)->isBlockAck ();
+}
+bool 
+isNoAck (Packet *packet)
+{
+	return HDR_MAC_80211 (packet)->getNoAck ();
+}
+bool 
+isNormalAck (Packet *packet)
+{
+	return HDR_MAC_80211 (packet)->getNormalAck ();
 }
 
 
 
+/*********************************************************
+ * Helper Setters
+ ********************************************************/
+
+
+void 
+setTID (Packet *packet, int tid)
+{
+	HDR_MAC_80211 (packet)->setTID (tid);
+}
+void 
+setNoAck (Packet *packet)
+{
+	HDR_MAC_80211 (packet)->setNoAck ();
+}
+void 
+setBlockAck (Packet *packet)
+{
+	HDR_MAC_80211 (packet)->setBlockAck ();
+}
+void
+setNormalAck (Packet *packet)
+{
+	HDR_MAC_80211 (packet)->setNormalAck ();
+}
 void
 setSize (Packet *packet, int size)
 {
@@ -283,9 +393,9 @@ setType (Packet *packet, enum mac_80211_packet_type type)
 	HDR_MAC_80211 (packet)->setType (type);
 }
 void
-setSequence (Packet *packet, int sequence)
+setSequenceNumber (Packet *packet, int sequence)
 {
-	HDR_MAC_80211 (packet)->setSequence (sequence);
+	HDR_MAC_80211 (packet)->setSequenceNumber (sequence);
 }
 void
 setFragmentNumber (Packet *packet, int fragmentNumber)
@@ -298,7 +408,25 @@ setRetry (Packet *packet)
 	HDR_MAC_80211 (packet)->setRetry ();
 }
 void
+setMoreFragments (Packet *packet, bool moreFragments)
+{
+	HDR_MAC_80211 (packet)->setMoreFragments (moreFragments);
+}
+void
 initialize (Packet *packet)
 {
 	HDR_MAC_80211 (packet)->initialize ();
+}
+
+
+
+
+
+
+
+
+char const *
+getTypeString (Packet *packet)
+{
+	return HDR_MAC_80211 (packet)->getTypeString ();
 }
