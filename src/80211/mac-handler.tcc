@@ -70,7 +70,6 @@ private:
 	TYPE *m_obj;
 	DynamicHandler_TYPE m_handler;
 	MacCancelableEvent *m_event;
-	double m_end;
 };
 
 
@@ -133,7 +132,7 @@ StaticHandler<TYPE>::handle (Event *e)
 template <typename TYPE>
 DynamicHandler<TYPE>::DynamicHandler<TYPE> (TYPE *obj, DynamicHandler_TYPE handler)
 	: m_obj (obj) , m_handler (handler),
-	  m_event (0), m_end (0.0)
+	  m_event (0)
 {}
 template <typename TYPE>
 DynamicHandler<TYPE>::~DynamicHandler<TYPE> ()
@@ -143,7 +142,6 @@ void
 DynamicHandler<TYPE>::start (class MacCancelableEvent *e, double delay)
 {
 	m_event = e;
-	m_end = Scheduler::instance ().clock () + delay;
 	Scheduler::instance ().schedule (this, e, delay);
 }
 template <typename TYPE>
@@ -168,7 +166,7 @@ double
 DynamicHandler<TYPE>::getEndTime (void)
 {
 	if (isRunning ()) {
-		return m_end;
+		return m_event->time_;
 	} else {
 		return 0.0;
 	}
