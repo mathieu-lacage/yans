@@ -119,7 +119,13 @@ $interfaces(2) addts $tspec addts-granted-callback1 addts-refused-callback1
 #########################################################
 
 
-$ns at 300 "puts \"End of simulation.\"; $ns halt"
+proc end-simulation {} {
+    global ns
+    puts "End of simulation."; 
+    $ns halt;
+}
+
+$ns at 300 end-simulation 
 puts "Starting Simulation..."
 $ns run
 

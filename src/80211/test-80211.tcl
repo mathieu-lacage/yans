@@ -60,6 +60,7 @@ $ns at 3.0 "$ftp start"
 #########################################################
 
 proc end-simulation {} {
+    global ns
     puts "End of simulation."; 
     $ns halt;
 }
