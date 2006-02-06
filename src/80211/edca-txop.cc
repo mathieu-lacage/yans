@@ -97,6 +97,9 @@ public:
 	virtual void startNext (void) {
 		m_txop->startNext ();
 	}
+	virtual void cancel (void) {
+		m_txop->cancel ();
+	}
 
 private:
 	EdcaTxop *m_txop;
@@ -382,6 +385,12 @@ EdcaTxop::startNext (void)
 	TRACE ("start next packet -- burst");
 	m_firstPacketInBurst = false;
 	tryToSendOnePacket ();
+}
+void
+EdcaTxop::cancel (void)
+{
+	TRACE ("cancel tx");
+	m_dcf->notifyAccessFinished ();
 }
 
 void

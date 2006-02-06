@@ -132,6 +132,9 @@ public:
 	virtual void startNext (void) {
 		m_scheduler->beaconTxNextData ();
 	}
+	virtual void cancel (void) {
+		assert (false);
+	}
 private:
 	QapScheduler *m_scheduler;
 };
@@ -155,6 +158,9 @@ public:
 		m_scheduler->missedCfPollAck ();
 	}
 	virtual void startNext (void) {
+		assert (false);
+	}
+	virtual void cancel (void) {
 		assert (false);
 	}
 private:

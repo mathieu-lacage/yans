@@ -44,22 +44,14 @@ public:
 	virtual void gotACK (double snr, int txMode) = 0;
 	virtual void missedACK (void) = 0;
 	virtual void startNext (void) = 0;
-};
 
-class NullMacLowTransmissionListener : public MacLowTransmissionListener {
-public:
-	NullMacLowTransmissionListener ();
-	virtual ~NullMacLowTransmissionListener ();
-
-	virtual void gotCTS (double snr, int txMode);
-	virtual void missedCTS (void);
-	virtual void gotACK (double snr, int txMode);
-	virtual void missedACK (void);
-	virtual void startNext (void);
-
-	static MacLowTransmissionListener *instance (void);
-private:
-	static MacLowTransmissionListener *m_instance;
+	/* Invoked if this transmission was canceled 
+	 * one way or another. When this method is invoked,
+	 * you can assume that the packet has not been passed
+	 * down the stack to the PHY. You are responsible
+	 * for freeing the packet if you want to.
+	 */
+	virtual void cancel (void) = 0;
 };
 
 class MacLowReceptionListener {
@@ -139,7 +131,6 @@ public:
 
 	/* store the data packet to transmit. */
 	void setData (Packet *packet);
-	void clearData (void);
 
 	/* store the transmission listener. */
 	void setTransmissionListener (MacLowTransmissionListener *listener);
@@ -175,6 +166,7 @@ private:
 			enum mac_80211_packet_type type,
 			int source);
 	bool isNavZero (double now);
+	void maybeCancelPrevious (void);
 	
 	Packet *getRTSPacket (void);
 	Packet *getCTSPacket (void);

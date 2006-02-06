@@ -97,6 +97,10 @@ public:
 		m_txop->startNext ();
 	}
 
+	virtual void cancel (void) {
+		assert (false);
+	}
+
 private:
 	DcaTxop *m_txop;
 };

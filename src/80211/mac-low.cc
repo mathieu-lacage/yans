@@ -50,29 +50,6 @@ MacLowTransmissionListener::MacLowTransmissionListener ()
 {}
 MacLowTransmissionListener::~MacLowTransmissionListener ()
 {}
-NullMacLowTransmissionListener::NullMacLowTransmissionListener ()
-{}
-NullMacLowTransmissionListener::~NullMacLowTransmissionListener ()
-{}
-void NullMacLowTransmissionListener::gotCTS (double snr, int txMode)
-{}
-void NullMacLowTransmissionListener::missedCTS (void)
-{}
-void NullMacLowTransmissionListener::gotACK (double snr, int txMode)
-{}
-void NullMacLowTransmissionListener::missedACK (void)
-{}
-void NullMacLowTransmissionListener::startNext (void)
-{}
-MacLowTransmissionListener *NullMacLowTransmissionListener::m_instance = 0;
-MacLowTransmissionListener *
-NullMacLowTransmissionListener::instance (void)
-{
-	if (m_instance == 0) {
-		m_instance = new NullMacLowTransmissionListener ();
-	}
-	return m_instance;
-}
 MacLowReceptionListener::MacLowReceptionListener ()
 {}
 MacLowReceptionListener::~MacLowReceptionListener ()
@@ -124,6 +101,7 @@ MacLow::MacLow (MacContainer *container)
 	m_lastNavDuration = 0.0;
 	m_lastNavStart = 0.0;
 	m_overrideDurationId = 0.0;
+	m_currentTxPacket = 0;
 }
 
 MacLow::~MacLow ()
@@ -205,6 +183,33 @@ MacLow::getAckTxModeForData (int to, int dataTxMode)
 	 * and the BSS mode.
 	 */
 	return 0;
+}
+
+void
+MacLow::maybeCancelPrevious (void)
+{
+	/* The cancels below should not be really needed in 
+	 * a perfect world but the QapScheduler steals ownership
+	 * of the medium to the edca-txop which cannot complete
+	 * any transaction left.
+	 * See the comment in setData too.
+	 */
+	if (m_waitSIFSHandler->isRunning () ||
+	    m_normalAckTimeoutHandler->isRunning () ||
+	    m_CTSTimeoutHandler->isRunning () ||
+	    m_fastAckFailedTimeoutHandler->isRunning () ||
+	    m_fastAckTimeoutHandler->isRunning () ||
+	    m_superFastAckTimeoutHandler->isRunning ()) {
+		
+		m_waitSIFSHandler->cancel ();
+		m_normalAckTimeoutHandler->cancel ();
+		m_CTSTimeoutHandler->cancel ();
+		m_fastAckFailedTimeoutHandler->cancel ();
+		m_fastAckTimeoutHandler->cancel ();
+		m_superFastAckTimeoutHandler->cancel ();
+
+		m_transmissionListener->cancel ();
+	}
 }
 
 double
@@ -557,13 +562,27 @@ MacLow::waitSuperFastAck (void)
 void 
 MacLow::setData (Packet *packet)
 {
-	assert (m_currentTxPacket == 0);
+	if (m_currentTxPacket != 0) {
+		/* currentTxPacket is not NULL because someone started
+		 * a transmission and was interrupted before one of:
+		 *   - ctsTimeout
+		 *   - sendDataAfterCTS
+		 * expired. This means that one of these timers is still
+		 * running. When the caller of this method also calls
+		 * setTransmissionListener, it will trigger a positive
+		 * check in maybeCancelPrevious (because of at least one
+		 * of these two timer) which will trigger a call to the
+		 * previous listener's cancel method. That method is 
+		 * responsible for freeing the Packet because it has not 
+		 * been forwarded to the Phy yet.
+		 *
+		 * This typically happens because the high-priority 
+		 * QapScheduler has taken access to the channel from
+		 * one of the Edca of the QAP.
+		 */
+		m_currentTxPacket = 0;
+	}
 	m_currentTxPacket = packet;
-}
-void
-MacLow::clearData (void)
-{
-	m_currentTxPacket = 0;
 }
 
 void 
@@ -649,18 +668,7 @@ MacLow::disableRTS (void)
 void 
 MacLow::setTransmissionListener (MacLowTransmissionListener *listener)
 {
-	/* the cancels below should not be really needed in 
-	 * a perfect world but the QapScheduler steals ownership
-	 * of the medium to the edca-txop which cannot complete
-	 * any transaction left.
-	 */
-	m_waitSIFSHandler->cancel ();
-	m_normalAckTimeoutHandler->cancel ();
-	m_CTSTimeoutHandler->cancel ();
-	m_fastAckFailedTimeoutHandler->cancel ();
-	m_fastAckTimeoutHandler->cancel ();
-	m_superFastAckTimeoutHandler->cancel ();
-
+	maybeCancelPrevious ();
 	m_transmissionListener = listener;
 }
 void 

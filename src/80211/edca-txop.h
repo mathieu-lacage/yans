@@ -61,6 +61,7 @@ private:
 	void gotACK (double snr, int txMode);
 	void missedACK (void);
 	void startNext (void);
+	void cancel (void);
 
 	bool needRTS (void);
 	void dropCurrentPacket (void);

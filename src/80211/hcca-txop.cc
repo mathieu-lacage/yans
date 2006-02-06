@@ -75,6 +75,10 @@ public:
 		m_txop->startNext ();
 	}
 
+	virtual void cancel (void) {
+		assert (false);
+	}
+
 private:
 	HccaTxop *m_txop;
 };
@@ -100,6 +104,9 @@ public:
 		m_txop->missedQosNullAck ();
 	}
 	virtual void startNext (void) {
+		assert (false);
+	}
+	virtual void cancel (void) {
 		assert (false);
 	}
 
