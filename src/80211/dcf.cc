@@ -106,8 +106,8 @@ class DcfNavListener : public MacLowNavListener
 public:
 	DcfNavListener (Dcf *dcf)
 		: m_dcf (dcf) {}
-	virtual void navReset (double now) {
-		m_dcf->navReset (now);
+	virtual void navReset (double now, double duration) {
+		m_dcf->navReset (now, duration);
 	}
 	virtual void navStart (double now, double duration) {
 		m_dcf->navStart (now, duration);
@@ -442,12 +442,13 @@ Dcf::updateBackoff (double time)
  *     Notification methods.
  ***************************************************************/ 
 void
-Dcf::navReset (double navReset)
+Dcf::navReset (double navStart, double duration)
 {
-	double previousDelayUntilAccessGranted = getDelayUntilAccessGranted (navReset);
-	m_lastNavStart = navReset;
+	double navEnd = navStart + duration;
+	double previousDelayUntilAccessGranted = getDelayUntilAccessGranted (navEnd);
+	m_lastNavStart = navEnd;
 	m_lastNavDuration = 0.0;
-	double newDelayUntilAccessGranted = getDelayUntilAccessGranted (navReset);
+	double newDelayUntilAccessGranted = getDelayUntilAccessGranted (navEnd);
 	if (newDelayUntilAccessGranted < previousDelayUntilAccessGranted &&
 	    m_accessTimer->isRunning () &&
 	    m_accessTimer->getEndTime () > newDelayUntilAccessGranted) {

@@ -484,19 +484,19 @@ MacLow::notifyNav (double nowTime, double duration,
 	double oldNavStart = m_lastNavStart;
 	double oldNavEnd = oldNavStart + m_lastNavDuration;
 	double newNavStart = nowTime;
-	double newNavEnd = newNavStart + duration;
 
 	if (type == MAC_80211_MGT_CFPOLL &&
 	    source == m_interface->getBSSID ()) {
 		m_lastNavStart = newNavStart;
 		m_lastNavDuration = duration;
 		for (NavListenersCI i = m_navListeners.begin (); i != m_navListeners.end (); i++) {
-			(*i)->navReset (newNavStart);
+			(*i)->navReset (newNavStart, duration);
 		}
 		return;
 	}
 
 	if (oldNavEnd > newNavStart) {
+		double newNavEnd = newNavStart + duration;
 		/* The two NAVs overlap */
 		if (newNavEnd > oldNavEnd) {
 			double delta = newNavEnd - oldNavEnd;

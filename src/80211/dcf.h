@@ -122,7 +122,7 @@ private:
 	void notifyTxStart (double now, double duration);
 	void notifySleep (double now);
 	void notifyWakeup (double now);
-	void navReset (double now);
+	void navReset (double now, double duration);
 	void navStart (double now, double duration);
 	void navContinue (double duration);
 

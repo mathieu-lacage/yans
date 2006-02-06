@@ -81,7 +81,7 @@ public:
 	virtual ~MacLowNavListener ();
 	virtual void navStart (double now, double duration) = 0;
 	virtual void navContinue (double duration) = 0;
-	virtual void navReset (double now) = 0;
+	virtual void navReset (double now, double duration) = 0;
 };
 
 class MacLow {
