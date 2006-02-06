@@ -49,7 +49,7 @@ TSpec::TSpec ()
 	initialize ("peakDataRate", &m_peakDataRate, 100000);
 	initialize ("burstSize", &m_burstSize, 4000);
 	initialize ("delayBound", &m_delayBound, 0.5);
-	initialize ("minimumPhyRate", &m_minimumPhyRate, 8000000);
+	initialize ("minimumPhyMode", &m_minimumPhyMode, 0);
 	initialize ("surplusBandwidthAllowance", &m_surplusBandwidthAllowance, 1.5);
 	initialize ("mediumTime", &m_mediumTime, 1.0);
 }
@@ -132,104 +132,104 @@ TSpec::command(int argc, const char*const* argv)
 
 
 enum trafficType_e
-TSpec::getTrafficType (void)
+TSpec::getTrafficType (void) const
 {
 	return m_trafficType;
 }
 uint8_t 
-TSpec::getTSID (void)
+TSpec::getTSID (void) const
 {
 	return m_TSID;
 }
 enum direction_e 
-TSpec::getLinkDirection (void)
+TSpec::getLinkDirection (void) const
 {
 	return m_direction;
 }
 enum accessPolicy_e 
-TSpec::getAccessPolicy (void)
+TSpec::getAccessPolicy (void) const
 {
 	return m_accessPolicy;
 }
 uint8_t 
-TSpec::getUserPriority (void)
+TSpec::getUserPriority (void) const
 {
 	return m_UP;
 }
 
 
 uint16_t 
-TSpec::getNominalMSDUSize (void)
+TSpec::getNominalMSDUSize (void) const
 {
 	return (uint16_t)m_nominalMSDUSize;
 }
 uint16_t 
-TSpec::getMaximalMSDUSize (void)
+TSpec::getMaximalMSDUSize (void) const
 {
 	return (uint16_t)m_maximalMSDUSize;
 }
 double 
-TSpec::getMinimumServiceInterval (void)
+TSpec::getMinimumServiceInterval (void) const
 {
 	return m_minimumServiceInterval;
 }
 double 
-TSpec::getMaximumServiceInterval (void)
+TSpec::getMaximumServiceInterval (void) const
 {
 	return m_maximumServiceInterval;
 }
 double 
-TSpec::getInactivityInterval (void)
+TSpec::getInactivityInterval (void) const
 {
 	return m_inactivityInterval;
 }
 double 
-TSpec::getSuspensionInterval (void)
+TSpec::getSuspensionInterval (void) const
 {
 	return m_suspensionInterval;
 }
 double 
-TSpec::getServiceStartTime (void)
+TSpec::getServiceStartTime (void) const
 {
 	return m_serviceStartTime;
 }
 double 
-TSpec::getMinimumDataRate (void)
+TSpec::getMinimumDataRate (void) const
 {
 	return m_minimumDataRate;
 }
 double 
-TSpec::getMeanDataRate (void)
+TSpec::getMeanDataRate (void) const
 {
 	return m_meanDataRate;
 }
 double 
-TSpec::getPeakDataRate (void)
+TSpec::getPeakDataRate (void) const
 {
 	return m_peakDataRate;
 }
 uint32_t 
-TSpec::getBurstSize (void)
+TSpec::getBurstSize (void) const
 {
 	return m_burstSize;
 }
 double 
-TSpec::getDelayBound (void)
+TSpec::getDelayBound (void) const
 {
 	return m_delayBound;
 }
-double 
-TSpec::getMinimumPhyRate (void)
+int
+TSpec::getMinimumPhyMode (void) const
 {
-	return m_minimumPhyRate;
+	return m_minimumPhyMode;
 }
 double 
-TSpec::getSurplusBandwidthAllowance (void)
+TSpec::getSurplusBandwidthAllowance (void) const
 {
 	return m_surplusBandwidthAllowance;
 }
 double 
-TSpec::getMediumTime (void)
+TSpec::getMediumTime (void) const
 {
 	return m_mediumTime;
 }
@@ -305,9 +305,9 @@ TSpec::setDelayBound (double delay)
 	m_delayBound = delay;
 }
 void 
-TSpec::setMinimumPhyRate (double rate)
+TSpec::setMinimumPhyMode (int mode)
 {
-	m_minimumPhyRate = rate;
+	m_minimumPhyMode = mode;
 }
 void 
 TSpec::setSurplusBandwidthAllowance (double v)

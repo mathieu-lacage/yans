@@ -81,3 +81,8 @@ MacHighNQStation::addTsRequest (TSpecRequest *request)
 	/* really, this should not happen.*/
 	assert (false);
 }
+void 
+MacHighNQStation::delTsRequest (TSpecRequest *request)
+{
+	assert (false);
+}

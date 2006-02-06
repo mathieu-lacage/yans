@@ -48,6 +48,29 @@ MacLowTransmissionListener::MacLowTransmissionListener ()
 {}
 MacLowTransmissionListener::~MacLowTransmissionListener ()
 {}
+NullMacLowTransmissionListener::NullMacLowTransmissionListener ()
+{}
+NullMacLowTransmissionListener::~NullMacLowTransmissionListener ()
+{}
+void NullMacLowTransmissionListener::gotCTS (double snr, int txMode)
+{}
+void NullMacLowTransmissionListener::missedCTS (void)
+{}
+void NullMacLowTransmissionListener::gotACK (double snr, int txMode)
+{}
+void NullMacLowTransmissionListener::missedACK (void)
+{}
+void NullMacLowTransmissionListener::startNext (void)
+{}
+MacLowTransmissionListener *NullMacLowTransmissionListener::m_instance = 0;
+MacLowTransmissionListener *
+NullMacLowTransmissionListener::instance (void)
+{
+	if (m_instance == 0) {
+		m_instance = new NullMacLowTransmissionListener ();
+	}
+	return m_instance;
+}
 MacLowReceptionListener::MacLowReceptionListener ()
 {}
 MacLowReceptionListener::~MacLowReceptionListener ()
@@ -503,8 +526,6 @@ MacLow::startTransmission (void)
 
 	if (isData (m_currentTxPacket)) {
 		increaseSize (m_currentTxPacket, parameters ()->getDataHeaderSize ());
-	} else if (isManagement (m_currentTxPacket)) {
-		increaseSize (m_currentTxPacket, parameters ()->getMgtHeaderSize ());
 	}
 
 	if (m_nextSize > 0 && !m_waitACK) {
@@ -644,8 +665,6 @@ MacLow::receive (Packet *packet)
 	} else {
 		if (isData (packet)) {
 			decreaseSize (packet, parameters ()->getDataHeaderSize ());
-		} else if (isManagement (packet)) {
-			decreaseSize (packet, parameters ()->getMgtHeaderSize ());
 		}
 		if (getDestination (packet) == getSelf ()) {
 			TRACE ("rx unicast from %d", getSource (packet));

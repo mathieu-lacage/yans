@@ -82,6 +82,7 @@ MacHighQStation::createTS (TSpec *tspec)
 }
 
 
+
 void
 MacHighQStation::updateEDCAParameters (unsigned char const *buffer)
 {
@@ -117,18 +118,24 @@ MacHighQStation::queueAC (enum ac_e ac, Packet *packet)
 	m_dcfs[ac]->requestAccess ();
 }
 
-
+void 
+MacHighQStation::delTsRequest (TSpecRequest *request)
+{
+	Packet *addts = getPacketFor (getApAddress ());
+	setType (addts, MAC_80211_MGT_ADDTS_REQUEST);
+	addts->allocdata (sizeof (request));
+	unsigned char *buffer = addts->accessdata ();
+	*((TSpecRequest **)buffer) = request;
+	// XXX for now, send through AC_BE queue.
+	queueAC (AC_BE, addts);
+}
 void 
 MacHighQStation::addTsRequest (TSpecRequest *request)
 {
 	Packet *addts = getPacketFor (getApAddress ());
 	setType (addts, MAC_80211_MGT_ADDTS_REQUEST);
-	/* The first byte of the data area is reserved
-	 * to hold the TS status response from the QAP.
-	 */
-	addts->allocdata (sizeof (request)+1);
+	addts->allocdata (sizeof (request));
 	unsigned char *buffer = addts->accessdata ();
-	buffer++;
 	*((TSpecRequest **)buffer) = request;
 	// XXX for now, send through AC_BE queue.
 	queueAC (AC_BE, addts);
@@ -165,8 +172,15 @@ MacHighQStation::enqueueToLow (Packet *packet)
 	 */
 	int requestedTID = getRequestedTID (packet);
 	if (requestedTID == 0) {
-		/* unmarked so we assume AC_BE */
-		queueAC (AC_BE, packet);
+		/* unmarked so we assume AC_BE unless we have
+		 * a management frame in which case it should be
+		 * AC_VO. see 9.1.3.1 802.11e/D12.1
+		 */
+		if (isManagement (packet)) {
+			queueAC (AC_VO, packet);
+		} else {
+			queueAC (AC_BE, packet);
+		}
 		return;
 	} else {
 		requestedTID --;
@@ -218,22 +232,37 @@ MacHighQStation::gotBeacon (Packet *packet)
 void 
 MacHighQStation::gotAddTsResponse (Packet *packet)
 {
-	unsigned char *buffer = packet->accessdata ();
-	uint8_t status = *buffer;
-	buffer++;
+	uint8_t *buffer = packet->accessdata ();
+	enum mac_80211_request_status status = *((enum mac_80211_request_status *)buffer);
+	buffer += sizeof (status);
 	TSpecRequest *request = *((TSpecRequest **)buffer);
-	if (status == 0) {
+	if (status == MAC_80211_ADDTS_OK) {
 		TRACE ("granted TS");
 		createTS (request->getTSpec ());
 		request->notifyGranted ();
 	} else {
+		assert (status == MAC_80211_ADDTS_FAILED);
 		TRACE ("refused TS");
 		request->notifyRefused ();
 	}
 }
 void 
 MacHighQStation::gotDelTsResponse (Packet *packet)
-{}
+{
+	uint8_t *buffer = packet->accessdata ();
+	enum mac_80211_request_status status = *((enum mac_80211_request_status *)buffer);
+	buffer += sizeof (status);
+	TSpecRequest *request = *((TSpecRequest **)buffer);
+	if (status == MAC_80211_DELTS_OK) {
+		TRACE ("deleted TS");
+		createTS (request->getTSpec ());
+		request->notifyGranted ();
+	} else {
+		assert (status == MAC_80211_DELTS_FAILED);
+		TRACE ("refused deleting TS");
+		request->notifyRefused ();
+	}
+}
 
 void 
 MacHighQStation::flush (void)

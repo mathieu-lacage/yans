@@ -138,18 +138,18 @@ HccaTxop::txCurrent (void)
 			return false;
 		}
 		if (!enoughTimeFor (queue->peekNextPacket ())) {
-			return false;
+			goto tryToSendQosNull;
 		}
 		assert (m_currentTxPacket == 0);
 		m_currentTxPacket = queue->dequeue ();
 	}
 	if (!enoughTimeFor (m_currentTxPacket)) {
 		/* we don't have enough time to transmit the
-		 * first frame in our granted txop.
+		 * current frame.
 		 * XXX shouldn't we ask for a longer txop with
 		 * some special frame ?
 		 */
-		return false;
+		goto tryToSendQosNull;
 	}
 
 	MacStation *station = lookupDestStation (m_currentTxPacket);
@@ -167,6 +167,9 @@ HccaTxop::txCurrent (void)
 	low ()->setTransmissionListener (m_transmissionListener);
 	low ()->startTransmission ();
 	return true;
+ tryToSendQosNull:
+	
+	return false;
 }
 
 void 

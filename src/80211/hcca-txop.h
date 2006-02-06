@@ -40,13 +40,12 @@ public:
 	HccaTxop (MacContainer *container);
 
 	void tsAccessGranted (uint8_t TSID, double txopLimit);
-	// XXX what is this method ? 
-	// remove it ?
-	void acAccessGranted (enum ac_e ac, double txopLimit);
-
 	void addStream (MacQueue80211e *queue, uint8_t TSID);
 	void deleteStream (uint8_t TSID);
 
+	// XXX what is this method ? 
+	// remove it ?
+	void acAccessGranted (enum ac_e ac, double txopLimit);
 	void addAccessCategory (MacQueue80211e *queue, enum ac_e accessCategory);
 	void deleteAccessCategory (enum ac_e accessCategory);
 private:

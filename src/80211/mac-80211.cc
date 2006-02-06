@@ -20,7 +20,7 @@
  */
 
 #include "mac-80211.h"
-#include "mac-high-access-point.h"
+#include "mac-high-nqap.h"
 #include "mac-high-nqstation.h"
 #include "mac-high-qstation.h"
 #include "mac-high-adhoc.h"
@@ -129,7 +129,7 @@ Mac80211::command(int argc, const char*const* argv)
 				return TCL_OK;
 			} else if (strcmp (argv[2], "access-point") == 0) {
 				startContainer ();
-				MacHigh *high = new MacHighAccessPoint (m_container);
+				MacHigh *high = new MacHighNqap (m_container);
 				m_container->setMacHigh (high);
 				return TCL_OK;
 			} else if (strcmp (argv[2], "qaccess-point") == 0) {

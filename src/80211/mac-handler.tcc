@@ -61,6 +61,7 @@ public:
 	DynamicHandler (TYPE *obj, DynamicHandler_TYPE handler);
 	virtual ~DynamicHandler ();
 	void start (MacCancelableEvent *e, double delay);
+	void start (double delay);
 	bool isRunning (void);
 	double getEndTime (void);
 	void cancel (void);
@@ -144,6 +145,12 @@ DynamicHandler<TYPE>::start (class MacCancelableEvent *e, double delay)
 	m_event = e;
 	m_end = Scheduler::instance ().clock () + delay;
 	Scheduler::instance ().schedule (this, e, delay);
+}
+template <typename TYPE>
+void 
+DynamicHandler<TYPE>::start (double delay)
+{
+	start (new MacCancelableEvent (), delay);
 }
 template <typename TYPE>
 bool 

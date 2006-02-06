@@ -18,38 +18,46 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef MAC_HIGH_NQSTATION_H
-#define MAC_HIGH_NQSTATION_H
+#ifndef MAC_HIGH_NQAP
+#define MAC_HIGH_NQAP
 
-#include "mac-high-station.h"
+#include "mac-high-ap.h"
+#include "mac-handler.tcc"
 
 class MacContainer;
 class Packet;
-class Dcf;
 class MacDcfParameters;
 class MacQueue80211e;
+class Dcf;
+class MacParameters;
 
-class MacHighNQStation : public MacHighStation {
+class MacHighNqap : public MacHighAp {
 public:
-	MacHighNQStation (MacContainer *container, int apAddress);
-	virtual ~MacHighNQStation ();
+	MacHighNqap (MacContainer *container);
+	virtual ~MacHighNqap ();
 
 	virtual void addTsRequest (TSpecRequest *request);
 	virtual void delTsRequest (TSpecRequest *request);
 
 private:
-	Dcf *m_dcf;
-	MacDcfParameters *m_dcfParameters;
-	MacQueue80211e *m_dcfQueue;
+	MacParameters *parameters (void);
+	Packet *getPacketFor (int destination);
+	void sendBeacon (void);
 
 	virtual void enqueueToLow (Packet *packet);
+	virtual void forwardQueueToLow (Packet *packet);
+	virtual void sendAssociationResponseOk (int destination);
+	virtual void sendReAssociationResponseOk (int destination);
+	virtual void sendProbeResponse (int destination);
+	virtual void gotAddTsRequest (Packet *packet);
+	virtual void gotDelTsRequest (Packet *packet);
 	virtual void gotCFPoll (Packet *packet);
-	virtual void gotBeacon (Packet *packet);
-	virtual void gotAssociated (Packet *packet);
-	virtual void gotReAssociated (Packet *packet);
-	virtual void gotAddTsResponse (Packet *packet);
-	virtual void gotDelTsResponse (Packet *packet);
-	virtual void flush (void);
+
+	MacDcfParameters *m_dcfParameters;
+	MacQueue80211e *m_queue;
+	Dcf *m_dcf;
+
+	StaticHandler<MacHighNqap> *m_sendBeaconTimer;
 };
 
-#endif /* MAC_HIGH_NQSTATION_H */
+#endif /* MAC_HIGH_NQAP */

@@ -21,6 +21,8 @@
 #ifndef MAC_PARAMETERS_H
 #define MAC_PARAMETERS_H
 
+#include "hdr-mac-80211.h"
+
 class MacContainer;
 
 class MacParameters {
@@ -33,18 +35,13 @@ public:
 
 	double getBeaconInterval (void);
 	int getMaxMissedBeacon (void);
-	int getBeaconSize (void);
-	int getAssociationResponseSize (void);
-	int getReAssociationResponseSize (void);
-	int getProbeResponseSize (void);
-	int getAssociationRequestSize (void);
-	int getReAssociationRequestSize (void);
-	int getProbeRequestSize (void);
 
+	int getPacketSize (enum mac_80211_packet_type);
+	int getManagementPayloadSize (enum mac_80211_packet_type);
 
 	int getDataHeaderSize (void);
-	int getMgtHeaderSize (void);
 
+	double getPIFS (void);
 	double getSIFS (void);
 	double getSlotTime (void);
 
@@ -60,7 +57,18 @@ public:
 	double getMaxPropagationDelay (void);
 
 	int getMaxMSDUSize (void);
+	double getCapLimit (void);
+	double getMinEdcaTrafficProportion (void);
 private:
+	int getBeaconSize (void);
+	int getAssociationResponseSize (void);
+	int getReAssociationResponseSize (void);
+	int getProbeResponseSize (void);
+	int getAssociationRequestSize (void);
+	int getReAssociationRequestSize (void);
+	int getProbeRequestSize (void);
+	int getMgtHeaderSize (void);
+
 	int getSelf (void);
 	double calculateBaseTxDuration (int size);
 

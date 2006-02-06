@@ -32,6 +32,7 @@ class MacStation;
 
 class MacLowTransmissionListener {
 public:
+	MacLowTransmissionListener ();
 	virtual ~MacLowTransmissionListener ();
 
 	virtual void gotCTS (double snr, int txMode) = 0;
@@ -39,39 +40,48 @@ public:
 	virtual void gotACK (double snr, int txMode) = 0;
 	virtual void missedACK (void) = 0;
 	virtual void startNext (void) = 0;
+};
 
+class NullMacLowTransmissionListener : public MacLowTransmissionListener {
+public:
+	NullMacLowTransmissionListener ();
+	virtual ~NullMacLowTransmissionListener ();
+
+	virtual void gotCTS (double snr, int txMode);
+	virtual void missedCTS (void);
+	virtual void gotACK (double snr, int txMode);
+	virtual void missedACK (void);
+	virtual void startNext (void);
+
+	static MacLowTransmissionListener *instance (void);
 private:
-	MacLowTransmissionListener ();
+	static MacLowTransmissionListener *m_instance;
 };
 
 class MacLowReceptionListener {
 public:
+	MacLowReceptionListener ();
 	virtual ~MacLowReceptionListener ();
 
 	virtual void gotPacket (int from, double snr, int txMode) = 0;
 	virtual void gotData (Packet *packet) = 0;
 	// XXX should implement this.
 	// virtual void missedData (Packet *packet) = 0;
-
-private:
-	MacLowReceptionListener ();
 };
 
 class MacLowBusyMonitoringListener {
 public:
+	MacLowBusyMonitoringListener ();
 	virtual ~MacLowBusyMonitoringListener ();
 	virtual void gotBusyTimeout (void) = 0;
-private:
-	MacLowBusyMonitoringListener ();
 };
 
 class MacLowNavListener {
 public:
+	MacLowNavListener ();
 	virtual ~MacLowNavListener ();
 	virtual void navStart (double now, double duration) = 0;
 	virtual void navContinue (double duration) = 0;
-private:
-	MacLowNavListener ();
 };
 
 class MacLow {

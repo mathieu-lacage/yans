@@ -90,7 +90,7 @@ MacHighStation::sendAssociationRequest (void)
 {
 	int destination = m_apAddress;
 	Packet *packet = getPacketFor (destination);
-	setSize (packet, parameters ()->getAssociationRequestSize ());
+	setSize (packet, parameters ()->getPacketSize (MAC_80211_MGT_ASSOCIATION_REQUEST));
 	setType (packet, MAC_80211_MGT_ASSOCIATION_REQUEST);
 	enqueueToLow (packet);
 }
@@ -100,7 +100,7 @@ MacHighStation::sendReAssociationRequest (void)
 {
 	int destination = m_apAddress;
 	Packet *packet = getPacketFor (destination);
-	setSize (packet, parameters ()->getReAssociationRequestSize ());
+	setSize (packet, parameters ()->getPacketSize (MAC_80211_MGT_REASSOCIATION_REQUEST));
 	setType (packet, MAC_80211_MGT_REASSOCIATION_REQUEST);
 	enqueueToLow (packet);
 }
@@ -110,7 +110,7 @@ MacHighStation::sendProbeRequest (void)
 {
 	int destination = m_apAddress;
 	Packet *packet = getPacketFor (destination);
-	setSize (packet, parameters ()->getProbeRequestSize ());
+	setSize (packet, parameters ()->getPacketSize (MAC_80211_MGT_PROBE_REQUEST));
 	setType (packet, MAC_80211_MGT_PROBE_REQUEST);
 	enqueueToLow (packet);
 }

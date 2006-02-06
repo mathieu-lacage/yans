@@ -18,11 +18,10 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef MAC_HIGH_ACCESS_POINT
-#define MAC_HIGH_ACCESS_POINT
+#ifndef MAC_HIGH_AP
+#define MAC_HIGH_AP
 
 #include "mac-high.h"
-#include "mac-handler.tcc"
 
 class MacContainer;
 class Packet;
@@ -31,31 +30,23 @@ class MacQueue80211e;
 class Dcf;
 class MacParameters;
 
-class MacHighAccessPoint : public MacHigh {
+class MacHighAp : public MacHigh {
 public:
-	MacHighAccessPoint (MacContainer *container);
-	virtual ~MacHighAccessPoint ();
+	MacHighAp (MacContainer *container);
+	virtual ~MacHighAp ();
 
 	virtual void enqueueFromLL (Packet *packet);
-	virtual void addTsRequest (TSpecRequest *request);
-
 	virtual void receiveFromMacLow (Packet *packet);
 	virtual void notifyAckReceivedFor (Packet *packet);
-
  private:
-	MacParameters *parameters (void);
-	void queueToLow (Packet *packet);
-	Packet *getPacketFor (int destination);
-	void sendBeacon (void);
-	void sendAssociationResponseOk (int destination);
-	void sendReAssociationResponseOk (int destination);
-	void sendProbeResponse (int destination);
-
-	MacDcfParameters *m_dcfParameters;
-	MacQueue80211e *m_queue;
-	Dcf *m_dcf;
-
-	StaticHandler<MacHighAccessPoint> *m_sendBeaconTimer;
+	virtual void sendAssociationResponseOk (int destination) = 0;
+	virtual void sendReAssociationResponseOk (int destination) = 0;
+	virtual void sendProbeResponse (int destination) = 0;
+	virtual void enqueueToLow (Packet *packet) = 0;
+	virtual void forwardQueueToLow (Packet *packet) = 0;
+	virtual void gotAddTsRequest (Packet *packet) = 0;
+	virtual void gotDelTsRequest (Packet *packet) = 0;
+	virtual void gotCFPoll (Packet *packet) = 0;
 };
 
-#endif /* MAC_HIGH_ACCESS_POINT */
+#endif /* MAC_HIGH_AP */

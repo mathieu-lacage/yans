@@ -477,36 +477,50 @@ initialize (Packet *packet)
 bool 
 isData (Packet *packet)
 {
-	if (getType (packet) == MAC_80211_DATA) {
-		return true;
-	} else {
-		return false;
-	}
+	return isData (getType (packet));
 }
 
 bool 
 isControl (Packet *packet)
 {
-	if (getType (packet) == MAC_80211_CTL_RTS     ||
-	    getType (packet) == MAC_80211_CTL_CTS     ||
-	    getType (packet) == MAC_80211_CTL_ACK     ||
-	    getType (packet) == MAC_80211_CTL_BACKREQ ||
-	    getType (packet) == MAC_80211_CTL_BACKRESP) {
+	return isControl (getType (packet));
+}
+
+bool 
+isManagement (Packet *packet)
+{
+	return isManagement (getType (packet));
+}
+
+bool isData (enum mac_80211_packet_type type)
+{
+	if (type == MAC_80211_DATA) {
+		return true;
+	} else {
+		return false;
+	}
+}
+bool isManagement (enum mac_80211_packet_type type)
+{
+	if (isData (type) || isControl (type)) {
+		return false;
+	} else {
+		return true;
+	}
+}
+bool isControl (enum mac_80211_packet_type type)
+{
+	if (type == MAC_80211_CTL_RTS     ||
+	    type == MAC_80211_CTL_CTS     ||
+	    type == MAC_80211_CTL_ACK     ||
+	    type == MAC_80211_CTL_BACKREQ ||
+	    type == MAC_80211_CTL_BACKRESP) {
 		return true;
 	} else {
 		return false;
 	}
 }
 
-bool 
-isManagement (Packet *packet)
-{
-	if (isData (packet) || isControl (packet)) {
-		return false;
-	} else {
-		return true;
-	}
-}
 
 
 

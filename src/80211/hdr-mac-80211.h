@@ -100,6 +100,13 @@ enum mac_80211_packet_type {
 	MAC_80211_MGT_DELBA_RESPONSE
 };
 
+enum mac_80211_request_status {
+	MAC_80211_ADDTS_OK,
+	MAC_80211_ADDTS_FAILED,
+	MAC_80211_DELTS_OK,
+	MAC_80211_DELTS_FAILED,
+};
+
 class hdr_mac_80211 {
  public:
 	void initialize (void);
@@ -211,6 +218,10 @@ uint8_t getRequestedTID (Packet *packet);
 bool isData (Packet *packet);
 bool isManagement (Packet *packet);
 bool isControl (Packet *packet);
+
+bool isData (enum mac_80211_packet_type type);
+bool isManagement (enum mac_80211_packet_type type);
+bool isControl (enum mac_80211_packet_type type);
 
 enum ac_e {
 	AC_BK = 0x1,

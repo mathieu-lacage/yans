@@ -67,6 +67,11 @@ MacHighAdhoc::addTsRequest (TSpecRequest *request)
 {
 	assert (false);
 }
+void 
+MacHighAdhoc::delTsRequest (TSpecRequest *request)
+{
+	assert (false);
+}
 
 void 
 MacHighAdhoc::notifyAckReceivedFor (Packet *packet)

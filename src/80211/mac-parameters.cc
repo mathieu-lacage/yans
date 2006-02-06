@@ -56,20 +56,157 @@ MacParameters::calculateBaseTxDuration (int size)
 	return m_container->phy ()->calculateTxDuration (0, size);
 }
 
-int
-MacParameters::getACKSize (void) const
+int 
+MacParameters::getPacketSize (enum mac_80211_packet_type type)
 {
-	return 2+2+6+4;
+	assert (isManagement (type) || isControl (type));
+	int size;
+	switch (type) {
+	case MAC_80211_CTL_RTS:
+		size = getRTSSize ();
+		break;
+	case MAC_80211_CTL_CTS:
+		size = getCTSSize ();
+		break;
+	case MAC_80211_CTL_ACK:
+		size = getACKSize ();
+		break;
+	case MAC_80211_CTL_BACKREQ:
+	case MAC_80211_CTL_BACKRESP:
+		/* not implemented */
+		assert (false);
+		break;
+
+	case MAC_80211_DATA:
+		/* cannot happen since assert at start of method */
+		assert (false);
+		break;
+
+	case MAC_80211_MGT_ADDBA_REQUEST:
+	case MAC_80211_MGT_ADDBA_RESPONSE:
+	case MAC_80211_MGT_DELBA_REQUEST:
+	case MAC_80211_MGT_DELBA_RESPONSE:
+	case MAC_80211_MGT_AUTHENTICATION:
+	case MAC_80211_MGT_DEAUTHENTICATION:
+	case MAC_80211_MGT_CFPOLL:
+	case MAC_80211_MGT_BEACON:
+	case MAC_80211_MGT_ASSOCIATION_REQUEST:
+	case MAC_80211_MGT_ASSOCIATION_RESPONSE:
+	case MAC_80211_MGT_DISASSOCIATION:
+	case MAC_80211_MGT_REASSOCIATION_REQUEST:
+	case MAC_80211_MGT_REASSOCIATION_RESPONSE:
+	case MAC_80211_MGT_PROBE_REQUEST:
+	case MAC_80211_MGT_PROBE_RESPONSE:
+	case MAC_80211_MGT_ADDTS_REQUEST:
+	case MAC_80211_MGT_ADDTS_RESPONSE:
+	case MAC_80211_MGT_DELTS_REQUEST:
+	case MAC_80211_MGT_DELTS_RESPONSE:
+		size = getMgtHeaderSize ();
+		size += getManagementPayloadSize (type);
+	}
+
+	assert (size < getMaxMSDUSize ());
+
+	return size;
 }
-int
-MacParameters::getRTSSize (void) const
+int 
+MacParameters::getManagementPayloadSize (enum mac_80211_packet_type type)
 {
-	return 2+2+6+6+4;
-}
-int
-MacParameters::getCTSSize (void) const
-{
-	return 2+2+6+4;
+	assert (isManagement (type));
+	int size;
+	int tspecSize = 0 +
+		1 + // element id
+		1 + // length
+		3 + // ts info
+		2 + // nominal msdu size
+		2 + // maximum msdu size
+		4 + // minimum service interval
+		4 + // maximum service interval
+		4 + // inactivity interval
+		4 + // suspension interval
+		4 + // service start time
+		4 + // minimum data rate
+		4 + // mean data rate
+		4 + // peak data rate
+		4 + // maximum burst size
+		4 + // delay bound
+		4 + // minimum phy rate
+		2 + // surplus bandwidth allowance
+		2 + // medium time
+		0;
+	switch (type) {
+	default:
+	case MAC_80211_MGT_ADDBA_REQUEST:
+	case MAC_80211_MGT_ADDBA_RESPONSE:
+	case MAC_80211_MGT_DELBA_REQUEST:
+	case MAC_80211_MGT_DELBA_RESPONSE:
+	case MAC_80211_MGT_AUTHENTICATION:
+	case MAC_80211_MGT_DEAUTHENTICATION:
+		// XXX not implemented
+		assert (false);
+		break;
+	case MAC_80211_MGT_CFPOLL:
+		// QOS CFPOLL has no data.
+		size = 0;
+		break;
+	case MAC_80211_MGT_BEACON:
+		size = getBeaconSize ();
+		break;
+	case MAC_80211_MGT_ASSOCIATION_REQUEST:
+		size = getAssociationRequestSize ();
+		break;
+	case MAC_80211_MGT_ASSOCIATION_RESPONSE:
+		size = getAssociationResponseSize ();
+		break;
+	case MAC_80211_MGT_DISASSOCIATION:
+		break;
+	case MAC_80211_MGT_REASSOCIATION_REQUEST:
+		size = getReAssociationRequestSize ();
+		break;
+	case MAC_80211_MGT_REASSOCIATION_RESPONSE:
+		size = getReAssociationResponseSize ();
+		break;
+	case MAC_80211_MGT_PROBE_REQUEST:
+		size = getProbeRequestSize ();
+		break;
+	case MAC_80211_MGT_PROBE_RESPONSE:
+		size = getProbeResponseSize ();
+		break;
+	case MAC_80211_MGT_ADDTS_REQUEST:
+		size =  1 + // category
+			1 + // action
+			1 + // dialog token
+			tspecSize + 
+			// no TCLAS
+			0;
+		break;
+	case MAC_80211_MGT_ADDTS_RESPONSE:
+		size =  1 + // category
+			1 + // action
+			1 + // dialog token
+			2 + // status code
+			1 + 1 + 4 + // ts delay
+			tspecSize + 
+			// no TCLAS and no schedule
+			0;
+		break;
+	case MAC_80211_MGT_DELTS_REQUEST:
+		size =  1 + // category
+			1 + // action
+			3 + // tsinfo
+			2 + // reason code
+			0;
+		break;
+	case MAC_80211_MGT_DELTS_RESPONSE:
+		size =  1 + // category
+			1 + // action
+			3 + // tsinfo
+			2 + // reason code
+			0;
+		break;
+	}
+
+	return size;
 }
 int
 MacParameters::getDataHeaderSize (void)
@@ -80,6 +217,12 @@ int
 MacParameters::getMgtHeaderSize (void)
 {
 	return 2+2+6+6+6+2+4;
+}
+double
+MacParameters::getPIFS (void)
+{
+	/* see section 9.2.10 ieee 802.11-1999 */
+	return getSIFS () + getSlotTime ();
 }
 double 
 MacParameters::getSIFS (void)
@@ -158,6 +301,57 @@ MacParameters::getMaxMissedBeacon (void)
 }
 
 
+double 
+MacParameters::getMSDULifetime (void)
+{
+	return 10; // seconds.
+}
+
+double 
+MacParameters::getMaxPropagationDelay (void)
+{
+	// 1000m is the max propagation distance.
+	return 1000 / SPEED_OF_LIGHT;
+}
+
+int
+MacParameters::getMaxMSDUSize (void)
+{
+	// section 6.2.1.1.2
+	return 2304;
+}
+
+
+double 
+MacParameters::getCapLimit (void)
+{
+	return 0.4;
+}
+
+double 
+MacParameters::getMinEdcaTrafficProportion (void)
+{
+	return 0.2;
+}
+
+
+
+/* deprecated. Use the getSize (type) method instead. */
+int
+MacParameters::getACKSize (void) const
+{
+	return 2+2+6+4;
+}
+int
+MacParameters::getRTSSize (void) const
+{
+	return 2+2+6+6+4;
+}
+int
+MacParameters::getCTSSize (void) const
+{
+	return 2+2+6+4;
+}
 int
 MacParameters::getBeaconSize (void)
 {
@@ -219,25 +413,4 @@ MacParameters::getProbeRequestSize (void)
 	return 34+//max ssid
 		10+//supported rates
 		0;
-}
-
-
-double 
-MacParameters::getMSDULifetime (void)
-{
-	return 10; // seconds.
-}
-
-double 
-MacParameters::getMaxPropagationDelay (void)
-{
-	// 1000m is the max propagation distance.
-	return 1000 / SPEED_OF_LIGHT;
-}
-
-int
-MacParameters::getMaxMSDUSize (void)
-{
-	// section 6.2.1.1.2
-	return 2304;
 }

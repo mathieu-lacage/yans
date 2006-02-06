@@ -41,8 +41,10 @@ public:
 	MacHighQStation (MacContainer *container, int apAddress);
 	virtual ~MacHighQStation ();
 
-private:
 	virtual void addTsRequest (TSpecRequest *request);
+	virtual void delTsRequest (TSpecRequest *request);
+
+private:
 	virtual void enqueueToLow (Packet *packet);
 	virtual void gotCFPoll (Packet *packet);
 	virtual void gotBeacon (Packet *packet);

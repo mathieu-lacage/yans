@@ -47,27 +47,34 @@ class TSpec : public TclObject {
 public:
 	TSpec ();
 
-	enum trafficType_e getTrafficType (void);
-	uint8_t getTSID (void);
-	enum direction_e getLinkDirection (void);
-	enum accessPolicy_e getAccessPolicy (void);
-	uint8_t getUserPriority (void);	
+	enum trafficType_e getTrafficType (void) const;
+	uint8_t getTSID (void) const;
+	enum direction_e getLinkDirection (void) const;
+	enum accessPolicy_e getAccessPolicy (void) const;
+	uint8_t getUserPriority (void) const;
 
-	uint16_t getNominalMSDUSize (void);
-	uint16_t getMaximalMSDUSize (void);
-	double getMinimumServiceInterval (void);
-	double getMaximumServiceInterval (void);
-	double getInactivityInterval (void);
-	double getSuspensionInterval (void);
-	double getServiceStartTime (void);
-	double getMinimumDataRate (void);
-	double getMeanDataRate (void);
-	double getPeakDataRate (void);
-	uint32_t getBurstSize (void);
-	double getDelayBound (void);
-	double getMinimumPhyRate (void);
-	double getSurplusBandwidthAllowance (void);
-	double getMediumTime (void);
+	uint16_t getNominalMSDUSize (void) const;
+	uint16_t getMaximalMSDUSize (void) const;
+	double getMinimumServiceInterval (void) const;
+	double getMaximumServiceInterval (void) const;
+	double getInactivityInterval (void) const;
+	double getSuspensionInterval (void) const;
+	double getServiceStartTime (void) const;
+	double getMinimumDataRate (void) const;
+	double getMeanDataRate (void) const;
+	double getPeakDataRate (void) const;
+	uint32_t getBurstSize (void) const;
+	double getDelayBound (void) const;
+
+	/* return an index into the PHY transmission 
+	 * mode list.
+	 */
+	int getMinimumPhyMode (void) const;
+
+	double getSurplusBandwidthAllowance (void) const;
+	double getMediumTime (void) const;
+
+	void setMediumTime (double mediumTime);
 
 	virtual int command(int argc, const char*const* argv);
 
@@ -85,9 +92,8 @@ private:
 	void setPeakDataRate (double rate);
 	void setBurstSize (uint32_t size);
 	void setDelayBound (double delay);
-	void setMinimumPhyRate (double rate);
+	void setMinimumPhyMode (int mode);
 	void setSurplusBandwidthAllowance (double v);
-	void setMediumTime (double mediumTime);
 private:
 	uint32_t m_nominalMSDUSize;
 	uint32_t m_maximalMSDUSize;
@@ -101,7 +107,7 @@ private:
 	double m_peakDataRate;
 	uint32_t m_burstSize;
 	double m_delayBound;
-	double m_minimumPhyRate;
+	uint32_t m_minimumPhyMode;
 	double m_surplusBandwidthAllowance;
 	double m_mediumTime;
 

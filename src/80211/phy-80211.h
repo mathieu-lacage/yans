@@ -27,18 +27,6 @@
 
 #include "phy.h"
 
-/* - an RX event means that a signal was sent to us but
- *   we have not synchronized on it because it is not 
- *   strong enough.
- *
- * - a SYNC event means that a signal was sent to us and
- *   that we have successfully synchronized on it. It does
- *   not mean that the packet has been successfully received
- *   without error though.
- *
- * - a TX event means that we are trying to send a packet
- *   to someone else.
- */
 
 class Propagation;
 class Antenna;
@@ -53,8 +41,20 @@ class Phy80211Listener {
 public:
 	virtual ~Phy80211Listener ();
 
+	/* we have received the first bit of a packet. We decided
+	 * that we could synchronize on this packet. It does not mean
+	 * we will be able to successfully receive completely the
+	 * whole packet. It means we will report a BUSY status.
+	 * rxEnd will be invoked later to report whether or not
+	 * the packet was successfully received.
+	 */
 	virtual void notifyRxStart (double now, double duration) = 0;
+	/* we have received the last bit of a packet for which
+	 * rxStart was invoked first. 
+	 */
 	virtual void notifyRxEnd (double now, bool receivedOk) = 0;
+	/* we start the transmission of a packet.
+	 */
 	virtual void notifyTxStart (double now, double duration) = 0;
 	virtual void notifySleep (double now) = 0;
 	virtual void notifyWakeup (double now) = 0;

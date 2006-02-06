@@ -36,6 +36,7 @@ public:
 	/* invoked by Mac80211. */
 	virtual void enqueueFromLL (Packet *packet);
 	virtual void addTsRequest (TSpecRequest *request);
+	virtual void delTsRequest (TSpecRequest *request);
 
 	/* invoked by the MacLows. */
 	virtual void notifyAckReceivedFor (Packet *packet);
