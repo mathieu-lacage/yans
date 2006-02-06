@@ -16,6 +16,27 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ * In addition, as a special exception, the copyright holders of
+ * this module give you permission to combine (via static or
+ * dynamic linking) this module with free software programs or
+ * libraries that are released under the GNU LGPL and with code
+ * included in the standard release of ns-2 under the Apache 2.0
+ * license or under otherwise-compatible licenses with advertising
+ * requirements (or modified versions of such code, with unchanged
+ * license).  You may copy and distribute such a system following the
+ * terms of the GNU GPL for this module and the licenses of the
+ * other code concerned, provided that you include the source code of
+ * that other code when and as the GNU GPL requires distribution of
+ * source code.
+ *
+ * Note that people who make modified versions of this module
+ * are not obligated to grant this special exception for their
+ * modified versions; it is their choice whether to do so.  The GNU
+ * General Public License gives permission to release a modified
+ * version without this exception; this exception also makes it
+ * possible to release a modified version which carries forward this
+ * exception.
+ *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
@@ -23,24 +44,14 @@
 #include <algorithm>
 #include <functional>
 
+#include "scheduler.h"
+#include "packet.h"
+
+#include "phy-80211.h"
 #include "phy-ber.h"
 #include "rng-uniform.h"
 #include "hdr-mac-80211.h"
 #include "transmission-mode.h"
-
-/****************************************************************
- *       TCL glue.
- ****************************************************************/
-
-static class PhyBerClass: public TclClass {
-public:
-        PhyBerClass() : TclClass("Phy/80211/Ber") {}
-        TclObject* create(int, const char*const*) {
-                return (new PhyBer ());
-        }
-} class_PhyBer;
-
-
 
 /****************************************************************
  *       Class which records SNIR change events for a 
@@ -81,7 +92,7 @@ public:
 		m_endTime = m_startTime + phy->calculatePacketDuration (getHeaderMode (),
 									m_payloadMode,
 									m_size);
-		m_power = phy->calculatePower (packet);
+		m_power = phy->calculateRxPower (packet);
 		m_refCount = 1;
 	}
 	~PhyRxEvent ()
@@ -150,8 +161,7 @@ private:
  *       Rx Handler glue.
  ****************************************************************/
 
-class EndRxHandler : public Handler
-{
+class EndRxHandler : public Handler {
 private:
 	class RxEvent : public Event 
 	{
@@ -229,14 +239,12 @@ RngUniform *PhyBer::m_random = new RngUniform ();
 PhyBer::PhyBer ()
 	: Phy80211 (),
 	  m_endRxHandler (new EndRxHandler (this, &PhyBer::endRx))
-{
-
-}
+{}
 
 PhyBer::~PhyBer ()
 {
 	delete m_random;
-	list<PhyRxEvent *>::iterator i = m_rxEventList.begin ();
+	PhyRxEventsI i = m_rxEventList.begin ();
 	while (i != m_rxEventList.end ()) {
 		(*i)->unref ();
 		i = m_rxEventList.erase (i);
@@ -245,9 +253,9 @@ PhyBer::~PhyBer ()
 }
 
 double
-PhyBer::calculateNI (PhyRxEvent *phyRxEvent, vector <NIChange> *ni)
+PhyBer::calculateNI (PhyRxEvent *phyRxEvent, NIChanges *ni)
 {
-	list<PhyRxEvent *>::iterator i = m_rxEventList.begin ();
+	PhyRxEventsI i = m_rxEventList.begin ();
 	double noiseInterference = 0.0;
 	while (i != m_rxEventList.end ()) {
 		if (phyRxEvent == (*i)) {
@@ -287,10 +295,10 @@ PhyBer::calculateChunkSuccessRate (double snir, double delay, TransmissionMode *
 }
 
 double 
-PhyBer::calculatePER (PhyRxEvent *packet, vector <NIChange> *ni)
+PhyBer::calculatePER (PhyRxEvent *packet, NIChanges *ni)
 {	
 	double psr = 1; /* Packet Success Rate */
-	vector<NIChange>::iterator j = ni->begin ();
+	NIChangesI j = ni->begin ();
 	double previous = (*j).getTime ();
 	double plcpHeaderStart = (*j).getTime () + getPreambleDuration ();
 	double plcpPayloadStart = plcpHeaderStart + calculateHeaderDuration (packet->getHeaderMode ());
@@ -387,7 +395,7 @@ PhyBer::endRx (PhyRxEvent *phyRxEvent, Packet *packet)
 	assert (phyRxEvent->getEndTime () == 
 		Scheduler::instance ().clock ());
 
-	vector<NIChange> ni;
+	NIChanges ni;
 
 	// XXX: we assign NI to SNR. Wrong !!
 	double noiseInterference = calculateNI (phyRxEvent, &ni);
@@ -417,7 +425,7 @@ PhyBer::endRx (PhyRxEvent *phyRxEvent, Packet *packet)
 	
 	notifyRxEnd (now (), receivedOk);
 	switchToIdleFromSync ();
-	uptarget ()->recv (packet);
+	forwardUp (packet);
 }
 
 void 
@@ -463,7 +471,7 @@ PhyBer::startRx (Packet *packet)
 		Packet::free (packet);
 		break;
 	case Phy80211::IDLE: {
-		double power = calculatePower (packet);
+		double power = calculateRxPower (packet);
 		
 		if (power > dBmToW (getRxThreshold ())) {
 			// sync to signal

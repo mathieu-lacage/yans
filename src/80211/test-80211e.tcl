@@ -1,50 +1,30 @@
-source 80211/utils.tcl
+source ./node-common/utils.tcl
 
-
-#################################################################
-# Normal Unicast simulation.
 set ns [new Simulator]
 $ns use-scheduler Heap
 
-$ns node-config \
-    -adhocRouting DumbAgent \
-    -llType LL \
-    -macType Mac/Mac80211 \
-    -ifqType Queue/DropTail \
-    -ifqLen 50 \
-    -antType  Antenna/OmniAntenna \
-    -propType Propagation/TwoRayGround \
-    -phyType Phy/80211/Ber \
-    -channel [new Channel/Channel80211] \
-    -topoInstance [new Topography] \
-    -agentTrace OFF \
-    -routerTrace OFF \
-    -macTrace OFF \
-    -movementTrace OFF 
+set nodeConstructor [new NodeConstructor];
+set interfaceConstructor [new TclNetInterfaceConstructor80211];
+set channel [new TclSimpleBroadcastChannel];
 
-create-god 2
+set nodes(0) [$nodeConstructor create-node];
+set nodes(1) [$nodeConstructor create-node];
+set nodes(2) [$nodeConstructor create-node];
 
-$ns trace-all [open test.tr w]
+$nodes(0) set-position 0.0 0.0 0.0
+$nodes(1) set-position 200.0 0.0 0.0
+$nodes(2) set-position 0.0 200.0 0.0
 
-set nodes(0) [$ns node]
-set nodes(1) [$ns node]
-set nodes(2) [$ns node]
-$nodes(0) set X_ 0.0
-$nodes(0) set Y_ 0.0
-$nodes(0) set Z_ 0.0
+$interfaceConstructor set-qap;
+set interfaces(0) [$interfaceConstructor create-interface];
+$interfaceConstructor set-qsta 1;
+set interfaces(1) [$interfaceConstructor create-interface];
+set interfaces(2) [$interfaceConstructor create-interface];
 
-$nodes(1) set X_ 200.0
-$nodes(1) set Y_ 0.0
-$nodes(1) set Z_ 0.0
+$nodes(0) add-interface $interfaces(0) $channel
+$nodes(1) add-interface $interfaces(1) $channel
+$nodes(2) add-interface $interfaces(2) $channel
 
-$nodes(2) set X_ 0.0
-$nodes(2) set Y_ 200.0
-$nodes(2) set Z_ 0.0
-
-
-set-qbss-mode 2 nodes
-#set-bss-mode 2 nodes
-#set-adhoc-mode nodes
 
 
 #########################################################
@@ -66,76 +46,76 @@ set-qbss-mode 2 nodes
 #   72bytes/4ms = 18000bytes/s
 #
 
-set tspec [new TSPEC]
-$tspec set minimumServiceInterval 0.0
-$tspec set maximumServiceInterval 0.0
+set tspec [new TclTspec]
+$tspec set-minimum-service-interval 0.0
+$tspec set-maximum-service-interval 0.0
 # ms
-$tspec set delayBound 0.125
+$tspec set-delay-bound 0.125
 # bytes
-$tspec set nominalMSDUSize 72
+$tspec set-nominal-msdu-size 72
 # bytes per second
-$tspec set meanDataRate 18000
-$tspec set peakDataRate 18000 
+$tspec set-mean-data-rate 18000
+$tspec set-peak-data-rate 18000 
 proc addts-granted-callback0 {tspec tsid} {
     global ::ns
     global ::nodes
-    set udp0 [new Agent/UDP];         # A UDP agent
-    $ns attach-agent $nodes(0) $udp0; # on node $n0
-    set cbr0 [new Application/Traffic/CBR]; # A CBR traffic generator agent
-    $cbr0 attach-agent $udp0; # attached to the UDP agent
-    $cbr0 set packetSize_ 72
-    $cbr0 set interval_ 0.004
-    $udp0 set class_ 0; # actually, the default, but. . .
-    $udp0 set prio_ $tsid
+    set source [new Agent/UDP];
+    $nodes(1) attach-agent $source;
+    set cbr [new Application/Traffic/CBR];
+    $cbr attach-agent $source;
+    $cbr set packetSize_ 72
+    $cbr set interval_ 0.004
+    $source set class_ 0;
+    $source set prio_ $tsid
     
-    set null0 [new Agent/Null]; # Its sink
-    $ns attach-agent $nodes(2) $null0; # on node  
+    set sink [new Agent/Null];
+    $nodes(2) attach-agent $sink;
 
-    $ns connect $udp0 $null0
-    $ns at 3.0 "$cbr0 start"
+    ip-connect $source $sink
+    $ns at 3.0 "$cbr start"
 
     puts "tspec granted for tsid $tsid";
 }
 proc addts-refused-callback0 {tspec tsid} {
     puts "tspec refused for tsid $tsid";
 }
-addts-request $nodes(0) $tspec addts-granted-callback0 addts-refused-callback0
+$interfaces(1) addts $tspec addts-granted-callback0 addts-refused-callback0
 
 
-set tspec [new TSPEC]
-$tspec set minimumServiceInterval 0.0
-$tspec set maximumServiceInterval 0.0
+set tspec [new TclTspec]
+$tspec set-minimum-service-interval 0.0
+$tspec set-maximum-service-interval 0.0
 # ms
-$tspec set delayBound 0.125
+$tspec set-delay-bound 0.125
 # bytes
-$tspec set nominalMSDUSize 72
+$tspec set-nominal-msdu-size 72
 # bytes per second
-$tspec set meanDataRate 18000
-$tspec set peakDataRate 18000 
+$tspec set-mean-data-rate 18000
+$tspec set-peak-data-rate 18000 
 proc addts-granted-callback1 {tspec tsid} {
     global ::ns
     global ::nodes
-    set udp1 [new Agent/UDP];         # A UDP agent
-    $ns attach-agent $nodes(1) $udp1; # on node $n0
-    set cbr1 [new Application/Traffic/CBR]; # A CBR traffic generator agent
-    $cbr1 attach-agent $udp1; # attached to the UDP agent
-    $cbr1 set packetSize_ 72
-    $cbr1 set interval_ 0.004
-    $udp1 set class_ 0; # actually, the default, but. . .
-    $udp1 set prio_ $tsid
+    set source [new Agent/UDP];
+    $nodes(2) attach-agent $source;
+    set cbr [new Application/Traffic/CBR];
+    $cbr attach-agent $source;
+    $cbr set packetSize_ 72
+    $cbr set interval_ 0.004
+    $source set class_ 0;
+    $source set prio_ $tsid
     
-    set null1 [new Agent/Null]; # Its sink
-    $ns attach-agent $nodes(2) $null1; # on node  
+    set sink [new Agent/Null];
+    $nodes(1) attach-agent $sink;
 
-    $ns connect $udp1 $null1
-    $ns at 3.0 "$cbr1 start"
+    ip-connect $source $sink
+    $ns at 3.0 "$cbr start"
 
     puts "tspec granted for tsid $tsid";
 }
 proc addts-refused-callback1 {tspec tsid} {
     puts "tspec refused for tsid $tsid";
 }
-addts-request $nodes(1) $tspec addts-granted-callback1 addts-refused-callback1
+$interfaces(2) addts $tspec addts-granted-callback1 addts-refused-callback1
 #########################################################
 
 

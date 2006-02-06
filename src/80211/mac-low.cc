@@ -16,20 +16,46 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ * In addition, as a special exception, the copyright holders of
+ * this module give you permission to combine (via static or
+ * dynamic linking) this module with free software programs or
+ * libraries that are released under the GNU LGPL and with code
+ * included in the standard release of ns-2 under the Apache 2.0
+ * license or under otherwise-compatible licenses with advertising
+ * requirements (or modified versions of such code, with unchanged
+ * license).  You may copy and distribute such a system following the
+ * terms of the GNU GPL for this module and the licenses of the
+ * other code concerned, provided that you include the source code of
+ * that other code when and as the GNU GPL requires distribution of
+ * source code.
+ *
+ * Note that people who make modified versions of this module
+ * are not obligated to grant this special exception for their
+ * modified versions; it is their choice whether to do so.  The GNU
+ * General Public License gives permission to release a modified
+ * version without this exception; this exception also makes it
+ * possible to release a modified version which carries forward this
+ * exception.
+ *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
 #include "mac-low.h"
 #include "mac-queue-80211e.h"
 #include "hdr-mac-80211.h"
-#include "mac-80211.h"
 #include "mac-high.h"
 #include "phy-80211.h"
 #include "mac-station.h"
 #include "rng-uniform.h"
 #include "mac-parameters.h"
-#include "mac-container.h"
 #include "mac-traces.h"
+#include "net-interface.h"
+#include "mac-stations.h"
+#include "mac-rx-middle.h"
+#include "net-interface-80211.h"
+#include "common.h"
+
+#include "packet.h"
 
 #include <iostream>
 
@@ -49,10 +75,6 @@
 MacLowTransmissionListener::MacLowTransmissionListener ()
 {}
 MacLowTransmissionListener::~MacLowTransmissionListener ()
-{}
-MacLowReceptionListener::MacLowReceptionListener ()
-{}
-MacLowReceptionListener::~MacLowReceptionListener ()
 {}
 MacLowNavListener::MacLowNavListener ()
 {}
@@ -85,9 +107,8 @@ private:
 	int m_txMode;
 };
 
-MacLow::MacLow (MacContainer *container)
-	: m_container (container),
-	  m_normalAckTimeoutHandler (new DynamicHandler<MacLow> (this, &MacLow::normalAckTimeout)),
+MacLow::MacLow ()
+	: m_normalAckTimeoutHandler (new DynamicHandler<MacLow> (this, &MacLow::normalAckTimeout)),
 	  m_fastAckTimeoutHandler (new DynamicHandler<MacLow> (this, &MacLow::fastAckTimeout)),
 	  m_superFastAckTimeoutHandler (new DynamicHandler<MacLow> (this, &MacLow::superFastAckTimeout)),
 	  m_fastAckFailedTimeoutHandler (new DynamicHandler<MacLow> (this, &MacLow::fastAckFailedTimeout)),
@@ -119,24 +140,19 @@ MacLow::~MacLow ()
  *  Accessor methods
  ****************************************************/
 
-MacParameters *
-MacLow::parameters (void)
+void
+MacLow::setInterface (NetInterface80211 *interface)
 {
-	return m_container->parameters ();
+	m_interface = interface;
 }
 
-Phy80211 *
-MacLow::peekPhy (void)
-{
-	return m_container->phy ();
-}
 void
 MacLow::forwardDown (Packet *packet)
 {
 	double txDuration = calculateTxDuration (getTxMode (packet), getSize (packet));
 	double durationId = getDuration (packet);
 	enum mac_80211_packet_type type = getType (packet);
-	m_container->forwardToPhy (packet);
+	m_interface->phy ()->sendDown (packet);
 	/* Note that it is really important to notify the NAV 
 	 * thing _after_ forwarding the packet to the PHY.
 	 * but we must perform the calculations _before_ passing
@@ -149,17 +165,17 @@ MacLow::forwardDown (Packet *packet)
 int 
 MacLow::getSelf (void)
 {
-	return m_container->selfAddress ();
+	return m_interface->getMacAddress ();
 }
 double 
 MacLow::getLastSNR (void)
 {
-	return peekPhy ()->getLastRxSNR ();
+	return m_interface->phy ()->getLastRxSNR ();
 }
 double
 MacLow::calculateTxDuration (int mode, uint32_t size)
 {
-	double duration = peekPhy ()->calculateTxDuration (mode, size);
+	double duration = m_interface->phy ()->calculateTxDuration (mode, size);
 	return duration;
 }
 
@@ -224,7 +240,7 @@ Packet *
 MacLow::getRTSPacket (void)
 {
 	Packet *packet = hdr_mac_80211::create (getSelf ());
-	setSize (packet, parameters ()->getRTSSize ());
+	setSize (packet, m_interface->parameters ()->getRTSSize ());
 	setType (packet, MAC_80211_CTL_RTS);
 	return packet;
 }
@@ -232,7 +248,7 @@ Packet *
 MacLow::getCTSPacket (void)
 {
 	Packet *packet = hdr_mac_80211::create (getSelf ());
-	setSize (packet, parameters ()->getCTSSize ());
+	setSize (packet, m_interface->parameters ()->getCTSSize ());
 	setType (packet, MAC_80211_CTL_CTS);
 	return packet;
 }
@@ -240,7 +256,7 @@ Packet *
 MacLow::getACKPacket (void)
 {
 	Packet *packet = hdr_mac_80211::create (getSelf ());
-	setSize (packet, parameters ()->getACKSize ());
+	setSize (packet, m_interface->parameters ()->getACKSize ());
 	setType (packet, MAC_80211_CTL_ACK);
 	return packet;
 }
@@ -257,12 +273,12 @@ MacLow::getRTSforPacket (Packet *data)
 	} else {
 		int ackTxMode = getAckTxModeForData (getDestination (data), m_dataTxMode);
 		duration = 0.0;
-		duration += parameters ()->getSIFS ();
-		duration += calculateTxDuration (m_rtsTxMode, parameters ()->getCTSSize ());
-		duration += parameters ()->getSIFS ();
+		duration += m_interface->parameters ()->getSIFS ();
+		duration += calculateTxDuration (m_rtsTxMode, m_interface->parameters ()->getCTSSize ());
+		duration += m_interface->parameters ()->getSIFS ();
 		duration += calculateTxDuration (m_dataTxMode, getSize (data));
-		duration += parameters ()->getSIFS ();
-		duration += calculateTxDuration (ackTxMode, parameters ()->getACKSize ());
+		duration += m_interface->parameters ()->getSIFS ();
+		duration += calculateTxDuration (ackTxMode, m_interface->parameters ()->getACKSize ());
 	}
 	setDuration (packet, duration);
 	return packet;
@@ -277,7 +293,7 @@ MacLow::sendRTSForPacket (void)
 	Packet *packet = getRTSforPacket (m_currentTxPacket);
 	TRACE ("tx RTS to %d with mode %d", getDestination (packet), getTxMode (packet));
 	double txDuration = calculateTxDuration (getTxMode (packet), getSize (packet));
-	double timerDelay = txDuration + parameters ()->getCTSTimeoutDuration ();
+	double timerDelay = txDuration + m_interface->parameters ()->getCTSTimeoutDuration ();
 	m_CTSTimeoutHandler->start (new MacCancelableEvent (),
 				    timerDelay);
 	forwardDown (packet);
@@ -291,13 +307,13 @@ MacLow::sendDataPacket (void)
 	TRACE ("tx %s to %d with mode %d", getTypeString (txPacket), getDestination (txPacket), m_dataTxMode);
 	double txDuration = calculateTxDuration (m_dataTxMode, getSize (txPacket));
 	if (waitNormalAck ()) {
-		double timerDelay = txDuration + parameters ()->getACKTimeoutDuration ();
+		double timerDelay = txDuration + m_interface->parameters ()->getACKTimeoutDuration ();
 		m_normalAckTimeoutHandler->start (timerDelay);
 	} else if (waitFastAck ()) {
-		double timerDelay = txDuration + parameters ()->getPIFS ();
+		double timerDelay = txDuration + m_interface->parameters ()->getPIFS ();
 		m_fastAckTimeoutHandler->start (timerDelay);
 	} else if (waitSuperFastAck ()) {
-		double timerDelay = txDuration + parameters ()->getPIFS ();
+		double timerDelay = txDuration + m_interface->parameters ()->getPIFS ();
 		m_superFastAckTimeoutHandler->start (timerDelay);
 	}
 	setTxMode (txPacket, m_dataTxMode);
@@ -308,15 +324,15 @@ MacLow::sendDataPacket (void)
 		int ackTxMode = getAckTxModeForData (getDestination (txPacket), m_dataTxMode);
 		duration = 0.0;
 		if (waitAck ()) {
-			duration += parameters ()->getSIFS ();
-			duration += calculateTxDuration (ackTxMode, parameters ()->getACKSize ());
+			duration += m_interface->parameters ()->getSIFS ();
+			duration += calculateTxDuration (ackTxMode, m_interface->parameters ()->getACKSize ());
 		}
 		if (m_nextSize > 0) {
-			duration += parameters ()->getSIFS ();
+			duration += m_interface->parameters ()->getSIFS ();
 			duration += calculateTxDuration (m_nextTxMode, m_nextSize);
 			if (waitAck ()) {
-				duration += parameters ()->getSIFS ();
-				duration += calculateTxDuration (ackTxMode, parameters ()->getACKSize ());
+				duration += m_interface->parameters ()->getSIFS ();
+				duration += calculateTxDuration (ackTxMode, m_interface->parameters ()->getACKSize ());
 			}
 		}
 	}
@@ -338,7 +354,7 @@ MacLow::sendCTS_AfterRTS (MacCancelableEvent *macEvent)
 	setDestination (cts, event->getSource ());
 	double duration = event->getDuration ();
 	duration -= calculateTxDuration (ctsTxMode, getSize (cts));
-	duration -= parameters ()->getSIFS ();
+	duration -= m_interface->parameters ()->getSIFS ();
 	setDuration (cts, duration);
 	setTxMode (cts, ctsTxMode);
 	forwardDown (cts);
@@ -357,7 +373,7 @@ MacLow::sendACK_AfterData (MacCancelableEvent *macEvent)
 	setDestination (ack, event->getSource ());
 	double duration = event->getDuration ();
 	duration -= calculateTxDuration (ackTxMode, getSize (ack));
-	duration -= parameters ()->getSIFS ();
+	duration -= m_interface->parameters ()->getSIFS ();
 	setDuration (ack, duration);
 	setTxMode (ack, ackTxMode);
 	forwardDown (ack);
@@ -381,20 +397,20 @@ MacLow::sendDataAfterCTS (MacCancelableEvent *macEvent)
 	       getTID (m_currentTxPacket));
 	double txDuration = calculateTxDuration (m_dataTxMode, getSize (m_currentTxPacket));
 	if (waitNormalAck ()) {
-		double timerDelay = txDuration + parameters ()->getACKTimeoutDuration ();
+		double timerDelay = txDuration + m_interface->parameters ()->getACKTimeoutDuration ();
 		m_normalAckTimeoutHandler->start (timerDelay);
 	} else if (waitFastAck ()) {
-		double timerDelay = txDuration + parameters ()->getPIFS ();
+		double timerDelay = txDuration + m_interface->parameters ()->getPIFS ();
 		m_fastAckTimeoutHandler->start (timerDelay);
 	} else if (waitSuperFastAck ()) {
-		double timerDelay = txDuration + parameters ()->getPIFS ();
+		double timerDelay = txDuration + m_interface->parameters ()->getPIFS ();
 		m_superFastAckTimeoutHandler->start (timerDelay);
 	}
 
 	setTxMode (m_currentTxPacket, m_dataTxMode);
 	double duration = event->getDuration ();
 	duration -= txDuration;
-	duration -= parameters ()->getSIFS ();
+	duration -= m_interface->parameters ()->getSIFS ();
 	setDuration (m_currentTxPacket, duration);
 	forwardDown (m_currentTxPacket);
 	m_currentTxPacket = 0;
@@ -421,7 +437,7 @@ MacLow::fastAckFailedTimeout (MacCancelableEvent *event)
 void
 MacLow::fastAckTimeout (MacCancelableEvent *event)
 {
-	if (peekPhy ()->getState () == Phy80211::IDLE) {
+	if (m_interface->phy ()->getState () == Phy80211::IDLE) {
 		TRACE ("fast Ack idle missed");
 		m_transmissionListener->missedACK ();
 	}
@@ -429,7 +445,7 @@ MacLow::fastAckTimeout (MacCancelableEvent *event)
 void
 MacLow::superFastAckTimeout (MacCancelableEvent *event)
 {
-	if (peekPhy ()->getState () == Phy80211::IDLE) {
+	if (m_interface->phy ()->getState () == Phy80211::IDLE) {
 		TRACE ("super fast Ack failed");
 		m_transmissionListener->missedACK ();
 	} else {
@@ -473,10 +489,10 @@ MacLow::notifyNav (double nowTime, double duration,
 	double newNavEnd = newNavStart + duration;
 
 	if (type == MAC_80211_MGT_CFPOLL &&
-	    source == m_container->getBSSID ()) {
+	    source == m_interface->getBSSID ()) {
 		m_lastNavStart = newNavStart;
 		m_lastNavDuration = duration;
-		for (NavListenerCI i = m_navListeners.begin (); i != m_navListeners.end (); i++) {
+		for (NavListenersCI i = m_navListeners.begin (); i != m_navListeners.end (); i++) {
 			(*i)->navReset (newNavStart);
 		}
 		return;
@@ -487,14 +503,14 @@ MacLow::notifyNav (double nowTime, double duration,
 		if (newNavEnd > oldNavEnd) {
 			double delta = newNavEnd - oldNavEnd;
 			m_lastNavDuration += delta;
-			for (NavListenerCI i = m_navListeners.begin (); i != m_navListeners.end (); i++) {
+			for (NavListenersCI i = m_navListeners.begin (); i != m_navListeners.end (); i++) {
 				(*i)->navContinue (delta);
 			}
 		}
 	} else {
 		m_lastNavStart = newNavStart;
 		m_lastNavDuration = duration;
-		for (NavListenerCI i = m_navListeners.begin (); i != m_navListeners.end (); i++) {
+		for (NavListenersCI i = m_navListeners.begin (); i != m_navListeners.end (); i++) {
 			(*i)->navStart (newNavStart, duration);
 		}
 	}
@@ -505,15 +521,15 @@ MacLow::calculateOverallCurrentTxTime (void)
 {
 	double txTime = 0.0;
 	if (m_sendRTS) {
-		txTime += calculateTxDuration (m_rtsTxMode, parameters ()->getRTSSize ());
-		txTime += calculateTxDuration (m_rtsTxMode, parameters ()->getCTSSize ());
-		txTime += parameters ()->getSIFS () * 2;
+		txTime += calculateTxDuration (m_rtsTxMode, m_interface->parameters ()->getRTSSize ());
+		txTime += calculateTxDuration (m_rtsTxMode, m_interface->parameters ()->getCTSSize ());
+		txTime += m_interface->parameters ()->getSIFS () * 2;
 	}
 	txTime += calculateTxDuration (m_dataTxMode, getSize (m_currentTxPacket));
 	if (waitAck ()) {
 		int ackTxMode = getAckTxModeForData (getDestination (m_currentTxPacket), m_dataTxMode);
-		txTime += parameters ()->getSIFS ();
-		txTime += calculateTxDuration (ackTxMode, parameters ()->getACKSize ());
+		txTime += m_interface->parameters ()->getSIFS ();
+		txTime += calculateTxDuration (ackTxMode, m_interface->parameters ()->getACKSize ());
 	}
 	return txTime;
 }
@@ -610,18 +626,18 @@ MacLow::disableOverrideDurationId (void)
 void 
 MacLow::startTransmission (void)
 {
-	assert (peekPhy ()->getState () == Phy80211::IDLE);
+	assert (m_interface->phy ()->getState () == Phy80211::IDLE);
 
 	TRACE ("startTx %d to %d", getSize (m_currentTxPacket), getDestination (m_currentTxPacket));
 
 	if (isData (m_currentTxPacket)) {
-		increaseSize (m_currentTxPacket, parameters ()->getDataHeaderSize ());
+		increaseSize (m_currentTxPacket, m_interface->parameters ()->getDataHeaderSize ());
 	}
 
 	if (m_nextSize > 0 && !waitAck ()) {
 		// we need to start the afterSIFS timeout now.
 		double delay = calculateOverallCurrentTxTime ();
-		delay += parameters ()->getSIFS ();
+		delay += m_interface->parameters ()->getSIFS ();
 		m_waitSIFSHandler->start (new MacCancelableEvent (), delay);
 	}
 
@@ -632,7 +648,7 @@ MacLow::startTransmission (void)
 		m_currentTxPacket = 0;
 	}
 	/* When this method completes, we have taken ownership of the medium. */
-	assert (peekPhy ()->getState () == Phy80211::TX);	
+	assert (m_interface->phy ()->getState () == Phy80211::TX);	
 }
 
 void 
@@ -672,11 +688,6 @@ MacLow::setTransmissionListener (MacLowTransmissionListener *listener)
 	m_transmissionListener = listener;
 }
 void 
-MacLow::setReceptionListener (MacLowReceptionListener *listener)
-{
-	m_receptionListener = listener;
-}
-void 
 MacLow::setDataTransmissionMode (int txMode)
 {
 	m_dataTxMode = txMode;
@@ -706,24 +717,21 @@ MacLow::receive (Packet *packet)
 		       getSource (packet));
 		dropPacket (packet);
 		if (waitFastAck ()) {
-			m_fastAckFailedTimeoutHandler->start (parameters ()->getSIFS ());
+			m_fastAckFailedTimeoutHandler->start (m_interface->parameters ()->getSIFS ());
 		}
 		return;
 	}
-	m_receptionListener->gotPacket (getSource (packet),
-					getLastSNR (),
-					getTxMode (packet));
+	m_interface->stations ()->lookup (getSource (packet))->reportRxOk (getLastSNR (), getTxMode (packet));
+
 	bool isPrevNavZero = isNavZero (now ());
 	TRACE ("duration/id: %f", getDuration (packet));
 	notifyNav (now (), getDuration (packet), getType (packet), getSource (packet));
-
-
 	if (getType (packet) == MAC_80211_CTL_RTS) {
 		/* XXX see section 9.9.2.2.1 802.11e/D12.1 */
 		if (isPrevNavZero &&
 		    getDestination (packet) == getSelf ()) {
 			TRACE ("rx RTS from %d -- schedule CTS", getSource (packet));
-			m_sendCTSHandler->start (new SendEvent (packet), parameters ()->getSIFS ());
+			m_sendCTSHandler->start (new SendEvent (packet), m_interface->parameters ()->getSIFS ());
 		} else {
 			TRACE ("rx RTS from %d -- cannot schedule CTS", getSource (packet));
 		}
@@ -735,7 +743,7 @@ MacLow::receive (Packet *packet)
 		TRACE ("rx CTS from %d", getSource (packet));
 		m_CTSTimeoutHandler->cancel ();
 		m_transmissionListener->gotCTS (getLastSNR (), getTxMode (packet));
-		m_sendDataHandler->start (new SendEvent (packet), parameters ()->getSIFS ());
+		m_sendDataHandler->start (new SendEvent (packet), m_interface->parameters ()->getSIFS ());
 		dropPacket (packet);
 	} else if (getType (packet) == MAC_80211_CTL_ACK &&
 		   getDestination (packet) == getSelf () &&
@@ -749,26 +757,26 @@ MacLow::receive (Packet *packet)
 		}
 		dropPacket (packet);
 		if (m_nextSize > 0) {
-			m_waitSIFSHandler->start (new MacCancelableEvent (), parameters ()->getSIFS ());
+			m_waitSIFSHandler->start (new MacCancelableEvent (), m_interface->parameters ()->getSIFS ());
 		}
 	} else if (isControl (packet)) {
 		TRACE ("rx drop %s", getTypeString (packet));
 		dropPacket (packet);
 	} else {
 		if (isData (packet)) {
-			decreaseSize (packet, parameters ()->getDataHeaderSize ());
+			decreaseSize (packet, m_interface->parameters ()->getDataHeaderSize ());
 		}
 		if (getDestination (packet) == getSelf ()) {
 			if (!isNoAck (packet)) {
 				TRACE ("rx unicast/send_ack from %d", getSource (packet));
-				m_sendACKHandler->start (new SendEvent (packet), parameters ()->getSIFS ());
+				m_sendACKHandler->start (new SendEvent (packet), m_interface->parameters ()->getSIFS ());
 			} else {
 				TRACE ("rx unicast/no_ack from %d", getSource (packet));
 			}
-			m_receptionListener->gotData (packet);
+			m_interface->rxMiddle ()->sendUp (packet);
 		} else if (getDestination (packet) == ((int)MAC_BROADCAST)) {
 			TRACE ("rx broadcast from %d", getSource (packet));
-			m_receptionListener->gotData (packet);
+			m_interface->rxMiddle ()->sendUp (packet);
 		} else {
 			//TRACE_VERBOSE ("rx not-for-me from %d", getSource (packet));
 			dropPacket (packet);

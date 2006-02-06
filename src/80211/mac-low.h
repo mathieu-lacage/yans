@@ -16,19 +16,39 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ * In addition, as a special exception, the copyright holders of
+ * this module give you permission to combine (via static or
+ * dynamic linking) this module with free software programs or
+ * libraries that are released under the GNU LGPL and with code
+ * included in the standard release of ns-2 under the Apache 2.0
+ * license or under otherwise-compatible licenses with advertising
+ * requirements (or modified versions of such code, with unchanged
+ * license).  You may copy and distribute such a system following the
+ * terms of the GNU GPL for this module and the licenses of the
+ * other code concerned, provided that you include the source code of
+ * that other code when and as the GNU GPL requires distribution of
+ * source code.
+ *
+ * Note that people who make modified versions of this module
+ * are not obligated to grant this special exception for their
+ * modified versions; it is their choice whether to do so.  The GNU
+ * General Public License gives permission to release a modified
+ * version without this exception; this exception also makes it
+ * possible to release a modified version which carries forward this
+ * exception.
+ *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #ifndef MAC_LOW_H
 #define MAC_LOW_H
 
+#include <vector>
+
 #include "hdr-mac-80211.h"
-#include "phy-80211.h"
 #include "mac-handler.tcc"
 
 class Packet;
-class MacContainer;
-class MacParameters;
-class MacStation;
+class NetInterface80211;
 
 class MacLowTransmissionListener {
 public:
@@ -54,16 +74,6 @@ public:
 	virtual void cancel (void) = 0;
 };
 
-class MacLowReceptionListener {
-public:
-	MacLowReceptionListener ();
-	virtual ~MacLowReceptionListener ();
-
-	virtual void gotPacket (int from, double snr, int txMode) = 0;
-	virtual void gotData (Packet *packet) = 0;
-	// XXX should implement this.
-	// virtual void missedData (Packet *packet) = 0;
-};
 
 class MacLowNavListener {
 public:
@@ -76,8 +86,11 @@ public:
 
 class MacLow {
 public:
-	MacLow (MacContainer *container);
+	MacLow ();
 	~MacLow ();
+
+	void setInterface (NetInterface80211 *interface);
+
 
 	/* If ACK is enabled, we wait ACKTimeout for an ACK.
 	 */
@@ -138,19 +151,12 @@ public:
 	/* start the transmission of the currently-stored data. */
 	void startTransmission (void);
 
-
 	void receive (Packet *packet);
 	
-	void setReceptionListener (MacLowReceptionListener *listener);
-
-
 	void registerNavListener (MacLowNavListener *listener);
 private:
 	void dropPacket (Packet *packet);
-	MacParameters *parameters (void);
 	double now (void);
-	MacStation *lookupStation (int address);
-	Phy80211 *peekPhy (void);
 	void forwardDown (Packet *packet);
 	int getSelf (void);
 	bool waitAck (void);
@@ -187,11 +193,11 @@ private:
 	void sendDataPacket (void);
 	void sendCurrentTxPacket (void);
 
-	MacContainer *m_container;
-	MacLowReceptionListener *m_receptionListener;
+	NetInterface80211 *m_interface;
 	MacLowTransmissionListener *m_transmissionListener;
-	typedef vector<MacLowNavListener *>::const_iterator NavListenerCI;
-	vector<MacLowNavListener *> m_navListeners;
+	typedef std::vector<MacLowNavListener *>::const_iterator NavListenersCI;
+	typedef std::vector<MacLowNavListener *> NavListeners;
+	NavListeners m_navListeners;
 
 	DynamicHandler<MacLow> *m_normalAckTimeoutHandler;
 	DynamicHandler<MacLow> *m_fastAckTimeoutHandler;

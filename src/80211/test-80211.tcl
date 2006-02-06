@@ -1,68 +1,51 @@
-source 80211/utils.tcl
+source ./node-common/utils.tcl
 
-#################################################################
-# Normal Unicast simulation.
 set ns [new Simulator]
 $ns use-scheduler Heap
 
-$ns node-config \
-    -adhocRouting DumbAgent \
-    -llType LL \
-    -macType Mac/Mac80211 \
-    -ifqType Queue/DropTail \
-    -ifqLen 50 \
-    -antType  Antenna/OmniAntenna \
-    -propType Propagation/TwoRayGround \
-    -phyType Phy/80211/Ber \
-    -channel [new Channel/Channel80211] \
-    -topoInstance [new Topography] \
-    -agentTrace OFF \
-    -routerTrace OFF \
-    -macTrace OFF \
-    -movementTrace OFF 
+set nodeConstructor [new NodeConstructor];
+set interfaceConstructor [new TclNetInterfaceConstructor80211];
+set channel [new TclSimpleBroadcastChannel];
 
-create-god 2
+set nodes(0) [$nodeConstructor create-node];
+set nodes(1) [$nodeConstructor create-node];
+set nodes(2) [$nodeConstructor create-node];
 
-$ns trace-all [open test.tr w]
+$nodes(0) set-position 0.0 0.0 0.0
+$nodes(1) set-position 200.0 0.0 0.0
+$nodes(2) set-position 0.0 200.0 0.0
 
-set nodes(0) [$ns node]
-set nodes(1) [$ns node]
-set nodes(2) [$ns node]
-$nodes(0) set X_ 0.0
-$nodes(0) set Y_ 0.0
-$nodes(0) set Z_ 0.0
-
-$nodes(1) set X_ 200.0
-$nodes(1) set Y_ 0.0
-$nodes(1) set Z_ 0.0
-
-$nodes(2) set X_ 0.0
-$nodes(2) set Y_ 200.0
-$nodes(2) set Z_ 0.0
+$interfaceConstructor set-nqap;
+$nodes(0) add-interface [$interfaceConstructor create-interface] $channel
+$interfaceConstructor set-nqsta 1;
+$nodes(1) add-interface [$interfaceConstructor create-interface] $channel
+$nodes(2) add-interface [$interfaceConstructor create-interface] $channel
 
 
-set-qbss-mode 2 nodes
-#set-bss-mode 2 nodes
-#set-adhoc-mode nodes
 
 #########################################################
 #   Normal tcp testing for 802.11
 # setup tcp receiver
 set sink [new Agent/TCPSink]
-$ns attach-agent $nodes(1) $sink
+$nodes(1) attach-agent $sink
 # setup tcp source.
-set tcp [new Agent/TCP]
-$tcp set class_ 2
-$ns attach-agent $nodes(2) $tcp
+set source [new Agent/TCP]
+$source set class_ 2
+$nodes(2) attach-agent $source
 set ftp [new Application/FTP]
-$ftp attach-agent $tcp
+$ftp attach-agent $source
 # connect tcp source to receiver
-$ns connect $tcp $sink
+ip-connect $source $sink
 # start source.
 $ns at 3.0 "$ftp start" 
 #########################################################
 
-$ns at 300 "puts \"End of simulation.\"; $ns halt"
+proc end-simulation {} {
+    puts "End of simulation."; 
+    $ns halt;
+}
+
+$ns at 300 end-simulation 
 puts "Starting Simulation..."
 $ns run
 

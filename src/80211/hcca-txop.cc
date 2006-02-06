@@ -16,6 +16,27 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ * In addition, as a special exception, the copyright holders of
+ * this module give you permission to combine (via static or
+ * dynamic linking) this module with free software programs or
+ * libraries that are released under the GNU LGPL and with code
+ * included in the standard release of ns-2 under the Apache 2.0
+ * license or under otherwise-compatible licenses with advertising
+ * requirements (or modified versions of such code, with unchanged
+ * license).  You may copy and distribute such a system following the
+ * terms of the GNU GPL for this module and the licenses of the
+ * other code concerned, provided that you include the source code of
+ * that other code when and as the GNU GPL requires distribution of
+ * source code.
+ *
+ * Note that people who make modified versions of this module
+ * are not obligated to grant this special exception for their
+ * modified versions; it is their choice whether to do so.  The GNU
+ * General Public License gives permission to release a modified
+ * version without this exception; this exception also makes it
+ * possible to release a modified version which carries forward this
+ * exception.
+ *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
@@ -32,11 +53,14 @@
 #include "hcca-txop.h"
 #include "mac-queue-80211e.h"
 #include "mac-low.h"
-#include "mac-container.h"
 #include "mac-stations.h"
 #include "mac-station.h"
 #include "mac-tx-middle.h"
 #include "mac-parameters.h"
+#include "net-interface-80211.h"
+#include "phy-80211.h"
+
+#include "packet.h"
 
 #ifndef HCCA_TXOP_TRACE
 #define HCCA_TXOP_TRACE 1
@@ -44,7 +68,7 @@
 
 #ifdef HCCA_TXOP_TRACE
 # define TRACE(format, ...) \
-	printf ("HCCA TRACE %d %f " format "\n", m_container->selfAddress (), \
+	printf ("HCCA TRACE %d %f " format "\n", m_interface->getMacAddress (), \
                 Scheduler::instance ().clock (), ## __VA_ARGS__);
 #else /* HCCA_TXOP_TRACE */
 # define TRACE(format, ...)
@@ -115,20 +139,32 @@ private:
 };
 
 
-HccaTxop::HccaTxop (MacContainer *container)
-	: m_container (container),
-	  m_currentTxPacket (0)
+HccaTxop::HccaTxop ()
+	: m_currentTxPacket (0)
 {
 	m_transmissionListener = new MyTransmissionListener (this);
 	m_qosNullTransmissionListener = new MyQosNullTransmissionListener (this);
 	m_txopStart = new StaticHandler<HccaTxop> (this, &HccaTxop::txopStartTimer);
 }
 
-MacLow *
-HccaTxop::low (void) const
+void 
+HccaTxop::setInterface (NetInterface80211 *interface)
 {
-	return m_container->macLow ();
+	m_interface = interface;
 }
+
+MacLow *
+HccaTxop::low (void)
+{
+	return m_interface->low ();
+}
+
+MacParameters *
+HccaTxop::parameters (void)
+{
+	return m_interface->parameters ();
+}
+
 double
 HccaTxop::now (void) const
 {
@@ -137,7 +173,7 @@ HccaTxop::now (void) const
 MacStation *
 HccaTxop::lookupDestStation (Packet *packet) const
 {
-	MacStation *station = m_container->stations ()->lookup (getDestination (packet));
+	MacStation *station = m_interface->stations ()->lookup (getDestination (packet));
 	return station;
 }
 
@@ -163,7 +199,7 @@ HccaTxop::enoughTimeFor (Packet *packet)
 double 
 HccaTxop::calculateTxDuration (int txMode, uint32_t size)
 {
-	return m_container->phy ()->calculateTxDuration (txMode, size);
+	return m_interface->phy ()->calculateTxDuration (txMode, size);
 }
 void
 HccaTxop::setCurrentTsid (uint8_t tsid)
@@ -178,7 +214,7 @@ HccaTxop::getCurrentTsid (void)
 Packet *
 HccaTxop::getQosNullFor (int destination)
 {
-	Packet *packet = hdr_mac_80211::create (m_container->selfAddress ());
+	Packet *packet = hdr_mac_80211::create (m_interface->getMacAddress ());
 	setDestination (packet, destination);
 	setFinalDestination (packet, destination);
 	setType (packet, MAC_80211_MGT_QOSNULL);
@@ -188,7 +224,7 @@ HccaTxop::getQosNullFor (int destination)
 void
 HccaTxop::tryToSendQosNull (void)
 {
-	Packet *qosNull = getQosNullFor (m_container->getBSSID ());
+	Packet *qosNull = getQosNullFor (m_interface->getBSSID ());
 
 	/* calculate whether or not we have enough time. at rate 0. */
 	double duration = 0.0;
@@ -230,7 +266,7 @@ HccaTxop::txCurrent (void)
 		m_currentTxPacket = queue->dequeue ();
 		assert (m_currentTxPacket != 0);
 		initialize (m_currentTxPacket);
-		uint16_t sequence = m_container->macTxMiddle ()->getNextSequenceNumberFor (m_currentTxPacket);
+		uint16_t sequence = m_interface->txMiddle ()->getNextSequenceNumberFor (m_currentTxPacket);
 		setSequenceNumber (m_currentTxPacket, sequence);
 		TRACE ("dequeued %d to %d seq: 0x%x", 
 		       getSize (m_currentTxPacket), 
@@ -310,11 +346,6 @@ HccaTxop::enoughTimeFor (double duration)
 		return true;
 	}
 }
-MacParameters *
-HccaTxop::parameters (void)
-{
-	return m_container->parameters ();
-}
 
 bool 
 HccaTxop::isTxopFinished (void)
@@ -380,7 +411,7 @@ HccaTxop::missedCTS (void)
 void 
 HccaTxop::gotQosNullAck (void)
 {
-	TRACE ("got QosNull Ack  from %d", m_container->getBSSID ());
+	TRACE ("got QosNull Ack  from %d", m_interface->getBSSID ());
 	/* There is not much to do since this means that
 	 * we have successfully transmitted ownership of the
 	 * medium to the QAP.
@@ -389,7 +420,7 @@ HccaTxop::gotQosNullAck (void)
 void 
 HccaTxop::missedQosNullAck (void)
 {
-	TRACE ("missed QosNull Ack from %d", m_container->getBSSID ());
+	TRACE ("missed QosNull Ack from %d", m_interface->getBSSID ());
 	/* We are not sure the QAP has correctly received the
 	 * QosNull frame we sent to relinquish ownership of the medium
 	 * so we try to trigger a retransmission of the QosNull now

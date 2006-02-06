@@ -16,11 +16,31 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ * In addition, as a special exception, the copyright holders of
+ * this module give you permission to combine (via static or
+ * dynamic linking) this module with free software programs or
+ * libraries that are released under the GNU LGPL and with code
+ * included in the standard release of ns-2 under the Apache 2.0
+ * license or under otherwise-compatible licenses with advertising
+ * requirements (or modified versions of such code, with unchanged
+ * license).  You may copy and distribute such a system following the
+ * terms of the GNU GPL for this module and the licenses of the
+ * other code concerned, provided that you include the source code of
+ * that other code when and as the GNU GPL requires distribution of
+ * source code.
+ *
+ * Note that people who make modified versions of this module
+ * are not obligated to grant this special exception for their
+ * modified versions; it is their choice whether to do so.  The GNU
+ * General Public License gives permission to release a modified
+ * version without this exception; this exception also makes it
+ * possible to release a modified version which carries forward this
+ * exception.
+ *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
 #include "mac-high-qap.h"
-#include "mac-80211.h"
 #include "arf-mac-stations.h"
 #include "mac-stations.h"
 #include "mac-station.h"
@@ -28,7 +48,6 @@
 #include "mac-dcf-parameters.h"
 #include "dcf.h"
 #include "edca-txop.h"
-#include "mac-container.h"
 #include "mac-queue-80211e.h"
 #include "hdr-mac-80211.h"
 #include "mac-traces.h"
@@ -36,6 +55,7 @@
 #include "qap-scheduler.h"
 #include "tspec-request.h"
 #include "tspec.h"
+#include "net-interface-80211.h"
 
 #include "packet.h"
 
@@ -45,40 +65,49 @@
 
 #ifdef QAP_TRACE
 # define TRACE(format, ...) \
-	printf ("QAP TRACE %d %f " format "\n", container ()->selfAddress (), \
+	printf ("QAP TRACE %d %f " format "\n", m_interface->getMacAddress (), \
                 Scheduler::instance ().clock (), ## __VA_ARGS__);
 #else /* QAP_TRACE */
 # define TRACE(format, ...)
 #endif /* QAP_TRACE */
 
 
-MacHighQap::MacHighQap (MacContainer *container)
-	: MacHighAp (container)
+MacHighQap::MacHighQap ()
+	: MacHighAp ()
 {
-	m_scheduler = new QapScheduler (container);
+	m_scheduler = new QapScheduler ();
 
-	createAC (AC_BE);
-	createAC (AC_BK);
-	createAC (AC_VI);
-	createAC (AC_VO);
-
-	m_hcca = new HccaTxop (container);
+	m_hcca = new HccaTxop ();
 }
 MacHighQap::~MacHighQap ()
 {}
 
+void
+MacHighQap::setInterface (NetInterface80211 *interface)
+{
+	m_interface = interface;
+	m_scheduler->setInterface (interface);
+	m_hcca->setInterface (interface);
+	createAC (AC_BE, interface);
+	createAC (AC_BK, interface);
+	createAC (AC_VI, interface);
+	createAC (AC_VO, interface);
+}
+
 MacParameters *
 MacHighQap::parameters (void)
 {
-	return container ()->parameters ();
+	return m_interface->parameters ();
 }
 
 void
-MacHighQap::createAC (enum ac_e ac)
+MacHighQap::createAC (enum ac_e ac, NetInterface80211 *interface)
 {
-	MacQueue80211e *queue = new MacQueue80211e (container ()->parameters ());
+	MacQueue80211e *queue = new MacQueue80211e ();
+	queue->setParameters (interface->parameters ());
 	Dcf *dcf = m_scheduler->createDcf (ac);
-	new EdcaTxop (dcf, queue, container ());
+	EdcaTxop *edcaTxop = new EdcaTxop (dcf, queue);
+	edcaTxop->setInterface (m_interface);
 
 	m_dcfQueues[ac] = queue;
 	m_dcfs[ac] = dcf;
@@ -92,7 +121,8 @@ MacHighQap::createAC (enum ac_e ac)
 void
 MacHighQap::createTS (TSpec *tspec)
 {
-	MacQueue80211e *queue = new MacQueue80211e (container ()->parameters ());
+	MacQueue80211e *queue = new MacQueue80211e ();
+	queue->setParameters (parameters ());
 	m_ts[tspec->getTSID ()] = make_pair (tspec, queue);
 	m_hcca->addStream (queue, tspec->getTSID ());
 }
@@ -140,6 +170,12 @@ MacHighQap::isTsActive (uint8_t tsid)
 	}
 }
 
+NetInterface80211 *
+MacHighQap::interface (void)
+{
+	return m_interface;
+}
+
 void
 MacHighQap::enqueueToLow (Packet *packet)
 {
@@ -184,6 +220,7 @@ MacHighQap::enqueueToLow (Packet *packet)
 		} else {
 			// XXX if we have not created this TS
 			// yet, we should probably drop this packet.
+			assert (false);
 		}
 	}
 }
@@ -196,10 +233,10 @@ MacHighQap::enqueueToLow (Packet *packet)
 void 
 MacHighQap::delTsRequest (TSpecRequest *request)
 {
-	if (m_scheduler->delTsRequest (container ()->selfAddress (), 
+	if (m_scheduler->delTsRequest (m_interface->getMacAddress (), 
 				       request->getTSpec ())) {
-		request->notifyGranted ();
 		destroyTS (request->getTSpec ()->getTSID ());
+		request->notifyGranted ();
 	} else {
 		request->notifyRefused ();
 	}
@@ -208,9 +245,9 @@ MacHighQap::delTsRequest (TSpecRequest *request)
 void 
 MacHighQap::addTsRequest (TSpecRequest *request)
 {
-	if (m_scheduler->addTsRequest (container ()->selfAddress (), request->getTSpec ())) {
-		request->notifyGranted ();
+	if (m_scheduler->addTsRequest (m_interface->getMacAddress (), request->getTSpec ())) {
 		createTS (request->getTSpec ());
+		request->notifyGranted ();
 	} else {
 		request->notifyRefused ();
 	}
@@ -220,7 +257,7 @@ MacHighQap::addTsRequest (TSpecRequest *request)
 Packet *
 MacHighQap::getPacketFor (int destination)
 {
-	Packet *packet = hdr_mac_80211::create (container ()->selfAddress ());
+	Packet *packet = hdr_mac_80211::create (m_interface->getMacAddress ());
 	setFinalDestination (packet, destination);
 	setDestination (packet, destination);
 	return packet;
@@ -359,22 +396,16 @@ MacHighQap::gotQosNull (Packet *packet)
 void
 MacHighQap::forwardQueueToLow (Packet *packet)
 {
-	int requestedTID = getRequestedTID (packet);
-	if (requestedTID < 8) {
-		/* XXX we assume that there is no form of
-		 * Access Control for any Access Category.
-		 * Of course, this is wrong but we can
-		 * implement it later.
-		 */
-		setTID (packet, requestedTID);
-		queueAC (getAC (packet), packet);
+	/* packets forwarded from a station A to B cannot have
+	 * any special priority so we do not give them any.
+	 * This is exactly where a TCLAS would be handy.
+	 */
+	enum ac_e ac;
+	if (isManagement (packet)) {
+		ac = AC_VO;
 	} else {
-		if (isTsActive (requestedTID)) {
-			setTID (packet, requestedTID);
-			queueTS (requestedTID, packet);
-		} else {
-			// XXX if we have not created this TS
-			// yet, we should probably drop this packet.
-		}
+		ac = AC_BE;
 	}
+	setAC (packet, ac);
+	queueAC (ac, packet);
 }

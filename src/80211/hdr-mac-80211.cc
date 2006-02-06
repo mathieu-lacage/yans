@@ -16,24 +16,59 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ * In addition, as a special exception, the copyright holders of
+ * this module give you permission to combine (via static or
+ * dynamic linking) this module with free software programs or
+ * libraries that are released under the GNU LGPL and with code
+ * included in the standard release of ns-2 under the Apache 2.0
+ * license or under otherwise-compatible licenses with advertising
+ * requirements (or modified versions of such code, with unchanged
+ * license).  You may copy and distribute such a system following the
+ * terms of the GNU GPL for this module and the licenses of the
+ * other code concerned, provided that you include the source code of
+ * that other code when and as the GNU GPL requires distribution of
+ * source code.
+ *
+ * Note that people who make modified versions of this module
+ * are not obligated to grant this special exception for their
+ * modified versions; it is their choice whether to do so.  The GNU
+ * General Public License gives permission to release a modified
+ * version without this exception; this exception also makes it
+ * possible to release a modified version which carries forward this
+ * exception.
+ *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
+
+#include <math.h>
 
 #include "hdr-mac-80211.h"
 
 #include "packet.h"
 #include "ip.h"
-#include "mac.h"
 
-/* a small array to verify that 
- * sizeof (hdr_mac) >= sizeof (hdr_mac_80211) 
- * Note that this array is not made static 
- * as it should because it is never ever used 
- * by anyone which makes gcc report a bug. So,
- * since I don't care whether or not gcc will optimize
- * this thing away, I don't mark it static.
- */
-char foo[sizeof (hdr_mac)-sizeof (hdr_mac_80211)+1];
+static class Mac80211HeaderClass : public PacketHeaderClass {
+public:
+        Mac80211HeaderClass() : PacketHeaderClass("PacketHeader/Mac80211",
+						  sizeof(hdr_mac_80211)) { 
+		bind_offset(&hdr_mac_80211::offset_);
+	}
+} class_hdr_mac_80211;
+
+
+
+int hdr_mac_80211::offset_;
+int& 
+hdr_mac_80211::offset()
+{
+	return offset_;
+}
+hdr_mac_80211* 
+hdr_mac_80211::access(const Packet* p)
+{
+	return (hdr_mac_80211*) p->access(offset_);
+}
+
 
 Packet *
 hdr_mac_80211::create (int source)
@@ -57,6 +92,34 @@ hdr_mac_80211::initialize (void)
 	m_sequenceControl = 0;
 	m_ackMode = ACK_NORMAL;
 }
+
+/*********************************************************
+ * Hacks to deal with the Phy propagation model.
+ ********************************************************/
+
+
+double 
+hdr_mac_80211::getTxAirPower (void) const
+{
+	return m_txAirPower;
+}
+void 
+hdr_mac_80211::setTxAirPower (double airPower)
+{
+	m_txAirPower = airPower;
+}
+
+void 
+hdr_mac_80211::setTxNodePosition (NodePosition const *position)
+{
+	m_txPosition = *position;
+}
+void 
+hdr_mac_80211::peekTxNodePosition (NodePosition *position) const
+{
+	*position = m_txPosition;
+}
+
 
 
 /*********************************************************
@@ -145,6 +208,7 @@ hdr_mac_80211::isQos (void) const
 {
 	return (m_qos)?true:false;
 }
+
 
 /*********************************************************
  * Setters.

@@ -16,17 +16,39 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ * In addition, as a special exception, the copyright holders of
+ * this module give you permission to combine (via static or
+ * dynamic linking) this module with free software programs or
+ * libraries that are released under the GNU LGPL and with code
+ * included in the standard release of ns-2 under the Apache 2.0
+ * license or under otherwise-compatible licenses with advertising
+ * requirements (or modified versions of such code, with unchanged
+ * license).  You may copy and distribute such a system following the
+ * terms of the GNU GPL for this module and the licenses of the
+ * other code concerned, provided that you include the source code of
+ * that other code when and as the GNU GPL requires distribution of
+ * source code.
+ *
+ * Note that people who make modified versions of this module
+ * are not obligated to grant this special exception for their
+ * modified versions; it is their choice whether to do so.  The GNU
+ * General Public License gives permission to release a modified
+ * version without this exception; this exception also makes it
+ * possible to release a modified version which carries forward this
+ * exception.
+ *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "mac.h"
-
+#include "common.h"
 #include "mac-high-ap.h"
-#include "mac-container.h"
-#include "packet.h"
+#include "net-interface-80211.h"
 #include "hdr-mac-80211.h"
 #include "mac-stations.h"
 #include "mac-station.h"
+#include "ll-arp.h"
+
+#include "packet.h"
 
 #ifndef AP_TRACE
 #define nopeAP_TRACE 1
@@ -34,24 +56,25 @@
 
 #ifdef AP_TRACE
 # define TRACE(format, ...) \
-	printf ("AP TRACE %d %f " format "\n", container ()->selfAddress (), \
+	printf ("AP TRACE %d %f " format "\n", interface ()->getMacAddress (), \
                 Scheduler::instance ().clock (), ## __VA_ARGS__);
 #else /* AP_TRACE */
 # define TRACE(format, ...)
 #endif /* AP_TRACE */
 
 
-MacHighAp::MacHighAp (MacContainer *container)
-	: MacHigh (container)
+MacHighAp::MacHighAp ()
+	: MacHigh ()
 {}
 MacHighAp::~MacHighAp ()
 {}
 
 void 
-MacHighAp::enqueueFromLL (Packet *packet)
+MacHighAp::enqueueFromLL (Packet *packet, int macDestination)
 {
-	setSource (packet, container ()->selfAddress ());
-	setDestination (packet, getFinalDestination (packet));
+	setSource (packet, interface ()->getMacAddress ());
+	setFinalDestination (packet, macDestination);
+	setDestination (packet, macDestination);
 	setType (packet, MAC_80211_DATA);
 	enqueueToLow (packet);
 }
@@ -63,17 +86,17 @@ MacHighAp::notifyAckReceivedFor (Packet *packet)
 	    getType (packet) == MAC_80211_MGT_REASSOCIATION_RESPONSE) {
 		// should check association response status.
 		TRACE ("associated %d", getDestination (packet));
-		container ()->stations ()->lookup (getDestination (packet))->recordAssociated ();
+		interface ()->stations ()->lookup (getDestination (packet))->recordAssociated ();
 	}
 }
 
 void 
 MacHighAp::receiveFromMacLow (Packet *packet)
 {
-	MacStation *station = container ()->stations ()->lookup (getSource (packet));
+	MacStation *station = interface ()->stations ()->lookup (getSource (packet));
 
-	if (getFinalDestination (packet) == container ()->selfAddress () &&
-	    getDestination (packet) == container ()->selfAddress ()) {
+	if (getFinalDestination (packet) == interface ()->getMacAddress () &&
+	    getDestination (packet) == interface ()->getMacAddress ()) {
 		switch (getType (packet)) {
 		case MAC_80211_MGT_BEACON:
 		case MAC_80211_MGT_ASSOCIATION_RESPONSE:
@@ -133,7 +156,7 @@ MacHighAp::receiveFromMacLow (Packet *packet)
 		case MAC_80211_DATA:
 			if (station->isAssociated ()) {
 				TRACE ("forward up from %d", getSource (packet));
-				container ()->forwardToLL (packet);
+				interface ()->ll ()->sendUp (packet);
 			} else {
 				goto drop;
 			}
@@ -141,24 +164,24 @@ MacHighAp::receiveFromMacLow (Packet *packet)
 		default:
 			break;
 		}
-	} else if (getDestination (packet) == container ()->selfAddress () &&
+	} else if (getDestination (packet) == interface ()->getMacAddress () &&
 		   getFinalDestination (packet) == ((int)MAC_BROADCAST)) {
 		if (station->isAssociated ()) {
 			TRACE ("forward broadcast from %d", getSource (packet));
 			setDestination (packet, getFinalDestination (packet));
-			setSource (packet, container ()->selfAddress ());
+			setSource (packet, interface ()->getMacAddress ());
 			forwardQueueToLow (packet->copy ());
-			container ()->forwardToLL (packet);
+			interface ()->ll ()->sendUp (packet);
 		} else {
 			goto drop;
 		}
-	} else if (getDestination (packet) == container ()->selfAddress ()) {
-		MacStation *station = container ()->stations ()->lookup (getSource (packet));
+	} else if (getDestination (packet) == interface ()->getMacAddress ()) {
+		MacStation *station = interface ()->stations ()->lookup (getSource (packet));
 		if (station->isAssociated ()) {
 			// forward to target station.
 			TRACE ("%d associated: forwarding packet", getSource (packet));
 			setDestination (packet, getFinalDestination (packet));
-			setSource (packet, container ()->selfAddress ());
+			setSource (packet, interface ()->getMacAddress ());
 			forwardQueueToLow (packet);
 		} else {
 			goto drop;

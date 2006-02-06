@@ -16,6 +16,27 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ * In addition, as a special exception, the copyright holders of
+ * this module give you permission to combine (via static or
+ * dynamic linking) this module with free software programs or
+ * libraries that are released under the GNU LGPL and with code
+ * included in the standard release of ns-2 under the Apache 2.0
+ * license or under otherwise-compatible licenses with advertising
+ * requirements (or modified versions of such code, with unchanged
+ * license).  You may copy and distribute such a system following the
+ * terms of the GNU GPL for this module and the licenses of the
+ * other code concerned, provided that you include the source code of
+ * that other code when and as the GNU GPL requires distribution of
+ * source code.
+ *
+ * Note that people who make modified versions of this module
+ * are not obligated to grant this special exception for their
+ * modified versions; it is their choice whether to do so.  The GNU
+ * General Public License gives permission to release a modified
+ * version without this exception; this exception also makes it
+ * possible to release a modified version which carries forward this
+ * exception.
+ *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
@@ -24,12 +45,14 @@
 #include "qam-mode.h"
 #include "rng-uniform.h"
 #include "hdr-mac-80211.h"
-
-#include "antenna.h"
-#include "propagation.h"
+#include "net-interface.h"
+#include "free-space-propagation.h"
 #include "transmission-mode.h"
+#include "mac-low.h"
 
+#include "packet.h"
 
+#include <math.h>
 #include <iostream>
 #include <vector>
 #include <algorithm>
@@ -57,22 +80,6 @@
 #endif
 
 /****************************************************************
- *       TCL glue.
- ****************************************************************/
-
-static class Phy80211Class: public TclClass {
-public:
-        Phy80211Class() : TclClass("Phy/80211") {}
-        TclObject* create(int, const char*const*) {
-		/* instantiating this object is 
-		 * really impossible
-		 */
-                return 0;
-        }
-} class_Phy80211;
-
-
-/****************************************************************
  *       This destructor is needed.
  ****************************************************************/
 
@@ -84,56 +91,70 @@ Phy80211Listener::~Phy80211Listener ()
  ****************************************************************/
 
 Phy80211::Phy80211 ()
-	: Phy (),
-	  m_propagation (0),
-	  m_antenna (0),
-	  m_sleeping (false),
+	: m_sleeping (false),
 	  m_rxing (false),
 	  m_endTx (0.0),
 	  m_previousStateChangeTime (0.0)
-{
-	initialize ("standard", &m_standard, standard_80211_a);
-
-	/* absolute system loss. W. */
-	m_systemLoss = 1.0;
-	/* absolute reception threshold. dBm. */
-	m_rxThreshold = -81;
-	/* Ratio of energy lost by receiver. dB. */
-	m_rxNoise = 7;
-
-	/* absolute transmission energy. dBm. 
-	 * XXX: this field should be moved to the 
-	 * packet structure.
-	 */
-	m_txPower = 15;
-
-	if (m_standard == standard_80211_unknown) {
-		
-	} else if (m_standard == standard_80211_b) {
-		// XXX
-		m_frequency = 2.4e9;
-		m_plcpPreambleDelay = 144e-6;
-		m_plcpHeaderLength = 48;
-	} else if (m_standard == standard_80211_a) {
-		m_frequency = 5e9;
-		m_plcpHeaderLength = 4 + 1 + 12 + 1 + 6 + 16 + 6;
-		m_plcpPreambleDelay = 20e-6;
-		/* 4095 bytes at a 6Mb/s rate with a 1/2 coding rate. */
-		m_maxPacketDuration = 4095.0*8.0/6000000.0*(1.0/2.0);
-		addTxRxMode (new BPSKFECMode (10, 11,       20e6, 6e6, 0.5));
-		addTxRxMode (new BPSKFECMode (5, 8,         20e6, 9e6, 0.75));
-		addTxRxMode (new QAMFECMode (4, 10, 11, 0,  20e6, 12e6, 0.5));
-		addTxRxMode (new QAMFECMode (4, 5, 8, 31,   20e6, 18e6, 0.75));
-		addTxRxMode (new QAMFECMode (16, 10, 11, 0, 20e6, 24e6, 0.5));
-		addTxRxMode (new QAMFECMode (16, 5, 8, 31,  20e6, 36e6, 0.75));
-		addTxRxMode (new QAMFECMode (64, 6, 1, 16,  20e6, 48e6, 0.666));
-		addTxRxMode (new QAMFECMode (64, 5, 8, 31,  20e6, 54e6, 0.75));
-	}
-
-}
+{}
 
 Phy80211::~Phy80211 ()
 {}
+
+void
+Phy80211::setInterface (NetInterface *interface)
+{
+	m_interface = interface;
+}
+void 
+Phy80211::setMac (MacLow *low)
+{
+	m_mac = low;
+}
+
+void 
+Phy80211::forwardUp (Packet *packet)
+{
+	m_mac->receive (packet);
+}
+
+void 
+Phy80211::setRxThreshold (double rxThreshold)
+{
+	m_rxThreshold = rxThreshold;
+}
+void 
+Phy80211::setRxNoise (double rxNoise)
+{
+	m_rxNoise = rxNoise;
+}
+void 
+Phy80211::setTxPower (double txPower)
+{
+	m_txPower = txPower;
+}
+
+void
+Phy80211::configureStandardA (void)
+{
+	m_plcpHeaderLength = 4 + 1 + 12 + 1 + 6 + 16 + 6;
+	m_plcpPreambleDelay = 20e-6;
+	/* 4095 bytes at a 6Mb/s rate with a 1/2 coding rate. */
+	m_maxPacketDuration = 4095.0*8.0/6000000.0*(1.0/2.0);
+	addTxRxMode (new BPSKFECMode (10, 11,       20e6, 6e6, 0.5));
+	addTxRxMode (new BPSKFECMode (5, 8,         20e6, 9e6, 0.75));
+	addTxRxMode (new QAMFECMode (4, 10, 11, 0,  20e6, 12e6, 0.5));
+	addTxRxMode (new QAMFECMode (4, 5, 8, 31,   20e6, 18e6, 0.75));
+	addTxRxMode (new QAMFECMode (16, 10, 11, 0, 20e6, 24e6, 0.5));
+	addTxRxMode (new QAMFECMode (16, 5, 8, 31,  20e6, 36e6, 0.75));
+	addTxRxMode (new QAMFECMode (64, 6, 1, 16,  20e6, 48e6, 0.666));
+	addTxRxMode (new QAMFECMode (64, 5, 8, 31,  20e6, 54e6, 0.75));
+}
+
+void 
+Phy80211::setPropagationModel (FreeSpacePropagation *propagation)
+{
+	m_propagation = propagation;
+}
 
 void 
 Phy80211::registerListener (Phy80211Listener *listener)
@@ -144,40 +165,35 @@ Phy80211::registerListener (Phy80211Listener *listener)
 void 
 Phy80211::notifyRxStart (double now, double duration)
 {
-	vector<Phy80211Listener *>::const_iterator i;
-	for (i = m_listeners.begin (); i != m_listeners.end (); i++) {
+	for (ListenersCI i = m_listeners.begin (); i != m_listeners.end (); i++) {
 		(*i)->notifyRxStart (now, duration);
 	}
 }
 void 
 Phy80211::notifyRxEnd (double now, bool receivedOk)
 {
-	vector<Phy80211Listener *>::const_iterator i;
-	for (i = m_listeners.begin (); i != m_listeners.end (); i++) {
+	for (ListenersCI i = m_listeners.begin (); i != m_listeners.end (); i++) {
 		(*i)->notifyRxEnd (now, receivedOk);
 	}
 }
 void 
 Phy80211::notifyTxStart (double now, double duration)
 {
-	vector<Phy80211Listener *>::const_iterator i;
-	for (i = m_listeners.begin (); i != m_listeners.end (); i++) {
+	for (ListenersCI i = m_listeners.begin (); i != m_listeners.end (); i++) {
 		(*i)->notifyTxStart (now, duration);
 	}
 }
 void 
 Phy80211::notifySleep (double now)
 {
-	vector<Phy80211Listener *>::const_iterator i;
-	for (i = m_listeners.begin (); i != m_listeners.end (); i++) {
+	for (ListenersCI i = m_listeners.begin (); i != m_listeners.end (); i++) {
 		(*i)->notifySleep (now);
 	}
 }
 void 
 Phy80211::notifyWakeup (double now)
 {
-	vector<Phy80211Listener *>::const_iterator i;
-	for (i = m_listeners.begin (); i != m_listeners.end (); i++) {
+	for (ListenersCI i = m_listeners.begin (); i != m_listeners.end (); i++) {
 		(*i)->notifyWakeup (now);
 	}
 }
@@ -203,38 +219,10 @@ Phy80211::stateToString (enum Phy80211State state)
 	return "deadbeaf";
 }
 
-bool
-Phy80211::isDefined (char const *varName)
-{
-	Tcl& tcl=Tcl::instance();
-	tcl.evalf ("catch \"Phy/80211 set %s\" val", varName);
-	if (strcmp ((char *)tcl.result (), "0") == 0) {
-		return true;
-	} else {
-		return false;
-	}
-}
-void
-Phy80211::define (char const *varName, uint32_t defaultValue)
-{
-	Tcl& tcl=Tcl::instance();
-	tcl.evalf ("Phy/80211 set %s %u", 
-		   varName, defaultValue);
-}
-
-void
-Phy80211::initialize (char const *varName, uint32_t *variable, uint32_t defaultValue)
-{
-	if (!isDefined (varName)) {
-		define (varName, defaultValue);
-	}
-	bind (varName, variable);
-}
-
 int
 Phy80211::selfAddress (void)
 {
-	return node_->address ();
+	return m_interface->getMacAddress ();
 }
 
 double 
@@ -297,17 +285,6 @@ Phy80211::getPreambleDuration (void)
 	return m_plcpPreambleDelay;
 }
 double 
-Phy80211::getLambda (void)
-{	
-	double lambda = SPEED_OF_LIGHT / m_frequency;
-	return lambda;
-}
-double 
-Phy80211::getSystemLoss (void)
-{
-	return m_systemLoss;
-}
-double 
 Phy80211::getEndOfTx (void)
 {
 	return m_endTx;
@@ -332,54 +309,6 @@ Phy80211::addTxRxMode (TransmissionMode *mode)
 {
 	m_modes.push_back (mode);
 }
-
-int
-Phy80211::command(int argc, const char*const* argv)
-{
-	TclObject *obj; 
-
-
-	if (argc == 3) {
-		if( (obj = TclObject::lookup(argv[2])) == 0) {
-			fprintf(stderr,"Phy80211: %s lookup of %s failed\n", 
-				argv[1], argv[2]);
-			return TCL_ERROR;
-		} else if (strcmp (argv[1], "propagation") == 0) {
-			assert (m_propagation == 0);
-			m_propagation = static_cast<Propagation *> (obj);
-			return TCL_OK;
-		} else if (strcasecmp (argv[1], "antenna") == 0) {
-			assert (m_antenna == 0);
-			m_antenna = static_cast<Antenna *> (obj);
-			return TCL_OK;
-		}
-	}
-	return Phy::command(argc,argv);
-}
-
-void
-Phy80211::recv(Packet *packet, Handler *)
-{
-	switch(HDR_CMN (packet)->direction ()) {
-	case hdr_cmn::DOWN :
-		startTx (packet);
-		return;
-	case hdr_cmn::UP :
-		startRx (packet);
-		break;
-	default:
-		assert (false);
-	}
-}
-/* this two methods used to be called by the parent Phy
- * from Phy::recv but since we override Phy::recv,
- * we can implement empty stubs for these methods since
- * they will never be called.
- */
-void Phy80211::sendDown(Packet *packet)
-{}
-int Phy80211::sendUp(Packet *packet)
-{ return 0; }
 
 void 
 Phy80211::sleep (void)
@@ -456,19 +385,19 @@ Phy80211::SNR (double signal, double noiseInterference, TransmissionMode *mode)
 
 /* return power in W */
 double 
-Phy80211::calculatePower (Packet *p)
+Phy80211::calculateRxPower (Packet *p)
 {
-	double power;
-	PacketStamp stamp;
-	stamp.stamp(peekMobileNode (), m_antenna, 0, getLambda ());
-	power = m_propagation->Pr (&p->txinfo_, &stamp, getSystemLoss (), getLambda ());
-	return power;
+	return m_propagation->getReceptionPower (p);
 }
 
 
-
 void
-Phy80211::startTx (Packet *packet)
+Phy80211::sendUp (Packet *packet)
+{
+	startRx (packet);
+}
+void
+Phy80211::sendDown (Packet *packet)
 {
 	/* Transmission can happen if:
 	 *  - we are syncing on a packet. It is the responsability of the
@@ -489,16 +418,13 @@ Phy80211::startTx (Packet *packet)
 	 *    - leave this field alone here.
 	 * XXX
 	 */
-	MobileNode *node = peekMobileNode ();
-	Antenna *antenna = m_antenna->copy();
-	packet->txinfo_.stamp(node, antenna, dBmToW (m_txPower), getLambda ());
-
+	m_propagation->setTransmissionPower (packet, m_txPower);
 	double txDuration = calculatePacketDuration (getHeaderMode (packet), 
 						     getPayloadMode (packet),
 						     getSize (packet));
 	notifyTxStart (now (), txDuration);
 	switchToTx (txDuration);
-	peekChannel ()->recv (packet, this);
+	m_interface->sendDownToChannel (packet);
 }
 
 
@@ -675,16 +601,4 @@ Phy80211::getDelayUntilIdle (void)
 	}
 	retval = max (retval, 0.0);
 	return retval;
-}
-
-Channel *
-Phy80211::peekChannel (void)
-{
-	return Phy::channel ();
-}
-
-MobileNode *
-Phy80211::peekMobileNode (void)
-{
-	return static_cast<MobileNode *>(Phy::node ());
 }

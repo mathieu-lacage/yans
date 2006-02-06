@@ -16,6 +16,27 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ * In addition, as a special exception, the copyright holders of
+ * this module give you permission to combine (via static or
+ * dynamic linking) this module with free software programs or
+ * libraries that are released under the GNU LGPL and with code
+ * included in the standard release of ns-2 under the Apache 2.0
+ * license or under otherwise-compatible licenses with advertising
+ * requirements (or modified versions of such code, with unchanged
+ * license).  You may copy and distribute such a system following the
+ * terms of the GNU GPL for this module and the licenses of the
+ * other code concerned, provided that you include the source code of
+ * that other code when and as the GNU GPL requires distribution of
+ * source code.
+ *
+ * Note that people who make modified versions of this module
+ * are not obligated to grant this special exception for their
+ * modified versions; it is their choice whether to do so.  The GNU
+ * General Public License gives permission to release a modified
+ * version without this exception; this exception also makes it
+ * possible to release a modified version which carries forward this
+ * exception.
+ *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
@@ -29,22 +50,25 @@ class MacQueue80211e;
 class Packet;
 class MacLowTransmissionListener;
 class MacStation;
-class MacContainer;
+class NetInterface80211;
 class MacLow;
 class MacParameters;
 
 class DcaTxop 
 {
 public:
-	DcaTxop (Dcf *dcf, MacQueue80211e *queue, MacContainer *container);
+	DcaTxop (Dcf *dcf, MacQueue80211e *queue);
+
+	void setInterface (NetInterface80211 *interface);
 
 private:
 	friend class MyDcaAccessListener;
 	friend class MyDcaTransmissionListener;
 
+	double now (void);
+
 	MacLow *low (void);
 	MacParameters *parameters (void);
-	double now (void);
 
 	/* event handlers */
 	void accessGrantedNow (void);
@@ -70,7 +94,7 @@ private:
 
 	Dcf *m_dcf;
 	MacQueue80211e *m_queue;
-	MacContainer *m_container;
+	NetInterface80211 *m_interface;
 	Packet *m_currentTxPacket;
 	MacLowTransmissionListener *m_transmissionListener;
 	int m_SSRC;

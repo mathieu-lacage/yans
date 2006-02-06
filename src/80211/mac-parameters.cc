@@ -16,15 +16,35 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ * In addition, as a special exception, the copyright holders of
+ * this module give you permission to combine (via static or
+ * dynamic linking) this module with free software programs or
+ * libraries that are released under the GNU LGPL and with code
+ * included in the standard release of ns-2 under the Apache 2.0
+ * license or under otherwise-compatible licenses with advertising
+ * requirements (or modified versions of such code, with unchanged
+ * license).  You may copy and distribute such a system following the
+ * terms of the GNU GPL for this module and the licenses of the
+ * other code concerned, provided that you include the source code of
+ * that other code when and as the GNU GPL requires distribution of
+ * source code.
+ *
+ * Note that people who make modified versions of this module
+ * are not obligated to grant this special exception for their
+ * modified versions; it is their choice whether to do so.  The GNU
+ * General Public License gives permission to release a modified
+ * version without this exception; this exception also makes it
+ * possible to release a modified version which carries forward this
+ * exception.
+ *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
 #include <cassert>
 
 #include "mac-parameters.h"
+#include "net-interface-80211.h"
 #include "phy-80211.h"
-#include "mac-80211.h"
-#include "mac-container.h"
 
 #define PARAM_DEBUG 1
 
@@ -35,25 +55,27 @@
 # define DEBUG(format, ...)
 #endif /* MAC_DEBUG */
 
+const double MacParameters::SPEED_OF_LIGHT = 3e8; // m/s
 
-MacParameters::MacParameters (MacContainer *container)
-	: m_container (container)
+
+MacParameters::MacParameters ()
+{}
+
+void
+MacParameters::setInterface (NetInterface80211 *interface)
 {
-	DEBUG ("slot %f", getSlotTime ());
-	DEBUG ("SIFS %f", getSIFS ());
-	DEBUG ("ACK timeout %f", getACKTimeoutDuration ());
-	DEBUG ("CTS timeout %f", getCTSTimeoutDuration ());
+	m_interface = interface;
 }
 
 int
 MacParameters::getSelf (void)
 {
-	return m_container->selfAddress ();
+	return m_interface->getMacAddress ();
 }
 double 
 MacParameters::calculateBaseTxDuration (int size)
 {
-	return m_container->phy ()->calculateTxDuration (0, size);
+	return m_interface->phy ()->calculateTxDuration (0, size);
 }
 
 int 

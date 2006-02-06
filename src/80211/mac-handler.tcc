@@ -22,6 +22,7 @@
 #define MAC_HANDLER_TCC
 
 #include "scheduler.h"
+#include <cassert>
 
 template<typename TYPE>
 class StaticHandler : public Handler
@@ -75,11 +76,11 @@ private:
 
 
 template <typename TYPE>
-StaticHandler<TYPE>::StaticHandler<TYPE> (TYPE *obj, StaticHandler_TYPE handler)
+StaticHandler<TYPE>::StaticHandler (TYPE *obj, StaticHandler_TYPE handler)
 	: m_obj (obj) , m_handler (handler)
 {}
 template <typename TYPE>
-StaticHandler<TYPE>::~StaticHandler<TYPE> ()
+StaticHandler<TYPE>::~StaticHandler ()
 {}
 template <typename TYPE>
 void 
@@ -97,6 +98,7 @@ StaticHandler<TYPE>::start (double delay)
 	 *     see a very confused scheduler.
 	 * Been there, done that.
 	 */
+	assert (!isRunning ());
 	m_event.uid_ = 0;
 	m_event.time_ = 0.0;
 	Scheduler::instance ().schedule (this, &m_event, delay);
@@ -130,17 +132,18 @@ StaticHandler<TYPE>::handle (Event *e)
 
 
 template <typename TYPE>
-DynamicHandler<TYPE>::DynamicHandler<TYPE> (TYPE *obj, DynamicHandler_TYPE handler)
+DynamicHandler<TYPE>::DynamicHandler (TYPE *obj, DynamicHandler_TYPE handler)
 	: m_obj (obj) , m_handler (handler),
 	  m_event (0)
 {}
 template <typename TYPE>
-DynamicHandler<TYPE>::~DynamicHandler<TYPE> ()
+DynamicHandler<TYPE>::~DynamicHandler ()
 {}
 template <typename TYPE>
 void 
 DynamicHandler<TYPE>::start (class MacCancelableEvent *e, double delay)
 {
+	assert (!isRunning ());
 	m_event = e;
 	Scheduler::instance ().schedule (this, e, delay);
 }

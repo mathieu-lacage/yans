@@ -16,132 +16,51 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ * In addition, as a special exception, the copyright holders of
+ * this module give you permission to combine (via static or
+ * dynamic linking) this module with free software programs or
+ * libraries that are released under the GNU LGPL and with code
+ * included in the standard release of ns-2 under the Apache 2.0
+ * license or under otherwise-compatible licenses with advertising
+ * requirements (or modified versions of such code, with unchanged
+ * license).  You may copy and distribute such a system following the
+ * terms of the GNU GPL for this module and the licenses of the
+ * other code concerned, provided that you include the source code of
+ * that other code when and as the GNU GPL requires distribution of
+ * source code.
+ *
+ * Note that people who make modified versions of this module
+ * are not obligated to grant this special exception for their
+ * modified versions; it is their choice whether to do so.  The GNU
+ * General Public License gives permission to release a modified
+ * version without this exception; this exception also makes it
+ * possible to release a modified version which carries forward this
+ * exception.
+ *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
 #include "tspec.h"
 
-#include <tclcl.h>
-#include <stdlib.h>
-
-
-static class TSpecClass: public TclClass {
-public:
-        TSpecClass() : TclClass("TSPEC") {}
-        TclObject* create(int, const char*const*) {
-                return (new TSpec ());
-        }
-} class_TSpec;
-
-
-
 TSpec::TSpec ()
-{
-	initialize ("nominalMSDUSize", &m_nominalMSDUSize, 1500);
-	initialize ("maximalMSDUSize", &m_maximalMSDUSize, 1500);
-	initialize ("minimumServiceInterval", &m_minimumServiceInterval, 0.0);
-	initialize ("maximumServiceInterval", &m_maximumServiceInterval, 1.0);
-	initialize ("inactivityInterval", &m_inactivityInterval, 1.0);
-	initialize ("suspensionInterval", &m_suspensionInterval, 1.0);
-	initialize ("serviceStartTime", &m_serviceStartTime, 1.0);
-	initialize ("minimumDataRate", &m_minimumDataRate, 100000);
-	initialize ("meanDataRate", &m_meanDataRate, 10000);
-	initialize ("peakDataRate", &m_peakDataRate, 10000);
-	initialize ("burstSize", &m_burstSize, 4000);
-	initialize ("delayBound", &m_delayBound, 0.0);
-	initialize ("minimumPhyMode", &m_minimumPhyMode, 0);
-	initialize ("surplusBandwidthAllowance", &m_surplusBandwidthAllowance, 1.5);
-	initialize ("mediumTime", &m_mediumTime, 1.0);
-}
+	: m_nominalMsduSize (1500),
+	  m_maximalMsduSize (1500),
+	  m_minimumServiceInterval (0.0),
+	  m_maximumServiceInterval (1.0),
+	  m_inactivityInterval (1.0),
+	  m_suspensionInterval (1.0),
+	  m_serviceStartTime (1.0),
+	  m_minimumDataRate (100000),
+	  m_meanDataRate (10000),
+	  m_peakDataRate (10000),
+	  m_burstSize (4000),
+	  m_delayBound (0.0),
+	  m_minimumPhyMode (0),
+	  m_surplusBandwidthAllowance (1.5),
+	  m_mediumTime (1.0)
+{}
 
-void
-TSpec::initialize (char const *varName, uint32_t *variable, uint32_t defaultValue)
-{
-	if (!isDefined (varName)) {
-		define (varName, defaultValue);
-	}
-	bind (varName, variable);
-}
-void
-TSpec::initialize (char const *varName, double *variable, double defaultValue)
-{
-	if (!isDefined (varName)) {
-		define (varName, defaultValue);
-	}
-	bind (varName, variable);
-}
-
-void
-TSpec::define (char const *varName, uint32_t defaultValue)
-{
-	Tcl& tcl=Tcl::instance();
-	tcl.evalf ("TSPEC set %s %u", varName, defaultValue);
-}
-void
-TSpec::define (char const *varName, double defaultValue)
-{
-	Tcl& tcl=Tcl::instance();
-	tcl.evalf ("TSPEC set %s %f", varName, defaultValue);
-}
-
-bool
-TSpec::isDefined (char const *varName)
-{
-	Tcl& tcl=Tcl::instance();
-	tcl.evalf ("catch \"TSPEC set %s\" val", varName);
-	if (strcmp ((char *)tcl.result (), "0") == 0) {
-		return true;
-	} else {
-		return false;
-	}
-}
-
-int
-TSpec::command(int argc, const char*const* argv)
-{
-	if (argc == 3) {
-		if (strcmp (argv[1], "trafficType") == 0) {
-			if (strcmp (argv[2], "periodic") == 0) {
-				m_trafficType = PERIODIC;
-			} else if (strcmp (argv[2], "aperiodic") == 0) {
-				m_trafficType = APERIODIC;
-			}
-			return TCL_OK;
-		} else if (strcmp (argv[1], "TSID") == 0) {
-			m_TSID = atoi (argv[2]);
-			return TCL_OK;
-		} else if (strcmp (argv[1], "linkDirection") == 0) {
-			if (strcmp (argv[2], "uplink") == 0) {
-				m_direction = UPLINK;
-			} else if (strcmp (argv[2], "downlink") == 0) {
-				m_direction = DOWNLINK;
-			} else if (strcmp (argv[2], "bidilink") == 0) {
-				m_direction = BIDILINK;
-			} else if (strcmp (argv[2], "directlink") == 0) {
-				m_direction = DIRECTLINK;
-			}
-			return TCL_OK;
-		} else if (strcmp (argv[1], "accessPolicy") == 0) {
-			if (strcmp (argv[2], "HCCA") == 0) {
-				m_accessPolicy = HCCA;
-			} else if (strcmp (argv[2], "EDCA") == 0) {
-				m_accessPolicy = EDCA;
-			} else if (strcmp (argv[2], "HEMM") == 0) {
-				m_accessPolicy = HEMM;
-			}
-			return TCL_OK;
-		} else if (strcmp (argv[1], "userPriority") == 0) {
-			m_UP = atoi (argv[2]);
-			return TCL_OK;
-		}
-	}
-	// XXX: we could implement getting these values too. we will
-	// see later if it is really needed.
-	return TclObject::command(argc,argv);
-}
-
-
-enum trafficType_e
+enum TSpec::trafficType_e
 TSpec::getTrafficType (void) const
 {
 	return m_trafficType;
@@ -151,12 +70,12 @@ TSpec::getTSID (void) const
 {
 	return m_TSID;
 }
-enum direction_e 
+enum TSpec::direction_e 
 TSpec::getLinkDirection (void) const
 {
 	return m_direction;
 }
-enum accessPolicy_e 
+enum TSpec::accessPolicy_e 
 TSpec::getAccessPolicy (void) const
 {
 	return m_accessPolicy;
@@ -171,12 +90,12 @@ TSpec::getUserPriority (void) const
 uint16_t 
 TSpec::getNominalMSDUSize (void) const
 {
-	return (uint16_t)m_nominalMSDUSize;
+	return (uint16_t)m_nominalMsduSize;
 }
 uint16_t 
 TSpec::getMaximalMSDUSize (void) const
 {
-	return (uint16_t)m_maximalMSDUSize;
+	return (uint16_t)m_maximalMsduSize;
 }
 double 
 TSpec::getMinimumServiceInterval (void) const
@@ -253,16 +172,36 @@ TSpec::getMediumTime (void) const
 
 
 
-
 void 
-TSpec::setNominalMSDUSize (uint16_t size)
+TSpec::setTrafficType (enum trafficType_e trafficType)
 {
-	m_nominalMSDUSize = size;
+	m_trafficType = trafficType;
 }
 void 
-TSpec::setMaximalMSDUSize (uint16_t size)
+TSpec::setLinkDirection (enum direction_e direction)
 {
-	m_maximalMSDUSize = size;
+	m_direction = direction;
+}
+void 
+TSpec::setAccessPolicy (enum accessPolicy_e policy)
+{
+	m_accessPolicy = policy;
+}
+void 
+TSpec::setUserPriority (uint8_t up)
+{
+	m_UP = up;
+}
+
+void 
+TSpec::setNominalMsduSize (uint16_t size)
+{
+	m_nominalMsduSize = size;
+}
+void 
+TSpec::setMaximalMsduSize (uint16_t size)
+{
+	m_maximalMsduSize = size;
 }
 void 
 TSpec::setMinimumServiceInterval (double interval)

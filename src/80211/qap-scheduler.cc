@@ -16,6 +16,27 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ * In addition, as a special exception, the copyright holders of
+ * this module give you permission to combine (via static or
+ * dynamic linking) this module with free software programs or
+ * libraries that are released under the GNU LGPL and with code
+ * included in the standard release of ns-2 under the Apache 2.0
+ * license or under otherwise-compatible licenses with advertising
+ * requirements (or modified versions of such code, with unchanged
+ * license).  You may copy and distribute such a system following the
+ * terms of the GNU GPL for this module and the licenses of the
+ * other code concerned, provided that you include the source code of
+ * that other code when and as the GNU GPL requires distribution of
+ * source code.
+ *
+ * Note that people who make modified versions of this module
+ * are not obligated to grant this special exception for their
+ * modified versions; it is their choice whether to do so.  The GNU
+ * General Public License gives permission to release a modified
+ * version without this exception; this exception also makes it
+ * possible to release a modified version which carries forward this
+ * exception.
+ *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
@@ -56,7 +77,6 @@
  */
 
 #include "qap-scheduler.h"
-#include "mac-container.h"
 #include "mac-parameters.h"
 #include "mac-dcf-parameters.h"
 #include "mac-high-qap.h"
@@ -64,6 +84,11 @@
 #include "tspec.h"
 #include "dcf.h"
 #include "mac-tx-middle.h"
+#include "net-interface-80211.h"
+#include "common.h"
+#include "phy-80211.h"
+
+#include "packet.h"
 
 
 #ifndef QAP_SCHEDULER_TRACE
@@ -72,7 +97,7 @@
 
 #ifdef QAP_SCHEDULER_TRACE
 # define TRACE(format, ...) \
-	printf ("SCHED TRACE %d %f " format "\n", m_container->selfAddress (), \
+	printf ("SCHED TRACE %d %f " format "\n", m_interface->getMacAddress (), \
                 Scheduler::instance ().clock (), ## __VA_ARGS__);
 #else /* QAP_SCHEDULER_TRACE */
 # define TRACE(format, ...)
@@ -168,9 +193,8 @@ private:
 };
 
 
-QapScheduler::QapScheduler (MacContainer *container)
-	: m_container (container),
-	  m_currentServiceInterval (0.0),
+QapScheduler::QapScheduler ()
+	: m_currentServiceInterval (0.0),
 	  m_sequence (0)
 {
 	m_beaconTxListener = new MyBeaconMacLowTransmissionListener (this);
@@ -178,52 +202,71 @@ QapScheduler::QapScheduler (MacContainer *container)
 	m_capStart = new DynamicHandler<QapScheduler> (this, &QapScheduler::capStartTimer);
 	m_beacon = new DynamicHandler<QapScheduler> (this, &QapScheduler::beaconTimer);
 	m_txopStart = new DynamicHandler<QapScheduler> (this, &QapScheduler::txopStartTimer);
-	m_beacon->start (parameters ()->getBeaconInterval ());
 
-	m_dcfParameters[AC_BE] = new MacDcfParameters (container);
-	m_dcfParameters[AC_BK] = new MacDcfParameters (container);
-	m_dcfParameters[AC_VI] = new MacDcfParameters (container);
-	m_dcfParameters[AC_VO] = new MacDcfParameters (container);
-
-	/* default parameters from section 7.3.2.14 802.11e/D12.1*/
-	uint16_t CWmin;
-	uint16_t CWmax;
-	if (true) {
-		/* 802.11a */
-		CWmin = 15;
-		CWmax = 1023;
-		m_dcfParameters[AC_VO]->setTxopLimit (1.504e-3);
-		m_dcfParameters[AC_VI]->setTxopLimit (3.008e-3);
-	} else {
-		/* 802.11b */
-		CWmin = 31;
-		CWmax = 1023;
-		m_dcfParameters[AC_VO]->setTxopLimit (3.264e-3);
-		m_dcfParameters[AC_VI]->setTxopLimit (6.016e-3);
-	}
+	m_dcfParameters[AC_BE] = new MacDcfParameters ();
+	m_dcfParameters[AC_BK] = new MacDcfParameters ();
+	m_dcfParameters[AC_VI] = new MacDcfParameters ();
+	m_dcfParameters[AC_VO] = new MacDcfParameters ();
 
 	m_dcfParameters[AC_BK]->setACM (false);
 	m_dcfParameters[AC_BK]->setAIFSN (7);
-	m_dcfParameters[AC_BK]->setCWmin (CWmin);
-	m_dcfParameters[AC_BK]->setCWmax (CWmax);
 	m_dcfParameters[AC_BK]->setTxopLimit (0.0);
 
 	m_dcfParameters[AC_BE]->setACM (false);
 	m_dcfParameters[AC_BE]->setAIFSN (3);
-	m_dcfParameters[AC_BE]->setCWmin (CWmin);
-	m_dcfParameters[AC_BE]->setCWmax (CWmax);
 	m_dcfParameters[AC_BE]->setTxopLimit (0.0);
 
 	m_dcfParameters[AC_VI]->setACM (false);
 	m_dcfParameters[AC_VI]->setAIFSN (2);
-	m_dcfParameters[AC_VI]->setCWmin ((CWmin+1)/2-1);
-	m_dcfParameters[AC_VI]->setCWmax ((CWmin));
 
 	m_dcfParameters[AC_VO]->setACM (false);
 	m_dcfParameters[AC_VO]->setAIFSN (2);
+
+	set80211a ();
+}
+
+void
+QapScheduler::updateCWboundaries (uint16_t CWmin, uint16_t CWmax)
+{
+	/* default parameters from section 7.3.2.14 802.11e/D12.1*/
+	m_dcfParameters[AC_BK]->setCWmin (CWmin);
+	m_dcfParameters[AC_BK]->setCWmax (CWmax);
+	m_dcfParameters[AC_BE]->setCWmin (CWmin);
+	m_dcfParameters[AC_BE]->setCWmax (CWmax);
+	m_dcfParameters[AC_VI]->setCWmin ((CWmin+1)/2-1);
+	m_dcfParameters[AC_VI]->setCWmax ((CWmin));
 	m_dcfParameters[AC_VO]->setCWmin ((CWmin+1)/4-1);
 	m_dcfParameters[AC_VO]->setCWmax ((CWmin+1)/2-1);
+}
 
+void
+QapScheduler::set80211a (void)
+{
+	m_dcfParameters[AC_VO]->setTxopLimit (1.504e-3);
+	m_dcfParameters[AC_VI]->setTxopLimit (3.008e-3);
+	updateCWboundaries (15, 1023);
+}
+
+void
+QapScheduler::set80211b (void)
+{
+	m_dcfParameters[AC_VO]->setTxopLimit (3.264e-3);
+	m_dcfParameters[AC_VI]->setTxopLimit (6.016e-3);
+	updateCWboundaries (31, 1023);
+}
+
+void 
+QapScheduler::setInterface (NetInterface80211 *interface)
+{
+	m_interface = interface;
+
+	MacParameters *parameters = interface->parameters ();
+	m_beacon->start (parameters->getBeaconInterval ());
+
+	m_dcfParameters[AC_BE]->setParameters (parameters);
+	m_dcfParameters[AC_BK]->setParameters (parameters);
+	m_dcfParameters[AC_VI]->setParameters (parameters);
+	m_dcfParameters[AC_VO]->setParameters (parameters);
 }
 
 void
@@ -241,9 +284,11 @@ QapScheduler::storeEdcaParametersInPacket (Packet *packet)
 Dcf *
 QapScheduler::createDcf (enum ac_e ac)
 {
-	MacDcfParameters *dcfParameters = new MacDcfParameters (m_container);
+	MacDcfParameters *dcfParameters = new MacDcfParameters ();
+	dcfParameters->setParameters (m_interface->parameters ());
 	*dcfParameters = *(m_dcfParameters[ac]);
-	Dcf *dcf = new Dcf (m_container, dcfParameters);
+	Dcf *dcf = new Dcf (dcfParameters);
+	dcf->setInterface (m_interface);
 	return dcf;
 }
 
@@ -251,7 +296,7 @@ QapScheduler::createDcf (enum ac_e ac)
 Packet *
 QapScheduler::getPacketFor (int destination)
 {
-	Packet *packet = hdr_mac_80211::create (m_container->selfAddress ());
+	Packet *packet = hdr_mac_80211::create (m_interface->getMacAddress ());
 	setFinalDestination (packet, destination);
 	setDestination (packet, destination);
 	return packet;
@@ -263,17 +308,24 @@ QapScheduler::getPacketSize (enum mac_80211_packet_type type)
 	return parameters ()->getPacketSize (type);
 }
 
-Phy80211 *
-QapScheduler::phy (void)
-{
-	return m_container->phy ();
-}
-
 MacLow *
 QapScheduler::low (void)
 {
-	return m_container->macLow ();
+	return m_interface->low ();
 }
+
+Phy80211 *
+QapScheduler::phy (void)
+{
+	return m_interface->phy ();
+}
+
+MacParameters *
+QapScheduler::parameters (void)
+{
+	return m_interface->parameters ();
+}
+
 
 double
 QapScheduler::now (void)
@@ -281,16 +333,10 @@ QapScheduler::now (void)
 	return Scheduler::instance ().clock ();
 }
 
-MacParameters *
-QapScheduler::parameters (void)
-{
-	return m_container->parameters ();
-}
-
 double
 QapScheduler::duration (int size, int mode)
 {
-	double txDuration = m_container->phy ()->calculateTxDuration (mode, size);
+	double txDuration = phy ()->calculateTxDuration (mode, size);
 	return txDuration;
 }
 
@@ -588,7 +634,7 @@ QapScheduler::sendCfPollTo (int destination, uint8_t tsid, double txopDuration)
 	setNoAck (packet);
 	setTID (packet, tsid);
 	setFragmentNumber (packet, 0);
-	uint16_t sequence = m_container->macTxMiddle ()->getNextSequenceNumberFor (packet);
+	uint16_t sequence = m_interface->txMiddle ()->getNextSequenceNumberFor (packet);
 	setSequenceNumber (packet, sequence);
 	low ()->disableRTS ();
 	low ()->enableOverrideDurationId (txopDuration);
@@ -608,20 +654,20 @@ QapScheduler::finishCap (void)
 	 * before its normal end such that contention-based access
 	 * can resume.
 	 */
-	double cfPollDuration = m_container->phy ()->calculateTxDuration (0, getPacketSize (MAC_80211_MGT_CFPOLL));
+	double cfPollDuration = phy ()->calculateTxDuration (0, getPacketSize (MAC_80211_MGT_CFPOLL));
 	double cfPollEnd = now () + cfPollDuration;
 	if (cfPollEnd < m_capEndTime) {
 		low ()->disableACK ();
-		sendCfPollTo (m_container->selfAddress (), 0, 0.0);
+		sendCfPollTo (m_interface->getMacAddress (), 0, 0.0);
 	}
 }
 
 void
 QapScheduler::startCap (void)
 {
-	TRACE ("start CAP");
 	m_capStartTime = now ();
 	double capEnd = m_capStartTime + getCurrentTotalCapTime ();
+	TRACE ("start CAP until %f", capEnd);
 	m_capEndTime = min (capEnd, m_nextBeaconStartTime);
 	m_txopIterator = m_admitted.begin ();
 
@@ -666,7 +712,7 @@ QapScheduler::capStartTimer (MacCancelableEvent *event)
 		/* Somehow, we got delayed so we need to wait
 		 * until next idle+PIFS.
 		 */
-		TRACE ("cannot start CAP now. restart delay.");
+		TRACE ("cannot start CAP now. restart delay. -- 1");
 		double nextCapStartDelay = 0.0;
 		nextCapStartDelay += phy ()->getDelayUntilIdle ();
 		nextCapStartDelay += parameters ()->getPIFS ();
@@ -690,7 +736,7 @@ QapScheduler::beaconTxNextData (void)
 		return;
 	}
 	if (phy ()->getState () != Phy80211::IDLE) {
-		TRACE ("cannot start CAP now. restart delay.");
+		TRACE ("cannot start CAP now. restart delay. -- 2");
 		double nextCapStartDelay = 0.0;
 		nextCapStartDelay += phy ()->getDelayUntilIdle ();
 		nextCapStartDelay += parameters ()->getPIFS ();
@@ -725,7 +771,7 @@ QapScheduler::beaconTimer (MacCancelableEvent *event)
 	storeEdcaParametersInPacket (packet);
 	setAC (packet, AC_SPECIAL);
 	setFragmentNumber (packet, 0);
-	uint16_t sequence = m_container->macTxMiddle ()->getNextSequenceNumberFor (packet);
+	uint16_t sequence = m_interface->txMiddle ()->getNextSequenceNumberFor (packet);
 	setSequenceNumber (packet, sequence);
 	low ()->disableACK ();
 	low ()->disableRTS ();

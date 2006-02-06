@@ -16,11 +16,33 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ * In addition, as a special exception, the copyright holders of
+ * this module give you permission to combine (via static or
+ * dynamic linking) this module with free software programs or
+ * libraries that are released under the GNU LGPL and with code
+ * included in the standard release of ns-2 under the Apache 2.0
+ * license or under otherwise-compatible licenses with advertising
+ * requirements (or modified versions of such code, with unchanged
+ * license).  You may copy and distribute such a system following the
+ * terms of the GNU GPL for this module and the licenses of the
+ * other code concerned, provided that you include the source code of
+ * that other code when and as the GNU GPL requires distribution of
+ * source code.
+ *
+ * Note that people who make modified versions of this module
+ * are not obligated to grant this special exception for their
+ * modified versions; it is their choice whether to do so.  The GNU
+ * General Public License gives permission to release a modified
+ * version without this exception; this exception also makes it
+ * possible to release a modified version which carries forward this
+ * exception.
+ *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
 #include <iostream>
 #include <cassert>
+#include <math.h>
 
 #include "dcf.h"
 #include "phy-80211.h"
@@ -28,9 +50,9 @@
 #include "precision.h"
 #include "mac-dcf-parameters.h"
 #include "rng-uniform.h"
-#include "mac-container.h"
 #include "mac-parameters.h"
 #include "mac-traces.h"
+#include "net-interface-80211.h"
 
 
 #ifndef DCF_TRACE
@@ -39,7 +61,7 @@
 
 #ifdef DCF_TRACE
 # define TRACE(format, ...) \
-  printf ("DCF %d %f " format "\n", m_container->selfAddress (), \
+  printf ("DCF %d %f " format "\n", m_interface->getMacAddress (), \
           Scheduler::instance ().clock (), ## __VA_ARGS__);
 #else /* DCF_TRACE */
 # define TRACE(format, ...)
@@ -99,9 +121,8 @@ private:
 
 
 
-Dcf::Dcf (MacContainer *container, MacDcfParameters *parameters)
-	: m_container (container),
-	  m_parameters (parameters),
+Dcf::Dcf (MacDcfParameters *parameters)
+	: m_parameters (parameters),
 	  m_backoffStart (0.0),
 	  m_backoffLeft (0.0),
 	  m_lastNavStart (0.0),
@@ -117,13 +138,9 @@ Dcf::Dcf (MacContainer *container, MacDcfParameters *parameters)
 	  m_rxing (false),
 	  m_sleeping (false)
 {
-	Phy80211 *phy = container->phy ();
-	MacLow *low = container->macLow ();
 	m_phyListener = new DcfPhyListener (this);
 	m_navListener = new DcfNavListener (this);
 	m_accessTimer = new DynamicHandler<Dcf> (this, &Dcf::accessTimeout);
-	low->registerNavListener (m_navListener);
-	phy->registerListener (m_phyListener);
 	resetCW ();
 	//m_random = new RngUniform ();
 }
@@ -144,6 +161,13 @@ Dcf::parameters (void)
 	return m_parameters;
 }
 
+void
+Dcf::setInterface (NetInterface80211 *interface)
+{
+	m_interface = interface;
+	m_interface->low ()->registerNavListener (m_navListener);
+	m_interface->phy ()->registerListener (m_phyListener);
+}
 
 void 
 Dcf::requestAccess (void)
@@ -164,7 +188,7 @@ Dcf::requestAccess (void)
 		 */
 		TRACE ("request access X delayed for %f", delayUntilAccessGranted);
 		m_accessTimer->start (delayUntilAccessGranted);
-	} else if (m_container->phy ()->getState () != Phy80211::IDLE) {
+	} else if (m_interface->phy ()->getState () != Phy80211::IDLE) {
 		/* someone else has accessed the medium.
 		 * generate a backoff, start timer.
 		 */
@@ -261,7 +285,7 @@ Dcf::pickBackoffDelay (void)
 	       m_parameters->getCWmax (), 
 	       pickedCW);
 	double delay =  pickedCW * 
-		m_container->parameters ()->getSlotTime ();
+		m_interface->parameters ()->getSlotTime ();
 	return delay;
 }
 void
@@ -308,7 +332,7 @@ Dcf::getDIFS (void) const
 double
 Dcf::getEIFS (void) const
 {
-	return m_parameters->getEIFS ();
+	return m_parameters->getEIFS (m_interface->phy ());
 }
 
 /***************************************************************

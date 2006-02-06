@@ -16,11 +16,31 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ * In addition, as a special exception, the copyright holders of
+ * this module give you permission to combine (via static or
+ * dynamic linking) this module with free software programs or
+ * libraries that are released under the GNU LGPL and with code
+ * included in the standard release of ns-2 under the Apache 2.0
+ * license or under otherwise-compatible licenses with advertising
+ * requirements (or modified versions of such code, with unchanged
+ * license).  You may copy and distribute such a system following the
+ * terms of the GNU GPL for this module and the licenses of the
+ * other code concerned, provided that you include the source code of
+ * that other code when and as the GNU GPL requires distribution of
+ * source code.
+ *
+ * Note that people who make modified versions of this module
+ * are not obligated to grant this special exception for their
+ * modified versions; it is their choice whether to do so.  The GNU
+ * General Public License gives permission to release a modified
+ * version without this exception; this exception also makes it
+ * possible to release a modified version which carries forward this
+ * exception.
+ *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
 #include "mac-high-nqap.h"
-#include "mac-80211.h"
 #include "arf-mac-stations.h"
 #include "mac-stations.h"
 #include "mac-station.h"
@@ -28,10 +48,11 @@
 #include "mac-dcf-parameters.h"
 #include "dcf.h"
 #include "dca-txop.h"
-#include "mac-container.h"
 #include "mac-queue-80211e.h"
 #include "hdr-mac-80211.h"
 #include "mac-traces.h"
+#include "net-interface-80211.h"
+#include "common.h"
 
 #include "packet.h"
 
@@ -41,31 +62,47 @@
 
 #ifdef NQAP_TRACE
 # define TRACE(format, ...) \
-	printf ("NQAP TRACE %d %f " format "\n", container ()->selfAddress (), \
+	printf ("NQAP TRACE %d %f " format "\n", m_interface->getMacAddress (), \
                 Scheduler::instance ().clock (), ## __VA_ARGS__);
 #else /* NQAP_TRACE */
 # define TRACE(format, ...)
 #endif /* NQAP_TRACE */
 
 
-MacHighNqap::MacHighNqap (MacContainer *container)
-	: MacHighAp (container)
+MacHighNqap::MacHighNqap ()
+	: MacHighAp ()
 {
-	m_dcfParameters = new MacDcfParameters (container);
-	m_dcf = new Dcf (container, m_dcfParameters);
-	m_queue = new MacQueue80211e (container->parameters ());
-	new DcaTxop (m_dcf, m_queue, container);
+	m_dcfParameters = new MacDcfParameters ();
+	m_dcf = new Dcf (m_dcfParameters);
+	m_queue = new MacQueue80211e ();
 
 	m_sendBeaconTimer = new StaticHandler<MacHighNqap> (this, &MacHighNqap::sendBeacon);
-	m_sendBeaconTimer->start (parameters ()->getBeaconInterval ());
 }
 MacHighNqap::~MacHighNqap ()
 {}
 
+NetInterface80211 *
+MacHighNqap::interface (void)
+{
+	return m_interface;
+}
+
+void
+MacHighNqap::setInterface (NetInterface80211 *interface)
+{
+	m_interface = interface;
+	DcaTxop *dcaTxop = new DcaTxop (m_dcf, m_queue);
+	dcaTxop->setInterface (interface);
+	m_dcf->setInterface (interface);
+	m_dcfParameters->setParameters (interface->parameters ());
+	m_sendBeaconTimer->start (parameters ()->getBeaconInterval ());
+}
+
+
 MacParameters *
 MacHighNqap::parameters (void)
 {
-	return container ()->parameters ();
+	return m_interface->parameters ();
 }
 
 void
@@ -88,7 +125,7 @@ MacHighNqap::sendBeacon (void)
 Packet *
 MacHighNqap::getPacketFor (int destination)
 {
-	Packet *packet = hdr_mac_80211::create (container ()->selfAddress ());
+	Packet *packet = hdr_mac_80211::create (m_interface->getMacAddress ());
 	setFinalDestination (packet, destination);
 	setDestination (packet, destination);
 	return packet;

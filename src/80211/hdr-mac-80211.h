@@ -16,61 +16,39 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ * In addition, as a special exception, the copyright holders of
+ * this module give you permission to combine (via static or
+ * dynamic linking) this module with free software programs or
+ * libraries that are released under the GNU LGPL and with code
+ * included in the standard release of ns-2 under the Apache 2.0
+ * license or under otherwise-compatible licenses with advertising
+ * requirements (or modified versions of such code, with unchanged
+ * license).  You may copy and distribute such a system following the
+ * terms of the GNU GPL for this module and the licenses of the
+ * other code concerned, provided that you include the source code of
+ * that other code when and as the GNU GPL requires distribution of
+ * source code.
+ *
+ * Note that people who make modified versions of this module
+ * are not obligated to grant this special exception for their
+ * modified versions; it is their choice whether to do so.  The GNU
+ * General Public License gives permission to release a modified
+ * version without this exception; this exception also makes it
+ * possible to release a modified version which carries forward this
+ * exception.
+ *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #ifndef HDRMAC_80211
 #define HDRMAC_80211
 
-/* Using this code is easy:
- *  - call HDR_MAC_80211 (packet)->foo () as you wish.
- *  - assume that the higher-levels set and get the
- *    fields source, destination and dataType.
- *
- * To understand why it works is clearly a bit more tricky.
- * There are quite a few tricks here so I think it is
- * worth talking about them. Theorically, if you want to 
- * introduce a new packet type, you need to declare a new 
- * header class/structure which features a static 
- * int _offset member and you need to implement a static
- * instance of a subclass of PacketHeaderClass.
- * This static instance should register this new header type
- * and store in the static _offset member the offset at which
- * the header can be accessed by a Packet's access method.
- *
- * This is the theory. Unfortunately, it is not really 
- * possible to create a new packet type and have other pieces
- * of the ns2 codebase start using it even though it provides
- * at least the same functionality. Specifically, you cannot
- * create a new Mac-like packet type to replace the hdr_mac 
- * headers because lots of places access directly to the 
- * hdr_mac header through the HDR_MAC macro. In theory, it 
- * would be possible to remove this dependency on the HDR_MAC 
- * macro (through the introduction of decent methods in the 
- * Mac class such as: set_dst (Packet *, int) and the removal
- * of methods such as hdr_dst (char *, int = -2)) _but_ I have
- * decided to make as little modifications as possible to the 
- * core of ns2 which means that I cannot really do this. 
- * As such, I have ended-up using the same trick used in the
- * previous 802.11 mac which is to use the hdr_mac structure
- * to store my 802.11 header.
- * 
- * For example:
- *   - HDR_MAC_80211: calls hdr_mac::access rather than 
- *     hdr_mac_80211::access.
- *   - class hdr_mac_80211 does not have a static int 
- *     _offset member.
- *   - I do not declare a subclass of PacketHeaderClass.
- *
- * All of this is going to work provided that 
- * sizeof (hdr_mac) >= sizeof (hdr_mac_80211). This constraint 
- * is verified by some special stuff in hdr-mac-80211.cc
- */
-
 #include <stdint.h>
+
+#include "net-node.h"
 
 class Packet;
 
-#define HDR_MAC_80211(p) ((hdr_mac_80211 *)hdr_mac::access(p))
+#define HDR_MAC_80211(p) ((hdr_mac_80211 *)hdr_mac_80211::access(p))
 
 enum mac_80211_packet_type {
 	MAC_80211_CTL_RTS = 0,
@@ -150,6 +128,11 @@ class hdr_mac_80211 {
 	void setBlockAck (void);
 	void setNormalAck (void);
 
+	double getTxAirPower (void) const;
+	void setTxAirPower (double airPower);
+	void setTxNodePosition (NodePosition const *position);
+	void peekTxNodePosition (NodePosition *position) const;
+
 	char const *getTypeString (void) const;
 	
  private:
@@ -175,6 +158,14 @@ class hdr_mac_80211 {
 	int m_destination;
 	int m_finalDestination;
 	int m_source;
+	double m_txAirPower;
+	NodePosition m_txPosition;
+
+	friend class Mac80211HeaderClass;
+	static int offset_;
+public:
+	static int& offset();
+	static hdr_mac_80211* access(const Packet* p);
 };
 
 
