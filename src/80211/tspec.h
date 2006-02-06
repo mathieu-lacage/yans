@@ -119,9 +119,11 @@ private:
 
 
 	void initialize (char const *varName, uint32_t *variable, uint32_t defaultValue);
-	void initialize (char const *varName, uint16_t *variable, uint16_t defaultValue);
 	void initialize (char const *varName, double *variable, double defaultValue);
 	bool isDefined (char const *varName);
+	void define (char const *varName, uint32_t defaultValue);
+	void define (char const *varName, double defaultValue);
+
 };
 
 

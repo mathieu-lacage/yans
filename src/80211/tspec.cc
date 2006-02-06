@@ -57,22 +57,32 @@ TSpec::TSpec ()
 void
 TSpec::initialize (char const *varName, uint32_t *variable, uint32_t defaultValue)
 {
-	if (isDefined (varName)) {
-		bind (varName, variable);
-	} else {
-		*variable = defaultValue;
+	if (!isDefined (varName)) {
+		define (varName, defaultValue);
 	}
+	bind (varName, variable);
 }
 void
 TSpec::initialize (char const *varName, double *variable, double defaultValue)
 {
-	if (isDefined (varName)) {
-		bind (varName, variable);
-	} else {
-		*variable = defaultValue;
+	if (!isDefined (varName)) {
+		define (varName, defaultValue);
 	}
+	bind (varName, variable);
 }
 
+void
+TSpec::define (char const *varName, uint32_t defaultValue)
+{
+	Tcl& tcl=Tcl::instance();
+	tcl.evalf ("TSPEC set %s %u", varName, defaultValue);
+}
+void
+TSpec::define (char const *varName, double defaultValue)
+{
+	Tcl& tcl=Tcl::instance();
+	tcl.evalf ("TSPEC set %s %f", varName, defaultValue);
+}
 
 bool
 TSpec::isDefined (char const *varName)
