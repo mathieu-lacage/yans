@@ -332,7 +332,7 @@ MacParameters::getCapLimit (void)
 double 
 MacParameters::getMinEdcaTrafficProportion (void)
 {
-	return 0.2;
+	return 0.4;
 }
 
 
