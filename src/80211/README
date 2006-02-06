@@ -124,6 +124,12 @@ Its state machine is:
 4) MAC architecture.
 --------------------
 
+The MAC architecture is a bit complicated because we want to support
+both the normal 802.11 protocol and the 802.11e extensions in the same
+codebase.
+
+
+
 The MAC is split is many pieces:
   - Mac80211 is the object which encapsulates the whole MAC stack
     for the rest of ns-2.
@@ -181,107 +187,3 @@ by Whengrong Ji, Junlan Zhou,Mineo Takai and Rajive Bagrodia.
 The code which calculates the backoff duration is located in the Backoff
 class.
 
-5) QoS
--------
-
-Requirements:
-  - allow the use of both 802.11 devices and 802.11e devices at the same
-    time
-  - support Mandatory aspects of 802.11e for now. This includes:
-     - access differentiation through "Access Categories".
-     - access differentiation through TSPEC granting by the QoS AP.
-
-5.0 acronyms
-------------
-
-AC: Access Category
-UP: User Priority
-TID: Traffic Identifier (field of a MAC packet)
-TSID: Traffic Stream Identifier
-TSPEC: Traffic Specification
-       (describes how to map a TSID
-        to a set of QoS requirements and to a UP)
-TS: Traffic Stream
-TCLAS: Traffic Classification 
-       (describes how to map any packet 
-        received from the higher-layers 
-        to a given TS.)
-
-5.1 ACs.
---------
-
-Each Mac has 4 queues which contend for the medium:
- AC_BE: Best Effort
- AC_BK: Background
- AC_VO: Voice
- AC_VI: Video
-Each queue is set a bunch of parameters by the BEACON
-and PROBE_RESPONSE frames.
-  - AIFSN
-  - TXOP limit
-  - ECWmin
-  - ECWmax
-
-UPs are mapped to ACs with section 9.1.3.1, table 20.23
-
-UP --> AC
-
-5.2 TSs
--------
-
-UP <--> TSID <--> QoS requirement
-
-Each packet contains a TID field which is used to identify to which
-QoS stream this packet belongs.
-
-int getUP (int TID) {
-	int UP;
-	if (TID < 8) {
-		UP = TID;
-	} else {
-		int TSID = TID;
-		UP = TSPEC[TSID].UP;
-	}
-	return UP;
-}
-
-
-to manage TSs, there are 4 message types:
-ADDTS_REQUEST:  QSTA --> QAP
-ADDTS_RESPONSE: QSTA <-- QAP
-DELTS_REQUEST:  QSTA --> QAP
-DELTS_RESPONSE: QSTA <-- QAP
-
-A TCLAS is necessary only if you want to map 
-downlink traffic (QAP --> QSTA) to a TSPEC.
-Typically, this would be used to ensure that
-the incomming traffic from a distant telephony
-application to yourself gets proper treatment 
-on the 802.11e network.
-
-5.3 how we export this functionality
-------------------------------------
-
-The MAC supports 2 methods which are also exported
-to tcl.
-/* tspec: describes the requested QoS.
- * tclass: describes the AP tclass if 
- *         downlink traffic is requested.
- * tsid: contains the tsid allocated by the MAC if
- *       the TSPEC is granted. This tsid should be
- *       used to mark the user-level packets' prio_
- *       field. In this case, the tsid is always higher
- *       than or equal to 8.
- * returns OK if TS is granted, FALSE otherwise.
- */
-int requestTS  (TSPEC const *tspec, 
-		TCLAS const *tclas,
-		int *tsid);
-int releaseTS  (int tsid);
-
-If the prio_ field of a packet is marked with a value higher
-than 8, we copy this value in the MAC-level TID field and use
-the UP associated to the TSPEC for this TSID.
-If the prio_ field of a packet is marked with a value strictly
-lower than 8, we use this as the UP of the packet and copy it
-to the MAC-level TID field of the packet.
