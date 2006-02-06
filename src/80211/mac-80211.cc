@@ -111,6 +111,18 @@ Mac80211::hdr_type(char *hdr, u_int16_t type)
 	return (int)mac_header->getDataType ();
 }
 
+int 
+Mac80211::command(int argc, const char*const* argv)
+{
+	int retval;
+	retval = Mac::command (argc, argv);
+	if (argc == 3 &&
+	    strcmp(argv[1], "netif") == 0) {
+		m_low->completeConstruction (peekPhy80211 ());
+	}
+	return retval;
+}
+
 void 
 Mac80211::recv (Packet *p, Handler *h)
 {

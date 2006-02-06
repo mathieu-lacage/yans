@@ -22,73 +22,58 @@
 #ifndef BACKOFF_H
 #define BACKOFF_H
 
-#include <list>
+#include "phy-80211.h"
 
-class NavEvent;
-class Phy80211EventList;
 class MacLow80211;
 
-class Backoff 
+class Backoff : public Phy80211Listener
 {
  public:
 	Backoff (MacLow80211 *mac);
-	/* start a backoff from now */
+	~Backoff ();
 	void start (double backoffStart, double backoffDuration);
 	void cancel (void);
-	/* a packet has been received and its contained
-	 * a valid duration field which might require a
-	 * NAV update.
-	 */
-	void updateNAV (double duration, double now);
-	/* is the current backoff completed. This method
-	 * requires a call to updateToNow before.
-	 */
-	bool isCompleted (void) const;
-	/* how long we have left in the current backoff. 
-	 * This method
-	 * requires a call to updateToNow before.
-	 */
-	double getDurationLeft (void) const;
-
-	/* This operation can be really slow. */
-	void updateToNow (double now);
-
-	bool isVirtualCS_Idle (double now);
-	double getDelayUntilIdle (double now);
-
+	bool isCompleted (double now);
+	double getDelayUntilEnd (double now);
+	bool isNavZero (double now) const;
+	double getDelayUntilNavZero (double now) const;
 	/* Return how many seconds we believe we have left until the
 	 * backoff expires. If the backoff has already expired, 
 	 * this method returns zero.
 	 */
-	double getExpectedDelayToEndFromNow (double now);
+	double getDelayUntilAccessAllowed (double now) const;
+
+	bool wasLastRxOk (void) const;
+	double getLastRxEndTime (void) const;
+
+	void notifyNav (double start, double duration);
+	virtual void notifyRxStart (double now, double duration);
+	virtual void notifyRxEnd (double now, bool receivedOk);
+	virtual void notifyTxStart (double now, double duration);
+	virtual void notifySleep (double now);
+	virtual void notifyWakeup (double now);
 
 private:
-	Phy80211EventList *getPhyEventList (void);
-	double max (double a, double b);
-	double mostRecent (double a, double b, double c, double d);
+	double max (double a, double b) const;
+	double mostRecent (double a, double b, double c) const;
 	void updateBackoff (double time);
-	void recordTxStart (double time);
-	void recordTxEnd (double time);
-	void recordSyncStart (double time);
-	void recordSyncEnd (double time, bool receivedOk);
-	void recordSleep (double time);
-	void recordWakeup (double time);
-	void recordNAV_BusyStart (double time);
-	void recordNAV_BusyEnd (double time);
-	void clearNAV_Until (double time);
-	double getDIFS (void);
-	double getEIFS (void);
+	double getDIFS (void) const;
+	double getEIFS (void) const;
+	double getAccessAllowedStart (void) const;
 
 	MacLow80211 *m_mac;
-	std::list<NavEvent *> m_navList;
 	double m_backoffStart;
 	double m_backoffLeft;
-	bool   m_NAV_Running;
-	double m_lastNAV_BackoffStart;
-	double m_lastTxBackoffStart;
-	double m_lastRxBackoffStart;
-	int m_backoffId;
-	bool m_txing;
+	double m_lastNavStart;
+	double m_lastNavDuration;
+	double m_lastRxStart;
+	double m_lastRxDuration;
+	bool m_lastRxReceivedOk;
+	double m_lastRxEnd;
+	double m_lastTxStart;
+	double m_lastTxDuration;
+	double m_lastSleepStart;
+	double m_lastWakeupStart;
 	bool m_rxing;
 	bool m_sleeping;
 };

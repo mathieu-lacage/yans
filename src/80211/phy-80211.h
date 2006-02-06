@@ -48,7 +48,18 @@ class EndRxHandler;
 class TransmissionMode;
 class PhyRxEvent;
 class RngUniform;
-class Phy80211EventList;
+
+class Phy80211Listener {
+public:
+	virtual ~Phy80211Listener ();
+
+	virtual void notifyRxStart (double now, double duration) = 0;
+	virtual void notifyRxEnd (double now, bool receivedOk) = 0;
+	virtual void notifyTxStart (double now, double duration) = 0;
+	virtual void notifySleep (double now) = 0;
+	virtual void notifyWakeup (double now) = 0;
+};
+
 
 
 class Phy80211 : public Phy 
@@ -79,7 +90,7 @@ public:
 	void sleep (void);
 	void wakeup (void);
 
-	Phy80211EventList *peekEventList (void) const;
+	void registerListener (Phy80211Listener *listener);
 
 	enum Phy80211State getState (void);
 	double getStateDuration (void);
@@ -159,7 +170,7 @@ private:
 	Antenna     *m_antenna;
 	EndRxHandler *m_endRxHandler;
 	RngUniform *m_random;
-	Phy80211EventList *m_eventList;
+	Phy80211Listener *m_listener;
 	vector<class TransmissionMode *> m_modes;
 	list<PhyRxEvent *> m_rxEventList;
 

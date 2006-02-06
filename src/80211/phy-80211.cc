@@ -70,6 +70,13 @@ public:
 } class_Phy80211;
 
 /****************************************************************
+ *       This destructor is needed.
+ ****************************************************************/
+
+Phy80211Listener::~Phy80211Listener ()
+{}
+
+/****************************************************************
  *       Phy event class
  ****************************************************************/
 
@@ -259,7 +266,7 @@ Phy80211::Phy80211 ()
 	  m_antenna (0),
 	  m_endRxHandler (new EndRxHandler (this, &Phy80211::endRx)),
 	  m_random (new RngUniform ()),
-	  m_eventList (new Phy80211EventList ()),
+	  m_listener (0),
 	  m_sleeping (false),
 	  m_rxing (false),
 	  m_endTx (0.0),
@@ -309,10 +316,10 @@ Phy80211::~Phy80211 ()
 
 }
 
-Phy80211EventList *
-Phy80211::peekEventList (void) const
+void 
+Phy80211::registerListener (Phy80211Listener *listener)
 {
-	return m_eventList;
+	m_listener = listener;
 }
 
 char const *
@@ -542,7 +549,7 @@ Phy80211::sleep (void)
 	if (getState () == Phy80211::SYNC) {
 		m_endRxHandler->cancel ();
 	}
-	m_eventList->notifySleep (now ());
+	m_listener->notifySleep (now ());
 	switchToSleep ();
 }
 
@@ -553,7 +560,7 @@ Phy80211::wakeup (void)
 	 * went to sleep earlier.
 	 */
 	assert (getState () == Phy80211::SLEEP);
-	m_eventList->notifyWakeup (now ());
+	m_listener->notifyWakeup (now ());
 	switchToIdleFromSleep ();
 }
 
@@ -679,7 +686,7 @@ Phy80211::startTx (Packet *packet)
 	double txDuration = calculatePacketDuration (getHeaderMode (packet), 
 						     getPayloadMode (packet),
 						     getSize (packet));
-	m_eventList->notifyTxStart (now (), txDuration);
+	m_listener->notifyTxStart (now (), txDuration);
 	switchToTx (txDuration);
 	peekChannel ()->recv (packet, this);
 }
@@ -703,7 +710,7 @@ Phy80211::startRx (Packet *packet)
 		
 		if (power > dBmToW (m_rxThreshold)) {
 			// sync to signal
-			m_eventList->notifyRxStart (now ());
+			m_listener->notifyRxStart (now (), event->getDuration ());
 			switchToSyncFromIdle ();
 			m_endRxHandler->start (event, packet, 
 					       event->getDuration ());
@@ -879,7 +886,7 @@ Phy80211::endRx (PhyRxEvent *phyRxEvent, Packet *packet)
 	HDR_CMN (packet)->direction() = hdr_cmn::UP;
 	
 	uptarget ()->recv (packet);
-	m_eventList->notifyRxEnd (now (), receivedOk);
+	m_listener->notifyRxEnd (now (), receivedOk);
 	switchToIdleFromSync ();
 }
 

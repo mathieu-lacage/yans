@@ -18,36 +18,21 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
+#ifndef PRECISON_H
+#define PRECISON_H
 
-#ifndef MAC_80211_H
-#define MAC_80211_H
+/* The limits below are defined to allow us not to encounter
+ * floating point arithmetic rounding problems.
+ *  - MAX_TIME: simulations which last longer than
+ *    100000s or 27h cannot be guaranteed to work from the 
+ *    point of view of the 802.11 code.
+ *  - MIN_TIME: the 802.11 code is careful to round
+ *    floating point numbers close to this value to zero.
+ */
+#define PRECISON_MAX_TIME (100000)
+#define PRECISON_MIN_TIME (1e-10)
 
-#include "mac.h"
-
-class Phy80211;
-class MacLow80211;
-class Packet;
-
-class Mac80211 : public Mac
-{
-public:
-	Mac80211 ();
-	virtual ~Mac80211 ();
-	// XXXX 
-	virtual void Mac80211::recv (Packet *p, Handler *h);
-	/* inherited from Mac (mac/mac.h) */
-	virtual int hdr_dst (char* hdr, int dst = -2);
-	virtual int hdr_src (char* hdr, int src = -2);
-	virtual int hdr_type(char *hdr, u_int16_t type = 0);
-
-	virtual int command(int argc, const char*const* argv);
-
-	Phy80211 *peekPhy80211 (void);
-	void forwardUp (class Packet *packet);
-	void forwardDown (class Packet *packet);
-private:
-	MacLow80211 *m_low;
-};
+#define PRECISON_ROUND_TO_ZERO(x) ((x<PRECISON_MIN_TIME)?0.0:x)
 
 
-#endif /* MAC_80211_H */
+#endif /* PRECISON_H */

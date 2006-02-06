@@ -35,6 +35,7 @@
 #include <iostream>
 
 #define nopeMAC_TRACE 1
+#define nopeMAC_TRACE_VERBOSE 1
 
 #ifdef MAC_TRACE
 # define TRACE(format, ...) \
@@ -42,6 +43,13 @@
 #else /* MAC_TRACE */
 # define TRACE(format, ...)
 #endif /* MAC_TRACE */
+
+#ifdef MAC_TRACE_VERBOSE
+# define TRACE_VERBOSE(format, ...) \
+	printf ("MAC TRACE VERBOSE %d " format "\n", getSelf (), ## __VA_ARGS__);
+#else /* MAC_TRACE_VERBOSE */
+# define TRACE_VERBOSE(format, ...)
+#endif /* MAC_TRACE_VERBOSE */
 
 /* The core idea behind the MAC is to defer every event 
  * as much as possible so that multiple events are coalesced
@@ -179,6 +187,12 @@ MacLow80211::MacLow80211 (class Mac80211 *mac)
 	  m_random (new RngUniform ())
 {
 	resetCW ();
+}
+
+void 
+MacLow80211::completeConstruction (Phy80211 *phy)
+{
+	phy->registerListener (m_backoff);
 }
 
 MacLow80211::~MacLow80211 ()
@@ -524,14 +538,13 @@ MacLow80211::max (double a, double b)
 double
 MacLow80211::getXIFSLeft (void)
 {
-	Phy80211EventList *phyEventList = peekPhy ()->peekEventList ();
 	double XIFS;
-	if (phyEventList->wasLastRxEndSuccessful ()) {
+	if (m_backoff->wasLastRxOk ()) {
 		XIFS = getDIFS ();
 	}  else {
 		XIFS = getEIFS ();
 	}
-	double left = phyEventList->getLastRxEndTime () + XIFS - now ();
+	double left = m_backoff->getLastRxEndTime () + XIFS - now ();
 	left = max (left, 0);
 	return left;
 }
@@ -570,9 +583,9 @@ MacLow80211::sendPacket (Packet *txPacket)
 		m_backoff->start (backoffStart, backoffDelay);
 		m_ACKTimeoutBackoffHandler->start (new MacCancelableEvent (),
 						   timerDelay);
-		
+
 		setTxMode (txPacket, txMode);
-		setDuration (txPacket, txDuration + getSIFS ());
+		setDuration (txPacket, getACKTimeoutDuration () + getSIFS ());
 		setExpectedACKSource (getDestination (txPacket));
 		m_mac->forwardDown (txPacket);
 	}
@@ -664,27 +677,22 @@ MacLow80211::dealWithInputQueue (void)
 		 */
 		return;
 	}
-	m_backoff->updateToNow (now ());
-	if (!m_backoff->isCompleted ()) {
-		//cout << "7" << endl;
+	if (!m_backoff->isCompleted (now ())) {
+		//cout << "7 to " << m_backoff->getDelayUntilEnd (now ()) << endl;
 		/* A previous operation started the backoff counter
 		 * but did not start a backoff access timer.
 		 * We start the timer now.
 		 */
-		m_accessBackoffHandler->start (m_backoff->getExpectedDelayToEndFromNow (now ()));
+		m_accessBackoffHandler->start (m_backoff->getDelayUntilEnd (now ()));
 		return;
 	}
-	if (!m_backoff->isVirtualCS_Idle (now ())) {
+	if (!m_backoff->isNavZero (now ())) {
 		//cout << "8" << endl;
 		/* We have a Virtual Carrier Sense Busy status
 		 * so we start a timer for end-of-busy + DIFS + backoff
 		 */
-		double backoffDuration = pickBackoffDelay ();
-		double timerDuration = m_backoff->getDelayUntilIdle (now ()) + getDIFS ();
-		double backoffStart = now () + timerDuration;
-		timerDuration += backoffDuration;
-		m_backoff->start (backoffStart, backoffDuration);
-		m_accessBackoffHandler->start (timerDuration);
+		m_backoff->start (now (), pickBackoffDelay ());
+		m_accessBackoffHandler->start (m_backoff->getDelayUntilEnd (now ()));
 		return;
 	}
 	if (getXIFSLeft () > 0.0) {
@@ -737,10 +745,12 @@ MacLow80211::receive (class Packet *packet)
 	m_rateControl->reportRxOk (getSource (packet), 
 				   getLastSNR (), 
 				   getTxMode (packet));
+	bool isNavZero = m_backoff->isNavZero (now ());
+	m_backoff->notifyNav (now (), getDuration (packet));
 
 	if (getType (packet) == MAC_80211_RTS) {
 		TRACE ("rx RTS from %d", getSource (packet));
-		if (m_backoff->isVirtualCS_Idle (now ()) &&
+		if (isNavZero &&
 		    getDestination (packet) == getSelf ()) {
 			m_sendCTSHandler->start (new SendCTSEvent (packet), getSIFS ());
 		} else {
@@ -790,19 +800,18 @@ MacLow80211::receive (class Packet *packet)
 	} else {
 		dealWithInputQueue ();
 	}
-
-	m_backoff->updateNAV (getDuration (packet), now ());
 }
 
 void
 MacLow80211::ACKTimeout (class MacCancelableEvent *event)
 {
-	m_backoff->updateToNow (now ());
-	if (!m_backoff->isCompleted ()) {
+	if (!m_backoff->isCompleted (now ())) {
 		m_ACKTimeoutBackoffHandler->start (new MacCancelableEvent (), 
-						   m_backoff->getDurationLeft ());
+						   m_backoff->getDelayUntilEnd (now ()));
+		TRACE_VERBOSE ("ACK timeout not finished at %f", now ());
 		return;
 	}
+	TRACE_VERBOSE ("ACK timeout at %f", now ());
 
 	/* access backoff and ACK timeout completed. 
 	 * - update retry counters
@@ -833,12 +842,13 @@ MacLow80211::ACKTimeout (class MacCancelableEvent *event)
 void
 MacLow80211::CTSTimeout (class MacCancelableEvent *event)
 {
-	m_backoff->updateToNow (now ());
-	if (!m_backoff->isCompleted ()) {
+	if (!m_backoff->isCompleted (now ())) {
 		m_CTSTimeoutBackoffHandler->start (new MacCancelableEvent (),
-						   m_backoff->getDurationLeft ());
+						   m_backoff->getDelayUntilEnd (now ()));
+		TRACE_VERBOSE ("CTS timeout not finished at %f", now ());
 		return;
 	}
+	TRACE_VERBOSE ("CTS timeout at %f", now ());
 
 	/* access backoff and CTS timeout completed. 
 	 * - update retry counters
@@ -867,22 +877,24 @@ MacLow80211::CTSTimeout (class MacCancelableEvent *event)
 void 
 MacLow80211::initialBackoffTimeout (void)
 {
-	m_backoff->updateToNow (now ());
 	if (m_queue->isEmpty ()) {
 		/* The packet which was queued for transmission
 		 * was dropped by the 802.11 queue timeout
 		 * before we could try to finish its initial 
 		 * backoff.
 		 */
+		TRACE_VERBOSE ("access timeout with empty queue at %f", now ());
 		return;
 	}
-	if (!m_backoff->isCompleted ()) {
+	if (!m_backoff->isCompleted (now ())) {
 		/* start a backoff timer for what is left of 
 		 * the backoff.
 		 */
-		m_accessBackoffHandler->start (m_backoff->getDurationLeft ());
+		TRACE_VERBOSE ("access timeout not finished at %f", now ());
+		m_accessBackoffHandler->start (m_backoff->getDelayUntilEnd (now ()));
 		return;
 	}
+	TRACE_VERBOSE ("access timeout at %f", now ());
 
 	startTransmission ();
 }

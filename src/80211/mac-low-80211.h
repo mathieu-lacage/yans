@@ -18,8 +18,8 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef MAC_LOW_80211
-#define MAC_LOW_80211
+#ifndef MAC_LOW_80211_H
+#define MAC_LOW_80211_H
 
 #include "hdr-mac-80211.h"
 #include "phy-80211.h"
@@ -33,11 +33,14 @@ class RateControl;
 class DynamicMacHandler;
 class MacCancelableEvent;
 class StaticMacHandler;
+class Phy80211;
 
 class MacLow80211 {
 public:
 	MacLow80211 (Mac80211 *mac);
 	~MacLow80211 ();
+
+	void completeConstruction (Phy80211 *phy);
 
 	void enqueue (Packet *packet);
 	void receive (Packet *packet);
@@ -47,13 +50,14 @@ public:
 	double getEIFS (void);
 	double getDIFS (void);
 
+	int getSelf (void);
+
 private:
 	double now (void);
 
 	int getACKSize (void) const;
 	int getRTSSize (void) const;
 	int getCTSSize (void) const;
-	int getSelf (void);
 	int getDestination (Packet *packet);
 	int getSource (Packet *packet);
 	int getTxMode (Packet *packet);
@@ -138,4 +142,4 @@ private:
 	RngUniform *m_random;
 };
 
-#endif /* MAC_LOW_80211 */
+#endif /* MAC_LOW_80211_H */
