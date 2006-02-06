@@ -41,8 +41,8 @@ BPSKMode::chunkSuccessRate (double snr, unsigned int nbits)
 }
 
 BPSKFECMode::BPSKFECMode (unsigned int dFree, unsigned int adFree, 
-			  double signalSpread, double rate)
-	: FECBaseTransmissionMode (signalSpread, rate),
+			  double signalSpread, double rate, double codingRate)
+	: FECBaseTransmissionMode (signalSpread, rate, codingRate),
 	  dFree_ (dFree),
 	  adFree_ (adFree)
 {}

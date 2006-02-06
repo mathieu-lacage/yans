@@ -39,7 +39,7 @@ class BPSKFECMode : public FECBaseTransmissionMode
 {
 public:
 	BPSKFECMode (unsigned int dFree, unsigned int adFree, 
-		     double signalSpread, double rate);
+		     double signalSpread, double rate, double codingRate);
 	virtual ~BPSKFECMode ();
 	virtual double chunkSuccessRate (double snr, unsigned int nbits);
 private:

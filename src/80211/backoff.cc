@@ -63,6 +63,11 @@ Backoff::getLastRxEndTime (void) const
 {
 	return m_lastRxEnd;
 }
+double 
+Backoff::getLastTxEndTime (void) const
+{
+	return m_lastTxStart + m_lastTxDuration;
+}
 bool 
 Backoff::wasLastRxOk (void) const
 {

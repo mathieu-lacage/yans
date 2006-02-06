@@ -96,6 +96,7 @@ private:
 	int calculateNewFailedCW (int CW);
 	void resetCW (void);
 	void updateFailedCW (void);
+	void dropPacket (Packet *packet);
 	void dropCurrentTxPacket (void);
 	double max (double a, double b);
 

@@ -45,6 +45,7 @@ class Backoff : public Phy80211Listener
 
 	bool wasLastRxOk (void) const;
 	double getLastRxEndTime (void) const;
+	double getLastTxEndTime (void) const;
 
 	void notifyNav (double start, double duration);
 	virtual void notifyRxStart (double now, double duration);

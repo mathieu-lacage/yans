@@ -36,9 +36,10 @@ public:
 	virtual double getSignalSpread (void) const = 0;
 
 	/** 
-	 * returns the number of physical bits per second achieved by this transmission mode 
+	 * returns the number of user bits per 
+	 * second achieved by this transmission mode 
 	 */
-	virtual double getRate (void) const = 0;
+	virtual double getDataRate (void) const = 0;
 
 	/**
 	 * @snr: the snr, (W/W)

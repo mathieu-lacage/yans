@@ -59,8 +59,9 @@ double BaseTransmissionMode::QAMBER (double snr, unsigned int M)
 
 
 
-FECBaseTransmissionMode::FECBaseTransmissionMode (double signalSpread, double rate)
-	: BaseTransmissionMode (signalSpread, rate) 
+FECBaseTransmissionMode::FECBaseTransmissionMode (double signalSpread, double rate, double codingRate)
+	: BaseTransmissionMode (signalSpread, rate),
+	  m_codingRate (codingRate)
 {}
 FECBaseTransmissionMode::~FECBaseTransmissionMode ()
 {}

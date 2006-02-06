@@ -44,8 +44,9 @@ QAMMode::chunkSuccessRate (double snr, unsigned int nbits)
 QAMFECMode::QAMFECMode (unsigned int M, unsigned int dFree, 
 			unsigned int adFree,
 			unsigned int adFreePlusOne,
-			double signalSpread, double rate)
-	: FECBaseTransmissionMode (signalSpread, rate),
+			double signalSpread, double rate,
+			double codingRate)
+	: FECBaseTransmissionMode (signalSpread, rate, codingRate),
 	  M_ (M), dFree_ (dFree), 
 	  adFree_ (adFree),
 	  adFreePlusOne_ (adFreePlusOne)

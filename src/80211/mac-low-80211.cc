@@ -33,19 +33,27 @@
 
 #include <iostream>
 
+#define nopeMAC_DEBUG 1
 #define nopeMAC_TRACE 1
 #define nopeMAC_TRACE_VERBOSE 1
 
+#ifdef MAC_DEBUG
+# define DEBUG(format, ...) \
+	printf ("DEBUG %d " format "\n", getSelf (), ## __VA_ARGS__);
+#else /* MAC_DEBUG */
+# define DEBUG(format, ...)
+#endif /* MAC_DEBUG */
+
 #ifdef MAC_TRACE
 # define TRACE(format, ...) \
-	printf ("MAC TRACE %d " format "\n", getSelf (), ## __VA_ARGS__);
+	printf ("MAC   TERSE %f %d " format "\n", now (), getSelf (), ## __VA_ARGS__);
 #else /* MAC_TRACE */
 # define TRACE(format, ...)
 #endif /* MAC_TRACE */
 
 #ifdef MAC_TRACE_VERBOSE
 # define TRACE_VERBOSE(format, ...) \
-	printf ("MAC TRACE VERBOSE %d " format "\n", getSelf (), ## __VA_ARGS__);
+	printf ("MAC VERBOSE %f %d " format "\n", now (), getSelf (), ## __VA_ARGS__);
 #else /* MAC_TRACE_VERBOSE */
 # define TRACE_VERBOSE(format, ...)
 #endif /* MAC_TRACE_VERBOSE */
@@ -194,6 +202,14 @@ void
 MacLow80211::completeConstruction (Phy80211 *phy)
 {
 	phy->registerListener (m_backoff);
+	DEBUG ("slot %f", getSlotTime ());
+	DEBUG ("SIFS %f", getSIFS ());
+	DEBUG ("DIFS %f", getDIFS ());
+	DEBUG ("EIFS %f", getEIFS ());
+	DEBUG ("ACK timeout %f", getACKTimeoutDuration ());
+	DEBUG ("CTS timeout %f", getCTSTimeoutDuration ());
+	DEBUG ("CWmin %d", getCWmin ());
+	DEBUG ("CWmax %d", getCWmax ());
 }
 
 MacLow80211::~MacLow80211 ()
@@ -285,8 +301,10 @@ double
 MacLow80211::getEIFS (void)
 {
 	/* 802.11 section 9.2.10 */
-	return getSIFS () + 8 * getACKSize () + 
-		m_mac->peekPhy80211 ()->calculateTxDuration (0, getACKSize ());
+	// XXX check with regard to 802.11a
+	return getSIFS () + 
+		m_mac->peekPhy80211 ()->calculateTxDuration (0, getACKSize ()) +
+		getDIFS ();
 }
 double 
 MacLow80211::getDIFS (void)
@@ -329,7 +347,7 @@ double
 MacLow80211::getCTSTimeoutDuration (void)
 {
 	/* XXX */
-	return 0;
+	return getSIFS () + m_mac->peekPhy80211 ()->calculateTxDuration (0, getCTSSize ());;
 }
 double
 MacLow80211::getACKTimeoutDuration (void)
@@ -512,10 +530,16 @@ MacLow80211::updateFailedCW (void)
 }
 
 void
+MacLow80211::dropPacket (Packet *packet)
+{
+	/* XXX: push in drop queue. */
+	Packet::free (packet);
+}
+void
 MacLow80211::dropCurrentTxPacket (void)
 {
 	/* XXX: push in drop queue. */
-	Packet::free (m_currentTxPacket);
+	dropPacket (m_currentTxPacket);
 	m_currentTxPacket = 0;
 }
 
@@ -545,7 +569,9 @@ MacLow80211::getXIFSLeft (void)
 	}  else {
 		XIFS = getEIFS ();
 	}
-	double left = m_backoff->getLastRxEndTime () + XIFS - now ();
+	double lastEvent = max (m_backoff->getLastRxEndTime () + XIFS,
+				m_backoff->getLastTxEndTime () + getDIFS ());
+	double left = lastEvent - now ();
 	left = max (left, 0);
 	return left;
 }
@@ -626,12 +652,12 @@ void
 MacLow80211::dealWithInputQueue (void)
 {
 	if (m_queue->isEmpty ()) {
+		TRACE_VERBOSE ("deal -- queue empty");
 		/* no packet to transmit, nothing to do. */
-		//cout << "1" << endl;
 		return;
 	}
 	if (m_currentTxPacket) {
-		//cout << "2" << endl;
+		TRACE_VERBOSE ("deal -- txing");
 		/* a packet is being txed. we will deal with 
 		 * the input queue at the end of the curent 
 		 * txtion
@@ -642,7 +668,7 @@ MacLow80211::dealWithInputQueue (void)
 		return;
 	}
 	if (m_accessBackoffHandler->isRunning ()) {
-		//cout << "3" << endl;
+		TRACE_VERBOSE ("deal -- access timer running");
 		/* We are already attempting to send a packet. 
 		 * The access timer will deal with the input queue.
 		 */
@@ -650,7 +676,7 @@ MacLow80211::dealWithInputQueue (void)
 	}
 	if (m_sendCTSHandler->isRunning () ||
 	    m_sendACKHandler->isRunning ()) {
-		//cout << "4" << endl;
+		TRACE_VERBOSE ("deal -- cts/ack timer running");
 		/* We are answering a handshake either
 		 * with a CTS or an ACK.
 		 * The sendCTS and sendACK timer handlers
@@ -659,53 +685,51 @@ MacLow80211::dealWithInputQueue (void)
 		return;
 	}
 	if (peekPhy ()->getState () == Phy80211::SYNC) {
-		//cout << "5" << endl;
+		TRACE_VERBOSE ("deal -- phy syncing");
 		/* The PHY is receiving a packet. Our reception
 		 * handler will deal with the input queue.
 		 */
 		return;
 	}
-	if (peekPhy ()->getState () == Phy80211::TX) {
-		//cout << "6" << endl;
-		/* The PHY is txing a packet _and_:
-		 *   - we are not doing a tx handshake (DATA or RTS/DATA)
-		 *   - we are not doing a rx handshake (ACK or CTS)
-		 *   - XXX we might be doing a tx broadcast.
-		 * This is a conflict with another MacLow80211 for the 
-		 * same PHY (think, 802.11E).
-		 * We should calculate a backoff and start a timer.
-		 * XXX
-		 */
-		return;
-	}
 	if (!m_backoff->isCompleted (now ())) {
-		//cout << "7 to " << m_backoff->getDelayUntilEnd (now ()) << endl;
 		/* A previous operation started the backoff counter
 		 * but did not start a backoff access timer.
 		 * We start the timer now.
 		 */
+		TRACE_VERBOSE ("deal -- starting backoff timer for %f", 
+			       m_backoff->getDelayUntilEnd (now ()));
+		m_accessBackoffHandler->start (m_backoff->getDelayUntilEnd (now ()));
+		return;
+	}
+	if (peekPhy ()->getState () == Phy80211::TX) {
+		/* The PHY is txing a packet so we have a conflict.
+		 * start a backoff timer for our future packet.
+		 */
+		m_backoff->start (now (), pickBackoffDelay ());
+		TRACE_VERBOSE ("deal -- phy txing busy. Starting backoff and timer for %f",
+			       m_backoff->getDelayUntilEnd (now ()));
 		m_accessBackoffHandler->start (m_backoff->getDelayUntilEnd (now ()));
 		return;
 	}
 	if (!m_backoff->isNavZero (now ())) {
-		//cout << "8" << endl;
 		/* We have a Virtual Carrier Sense Busy status
 		 * so we start a timer for end-of-busy + DIFS + backoff
 		 */
 		m_backoff->start (now (), pickBackoffDelay ());
+		TRACE_VERBOSE ("deal -- CS busy. Starting backoff and timer for %f", 
+			       m_backoff->getDelayUntilEnd (now ()));
 		m_accessBackoffHandler->start (m_backoff->getDelayUntilEnd (now ()));
 		return;
 	}
 	if (getXIFSLeft () > 0.0) {
-		//cout << "9" << endl;
-		/* the DIFS/EIFS period after an end-of-rx has 
-		 * not been completed.
+		/* the DIFS/EIFS period after an end-of-rx 
+		 * or end-of-tx has not been completed.
 		 */
-		double timerDuration = getXIFSLeft ();
-		m_accessBackoffHandler->start (timerDuration);
+		TRACE_VERBOSE ("deal -- XIFS period not finished. Starting access timer for %f", 
+			       getXIFSLeft ());
+		m_accessBackoffHandler->start (getXIFSLeft ());
 		return;
 	}
-	//cout << "10" << endl;
 
 	/* We are free to start a transmission now because
 	 * we are IDLE and have been IDLE for long enough.
@@ -740,6 +764,9 @@ MacLow80211::receive (class Packet *packet)
 	 * packet queue.
 	 */
 	if (HDR_CMN (packet)->error ()) {
+		TRACE_VERBOSE ("rx failed from %d",
+			       getSource (packet));
+		dropPacket (packet);
 		dealWithInputQueue ();
 		return;
 	}
@@ -757,16 +784,19 @@ MacLow80211::receive (class Packet *packet)
 		} else {
 			dealWithInputQueue ();
 		}
+		dropPacket (packet);
 	} else if (getType (packet) == MAC_80211_DATA) {
-		TRACE ("rx DATA from %d", getSource (packet));
 		decreaseSize (packet, getDataHeaderSize ());
 		if (getDestination (packet) == getSelf ()) {
+			TRACE ("rx DATA from %d", getSource (packet));
 			m_sendACKHandler->start (new SendACKEvent (packet), getSIFS ());
 			m_mac->forwardUp (packet);
 		} else if (getDestination (packet) == ((int)MAC_BROADCAST)) {
+			TRACE ("rx broadcast from %d", getSource (packet));
 			m_mac->forwardUp (packet);
 			dealWithInputQueue ();
 		} else {
+			dropPacket (packet);
 			dealWithInputQueue ();
 		}
 	} else if (getType (packet) == MAC_80211_CTS &&
@@ -782,6 +812,8 @@ MacLow80211::receive (class Packet *packet)
 		m_rateControl->reportRTSOk (getSource (packet),
 					    getLastSNR (),
 					    getTxMode (packet));
+		dropPacket (packet);
+		dealWithInputQueue ();
 	} else if (getType (packet) == MAC_80211_ACK &&
 		   getDestination (packet) == getSelf () &&
 		   m_ACKTimeoutBackoffHandler->isRunning () &&
@@ -797,8 +829,11 @@ MacLow80211::receive (class Packet *packet)
 					     getLastSNR (),
 					     getTxMode (packet));
 		m_currentTxPacket = 0;
+		dropPacket (packet);
 		dealWithInputQueue ();
 	} else {
+		TRACE_VERBOSE ("rx unknown from %d", getSource (packet));
+		dropPacket (packet);
 		dealWithInputQueue ();
 	}
 }
@@ -809,10 +844,10 @@ MacLow80211::ACKTimeout (class MacCancelableEvent *event)
 	if (!m_backoff->isCompleted (now ())) {
 		m_ACKTimeoutBackoffHandler->start (new MacCancelableEvent (), 
 						   m_backoff->getDelayUntilEnd (now ()));
-		TRACE_VERBOSE ("ACK timeout not finished at %f", now ());
+		TRACE_VERBOSE ("ACK timeout not finished");
 		return;
 	}
-	TRACE_VERBOSE ("ACK timeout at %f", now ());
+	TRACE_VERBOSE ("ACK timeout");
 
 	/* access backoff and ACK timeout completed. 
 	 * - update retry counters
@@ -846,10 +881,10 @@ MacLow80211::CTSTimeout (class MacCancelableEvent *event)
 	if (!m_backoff->isCompleted (now ())) {
 		m_CTSTimeoutBackoffHandler->start (new MacCancelableEvent (),
 						   m_backoff->getDelayUntilEnd (now ()));
-		TRACE_VERBOSE ("CTS timeout not finished at %f", now ());
+		TRACE_VERBOSE ("CTS timeout not finished");
 		return;
 	}
-	TRACE_VERBOSE ("CTS timeout at %f", now ());
+	TRACE_VERBOSE ("CTS timeout");
 
 	/* access backoff and CTS timeout completed. 
 	 * - update retry counters
@@ -884,18 +919,18 @@ MacLow80211::initialBackoffTimeout (void)
 		 * before we could try to finish its initial 
 		 * backoff.
 		 */
-		TRACE_VERBOSE ("access timeout with empty queue at %f", now ());
+		TRACE_VERBOSE ("access timeout with empty queue");
 		return;
 	}
 	if (!m_backoff->isCompleted (now ())) {
 		/* start a backoff timer for what is left of 
 		 * the backoff.
 		 */
-		TRACE_VERBOSE ("access timeout not finished at %f", now ());
+		TRACE_VERBOSE ("access timeout not finished");
 		m_accessBackoffHandler->start (m_backoff->getDelayUntilEnd (now ()));
 		return;
 	}
-	TRACE_VERBOSE ("access timeout at %f", now ());
+	TRACE_VERBOSE ("access timeout");
 
 	startTransmission ();
 }
@@ -914,6 +949,7 @@ MacLow80211::sendCTS_AfterRTS (class MacCancelableEvent *macEvent)
 	setDuration (cts, event->getDuration () - ctsDuration - getSIFS ());
 	setTxMode (cts, event->getTxMode ());
 	m_mac->forwardDown (cts);
+	dealWithInputQueue ();
 }
 
 void
@@ -933,6 +969,7 @@ MacLow80211::sendACK_AfterData (class MacCancelableEvent *macEvent)
 	 */
 	setTxMode (ack, event->getTxMode ());
 	m_mac->forwardDown (ack);
+	dealWithInputQueue ();
 }
 
 void
@@ -959,4 +996,5 @@ MacLow80211::sendDataAfterCTS (class MacCancelableEvent *macEvent)
 	setDuration (m_currentTxPacket, event->getDuration () - txDuration - getSIFS ());
 	setExpectedACKSource (getDestination (m_currentTxPacket));
 	m_mac->forwardDown (m_currentTxPacket);
+	dealWithInputQueue ();
 }

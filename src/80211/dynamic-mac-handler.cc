@@ -87,8 +87,8 @@ DynamicMacHandler::handle (Event *e)
 {
 	MacCancelableEvent *ev = static_cast<MacCancelableEvent *> (e);
 	if (!ev->isCanceled ()) {
-		(m_mac->*m_handler) (ev);
 		m_event = 0;
+		(m_mac->*m_handler) (ev);
 	}
 	delete ev;
 }

@@ -34,12 +34,13 @@ public:
 	BaseTransmissionMode (double signalSpread, double rate);
 	virtual ~BaseTransmissionMode () {}
 	virtual double getSignalSpread (void) const {return signalSpread_;}
-	virtual double getRate (void) const {return rate_;}
+	virtual double getDataRate (void) const {return rate_;}
 
 private:
 	double signalSpread_;
 	double rate_;
 protected:
+	double getRate (void) const {return rate_;}
 	double BPSKBER (double SNR);
 	double QAMBER (double SNR, unsigned int M);
 	static double log2 (double v);
@@ -49,12 +50,16 @@ protected:
 class FECBaseTransmissionMode : public BaseTransmissionMode
 {
 public:
-	FECBaseTransmissionMode (double signalSpread, double rate);
+	FECBaseTransmissionMode (double signalSpread, double rate, double codingRate);
 	virtual ~FECBaseTransmissionMode ();
+	virtual double getDataRate (void) const {return getRate () * m_codingRate;}
 protected:
 	double calculatePdOdd (double ber, unsigned int d);
 	double calculatePdEven (double ber, unsigned int d);
 	double calculatePd (double ber, unsigned int d);
+
+private:
+	double m_codingRate;
 };
 
 

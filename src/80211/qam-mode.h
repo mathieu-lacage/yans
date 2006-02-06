@@ -41,7 +41,7 @@ public:
 	QAMFECMode (unsigned int M, unsigned int dFree, 
 		    unsigned int adFree,
 		    unsigned int adFreePlusOne,
-		    double signalSpread, double rate);
+		    double signalSpread, double rate, double codingRate);
 	virtual ~QAMFECMode ();
 	virtual double chunkSuccessRate (double snr, unsigned int nbits);
 private:

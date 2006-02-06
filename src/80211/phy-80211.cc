@@ -289,16 +289,16 @@ Phy80211::Phy80211 ()
 		m_frequency = 5e9;
 		m_plcpHeaderLength = 4 + 1 + 12 + 1 + 6 + 16 + 6;
 		m_plcpPreambleDelay = 20e-6;
-		/* 10kBytes at a 6Mb/s rate with a 1/2 coding rate. */
-		m_maxPacketDuration = 10000.0*8.0/6000000.0*(1.0/2.0);
-		addTxRxMode (new BPSKFECMode (10, 11, 20e6, 6e6));
-		addTxRxMode (new BPSKFECMode (5, 8, 20e6, 9e6));
-		addTxRxMode (new QAMFECMode (4, 10, 11, 0, 20e6, 12e6));
-		addTxRxMode (new QAMFECMode (4, 5, 8, 31, 20e6, 18e6));
-		addTxRxMode (new QAMFECMode (16, 10, 11, 0, 20e6, 24e6));
-		addTxRxMode (new QAMFECMode (16, 5, 8, 31, 20e6, 36e6));
-		addTxRxMode (new QAMFECMode (64, 6, 1, 16, 20e6, 48e6));
-		addTxRxMode (new QAMFECMode (64, 5, 8, 31, 20e6, 54e6));
+		/* 4095 bytes at a 6Mb/s rate with a 1/2 coding rate. */
+		m_maxPacketDuration = 4095.0*8.0/6000000.0*(1.0/2.0);
+		addTxRxMode (new BPSKFECMode (10, 11,       20e6, 6e6, 0.5));
+		addTxRxMode (new BPSKFECMode (5, 8,         20e6, 9e6, 0.75));
+		addTxRxMode (new QAMFECMode (4, 10, 11, 0,  20e6, 12e6, 0.5));
+		addTxRxMode (new QAMFECMode (4, 5, 8, 31,   20e6, 18e6, 0.75));
+		addTxRxMode (new QAMFECMode (16, 10, 11, 0, 20e6, 24e6, 0.5));
+		addTxRxMode (new QAMFECMode (16, 5, 8, 31,  20e6, 36e6, 0.75));
+		addTxRxMode (new QAMFECMode (64, 6, 1, 16,  20e6, 48e6, 0.666));
+		addTxRxMode (new QAMFECMode (64, 5, 8, 31,  20e6, 54e6, 0.75));
 	}
 
 }
@@ -569,7 +569,7 @@ Phy80211::wakeup (void)
 double
 Phy80211::calculateHeaderDuration (int headerMode)
 {
-	return m_plcpHeaderLength / getMode (headerMode)->getRate ();
+	return m_plcpHeaderLength / getMode (headerMode)->getDataRate ();
 }
 
 double
@@ -577,7 +577,7 @@ Phy80211::calculatePacketDuration (int headerMode, int payloadMode, int size)
 {
 	double delay = getPreambleDuration ();
 	delay += calculateHeaderDuration (headerMode);
-	delay += (size * 8) / getMode (payloadMode)->getRate ();
+	delay += (size * 8) / getMode (payloadMode)->getDataRate ();
 	return delay;
 }
 
@@ -700,9 +700,13 @@ Phy80211::startRx (Packet *packet)
 	appendEvent (event);
 
 	switch (getState ()) {
+	default:
+		cout << "FDASFASDFASDF" << endl;
+		break;
 	case Phy80211::SYNC:
 	case Phy80211::TX:
 	case Phy80211::SLEEP:
+		Packet::free (packet);
 		break;
 	case Phy80211::IDLE: {
 		double power = calculatePower (packet);
@@ -720,9 +724,11 @@ Phy80211::startRx (Packet *packet)
 			/* if the energy of the signal is smaller than rxThreshold,
 			 * this packet is not synced upon.
 			 */
+			Packet::free (packet);
 		}
 	} break;
 	}
+	event->unref ();
 }
 
 double
@@ -776,7 +782,7 @@ Phy80211::getMode (int mode)
 double
 Phy80211::calculateChunkSuccessRate (double snir, double delay, TransmissionMode *mode)
 {
-	double rate = mode->getRate ();
+	double rate = mode->getDataRate ();
 	double nbits = rate * delay;
 	/** XXX: make sure the signed double to unsigned 
 	 *  int conversion below is correct.
