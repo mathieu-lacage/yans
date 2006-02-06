@@ -79,6 +79,7 @@ enum mac_80211_packet_type {
 	MAC_80211_CTL_BACKREQ,
 	MAC_80211_CTL_BACKRESP,
 	MAC_80211_DATA,
+	MAC_80211_MGT_CFPOLL,
 	MAC_80211_MGT_BEACON,
 	MAC_80211_MGT_ASSOCIATION_REQUEST,
 	MAC_80211_MGT_ASSOCIATION_RESPONSE,
@@ -112,7 +113,8 @@ class hdr_mac_80211 {
 	bool getMoreFragments (void) const;
 	bool isRetry (void) const;
 	int getSequenceControl (void) const;
-	int getTID (void) const;
+	uint8_t getTID (void) const;
+	double getTxopLimit (void) const;
 	bool isBlockAck (void) const;
 	bool isNoAck (void) const;
 	bool isNormalAck (void) const;
@@ -128,7 +130,8 @@ class hdr_mac_80211 {
 	void setFragmentNumber (int fragmentNumber);
 	void setMoreFragments (bool);
 	void setRetry (void);
-	void setTID (int tid);
+	void setTID (uint8_t tid);
+	void setTxopLimit (double);
 	void setNoAck (void);
 	void setBlockAck (void);
 	void setNormalAck (void);
@@ -154,13 +157,15 @@ class hdr_mac_80211 {
 	unsigned int m_tid             : 4;
 	unsigned int m_ackMode         : 2;
 	unsigned int m_qos             : 1;
+	unsigned int m_txopLimit       : 8;
 	int m_destination;
 	int m_finalDestination;
 	int m_source;
 };
 
 
-void setTID (Packet *packet, int tid);
+void setTID (Packet *packet, uint8_t tid);
+void setTxopLimit (Packet *packet, double txopLimit);
 void setNoAck (Packet *packet);
 void setBlockAck (Packet *packet);
 void setNormalAck (Packet *packet);
@@ -190,14 +195,22 @@ int getSource (Packet *packet);
 int getTxMode (Packet *packet);
 enum mac_80211_packet_type getType (Packet *packet);
 bool getMoreFragments (Packet *packet);
-int getTID (Packet *packet);
+uint8_t getTID (Packet *packet);
+double getTxopLimit (Packet *packet);
 bool isBlockAck (Packet *packet);
 bool isNoAck (Packet *packet);
 bool isNormalAck (Packet *packet);
 bool isQos (Packet *packet);
 
+uint8_t getRequestedTID (Packet *packet);
 
-
+enum ac_e {
+	AC_BK,
+	AC_BE,
+	AC_VI,
+	AC_VO
+};
 char const *getTypeString (Packet *packet);
+enum ac_e getAC (Packet *packet);
 
 #endif /* HDRMAC_80211 */

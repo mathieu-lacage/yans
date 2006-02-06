@@ -32,6 +32,7 @@
 #include "mac-stations.h"
 #include "mac-high.h"
 #include "mac-container.h"
+#include "mac-traces.h"
 
 
 #define nopeDCA_TXOP_TRACE 1

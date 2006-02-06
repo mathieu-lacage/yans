@@ -28,8 +28,9 @@
 #include "mac-queue-80211e.h"
 #include "mac-container.h"
 #include "dca-txop.h"
+#include "mac-traces.h"
 
-#define ADHOC_TRACE 1
+#define nopeADHOC_TRACE 1
 
 #ifdef ADHOC_TRACE
 # define TRACE(format, ...) \

@@ -24,14 +24,9 @@
 #include "mac-high.h"
 #include "mac-handler.tcc"
 
-class MacLow;
 class Packet;
-class MacStations;
-class MacQueue80211e;
-class MacLowParameters;
 class MacParameters;
-class Dcf;
-class MacDcfParameters;
+class MacQueue80211e;
 
 
 class MacHighStation : public MacHigh {
@@ -45,6 +40,10 @@ public:
 	virtual void notifyAckReceivedFor (Packet *packet);
 
  private:
+	virtual void enqueueToLow (Packet *packet) = 0;
+	virtual void gotCFPoll (Packet *packet) = 0;
+	virtual void flush (void) = 0;
+
 
 	void sendAssociationRequest (void);
 	void sendReAssociationRequest (void);
@@ -58,15 +57,11 @@ public:
 	bool isAssociated (void);
 	void setAssociated (void);
 	void setDisAssociated (void);
-	void enqueueToLow (Packet *packet);
 	Packet *getPacketFor (int destination);
 	MacParameters *parameters (void);
-	
-	Dcf *m_dcf;
-	MacDcfParameters *m_dcfParameters;
-	MacQueue80211e *m_dcfQueue;
-	MacQueue80211e *m_associationQueue;
 
+	MacQueue80211e *m_associationQueue;
+	
 	int m_apAddress;
 	bool m_associated;
 	double m_lastBeaconRx;

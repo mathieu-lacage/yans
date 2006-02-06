@@ -30,6 +30,7 @@
 #include "rng-uniform.h"
 #include "mac-container.h"
 #include "mac-parameters.h"
+#include "mac-traces.h"
 
 
 #define nopeDCF_TRACE 1

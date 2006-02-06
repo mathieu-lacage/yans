@@ -25,6 +25,7 @@
 #include "mac-high.h"
 #include "mac-stations.h"
 #include "mac-station.h"
+#include "mac-traces.h"
 
 #define nopeMAC_MIDDLE_TRACE 1
 

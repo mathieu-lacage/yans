@@ -21,7 +21,7 @@
 
 #include "mac-80211.h"
 #include "mac-high-access-point.h"
-#include "mac-high-station.h"
+#include "mac-high-nqstation.h"
 //#include "mac-high-qstation.h"
 #include "mac-high-adhoc.h"
 #include "phy-80211.h"
@@ -100,8 +100,8 @@ Mac80211::startContainer (void)
 	m_container = new MacContainer (this);
 	Phy80211 *phy = static_cast <class Phy80211 *> (netif_);
 	m_container->setPhy (phy);
-	MacStations *stations = new AarfMacStations (m_container);
-	//MacStations *stations = new ArfMacStations (m_container);
+	//MacStations *stations = new AarfMacStations (m_container);
+	MacStations *stations = new ArfMacStations (m_container);
 	m_container->setStations (stations);
 	MacParameters *parameters = new MacParameters (m_container);
 	m_container->setParameters (parameters);
@@ -141,7 +141,7 @@ Mac80211::command(int argc, const char*const* argv)
 		    strcmp (argv[2], "station") == 0) {
 			int ap = atoi (argv[3]);
 			startContainer ();
-			MacHigh *high = new MacHighStation (m_container, ap);
+			MacHigh *high = new MacHighNQStation (m_container, ap);
 			m_container->setMacHigh (high);
 			return TCL_OK;
 		}

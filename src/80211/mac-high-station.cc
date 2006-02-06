@@ -31,10 +31,13 @@
 #include "dca-txop.h"
 #include "mac-parameters.h"
 #include "mac-container.h"
+#include "mac-traces.h"
 
 #include "packet.h"
 
+#ifndef STATION_TRACE
 #define STATION_TRACE 1
+#endif /* STATION_TRACE */
 
 #ifdef STATION_TRACE
 # define TRACE(format, ...) \
@@ -48,10 +51,6 @@
 MacHighStation::MacHighStation (MacContainer *container, int apAddress)
 	: MacHigh (container)
 {
-	m_dcfParameters = new MacDcfParameters (container);
-	m_dcf = new Dcf (container, m_dcfParameters);
-	m_dcfQueue = new MacQueue80211e (container->parameters ());
-	new DcaTxop (m_dcf, m_dcfQueue, container);
 
 	m_associationQueue = new MacQueue80211e (container->parameters ());
 
@@ -68,12 +67,6 @@ MacHighStation::parameters (void)
 	return container ()->parameters ();
 }
 
-void
-MacHighStation::enqueueToLow (Packet *packet)
-{
-	m_dcfQueue->enqueue (packet);
-	m_dcf->requestAccess ();
-}
 
 Packet *
 MacHighStation::getPacketFor (int destination)
@@ -126,7 +119,7 @@ MacHighStation::tryToEnsureAssociated (void)
 	if (isBeaconMissed ()) {
 		TRACE ("missed too many beacons");
 		// XXX
-		m_dcfQueue->flush ();
+		flush ();
 		setDisAssociated ();
 		sendProbeRequest ();
 	} else if (!isAssociated ()) {
@@ -254,6 +247,9 @@ MacHighStation::receiveFromMacLow (Packet *packet)
 		case MAC_80211_MGT_PROBE_REQUEST:
 			Packet::free (packet);
 			break;
+		case MAC_80211_MGT_CFPOLL:
+			break;
+			gotCFPoll (packet);
 		case MAC_80211_DATA:
 			TRACE ("forward up from %d", getSource (packet));
 			container ()->forwardToLL (packet);

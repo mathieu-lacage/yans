@@ -31,11 +31,13 @@
 #include "mac-container.h"
 #include "mac-queue-80211e.h"
 #include "hdr-mac-80211.h"
+#include "mac-traces.h"
 
 #include "packet.h"
 
-
+#ifndef AP_TRACE
 #define AP_TRACE 1
+#endif /* AP_TRACE */
 
 #ifdef AP_TRACE
 # define TRACE(format, ...) \

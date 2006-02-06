@@ -20,7 +20,9 @@
  */
 
 #include "hdr-mac-80211.h"
+
 #include "packet.h"
+#include "ip.h"
 #include "mac.h"
 
 /* a small array to verify that 
@@ -94,10 +96,15 @@ hdr_mac_80211::isRetry (void) const
 {
 	return (m_retry)?true:false;
 }
-int 
+uint8_t
 hdr_mac_80211::getTID (void) const
 {
 	return m_tid;
+}
+double 
+hdr_mac_80211::getTxopLimit (void) const
+{
+	return m_txopLimit * 1000000;
 }
 bool 
 hdr_mac_80211::isBlockAck (void) const
@@ -186,10 +193,16 @@ hdr_mac_80211::setMoreFragments (bool moreFragments)
 	m_moreFragments = moreFragments?1:0;
 }
 void 
-hdr_mac_80211::setTID (int tid)
+hdr_mac_80211::setTID (uint8_t tid)
 {
 	m_tid = tid;
 	m_qos = 1;
+}
+void
+hdr_mac_80211::setTxopLimit (double txopLimit)
+{
+	unsigned int usec = (unsigned int) floor (txopLimit * 1000000);
+	m_txopLimit = usec;
 }
 void 
 hdr_mac_80211::setNoAck (void)
@@ -225,6 +238,7 @@ hdr_mac_80211::getTypeString (void) const
 		FOO (CTL_BACKREQ);
 		FOO (CTL_BACKRESP);
 		FOO (DATA);
+		FOO (MGT_CFPOLL);
 		FOO (MGT_BEACON);
 		FOO (MGT_ASSOCIATION_REQUEST);
 		FOO (MGT_ASSOCIATION_RESPONSE);
@@ -310,10 +324,15 @@ getDuration (Packet *packet)
 {
 	return HDR_MAC_80211 (packet)->getDuration ();
 }
-int 
+uint8_t
 getTID (Packet *packet)
 {
 	return HDR_MAC_80211 (packet)->getTID ();
+}
+double
+getTxopLimit (Packet *packet)
+{
+	return HDR_MAC_80211 (packet)->getTxopLimit ();
 }
 bool 
 isBlockAck (Packet *packet)
@@ -336,6 +355,12 @@ isQos (Packet *packet)
 	return HDR_MAC_80211 (packet)->isQos ();
 }
 
+uint8_t 
+getRequestedTID (Packet *packet)
+{
+	return HDR_IP (packet)->prio ();
+}
+
 
 
 /*********************************************************
@@ -344,9 +369,14 @@ isQos (Packet *packet)
 
 
 void 
-setTID (Packet *packet, int tid)
+setTID (Packet *packet, uint8_t tid)
 {
 	HDR_MAC_80211 (packet)->setTID (tid);
+}
+void
+setTxopLimit (Packet *packet, double txopLimit)
+{
+	HDR_MAC_80211 (packet)->setTxopLimit (txopLimit);
 }
 void 
 setNoAck (Packet *packet)
@@ -447,4 +477,29 @@ char const *
 getTypeString (Packet *packet)
 {
 	return HDR_MAC_80211 (packet)->getTypeString ();
+}
+
+
+enum ac_e 
+getAC (Packet *packet)
+{
+	uint8_t UP = getTID (packet);
+	assert (UP < 8);
+       	switch (UP) {
+	case 1:
+	case 2:
+		return AC_BK;
+	case 0:
+	case 3:
+		return AC_BE;
+	case 4:
+	case 5:
+		return AC_VI;
+	case 6:
+	case 7:
+		return AC_VO;
+	default:
+		assert (false);
+		return AC_BK;
+	}
 }

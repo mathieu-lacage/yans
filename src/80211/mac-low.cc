@@ -29,17 +29,18 @@
 #include "rng-uniform.h"
 #include "mac-parameters.h"
 #include "mac-container.h"
+#include "mac-traces.h"
 
 #include <iostream>
 
-#define nopeMAC_TRACE 1
+#define nopeMAC_LOW_TRACE 1
 
-#ifdef MAC_TRACE
+#ifdef MAC_LOW_TRACE
 # define TRACE(format, ...) \
 	printf ("MAC LOW %d %f " format "\n", getSelf (), now (), ## __VA_ARGS__);
-#else /* MAC_TRACE */
+#else /* MAC_LOW_TRACE */
 # define TRACE(format, ...)
-#endif /* MAC_TRACE */
+#endif /* MAC_LOW_TRACE */
 
 
 
