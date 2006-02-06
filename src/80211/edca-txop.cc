@@ -263,6 +263,7 @@ EdcaTxop::tryToSendOnePacket (void)
 	}
 	if (!enoughCurrentTime ()) {
 		TRACE ("no time to start transmission.");
+		m_dcf->notifyAccessFinished ();
 		return;
 	}
 
@@ -271,15 +272,23 @@ EdcaTxop::tryToSendOnePacket (void)
 		Packet *packet = m_queue->peekNextPacket ();
 		int nextTxMode = lookupDestStation (packet)->getDataMode (getSize (packet));
 		double txDuration = calculateNextTxDuration (packet);
+		txDuration += parameters ()->getSIFS ();
 		txDuration += calculateCurrentTxDuration ();
 		if (enoughTime (txDuration)) {
 			m_lastPacketInBurst = false;
+			TRACE ("burst");
 			low ()->enableNextData (getSize (packet), nextTxMode);
 		} else {
+			TRACE ("burst end (not enough time for next packet)");
 			m_lastPacketInBurst = true;
 			low ()->disableNextData ();
 		}
 	} else {
+		if (m_queue->isEmpty ()) {
+			TRACE ("burst end (queue empty)");
+		} else {
+			TRACE ("burst end (txop zero)");
+		}
 		m_lastPacketInBurst = true;
 		low ()->disableNextData ();
 	}
