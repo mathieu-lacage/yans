@@ -27,8 +27,13 @@
 
 /* a small array to verify that 
  * sizeof (hdr_mac) >= sizeof (hdr_mac_80211) 
+ * Note that this array is not made static 
+ * as it should because it is never ever used 
+ * by anyone which makes gcc report a bug. So,
+ * since I don't care whether or not gcc will optimize
+ * this thing away, I don't mark it static.
  */
-static char foo[sizeof (hdr_mac)-sizeof (hdr_mac_80211)+1];
+char foo[sizeof (hdr_mac)-sizeof (hdr_mac_80211)+1];
 
 Packet *
 hdr_mac_80211::create (int source)
