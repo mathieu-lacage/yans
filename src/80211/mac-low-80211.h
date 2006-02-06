@@ -115,7 +115,9 @@ private:
 	double getXIFSLeft (void);
 
 
-	void sendPacket (Packet *txPacket);
+	void sendRTSForPacket (Packet *packet);
+	void sendDataPacket (Packet *packet);
+	void sendPacket (void);
 	void startTransmission (void);
 	void dealWithInputQueue (void);
 
