@@ -53,13 +53,6 @@ public:
 	virtual void gotData (Packet *packet) {
 		m_middle->gotData (packet);
 	}
-	virtual Packet *gotBlockAckReq (Packet *packet) {
-#ifdef BACK
-		return m_middle->gotBlockAckReq (packet);
-#else /* BACK */
-		return 0;
-#endif /* BACK */
-	}
 private:
 	MacRxMiddle *m_middle;
 };
@@ -102,98 +95,7 @@ public:
 		m_lastSequenceControl = sequenceControl;
 	}
 
-#ifdef BACK
-	void setBABufferSize (int n) {
-		m_BABufferSize = n;
-	}
-	void setInactivityTimer (double delay) {
-		m_inactivityTimer = delay;
-	}
-	void resetInactivityTimer (double now) {
-		m_lastInactivityTimerStart = now;
-	}
-	double isInactivityTimerExpired (double now) {
-		double delay = now - m_lastInactivityTimerStart;
-		if (m_inactivityTimer < delay) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-	bool isBlockAcking (void) {
-		return m_blockAcking;
-	}
-	bool accumulateFirstBlock (Packet *packet) {
-		m_blockAcking = true;
-		return appendBlock (packet);
-	}
-	bool accumulateLastBlock (Packet *packet) {
-		m_blockAcking = false;
-		return appendBlock (packet);
-	}
-	bool accumulateBlock (Packet *packet) {
-		return appendBlock (packet);
-	}
-	Packet *getOldestCompletePacket (void) {
-		/* Here, we have to defragment the first packet
-		 * we can from the BA buffer.
-		 */
-		dequeue<Packet *>::iterator i;
-		Packet *defragmented;
-		int totalSize = 0;
-		for (i = m_blocks.begin (); i != m_blocks->end (); i++) {
-			totalSize += getSize (*i);
-			if (!getMoreFragments (*i)) {
-				defragmented = *i;
-				setSize (defragmented, totalSize);
-				m_blocks->erase (m_blocks->begin (), i);
-				return defragmented;
-				break;
-			}
-			Packet::free (*i);
-		}
-		m_blocks->erase (m_blocks->begin (), m_blocks->end ());
-		return 0;
-	}
-	void fillBlockAckResp (Packet *packet, int sequenceControlStart) {
-		dequeue<Packet *>::iterator i;
-		int j;
-		int n = 0;
-		int prevSequenceNumber = sequenceControlStart >> 4;
-		for (i = m_blocks.begin (), j = 0; i != m_blocks->end () && j < 64; i++) {
-			int currentSequenceNumber = getSequenceControl (*i) >> 4;
-			if (getSequenceControl (*i) >= sequenceControlStart) {
-				n++;
-				if (currentSequenceNumber > prevSequenceNumber) {
-					j++;
-					prevSequenceNumber = currentSequenceNumber;
-				}
-			}
-		}
-		packet->allocdata (n * sizeof (uint16_t));
-		uint16_t *buffer = packet->accessdata ();
-		for (i = m_blocks.begin (), j = 0; i != m_blocks->end () && j < n; i++) {
-			if (getSequenceControl (*i) >= sequenceControlStart) {
-				*buffer = getSequenceControl (*i);
-				buffer++;
-				j++;
-			}
-		}
-	}
 private:
-	bool appendBlock (Packet *packet) {
-		m_blocks->push_back (packet);
-		if (m_blocks->size () == m_BABufferSize) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-	double m_inactivityTimer;
-	int m_BABufferSize;
-	bool m_blockAcking;
-	dequeue<Packet *> m_blocks;
-#endif /* BACK */
 	bool m_deFragmenting;
 	uint16_t m_lastSequenceControl;
 	int m_rxSize;
@@ -336,77 +238,6 @@ MacRxMiddle::handleFragments (Packet *packet, OriginatorRxStatus *originator)
 	}
 	return true;
 }
-
-#ifdef BACK
-/* Return true is packet has been handled by BlockAck
- * machinery. Return false otherwise.
- */
-bool
-MacRxMiddle::handleBlockAck (Packet *packet, OriginatorRxStatus *originator)
-{
-	if (originator->isBlockAcking ()) {
-		if (isBlockAck (packet)) {
-			if (originator->isInactivityTimerExpired (now ())) {
-				// XXX cancel BA and send delba.
-				dropPacket (packet);
-			} else {
-				if (originator->accumulateBlock (packet)) {
-					Packet *old = originator->getOldestCompletePacket ();
-					if (old != 0) {
-						// XXX forward to MAC directly.
-					}
-				}
-				originator->resetInactivityTimer (now ());
-			}
-		} else {
-			if (originator->isInactivityTimerExpired (now ())) {
-				// XXX cancel BA and send delba.
-			}
-			/* accumulate in block ack anyway but do not
-			   update the inactivity timer. 
-			*/
-			if (originator->accumulateBlock (packet)) {
-				Packet *old = originator->getOldestCompletePacket ();
-				if (old != 0) {
-					// XXX forward to MAC directly.
-				}
-			}
-		}
-	} else {
-		if (isBlockAck (packet)) {
-			// XXX cancel BA and send delba.
-			dropPacket (packet);
-		} else {
-			return false;
-		}
-	}
-	return true;
-}
-Packet *
-MacRxMiddle::gotBlockAckReq (Packet *packet)
-{
-	OriginatorRxStatus *originator = lookup (packet);
-	Packet *resp;
-	if (originator->isBlockAcking ()) {
-		resp = Packet::alloc ();
-		setType (resp, MAC_80211_CTL_BACKRESP);
-		setSource (resp, getDestination (packet));
-		setDestination (resp, getSource (packet));
-		setTID (resp, getTID (packet));
-		originator->fillBlockAckResp (resp, getBACKsequenceControl (packet));
-
-		originator->indicateBlocks (resp);
-		// and forward to mac content of rx buffer.
-	} else {
-		// this will allow the calling MacLow to
-		// send an ACK instead.
-		resp = 0;
-		// queue delba
-		
-	}
-	return resp;
-}
-#endif /* BACK */
 
 void 
 MacRxMiddle::gotPacket (int from, double snr, int txMode)
