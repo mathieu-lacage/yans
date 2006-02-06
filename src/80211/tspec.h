@@ -65,17 +65,18 @@ public:
 	double getPeakDataRate (void) const;
 	uint32_t getBurstSize (void) const;
 	double getDelayBound (void) const;
-
 	/* return an index into the PHY transmission 
 	 * mode list.
 	 */
 	int getMinimumPhyMode (void) const;
-
 	double getSurplusBandwidthAllowance (void) const;
 	double getMediumTime (void) const;
 
+
 	void setTsid (int tsid);
 	void setMediumTime (double mediumTime);
+	void setMinimumServiceInterval (double interval);
+	void setMaximumServiceInterval (double interval);
 
 	virtual int command(int argc, const char*const* argv);
 
@@ -83,8 +84,6 @@ private:
 	// XXX ?
 	void setNominalMSDUSize (uint16_t size);
 	void setMaximalMSDUSize (uint16_t size);
-	void setMinimumServiceInterval (double interval);
-	void setMaximumServiceInterval (double interval);
 	void setInactivityInterval (double interval);
 	void setSuspensionInterval (double interval);
 	void setServiceStartTime (double startTime);

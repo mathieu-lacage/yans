@@ -344,6 +344,13 @@ QapScheduler::calculateTotalCapTime (double serviceInterval)
 }
 
 double
+QapScheduler::getMaxTxopDuration (void)
+{
+	double maxTxop = 0xff * 32.0e-6;
+	return maxTxop;
+}
+
+double
 QapScheduler::getCurrentTotalCapTime (void)
 {
 	return calculateTotalCapTime (getCurrentServiceInterval ());
@@ -358,11 +365,15 @@ QapScheduler::addTsRequest (TSpec *tspec)
 	    tspec->getNominalMSDUSize () == 0 ||
 	    tspec->getSurplusBandwidthAllowance () <= 0.0 ||
 	    (tspec->getMaximumServiceInterval () <= 0.0 &&
-	     tspec->getDelayBound () <= 0.0)) {
+	     tspec->getDelayBound () <= 0.0) ||
+	    (tspec->getMaximumServiceInterval () < 
+	     tspec->getMinimumServiceInterval ())) {
 		/* we don't have a minimum set of parameters
+		 * or we have invalid parameters.
 		 * send back invalid ADDTS_RESPONSE.
 		 * see section 9.9.3.2 802.11e/D12.1
 		 */
+		TRACE ("Refused new stream. Missing minimum set of parameters");
 		return false;
 	}
 	tspec->setMediumTime (calculateMediumTime (tspec));
@@ -375,20 +386,38 @@ QapScheduler::addTsRequest (TSpec *tspec)
 		newServiceInterval = maximumServiceInterval;
 	}
 	double capTime = 0.0;
-	capTime += calculateTxopDuration (newServiceInterval, tspec);
+	double txopDuration = calculateTxopDuration (newServiceInterval, tspec);
+	if (txopDuration > getMaxTxopDuration ()) {
+		/* The txop duration for this TS is larger than 
+		 * what can be encoded in the txoplimit of the cfpoll 
+		 * packet. This is probably due to a MinimumServiceInterval
+		 * which was not correctly set in the tspec.
+		 */
+		TRACE ("Refused new stream. Txop too large (%f > %f). Probably because of wrong MinimumServiceInterval",
+		       txopDuration,
+		       getMaxTxopDuration ());
+		return false;
+	}
+	capTime += txopDuration;
 	capTime += calculateTotalCapTime (newServiceInterval);
 	if (capTime > parameters ()->getCapLimit ()) {
 		/* We cannot allow each CAP to be longer than CapLimit. */
+		TRACE ("Refused new stream. Cap time too big: %f > %f",
+		       capTime,
+		       parameters ()->getCapLimit ());
 		return false;
 	}
 	double capProportion = capTime / newServiceInterval;
 	if (capProportion > parameters ()->getMinEdcaTrafficProportion ()) {
 		/* we must allow at least a small proportion of EDCA traffic. */
+		TRACE ("Refused new stream. Cap proportion too big: %f > %f",
+		       capProportion,
+		       parameters ()->getMinEdcaTrafficProportion ());
 		return false;
 	}
 	/* The new schedule should be okay. We need to advertise it now. */
 	setCurrentServiceInterval (newServiceInterval);
-	TRACE ("new SI is: %f", newServiceInterval);
+	TRACE ("Admitted new stream. Service interval: %f, capTime: %f", newServiceInterval, capTime);
 	// need to move around source dest XXX
 	m_admitted.push_back (Txop (0, tspec));
 	return true;

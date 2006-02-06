@@ -627,6 +627,7 @@ MacLow::receive (Packet *packet)
 					getLastSNR (),
 					getTxMode (packet));
 	bool isPrevNavZero = isNavZero (now ());
+	TRACE ("duration/id: %f", getDuration (packet));
 	notifyNav (now (), getDuration (packet));
 
 	double monitorDelay = 0.0;

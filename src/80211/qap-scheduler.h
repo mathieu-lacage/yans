@@ -83,6 +83,7 @@ private:
 	void finishCap (void);
 	void doCurrentTxop (void);
 
+	double getMaxTxopDuration (void);
 	double duration (int size, int mode);
 	double calculateMediumTime (TSpec const *tspec);
 	double calculateTxopDuration (double serviceInterval, TSpec const *tspec);

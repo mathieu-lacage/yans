@@ -39,7 +39,7 @@ TSpec::TSpec ()
 {
 	initialize ("nominalMSDUSize", &m_nominalMSDUSize, 1500);
 	initialize ("maximalMSDUSize", &m_maximalMSDUSize, 1500);
-	initialize ("minimumServiceInterval", &m_minimumServiceInterval, 1.0);
+	initialize ("minimumServiceInterval", &m_minimumServiceInterval, 0.0);
 	initialize ("maximumServiceInterval", &m_maximumServiceInterval, 1.0);
 	initialize ("inactivityInterval", &m_inactivityInterval, 1.0);
 	initialize ("suspensionInterval", &m_suspensionInterval, 1.0);
@@ -48,7 +48,7 @@ TSpec::TSpec ()
 	initialize ("meanDataRate", &m_meanDataRate, 100000);
 	initialize ("peakDataRate", &m_peakDataRate, 100000);
 	initialize ("burstSize", &m_burstSize, 4000);
-	initialize ("delayBound", &m_delayBound, 0.5);
+	initialize ("delayBound", &m_delayBound, 0.0);
 	initialize ("minimumPhyMode", &m_minimumPhyMode, 0);
 	initialize ("surplusBandwidthAllowance", &m_surplusBandwidthAllowance, 1.5);
 	initialize ("mediumTime", &m_mediumTime, 1.0);

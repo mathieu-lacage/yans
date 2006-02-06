@@ -132,6 +132,30 @@ MacHighQStation::addTsRequest (TSpecRequest *request)
 		}
 	}
 	if (!found) {
+		TRACE ("no tsids available");
+		request->notifyRefused ();
+		return;
+	}
+	if (tspec->getMinimumServiceInterval () == 0.0) {
+		if (tspec->getNominalMSDUSize () == 0 &&
+		    tspec->getMeanDataRate () == 0.0) {
+			TRACE ("invalid tspec: min SI not specified and cannot be calculated");
+			request->notifyRefused ();
+			return;
+		}
+		tspec->setMinimumServiceInterval (tspec->getNominalMSDUSize () / tspec->getMeanDataRate ());
+	}
+	if (tspec->getMaximumServiceInterval () == 0.0) {
+		if (tspec->getDelayBound () == 0.0) {
+			TRACE ("invalid tspec: max SI not specified and cannot be calculated");
+			request->notifyRefused ();
+			return;			
+		}
+		uint8_t maxRetriesPossible = 1;
+		tspec->setMaximumServiceInterval (tspec->getDelayBound () / maxRetriesPossible);
+	}
+	if (tspec->getMinimumServiceInterval () > tspec->getMaximumServiceInterval ()) {
+		TRACE ("invalid tspec: min SI > max SI");
 		request->notifyRefused ();
 		return;
 	}
@@ -219,7 +243,7 @@ MacHighQStation::enqueueToLow (Packet *packet)
 void 
 MacHighQStation::gotCFPoll (Packet *packet)
 {
-	TRACE ("got cfpoll %d", getTID (packet));
+	TRACE ("got cfpoll %d/%f", getTID (packet), getTxopLimit (packet));
 	if (getTID (packet) < 8) {
 		m_hcca->acAccessGranted (getAC (packet), getTxopLimit (packet));
 	} else {

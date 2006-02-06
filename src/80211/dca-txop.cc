@@ -36,7 +36,9 @@
 #include "mac-tx-middle.h"
 
 
-#define nopeDCA_TXOP_TRACE 1
+#ifndef DCA_TXOP_TRACE
+#define DCA_TXOP_TRACE 1
+#endif /* DCA_TXOP_TRACE */
 
 #ifdef DCA_TXOP_TRACE
 # define TRACE(format, ...) \
