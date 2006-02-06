@@ -29,6 +29,13 @@ public:
 
 	virtual ~MacStation ();
 
+	/* All stations are assumed to be 
+	 * Authenticated so this method always
+	 * returns true.
+	 */
+	bool isAssociated (void);
+	void recordAssociated (void);
+
 	void setLastRxSequence (int sequence);
 	int getLastRxSequence (void);
 
@@ -46,6 +53,7 @@ protected:
 	int getNModes (void);
 private:
 	int m_sequence;
+	bool m_associated;
 	MacStations *m_stations;
 };
 

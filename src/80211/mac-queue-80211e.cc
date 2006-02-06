@@ -37,6 +37,7 @@ MacQueue80211e::~MacQueue80211e ()
 void 
 MacQueue80211e::enqueue (class Packet *packet)
 {
+	cleanup ();
 	double now;
 	now = Scheduler::instance ().clock ();
 	m_queue.push_front (pair<Packet *, double> (packet, now));
@@ -58,6 +59,7 @@ MacQueue80211e::cleanup (void)
 		if ((*tmp).second + m_lifetime > now) {
 			break;
 		}
+		Packet::free ((*tmp).first);
 		tmp++;
 	}
 	m_queue.erase (tmp.base (), m_queue.end ());

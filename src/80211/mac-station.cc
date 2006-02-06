@@ -48,3 +48,13 @@ MacStation::getNModes (void)
 {
 	return m_stations->getNModes ();
 }
+bool 
+MacStation::isAssociated (void)
+{
+	return m_associated;
+}
+void 
+MacStation::recordAssociated (void)
+{
+	m_associated = true;
+}

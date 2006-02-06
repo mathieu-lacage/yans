@@ -55,20 +55,6 @@ private:
 };
 
 
-class StaticMacHandler : public Handler
-{
-public:
-	typedef void (MacLow80211::*StaticMacRxHandler) (void);
-	StaticMacHandler (MacLow80211 *mac, StaticMacRxHandler handler);
-	virtual ~StaticMacHandler ();
-	void start (double delay);
-	virtual void handle (Event *e);
-	bool isRunning (void);
-private:
-	double now (void);
-	MacLow80211 *m_mac;
-	StaticMacRxHandler m_handler;
-	Event m_event;
-};
+
 
 #endif /* MAC_HANDLER */

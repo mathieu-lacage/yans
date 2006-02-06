@@ -31,7 +31,7 @@ static char foo[sizeof (hdr_mac)-sizeof (hdr_mac_80211)+1];
 void
 hdr_mac_80211::initialize (void)
 {
-	m_retry = false;
+	m_retry = 0;
 }
 
 int 
@@ -49,7 +49,7 @@ hdr_mac_80211::getSource (void) const
 {
 	return m_source;
 }
-enum mac_80211_data_type
+uint16_t
 hdr_mac_80211::getDataType (void) const
 {
 	return m_dataType;
@@ -62,7 +62,8 @@ hdr_mac_80211::getType (void) const
 double 
 hdr_mac_80211::getDuration (void) const
 {
-	return m_duration;
+	double realDuration = (double)m_duration;
+	return realDuration / 1e6;
 }
 int 
 hdr_mac_80211::getSequence (void) const
@@ -72,7 +73,7 @@ hdr_mac_80211::getSequence (void) const
 bool
 hdr_mac_80211::isRetry (void) const
 {
-	return m_retry;
+	return (m_retry)?true:false;
 }
 
 void 
@@ -91,7 +92,7 @@ hdr_mac_80211::setSource (int source)
 	m_source = source;
 }
 void 
-hdr_mac_80211::setDataType (enum mac_80211_data_type dataType)
+hdr_mac_80211::setDataType (uint16_t dataType)
 {
 	m_dataType = dataType;
 }
@@ -103,7 +104,9 @@ hdr_mac_80211::setType (enum mac_80211_packet_type type)
 void 
 hdr_mac_80211::setDuration (double duration)
 {
-	m_duration = duration;
+	assert (duration >= 0);
+	unsigned int realDuration = ( unsigned int) floor (duration * 1e6 + 0.5);
+	m_duration = realDuration;
 }
 void 
 hdr_mac_80211::setSequence (int sequence)
@@ -113,7 +116,7 @@ hdr_mac_80211::setSequence (int sequence)
 void
 hdr_mac_80211::setRetry (void)
 {
-	m_retry = true;
+	m_retry = 1;
 }
 
 void
@@ -131,30 +134,23 @@ hdr_mac_80211::getTxMode (void) const
 #define FOO(x) case MAC_80211_ ## x: return #x; break;
 
 const char *
-hdr_mac_80211::getDataTypeString (void) const
-{
-	switch (m_dataType) {
-		FOO (BEACON);
-		FOO (ASSOCIATTION_REQUEST);
-		FOO (ASSOCIATTION_RESPONSE);
-		FOO (DISASSOCIATION);
-		FOO (REASSOCIATION_REQUEST);
-		FOO (REASSOCIATION_RESPONSE);
-		FOO (PROBE_REQUEST);
-		FOO (PROBE_RESPONSE);
-		FOO (AUTHENTICATION);
-		FOO (DEAUTHENTICATION);
-	}
-	return "deadbeaf";
-}
-const char *
 hdr_mac_80211::getTypeString (void) const
 {
 	switch (m_type) {
-		FOO (RTS);
-		FOO (CTS);
+		FOO (CTL_RTS);
+		FOO (CTL_CTS);
+		FOO (CTL_ACK);
 		FOO (DATA);
-		FOO (ACK);
+		FOO (MGT_BEACON);
+		FOO (MGT_ASSOCIATION_REQUEST);
+		FOO (MGT_ASSOCIATION_RESPONSE);
+		FOO (MGT_DISASSOCIATION);
+		FOO (MGT_REASSOCIATION_REQUEST);
+		FOO (MGT_REASSOCIATION_RESPONSE);
+		FOO (MGT_PROBE_REQUEST);
+		FOO (MGT_PROBE_RESPONSE);
+		FOO (MGT_AUTHENTICATION);
+		FOO (MGT_DEAUTHENTICATION);
 	}
 	return "deadbeaf";
 }

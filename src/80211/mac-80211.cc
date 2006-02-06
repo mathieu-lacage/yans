@@ -20,15 +20,13 @@
  */
 
 #include "mac-80211.h"
-#include "mac-low-80211.h"
+#include "mac-high-access-point.h"
+#include "mac-high-station.h"
 #include "phy-80211.h"
 #include "hdr-mac-80211.h"
 #include "arf-mac-stations.h"
 
 #include <iostream>
-
-#define nopeTRACE_PACKETS 1
-
 
 static class Mac80211Class: public TclClass {
 public:
@@ -40,9 +38,7 @@ public:
 
 
 Mac80211::Mac80211 ()
-	: Mac (),
-	  m_stations (new ArfMacStations (this)),
-	  m_low (new MacLow80211 (this))
+	: Mac ()
 {}
 
 Mac80211::~Mac80211 ()
@@ -55,22 +51,6 @@ Mac80211::peekPhy80211 (void)
 	Phy80211 *phy = static_cast <class Phy80211 *> (netif_);
 	return phy;
 }
-
-void
-Mac80211::forwardUp (class Packet *packet)
-{
-#ifdef TRACE_PACKETS
-	cout << "mac " << this << " rx " << HDR_CMN (packet)->size () << " from " << HDR_MAC_80211 (packet)->getSource () << endl;
-#endif
-	uptarget ()->recv (packet);
-}
-
-void
-Mac80211::forwardDown (class Packet *packet)
-{
-	downtarget ()->recv (packet, (Handler *)0);
-}
-
 
 /* These three methods are the interface used by the higher-level
  * layers (i.e., arp, ll) to control where packets should be sent
@@ -109,7 +89,7 @@ Mac80211::hdr_type(char *hdr, u_int16_t type)
 	class hdr_mac_80211 *mac_header = reinterpret_cast<class hdr_mac_80211 *>(hdr);
 	// XXX ? what is this data type sued for ?
 	if (type != 0) {
-		mac_header->setDataType ((enum mac_80211_data_type)type);
+		mac_header->setDataType (type);
 	}
 	return (int)mac_header->getDataType ();
 }
@@ -121,28 +101,25 @@ Mac80211::hdr_type(char *hdr, u_int16_t type)
 int 
 Mac80211::command(int argc, const char*const* argv)
 {
-	int retval;
-	retval = Mac::command (argc, argv);
-	if (argc == 3 &&
-	    strcmp(argv[1], "netif") == 0) {
-		m_low->completeConstruction (peekPhy80211 ());
-	}
-	if (argc >= 3) {
+	if (argc == 3) {
 		if (strcmp (argv[1], "mode") == 0) {
 			if (strcmp (argv[2], "adhoc") == 0) {
-				//m_high = 0;
-			}
-			if (argc == 3) {
-				// bad
-			} else if (strcmp (argv[2], "station-passive") == 0) {
-				//m_high = new MacHighStation (argv[3]);
-			} else if (strcmp (argv[2], "station-active") == 0) {
-				//m_high = new MacHighStation (argv[3]);
+				m_high = 0;
+				return TCL_OK;
 			} else if (strcmp (argv[2], "access-point") == 0) {
-				//m_high = new MacHighAccessPoint (argv[3]);
+				m_high = new MacHighAccessPoint (this, peekPhy80211 ());
+				return TCL_OK;
 			}
 		}
+	} else if (argc == 4) {
+		if (strcmp (argv[1], "mode") == 0 &&
+		    strcmp (argv[2], "station") == 0) {
+			int ap = atoi (argv[3]);
+			m_high = new MacHighStation (this, peekPhy80211 (), ap);
+			return TCL_OK;
+		}
 	}
+	int retval = Mac::command (argc, argv);
 	return retval;
 }
 
@@ -153,14 +130,11 @@ Mac80211::recv (Packet *p, Handler *h)
 	
 	switch(hdr->direction()) {
 	case hdr_cmn::DOWN:
-#ifdef TRACE_PACKETS
-		cout << "mac " << this << " queue tx " << HDR_CMN (p)->size () << " for " << HDR_MAC_80211 (p)->getDestination () << endl;
-#endif
-		m_low->enqueue (p);
+		m_high->enqueueFromLL (p);
 		h->handle (p);
 		break;
 	case hdr_cmn::UP:
-		m_low->receive (p);
+		m_high->receiveFromPhy (p);
 		break;
 	default:
 		assert (FALSE);
@@ -168,8 +142,3 @@ Mac80211::recv (Packet *p, Handler *h)
 	}
 }
 
-MacStation *
-Mac80211::lookupStation (int address)
-{
-	return m_stations->lookup (address);
-}

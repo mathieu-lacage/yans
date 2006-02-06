@@ -23,6 +23,7 @@
 
 #include "hdr-mac-80211.h"
 #include "phy-80211.h"
+#include "static-handler.tcc"
 
 class Packet;
 class RngUniform;
@@ -30,22 +31,22 @@ class Backoff;
 class Mac80211;
 class MacQueue80211e;
 class MacStation;
+class MacHigh;
 class DynamicMacHandler;
 class MacCancelableEvent;
-class StaticMacHandler;
+class MacHigh;
 class Phy80211;
 
 class MacLow80211 {
 public:
-	MacLow80211 (Mac80211 *mac);
+	MacLow80211 (Mac80211 *mac, MacHigh *high, Phy80211 *phy);
 	~MacLow80211 ();
-
-	void completeConstruction (Phy80211 *phy);
 
 	void enqueue (Packet *packet);
 	void receive (Packet *packet);
+	void flush (void);
 
-	Phy80211 *peekPhy80211 (void);
+	Phy80211 *peekPhy (void);
 
 	double getEIFS (void);
 	double getDIFS (void);
@@ -53,6 +54,7 @@ public:
 	int getSelf (void);
 
 private:
+	void forwardDown (Packet *packet);
 	double now (void);
 	MacStation *lookupStation (int address);
 
@@ -66,8 +68,6 @@ private:
 	int getCWmin (void);
 	int getCWmax (void);
 	
-	Phy80211 *peekPhy (void);
-
 	double getLastSNR (void);
 	double getLastStartRx (void);
 	double calculateTxDuration (int mode, int size);
@@ -119,10 +119,12 @@ private:
 	int m_SSRC;
 	int m_SLRC;
 	Mac80211 *m_mac;
+	MacHigh *m_high;
+	Phy80211 *m_phy;
 	MacQueue80211e *m_queue;
 	DynamicMacHandler *m_ACKTimeoutBackoffHandler;
 	DynamicMacHandler *m_CTSTimeoutBackoffHandler;
-	StaticMacHandler *m_accessBackoffHandler;
+	StaticHandler<MacLow80211> *m_accessBackoffHandler;
 	DynamicMacHandler *m_sendCTSHandler;
 	DynamicMacHandler *m_sendACKHandler;
 	DynamicMacHandler *m_sendDataHandler;

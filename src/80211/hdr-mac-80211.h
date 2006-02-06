@@ -73,23 +73,20 @@ class Packet;
 #define HDR_MAC_80211(p) ((hdr_mac_80211 *)hdr_mac::access(p))
 
 enum mac_80211_packet_type {
-	MAC_80211_RTS,
-	MAC_80211_CTS,
+	MAC_80211_CTL_RTS,
+	MAC_80211_CTL_CTS,
+	MAC_80211_CTL_ACK,
 	MAC_80211_DATA,
-	MAC_80211_ACK
-};
-
-enum mac_80211_data_type {
-	MAC_80211_BEACON,
-	MAC_80211_ASSOCIATTION_REQUEST,
-	MAC_80211_ASSOCIATTION_RESPONSE,
-	MAC_80211_DISASSOCIATION,
-	MAC_80211_REASSOCIATION_REQUEST,
-	MAC_80211_REASSOCIATION_RESPONSE,
-	MAC_80211_PROBE_REQUEST,
-	MAC_80211_PROBE_RESPONSE,
-	MAC_80211_AUTHENTICATION,
-	MAC_80211_DEAUTHENTICATION
+	MAC_80211_MGT_BEACON,
+	MAC_80211_MGT_ASSOCIATION_REQUEST,
+	MAC_80211_MGT_ASSOCIATION_RESPONSE,
+	MAC_80211_MGT_DISASSOCIATION,
+	MAC_80211_MGT_REASSOCIATION_REQUEST,
+	MAC_80211_MGT_REASSOCIATION_RESPONSE,
+	MAC_80211_MGT_PROBE_REQUEST,
+	MAC_80211_MGT_PROBE_RESPONSE,
+	MAC_80211_MGT_AUTHENTICATION,
+	MAC_80211_MGT_DEAUTHENTICATION
 };
 
 class hdr_mac_80211 {
@@ -103,7 +100,7 @@ class hdr_mac_80211 {
 	int getDestination (void) const;
 	int getFinalDestination (void) const;
 	int getSource (void) const;
-	enum mac_80211_data_type getDataType (void) const;
+	uint16_t getDataType (void) const;
 	enum mac_80211_packet_type getType (void) const;
 	double getDuration (void) const;
 	int getSequence (void) const;
@@ -112,28 +109,28 @@ class hdr_mac_80211 {
 	void setDestination (int destination);
 	void setFinalDestination (int destination);
 	void setSource (int source);
-	void setDataType (enum mac_80211_data_type type);
+	void setDataType (uint16_t type);
 	void setType (enum mac_80211_packet_type type);
 	void setDuration (double duration);
 	void setSequence (int sequence);
 	void setRetry (void);
 
-	const char *getDataTypeString (void) const;
 	const char *getTypeString (void) const;
 	
  private:
 	enum mac_80211_packet_type m_type;
-	enum mac_80211_data_type m_dataType;
-	double m_duration;
 	/* this is a hack to avoid growing 
 	 * larger than the normal Mac header. 
 	 */
-	int m_sequence : 10;
-	int m_txMode   : 10;
+	unsigned int m_dataType : 16;
+	unsigned int m_duration : 16;
+	unsigned int m_sequence : 12;
+	unsigned int m_fragment : 4;
+	unsigned int m_retry    : 1;
+	unsigned int m_txMode   : 10;
 	int m_destination;
 	int m_finalDestination;
 	int m_source;
-	bool m_retry;
 };
 
 

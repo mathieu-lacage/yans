@@ -24,11 +24,10 @@
 
 #include "mac.h"
 
-class MacStation;
-class MacStations;
+class MacHigh;
 class Phy80211;
-class MacLow80211;
 class Packet;
+class Handler;
 
 class Mac80211 : public Mac
 {
@@ -45,12 +44,8 @@ public:
 	virtual int command(int argc, const char*const* argv);
 
 	Phy80211 *peekPhy80211 (void);
-	void forwardUp (class Packet *packet);
-	void forwardDown (class Packet *packet);
-	MacStation *lookupStation (int address);
 private:
-	MacStations *m_stations;
-	MacLow80211 *m_low;
+	MacHigh *m_high;
 };
 
 
