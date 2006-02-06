@@ -33,6 +33,7 @@ MacHighAdhoc::~MacHighAdhoc ()
 void 
 MacHighAdhoc::enqueueFromLL (Packet *packet)
 {
+	setType (packet, MAC_80211_DATA);
 	setDestination (packet, getFinalDestination (packet));
 	m_low->enqueue (packet);
 }

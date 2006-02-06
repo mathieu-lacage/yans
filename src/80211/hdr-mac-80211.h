@@ -115,7 +115,7 @@ class hdr_mac_80211 {
 	void setSequence (int sequence);
 	void setRetry (void);
 
-	const char *getTypeString (void) const;
+	char const *getTypeString (void) const;
 	
  private:
 	enum mac_80211_packet_type m_type;
@@ -157,5 +157,6 @@ int getFinalDestination (Packet *packet);
 int getSource (Packet *packet);
 int getTxMode (Packet *packet);
 enum mac_80211_packet_type getType (Packet *packet);
+char const *getTypeString (Packet *packet);
 
 #endif /* HDRMAC_80211 */

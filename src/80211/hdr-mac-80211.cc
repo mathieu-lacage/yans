@@ -133,7 +133,7 @@ hdr_mac_80211::getTxMode (void) const
 
 #define FOO(x) case MAC_80211_ ## x: return #x; break;
 
-const char *
+char const *
 hdr_mac_80211::getTypeString (void) const
 {
 	switch (m_type) {
@@ -206,13 +206,15 @@ getSize (Packet *packet)
 {
 	return HDR_CMN (packet)->size ();
 }
-
-
-
 double
 getDuration (Packet *packet)
 {
 	return HDR_MAC_80211 (packet)->getDuration ();
+}
+char const *
+getTypeString (Packet *packet)
+{
+	return HDR_MAC_80211 (packet)->getTypeString ();
 }
 
 

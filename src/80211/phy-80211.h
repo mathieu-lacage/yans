@@ -166,12 +166,18 @@ private:
 	bool isClassDefined (char const *className, char const *varName);
 	void delay_bind_safe (char const *varName);
 
+	void notifyRxStart (double now, double duration);
+	void notifyRxEnd (double now, bool receivedOk);
+	void notifyTxStart (double now, double duration);
+	void notifySleep (double now);
+	void notifyWakeup (double now);
+
 	
 	Propagation *m_propagation;
 	Antenna     *m_antenna;
 	EndRxHandler *m_endRxHandler;
 	RngUniform *m_random;
-	Phy80211Listener *m_listener;
+	vector<Phy80211Listener *> m_listeners;
 	vector<class TransmissionMode *> m_modes;
 	list<PhyRxEvent *> m_rxEventList;
 

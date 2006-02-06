@@ -24,6 +24,7 @@
 
 MacStation::MacStation (MacStations *stations)
 	: m_sequence (0),
+	  m_associated (false),
 	  m_stations (stations)
 {}
 

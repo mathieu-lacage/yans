@@ -36,6 +36,7 @@ class DynamicMacHandler;
 class MacCancelableEvent;
 class MacHigh;
 class Phy80211;
+class MacParameters;
 
 class MacLow {
 public:
@@ -54,19 +55,13 @@ public:
 	int getSelf (void);
 
 private:
+	MacParameters *parameters (void);
 	void forwardDown (Packet *packet);
 	double now (void);
 	MacStation *lookupStation (int address);
 
-	int getACKSize (void) const;
-	int getRTSSize (void) const;
-	int getCTSSize (void) const;
-
-	int getDataHeaderSize (void);
-	double getSIFS (void);
-	double getSlotTime (void);
-	int getCWmin (void);
-	int getCWmax (void);
+	bool isData (Packet *packet);
+	bool isManagement (Packet *packet);
 	
 	double getLastSNR (void);
 	double getLastStartRx (void);
@@ -83,12 +78,6 @@ private:
 	void dropPacket (Packet *packet);
 	void dropCurrentTxPacket (void);
 	double max (double a, double b);
-
-	int getMaxSSRC (void);
-	int getMaxSLRC (void);
-	int getRTSCTSThreshold (void);
-	double getCTSTimeoutDuration (void);
-	double getACKTimeoutDuration (void);
 	double getXIFSLeft (void);
 	void increaseSequence (void);
 
