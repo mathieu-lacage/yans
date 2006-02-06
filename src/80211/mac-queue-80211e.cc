@@ -90,12 +90,13 @@ Packet *
 MacQueue80211e::peekNextPacket (void)
 {
 	cleanup ();
-	if (m_queue.empty ()) {
+	if (!m_queue.empty ()) {
 		Packet *packet;
 		packet = m_queue.back ().first;
 		return packet;
+	} else {
+		return 0;
 	}
-	return 0;
 }
 
 bool
