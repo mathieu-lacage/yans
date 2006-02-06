@@ -40,6 +40,9 @@ hdr_mac_80211::create (int source)
 {
 	Packet *packet = Packet::alloc ();
 	HDR_CMN (packet)->ptype () = PT_MAC;
+	HDR_CMN (packet)->iface () = ANY_IFACE.value ();
+	HDR_CMN (packet)->error() = 0;
+	HDR_CMN (packet)->direction() = hdr_cmn::DOWN;
         HDR_MAC_80211 (packet)->setSource (source);
 	HDR_MAC_80211 (packet)->initialize ();
         return packet;
