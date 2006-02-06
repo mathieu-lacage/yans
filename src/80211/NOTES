@@ -142,7 +142,7 @@ int getUP (int TID) {
 	if (TID < 8) {
 		UP = TID;
 	} else {
-		int TSID = TID;
+5~		int TSID = TID;
 		UP = TSPEC[TSID].UP;
 	}
 	return UP;
@@ -230,3 +230,14 @@ does not require admission control.
   tx in EDCA some HCCA packets and when some other EDCA packets were
   already present. i.e., how do you take packets from the TS queues ?
 
+
+Access Category Admission Control
+---------------------------------
+
+This is not implemented. It would require:
+each Edca-Txop:
+  - sends ADDTS and stores response mediumTime and delay
+  - verify that delay is not expired
+  - verify that allocated mediumTime is not depleted.
+  - switch to lower-priority parameters if needed in either
+    case.

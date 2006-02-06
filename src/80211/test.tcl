@@ -26,6 +26,28 @@ proc set-bss-mode {ap arrayName} {
     }
 }
 
+# set all nodes in QoS station mode except for
+# the ap which is set to QoS ap mode.
+#   - the first argument must be the address of
+#     the tentative ap.
+#   - the second argument must be the name of
+#     the array which holds all the nodes.
+proc set-qbss-mode {ap arrayName} {
+    upvar $arrayName nodes
+    for {set i 0} {$i < [array size nodes]} {incr i} {
+	set node $nodes($i)
+	for {set j 0} {$j < [$node set nifs_]} {incr j} {
+	    set mac [$node set mac_($j)]
+	    if {$i == $ap} {
+		$mac mode qaccess-point
+	    } else {
+		$mac mode qstation $ap
+	    }
+	}
+    }
+}
+
+
 # set all nodes in adhoc mode.
 #   - the first and only argument must be 
 #     the name of the array which holds
@@ -39,6 +61,13 @@ proc set-adhoc-mode {arrayName} {
 	    $mac mode adhoc
 	}
     }
+}
+
+proc addts-request {node tspec granted_callback refused_callback} {
+    for {set j 0} {$j < [$node set nifs_]} {incr j} {
+	set mac [$node set mac_($j)]
+	$mac addts-request $tspec $granted_callback $refused_callback
+    }    
 }
 
 
@@ -72,9 +101,29 @@ set nodes(0) [$ns node]
 set nodes(1) [$ns node]
 set nodes(2) [$ns node]
 
-set-bss-mode 2 nodes
-
+set-qbss-mode 2 nodes
+#set-bss-mode 2 nodes
 #set-adhoc-mode nodes
+
+set tspec [new TSPEC]
+proc addts-granted-callback {tspec tsid} {
+    set tcp [new Agent/TCP]
+    $tcp set prio_ tsid
+    $tcp set class_ 2
+    set sink [new Agent/TCPSink]
+    $ns attach-agent $nodes(0) $tcp
+    $ns attach-agent $nodes(1) $sink
+    $ns connect $tcp $sink
+    set ftp [new Application/FTP]
+    $ftp attach-agent $tcp
+    $ns at 3.0 "$ftp start" 
+
+    puts "tspec granted";
+}
+proc addts-refused-callback {tspec tsid} {
+    puts "tspec refused";
+}
+addts-request $nodes(1) $tspec addts-granted-callback addts-refused-callback
 
 $nodes(0) set X_ 0.0
 $nodes(0) set Y_ 0.0
@@ -89,8 +138,6 @@ $nodes(2) set Y_ 200.0
 $nodes(2) set Z_ 0.0
 
 
-
-
 set tcp [new Agent/TCP]
 $tcp set class_ 2
 set sink [new Agent/TCPSink]
@@ -100,7 +147,6 @@ $ns connect $tcp $sink
 set ftp [new Application/FTP]
 $ftp attach-agent $tcp
 $ns at 3.0 "$ftp start" 
-
 
 $ns at 300 "puts \"End of simulation.\"; $ns halt"
 puts "Starting Simulation..."

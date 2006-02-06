@@ -21,6 +21,8 @@
 #ifndef MAC_DCF_PARAMETERS_H
 #define MAC_DCF_PARAMETERS_H
 
+#include <stdint.h>
+
 class MacContainer;
 
 class MacDcfParameters {
@@ -31,8 +33,25 @@ public:
 	double getTxopLimit (void);
 	double getAIFS (void);
 	double getEIFS (void);
+
+	bool isAccessAllowed (void);
+	void startAccessAllowed (double delay);
+
+	bool isACMandatory (void);
+
+	void setCWmin (uint16_t CWmin);
+	void setCWmax (uint16_t CWmin);
+	void setTxopLimit (double txopLimit);
+	void setAIFSN (uint8_t AIFSN);
+	void setACM (uint8_t ACM);
 private:
 	MacContainer *m_container;
+
+	double m_txopLimit;
+	uint16_t m_CWmin;
+	uint16_t m_CWmax;
+	bool m_ACM;
+	uint8_t m_AIFSN;
 };
 
 #endif /* MAC_DCF_PARAMETERS_H */

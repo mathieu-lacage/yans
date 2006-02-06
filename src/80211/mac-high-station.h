@@ -42,6 +42,11 @@ public:
  private:
 	virtual void enqueueToLow (Packet *packet) = 0;
 	virtual void gotCFPoll (Packet *packet) = 0;
+	virtual void gotBeacon (Packet *packet) = 0;
+	virtual void gotAssociated (Packet *packet) = 0;
+	virtual void gotReAssociated (Packet *packet) = 0;
+	virtual void gotAddTsResponse (Packet *packet) = 0;
+	virtual void gotDelTsResponse (Packet *packet) = 0;
 	virtual void flush (void) = 0;
 
 

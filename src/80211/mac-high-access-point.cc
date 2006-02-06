@@ -145,7 +145,11 @@ MacHighAccessPoint::queueToLow (Packet *packet)
 	m_dcf->requestAccess ();
 }
 
-
+void 
+MacHighAccessPoint::addTsRequest (TSpecRequest *request)
+{
+	assert (false);
+}
 void 
 MacHighAccessPoint::enqueueFromLL (Packet *packet)
 {

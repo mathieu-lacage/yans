@@ -48,25 +48,53 @@
 MacHighQStation::MacHighQStation (MacContainer *container, int apAddress)
 	: MacHighStation (container, apAddress)
 {
-	Dcf *dcf;
-	MacQueue80211e *queue;
-	MacDcfParameters *dcfParameters;
-
-	queue = new MacQueue80211e (container->parameters ());
-	dcfParameters = new MacDcfParameters (container);
-	dcf = new Dcf (container, dcfParameters);
-	new DcaTxop (dcf, queue, container);
+	createAC (AC_BE);
+	createAC (AC_BK);
+	createAC (AC_VI);
+	createAC (AC_VO);
 
 	m_hcca = new HccaTxop (container);
 }
 MacHighQStation::~MacHighQStation ()
 {}
 
-bool
-MacHighQStation::isAcActive (uint8_t UP)
+void
+MacHighQStation::createAC (enum ac_e ac)
 {
-	// XXX
-	return true;
+	MacQueue80211e *queue = new MacQueue80211e (container ()->parameters ());
+	MacDcfParameters *dcfParameters = new MacDcfParameters (container ());
+	Dcf *dcf = new Dcf (container (), dcfParameters);
+	new DcaTxop (dcf, queue, container ());
+
+	m_dcfQueues[ac] = queue;
+	m_dcfParameters[ac] = dcfParameters;
+	m_dcfs[ac] = dcf;
+}
+
+
+void
+MacHighQStation::updateEDCAParameters (unsigned char const *buffer)
+{
+	for (uint8_t i = 0; i < 4; i++) {
+		uint8_t AIFSN = *buffer & 0x0f;
+		uint8_t ACM = (*buffer >> 4) & 0x1;
+		uint8_t ACI = (*buffer >> 5) & 0x3;
+		buffer++;
+		uint8_t ECWmin = (*buffer & 0x0f);
+		uint8_t ECWmax = (*buffer >> 4) & 0x0f;
+		uint16_t CWmin = (1<<ECWmin)-1;
+		uint16_t CWmax = (1<<ECWmax)-1;
+		buffer++;
+		uint16_t txop = buffer[0] | (buffer[1]<<8);
+		double txopLimit = txop * 32e-6;
+		buffer += 2;
+		enum ac_e ac = (enum ac_e) ACI;
+		m_dcfParameters[ac]->setCWmin (CWmin);
+		m_dcfParameters[ac]->setCWmax (CWmax);
+		m_dcfParameters[ac]->setTxopLimit (txopLimit);
+		m_dcfParameters[ac]->setAIFSN (AIFSN);
+		m_dcfParameters[ac]->setACM (ACM);
+	}
 }
 
 bool
@@ -77,17 +105,24 @@ MacHighQStation::isStreamActive (uint8_t TSID)
 }
 
 void 
+MacHighQStation::addTsRequest (TSpecRequest *request)
+{
+	
+}
+
+void 
 MacHighQStation::enqueueToLow (Packet *packet)
 {
 	int requestedTID = getRequestedTID (packet);
 	if (requestedTID < 8) {
-		if (isAcActive (requestedTID)) {
-			setTID (packet, requestedTID);
-			//m_dcfQueues[getAC (packet)]->enqueue (packet);
-			//m_dcfs[getAC (packet)]->requestAccess ();
-		} else {
-			// XXX ?
-		}
+		/* XXX we assume that there is no form of
+		 * Access Control for any Access Category.
+		 * Of course, this is wrong but we can
+		 * implement it later.
+		 */
+		setTID (packet, requestedTID);
+		//m_dcfQueues[getAC (packet)]->enqueue (packet);
+		//m_dcfs[getAC (packet)]->requestAccess ();
 	} else {
 		if (isStreamActive (requestedTID)) {
 			setTID (packet, requestedTID);
@@ -107,6 +142,28 @@ MacHighQStation::gotCFPoll (Packet *packet)
 		m_hcca->acAccessGranted (getAC (packet), getTxopLimit (packet));
 	}
 }
+
+void
+MacHighQStation::gotReAssociated (Packet *packet)
+{
+	updateEDCAParameters (packet->accessdata ());
+}
+void
+MacHighQStation::gotAssociated (Packet *packet)
+{
+	updateEDCAParameters (packet->accessdata ());
+}
+void
+MacHighQStation::gotBeacon (Packet *packet)
+{
+	updateEDCAParameters (packet->accessdata ());
+}
+void 
+MacHighQStation::gotAddTsResponse (Packet *packet)
+{}
+void 
+MacHighQStation::gotDelTsResponse (Packet *packet)
+{}
 
 void 
 MacHighQStation::flush (void)

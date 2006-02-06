@@ -58,3 +58,26 @@ MacHighNQStation::flush (void)
 {
 	m_dcfQueue->flush ();
 }
+
+void 
+MacHighNQStation::gotBeacon (Packet *packet)
+{}
+void 
+MacHighNQStation::gotAssociated (Packet *packet)
+{}
+void 
+MacHighNQStation::gotReAssociated (Packet *packet)
+{}
+void 
+MacHighNQStation::gotAddTsResponse (Packet *packet)
+{}
+void 
+MacHighNQStation::gotDelTsResponse (Packet *packet)
+{}
+
+void 
+MacHighNQStation::addTsRequest (TSpecRequest *request)
+{
+	/* really, this should not happen.*/
+	assert (false);
+}

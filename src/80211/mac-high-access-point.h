@@ -37,6 +37,7 @@ public:
 	virtual ~MacHighAccessPoint ();
 
 	virtual void enqueueFromLL (Packet *packet);
+	virtual void addTsRequest (TSpecRequest *request);
 
 	virtual void receiveFromMacLow (Packet *packet);
 	virtual void notifyAckReceivedFor (Packet *packet);

@@ -37,6 +37,13 @@
 MacDcfParameters::MacDcfParameters (MacContainer *container)
 	: m_container (container)
 {
+	/* AIFS = DIFS: 802.11 section 9.2.10 */
+	m_AIFSN = 2;
+	/* XXX 802.11a */
+	m_CWmin = 15;
+	m_CWmax = 1023;
+	m_txopLimit = 0.0;
+
 	DEBUG ("DIFS %f", getAIFS ());
 	DEBUG ("EIFS %f", getEIFS ());
 	DEBUG ("CWmin %d", getCWmin ());
@@ -46,26 +53,23 @@ MacDcfParameters::MacDcfParameters (MacContainer *container)
 double 
 MacDcfParameters::getAIFS (void)
 {
-	/* AIFS = DIFS: 802.11 section 9.2.10 */
 	return m_container->parameters ()->getSIFS () + 
-		2 * m_container->parameters ()->getSlotTime ();
+		m_AIFSN * m_container->parameters ()->getSlotTime ();
 }
 int
 MacDcfParameters::getCWmin (void)
 {
-	/* XXX 802.11a */
-	return 15;
+	return m_CWmin;
 }
 int
 MacDcfParameters::getCWmax (void)
 {
-	/* XXX 802.11a */
-	return 1023;
+	return m_CWmax;
 }
 double 
 MacDcfParameters::getTxopLimit (void)
 {
-	return 0;
+	return m_txopLimit;
 }
 
 double 
@@ -76,4 +80,37 @@ MacDcfParameters::getEIFS (void)
 	return m_container->parameters ()->getSIFS () + 
 		m_container->phy ()->calculateTxDuration (0, m_container->parameters ()->getACKSize ()) +
 		getAIFS ();
+}
+
+
+bool 
+MacDcfParameters::isACMandatory (void)
+{
+	return m_ACM;
+}
+
+void 
+MacDcfParameters::setCWmin (uint16_t CWmin)
+{
+	m_CWmin = CWmin;
+}
+void 
+MacDcfParameters::setCWmax (uint16_t CWmax)
+{
+	m_CWmax = CWmax;
+}
+void 
+MacDcfParameters::setTxopLimit (double txopLimit)
+{
+	m_txopLimit = txopLimit;
+}
+void 
+MacDcfParameters::setAIFSN (uint8_t AIFSN)
+{
+	m_AIFSN = AIFSN;
+}
+void 
+MacDcfParameters::setACM (uint8_t ACM)
+{
+	m_ACM = (ACM == 1)?true:false;
 }

@@ -18,32 +18,46 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef MAC_HIGH_ADHOC_H
-#define MAC_HIGH_ADHOC_H
 
-#include "mac-high.h"
+#ifndef TSPEC_REQUEST_H
+#define TSPEC_REQUEST_H
 
-class MacContainer;
-class MacQueue80211e;
-class Packet;
-class Dcf;
+class TSpec;
 
-class MacHighAdhoc : public MacHigh {
+class TSpecRequest 
+{
 public:
-	MacHighAdhoc (MacContainer *container);
-	virtual ~MacHighAdhoc ();
+	TSpecRequest (TSpec *tspec);
+	virtual ~TSpecRequest ();
 
-	/* invoked by Mac80211. */
-	virtual void enqueueFromLL (Packet *packet);
-	virtual void addTsRequest (TSpecRequest *request);
+	TSpec *getTSpec (void);
 
-	/* invoked by the MacLows. */
-	virtual void notifyAckReceivedFor (Packet *packet);
-	virtual void receiveFromMacLow (Packet *packet);
+	void notifyGranted (void);
+	void notifyRefused (void);
+
 private:
-	double now (void);
-	MacQueue80211e *m_queue;
-	Dcf *m_dcf;
+	virtual void notifyRequestGranted (void) = 0;
+	virtual void notifyRequestRefused (void) = 0;
+
+	TSpec *m_tspec;
 };
 
-#endif /* MAC_HIGH_ADHOC_H */
+class TclTSpecRequest : public TSpecRequest
+{
+public:
+	TclTSpecRequest (TSpec *tspec, 
+			 char const *tclTSpec,
+			 char const *grantedCallback,
+			 char const *refusedCallback);
+	virtual ~TclTSpecRequest ();
+
+private:
+	virtual void notifyRequestGranted (void);
+	virtual void notifyRequestRefused (void);
+
+	char const *m_tclTspec;
+	char const *m_grantedCallback;
+	char const *m_refusedCallback;
+};
+
+#endif /* TSPEC_REQUEST_H */

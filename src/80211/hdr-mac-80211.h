@@ -90,6 +90,10 @@ enum mac_80211_packet_type {
 	MAC_80211_MGT_PROBE_RESPONSE,
 	MAC_80211_MGT_AUTHENTICATION,
 	MAC_80211_MGT_DEAUTHENTICATION,
+	MAC_80211_MGT_ADDTS_REQUEST,
+	MAC_80211_MGT_ADDTS_RESPONSE,
+	MAC_80211_MGT_DELTS_REQUEST,
+	MAC_80211_MGT_DELTS_RESPONSE,
 	MAC_80211_MGT_ADDBA_REQUEST,
 	MAC_80211_MGT_ADDBA_RESPONSE,
 	MAC_80211_MGT_DELBA_REQUEST,
@@ -205,10 +209,10 @@ bool isQos (Packet *packet);
 uint8_t getRequestedTID (Packet *packet);
 
 enum ac_e {
-	AC_BK,
-	AC_BE,
-	AC_VI,
-	AC_VO
+	AC_BK = 0x1,
+	AC_BE = 0x0,
+	AC_VI = 0x2,
+	AC_VO = 0x3
 };
 char const *getTypeString (Packet *packet);
 enum ac_e getAC (Packet *packet);

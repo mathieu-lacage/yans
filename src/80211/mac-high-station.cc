@@ -146,6 +146,7 @@ void
 MacHighStation::recordBeaconRx (Packet *packet)
 {
 	m_lastBeaconRx = now ();
+	gotBeacon (packet);
 }
 
 bool
@@ -223,6 +224,7 @@ MacHighStation::receiveFromMacLow (Packet *packet)
 			TRACE ("associated");
 			setAssociated ();
 			emptyAssociationQueue ();
+			gotAssociated (packet);
 			Packet::free (packet);
 			break;
 		case MAC_80211_MGT_REASSOCIATION_RESPONSE:
@@ -230,6 +232,7 @@ MacHighStation::receiveFromMacLow (Packet *packet)
 			TRACE ("associated");
 			setAssociated ();
 			emptyAssociationQueue ();
+			gotReAssociated (packet);
 			Packet::free (packet);
 			break;
 		case MAC_80211_MGT_DISASSOCIATION:
@@ -245,6 +248,18 @@ MacHighStation::receiveFromMacLow (Packet *packet)
 		case MAC_80211_MGT_ASSOCIATION_REQUEST:
 		case MAC_80211_MGT_REASSOCIATION_REQUEST:
 		case MAC_80211_MGT_PROBE_REQUEST:
+			Packet::free (packet);
+			break;
+		case MAC_80211_MGT_ADDTS_REQUEST:
+		case MAC_80211_MGT_DELTS_REQUEST:
+			Packet::free (packet);
+			break;
+		case MAC_80211_MGT_ADDTS_RESPONSE:
+			gotAddTsResponse (packet);
+			Packet::free (packet);
+			break;
+		case MAC_80211_MGT_DELTS_RESPONSE:
+			gotDelTsResponse (packet);
 			Packet::free (packet);
 			break;
 		case MAC_80211_MGT_CFPOLL:

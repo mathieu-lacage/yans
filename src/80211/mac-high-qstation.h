@@ -22,9 +22,14 @@
 #define MAC_HIGH_QSTATION_H
 
 #include "mac-high-station.h"
+#include "hdr-mac-80211.h"
+
 
 class MacContainer;
 class Packet;
+class Dcf;
+class MacDcfParameters;
+class MacQueue80211e;
 class HccaTxop;
 
 class MacHighQStation : public MacHighStation {
@@ -33,13 +38,24 @@ public:
 	virtual ~MacHighQStation ();
 
 private:
+	virtual void addTsRequest (TSpecRequest *request);
 	virtual void enqueueToLow (Packet *packet);
 	virtual void gotCFPoll (Packet *packet);
+	virtual void gotBeacon (Packet *packet);
+	virtual void gotAssociated (Packet *packet);
+	virtual void gotReAssociated (Packet *packet);
+	virtual void gotAddTsResponse (Packet *packet);
+	virtual void gotDelTsResponse (Packet *packet);
 	virtual void flush (void);
 
-	bool isAcActive (uint8_t UP);
+
+	void updateEDCAParameters (unsigned char const *buffer);
+	void createAC (enum ac_e ac);
 	bool isStreamActive (uint8_t TSID);
 
+	MacQueue80211e *m_dcfQueues[4];
+	MacDcfParameters *m_dcfParameters[4];
+	Dcf *m_dcfs[4];
 	HccaTxop *m_hcca;
 };
 

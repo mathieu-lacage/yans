@@ -62,6 +62,11 @@ MacHighAdhoc::enqueueFromLL (Packet *packet)
 	m_queue->enqueue (packet);
 	m_dcf->requestAccess ();
 }
+void 
+MacHighAdhoc::addTsRequest (TSpecRequest *request)
+{
+	assert (false);
+}
 
 void 
 MacHighAdhoc::notifyAckReceivedFor (Packet *packet)

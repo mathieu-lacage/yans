@@ -39,8 +39,14 @@ private:
 	MacDcfParameters *m_dcfParameters;
 	MacQueue80211e *m_dcfQueue;
 
+	virtual void addTsRequest (TSpecRequest *request);
 	virtual void enqueueToLow (Packet *packet);
 	virtual void gotCFPoll (Packet *packet);
+	virtual void gotBeacon (Packet *packet);
+	virtual void gotAssociated (Packet *packet);
+	virtual void gotReAssociated (Packet *packet);
+	virtual void gotAddTsResponse (Packet *packet);
+	virtual void gotDelTsResponse (Packet *packet);
 	virtual void flush (void);
 };
 

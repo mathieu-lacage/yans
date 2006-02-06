@@ -32,6 +32,8 @@
 #include "arf-mac-stations.h"
 #include "aarf-mac-stations.h"
 #include "mac-container.h"
+#include "tspec.h"
+#include "tspec-request.h"
 
 #include <iostream>
 
@@ -42,7 +44,6 @@ public:
                 return (new Mac80211 ());
         }
 } class_Mac80211;
-
 
 Mac80211::Mac80211 ()
 	: Mac ()
@@ -144,11 +145,21 @@ Mac80211::command(int argc, const char*const* argv)
 			MacHigh *high = new MacHighNQStation (m_container, ap);
 			m_container->setMacHigh (high);
 			return TCL_OK;
-		}
-		if (strcmp (argv[1], "mode") == 0 &&
+		} else if (strcmp (argv[1], "mode") == 0 &&
 		    strcmp (argv[2], "qstation") == 0) {
 			int ap = atoi (argv[3]);
 			//m_high = new MacHighQStation (this, peekPhy80211 (), ap);
+			return TCL_OK;
+		}
+	} else if (argc == 5) {
+		TclObject *obj;
+		if ((obj = TclObject::lookup(argv[2])) == 0) {
+			fprintf (stderr, "%s lookup failed\n", argv[1]);
+			return TCL_ERROR;
+		} else if (strcmp (argv[1], "addts-request") == 0) {
+			TSpec *tspec = static_cast<TSpec *> (obj);
+			TSpecRequest *request = new TclTSpecRequest (tspec, argv[2], argv[3], argv[4]);
+			m_container->macHigh ()->addTsRequest (request);
 			return TCL_OK;
 		}
 	}
