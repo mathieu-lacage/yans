@@ -24,7 +24,6 @@
 #include "qam-mode.h"
 #include "rng-uniform.h"
 #include "hdr-mac-80211.h"
-#include "phy-event-list.h"
 
 #include "antenna.h"
 #include "propagation.h"
