@@ -27,38 +27,43 @@ create-god 2
 
 $ns trace-all [open test.tr w]
 
-set node(0) [$ns node]
-set node(1) [$ns node]
-set node(2) [$ns node]
-set node(3) [$ns node]
+set nodes(0) [$ns node]
+set nodes(1) [$ns node]
+set nodes(2) [$ns node]
+set nodes(3) [$ns node]
 
-#$node(0) addenergymodel [new EnergyModel $node(0) 200.0 100.0 200.0] 
-#$node(1) addenergymodel [new EnergyModel  $node(1) 200.0 100.0 100.0]
-#$node(0) addenergymodel [new EnergyModel]
-#$node(1) addenergymodel [new NullEnergyModel]
+# set all nodes in adhoc mode.
+for {set i 0} {$i < [array size nodes]} {incr i} {
+    set node $nodes($i)
+    for {set j 0} {$j < [$node set nifs_]} {incr j} {
+	set mac [$node set mac_($j)]
+	$mac mode adhoc
+    }
+}
 
-$node(0) set X_ 0.0
-$node(0) set Y_ 0.0
-$node(0) set Z_ 0.0
+$nodes(0) set X_ 0.0
+$nodes(0) set Y_ 0.0
+$nodes(0) set Z_ 0.0
 
-$node(1) set X_ 300.0
-$node(1) set Y_ 0.0
-$node(1) set Z_ 0.0
+$nodes(1) set X_ 300.0
+$nodes(1) set Y_ 0.0
+$nodes(1) set Z_ 0.0
 
-$node(2) set X_ 0.0
-$node(2) set Y_ 300.0
-$node(2) set Z_ 0.0
+$nodes(2) set X_ 0.0
+$nodes(2) set Y_ 300.0
+$nodes(2) set Z_ 0.0
 
-$node(3) set X_ 300.0
-$node(3) set Y_ 300.0
-$node(3) set Z_ 0.0
+$nodes(3) set X_ 300.0
+$nodes(3) set Y_ 300.0
+$nodes(3) set Z_ 0.0
+
 
 
 set tcp [new Agent/TCP]
 $tcp set class_ 2
 set sink [new Agent/TCPSink]
-$ns attach-agent $node(0) $tcp
-$ns attach-agent $node(1) $sink
+$ns attach-agent $nodes(0) $tcp
+$ns attach-agent $nodes(1) $sink
 $ns connect $tcp $sink
 set ftp [new Application/FTP]
 $ftp attach-agent $tcp

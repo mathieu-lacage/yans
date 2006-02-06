@@ -22,6 +22,7 @@
 #include "mac-80211.h"
 #include "mac-high-access-point.h"
 #include "mac-high-station.h"
+#include "mac-high-adhoc.h"
 #include "phy-80211.h"
 #include "hdr-mac-80211.h"
 #include "arf-mac-stations.h"
@@ -104,7 +105,7 @@ Mac80211::command(int argc, const char*const* argv)
 	if (argc == 3) {
 		if (strcmp (argv[1], "mode") == 0) {
 			if (strcmp (argv[2], "adhoc") == 0) {
-				m_high = 0;
+				m_high = new MacHighAdhoc (this, peekPhy80211 ());
 				return TCL_OK;
 			} else if (strcmp (argv[2], "access-point") == 0) {
 				m_high = new MacHighAccessPoint (this, peekPhy80211 ());
