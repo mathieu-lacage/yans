@@ -39,17 +39,17 @@
 
 #include "packet.h"
 
-#ifndef AP_TRACE
-#define AP_TRACE 1
-#endif /* AP_TRACE */
+#ifndef QAP_TRACE
+#define QAP_TRACE 1
+#endif /* QAP_TRACE */
 
-#ifdef AP_TRACE
+#ifdef QAP_TRACE
 # define TRACE(format, ...) \
-	printf ("AP TRACE %d %f " format "\n", container ()->selfAddress (), \
+	printf ("QAP TRACE %d %f " format "\n", container ()->selfAddress (), \
                 Scheduler::instance ().clock (), ## __VA_ARGS__);
-#else /* AP_TRACE */
+#else /* QAP_TRACE */
 # define TRACE(format, ...)
-#endif /* AP_TRACE */
+#endif /* QAP_TRACE */
 
 
 MacHighQap::MacHighQap (MacContainer *container)

@@ -27,7 +27,9 @@
 #include "mac-station.h"
 #include "mac-traces.h"
 
+#ifndef MAC_MIDDLE_TRACE
 #define nopeMAC_MIDDLE_TRACE 1
+#endif /* MAC_MIDDLE_TRACE */
 
 #ifdef MAC_MIDDLE_TRACE
 # define TRACE(format, ...) \

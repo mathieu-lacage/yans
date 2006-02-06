@@ -270,6 +270,8 @@ DcaTxop::accessGrantedNow (void)
 		       getDestination (m_currentTxPacket),
 		       getSequenceControl (m_currentTxPacket));
 	}
+	low ()->disableBusyMonitoring ();
+	low ()->disableOverrideDurationId ();
 	if (getDestination (m_currentTxPacket) == (int)MAC_BROADCAST) {
 		low ()->disableRTS ();
 		low ()->disableACK ();

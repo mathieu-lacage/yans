@@ -39,7 +39,7 @@ proc set-qbss-mode {ap arrayName} {
 	for {set j 0} {$j < [$node set nifs_]} {incr j} {
 	    set mac [$node set mac_($j)]
 	    if {$i == $ap} {
-		$mac mode access-point
+		$mac mode qaccess-point
 	    } else {
 		$mac mode qstation $ap
 	    }
@@ -123,7 +123,7 @@ proc addts-granted-callback {tspec tsid} {
 proc addts-refused-callback {tspec tsid} {
     puts "tspec refused";
 }
-addts-request $nodes(1) $tspec addts-granted-callback addts-refused-callback
+#addts-request $nodes(1) $tspec addts-granted-callback addts-refused-callback
 
 $nodes(0) set X_ 0.0
 $nodes(0) set Y_ 0.0

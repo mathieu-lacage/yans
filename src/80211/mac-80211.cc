@@ -21,6 +21,7 @@
 
 #include "mac-80211.h"
 #include "mac-high-nqap.h"
+#include "mac-high-qap.h"
 #include "mac-high-nqstation.h"
 #include "mac-high-qstation.h"
 #include "mac-high-adhoc.h"
@@ -133,7 +134,9 @@ Mac80211::command(int argc, const char*const* argv)
 				m_container->setMacHigh (high);
 				return TCL_OK;
 			} else if (strcmp (argv[2], "qaccess-point") == 0) {
-				//m_high = new MacHighAccessPoint (this, peekPhy80211 ());
+				startContainer ();
+				MacHigh *high = new MacHighQap (m_container);
+				m_container->setMacHigh (high);
 				return TCL_OK;
 			}
 		}

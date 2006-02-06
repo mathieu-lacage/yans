@@ -136,6 +136,7 @@ MacHighAp::receiveFromMacLow (Packet *packet)
 		if (station->isAssociated ()) {
 			TRACE ("forward broadcast from %d", getSource (packet));
 			setDestination (packet, getFinalDestination (packet));
+			setSource (packet, container ()->selfAddress ());
 			forwardQueueToLow (packet->copy ());
 			container ()->forwardToLL (packet);
 		} else {
@@ -146,6 +147,8 @@ MacHighAp::receiveFromMacLow (Packet *packet)
 		if (station->isAssociated ()) {
 			// forward to target station.
 			TRACE ("%d associated: forwarding packet", getSource (packet));
+			setDestination (packet, getFinalDestination (packet));
+			setSource (packet, container ()->selfAddress ());
 			forwardQueueToLow (packet);
 		} else {
 			goto drop;

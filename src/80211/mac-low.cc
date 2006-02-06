@@ -33,7 +33,9 @@
 
 #include <iostream>
 
+#ifndef MAC_LOW_TRACE
 #define nopeMAC_LOW_TRACE 1
+#endif
 
 #ifdef MAC_LOW_TRACE
 # define TRACE(format, ...) \
@@ -124,6 +126,7 @@ MacLow::MacLow (MacContainer *container)
 	m_lastNavDuration = 0.0;
 	m_lastNavStart = 0.0;
 	m_overrideDurationId = 0.0;
+	m_monitorBusy = false;
 }
 
 MacLow::~MacLow ()

@@ -28,6 +28,9 @@
 #define AP_TRACE
 #define noADHOC_TRACE
 
+#define noNQAP_TRACE
+#define noQAP_TRACE
+
 /* */
 #define noMAC_LOW_TRACE
 #define noDCF_TRACE
