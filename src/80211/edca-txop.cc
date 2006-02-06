@@ -300,12 +300,13 @@ EdcaTxop::tryToSendOnePacket (void)
 		low ()->setDataTransmissionMode (0);
 		low ()->setTransmissionListener (m_transmissionListener);
 		low ()->setData (m_currentTxPacket);
+		low ()->startTransmission ();
 		m_currentTxPacket = 0;
 		m_dcf->notifyAccessOngoingOk ();
+		TRACE ("tx broadcast");
 		if (m_lastPacketInBurst) {
 			m_dcf->notifyAccessFinished ();
 		}
-		TRACE ("tx broadcast");
 	} else {
 		int dataTxMode = lookupDestStation (m_currentTxPacket)->getDataMode (getSize (m_currentTxPacket));
 		low ()->setDataTransmissionMode (dataTxMode);
@@ -321,9 +322,8 @@ EdcaTxop::tryToSendOnePacket (void)
 			TRACE ("tx unicast mode %d", dataTxMode);
 		}
 		low ()->setData (m_currentTxPacket->copy ());
+		low ()->startTransmission ();
 	}
-	low ()->startTransmission ();
-
 }
 
 
