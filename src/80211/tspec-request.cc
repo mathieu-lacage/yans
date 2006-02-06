@@ -56,7 +56,7 @@ TclTSpecRequest::TclTSpecRequest (TSpec *tspec, char const *tclTspec,
 				  char const *grantedCallback,
 				  char const *refusedCallback)
 	: TSpecRequest (tspec),
-	  m_tclTspec (tclTspec),
+	  m_tclTspec (strdup (tclTspec)),
 	  m_grantedCallback (strdup (grantedCallback)),
 	  m_refusedCallback (strdup (refusedCallback))
 {}

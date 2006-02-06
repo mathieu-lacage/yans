@@ -131,7 +131,8 @@ private:
 
 QapScheduler::QapScheduler (MacContainer *container)
 	: m_container (container),
-	  m_sequence (0)
+	  m_sequence (0),
+	  m_currentServiceInterval (0.0)
 {
 	m_busyListener = new MyMacLowBusyMonitoringListener (this);
 	m_beaconTxListener = new MyMacLowTransmissionListener (this);
