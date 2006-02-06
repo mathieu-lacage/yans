@@ -456,6 +456,8 @@ MacLow::notifyNav (double nowTime, double duration,
 
 	if (type == MAC_80211_MGT_CFPOLL &&
 	    source == m_container->getBSSID ()) {
+		m_lastNavStart = newNavStart;
+		m_lastNavDuration = duration;
 		for (NavListenerCI i = m_navListeners.begin (); i != m_navListeners.end (); i++) {
 			(*i)->navReset (newNavStart);
 		}
@@ -641,10 +643,10 @@ MacLow::receive (Packet *packet)
 	double monitorDelay = 0.0;
 
 	if (getType (packet) == MAC_80211_CTL_RTS) {
-		TRACE ("rx RTS from %d", getSource (packet));
 		/* XXX see section 9.9.2.2.1 802.11e/D12.1 */
 		if (isPrevNavZero &&
 		    getDestination (packet) == getSelf ()) {
+			TRACE ("rx RTS from %d -- schedule CTS", getSource (packet));
 			monitorDelay += parameters ()->getSIFS ();
 			int ctsTxMode = getCtsTxModeForRts (getSource (packet), getTxMode (packet));
 			monitorDelay += calculateTxDuration (ctsTxMode,
@@ -652,6 +654,7 @@ MacLow::receive (Packet *packet)
 			monitorDelay += parameters ()->getPIFS ();
 			m_sendCTSHandler->start (new SendEvent (packet), parameters ()->getSIFS ());
 		} else {
+			TRACE ("rx RTS from %d -- cannot schedule CTS", getSource (packet));
 			monitorDelay += parameters ()->getPIFS ();
 		}
 		dropPacket (packet);
