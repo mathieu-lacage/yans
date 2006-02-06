@@ -906,7 +906,6 @@ Phy80211::endRx (PhyRxEvent *phyRxEvent, Packet *packet)
 
 	assert (getState () == Phy80211::SYNC);
 
-	assert (phyRxEvent->getType () == PHY_EVENT_SYNC);
 	assert (phyRxEvent->getEndTime () == 
 		Scheduler::instance ().clock ());
 

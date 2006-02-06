@@ -26,6 +26,16 @@
 #include "mac-stations.h"
 #include "mac-station.h"
 
+#define MAC_MIDDLE_TRACE 1
+
+#ifdef MAC_MIDDLE_TRACE
+# define TRACE(format, ...) \
+	printf ("MAC MIDDLE %d " format "\n", m_container->selfAddress (), ## __VA_ARGS__);
+#else /* MAC_TRACE */
+# define TRACE(format, ...)
+#endif /* MAC_TRACE */
+
+
 class MyMacLowReceptionListener : public MacLowReceptionListener
 {
 public:
@@ -53,6 +63,11 @@ private:
 
 class OriginatorRxStatus {
 public:
+	OriginatorRxStatus () {
+		/* this is a magic value necessary. */
+		m_lastSequenceControl = 0xffff;
+		m_deFragmenting = false;
+	}
 	bool isDeFragmenting (void) {
 		return m_deFragmenting;
 	}
@@ -201,13 +216,31 @@ MacRxMiddle::dropPacket (Packet *packet)
 	Packet::free (packet);
 }
 
+bool
+MacRxMiddle::sequenceControlSmaller (int seqca, int seqcb)
+{
+	int seqa = seqca >> 4;
+	int seqb = seqcb >> 4;
+	int delta = seqb - seqa;
+	printf ("seqb: %d, seqa: %d, delta: %d\n", seqb, seqa, delta);
+	if (delta <= 0 && delta < -2048) {
+		return true;
+	} else if (delta >= 0 && delta < 2048) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+
 OriginatorRxStatus *
 MacRxMiddle::lookupQos (int source, int TID) 
 {
 	OriginatorRxStatus *originator;
 	originator = m_qosOriginatorStatus[make_pair(source, TID)];
 	if (originator == 0) {
-		originator = m_qosOriginatorStatus[make_pair(source, TID)] = new OriginatorRxStatus ();
+		originator = new OriginatorRxStatus ();
+		m_qosOriginatorStatus[make_pair(source, TID)] = originator;
 	}
 	return originator;
 }
@@ -218,7 +251,8 @@ MacRxMiddle::lookup (int source)
 	OriginatorRxStatus *originator;
 	originator = m_originatorStatus[source];
 	if (originator == 0) {
-		originator = m_originatorStatus[source] = new OriginatorRxStatus ();
+		originator = new OriginatorRxStatus ();
+		m_originatorStatus[source] = originator;
 	}
 	return originator;
 }
@@ -239,6 +273,7 @@ bool
 MacRxMiddle::handleDuplicates (Packet *packet, OriginatorRxStatus *originator)
 {
 	if (originator->getLastSequenceControl () == getSequenceControl (packet)) {
+		TRACE ("dump duplicate 0x%x", getSequenceControl (packet));
 		dropPacket (packet);
 		return true;
 	}
@@ -252,10 +287,13 @@ MacRxMiddle::handleFragments (Packet *packet, OriginatorRxStatus *originator)
 	if (originator->isDeFragmenting ()) {
 		if (getMoreFragments (packet)) {
 			if (originator->isNextFragment (getSequenceControl (packet))) {
+				TRACE ("accumulate fragment 0x%x %d", 
+				       getSequenceControl (packet), getSize (packet));
 				originator->accumulateFragment (getSize (packet));
 				originator->setSequenceControl (getSequenceControl (packet));
 				dropPacket (packet);
 			} else {
+				TRACE ("drop invalid fragment");
 				dropPacket (packet);
 			}
 		} else {
@@ -266,21 +304,27 @@ MacRxMiddle::handleFragments (Packet *packet, OriginatorRxStatus *originator)
 				 * fragment to change its size back to the original packet 
 				 * size and to pass it up to the higher-level layers.
 				 */
+				TRACE ("accumulate last fragment 0x%x %d", 
+				       getSequenceControl (packet), getSize (packet));
 				int finalSize = originator->accumulateLastFragment (getSize (packet));
 				setSize (packet, finalSize);
 				originator->setSequenceControl (getSequenceControl (packet));
 				// pass-through to give to mac high.
 				return false;
 			} else {
+				TRACE ("drop packet");
 				dropPacket (packet);
 			}
 		}
 	} else {
 		if (getMoreFragments (packet)) {
+			TRACE ("accumulate first fragment 0x%x %d", 
+			       getSequenceControl (packet), getSize (packet));
 			originator->accumulateFirstFragment (getSize (packet));
 			originator->setSequenceControl (getSequenceControl (packet));
 			dropPacket (packet);
 		} else {
+			TRACE ("no defrag -- passthrough");
 			// pass-through to give to mac high.
 			return false;
 		}
@@ -371,18 +415,21 @@ MacRxMiddle::gotData (Packet *packet)
 	OriginatorRxStatus *originator = lookup (packet);
 	switch (getType (packet)) {
 	case MAC_80211_MGT_ADDBA_REQUEST:
+		TRACE ("got addba req");
 		dropPacket (packet);
 		break;
 	case MAC_80211_DATA:
-		assert (station->getLastSequenceControl () <= getSequenceControl (packet));
+		assert (sequenceControlSmaller (originator->getLastSequenceControl (), getSequenceControl (packet)));
 		// filter duplicates.
 		if (!handleDuplicates (packet, originator) &&
 		    //!handleBlockAck (packet, originator) &&
 		    !handleFragments (packet, originator)) {
+			TRACE ("forwarding data from %d", getSource (packet));
 			forwardToHigh (packet);
 		}
 		break;
 	default:
+		TRACE ("forwarding %s", getTypeString (packet));
 		forwardToHigh (packet);
 		break;
 	}

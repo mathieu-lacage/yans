@@ -26,6 +26,7 @@
 class MacContainer;
 class MacQueue80211e;
 class Packet;
+class Dcf;
 
 class MacHighAdhoc : public MacHigh {
 public:
@@ -34,13 +35,16 @@ public:
 
 	/* invoked by Mac80211. */
 	virtual void enqueueFromLL (Packet *packet);
-	virtual void receiveFromPhy (Packet *packet);
 
 	/* invoked by the MacLows. */
 	virtual void notifyAckReceivedFor (Packet *packet);
 	virtual void receiveFromMacLow (Packet *packet);
 private:
+	friend class MyDcfAccessNeedListener;
+	bool accessNeeded (void);
+	double now (void);
 	MacQueue80211e *m_queue;
+	Dcf *m_dcf;
 };
 
 #endif /* MAC_HIGH_ADHOC_H */

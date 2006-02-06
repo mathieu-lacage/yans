@@ -119,11 +119,13 @@ private:
 	double getLastSNR (void);
 	double getLastStartRx (void);
 	double calculateTxDuration (int mode, int size);
+	double calculateOverallTxTime (void);
 	void notifyNav (double now, double duration);
 	bool isNavZero (double now);
 
 	bool isData (Packet *packet);
 	bool isManagement (Packet *packet);
+	bool isCtl (Packet *packet);
 	
 	Packet *getRTSPacket (void);
 	Packet *getCTSPacket (void);
@@ -135,6 +137,7 @@ private:
 	void sendCTS_AfterRTS (MacCancelableEvent *macEvent);
 	void sendACK_AfterData (MacCancelableEvent *macEvent);
 	void sendDataAfterCTS (MacCancelableEvent *macEvent);
+	void waitSIFSAfterEndTx (MacCancelableEvent *macEvent);
 
 	void sendRTSForPacket (Packet *packet);
 	void sendDataPacket (Packet *packet);
@@ -151,6 +154,7 @@ private:
 	DynamicHandler<MacLow> *m_sendCTSHandler;
 	DynamicHandler<MacLow> *m_sendACKHandler;
 	DynamicHandler<MacLow> *m_sendDataHandler;
+	DynamicHandler<MacLow> *m_waitSIFSHandler;
 
 	Packet *m_currentTxPacket;
 

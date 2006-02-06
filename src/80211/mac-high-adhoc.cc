@@ -29,13 +29,24 @@
 #include "mac-container.h"
 #include "dca-txop.h"
 
+#define ADHOC_TRACE 1
+
+#ifdef ADHOC_TRACE
+# define TRACE(format, ...) \
+  printf ("HIGH ADHOC %d %f " format "\n", container ()->selfAddress (), now (), ## __VA_ARGS__);
+#else /* DCF_TRACE */
+# define TRACE(format, ...)
+#endif /* DCF_TRACE */
+
+
+
 MacHighAdhoc::MacHighAdhoc (MacContainer *container)
 	: MacHigh (container)
 {
-	MacDcfParameters *parameters;
-	Dcf *dcf = new Dcf (container, parameters);
+	MacDcfParameters *parameters = new MacDcfParameters (container);
+	m_dcf = new Dcf (container, parameters);
 	m_queue = new MacQueue80211e (container->parameters ());
-	new DcaTxop (dcf, m_queue, container);
+	new DcaTxop (m_dcf, m_queue, container);
 }
 MacHighAdhoc::~MacHighAdhoc ()
 {}
@@ -43,15 +54,12 @@ MacHighAdhoc::~MacHighAdhoc ()
 void 
 MacHighAdhoc::enqueueFromLL (Packet *packet)
 {
+	TRACE ("enqueue %d to %d (%d)", getSize (packet), 
+	       getFinalDestination (packet), m_queue->size ());
 	setType (packet, MAC_80211_DATA);
 	setDestination (packet, getFinalDestination (packet));
 	m_queue->enqueue (packet);
-}
-
-void 
-MacHighAdhoc::receiveFromPhy (Packet *packet)
-{
-	container ()->macLow ()->receive (packet);
+	m_dcf->requestAccess ();
 }
 
 void 
@@ -61,5 +69,18 @@ MacHighAdhoc::notifyAckReceivedFor (Packet *packet)
 void 
 MacHighAdhoc::receiveFromMacLow (Packet *packet)
 {
+	TRACE ("received %d from %d", getSize (packet), getSource (packet));
 	container ()->forwardToLL (packet);
+}
+
+double
+MacHighAdhoc::now (void)
+{
+	return Scheduler::instance ().clock ();
+}
+
+bool
+MacHighAdhoc::accessNeeded (void)
+{
+	return !m_queue->isEmpty ();
 }

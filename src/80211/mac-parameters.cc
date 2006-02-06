@@ -19,14 +19,16 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
+#include <cassert>
+
 #include "mac-parameters.h"
 #include "phy-80211.h"
 #include "mac-80211.h"
 #include "mac-container.h"
 
-#define nopeMAC_DEBUG 1
+#define PARAM_DEBUG 1
 
-#ifdef MAC_DEBUG
+#ifdef PARAM_DEBUG
 # define DEBUG(format, ...) \
 	printf ("DEBUG %d " format "\n", getSelf (), ## __VA_ARGS__);
 #else /* MAC_DEBUG */
@@ -39,12 +41,8 @@ MacParameters::MacParameters (MacContainer *container)
 {
 	DEBUG ("slot %f", getSlotTime ());
 	DEBUG ("SIFS %f", getSIFS ());
-	DEBUG ("DIFS %f", getDIFS ());
-	DEBUG ("EIFS %f", getEIFS ());
 	DEBUG ("ACK timeout %f", getACKTimeoutDuration ());
 	DEBUG ("CTS timeout %f", getCTSTimeoutDuration ());
-	DEBUG ("CWmin %d", getCWmin ());
-	DEBUG ("CWmax %d", getCWmax ());
 }
 
 int
@@ -119,19 +117,30 @@ int
 MacParameters::getFragmentationThreshold (void)
 {
 	/* XXX */
-	return 1;
+	int fragThreshold = 400;
+	// if this assert is not verified, we cannot ensure
+	// that every MSDU will be fragmented in less than 
+	// 16 packets.
+	assert (getMaxMSDUSize () / 16 < fragThreshold);
+	return fragThreshold;
 }
 double
 MacParameters::getCTSTimeoutDuration (void)
 {
 	/* XXX */
-	return getSIFS () + calculateBaseTxDuration (getCTSSize ());;
+	double ctsTimeout = getSIFS ();
+	ctsTimeout += calculateBaseTxDuration (getCTSSize ());
+	ctsTimeout += 2 * getMaxPropagationDelay ();
+	return ctsTimeout;
 }
 double
 MacParameters::getACKTimeoutDuration (void)
 {
 	/* XXX */
-	return getSIFS () + calculateBaseTxDuration (getACKSize ());
+	double ackTimeout = getSIFS ();
+	ackTimeout += calculateBaseTxDuration (getACKSize ());
+	ackTimeout += 2 * getMaxPropagationDelay ();
+	return ackTimeout;
 }
 
 
@@ -217,4 +226,18 @@ double
 MacParameters::getMSDULifetime (void)
 {
 	return 10; // seconds.
+}
+
+double 
+MacParameters::getMaxPropagationDelay (void)
+{
+	// 1000m is the max propagation distance.
+	return 1000 / SPEED_OF_LIGHT;
+}
+
+int
+MacParameters::getMaxMSDUSize (void)
+{
+	// section 6.2.1.1.2
+	return 2304;
 }

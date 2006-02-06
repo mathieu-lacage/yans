@@ -56,11 +56,17 @@ public:
 	double getACKTimeoutDuration (void);
 
 	double getMSDULifetime (void);
+
+	double getMaxPropagationDelay (void);
+
+	int getMaxMSDUSize (void);
 private:
 	int getSelf (void);
 	double calculateBaseTxDuration (int size);
 
 	MacContainer *m_container;
+
+	static const double SPEED_OF_LIGHT = 3e8; // m/s
 };
 
 #endif /* MAC_PARAMETERS_H */

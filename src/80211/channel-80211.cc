@@ -19,6 +19,8 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
+#include "mobilenode.h"
+
 #include "channel-80211.h"
 
 static class Channel80211Class: public TclClass {
@@ -52,4 +54,13 @@ Channel80211::command(int argc, const char*const* argv)
 		}
 	}
 	return Channel::command(argc, argv);
+}
+
+double 
+Channel80211::get_pdelay(Node* tnode, Node* rnode)
+{
+	MobileNode* tmnode = (MobileNode*)tnode;
+	MobileNode* rmnode = (MobileNode*)rnode;
+	double propdelay = tmnode->propdelay(rmnode);
+	return propdelay;
 }

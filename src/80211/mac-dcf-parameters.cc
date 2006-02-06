@@ -46,7 +46,7 @@ MacDcfParameters::MacDcfParameters (MacContainer *container)
 double 
 MacDcfParameters::getAIFS (void)
 {
-	/* 802.11 section 9.2.10 */
+	/* AIFS = DIFS: 802.11 section 9.2.10 */
 	return m_container->parameters ()->getSIFS () + 
 		2 * m_container->parameters ()->getSlotTime ();
 }

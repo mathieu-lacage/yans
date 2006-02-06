@@ -57,6 +57,8 @@ public:
 
 	bool isEmpty (void);
 
+	int size (void);
+
 private:
 	void cleanup (void);
 	std::list< std::pair<Packet *, double> > m_queue;

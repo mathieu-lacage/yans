@@ -44,9 +44,12 @@ private:
 
 	MacLow *low (void);
 	MacParameters *parameters (void);
+	double now (void);
 
 	/* event handlers */
 	void accessGrantedNow (void);
+	bool accessingAndWillNotify (void);
+	bool accessNeeded (void);
 	void gotCTS (double snr, int txMode);
 	void missedCTS (void);
 	void gotACK (double snr, int txMode);

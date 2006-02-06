@@ -32,6 +32,8 @@ public:
 
 	/* inherited from NsObject */
 	virtual int command(int argc, const char*const* argv);
+protected:
+	virtual double get_pdelay(Node* tnode, Node* rnode);
 };
 
 #endif /* CHANNEL_80211_H */

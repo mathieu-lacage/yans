@@ -18,8 +18,8 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef PRECISON_H
-#define PRECISON_H
+#ifndef PRECISION_H
+#define PRECISION_H
 
 /* The limits below are defined to allow us not to encounter
  * floating point arithmetic rounding problems.
@@ -29,10 +29,10 @@
  *  - MIN_TIME: the 802.11 code is careful to round
  *    floating point numbers close to this value to zero.
  */
-#define PRECISON_MAX_TIME (100000)
-#define PRECISON_MIN_TIME (1e-10)
+#define PRECISION_MAX_TIME (100000)
+#define PRECISION_MIN_TIME (1e-10)
 
-#define PRECISON_ROUND_TO_ZERO(x) ((x<PRECISON_MIN_TIME)?0.0:x)
+#define PRECISION_ROUND_TO_ZERO(x) ((x<PRECISION_MIN_TIME)?0.0:x)
 
 
-#endif /* PRECISON_H */
+#endif /* PRECISION_H */

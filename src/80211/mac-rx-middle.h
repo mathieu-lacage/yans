@@ -48,6 +48,7 @@ private:
 	bool handleFragments (Packet *packet, OriginatorRxStatus *originator);
 	void dropPacket (Packet *packet);
 	void forwardToHigh (Packet *packet);
+	bool sequenceControlSmaller (int seqa, int seqb);
 
 
 

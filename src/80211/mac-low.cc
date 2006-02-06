@@ -32,30 +32,15 @@
 
 #include <iostream>
 
-#define nopeMAC_DEBUG 1
-#define nopeMAC_TRACE 1
-#define nopeMAC_TRACE_VERBOSE 1
-
-#ifdef MAC_DEBUG
-# define DEBUG(format, ...) \
-	printf ("DEBUG %d " format "\n", getSelf (), ## __VA_ARGS__);
-#else /* MAC_DEBUG */
-# define DEBUG(format, ...)
-#endif /* MAC_DEBUG */
+#define MAC_TRACE 1
 
 #ifdef MAC_TRACE
 # define TRACE(format, ...) \
-	printf ("MAC   TERSE %f %d " format "\n", now (), getSelf (), ## __VA_ARGS__);
+	printf ("MAC LOW %d %f " format "\n", getSelf (), now (), ## __VA_ARGS__);
 #else /* MAC_TRACE */
 # define TRACE(format, ...)
 #endif /* MAC_TRACE */
 
-#ifdef MAC_TRACE_VERBOSE
-# define TRACE_VERBOSE(format, ...) \
-	printf ("MAC VERBOSE %f %d " format "\n", now (), getSelf (), ## __VA_ARGS__);
-#else /* MAC_TRACE_VERBOSE */
-# define TRACE_VERBOSE(format, ...)
-#endif /* MAC_TRACE_VERBOSE */
 
 
 MacLowTransmissionListener::MacLowTransmissionListener ()
@@ -104,8 +89,13 @@ MacLow::MacLow (MacContainer *container)
 	  m_sendCTSHandler (new DynamicHandler<MacLow> (this, &MacLow::sendCTS_AfterRTS)),
 	  m_sendACKHandler (new DynamicHandler<MacLow> (this, &MacLow::sendACK_AfterData)),
 	  m_sendDataHandler (new DynamicHandler<MacLow> (this, &MacLow::sendDataAfterCTS)),
+	  m_waitSIFSHandler (new DynamicHandler<MacLow> (this, &MacLow::waitSIFSAfterEndTx)),
 	  m_currentTxPacket (0)
-{}
+{
+	m_additionalDuration = 0.0;
+	m_lastNavDuration = 0.0;
+	m_lastNavStart = 0.0;
+}
 
 MacLow::~MacLow ()
 {
@@ -135,8 +125,12 @@ void
 MacLow::forwardDown (Packet *packet)
 {
 	double txDuration = calculateTxDuration (getTxMode (packet), getSize (packet));
-	notifyNav (now ()+txDuration, getDuration (packet));
+	double durationId = getDuration (packet);
 	m_container->forwardToPhy (packet);
+	/* Note that it is really important to notify the NAV 
+	 * thing after forwarding the packet to the PHY.
+	 */
+	notifyNav (now ()+txDuration, durationId);
 }
 int 
 MacLow::getSelf (void)
@@ -170,12 +164,23 @@ MacLow::isData (Packet *packet)
 }
 
 bool
+MacLow::isCtl (Packet *packet)
+{
+	if (getType (packet) == MAC_80211_CTL_RTS     ||
+	    getType (packet) == MAC_80211_CTL_CTS     ||
+	    getType (packet) == MAC_80211_CTL_ACK     ||
+	    getType (packet) == MAC_80211_CTL_BACKREQ ||
+	    getType (packet) == MAC_80211_CTL_BACKRESP) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+bool
 MacLow::isManagement (Packet *packet)
 {
-	if (getType (packet) == MAC_80211_DATA ||
-	    getType (packet) == MAC_80211_CTL_RTS ||
-	    getType (packet) == MAC_80211_CTL_CTS ||
-	    getType (packet) == MAC_80211_CTL_ACK) {
+	if (isData (packet) || isCtl (packet)) {
 		return false;
 	} else {
 		return true;
@@ -247,7 +252,7 @@ MacLow::sendRTSForPacket (Packet *txPacket)
 {
 	/* send an RTS for this packet. */
 	Packet *packet = getRTSforPacket (txPacket);
-	TRACE ("tx RTS with mode %d", getTxMode (packet));
+	TRACE ("tx RTS to %d with mode %d", getDestination (packet), getTxMode (packet));
 	double txDuration = calculateTxDuration (getTxMode (packet), getSize (packet));
 	double timerDelay = txDuration + parameters ()->getCTSTimeoutDuration ();
 	m_CTSTimeoutHandler->start (new MacCancelableEvent (),
@@ -285,7 +290,7 @@ MacLow::sendCTS_AfterRTS (class MacCancelableEvent *macEvent)
 	 * right after SIFS.
 	 */
 	SendEvent *event = static_cast<SendEvent *> (macEvent);
-	TRACE ("tx CTS with mode %d", event->getTxMode ());
+	TRACE ("tx CTS to %d with mode %d", event->getSource (), event->getTxMode ());
 	Packet * cts = getCTSPacket ();
 	setDestination (cts, event->getSource ());
 	double duration = event->getDuration ();
@@ -345,10 +350,15 @@ MacLow::sendDataAfterCTS (class MacCancelableEvent *macEvent)
 	duration -= parameters ()->getSIFS ();
 	setDuration (m_currentTxPacket, duration);
 	forwardDown (m_currentTxPacket);
+	m_currentTxPacket = 0;
 }
 
 
-
+void 
+MacLow::waitSIFSAfterEndTx (MacCancelableEvent *macEvent)
+{
+	m_transmissionListener->txCompletedAndSIFS ();
+}
 
 
 
@@ -361,6 +371,7 @@ MacLow::ACKTimeout (class MacCancelableEvent *event)
 void
 MacLow::CTSTimeout (class MacCancelableEvent *event)
 {
+	m_currentTxPacket = 0;
 	m_transmissionListener->missedCTS ();
 }
 
@@ -377,7 +388,7 @@ MacLow::isNavZero (double now)
 void
 MacLow::notifyNav (double now, double duration)
 {
-	assert (m_lastNAVStart < now);
+	assert (m_lastNavStart < now);
 	double oldNavStart = m_lastNavStart;
 	double oldNavEnd = oldNavStart + m_lastNavDuration;
 	double newNavStart = now;
@@ -400,6 +411,23 @@ MacLow::notifyNav (double now, double duration)
 			(*i)->navStart (newNavStart, duration);
 		}
 	}
+}
+
+double
+MacLow::calculateOverallTxTime (void)
+{
+	double txTime = 0.0;
+	if (m_sendRTS) {
+		txTime += calculateTxDuration (m_rtsTxMode, parameters ()->getRTSSize ());
+		txTime += calculateTxDuration (m_rtsTxMode, parameters ()->getCTSSize ());
+		txTime += parameters ()->getSIFS () * 2;
+	}
+	txTime += calculateTxDuration (m_dataTxMode, getSize (m_currentTxPacket));
+	if (m_waitACK) {
+		txTime += parameters ()->getSIFS ();
+		txTime += calculateTxDuration (m_dataTxMode, parameters ()->getACKSize ());
+	}
+	return txTime;
 }
 
 /****************************************************************************
@@ -477,19 +505,28 @@ MacLow::startTransmission (Packet *packet)
 {
 	assert (peekPhy ()->getState () == Phy80211::IDLE);
 
+	TRACE ("startTx %d to %d", getSize (packet), getDestination (packet));
+
 	if (isData (packet)) {
 		increaseSize (packet, parameters ()->getDataHeaderSize ());
 	} else if (isManagement (packet)) {
 		increaseSize (packet, parameters ()->getMgtHeaderSize ());
 	}
-	initialize (packet);
 	assert (m_currentTxPacket == 0);
 	m_currentTxPacket = packet;
+
+	if (m_waitSIFS && !m_waitACK) {
+		// we need to start the afterSIFS timeout now.
+		double delay = calculateOverallTxTime ();
+		delay += parameters ()->getSIFS ();
+		m_waitSIFSHandler->start (new MacCancelableEvent (), delay);
+	}
 
 	if (m_sendRTS) {
 		sendRTSForPacket (packet);
 	} else {
 		sendDataPacket (packet);
+		m_currentTxPacket = 0;
 	}
 	/* When this method completes, we have taken ownership of the medium. */
 	assert (peekPhy ()->getState () == Phy80211::TX);
@@ -511,8 +548,8 @@ MacLow::receive (Packet *packet)
 	 * packet queue.
 	 */
 	if (HDR_CMN (packet)->error ()) {
-		TRACE_VERBOSE ("rx failed from %d",
-			       getSource (packet));
+		//TRACE_VERBOSE ("rx failed from %d",
+		//getSource (packet));
 		dropPacket (packet);
 		return;
 	}
@@ -540,14 +577,14 @@ MacLow::receive (Packet *packet)
 		dropPacket (packet);
 	} else if (getType (packet) == MAC_80211_CTL_ACK &&
 		   getDestination (packet) == getSelf () &&
-		   m_ACKTimeoutHandler->isRunning () &&
-		   m_currentTxPacket) {
+		   m_ACKTimeoutHandler->isRunning ()) {
 		TRACE ("rx ACK from %d", getSource (packet));
 		m_ACKTimeoutHandler->cancel ();
 		m_transmissionListener->gotACK (getLastSNR (), getTxMode (packet));
-		Packet::free (m_currentTxPacket);
-		m_currentTxPacket = 0;
 		dropPacket (packet);
+		if (m_waitSIFS) {
+			m_waitSIFSHandler->start (new MacCancelableEvent (), parameters ()->getSIFS ());
+		}
 	} else if (getType (packet) == MAC_80211_CTL_BACKREQ) {
 		TRACE ("rx BACK_REQ from %d", getSource (packet));
 		Packet *resp = m_receptionListener->gotBlockAckReq (packet);
@@ -555,8 +592,10 @@ MacLow::receive (Packet *packet)
 		// XXX should use another handler.
 		//m_sendDataHandler->start (new SendDataEvent (resp), parameters ()->getSIFS ());
 		//dropPacket (packet);
+	} else if (isCtl (packet)) {
+		TRACE ("rx drop %s", getTypeString (packet));
+		dropPacket (packet);
 	} else {
-		// data or mgmt packet
 		if (isData (packet)) {
 			decreaseSize (packet, parameters ()->getDataHeaderSize ());
 		} else if (isManagement (packet)) {
@@ -570,7 +609,7 @@ MacLow::receive (Packet *packet)
 			TRACE ("rx broadcast from %d", getSource (packet));
 			m_receptionListener->gotData (packet);
 		} else {
-			TRACE_VERBOSE ("rx not-for-me from %d", getSource (packet));
+			//TRACE_VERBOSE ("rx not-for-me from %d", getSource (packet));
 			dropPacket (packet);
 		}
 	}

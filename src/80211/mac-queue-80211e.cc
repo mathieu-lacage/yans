@@ -84,3 +84,10 @@ MacQueue80211e::isEmpty (void)
 	cleanup ();
 	return m_queue.empty ();
 }
+
+
+int
+MacQueue80211e::size (void)
+{
+	return m_queue.size ();
+}

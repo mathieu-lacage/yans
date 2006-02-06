@@ -35,7 +35,7 @@ hdr_mac_80211::initialize (void)
 	m_moreFragments = 0;
 	m_sequenceControl = 0;
 	m_ackMode = ACK_NORMAL;
-	m_qos = 1;
+	m_qos = 0;
 }
 
 
@@ -152,6 +152,9 @@ hdr_mac_80211::setType (enum mac_80211_packet_type type)
 void 
 hdr_mac_80211::setDuration (double duration)
 {
+	if (fabs (duration) < 1e6) {
+		duration = 0.0;
+	}
 	assert (duration >= 0);
 	unsigned int realDuration = ( unsigned int) floor (duration * 1e6 + 0.5);
 	m_duration = realDuration;
