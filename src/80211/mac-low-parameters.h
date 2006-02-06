@@ -18,41 +18,39 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef MAC_HIGH_H
-#define MAC_HIGH_H
+#ifndef MAC_LOW_PARAMETERS_H
+#define MAC_LOW_PARAMETERS_H
 
-class Mac80211;
 class Phy80211;
-class Packet;
-class MacStations;
-class MacStation;
-class MacParameters;
+class Mac80211;
 
-class MacHigh {
+class MacLowParameters {
 public:
-	MacHigh (Mac80211 *mac, Phy80211 *phy);
-	virtual ~MacHigh ();
+	MacLowParameters (Phy80211 *phy);
+	
+	int getACKSize (void) const;
+	int getRTSSize (void) const;
+	int getCTSSize (void) const;
 
-	/* invoked by Mac80211. */
-	virtual void enqueueFromLL (Packet *packet) = 0;
-	virtual void receiveFromPhy (Packet *packet) = 0;
+	int getDataHeaderSize (void);
+	int getMgtHeaderSize (void);
 
-	/* invoked by the MacLows. */
-	MacStation *lookupStation (int address);
-	virtual void notifyAckReceivedFor (Packet *packet) = 0;
-	virtual void receiveFromMacLow (Packet *packet) = 0;
-protected:
-	Packet *getPacketFor (int addresss);
-	int getSelf (void);
-	void forwardUp (Packet *packet);
-	MacParameters *parameters (void);
-	Mac80211 *peekMac80211 (void);
-	Phy80211 *peekPhy80211 (void);
+	double getSIFS (void);
+	double getSlotTime (void);
+	int getCWmin (void);
+	int getCWmax (void);
+
+	int getMaxSSRC (void);
+	int getMaxSLRC (void);
+	int getRTSCTSThreshold (void);
+	double getCTSTimeoutDuration (void);
+	double getACKTimeoutDuration (void);
+
+	double getEIFS (void);
+	double getDIFS (void);
 private:
-	Mac80211 *m_mac;
+	Phy80211 *peekPhy (void);
 	Phy80211 *m_phy;
-	MacStations *m_stations;
-	MacParameters *m_parameters;
 };
 
-#endif /* MAC_HIGH_H */
+#endif /* MAC_LOW_PARAMETERS_H */

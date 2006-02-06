@@ -29,6 +29,9 @@ class MacLow;
 class Packet;
 class MacStations;
 class MacQueue80211e;
+class MacLowParameters;
+class MacParameters;
+
 
 class MacHighStation : public MacHigh {
 public:
@@ -57,6 +60,7 @@ public:
 	void setDisAssociated (void);
 
 	MacLow *m_low;
+	MacLowParameters *m_lowParameters;
 	int m_apAddress;
 	bool m_associated;
 	MacQueue80211e *m_associationQueue;

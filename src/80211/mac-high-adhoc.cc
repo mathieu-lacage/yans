@@ -21,11 +21,14 @@
 
 #include "mac-high-adhoc.h"
 #include "mac-low.h"
+#include "mac-parameters.h"
+#include "mac-low-parameters.h"
 
 MacHighAdhoc::MacHighAdhoc (Mac80211 *mac, Phy80211 *phy)
 	: MacHigh (mac, phy)
 {
-	m_low = new MacLow (mac, this, phy);
+	m_lowParameters = new MacLowParameters (phy);
+	m_low = new MacLow (mac, this, phy, m_lowParameters);
 }
 MacHighAdhoc::~MacHighAdhoc ()
 {}

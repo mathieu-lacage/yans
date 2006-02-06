@@ -18,8 +18,8 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef MAC_LOW_80211_H
-#define MAC_LOW_80211_H
+#ifndef MAC_LOW_H
+#define MAC_LOW_H
 
 #include "hdr-mac-80211.h"
 #include "phy-80211.h"
@@ -36,11 +36,12 @@ class DynamicMacHandler;
 class MacCancelableEvent;
 class MacHigh;
 class Phy80211;
-class MacParameters;
+class MacLowParameters;
 
 class MacLow {
 public:
-	MacLow (Mac80211 *mac, MacHigh *high, Phy80211 *phy);
+	MacLow (Mac80211 *mac, MacHigh *high, Phy80211 *phy, 
+		MacLowParameters *parameters);
 	~MacLow ();
 
 	void enqueue (Packet *packet);
@@ -55,7 +56,7 @@ public:
 	int getSelf (void);
 
 private:
-	MacParameters *parameters (void);
+	MacLowParameters *parameters (void);
 	void forwardDown (Packet *packet);
 	double now (void);
 	MacStation *lookupStation (int address);
@@ -110,6 +111,7 @@ private:
 	Mac80211 *m_mac;
 	MacHigh *m_high;
 	Phy80211 *m_phy;
+	MacLowParameters *m_parameters;
 	MacQueue80211e *m_queue;
 	DynamicMacHandler *m_ACKTimeoutBackoffHandler;
 	DynamicMacHandler *m_CTSTimeoutBackoffHandler;
@@ -121,4 +123,4 @@ private:
 	RngUniform *m_random;
 };
 
-#endif /* MAC_LOW_80211_H */
+#endif /* MAC_LOW_H */

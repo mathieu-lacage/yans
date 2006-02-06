@@ -26,6 +26,7 @@
 #include "mac-station.h"
 #include "mac-low.h"
 #include "mac-parameters.h"
+#include "mac-low-parameters.h"
 
 #include "packet.h"
 
@@ -43,8 +44,9 @@
 MacHighAccessPoint::MacHighAccessPoint (Mac80211 *mac, Phy80211 *phy)
 	: MacHigh (mac, phy)
 {
-	m_low = new MacLow (mac, this, phy);
-	m_lowBeacon = new MacLow (mac, this, phy);
+	m_lowParameters = new MacLowParameters (phy);
+	m_low = new MacLow (mac, this, phy, m_lowParameters);
+	m_lowBeacon = new MacLow (mac, this, phy, m_lowParameters);
 	m_sendBeaconTimer = new StaticHandler<MacHighAccessPoint> (this, &MacHighAccessPoint::sendBeacon);
 	m_sendBeaconTimer->start (parameters ()->getBeaconInterval ());
 }

@@ -28,7 +28,6 @@ class MacHigh;
 class Phy80211;
 class Packet;
 class Handler;
-class MacParameters;
 
 class Mac80211 : public Mac
 {
@@ -44,11 +43,9 @@ public:
 
 	virtual int command(int argc, const char*const* argv);
 
-	MacParameters *parameters (void);
 	Phy80211 *peekPhy80211 (void);
 private:
 	MacHigh *m_high;
-	MacParameters *m_parameters;
 };
 
 

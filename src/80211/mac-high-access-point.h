@@ -28,6 +28,7 @@ class Mac80211;
 class MacLow;
 class Packet;
 class MacStations;
+class MacLowParameters;
 
 class MacHighAccessPoint : public MacHigh {
 public:
@@ -49,6 +50,7 @@ public:
 	void sendProbeResponse (int destination);
 
 	MacLow *m_low;
+	MacLowParameters *m_lowParameters;
 	MacLow *m_lowBeacon;
 	StaticHandler<MacHighAccessPoint> *m_sendBeaconTimer;
 };

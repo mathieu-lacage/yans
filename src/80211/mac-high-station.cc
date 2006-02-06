@@ -26,6 +26,7 @@
 #include "mac-station.h"
 #include "mac-low.h"
 #include "mac-queue-80211e.h"
+#include "mac-low-parameters.h"
 #include "mac-parameters.h"
 
 #include "packet.h"
@@ -43,7 +44,8 @@
 MacHighStation::MacHighStation (Mac80211 *mac, Phy80211 *phy, int apAddress)
 	: MacHigh (mac, phy)
 {
-	m_low = new MacLow (mac, this, phy);
+	m_lowParameters = new MacLowParameters (phy);
+	m_low = new MacLow (mac, this, phy, m_lowParameters);
 	m_apAddress = apAddress;
 	m_associated = false;
 	m_associationQueue = new MacQueue80211e (10.0);

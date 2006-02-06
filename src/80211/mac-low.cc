@@ -30,7 +30,7 @@
 #include "mac-handler.h"
 #include "backoff.h"
 #include "rng-uniform.h"
-#include "mac-parameters.h"
+#include "mac-low-parameters.h"
 
 #include <iostream>
 
@@ -120,11 +120,13 @@ private:
 };
 
 
-MacLow::MacLow (Mac80211 *mac, MacHigh *high, Phy80211 *phy)
+MacLow::MacLow (Mac80211 *mac, MacHigh *high, Phy80211 *phy,
+		MacLowParameters *parameters)
 	: m_currentTxPacket (0),
 	  m_mac (mac),
 	  m_high (high),
 	  m_phy (phy),
+	  m_parameters (parameters),
 	  m_queue (new MacQueue80211e (10.0 /* XXX */)),
 	  m_ACKTimeoutBackoffHandler (new DynamicMacHandler (this, &MacLow::ACKTimeout)),
 	  m_CTSTimeoutBackoffHandler (new DynamicMacHandler (this, &MacLow::CTSTimeout)),
@@ -158,10 +160,10 @@ MacLow::~MacLow ()
  *  Accessor methods
  ****************************************************/
 
-MacParameters *
+MacLowParameters *
 MacLow::parameters (void)
 {
-	return m_mac->parameters ();
+	return m_parameters;
 }
 
 MacStation *
@@ -433,6 +435,8 @@ MacLow::startTransmission (void)
 	/* access backoff completed.
 	 * start a new transmission.
 	 */
+	assert (peekPhy ()->getState () == Phy80211::IDLE);
+
 	Packet *packet = m_queue->dequeue ();
 	increaseSequence ();
 	if (isData (packet)) {
@@ -462,6 +466,8 @@ MacLow::startTransmission (void)
 		m_currentTxPacket = packet;
 		sendCurrentTxPacket ();
 	}
+	/* When this method completes, we have taken ownership of the medium. */
+	assert (peekPhy ()->getState () == Phy80211::TX);
 }
 
 void

@@ -25,12 +25,14 @@
 #include "mac-stations.h"
 #include "arf-mac-stations.h"
 #include "hdr-mac-80211.h"
+#include "mac-parameters.h"
 
 MacHigh::MacHigh (Mac80211 *mac, Phy80211 *phy)
 	: m_mac (mac),
 	  m_phy (phy)
 {
 	m_stations = new ArfMacStations (mac);
+	m_parameters = new MacParameters (mac, phy);
 }
 MacHigh::~MacHigh ()
 {}
@@ -78,5 +80,5 @@ MacHigh::getPacketFor (int destination)
 MacParameters *
 MacHigh::parameters (void)
 {
-	return m_mac->parameters ();
+	return m_parameters;
 }

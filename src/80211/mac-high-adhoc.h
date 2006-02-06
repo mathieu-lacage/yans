@@ -27,6 +27,8 @@ class MacLow;
 class Mac80211;
 class Phy80211;
 class Packet;
+class MacLowParameters;
+class MacParameters;
 
 class MacHighAdhoc : public MacHigh {
 public:
@@ -42,6 +44,7 @@ public:
 	virtual void receiveFromMacLow (Packet *packet);
 private:
 	MacLow *m_low;
+	MacLowParameters *m_lowParameters;
 };
 
 #endif /* MAC_HIGH_ADHOC_H */
