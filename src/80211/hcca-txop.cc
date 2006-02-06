@@ -134,19 +134,29 @@ HccaTxop::lookupDestStation (Packet *packet) const
 	return station;
 }
 
+int
+HccaTxop::getAckModeForDataMode (int destination, int txMode)
+{
+	/* XXX */
+	return 0;
+}
+
 bool
 HccaTxop::enoughTimeFor (Packet *packet)
 {
-	low ()->disableRTS ();
-	low ()->enableFastAck ();
-	low ()->disableNextData ();
-	
 	MacStation *station = lookupDestStation (packet);
-	low ()->setDataTransmissionMode (station->getDataMode (getSize (packet)));
-	low ()->setData (packet);
-	double duration = low ()->calculateHandshakeDuration ();
-	low ()->clearData ();
+	int txMode = station->getDataMode (getSize (packet));
+	double duration = 0.0;
+	duration += calculateTxDuration (txMode, getSize (packet));
+	duration += parameters ()->getSIFS ();
+	int ackTxMode = getAckModeForDataMode (getDestination (packet), txMode);
+	duration += calculateTxDuration (ackTxMode, parameters ()->getPacketSize (MAC_80211_CTL_ACK));
 	return enoughTimeFor (duration);
+}
+double 
+HccaTxop::calculateTxDuration (int txMode, uint32_t size)
+{
+	return m_container->phy ()->calculateTxDuration (txMode, size);
 }
 void
 HccaTxop::setCurrentTsid (uint8_t tsid)
@@ -174,13 +184,10 @@ HccaTxop::tryToSendQosNull (void)
 	Packet *qosNull = getQosNullFor (m_container->getBSSID ());
 
 	/* calculate whether or not we have enough time. at rate 0. */
-	low ()->disableRTS ();
-	low ()->enableFastAck ();
-	low ()->disableNextData ();
-	low ()->setDataTransmissionMode (0);
-	low ()->setData (qosNull);
-	double duration = low ()->calculateHandshakeDuration ();
-	low ()->clearData ();
+	double duration = 0.0;
+	duration += calculateTxDuration (0, getSize (qosNull));
+	duration += parameters ()->getSIFS ();
+	duration += calculateTxDuration (0, parameters ()->getPacketSize (MAC_80211_CTL_ACK));
 	if (!enoughTimeFor (duration)) {
 		Packet::free (qosNull);
 		return;
@@ -232,10 +239,11 @@ HccaTxop::txCurrent (void)
 	}
 
 	MacStation *station = lookupDestStation (m_currentTxPacket);
+	int txMode = station->getDataMode (getSize (m_currentTxPacket));
 	if (!queue->isEmpty ()) {
 		// burst for next packet ?
 		Packet *nextPacket = queue->peekNextPacket ();
-		low ()->enableNextData (getSize (nextPacket));
+		low ()->enableNextData (getSize (nextPacket), txMode);
 		TRACE ("send to %d burst next", getDestination (m_currentTxPacket));
 	} else {
 		low ()->disableNextData ();
@@ -244,7 +252,7 @@ HccaTxop::txCurrent (void)
 	low ()->disableRTS ();
 	low ()->enableFastAck ();
 	low ()->enableOverrideDurationId (getDurationIdLeft ());
-	low ()->setDataTransmissionMode (station->getDataMode (getSize (m_currentTxPacket)));
+	low ()->setDataTransmissionMode (txMode);
 	low ()->setData (m_currentTxPacket->copy ());
 	low ()->setTransmissionListener (m_transmissionListener);
 	low ()->startTransmission ();

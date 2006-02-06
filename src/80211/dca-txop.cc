@@ -260,7 +260,6 @@ DcaTxop::accessGrantedNow (void)
 		       getDestination (m_currentTxPacket),
 		       getSequenceControl (m_currentTxPacket));
 	}
-	low ()->disableBusyMonitoring ();
 	low ()->disableOverrideDurationId ();
 	if (getDestination (m_currentTxPacket) == (int)MAC_BROADCAST) {
 		low ()->disableRTS ();
@@ -286,7 +285,7 @@ DcaTxop::accessGrantedNow (void)
 				low ()->disableNextData ();
 			} else {
 				TRACE ("fragmenting %d", getSize (fragment));
-				low ()->enableNextData (getNextFragmentSize ());
+				low ()->enableNextData (getNextFragmentSize (), dataTxMode);
 			}
 			low ()->setData (fragment);
 			low ()->startTransmission ();
@@ -379,13 +378,14 @@ DcaTxop::startNext (void)
 	MacStation *station = lookupDestStation (m_currentTxPacket);
 	low ()->disableRTS ();
 	nextFragment ();
+	Packet *fragment = getFragmentPacket ();
+	int txMode = station->getDataMode (getSize (fragment));
 	if (isLastFragment ()) {
 		low ()->disableNextData ();
 	} else {
-		low ()->enableNextData (getNextFragmentSize ());
+		low ()->enableNextData (getNextFragmentSize (), txMode);
 	}
-	Packet *fragment = getFragmentPacket ();
-	low ()->setDataTransmissionMode (station->getDataMode (getSize (fragment)));
+	low ()->setDataTransmissionMode (txMode);
 	low ()->setData (fragment);
 	low ()->startTransmission ();
 }

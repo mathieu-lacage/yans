@@ -69,6 +69,9 @@ private:
 	Packet *getQosNullFor (int destination);
 	MacParameters *parameters (void);
 	void tryToSendQosNull (void);
+	double calculateTxDuration (int txMode, uint32_t size);
+	int getAckModeForDataMode (int destination, int txMode);
+
 
 	void txopStartTimer (void);
 	void gotCTS (double snr, int txMode);

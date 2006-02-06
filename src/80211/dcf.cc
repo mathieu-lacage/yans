@@ -135,6 +135,12 @@ Dcf::~Dcf ()
  *     public API.
  ***************************************************************/ 
 
+MacDcfParameters *
+Dcf::parameters (void)
+{
+	return m_parameters;
+}
+
 
 void 
 Dcf::requestAccess (void)

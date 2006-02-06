@@ -53,7 +53,7 @@ public:
 
 class Dcf
 {
- public:
+public:
 	Dcf (MacContainer *container, MacDcfParameters *parameters);
 	~Dcf ();
 
@@ -61,6 +61,8 @@ class Dcf
 	void notifyAccessOk (void);
 	void notifyAccessFailed (void);
 	void registerAccessListener (DcfAccessListener *listener);
+
+	MacDcfParameters *parameters (void);
 
 private:
 	friend class DcfPhyListener;

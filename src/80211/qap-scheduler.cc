@@ -728,7 +728,7 @@ QapScheduler::beaconTimer (MacCancelableEvent *event)
 	if (m_admitted.empty ()) {
 		low ()->disableNextData ();
 	} else {
-		low ()->enableNextData (getPacketSize (MAC_80211_MGT_CFPOLL));
+		low ()->enableNextData (getPacketSize (MAC_80211_MGT_CFPOLL), 0);
 	}
 	low ()->setData (packet);
 	low ()->setTransmissionListener (m_beaconTxListener);
