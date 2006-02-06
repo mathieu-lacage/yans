@@ -85,7 +85,7 @@ $ns node-config \
     -ifqLen 50 \
     -antType  Antenna/OmniAntenna \
     -propType Propagation/TwoRayGround \
-    -phyType Phy/Phy80211 \
+    -phyType Phy/80211/Ber \
     -channel [new Channel/Channel80211] \
     -topoInstance [new Topography] \
     -agentTrace OFF \

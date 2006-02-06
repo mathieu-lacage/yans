@@ -22,12 +22,50 @@
 #ifndef PHY_BER_H
 #define PHY_BER_H
 
+#include <list>
+
 #include "phy-80211.h"
+
+class Packet;
+class PhyRxEvent;
+class NIChange;
+class EndRxHandler;
+class RngUniform;
 
 class PhyBer : public Phy80211 {
 public:
 	PhyBer ();
 	virtual ~PhyBer ();
+
+private:
+	virtual void startRx (Packet *packet);
+	virtual void cancelRx (void);
+private:
+	class NIChange {
+	public:
+		NIChange (double time, double delta);
+		double getTime (void);
+		double getDelta (void);
+		bool operator < (NIChange a) const;
+	private:
+		double m_time;
+		double m_delta;
+	};
+
+	double calculateCurrentNoiseInterference (void);
+	double calculateNoiseInterference (double time);
+	double calculateNI (PhyRxEvent *phyRxEvent, vector <NIChange> *snir);
+	double calculatePER (PhyRxEvent *packet, vector <NIChange> *snir);
+	double calculateChunkSuccessRate (double snir, double delay, TransmissionMode *mode);
+	double SNR (double signal, double noiseInterference, TransmissionMode *mode);
+	void appendEvent (PhyRxEvent *event);
+	void endRx (PhyRxEvent *phyRxEvent, Packet *packet);
+private:
+	list<PhyRxEvent *> m_rxEventList;
+	EndRxHandler *m_endRxHandler;
+	RngUniform *m_random;
+
+	friend class PhyRxEvent;
 };
 
 #endif /* PHY_BER_H */

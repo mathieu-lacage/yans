@@ -62,11 +62,15 @@
 
 static class Phy80211Class: public TclClass {
 public:
-        Phy80211Class() : TclClass("Phy/Phy80211") {}
+        Phy80211Class() : TclClass("Phy/80211") {}
         TclObject* create(int, const char*const*) {
-                return (new Phy80211 ());
+		/* instantiating this object is 
+		 * really impossible
+		 */
+                return 0;
         }
 } class_Phy80211;
+
 
 /****************************************************************
  *       This destructor is needed.
@@ -76,186 +80,6 @@ Phy80211Listener::~Phy80211Listener ()
 {}
 
 /****************************************************************
- *       Phy event class
- ****************************************************************/
-
-class PhyRxEvent {
-public:
-	PhyRxEvent (Packet *packet, class Phy80211 *phy)
-	{
-		m_payloadMode = phy->getPayloadMode (packet);
-		m_size = ::getSize (packet);
-		m_startTime = phy->now ();
-		m_endTime = m_startTime + phy->calculatePacketDuration (getHeaderMode (),
-									m_payloadMode,
-									m_size);
-		m_power = phy->calculatePower (packet);
-		m_refCount = 1;
-	}
-	~PhyRxEvent ()
-	{}
-	
-	void ref (void)
-	{
-		m_refCount++;
-	}
-	void unref (void)
-	{
-		m_refCount--;
-		if (m_refCount == 0) {
-			delete this;
-		}
-	}
-	double getDuration (void)
-	{
-		return m_endTime - m_startTime;
-	}
-	double getStartTime (void)
-	{
-		return m_startTime;
-	}
-	double getEndTime (void)
-	{
-		return m_endTime;
-	}
-	bool overlaps (double time)
-	{
-		if (getStartTime () <= time &&
-		    getEndTime () >= time) {
-			return true;
-		} else {
-			return false;
-		}
-	}
-	double getPower (void)
-	{
-		return m_power;
-	}
-	int getSize (void) 
-	{
-		return m_size;
-	}
-	int getPayloadMode (void) 
-	{
-		return m_payloadMode;
-	}
-
-	int getHeaderMode (void)
-	{
-		return 0;
-	}
-
-private:
-	double m_startTime;
-	double m_endTime;
-	int m_payloadMode;
-	int m_size;
-	double m_power;
-	int m_refCount;
-};
-
-
-/****************************************************************
- *       Rx Handler glue.
- ****************************************************************/
-
-class EndRxHandler : public Handler
-{
-private:
-	class RxEvent : public Event 
-	{
-	public:
-		RxEvent (PhyRxEvent *event, Packet *packet)
-			: m_event (event),
-			  m_packet (packet),
-			  m_canceled (false)
-		{
-			m_event->ref ();
-		}
-		virtual ~RxEvent ()
-		{
-			m_event->unref ();
-		}
-		void cancel (void)
-		{
-			m_canceled = true;
-		}
-		bool isCanceled (void)
-		{
-			return m_canceled;
-		}
-		class PhyRxEvent *peekPhyRxEvent (void)
-		{
-			return m_event;
-		}
-		Packet *peekPacket (void)
-		{
-			return m_packet;
-		}
-	private:
-		class PhyRxEvent *m_event;
-		Packet *m_packet;
-		bool m_canceled;
-	};
-public:
-	typedef void (Phy80211::*RxHandler)(class PhyRxEvent *event, Packet *packet);
-	EndRxHandler (Phy80211 *phy, RxHandler handler)
-		: m_phy (phy) , m_handler (handler) ,
-		  m_runningEvent (0)
-	{}
-	virtual ~EndRxHandler ()
-	{}
-	void start (PhyRxEvent *event, Packet *packet, double delay)
-	{
-		m_runningEvent = new RxEvent (event, packet);
-		Scheduler::instance ().schedule (this, m_runningEvent, delay);
-	}
-	void cancel (void) 
-	{
-		m_runningEvent->cancel ();
-	}
-	virtual void handle (Event *e)
-	{
-		RxEvent *ev = static_cast<RxEvent *> (e);
-		if (!ev->isCanceled ()) {
-			(m_phy->*m_handler) (ev->peekPhyRxEvent (), ev->peekPacket ());
-		}
-		delete ev;
-	}
-private:
-	Phy80211 *m_phy;
-	RxHandler m_handler;
-	RxEvent *m_runningEvent;
-};
-
-/****************************************************************
- *       Class which records SNIR change events for a 
- *       short period of time.
- ****************************************************************/
-
-
-Phy80211::NIChange::NIChange (double time, double delta)
-	: m_time (time), m_delta (delta)
-{}
-
-double 
-Phy80211::NIChange::getTime (void)
-{
-	return m_time;
-}
-double
-Phy80211::NIChange::getDelta (void)
-{
-	return m_delta;
-}
-
-bool
-Phy80211::NIChange::operator < (NIChange a) const
-{
-	return m_time < a.m_time;
-}
-
-/****************************************************************
  *       The actual Phy80211 class
  ****************************************************************/
 
@@ -263,18 +87,26 @@ Phy80211::Phy80211 ()
 	: Phy (),
 	  m_propagation (0),
 	  m_antenna (0),
-	  m_endRxHandler (new EndRxHandler (this, &Phy80211::endRx)),
-	  m_random (new RngUniform ()),
 	  m_sleeping (false),
 	  m_rxing (false),
 	  m_endTx (0.0),
 	  m_previousStateChangeTime (0.0)
 {
-	if (isClassDefined ("Phy/Phy80211", "standard")) {
-		bind ("standard", (unsigned int *)&m_standard);
-	} else {
-		m_standard = standard_80211_a;
-	}
+	initialize ("standard", &m_standard, standard_80211_a);
+
+	/* absolute system loss. W. */
+	m_systemLoss = 1.0;
+	/* absolute reception threshold. dBm. */
+	m_rxThreshold = -81;
+	/* Ratio of energy lost by receiver. dB. */
+	m_rxNoise = 7;
+
+	/* absolute transmission energy. dBm. 
+	 * XXX: this field should be moved to the 
+	 * packet structure.
+	 */
+	m_txPower = 15;
+
 	if (m_standard == standard_80211_unknown) {
 		
 	} else if (m_standard == standard_80211_b) {
@@ -301,16 +133,7 @@ Phy80211::Phy80211 ()
 }
 
 Phy80211::~Phy80211 ()
-{
-	delete m_endRxHandler;
-	delete m_random;
-	list<PhyRxEvent *>::iterator i = m_rxEventList.begin ();
-	while (i != m_rxEventList.end ()) {
-		(*i)->unref ();
-		i = m_rxEventList.erase (i);
-	}
-
-}
+{}
 
 void 
 Phy80211::registerListener (Phy80211Listener *listener)
@@ -381,85 +204,33 @@ Phy80211::stateToString (enum Phy80211State state)
 }
 
 bool
-Phy80211::isClassDefined (char const *className, char const *varName)
-{
-	Tcl& tcl=Tcl::instance();
-	tcl.evalf ("catch \"%s set %s\" val", className, varName);
-	if (strcmp ((char *)tcl.result (), "0") == 0) {
-		return true;
-	} else {
-		return false;
-	}
-}
-
-bool
 Phy80211::isDefined (char const *varName)
 {
 	Tcl& tcl=Tcl::instance();
-	tcl.evalf ("catch \"[%s info class] set %s\" val", (char *)name (), varName);
+	tcl.evalf ("catch \"Phy/80211/Ber set %s\" val", varName);
 	if (strcmp ((char *)tcl.result (), "0") == 0) {
 		return true;
 	} else {
 		return false;
 	}
 }
+void
+Phy80211::define (char const *varName, uint32_t defaultValue)
+{
+	Tcl& tcl=Tcl::instance();
+	tcl.evalf ("Phy/80211/Ber set %s %u", 
+		   varName, defaultValue);
+}
 
 void
-Phy80211::delay_bind_safe (char const *varName)
+Phy80211::initialize (char const *varName, uint32_t *variable, uint32_t defaultValue)
 {
-	if (isDefined (varName)) {
-		delay_bind_init_one (varName);
+	if (!isDefined (varName)) {
+		define (varName, defaultValue);
 	}
+	bind (varName, variable);
 }
 
-int 
-Phy80211::delay_bind_dispatch(const char *varName, const char *localName, TclObject *tracer)
-{
-	if (delay_bind (varName, localName, "frequency", &m_frequency, tracer)) {
-		goto ok;
-	} else if (delay_bind (varName, localName, "plcpHeaderLength", &m_plcpHeaderLength, tracer)) {
-		goto ok;
-	} else if (delay_bind (varName, localName, "plcpPreambleDelay", &m_plcpPreambleDelay, tracer)) {
-		goto ok;
-	} else if (delay_bind (varName, localName, "systemLoss", &m_systemLoss, tracer)) {
-		goto ok;
-	} else if (delay_bind (varName, localName, "rxThreshold", &m_rxThreshold, tracer)) {
-		goto ok;
-	} else if (delay_bind (varName, localName, "rxNoise", &m_rxNoise, tracer)) {
-		goto ok;
-	}
-	// chain up.
-	return Phy::delay_bind_dispatch (varName, localName, tracer);
- ok:
-	return TCL_OK;
-}
-
-void 
-Phy80211::delay_bind_init_all()
-{
-	delay_bind_safe ("frequency");           // Hz
-	delay_bind_safe ("plcpHeaderLength");    // bits
-	delay_bind_safe ("plcpPreambleDelay");   // seconds
-
-	/* absolute system loss. W. */
-	delay_bind_safe  ("systemLoss");
-	m_systemLoss = 1.0;
-	/* absolute reception threshold. dBm. */
-	delay_bind_safe ("rxThreshold");
-	m_rxThreshold = -81;
-	/* Ratio of energy lost by receiver. dB. */
-	delay_bind_safe ("rxNoise");     
-	m_rxNoise = 7;
-
-	/* absolute transmission energy. dBm. 
-	 * XXX: this field should be moved to the 
-	 * packet structure.
-	 */
-	m_txPower = 15;
-
-	// chain up.
-	Phy::delay_bind_init_all ();
-}
 
 double 
 Phy80211::dBmToW (double dBm)
@@ -478,10 +249,15 @@ Phy80211::getLastRxSNR (void)
 {
 	return m_rxStartSNR;
 }
-double 
-Phy80211::getLastRxStartTime (void)
+void
+Phy80211::setLastRxSNR (double snr)
 {
-	return m_rxStartTime;
+	m_rxStartSNR = snr;
+}
+double 
+Phy80211::getMaxPacketDuration (void)
+{
+	return m_maxPacketDuration;
 }
 int 
 Phy80211::getNModes (void)
@@ -494,6 +270,11 @@ Phy80211::now (void)
 	double now;
 	now = Scheduler::instance ().clock ();
 	return now;
+}
+double
+Phy80211::getRxThreshold (void)
+{
+	return m_rxThreshold;
 }
 int
 Phy80211::getHeaderMode (Packet *packet)
@@ -605,7 +386,7 @@ Phy80211::sleep (void)
 	 */
 	assert (getState () != Phy80211::TX);
 	if (getState () == Phy80211::SYNC) {
-		m_endRxHandler->cancel ();
+		cancelRx ();
 	}
 	notifySleep (now ());
 	switchToSleep ();
@@ -660,29 +441,6 @@ Phy80211::calculateNoiseFloor (double signalSpread)
 
 }
 
-/* signal and noiseInterference are both W
- */
-double
-Phy80211::SNR (double signal, double noiseInterference, TransmissionMode *mode)
-{
-#ifdef PHY80211_DEBUG
-	cout << "S: " << signal << 
-		", Ni: " << noiseInterference << 
-		", Nf: " << calculateNoiseFloor (mode->getSignalSpread ()) << endl;
-#endif
-	double noise = calculateNoiseFloor (mode->getSignalSpread ()) + noiseInterference;
-	double snr = signal / noise;
-	return snr;
-}
-
-double
-Phy80211::calculateCurrentNoiseInterference (void)
-{
-	double noiseInterference;
-	noiseInterference = calculateNoiseInterference (now ());
-	return noiseInterference;
-}
-
 /* return power in W */
 double 
 Phy80211::calculatePower (Packet *p)
@@ -695,25 +453,6 @@ Phy80211::calculatePower (Packet *p)
 }
 
 
-double
-Phy80211::calculateNoiseInterference (double time)
-{
-	double noiseInterference;
-	list<PhyRxEvent *>::iterator i;
-
-	noiseInterference = 0;
-	i = m_rxEventList.begin ();
-
-	while (i != m_rxEventList.end ()) {
-		if ((*i)->overlaps (time)) {
-			// this packet is contributing to the interference noise
-			noiseInterference += (*i)->getPower ();
-		}
-		i++;
-	}
-
-	return noiseInterference;
-}
 
 void
 Phy80211::startTx (Packet *packet)
@@ -728,7 +467,7 @@ Phy80211::startTx (Packet *packet)
 		getState () != Phy80211::TX);
 
 	if (getState () == Phy80211::SYNC) {
-		m_endRxHandler->cancel ();
+		cancelRx ();
 	}
 
 	/* txPower should be calculated on a per-packet basis by the MAC.
@@ -749,88 +488,7 @@ Phy80211::startTx (Packet *packet)
 	peekChannel ()->recv (packet, this);
 }
 
-void
-Phy80211::startRx (Packet *packet)
-{
-#ifdef PHY80211_DEBUG
-	cout << this << " phy startRx " << now () << " " << packet << endl;
-#endif
-	PhyRxEvent *event = new PhyRxEvent (packet, this);
-	appendEvent (event);
 
-	switch (getState ()) {
-	default:
-		cout << "FDASFASDFASDF" << endl;
-		break;
-	case Phy80211::SYNC:
-	case Phy80211::TX:
-	case Phy80211::SLEEP:
-		Packet::free (packet);
-		break;
-	case Phy80211::IDLE: {
-		double power = calculatePower (packet);
-		
-		if (power > dBmToW (m_rxThreshold)) {
-			// sync to signal
-			notifyRxStart (now (), event->getDuration ());
-			switchToSyncFromIdle (event->getDuration ());
-			m_endRxHandler->start (event, packet, 
-					       event->getDuration ());
-		} else {
-#ifdef PHY80211_DEBUG
-			cout << power << "too small " << dBmToW (m_rxThreshold) << endl;
-#endif
-			/* if the energy of the signal is smaller than rxThreshold,
-			 * this packet is not synced upon.
-			 */
-			Packet::free (packet);
-		}
-	} break;
-	}
-	event->unref ();
-}
-
-double
-Phy80211::calculateNI (PhyRxEvent *phyRxEvent, vector <NIChange> *ni)
-{
-	list<PhyRxEvent *>::iterator i = m_rxEventList.begin ();
-	double noiseInterference = 0.0;
-	while (i != m_rxEventList.end ()) {
-		if (phyRxEvent == (*i)) {
-			i++;
-			continue;
-		}
-		if (phyRxEvent->overlaps ((*i)->getStartTime ())) {
-			ni->push_back (NIChange ((*i)->getStartTime (), (*i)->getPower ()));
-		}
-		if (phyRxEvent->overlaps ((*i)->getEndTime ())) {
-			ni->push_back (NIChange ((*i)->getEndTime (), -(*i)->getPower ()));
-		}
-		if ((*i)->overlaps (phyRxEvent->getStartTime ())) {
-			noiseInterference += (*i)->getPower ();
-		}
-		i++;
-	}
-	ni->push_back (NIChange (phyRxEvent->getStartTime (), noiseInterference));
-	ni->push_back (NIChange (phyRxEvent->getEndTime (), 0));
-
-	/* quicksort vector of NI changes by time. */
-	sort (ni->begin (), ni->end (), less<NIChange> ());
-
-#ifdef PHY80211_DEBUG
-	{
-		cout << "snir: " << endl;
-		vector<NIChange>::iterator j;
-		for (j = ni->begin (); j < ni->end (); j++) {
-			cout << (*j).getTime () << " ";
-			cout << (*j).getDelta () << " ";
-			cout << endl;
-		}
-	}
-#endif 
-
-	return noiseInterference;
-}
 
 TransmissionMode *
 Phy80211::getMode (int mode)
@@ -838,120 +496,6 @@ Phy80211::getMode (int mode)
 	return m_modes[mode];
 }
 
-double
-Phy80211::calculateChunkSuccessRate (double snir, double delay, TransmissionMode *mode)
-{
-	double rate = mode->getDataRate ();
-	double nbits = rate * delay;
-	/** XXX: make sure the signed double to unsigned 
-	 *  int conversion below is correct.
-	 */
-	double csr = mode->chunkSuccessRate (snir, ((unsigned int)(int)nbits));
-	return csr;
-}
-
-double 
-Phy80211::calculatePER (PhyRxEvent *packet, vector <NIChange> *ni)
-{	
-	double psr = 1; /* Packet Success Rate */
-	vector<NIChange>::iterator j = ni->begin ();
-	double previous = (*j).getTime ();
-	double plcpHeaderStart = (*j).getTime () + getPreambleDuration ();
-	double plcpPayloadStart = plcpHeaderStart + calculateHeaderDuration (packet->getHeaderMode ());
-	double noiseInterference = (*j).getDelta ();
-	double power = packet->getPower ();
-	TransmissionMode *payloadMode = getMode (packet->getPayloadMode ());
-	TransmissionMode *headerMode = getMode (packet->getHeaderMode ());
-
-	j++;
-	while (ni->end () != j) {
-		assert ((*j).getTime () >= previous);
-		
-		if (previous >= plcpPayloadStart) {
-			psr *= calculateChunkSuccessRate (SNR (power, noiseInterference, payloadMode), 
-							  (*j).getTime () - previous,
-							  payloadMode);
-		} else if (previous >= plcpHeaderStart) {
-			if ((*j).getTime () >= plcpPayloadStart) {
-				psr *= calculateChunkSuccessRate (SNR (power, noiseInterference, headerMode), 
-								  plcpPayloadStart - previous,
-								  headerMode);
-				psr *= calculateChunkSuccessRate (SNR (power, noiseInterference, payloadMode),
-								  (*j).getTime () - plcpPayloadStart,
-								  payloadMode);
-			} else {
-				assert ((*j).getTime () >= plcpHeaderStart);
-				psr *= calculateChunkSuccessRate (SNR (power, noiseInterference, headerMode), 
-								  (*j).getTime () - previous,
-								  headerMode);
-			}
-		} else {
-			if ((*j).getTime () >= plcpPayloadStart) {
-				psr *= calculateChunkSuccessRate (SNR (power, noiseInterference, headerMode), 
-								  plcpPayloadStart - plcpHeaderStart,
-								  headerMode);
-				psr *= calculateChunkSuccessRate (SNR (power, noiseInterference, payloadMode), 
-								  (*j).getTime () - plcpPayloadStart,
-								  payloadMode);
-			} else if ((*j).getTime () >= plcpHeaderStart) {
-				psr *= calculateChunkSuccessRate (SNR (power, noiseInterference, headerMode), 
-								  (*j).getTime () - plcpHeaderStart,
-								  headerMode);
-			}
-		}
-
-		noiseInterference += (*j).getDelta ();
-		previous = (*j).getTime ();
-		j++;
-	}
-
-#ifdef PHY80211_DEBUG
-	cout << "psr: " << psr << endl;
-#endif
-	double per = 1 - psr;
-	return per;
-}
-
-void 
-Phy80211::endRx (PhyRxEvent *phyRxEvent, Packet *packet)
-{
-#ifdef PHY80211_DEBUG
-	cout << "phy endRx " << now () << endl;
-#endif
-
-	vector<NIChange> ni;
-
-	assert (getState () == Phy80211::SYNC);
-
-	assert (phyRxEvent->getEndTime () == 
-		Scheduler::instance ().clock ());
-
-	/* calculate the SNIR at the start of the packet and accumulate
-	 * all SNIR changes in the snir vector.
-	 */
-	// XXX: we assign NI to SNR. Wrong !!
-	m_rxStartSNR = calculateNI (phyRxEvent, &ni);
-	m_rxStartTime = phyRxEvent->getStartTime ();
-
-	double per;
-	bool receivedOk;
-	per = calculatePER (phyRxEvent, &ni);
-	if (m_random->pick () > per) {
-		/* success. */
-		HDR_CMN (packet)->error () = 0;
-		receivedOk = true;
-	} else {
-		/* failure. */
-		HDR_CMN (packet)->error () = 1;
-		receivedOk = false;
-	}
-
-	HDR_CMN (packet)->direction() = hdr_cmn::UP;
-	
-	notifyRxEnd (now (), receivedOk);
-	switchToIdleFromSync ();
-	uptarget ()->recv (packet);
-}
 
 void
 Phy80211::switchToTx (double txDuration)
@@ -1130,27 +674,4 @@ MobileNode *
 Phy80211::peekMobileNode (void)
 {
 	return static_cast<MobileNode *>(Phy::node ());
-}
-
-void 
-Phy80211::appendEvent (PhyRxEvent *event)
-{
-	/* attempt to remove the events which are 
-	 * not useful anymore. 
-	 * i.e.: all events which end _before_
-	 *       now - m_maxPacketDuration
-	 */
-	double end = now () - m_maxPacketDuration;
-	list<PhyRxEvent *>::iterator i = m_rxEventList.begin ();
-	while (i != m_rxEventList.end () &&
-	       (*i)->getStartTime () < end) {
-		if ((*i)->getEndTime () <= end) {
-			(*i)->unref ();
-			i = m_rxEventList.erase (i);
-		} else {
-			i++;
-		}
-	}
-	event->ref ();
-	m_rxEventList.push_back (event);
 }
