@@ -35,7 +35,7 @@
 
 
 #ifndef QSTATION_TRACE
-#define QSTATION_TRACE 1
+#define nopeQSTATION_TRACE 1
 #endif /* QSTATION_TRACE */
 
 #ifdef QSTATION_TRACE
