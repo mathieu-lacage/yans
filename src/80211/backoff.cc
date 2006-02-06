@@ -23,7 +23,6 @@
 
 #include "backoff.h"
 #include "phy-80211.h"
-#include "phy-event-list.h"
 #include "mac-low-80211.h"
 #include "precision.h"
 
@@ -223,7 +222,6 @@ Backoff::updateBackoff (double time)
 	double mostRecentEvent = max (m_backoffStart,
 				      getAccessAllowedStart ());
 	if (mostRecentEvent < time) {
-		double elapsed = time - mostRecentEvent;
 		m_backoffLeft -= time - mostRecentEvent;
 		m_backoffLeft = max (m_backoffLeft, 0.0); 
 		m_backoffLeft = PRECISON_ROUND_TO_ZERO (m_backoffLeft);
