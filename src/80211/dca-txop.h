@@ -39,8 +39,8 @@ public:
 	DcaTxop (Dcf *dcf, MacQueue80211e *queue, MacContainer *container);
 
 private:
-	friend class MyAccessListener;
-	friend class MyTransmissionListener;
+	friend class MyDcaAccessListener;
+	friend class MyDcaTransmissionListener;
 
 	MacLow *low (void);
 	MacParameters *parameters (void);

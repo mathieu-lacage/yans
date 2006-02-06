@@ -48,11 +48,13 @@
 #endif /* DCF_TRACE */
 
 
-class MyAccessListener : public DcfAccessListener {
+class MyDcaAccessListener : public DcfAccessListener {
 public:
-	MyAccessListener (DcaTxop *txop)
+	MyDcaAccessListener (DcaTxop *txop)
 		: DcfAccessListener (),
 		  m_txop (txop) {}
+
+	virtual ~MyDcaAccessListener () {}
 
 	virtual void accessGrantedNow (void)
 	{
@@ -71,13 +73,13 @@ private:
 	DcaTxop *m_txop;
 };
 
-class MyTransmissionListener : public MacLowTransmissionListener {
+class MyDcaTransmissionListener : public MacLowTransmissionListener {
 public:
-	MyTransmissionListener (DcaTxop *txop)
+	MyDcaTransmissionListener (DcaTxop *txop)
 		: MacLowTransmissionListener (),
 		  m_txop (txop) {}
 		  
-	virtual ~MyTransmissionListener () {}
+	virtual ~MyDcaTransmissionListener () {}
 
 	virtual void gotCTS (double snr, int txMode) {
 		m_txop->gotCTS (snr, txMode);
@@ -100,7 +102,6 @@ private:
 };
 
 
-
 DcaTxop::DcaTxop (Dcf *dcf, MacQueue80211e *queue, MacContainer *container)
 	: m_dcf (dcf),
 	  m_queue (queue),
@@ -109,8 +110,8 @@ DcaTxop::DcaTxop (Dcf *dcf, MacQueue80211e *queue, MacContainer *container)
 	  m_SSRC (0),
 	  m_SLRC (0)
 {
-	m_dcf->registerAccessListener (new MyAccessListener (this));
-	m_transmissionListener = new MyTransmissionListener (this);
+	m_dcf->registerAccessListener (new MyDcaAccessListener (this));
+	m_transmissionListener = new MyDcaTransmissionListener (this);
 }
 
 double
