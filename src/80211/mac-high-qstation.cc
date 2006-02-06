@@ -98,10 +98,8 @@ MacHighQStation::updateEDCAParameters (unsigned char const *buffer)
 void
 MacHighQStation::queueAC (enum ac_e ac, Packet *packet)
 {
-	TRACE ("queue seq 0x%x to %d (ac=%s)", 
-	       getSequenceControl (packet), 
-	       getDestination (packet),
-	       getAcString (packet));
+	TRACE ("queue to %d", 
+	       getDestination (packet));
 	m_dcfQueues[ac]->enqueue (packet);
 	m_dcfs[ac]->requestAccess ();
 }
