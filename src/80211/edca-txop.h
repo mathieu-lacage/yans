@@ -45,12 +45,6 @@ private:
 	MacLow *low (void);
 	MacParameters *parameters (void);
 	double now (void);
-	double calculateTxDuration (uint32_t size, int txMode);
-	double calculateCurrentTxDuration (void);
-	double calculateNextTxDuration (Packet *packet);
-	double enoughCurrentTime (void);
-	double enoughTime (double txDuration);
-	void tryToSendOnePacket (void);
 
 	/* event handlers */
 	void accessGrantedNow (void);
@@ -73,9 +67,7 @@ private:
 	MacLowTransmissionListener *m_transmissionListener;
 	int m_SSRC;
 	int m_SLRC;
-	bool m_firstPacketInBurst;
-	bool m_lastPacketInBurst;
-	double m_startTxopTime;
+	int m_fragmentNumber;
 };
 
 

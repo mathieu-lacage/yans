@@ -261,7 +261,7 @@ $ftp attach-agent $tcp
 # connect tcp source to receiver
 $ns connect $tcp $sink
 # start source.
-#$ns at 3.0 "$ftp start" 
+$ns at 3.0 "$ftp start" 
 #########################################################
 
 $ns at 300 "puts \"End of simulation.\"; $ns halt"

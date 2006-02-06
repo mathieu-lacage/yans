@@ -26,7 +26,6 @@
 #include "edca-txop.h"
 #include "dcf.h"
 #include "mac-parameters.h"
-#include "mac-dcf-parameters.h"
 #include "mac-low.h"
 #include "mac-queue-80211e.h"
 #include "mac-station.h"
@@ -167,72 +166,8 @@ EdcaTxop::accessNeeded (void)
 	}
 }
 
-double
-EdcaTxop::calculateTxDuration (uint32_t size, int txMode)
-{
-	return m_container->phy ()->calculateTxDuration (txMode, size);
-}
-
-double
-EdcaTxop::calculateCurrentTxDuration (void)
-{
-	double txDuration = 0.0;
-	if (getDestination (m_currentTxPacket) == (int)MAC_BROADCAST) {
-		txDuration += calculateTxDuration (getSize (m_currentTxPacket), 0);
-	} else {
-		int dataTxMode = lookupDestStation (m_currentTxPacket)->getDataMode (getSize (m_currentTxPacket));
-		if (m_firstPacketInBurst && needRTS ()) {
-			int txMode = lookupDestStation (m_currentTxPacket)->getRTSMode ();
-			txDuration += parameters ()->getSIFS () * 2;
-			txDuration += calculateTxDuration (parameters ()->getPacketSize (MAC_80211_CTL_RTS), 0);
-			txDuration += calculateTxDuration (parameters ()->getPacketSize (MAC_80211_CTL_CTS), 0);
-		}
-		txDuration += parameters ()->getSIFS ();
-		txDuration += calculateTxDuration (parameters ()->getPacketSize (MAC_80211_CTL_ACK), 0);
-	}
-	return txDuration;
-}
-double
-EdcaTxop::calculateNextTxDuration (Packet *packet)
-{
-	double txDuration = 0.0;
-	if (getDestination (packet) == (int)MAC_BROADCAST) {
-		txDuration += calculateTxDuration (getSize (packet), 0);
-	} else {
-		int dataTxMode = lookupDestStation (packet)->getDataMode (getSize (packet));
-		txDuration += parameters ()->getSIFS ();
-		txDuration += calculateTxDuration (parameters ()->getPacketSize (MAC_80211_CTL_ACK), 0);
-	}
-	return txDuration;
-}
-
-double
-EdcaTxop::enoughCurrentTime (void)
-{
-	return enoughTime (calculateCurrentTxDuration ());
-}
-double
-EdcaTxop::enoughTime (double txDuration)
-{
-	double endTxTime = now () + txDuration;
-	double endTxopTime = m_startTxopTime + m_dcf->parameters ()->getTxopLimit ();
-	if (endTxTime > endTxopTime) {
-		return false;
-	} else {
-		return true;
-	}
-}
-
 void
 EdcaTxop::accessGrantedNow (void)
-{
-	m_firstPacketInBurst = true;
-	m_startTxopTime = now ();
-	tryToSendOnePacket ();
-}
-
-void
-EdcaTxop::tryToSendOnePacket (void)
 {
 	if (!m_currentTxPacket) {
 		if (m_queue->isEmpty ()) {
@@ -251,48 +186,24 @@ EdcaTxop::tryToSendOnePacket (void)
 		       getDestination (m_currentTxPacket),
 		       getSequenceControl (m_currentTxPacket));
 	}
-	if (!enoughCurrentTime ()) {
-		TRACE ("no time to start transmission.");
-		return;
-	}
-
-	bool nextData;
-	if (!m_queue->isEmpty ()) {
-		Packet *packet = m_queue->peekNextPacket ();
-		int nextTxMode = lookupDestStation (packet)->getDataMode (getSize (packet));
-		double txDuration = calculateNextTxDuration (packet);
-		txDuration += calculateCurrentTxDuration ();
-		if (enoughTime (txDuration)) {
-			m_lastPacketInBurst = false;
-			low ()->enableNextData (getSize (packet), nextTxMode);
-		} else {
-			m_lastPacketInBurst = true;
-			low ()->disableNextData ();
-		}
-	} else {
-		m_lastPacketInBurst = true;
-		low ()->disableNextData ();
-	}
-
 	low ()->disableOverrideDurationId ();
 	if (getDestination (m_currentTxPacket) == (int)MAC_BROADCAST) {
 		low ()->disableRTS ();
 		low ()->disableACK ();
 		low ()->setDataTransmissionMode (0);
 		low ()->setTransmissionListener (m_transmissionListener);
+		low ()->disableNextData ();
 		low ()->setData (m_currentTxPacket);
+		low ()->startTransmission ();
 		m_currentTxPacket = 0;
-		m_dcf->notifyAccessOngoingOk ();
-		if (!nextData) {
-			m_dcf->notifyAccessFinished ();
-		}
+		m_dcf->notifyAccessOk ();
 		TRACE ("tx broadcast");
 	} else {
 		int dataTxMode = lookupDestStation (m_currentTxPacket)->getDataMode (getSize (m_currentTxPacket));
 		low ()->setDataTransmissionMode (dataTxMode);
 		low ()->enableACK ();
 		low ()->setTransmissionListener (m_transmissionListener);
-		if (m_firstPacketInBurst && needRTS ()) {
+		if (needRTS ()) {
 			low ()->enableRTS ();
 			int txMode = lookupDestStation (m_currentTxPacket)->getRTSMode ();
 			low ()->setRtsTransmissionMode (txMode);
@@ -301,10 +212,10 @@ EdcaTxop::tryToSendOnePacket (void)
 			low ()->disableRTS ();
 			TRACE ("tx unicast mode %d", dataTxMode);
 		}
+		low ()->disableNextData ();
 		low ()->setData (m_currentTxPacket->copy ());
+		low ()->startTransmission ();
 	}
-	low ()->startTransmission ();
-
 }
 
 
@@ -326,12 +237,12 @@ EdcaTxop::missedCTS (void)
 	if (m_SSRC > parameters ()->getMaxSSRC ()) {
 		station->reportFinalRTSFailed ();
 		// to reset the dcf.
-		m_dcf->notifyAccessOngoingErrorButOk ();
+		m_dcf->notifyAccessOk ();
 		dropCurrentPacket ();
 	} else {
-		m_dcf->notifyAccessOngoingError ();
+		m_dcf->notifyAccessFailed ();
+		m_dcf->requestAccess ();
 	}
-	m_dcf->notifyAccessFinished ();
 }
 void 
 EdcaTxop::gotACK (double snr, int txMode)
@@ -344,11 +255,7 @@ EdcaTxop::gotACK (double snr, int txMode)
 	m_container->macHigh ()->notifyAckReceivedFor (m_currentTxPacket);
 	Packet::free (m_currentTxPacket);
 	m_currentTxPacket = 0;
-	m_dcf->notifyAccessOngoingOk ();
-
-	if (m_lastPacketInBurst) {
-		m_dcf->notifyAccessFinished ();
-	}
+	m_dcf->notifyAccessOk ();
 }
 void 
 EdcaTxop::missedACK (void)
@@ -360,21 +267,20 @@ EdcaTxop::missedACK (void)
 	if (m_SLRC > parameters ()->getMaxSLRC ()) {
 		station->reportFinalDataFailed ();
 		// to reset the dcf.
-		m_dcf->notifyAccessOngoingErrorButOk ();
+		m_dcf->notifyAccessOk ();
 		dropCurrentPacket ();
 	} else {
 		setRetry (m_currentTxPacket);
-		m_dcf->notifyAccessOngoingError ();
+		m_dcf->notifyAccessFailed ();
+		m_dcf->requestAccess ();
 	}
-	m_dcf->notifyAccessFinished ();
 	
 }
 void 
 EdcaTxop::startNext (void)
 {
 	TRACE ("start next packet");
-	m_firstPacketInBurst = false;
-	tryToSendOnePacket ();
+	/* XXX */
 }
 
 void

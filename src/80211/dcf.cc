@@ -181,31 +181,20 @@ Dcf::requestAccess (void)
 	}
 }
 
-void
-Dcf::notifyAccessFinished (void)
-{
-	TRACE ("access finished");
-	startBackoff ();
-}
-
 void 
-Dcf::notifyAccessOngoingOk (void)
+Dcf::notifyAccessOk (void)
 {
 	TRACE ("access ok");
 	resetCW ();
+	startBackoff ();
 }
 
 void
-Dcf::notifyAccessOngoingError (void)
+Dcf::notifyAccessFailed (void)
 {
 	TRACE ("access failed");
 	updateFailedCW ();
-}
-void
-Dcf::notifyAccessOngoingErrorButOk (void)
-{
-	TRACE ("access failed but ok");
-	resetCW ();
+	startBackoff ();
 }
 
 void 
