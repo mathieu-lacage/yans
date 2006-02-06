@@ -105,21 +105,51 @@ set-qbss-mode 2 nodes
 #set-bss-mode 2 nodes
 #set-adhoc-mode nodes
 
-TSPEC set maximumServiceInterval 200e-3
+#
+# This is the canonical PCM coding for telephony networks:
+# sampling frequency is 8kHz, sample size is 1 byte, total
+# bandwidth required is thus 64kb/s and the required end-to
+# end delay is 125ms.
+# Here, I arbitrarily decided that each 8-bit voice sample
+# is stored in a 32-sample super-packet so this cbr source
+# is 32 bytes every 4ms
+#
+# This means that the size of each packet is:
+#  32 (payload) + 40 (ip+udp+rtp) + 34 (MAC header) = 104 bytes
+# MSDU = 32+40 = 72 bytes.
+# Thus, the Data Rate at the MAC level is:
+#   72bytes/4ms = 18000bytes/s
+#
+
 set tspec [new TSPEC]
+$tspec set minimumServiceInterval 0.0
+$tspec set maximumServiceInterval 0.0
+# ms
+$tspec set delayBound 0.125
+# bytes
+$tspec set nominalMSDUSize 72
+# bytes per second
+$tspec set meanDataRate 18000
+$tspec set peakDataRate 18000 
 proc addts-granted-callback {tspec tsid} {
     global ::ns
     global ::nodes
-    set tcp [new Agent/TCP]
-    $tcp set prio_ $tsid
-    $tcp set class_ 2
-    set sink [new Agent/TCPSink]
-    $ns attach-agent $nodes(0) $tcp
-    $ns attach-agent $nodes(2) $sink
-    $ns connect $tcp $sink
-    set ftp [new Application/FTP]
-    $ftp attach-agent $tcp
-    $ns at 3.0 "$ftp start" 
+    set udp0 [new Agent/UDP];         # A UDP agent
+    $udp0 set packetSize_ 32
+    $ns attach-agent $nodes(0) $udp0; # on node $n0
+    set cbr0 [new Application/Traffic/CBR]; # A CBR traffic generator agent
+    $cbr0 attach-agent $udp0; # attached to the UDP agent
+    $cbr0 set packetSize_ 32
+    $cbr0 set interval_ 0.004
+    $udp0 set class_ 0; # actually, the default, but. . .
+    $udp0 set prio_ $tsid
+    
+    set null0 [new Agent/Null]; # Its sink
+    $ns attach-agent $nodes(2) $null0; # on node  
+
+    $ns connect $udp0 $null0
+    $ns at 3.0 "$cbr0 start"
+#    $ns at 3.0 "$cbr0 stop"
 
     puts "tspec granted for tsid $tsid";
 }
