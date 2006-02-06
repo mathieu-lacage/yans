@@ -43,7 +43,7 @@
 
 #ifdef EDCA_TXOP_TRACE
 # define TRACE(format, ...) \
-  printf ("EDCA TXOP %d " format "\n", m_container->selfAddress (), ## __VA_ARGS__);
+  printf ("EDCA TXOP %d %f " format "\n", m_container->selfAddress (), Scheduler::instance ().clock (), ## __VA_ARGS__);
 #else /* EDCA_TXOP_TRACE */
 # define TRACE(format, ...)
 #endif /* EDCA_TXOP_TRACE */
@@ -379,7 +379,7 @@ EdcaTxop::missedACK (void)
 void 
 EdcaTxop::startNext (void)
 {
-	TRACE ("start next packet");
+	TRACE ("start next packet -- burst");
 	m_firstPacketInBurst = false;
 	tryToSendOnePacket ();
 }
