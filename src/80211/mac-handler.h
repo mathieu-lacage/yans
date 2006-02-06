@@ -21,7 +21,7 @@
 #ifndef MAC_HANDLER
 #define MAC_HANDLER
 
-#include "mac-low-80211.h"
+#include "mac-low.h"
 #include "scheduler.h"
 
 class MacCancelableEvent : public Event

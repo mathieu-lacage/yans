@@ -19,7 +19,7 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "mac-low-80211.h"
+#include "mac-low.h"
 #include "mac-queue-80211e.h"
 #include "hdr-mac-80211.h"
 #include "mac-80211.h"

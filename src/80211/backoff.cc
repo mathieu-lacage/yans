@@ -23,7 +23,7 @@
 
 #include "backoff.h"
 #include "phy-80211.h"
-#include "mac-low-80211.h"
+#include "mac-low.h"
 #include "precision.h"
 
 #define nopeBACKOFF_TRACE 1

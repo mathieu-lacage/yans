@@ -20,7 +20,7 @@
  */
 
 #include "mac-high-adhoc.h"
-#include "mac-low-80211.h"
+#include "mac-low.h"
 
 MacHighAdhoc::MacHighAdhoc (Mac80211 *mac, Phy80211 *phy)
 	: MacHigh (mac, phy)
