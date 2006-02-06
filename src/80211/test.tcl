@@ -124,8 +124,8 @@ $nodes(2) set Y_ 200.0
 $nodes(2) set Z_ 0.0
 
 
-#set-qbss-mode 2 nodes
-set-bss-mode 2 nodes
+set-qbss-mode 2 nodes
+#set-bss-mode 2 nodes
 #set-adhoc-mode nodes
 
 
