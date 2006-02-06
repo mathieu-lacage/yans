@@ -39,6 +39,13 @@ public:
 	virtual void receiveFromMacLow (Packet *packet);
 	virtual void notifyAckReceivedFor (Packet *packet);
 
+	/* If a subclass of this class needs to send a packet,
+	 * it can queue it with this method. This method will
+	 * take care of queuing the packet if the station is
+	 * not associated and will send it as soon as possible.
+	 */
+	void queueToLowDirectly (Packet *packet);
+
 protected:
 	Packet *getPacketFor (int destination);
 	int getApAddress (void);

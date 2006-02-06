@@ -191,15 +191,12 @@ MacHighStation::now (void)
 	return now;
 }
 
-
-
-void 
-MacHighStation::enqueueFromLL (Packet *packet)
+void
+MacHighStation::queueToLowDirectly (Packet *packet)
 {
 	tryToEnsureAssociated ();
 	setSource (packet, container ()->selfAddress ());
 	setDestination (packet, m_apAddress);
-	setType (packet, MAC_80211_DATA);
 	if (isAssociated ()) {
 		TRACE ("send to %d thru %d", getFinalDestination (packet), getDestination (packet));
 		enqueueToLow (packet);
@@ -207,6 +204,15 @@ MacHighStation::enqueueFromLL (Packet *packet)
 		TRACE ("temporarily queue");
 		m_associationQueue->enqueue (packet);
 	}
+}
+
+
+
+void 
+MacHighStation::enqueueFromLL (Packet *packet)
+{
+	setType (packet, MAC_80211_DATA);
+	queueToLowDirectly (packet);
 }
 
 void 

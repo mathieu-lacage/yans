@@ -40,7 +40,7 @@
 #include "packet.h"
 
 #ifndef QAP_TRACE
-#define nopeQAP_TRACE 1
+#define QAP_TRACE 1
 #endif /* QAP_TRACE */
 
 #ifdef QAP_TRACE

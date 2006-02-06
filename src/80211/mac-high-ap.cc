@@ -107,11 +107,15 @@ MacHighAp::receiveFromMacLow (Packet *packet)
 			Packet::free (packet);
 			break;
 		case MAC_80211_MGT_ADDTS_REQUEST:
-			gotAddTsRequest (packet);
+			if (station->isAssociated ()) {
+				gotAddTsRequest (packet);
+			}
 			Packet::free (packet);
 			break;
 		case MAC_80211_MGT_DELTS_REQUEST:
-			gotDelTsRequest (packet);
+			if (station->isAssociated ()) {
+				gotDelTsRequest (packet);
+			}
 			Packet::free (packet);
 			break;
 		case MAC_80211_MGT_ADDTS_RESPONSE:

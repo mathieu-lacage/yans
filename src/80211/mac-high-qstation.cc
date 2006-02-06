@@ -35,7 +35,7 @@
 
 
 #ifndef QSTATION_TRACE
-#define nopeQSTATION_TRACE 1
+#define QSTATION_TRACE 1
 #endif /* QSTATION_TRACE */
 
 #ifdef QSTATION_TRACE
@@ -98,8 +98,10 @@ MacHighQStation::updateEDCAParameters (unsigned char const *buffer)
 void
 MacHighQStation::queueAC (enum ac_e ac, Packet *packet)
 {
-	TRACE ("queue to %d", 
-	       getDestination (packet));
+	TRACE ("queue %s to %d thru %s", 
+	       getTypeString (packet), 
+	       getDestination (packet),
+	       getAcString (packet));
 	m_dcfQueues[ac]->enqueue (packet);
 	m_dcfs[ac]->requestAccess ();
 }
@@ -114,11 +116,25 @@ MacHighQStation::delTsRequest (TSpecRequest *request)
 	*((TSpecRequest **)buffer) = request;
 	// XXX for now, send through AC_BE queue.
 	setAC (delts, AC_BE);
-	queueAC (AC_BE, delts);
+	queueToLowDirectly (delts);
 }
 void 
 MacHighQStation::addTsRequest (TSpecRequest *request)
 {
+	TSpec *tspec = request->getTSpec ();
+	bool found = false;
+	for (int i = 8; i < 16; i++) {
+		if (m_ts.find (i) == m_ts.end ()) {
+			/* this is an available tsid. */
+			tspec->setTsid (i);
+			found = true;
+			break;
+		}
+	}
+	if (!found) {
+		request->notifyRefused ();
+		return;
+	}
 	Packet *addts = getPacketFor (getApAddress ());
 	setType (addts, MAC_80211_MGT_ADDTS_REQUEST);
 	addts->allocdata (sizeof (request));
@@ -126,7 +142,7 @@ MacHighQStation::addTsRequest (TSpecRequest *request)
 	*((TSpecRequest **)buffer) = request;
 	// XXX for now, send through AC_BE queue.
 	setAC (addts, AC_BE);
-	queueAC (AC_BE, addts);
+	queueToLowDirectly (addts);
 }
 
 bool
@@ -143,6 +159,10 @@ MacHighQStation::isTsActive (uint8_t tsid)
 void
 MacHighQStation::queueTS (uint8_t tsid, Packet *packet)
 {
+	TRACE ("queue %s to %d thru tsid %d", 
+	       getTypeString (packet), 
+	       getDestination (packet),
+	       getTID (packet));
 	assert (isTsActive (tsid));
 	m_ts[tsid].second->enqueue (packet);
 }
@@ -159,18 +179,20 @@ MacHighQStation::enqueueToLow (Packet *packet)
 	 * This is really quite tricky.
 	 */
 	int requestedTID = getRequestedTID (packet);
+	TRACE ("requested tid %d", requestedTID);
 	if (requestedTID == 0) {
 		/* unmarked so we assume AC_BE unless we have
 		 * a management frame in which case it should be
 		 * AC_VO. see 9.1.3.1 802.11e/D12.1
 		 */
+		enum ac_e ac;
 		if (isManagement (packet)) {
-			setAC (packet, AC_VO);
-			queueAC (AC_VO, packet);
+			ac = AC_VO;
 		} else {
-			setAC (packet, AC_BE);
-			queueAC (AC_BE, packet);
+			ac = AC_BE;
 		}
+		setAC (packet, ac);
+		queueAC (ac, packet);
 		return;
 	} else {
 		requestedTID --;
@@ -181,11 +203,9 @@ MacHighQStation::enqueueToLow (Packet *packet)
 		 * Of course, this is wrong but we can
 		 * implement it later.
 		 */
-		TRACE ("sending thru AC %d", requestedTID);
 		setTID (packet, requestedTID);
 		queueAC (getAC (packet), packet);
 	} else {
-		TRACE ("sending thru TS %d", requestedTID);
 		if (isTsActive (requestedTID)) {
 			setTID (packet, requestedTID);
 			queueTS (requestedTID, packet);
@@ -228,13 +248,14 @@ MacHighQStation::gotAddTsResponse (Packet *packet)
 	enum mac_80211_request_status status = *((enum mac_80211_request_status *)buffer);
 	buffer += sizeof (status);
 	TSpecRequest *request = *((TSpecRequest **)buffer);
+	TSpec *tspec = request->getTSpec ();
 	if (status == MAC_80211_ADDTS_OK) {
-		TRACE ("granted TS");
-		createTS (request->getTSpec ());
+		TRACE ("granted TS for tsid %d", tspec->getTSID ());
+		createTS (tspec);
 		request->notifyGranted ();
 	} else {
 		assert (status == MAC_80211_ADDTS_FAILED);
-		TRACE ("refused TS");
+		TRACE ("refused TS for tsid %d", tspec->getTSID ());
 		request->notifyRefused ();
 	}
 }
@@ -245,13 +266,14 @@ MacHighQStation::gotDelTsResponse (Packet *packet)
 	enum mac_80211_request_status status = *((enum mac_80211_request_status *)buffer);
 	buffer += sizeof (status);
 	TSpecRequest *request = *((TSpecRequest **)buffer);
+	TSpec *tspec = request->getTSpec ();
 	if (status == MAC_80211_DELTS_OK) {
-		TRACE ("deleted TS");
-		createTS (request->getTSpec ());
+		TRACE ("deleted TS for tsid %d", tspec->getTSID ());
+		createTS (tspec);
 		request->notifyGranted ();
 	} else {
 		assert (status == MAC_80211_DELTS_FAILED);
-		TRACE ("refused deleting TS");
+		TRACE ("refused deleting TS for tsid %d", tspec->getTSID ());
 		request->notifyRefused ();
 	}
 }
