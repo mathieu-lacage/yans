@@ -33,11 +33,14 @@
 #include "mac-traces.h"
 
 
+#ifndef DCF_TRACE
 #define nopeDCF_TRACE 1
+#endif /* DCF_TRACE */
 
 #ifdef DCF_TRACE
 # define TRACE(format, ...) \
-  printf ("DCF %d " format "\n", m_container->selfAddress (), ## __VA_ARGS__);
+  printf ("DCF %d %f " format "\n", m_container->selfAddress (), \
+          Scheduler::instance ().clock (), ## __VA_ARGS__);
 #else /* DCF_TRACE */
 # define TRACE(format, ...)
 #endif /* DCF_TRACE */
@@ -159,7 +162,7 @@ Dcf::requestAccess (void)
 	} else if (isBackoffNotCompleted (now ()) && !m_accessTimer->isRunning ()) {
 		/* start timer for ongoing backoff.
 		 */
-		TRACE ("request access X delayed for %f at %f", delayUntilAccessGranted, now ());
+		TRACE ("request access X delayed for %f", delayUntilAccessGranted);
 		m_accessTimer->start (delayUntilAccessGranted);
 	} else if (m_container->phy ()->getState () != Phy80211::IDLE) {
 		/* someone else has accessed the medium.
@@ -170,7 +173,7 @@ Dcf::requestAccess (void)
 		/* medium is IDLE, we have no backoff running but we 
 		 * need to wait a bit before accessing the medium.
 		 */
-		TRACE ("request access Y delayed for %f at %f", delayUntilAccessGranted, now ());
+		TRACE ("request access Y delayed for %f", delayUntilAccessGranted);
 		assert (!m_accessTimer->isRunning ());
 		m_accessTimer->start (delayUntilAccessGranted);
 	} else {
@@ -224,11 +227,11 @@ Dcf::accessTimeout (MacCancelableEvent *event)
 {
 	double delayUntilAccessGranted  = getDelayUntilAccessGranted (now ());
 	if (delayUntilAccessGranted > 0) {
-		TRACE ("timeout access delayed for %f at %f", delayUntilAccessGranted, now ());
+		TRACE ("timeout access delayed for %f", delayUntilAccessGranted);
 		assert (!m_accessTimer->isRunning ());
 		m_accessTimer->start (delayUntilAccessGranted);
 	} else {
-		TRACE ("timeout access granted at %f", now ());
+		TRACE ("timeout access granted");
 		m_listener->accessGrantedNow ();
 	}
 }
@@ -251,7 +254,12 @@ Dcf::pickBackoffDelay (void)
 {
 	double oooh = g_random->pick ();
 	double pickedCW = floor (oooh * m_CW);
-	TRACE ("oooh %f, CW: %d, picked: %f", oooh, m_CW, pickedCW);
+	TRACE ("oooh %f, CW: %d<%d<%d, picked: %f", 
+	       oooh, 
+	       m_parameters->getCWmin (),
+	       m_CW, 
+	       m_parameters->getCWmax (), 
+	       pickedCW);
 	double delay =  pickedCW * 
 		m_container->parameters ()->getSlotTime ();
 	return delay;
@@ -377,12 +385,10 @@ Dcf::getDelayUntilAccessGranted (double now)
 	double retval = getAccessGrantedStart () - now;
 	retval = max (retval, 0.0);
 	updateBackoff (now);
+	assert (m_backoffLeft >= 0);
 	retval += m_backoffLeft;
 	retval = PRECISION_ROUND_TO_ZERO (retval);
-	if (retval < 0) {
-		char *p = 0;
-		*p = 1;
-	}
+	assert (retval >= 0);
 	return retval;
 }
 void
@@ -473,14 +479,14 @@ Dcf::notifyTxStart (double txStart, double duration)
 void 
 Dcf::notifySleep (double now)
 {
-	TRACE ("sleep at %f", now);
+	TRACE ("sleep");
 	m_lastSleepStart = now;
 	m_sleeping = true;
 }
 void 
 Dcf::notifyWakeup (double now)
 {
-	TRACE ("wakeup at %f", now);
+	TRACE ("wakeup");
 	m_lastWakeupStart = now;
 	m_sleeping = false;
 }
