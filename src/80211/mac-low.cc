@@ -26,7 +26,6 @@
 #include "mac-high.h"
 #include "phy-80211.h"
 #include "mac-station.h"
-#include "backoff.h"
 #include "rng-uniform.h"
 #include "mac-low-parameters.h"
 

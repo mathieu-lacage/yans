@@ -33,19 +33,20 @@ class MacHigh;
 class Phy80211;
 class MacLowParameters;
 
-class EventListener {
+class TransmissionListener {
 public:
-	EventListener ();
-	virtual ~EventListener ();
-	void gotCTS (double snr);
-	void missedCTS (void);
-	void gotACK (double snr);
-	void missedACK (void);
-	void txCompletedAndSIFS (void);
-	void gotBlockAckStart (double snr);
-	void gotBlockAck (int sequence);
-	void gotBlockAckEnd (void);
-	void missedBlockAck (void);
+	TransmissionListener ();
+	virtual ~TransmissionListener ();
+
+	virtual void gotCTS (double snr);
+	virtual void missedCTS (void);
+	virtual void gotACK (double snr);
+	virtual void missedACK (void);
+	virtual void txCompletedAndSIFS (void);
+	virtual void gotBlockAckStart (double snr);
+	virtual void gotBlockAck (int sequence);
+	virtual void gotBlockAckEnd (void);
+	virtual void missedBlockAck (void);
 };
 
 class NavListener {
@@ -80,7 +81,7 @@ public:
 	void enableRTS (void);
 	void disableRTS (void);
 
-	void setListener (EventListener *listener);
+	void setTransmissionListener (TransmissionListener *listener);
 
 	/* This txmode is applied to _every_ packet sent after
 	 * this call. If you want to use a different txMode
@@ -140,7 +141,7 @@ private:
 
 	Packet *m_currentTxPacket;
 
-	EventListener *m_listener;
+	TransmissionListener *m_transmissionListener;
 	vector<NavListener *> m_navListeners;
 
 	DynamicHandler<MacLow> *m_ACKTimeoutHandler;
