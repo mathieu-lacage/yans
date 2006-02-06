@@ -57,7 +57,6 @@ private:
 	double calculateNI (PhyRxEvent *phyRxEvent, vector <NIChange> *snir);
 	double calculatePER (PhyRxEvent *packet, vector <NIChange> *snir);
 	double calculateChunkSuccessRate (double snir, double delay, TransmissionMode *mode);
-	double SNR (double signal, double noiseInterference, TransmissionMode *mode);
 	void appendEvent (PhyRxEvent *event);
 	void endRx (PhyRxEvent *phyRxEvent, Packet *packet);
 private:

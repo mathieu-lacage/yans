@@ -443,8 +443,16 @@ Phy80211::calculateNoiseFloor (double signalSpread)
 	double Nr = dBToRatio (m_rxNoise);
 	// receiver noise floor (W)
 	return Nr * Nt;
-
 }
+
+double
+Phy80211::SNR (double signal, double noiseInterference, TransmissionMode *mode)
+{
+	double noise = calculateNoiseFloor (mode->getSignalSpread ()) + noiseInterference;
+	double snr = signal / noise;
+	return snr;
+}
+
 
 /* return power in W */
 double 

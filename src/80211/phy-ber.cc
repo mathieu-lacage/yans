@@ -370,13 +370,6 @@ PhyBer::calculateNoiseInterference (double time)
 
 /* signal and noiseInterference are both W
  */
-double
-PhyBer::SNR (double signal, double noiseInterference, TransmissionMode *mode)
-{
-	double noise = calculateNoiseFloor (mode->getSignalSpread ()) + noiseInterference;
-	double snr = signal / noise;
-	return snr;
-}
 
 double
 PhyBer::calculateCurrentNoiseInterference (void)
@@ -397,7 +390,11 @@ PhyBer::endRx (PhyRxEvent *phyRxEvent, Packet *packet)
 	vector<NIChange> ni;
 
 	// XXX: we assign NI to SNR. Wrong !!
-	setLastRxSNR (calculateNI (phyRxEvent, &ni));
+	double noiseInterference = calculateNI (phyRxEvent, &ni);
+	double snr = SNR (phyRxEvent->getPower (),
+			  noiseInterference,
+			  getMode (phyRxEvent->getPayloadMode ()));
+	setLastRxSNR (snr);
 
 	/* calculate the SNIR at the start of the packet and accumulate
 	 * all SNIR changes in the snir vector.

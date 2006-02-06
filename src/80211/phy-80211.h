@@ -110,9 +110,9 @@ protected:
 	double getPreambleDuration (void);
 	double calculateHeaderDuration (int headerMode);
 	TransmissionMode *getMode (int mode);
-	double calculateNoiseFloor (double signalSpread);
 	void setLastRxSNR (double snr);
 	int selfAddress (void);
+	double SNR (double signal, double noiseInterference, TransmissionMode *mode);
 private:
 	enum {
 		standard_80211_unknown = 0,
@@ -143,6 +143,7 @@ private:
 	Channel *peekChannel (void);
 	MobileNode *peekMobileNode (void);
 
+	double calculateNoiseFloor (double signalSpread);
 	int    getHeaderMode (Packet *packet);
 	double dBToRatio (double dB);
 	double getSystemLoss (void);

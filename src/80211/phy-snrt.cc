@@ -58,6 +58,7 @@ PhySnrt::PhySnrt ()
 {
 	m_endRxHandler = new DynamicHandler<PhySnrt> (this, &PhySnrt::endRx);
 	m_rxPacket = 0;
+	m_snrThreshold = 1;
 }
 
 PhySnrt::~PhySnrt ()
@@ -65,9 +66,48 @@ PhySnrt::~PhySnrt ()
 	delete m_endRxHandler;
 }
 
+double
+PhySnrt::getSnrThreshold (void)
+{
+	return m_snrThreshold;
+}
+
+void
+PhySnrt::removeFinishedEvents (double time)
+{
+	EndRxEventsI i = m_endRxEvents.begin ();
+	while (i != m_endRxEvents.end ()) {
+		if ((*i).first < time) {
+			m_currentNI -= (*i).second;
+			i = m_endRxEvents.erase (i);
+		} else {
+			i++;
+		}
+	}
+}
+
+void
+PhySnrt::appendRxEvent (double duration, double power)
+{
+	removeFinishedEvents (now ());
+	m_endRxEvents.push_back (make_pair (now ()+duration, power));
+	m_currentNI += power;
+}
+
+double
+PhySnrt::getCurrentNi (void)
+{
+	removeFinishedEvents (now ());
+	return m_currentNI;
+}
+
 void 
 PhySnrt::startRx (Packet *packet)
 {
+	double power = calculatePower (packet);
+	double rxDuration = calculatePacketDuration (0, getPayloadMode (packet),
+						     ::getSize (packet));
+	appendRxEvent (rxDuration, power);
 	switch (getState ()) {
 	case Phy80211::SYNC:
 		TRACE ("drop packet because already in sync");
@@ -83,13 +123,10 @@ PhySnrt::startRx (Packet *packet)
 		break;
 	case Phy80211::IDLE: {
 		assert (m_rxPacket == 0);
-		double power = calculatePower (packet);
 		
 		if (power > dBmToW (getRxThreshold ())) {
 			// sync to signal
 			TRACE ("sync on packet");
-			double rxDuration = calculatePacketDuration (0, getPayloadMode (packet),
-								     ::getSize (packet));
 			notifyRxStart (now (), rxDuration);
 			switchToSyncFromIdle (rxDuration);
 			m_rxPacket = packet;
@@ -110,13 +147,25 @@ PhySnrt::endRx (MacCancelableEvent *ev)
 {
 	assert (getState () == Phy80211::SYNC);
 
-	// XXX ???
-	setLastRxSNR (calculatePower (m_rxPacket));
+	double power = calculatePower (m_rxPacket);
+	double snr = SNR (power, 
+			  getCurrentNi () - power, 
+			  getMode (getPayloadMode (m_rxPacket)));
+	setLastRxSNR (snr);
 
-	HDR_CMN (m_rxPacket)->error () = 0;
+	bool receivedOk;
+	if (snr > getSnrThreshold ()) {
+		receivedOk = true;
+	} else {
+		receivedOk = false;
+	}
+	if (receivedOk) {
+		HDR_CMN (m_rxPacket)->error () = 1;
+	} else {
+		HDR_CMN (m_rxPacket)->error () = 0;
+	}
 	HDR_CMN (m_rxPacket)->direction() = hdr_cmn::UP;
 	
-	bool receivedOk = true;
 	notifyRxEnd (now (), receivedOk);
 	switchToIdleFromSync ();
 	uptarget ()->recv (m_rxPacket);

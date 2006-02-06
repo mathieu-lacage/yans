@@ -38,9 +38,17 @@ private:
 	virtual void cancelRx (void);
 private:
 	void endRx (MacCancelableEvent *ev);
+	void appendRxEvent (double duration, double power);
+	double getCurrentNi (void);
+	void removeFinishedEvents (double time);
+	double getSnrThreshold (void);
 private:
 	DynamicHandler<PhySnrt> *m_endRxHandler;
 	Packet *m_rxPacket;
+	double m_currentNI;
+	double m_snrThreshold;
+	typedef vector <pair<double, double> >::iterator EndRxEventsI;
+	vector <pair<double, double> > m_endRxEvents;
 };
 
 
