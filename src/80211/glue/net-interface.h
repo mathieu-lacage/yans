@@ -19,8 +19,8 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#ifndef NET_INTERFACE_CONSTRUCTOR_H
-#define NET_INTERFACE_CONSTRUCTOR_H
+#ifndef NET_INTERFACE_H
+#define NET_INTERFACE_H
 
 #include <tclcl.h>
 
@@ -55,4 +55,4 @@ public:
 	virtual NetInterface *createInterface (void) = 0;
 };
 
-#endif /* NET_INTERFACE_CONSTRUCTOR_H */
+#endif /* NET_INTERFACE_H */

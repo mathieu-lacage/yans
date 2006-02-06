@@ -19,28 +19,38 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#ifndef SIMPLE_NET_INTERFACE_CONSTRUCTOR_H
-#define SIMPLE_NET_INTERFACE_CONSTRUCTOR_H
+#include "net-interface.h"
+#include "broadcast-channel.h"
+#include "node-empty.h"
 
-#include <tclcl.h>
 
-#include "net-interface-constructor.h"
+NetInterface::NetInterface ()
+{}
+NetInterface::~NetInterface ()
+{}
 
-class SimpleNetInterface : public NetInterface {
-public:
-	SimpleNetInterface ();
-	virtual ~SimpleNetInterface ();
+void
+NetInterface::connectTo (BroadcastChannel *channel, NodeEmpty *node)
+{
+	m_channel = channel;
+	m_node = node;
+}
 
-	virtual void sendDown (Packet *packet);
-	virtual void sendUp (Packet *packet);
-};
+void 
+NetInterface::sendDownToChannel (Packet *packet)
+{
+	m_channel->sendDown (packet, this);
+}
 
-class SimpleNetInterfaceConstructor : public NetInterfaceConstructor {
-public:
-	SimpleNetInterfaceConstructor ();
-	virtual ~SimpleNetInterfaceConstructor ();
+void
+NetInterface::sendUpToNode (Packet *packet)
+{
+	m_node->receiveFromInterface (packet, this);
+}
 
-	virtual NetInterface *createInterface (void);
-};
 
-#endif /* NET_INTERFACE_CONSTRUCTOR_H */
+NetInterfaceConstructor::NetInterfaceConstructor ()
+{}
+NetInterfaceConstructor::~NetInterfaceConstructor ()
+{}
+

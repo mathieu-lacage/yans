@@ -23,7 +23,7 @@
 
 #include "node-empty.h"
 #include "broadcast-channel.h"
-#include "net-interface-constructor.h"
+#include "net-interface.h"
 
 namespace {
 	class InterfaceConnector : public NsObject {
@@ -48,7 +48,7 @@ NodeEmpty::NodeEmpty ()
 	  m_demux (0)
 {
 	m_interfaceConnector = new InterfaceConnector (this);
-	m_entry = static_cast <Classifier *> (TclObject::New ("Classifier/Addr"));
+	m_classifier = static_cast <Classifier *> (TclObject::New ("Classifier/Addr"));
 	m_demux = static_cast <Classifier *> (TclObject::New ("Classifier/Port"));
 	// add notification route ?
 }
@@ -78,52 +78,21 @@ NodeEmpty::sendDown (Packet *packet)
 void 
 NodeEmpty::receiveFromInterface (Packet *packet, NetInterface *interface)
 {
-	m_entry->recv (packet, 0);
+	/* When we receive a packet from the low-level layers, 
+	 * we forward it to the port demuxer directly.
+	 */
+	m_demux->recv (packet, 0);
 }
 
 void
 NodeEmpty::attachAgent (Agent *agent)
 {
 	Agent *nullAgent = static_cast <Agent *> (TclObject::New ("Agent/Null"));
-	agent->dport () = m_demux->allocPort (nullAgent);
+	int port = m_demux->allocPort (nullAgent);
+	agent->port () = port;
 	agent->addr () = getAddress ();
 	agent->target (m_interfaceConnector);
-
-#if 0
-	Node instproc attach { agent { port "" } } {
-	$self instvar agents_ address_ dmux_ 
-	#
-	# Assign port number (i.e., this agent receives
-	# traffic addressed to this host and port)
-	#
-	lappend agents_ $agent
-	#
-	# Attach agents to this node (i.e., the classifier inside).
-	# We call the entry method on ourself to find the front door
-	# (e.g., for multicast the first object is not the unicast classifier)
-	#
-	# Also, stash the node in the agent and set the local addr of 
-	# this agent.
-	#
-	$agent set node_ $self
-	$agent set agent_addr_ [AddrParams addr2id $address_]
-	#
-	# If a port demuxer doesn't exist, create it.
-	#
-	if { $dmux_ == "" } {
-		# Use the default mask_ and port_ values
-		set dmux_ [new Classifier/Port]
-		# point the node's routing entry to itself
-		# at the port demuxer (if there is one)
-		$self add-route $address_ $dmux_
-	}
-	if { $port == "" } {
-		set port [$dmux_ alloc-port [[Simulator instance] nullagent]]
-	}
-	$agent set agent_port_ $port
-
-	$self add-target $agent $port
-#endif
+	m_demux->install (port, agent);
 }
 
 void

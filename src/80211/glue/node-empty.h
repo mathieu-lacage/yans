@@ -53,7 +53,7 @@ private:
 	static int m_uid;
 	int m_address;
 	Classifier *m_demux;
-	Classifier *m_entry;
+	Classifier *m_classifier;
 	NetInterface *m_interface;
 	NsObject *m_interfaceConnector;
 

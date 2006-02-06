@@ -24,7 +24,7 @@
 #include "packet.h"
 
 #include "simple-broadcast-channel.h"
-#include "net-interface-constructor.h"
+#include "net-interface.h"
 
 
 SimpleBroadcastChannel::SimpleBroadcastChannel ()

@@ -19,18 +19,51 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "simple-net-interface-constructor.h"
+#include "scheduler.h"
+#include "packet.h"
 
-SimpleNetInterface::SimpleNetInterface ()
+#include "simple-net-interface.h"
+
+class Delay : public Handler {
+public:
+	Delay (SimpleNetInterface *interface, double delay) 
+		: m_interface (interface),
+		  m_delay (delay) 
+	{}
+	
+	void start (Packet *packet) {
+		Scheduler::instance ().schedule (this, packet, m_delay);
+	}
+	
+	virtual void handle(Event* event) {
+		Packet *packet = static_cast <Packet *> (event);
+		m_interface->reallySendDown (packet);
+	}
+private:
+	SimpleNetInterface *m_interface;
+	double m_delay;
+};
+
+
+SimpleNetInterface::SimpleNetInterface (double delay)
 	: NetInterface ()
-{}
+	  
+{
+	m_delay = new Delay (this, delay);
+}
 SimpleNetInterface::~SimpleNetInterface ()
 {}
 
 void 
-SimpleNetInterface::sendDown (Packet *packet)
+SimpleNetInterface::reallySendDown (Packet *packet)
 {
 	sendDownToChannel (packet);
+}
+
+void 
+SimpleNetInterface::sendDown (Packet *packet)
+{
+	m_delay->start (packet);
 }
 void 
 SimpleNetInterface::sendUp (Packet *packet)
@@ -49,5 +82,5 @@ SimpleNetInterfaceConstructor::~SimpleNetInterfaceConstructor ()
 NetInterface *
 SimpleNetInterfaceConstructor::createInterface (void)
 {
-	return new SimpleNetInterface ();
+	return new SimpleNetInterface (1e-3);
 }
