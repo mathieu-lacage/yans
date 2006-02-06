@@ -26,54 +26,51 @@
 #include "mac-handler.tcc"
 
 class Packet;
-class Mac80211;
+class MacContainer;
+class MacParameters;
 class MacStation;
-class MacHigh;
-class MacHigh;
-class Phy80211;
-class MacLowParameters;
 
-class TransmissionListener {
+class MacLowTransmissionListener {
 public:
-	TransmissionListener ();
-	virtual ~TransmissionListener ();
+	MacLowTransmissionListener ();
+	virtual ~MacLowTransmissionListener ();
 
-	virtual void gotCTS (double snr, int txMode);
-	virtual void missedCTS (void);
-	virtual void gotACK (double snr, int txMode);
-	virtual void missedACK (void);
-	virtual void txCompletedAndSIFS (void);
-	virtual void gotBlockAckStart (double snr);
-	virtual void gotBlockAck (int sequence);
-	virtual void gotBlockAckEnd (void);
-	virtual void missedBlockAck (void);
+	virtual void gotCTS (double snr, int txMode) = 0;
+	virtual void missedCTS (void) = 0;
+	virtual void gotACK (double snr, int txMode) = 0;
+	virtual void missedACK (void) = 0;
+	virtual void txCompletedAndSIFS (void) = 0;
+	virtual void gotBlockAckStart (double snr) = 0;
+	virtual void gotBlockAck (int sequence) = 0;
+	virtual void gotBlockAckEnd (void) = 0;
+	virtual void missedBlockAck (void) = 0;
 };
 
-class ReceptionListener {
+class MacLowReceptionListener {
 public:
-	ReceptionListener ();
-	virtual ~ReceptionListener ();
+	MacLowReceptionListener ();
+	virtual ~MacLowReceptionListener ();
 
-	virtual void gotPacket (double snr, int txMode);
-	virtual void gotData (Packet *packet);
+	virtual void gotPacket (int from, double snr, int txMode) = 0;
+	virtual void gotData (Packet *packet) = 0;
 	/* return the BlockAckResp. If 0 is returned,
 	 * the MacLow will send back a simple ACK to the
 	 * originator.
 	 */
-	virtual Packet *gotBlockAckReq (Packet *packet);
+	virtual Packet *gotBlockAckReq (Packet *packet) = 0;
 };
 
-class NavListener {
+class MacLowNavListener {
 public:
-	NavListener ();
-	virtual ~NavListener ();
-	void gotNav (double now, double nav);
+	MacLowNavListener ();
+	virtual ~MacLowNavListener ();
+	virtual void navStart (double now, double duration) = 0;
+	virtual void navContinue (double duration) = 0;
 };
 
 class MacLow {
 public:
-	MacLow (Mac80211 *mac, Phy80211 *phy,
-		MacLowParameters *parameters);
+	MacLow (MacContainer *container);
 	~MacLow ();
 
 	/* notify the EventListener after end-of-handshake+SIFS. 
@@ -95,28 +92,25 @@ public:
 	void enableRTS (void);
 	void disableRTS (void);
 
-	void setReceptionListener (ReceptionListener *listener);
-	void setTransmissionListener (TransmissionListener *listener);
+	void setReceptionListener (MacLowReceptionListener *listener);
+	void setTransmissionListener (MacLowTransmissionListener *listener);
 
-	/* This txmode is applied to _every_ packet sent after
-	 * this call. If you want to use a different txMode
-	 * for a RTS and its subsequent DATA frame, you need
-	 * to call this method twice, once before the start
-	 * of the transmission for the RTS and once when the
-	 * gotCTS method is called for the DATA.
-	 */
-	void setTransmissionMode (int txMode);
+	void setAdditionalDuration (double duration);
+	double getDataTransmissionDuration (int size);
+
+	void setDataTransmissionMode (int txMode);
+	void setRtsTransmissionMode (int txMode);
 
 	void startTransmission (Packet *packet);
 	void startBlockAckReqTransmission (int to, int tid);
 
 	void receive (Packet *packet);
 
-	void registerNavListener (NavListener *listener);
+	void registerNavListener (MacLowNavListener *listener);
 
 private:
 	void dropPacket (Packet *packet);
-	MacLowParameters *parameters (void);
+	MacParameters *parameters (void);
 	double now (void);
 	MacStation *lookupStation (int address);
 	Phy80211 *peekPhy (void);
@@ -147,15 +141,10 @@ private:
 	void sendCurrentTxPacket (void);
 	void startTransmission (void);
 
-	/* XXX init all */
-	Mac80211 *m_mac;
-	Phy80211 *m_phy;
-
-	Packet *m_currentTxPacket;
-
-	ReceptionListener *m_receptionListener;
-	TransmissionListener *m_transmissionListener;
-	vector<NavListener *> m_navListeners;
+	MacContainer *m_container;
+	MacLowReceptionListener *m_receptionListener;
+	MacLowTransmissionListener *m_transmissionListener;
+	vector<MacLowNavListener *> m_navListeners;
 
 	DynamicHandler<MacLow> *m_ACKTimeoutHandler;
 	DynamicHandler<MacLow> *m_CTSTimeoutHandler;
@@ -163,13 +152,16 @@ private:
 	DynamicHandler<MacLow> *m_sendACKHandler;
 	DynamicHandler<MacLow> *m_sendDataHandler;
 
-	MacLowParameters *m_parameters;
-
+	Packet *m_currentTxPacket;
 
 	bool m_waitSIFS;
 	bool m_waitACK;
 	bool m_sendRTS;
-	int m_txMode;
+	int m_dataTxMode;
+	int m_rtsTxMode;
+	double m_additionalDuration;
+	double m_lastNavStart;
+	double m_lastNavDuration;
 };
 
 #endif /* MAC_LOW_H */

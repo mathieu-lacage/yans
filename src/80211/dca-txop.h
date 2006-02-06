@@ -27,20 +27,23 @@
 class Dcf;
 class MacQueue80211e;
 class Packet;
+class MacLowTransmissionListener;
+class MacStation;
+class MacContainer;
 class MacLow;
 class MacParameters;
-class TransmissionListener;
-class MacStation;
-class MacHigh;
 
 class DcaTxop 
 {
 public:
-	DcaTxop (Dcf *dcf, MacQueue80211e *queue, MacLow *low, MacParameters *parameters);
+	DcaTxop (Dcf *dcf, MacQueue80211e *queue, MacContainer *container);
 
 private:
 	friend class MyAccessListener;
 	friend class MyTransmissionListener;
+
+	MacLow *low (void);
+	MacParameters *parameters (void);
 
 	/* event handlers */
 	void accessGrantedNow (void);
@@ -67,11 +70,10 @@ private:
 
 	Dcf *m_dcf;
 	MacQueue80211e *m_queue;
-	MacLow *m_low;
-	MacHigh *m_high;
+	MacContainer *m_container;
+
 	Packet *m_currentTxPacket;
-	MacParameters *m_parameters;
-	TransmissionListener *m_transmissionListener;
+	MacLowTransmissionListener *m_transmissionListener;
 	int m_SSRC;
 	int m_SLRC;
 	int m_fragmentNumber;

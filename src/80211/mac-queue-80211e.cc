@@ -20,15 +20,15 @@
  */
 
 #include "mac-queue-80211e.h"
-
+#include "mac-parameters.h"
 #include "packet.h"
 
 #include <iostream>
 
 using namespace std;
 
-MacQueue80211e::MacQueue80211e (double lifetime)
-	: m_lifetime (lifetime)
+MacQueue80211e::MacQueue80211e (MacParameters *parameters)
+	: m_parameters (parameters)
 {}
 
 MacQueue80211e::~MacQueue80211e ()
@@ -56,7 +56,7 @@ MacQueue80211e::cleanup (void)
 	now = Scheduler::instance ().clock ();
 	tmp = m_queue.rbegin ();
 	while (tmp != m_queue.rend ()) {
-		if ((*tmp).second + m_lifetime > now) {
+		if ((*tmp).second + m_parameters->getMSDULifetime () > now) {
 			break;
 		}
 		Packet::free ((*tmp).first);

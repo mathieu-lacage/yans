@@ -24,11 +24,11 @@
 #include <map>
 
 class MacStation;
-class Mac80211;
+class MacContainer;
 
 class MacStations {
 public:
-	MacStations (Mac80211 *mac);
+	MacStations (MacContainer *container);
 	virtual ~MacStations ();
   
 	MacStation *lookup (int address);
@@ -38,7 +38,7 @@ public:
 private:
 	std::map <int, class MacStation *, std::less<int> > m_addresses;
 	virtual class MacStation *createStation (void) = 0;
-	Mac80211 *m_mac;
+	MacContainer *m_container;
 };
 
 

@@ -21,12 +21,11 @@
 #ifndef MAC_PARAMETERS_H
 #define MAC_PARAMETERS_H
 
-class Phy80211;
-class Mac80211;
+class MacContainer;
 
 class MacParameters {
 public:
-	MacParameters (Mac80211 *mac, Phy80211 *phy);
+	MacParameters (MacContainer *container);
 	
 	int getACKSize (void) const;
 	int getRTSSize (void) const;
@@ -48,8 +47,6 @@ public:
 
 	double getSIFS (void);
 	double getSlotTime (void);
-	int getCWmin (void);
-	int getCWmax (void);
 
 	int getMaxSSRC (void);
 	int getMaxSLRC (void);
@@ -58,13 +55,12 @@ public:
 	double getCTSTimeoutDuration (void);
 	double getACKTimeoutDuration (void);
 
-	double getEIFS (void);
-	double getDIFS (void);
+	double getMSDULifetime (void);
 private:
 	int getSelf (void);
-	Phy80211 *peekPhy (void);
-	Mac80211 *m_mac;
-	Phy80211 *m_phy;
+	double calculateBaseTxDuration (int size);
+
+	MacContainer *m_container;
 };
 
 #endif /* MAC_PARAMETERS_H */

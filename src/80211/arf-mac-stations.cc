@@ -232,8 +232,8 @@ void ArfMacStation::setSuccessThreshold (int success_threshold)
 
 
 
-ArfMacStations::ArfMacStations (Mac80211 *mac)
-	: MacStations (mac)
+ArfMacStations::ArfMacStations (MacContainer *container)
+	: MacStations (container)
 {}
 ArfMacStations::~ArfMacStations ()
 {}

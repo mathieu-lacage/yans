@@ -35,6 +35,7 @@ hdr_mac_80211::initialize (void)
 	m_moreFragments = 0;
 	m_sequenceControl = 0;
 	m_ackMode = ACK_NORMAL;
+	m_qos = 1;
 }
 
 
@@ -113,7 +114,11 @@ hdr_mac_80211::isNormalAck (void) const
 {
 	return (m_ackMode == ACK_NORMAL)?true:false;
 }
-
+bool 
+hdr_mac_80211::isQos (void) const
+{
+	return (m_qos)?true:false;
+}
 
 /*********************************************************
  * Setters.
@@ -181,6 +186,7 @@ void
 hdr_mac_80211::setTID (int tid)
 {
 	m_tid = tid;
+	m_qos = 1;
 }
 void 
 hdr_mac_80211::setNoAck (void)
@@ -226,6 +232,10 @@ hdr_mac_80211::getTypeString (void) const
 		FOO (MGT_PROBE_RESPONSE);
 		FOO (MGT_AUTHENTICATION);
 		FOO (MGT_DEAUTHENTICATION);
+		FOO (MGT_ADDBA_REQUEST);
+		FOO (MGT_ADDBA_RESPONSE);
+		FOO (MGT_DELBA_REQUEST);
+		FOO (MGT_DELBA_RESPONSE);
 	}
 	return "deadbeaf";
 }
@@ -310,12 +320,17 @@ isBlockAck (Packet *packet)
 bool 
 isNoAck (Packet *packet)
 {
-	return HDR_MAC_80211 (packet)->getNoAck ();
+	return HDR_MAC_80211 (packet)->isNoAck ();
 }
 bool 
 isNormalAck (Packet *packet)
 {
-	return HDR_MAC_80211 (packet)->getNormalAck ();
+	return HDR_MAC_80211 (packet)->isNormalAck ();
+}
+bool 
+isQos (Packet *packet)
+{
+	return HDR_MAC_80211 (packet)->isQos ();
 }
 
 

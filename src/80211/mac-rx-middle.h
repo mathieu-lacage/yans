@@ -22,23 +22,38 @@
 #ifndef MAC_RX_MIDDLE_H
 #define MAC_RX_MIDDLE_H
 
-class MacLow;
-class MacHigh;
+#include <map>
+#include <utility>
+
+
+class MacContainer;
 class Packet;
 class OriginatorRxStatus;
 
-class MaxRxMiddle
+class MacRxMiddle
 {
 public:
-	MacRxMiddle (MacLow *low, MacHigh *high);
+	MacRxMiddle (MacContainer *container);
 
 private:
-	void gotPacket (double snr, int txMode);
+	friend class MyMacLowReceptionListener;
+	void gotPacket (int from, double snr, int txMode);
 	void gotData (Packet *packet);
 	Packet *gotBlockAckReq (Packet *packet);
 
+	OriginatorRxStatus *lookupQos (int source, int TID);
+	OriginatorRxStatus *lookup (int source);
+	OriginatorRxStatus *lookup (Packet *packet);
+	bool handleDuplicates (Packet *packet, OriginatorRxStatus *originator);
+	bool handleFragments (Packet *packet, OriginatorRxStatus *originator);
+	void dropPacket (Packet *packet);
+	void forwardToHigh (Packet *packet);
+
+
+
 	std::map <int, OriginatorRxStatus *, std::less<int> > m_originatorStatus;
-	std::map <pair<int,int>, OriginatorRxStatus *, std::less<pair<int,int> > > > m_qosOriginatorStatus;
+	std::map <std::pair<int,int>, OriginatorRxStatus *, std::less<std::pair<int,int> > > m_qosOriginatorStatus;
+	MacContainer *m_container;
 };
 
 

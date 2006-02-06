@@ -22,6 +22,7 @@
 #include "mac-parameters.h"
 #include "phy-80211.h"
 #include "mac-80211.h"
+#include "mac-container.h"
 
 #define nopeMAC_DEBUG 1
 
@@ -33,9 +34,8 @@
 #endif /* MAC_DEBUG */
 
 
-MacParameters::MacParameters (Mac80211 *mac, Phy80211 *phy)
-	: m_mac (mac), 
-	  m_phy (phy)
+MacParameters::MacParameters (MacContainer *container)
+	: m_container (container)
 {
 	DEBUG ("slot %f", getSlotTime ());
 	DEBUG ("SIFS %f", getSIFS ());
@@ -47,16 +47,15 @@ MacParameters::MacParameters (Mac80211 *mac, Phy80211 *phy)
 	DEBUG ("CWmax %d", getCWmax ());
 }
 
-Phy80211 *
-MacParameters::peekPhy (void)
-{
-	return m_phy;
-}
-
 int
 MacParameters::getSelf (void)
 {
-	return m_mac->addr ();
+	return m_container->selfAddress ();
+}
+double 
+MacParameters::calculateBaseTxDuration (int size)
+{
+	return m_container->phy ()->calculateTxDuration (0, size);
 }
 
 int
@@ -96,33 +95,7 @@ MacParameters::getSlotTime (void)
 	/* XXX 802.11a */
 	return 9e-6;
 }
-double 
-MacParameters::getEIFS (void)
-{
-	/* 802.11 section 9.2.10 */
-	// XXX check with regard to 802.11a
-	return getSIFS () + 
-		peekPhy ()->calculateTxDuration (0, getACKSize ()) +
-		getDIFS ();
-}
-double 
-MacParameters::getDIFS (void)
-{
-	/* 802.11 section 9.2.10 */
-	return getSIFS () + 2 * getSlotTime ();
-}
-int
-MacParameters::getCWmin (void)
-{
-	/* XXX 802.11a */
-	return 15;
-}
-int
-MacParameters::getCWmax (void)
-{
-	/* XXX 802.11a */
-	return 1023;
-}
+
 int 
 MacParameters::getMaxSSRC (void)
 {
@@ -152,13 +125,13 @@ double
 MacParameters::getCTSTimeoutDuration (void)
 {
 	/* XXX */
-	return getSIFS () + peekPhy ()->calculateTxDuration (0, getCTSSize ());;
+	return getSIFS () + calculateBaseTxDuration (getCTSSize ());;
 }
 double
 MacParameters::getACKTimeoutDuration (void)
 {
 	/* XXX */
-	return getSIFS () + peekPhy ()->calculateTxDuration (0, getACKSize ());
+	return getSIFS () + calculateBaseTxDuration (getACKSize ());
 }
 
 
@@ -239,3 +212,9 @@ MacParameters::getProbeRequestSize (void)
 		0;
 }
 
+
+double 
+MacParameters::getMSDULifetime (void)
+{
+	return 10; // seconds.
+}

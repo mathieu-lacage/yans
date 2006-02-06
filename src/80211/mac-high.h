@@ -21,38 +21,24 @@
 #ifndef MAC_HIGH_H
 #define MAC_HIGH_H
 
-class Mac80211;
-class Phy80211;
+class MacContainer;
 class Packet;
-class MacStations;
-class MacStation;
-class MacParameters;
 
 class MacHigh {
 public:
-	MacHigh (Mac80211 *mac, Phy80211 *phy);
+	MacHigh (MacContainer *container);
 	virtual ~MacHigh ();
 
 	/* invoked by Mac80211. */
 	virtual void enqueueFromLL (Packet *packet) = 0;
-	virtual void receiveFromPhy (Packet *packet) = 0;
-
+	
 	/* invoked by the MacLows. */
-	MacStation *lookupStation (int address);
 	virtual void notifyAckReceivedFor (Packet *packet) = 0;
 	virtual void receiveFromMacLow (Packet *packet) = 0;
 protected:
-	Packet *getPacketFor (int addresss);
-	int getSelf (void);
-	void forwardUp (Packet *packet);
-	MacParameters *parameters (void);
-	Mac80211 *peekMac80211 (void);
-	Phy80211 *peekPhy80211 (void);
+	MacContainer *container (void);
 private:
-	Mac80211 *m_mac;
-	Phy80211 *m_phy;
-	MacStations *m_stations;
-	MacParameters *m_parameters;
+	MacContainer *m_container;
 };
 
 #endif /* MAC_HIGH_H */

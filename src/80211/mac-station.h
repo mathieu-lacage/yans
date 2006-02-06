@@ -34,17 +34,7 @@ public:
 	 * returns true.
 	 */
 	bool isAssociated (void);
-	void recordAssociated (void);
-
-	void setLastSequenceNumber (int sequence, int fragment);
-	int getLastSequenceControl (void);
-	int getLastSequenceNumber (void);
-	int getLastFragmentNumber (void);
-	void setLastSequenceNumber (int TID, int sequence, int fragment);
-	int getLastSequenceNumber (int TID);
-	int getLastFragmentNumber (int TID);
-	int getLastSequenceControl (int TID);
-	
+	void recordAssociated (void);	
 
 	// reception-related method
 	virtual void reportRxOk (double SNR, int mode) = 0;

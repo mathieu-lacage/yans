@@ -22,13 +22,20 @@
 #include "mac-high-adhoc.h"
 #include "mac-low.h"
 #include "mac-parameters.h"
-#include "mac-low-parameters.h"
+#include "dcf.h"
+#include "mac-dcf-parameters.h"
+#include "mac-rx-middle.h"
+#include "mac-queue-80211e.h"
+#include "mac-container.h"
+#include "dca-txop.h"
 
-MacHighAdhoc::MacHighAdhoc (Mac80211 *mac, Phy80211 *phy)
-	: MacHigh (mac, phy)
+MacHighAdhoc::MacHighAdhoc (MacContainer *container)
+	: MacHigh (container)
 {
-	m_lowParameters = new MacLowParameters (phy);
-	m_low = new MacLow (mac, this, phy, m_lowParameters);
+	MacDcfParameters *parameters;
+	Dcf *dcf = new Dcf (container, parameters);
+	m_queue = new MacQueue80211e (container->parameters ());
+	new DcaTxop (dcf, m_queue, container);
 }
 MacHighAdhoc::~MacHighAdhoc ()
 {}
@@ -38,13 +45,13 @@ MacHighAdhoc::enqueueFromLL (Packet *packet)
 {
 	setType (packet, MAC_80211_DATA);
 	setDestination (packet, getFinalDestination (packet));
-	m_low->enqueue (packet);
+	m_queue->enqueue (packet);
 }
 
 void 
 MacHighAdhoc::receiveFromPhy (Packet *packet)
 {
-	m_low->receive (packet);
+	container ()->macLow ()->receive (packet);
 }
 
 void 
@@ -54,5 +61,5 @@ MacHighAdhoc::notifyAckReceivedFor (Packet *packet)
 void 
 MacHighAdhoc::receiveFromMacLow (Packet *packet)
 {
-	forwardUp (packet);
+	container ()->forwardToLL (packet);
 }

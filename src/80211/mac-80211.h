@@ -24,8 +24,7 @@
 
 #include "mac.h"
 
-class MacHigh;
-class Phy80211;
+class MacContainer;
 class Packet;
 class Handler;
 
@@ -42,10 +41,9 @@ public:
 	virtual int hdr_type(char *hdr, u_int16_t type = 0);
 
 	virtual int command(int argc, const char*const* argv);
-
-	Phy80211 *peekPhy80211 (void);
 private:
-	MacHigh *m_high;
+	void startContainer (void);
+	MacContainer *m_container;
 };
 
 

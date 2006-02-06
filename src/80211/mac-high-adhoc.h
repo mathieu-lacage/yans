@@ -23,16 +23,13 @@
 
 #include "mac-high.h"
 
-class MacLow;
-class Mac80211;
-class Phy80211;
+class MacContainer;
+class MacQueue80211e;
 class Packet;
-class MacLowParameters;
-class MacParameters;
 
 class MacHighAdhoc : public MacHigh {
 public:
-	MacHighAdhoc (Mac80211 *mac, Phy80211 *phy);
+	MacHighAdhoc (MacContainer *container);
 	virtual ~MacHighAdhoc ();
 
 	/* invoked by Mac80211. */
@@ -43,8 +40,7 @@ public:
 	virtual void notifyAckReceivedFor (Packet *packet);
 	virtual void receiveFromMacLow (Packet *packet);
 private:
-	MacLow *m_low;
-	MacLowParameters *m_lowParameters;
+	MacQueue80211e *m_queue;
 };
 
 #endif /* MAC_HIGH_ADHOC_H */

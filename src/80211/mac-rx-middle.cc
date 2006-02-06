@@ -19,24 +19,33 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#ifndef "mac-rx-middle.h"
+#include "mac-rx-middle.h"
+#include "mac-container.h"
+#include "mac-low.h"
+#include "mac-high.h"
+#include "mac-stations.h"
+#include "mac-station.h"
 
-class MyReceptionListener
+class MyMacLowReceptionListener : public MacLowReceptionListener
 {
 public:
-	ReceptionListener (MacRxMiddle *middle)
+	MyMacLowReceptionListener (MacRxMiddle *middle)
 		: m_middle (middle) {}
-	virtual ~ReceptionListener ()
+	virtual ~MyMacLowReceptionListener ()
 	{}
 
-	virtual void gotPacket (double snr, int txMode){
-		m_middle->gotPacket (snr, txMode);
+	virtual void gotPacket (int from, double snr, int txMode){
+		m_middle->gotPacket (from, snr, txMode);
 	}
 	virtual void gotData (Packet *packet) {
 		m_middle->gotData (packet);
 	}
 	virtual Packet *gotBlockAckReq (Packet *packet) {
+#ifdef BACK
 		return m_middle->gotBlockAckReq (packet);
+#else /* BACK */
+		return 0;
+#endif /* BACK */
 	}
 private:
 	MacRxMiddle *m_middle;
@@ -75,7 +84,7 @@ public:
 		m_lastSequenceControl = sequenceControl;
 	}
 
-
+#ifdef BACK
 	void setBABufferSize (int n) {
 		m_BABufferSize = n;
 	}
@@ -128,6 +137,31 @@ public:
 		m_blocks->erase (m_blocks->begin (), m_blocks->end ());
 		return 0;
 	}
+	void fillBlockAckResp (Packet *packet, int sequenceControlStart) {
+		dequeue<Packet *>::iterator i;
+		int j;
+		int n = 0;
+		int prevSequenceNumber = sequenceControlStart >> 4;
+		for (i = m_blocks.begin (), j = 0; i != m_blocks->end () && j < 64; i++) {
+			int currentSequenceNumber = getSequenceControl (*i) >> 4;
+			if (getSequenceControl (*i) >= sequenceControlStart) {
+				n++;
+				if (currentSequenceNumber > prevSequenceNumber) {
+					j++;
+					prevSequenceNumber = currentSequenceNumber;
+				}
+			}
+		}
+		packet->allocdata (n * sizeof (uint16_t));
+		uint16_t *buffer = packet->accessdata ();
+		for (i = m_blocks.begin (), j = 0; i != m_blocks->end () && j < n; i++) {
+			if (getSequenceControl (*i) >= sequenceControlStart) {
+				*buffer = getSequenceControl (*i);
+				buffer++;
+				j++;
+			}
+		}
+	}
 private:
 	bool appendBlock (Packet *packet) {
 		m_blocks->push_back (packet);
@@ -137,28 +171,38 @@ private:
 			return false;
 		}
 	}
-	bool m_deFragmenting;
-	uint16_t m_lastSequenceControl;
-	int m_rxSize;
 	double m_inactivityTimer;
 	int m_BABufferSize;
 	bool m_blockAcking;
 	dequeue<Packet *> m_blocks;
+#endif /* BACK */
+	bool m_deFragmenting;
+	uint16_t m_lastSequenceControl;
+	int m_rxSize;
 };
 
 
-MacRxMiddle::MacRxMiddle (MacLow *low, MacHigh *high,
-			  MacStations *stations)
-	: m_low (low),
-	  m_high (high),
-	  m_stations (stations)
+MacRxMiddle::MacRxMiddle (MacContainer *container)
+	: m_container (container)
 {
-	listener = new MyReceptionListener (this);
-	m_low->setReceptionListener (listener);
+	MyMacLowReceptionListener *listener = new MyMacLowReceptionListener (this);
+	container->macLow ()->setReceptionListener (listener);
+}
+
+void
+MacRxMiddle::forwardToHigh (Packet *packet)
+{
+	m_container->macHigh ()->receiveFromMacLow (packet);
+}
+
+void
+MacRxMiddle::dropPacket (Packet *packet)
+{
+	Packet::free (packet);
 }
 
 OriginatorRxStatus *
-MacRxMiddle::lookupQoS (int source, int TID) 
+MacRxMiddle::lookupQos (int source, int TID) 
 {
 	OriginatorRxStatus *originator;
 	originator = m_qosOriginatorStatus[make_pair(source, TID)];
@@ -189,51 +233,6 @@ MacRxMiddle::lookup (Packet *packet)
 		originator = lookup (getSource (packet));
 	}
 	return originator;
-}
-
-/* Return true is packet has been handled by BlockAck
- * machinery. Return false otherwise.
- */
-bool
-MacRxMiddle::handleBlockAck (Packet *packet, OriginatorRxStatus *originator)
-{
-	if (originator->isBlockAcking ()) {
-		if (isBlockAck (packet)) {
-			if (originator->isInactivityTimerExpired (now ())) {
-				// XXX cancel BA and send delba.
-				dropPacket (packet);
-			} else {
-				if (originator->accumulateBlock (packet)) {
-					Packet *old = originator->getOldestCompletePacket ();
-					if (old != 0) {
-						// XXX forward to MAC directly.
-					}
-				}
-				originator->resetInactivityTimer (now ());
-			}
-		} else {
-			if (originator->isInactivityTimerExpired (now ())) {
-				// XXX cancel BA and send delba.
-			}
-			/* accumulate in block ack anyway but do not
-			   update the inactivity timer. 
-			*/
-			if (originator->accumulateBlock (packet)) {
-				Packet *old = originator->getOldestCompletePacket ();
-				if (old != 0) {
-					// XXX forward to MAC directly.
-				}
-			}
-		}
-	} else {
-		if (isBlockAck (packet)) {
-			// XXX cancel BA and send delba.
-			dropPacket (packet);
-		} else {
-			return false;
-		}
-	}
-	return true;
 }
 
 bool
@@ -289,22 +288,81 @@ MacRxMiddle::handleFragments (Packet *packet, OriginatorRxStatus *originator)
 	return true;
 }
 
+#ifdef BACK
+/* Return true is packet has been handled by BlockAck
+ * machinery. Return false otherwise.
+ */
+bool
+MacRxMiddle::handleBlockAck (Packet *packet, OriginatorRxStatus *originator)
+{
+	if (originator->isBlockAcking ()) {
+		if (isBlockAck (packet)) {
+			if (originator->isInactivityTimerExpired (now ())) {
+				// XXX cancel BA and send delba.
+				dropPacket (packet);
+			} else {
+				if (originator->accumulateBlock (packet)) {
+					Packet *old = originator->getOldestCompletePacket ();
+					if (old != 0) {
+						// XXX forward to MAC directly.
+					}
+				}
+				originator->resetInactivityTimer (now ());
+			}
+		} else {
+			if (originator->isInactivityTimerExpired (now ())) {
+				// XXX cancel BA and send delba.
+			}
+			/* accumulate in block ack anyway but do not
+			   update the inactivity timer. 
+			*/
+			if (originator->accumulateBlock (packet)) {
+				Packet *old = originator->getOldestCompletePacket ();
+				if (old != 0) {
+					// XXX forward to MAC directly.
+				}
+			}
+		}
+	} else {
+		if (isBlockAck (packet)) {
+			// XXX cancel BA and send delba.
+			dropPacket (packet);
+		} else {
+			return false;
+		}
+	}
+	return true;
+}
 Packet *
 MacRxMiddle::gotBlockAckReq (Packet *packet)
 {
 	OriginatorRxStatus *originator = lookup (packet);
 	Packet *resp;
 	if (originator->isBlockAcking ()) {
-		resp = allocBlockAckResp (originator);
-		// send BlockAckResp
+		resp = Packet::alloc ();
+		setType (resp, MAC_80211_CTL_BACKRESP);
+		setSource (resp, getDestination (packet));
+		setDestination (resp, getSource (packet));
+		setTID (resp, getTID (packet));
+		originator->fillBlockAckResp (resp, getBACKsequenceControl (packet));
+
+		originator->indicateBlocks (resp);
 		// and forward to mac content of rx buffer.
 	} else {
+		// this will allow the calling MacLow to
+		// send an ACK instead.
 		resp = 0;
-		// should set resp to ack.
 		// queue delba
 		
 	}
 	return resp;
+}
+#endif /* BACK */
+
+void 
+MacRxMiddle::gotPacket (int from, double snr, int txMode)
+{
+	m_container->stations ()->lookup (from)->reportRxOk (snr, txMode);
 }
 
 void 
@@ -312,21 +370,22 @@ MacRxMiddle::gotData (Packet *packet)
 {
 	OriginatorRxStatus *originator = lookup (packet);
 	switch (getType (packet)) {
+	case MAC_80211_MGT_ADDBA_REQUEST:
+		dropPacket (packet);
+		break;
 	case MAC_80211_DATA:
 		assert (station->getLastSequenceControl () <= getSequenceControl (packet));
 		// filter duplicates.
 		if (!handleDuplicates (packet, originator) &&
-		    !handleBlockAck (packet, originator) &&
+		    //!handleBlockAck (packet, originator) &&
 		    !handleFragments (packet, originator)) {
-			// XXX forward to MAC high.
+			forwardToHigh (packet);
 		}
 		break;
 	default:
-		// XXX forward to MAC high.
+		forwardToHigh (packet);
 		break;
 	}
 
 	return;
- drop:
-	dropPacket (packet);
 }

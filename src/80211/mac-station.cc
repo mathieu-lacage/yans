@@ -32,18 +32,6 @@ MacStation::MacStation (MacStations *stations)
 MacStation::~MacStation ()
 {}
 
-
-void
-MacStation::setLastRxSequence (int sequence)
-{
-	m_sequence = sequence;
-}
-int
-MacStation::getLastRxSequence (void)
-{
-	return m_sequence;
-}
-
 int
 MacStation::getNModes (void)
 {

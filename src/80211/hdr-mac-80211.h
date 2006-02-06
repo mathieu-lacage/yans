@@ -88,7 +88,11 @@ enum mac_80211_packet_type {
 	MAC_80211_MGT_PROBE_REQUEST,
 	MAC_80211_MGT_PROBE_RESPONSE,
 	MAC_80211_MGT_AUTHENTICATION,
-	MAC_80211_MGT_DEAUTHENTICATION
+	MAC_80211_MGT_DEAUTHENTICATION,
+	MAC_80211_MGT_ADDBA_REQUEST,
+	MAC_80211_MGT_ADDBA_RESPONSE,
+	MAC_80211_MGT_DELBA_REQUEST,
+	MAC_80211_MGT_DELBA_RESPONSE
 };
 
 class hdr_mac_80211 {
@@ -112,6 +116,7 @@ class hdr_mac_80211 {
 	bool isBlockAck (void) const;
 	bool isNoAck (void) const;
 	bool isNormalAck (void) const;
+	bool isQos (void) const;
 
 	void setDestination (int destination);
 	void setFinalDestination (int destination);
@@ -148,6 +153,7 @@ class hdr_mac_80211 {
 	unsigned int m_txMode          : 10;
 	unsigned int m_tid             : 4;
 	unsigned int m_ackMode         : 2;
+	unsigned int m_qos             : 1;
 	int m_destination;
 	int m_finalDestination;
 	int m_source;
@@ -188,6 +194,7 @@ int getTID (Packet *packet);
 bool isBlockAck (Packet *packet);
 bool isNoAck (Packet *packet);
 bool isNormalAck (Packet *packet);
+bool isQos (Packet *packet);
 
 
 

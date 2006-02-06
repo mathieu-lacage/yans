@@ -19,66 +19,16 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "mac-80211.h"
 #include "mac-high.h"
-#include "mac-station.h"
-#include "mac-stations.h"
-#include "arf-mac-stations.h"
-#include "hdr-mac-80211.h"
-#include "mac-parameters.h"
 
-MacHigh::MacHigh (Mac80211 *mac, Phy80211 *phy)
-	: m_mac (mac),
-	  m_phy (phy)
-{
-	m_stations = new ArfMacStations (mac);
-	m_parameters = new MacParameters (mac, phy);
-}
+MacHigh::MacHigh (MacContainer *container)
+	: m_container (container)
+{}
 MacHigh::~MacHigh ()
 {}
 
-MacStation *
-MacHigh::lookupStation (int address)
+MacContainer *
+MacHigh::container (void)
 {
-	return m_stations->lookup (address);
-}
-
-Mac80211 *
-MacHigh::peekMac80211 (void)
-{
-	return m_mac;
-}
-
-Phy80211 *
-MacHigh::peekPhy80211 (void)
-{
-	return m_phy;
-}
-
-int
-MacHigh::getSelf (void)
-{
-	return m_mac->addr ();
-}
-
-void 
-MacHigh::forwardUp (Packet *packet)
-{
-	return m_mac->uptarget ()->recv (packet);
-}
-
-Packet *
-MacHigh::getPacketFor (int destination)
-{
-	Packet *packet = Packet::alloc ();
-	setSource (packet, getSelf ());
-	setFinalDestination (packet, destination);
-	setDestination (packet, destination);
-	return packet;
-}
-
-MacParameters *
-MacHigh::parameters (void)
-{
-	return m_parameters;
+	return m_container;
 }

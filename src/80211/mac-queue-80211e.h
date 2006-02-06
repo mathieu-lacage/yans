@@ -44,9 +44,12 @@
 #include <list>
 #include <utility>
 
+class MacParameters;
+class Packet;
+
 class MacQueue80211e {
 public:
-	MacQueue80211e (double lifetime);
+	MacQueue80211e (MacParameters *parameters);
 	~MacQueue80211e ();
 
 	void enqueue (class Packet *packet);
@@ -57,7 +60,7 @@ public:
 private:
 	void cleanup (void);
 	std::list< std::pair<Packet *, double> > m_queue;
-	double m_lifetime;
+	MacParameters *m_parameters;
 };
 
 

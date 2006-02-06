@@ -18,39 +18,21 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef MAC_LOW_PARAMETERS_H
-#define MAC_LOW_PARAMETERS_H
+#ifndef MAC_DCF_PARAMETERS_H
+#define MAC_DCF_PARAMETERS_H
 
-class Phy80211;
-class Mac80211;
+class MacContainer;
 
-class MacLowParameters {
+class MacDcfParameters {
 public:
-	MacLowParameters (Phy80211 *phy);
-	
-	int getACKSize (void) const;
-	int getRTSSize (void) const;
-	int getCTSSize (void) const;
-
-	int getDataHeaderSize (void);
-	int getMgtHeaderSize (void);
-
-	double getSIFS (void);
-	double getSlotTime (void);
+	MacDcfParameters (MacContainer *container);
 	int getCWmin (void);
 	int getCWmax (void);
-
-	int getMaxSSRC (void);
-	int getMaxSLRC (void);
-	int getRTSCTSThreshold (void);
-	double getCTSTimeoutDuration (void);
-	double getACKTimeoutDuration (void);
-
+	double getTxopLimit (void);
+	double getAIFS (void);
 	double getEIFS (void);
-	double getDIFS (void);
 private:
-	Phy80211 *peekPhy (void);
-	Phy80211 *m_phy;
+	MacContainer *m_container;
 };
 
-#endif /* MAC_LOW_PARAMETERS_H */
+#endif /* MAC_DCF_PARAMETERS_H */
