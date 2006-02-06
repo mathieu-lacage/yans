@@ -219,10 +219,11 @@ MacHighQStation::enqueueToLow (Packet *packet)
 void 
 MacHighQStation::gotCFPoll (Packet *packet)
 {
-	if (getTID (packet) > 8) {
-		m_hcca->tsAccessGranted (getTID (packet), getTxopLimit (packet));
-	} else {
+	TRACE ("got cfpoll %d", getTID (packet));
+	if (getTID (packet) < 8) {
 		m_hcca->acAccessGranted (getAC (packet), getTxopLimit (packet));
+	} else {
+		m_hcca->tsAccessGranted (getTID (packet), getTxopLimit (packet));
 	}
 }
 
