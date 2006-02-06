@@ -462,7 +462,7 @@ QapScheduler::doCurrentTxop (void)
 	setSize (packet, getPacketSize (MAC_80211_MGT_CFPOLL));
 	setType (packet, MAC_80211_MGT_CFPOLL);
 	setNoAck (packet);
-	setAC (packet, AC_SPECIAL);
+	setTID (packet, tspec->getTSID ());
 	setFragmentNumber (packet, 0);
 	uint16_t sequence = m_container->macTxMiddle ()->getNextSequenceNumberFor (packet);
 	setSequenceNumber (packet, sequence);
