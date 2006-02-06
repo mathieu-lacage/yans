@@ -23,19 +23,20 @@
 #define MAC_TRACES_H
 
 /* HIGH */
-#define STATION_TRACE
-#define QSTATION_TRACE
-#define AP_TRACE
+#define noSTATION_TRACE
+#define noQSTATION_TRACE
 #define noADHOC_TRACE
-
+#define noAP_TRACE
 #define noNQAP_TRACE
 #define noQAP_TRACE
 
 /* */
-#define noMAC_LOW_TRACE
+#define MAC_LOW_TRACE
 #define noDCF_TRACE
 #define noDCA_TXOP_TRACE
 #define noMAC_MIDDLE_TRACE
 #define noHCCA_TXOP_TRACE
+
+#define noQAP_SCHEDULER_TRACE
 
 #endif /* MAC_TRACES_H */
