@@ -270,7 +270,6 @@ MacRxMiddle::sendUp (Packet *packet)
 			originator->setSequenceControl (getSequenceControl (packet));
 			m_interface->high ()->receiveFromMacLow (packet);
 		} else {
-			assert (false);
 			dropPacket (packet);
 		}
 		break;
