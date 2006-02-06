@@ -100,7 +100,6 @@ private:
 	MacStations *m_stations;
 	Phy80211 *m_phy;
 	int m_bssid;
-	NodePosition m_position;
 };
 
 

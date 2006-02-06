@@ -158,7 +158,8 @@ NetInterface80211::getMacAddress (void)
 void
 NetInterface80211::peekPosition (NodePosition *position)
 {
-	*position = m_position;
+        assert(m_node);
+        m_node->peekPosition(position);
 }
 
 
