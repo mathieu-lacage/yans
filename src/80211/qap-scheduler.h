@@ -64,7 +64,7 @@ public:
 	 * return true if request is accepted.
 	 * return false otherwise.
 	 */
-	bool addTsRequest (TSpec *tspec);
+	bool addTsRequest (int destination, TSpec *tspec);
 	bool delTsRequest (int destination, TSpec *tspec);
 	void gotQosNull (Packet *packet);
 

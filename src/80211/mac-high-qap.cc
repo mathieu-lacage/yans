@@ -208,7 +208,7 @@ MacHighQap::delTsRequest (TSpecRequest *request)
 void 
 MacHighQap::addTsRequest (TSpecRequest *request)
 {
-	if (m_scheduler->addTsRequest (request->getTSpec ())) {
+	if (m_scheduler->addTsRequest (container ()->selfAddress (), request->getTSpec ())) {
 		request->notifyGranted ();
 		createTS (request->getTSpec ());
 	} else {
@@ -319,7 +319,7 @@ MacHighQap::gotAddTsRequest (Packet *packet)
 	/* request send by a STA */
 	TSpecRequest *request = *(reinterpret_cast<TSpecRequest **> (packet->accessdata ()));
 	TSpec *tspec = request->getTSpec ();
-	if (m_scheduler->addTsRequest (tspec)) {
+	if (m_scheduler->addTsRequest (getSource (packet), tspec)) {
 		TRACE ("accept tspec for tsid %u from %u", tspec->getTSID (), getSource (packet));
 		queueAddTsResponseOk (getSource (packet), request);
 	} else {

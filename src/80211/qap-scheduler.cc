@@ -356,7 +356,7 @@ QapScheduler::getCurrentTotalCapTime (void)
 }
 
 bool
-QapScheduler::addTsRequest (TSpec *tspec)
+QapScheduler::addTsRequest (int destination, TSpec *tspec)
 {
 	/* make sure we have a minimum set of parameters.
 	 */
@@ -426,7 +426,7 @@ QapScheduler::addTsRequest (TSpec *tspec)
 	setCurrentServiceInterval (newServiceInterval);
 	TRACE ("Admitted new stream. Service interval: %f, capTime: %f", newServiceInterval, capTime);
 	// need to move around source dest XXX
-	m_admitted.push_back (Txop (0, tspec));
+	m_admitted.push_back (Txop (destination, tspec));
 	return true;
 }
 
