@@ -40,6 +40,9 @@ if (Simulator::now_s () >= time) { \
 
 class Simulator {
 public:
+	static void set_linked_list (void);
+	static void set_binary_heap (void);
+
 	static void destroy (void);
 
 	/* this is a blocking call which will return
@@ -69,6 +72,10 @@ private:
 	~Simulator ();
 	static SimulatorPrivate *get_priv (void);
 	static SimulatorPrivate *m_priv;
+	static enum ListType {
+		LINKED_LIST,
+		BINARY_HEAP,
+	} m_list_type;
 };
 
 }; // namespace yans

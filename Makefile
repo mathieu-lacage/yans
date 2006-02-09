@@ -42,7 +42,8 @@ PACKAGE_DIST= \
 # building of libyans.so
 YANS_SRC= \
 	simulator/clock.cc \
-	simulator/event-heap.cc \
+	simulator/event-list-base.cc \
+	simulator/event-list.cc \
 	simulator/event.cc \
 	simulator/simulator.cc \
 	$(FIBER_CONTEXT_PLATFORM) \
@@ -105,7 +106,8 @@ YANS_HDR = \
 	simulator/simulator.h \
 	simulator/callback-event.tcc \
 	simulator/clock.h \
-	simulator/event-heap.h \
+	simulator/event-list-base.h \
+	simulator/event-list.h \
 	src/common/buffer.h \
 	src/common/data-writer.h \
 	src/common/pcap-writer.h \

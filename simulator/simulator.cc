@@ -21,10 +21,11 @@
 
 #include "simulator.h"
 #include "clock.h"
-#include "event-heap.h"
+#include "event-list-base.h"
 #include "event.h"
 #include <math.h>
 #include <cassert>
+#include <list>
 
 #define noTRACE_SIMU 1
 
@@ -44,7 +45,7 @@ namespace yans {
 
 class SimulatorPrivate {
 public:
-	SimulatorPrivate ();
+	SimulatorPrivate (EventListBase *events);
 	~SimulatorPrivate ();
 
 	void run (void);
@@ -65,14 +66,14 @@ private:
 	Events m_destroy;
 	bool m_stop;
 	Clock *m_clock;
-	EventHeap *m_event_heap;
+	EventListBase *m_events;
 };
 
-SimulatorPrivate::SimulatorPrivate ()
+SimulatorPrivate::SimulatorPrivate (EventListBase *events)
 {
 	m_stop = false;
 	m_clock = new Clock ();
-	m_event_heap = new EventHeap ();
+	m_events = events;
 }
 
 SimulatorPrivate::~SimulatorPrivate ()
@@ -85,8 +86,8 @@ SimulatorPrivate::~SimulatorPrivate ()
 	}
 	delete m_clock;
 	m_clock = (Clock *)0xdeadbeaf;
-	delete m_event_heap;
-	m_event_heap = (EventHeap *)0xdeadbeaf;
+	delete m_events;
+	m_events = (EventListBase *)0xdeadbeaf;
 }
 
 void
@@ -104,16 +105,16 @@ void
 SimulatorPrivate::run (void)
 {
 	handle_immediate ();
-	Event *next_ev = m_event_heap->peek_next ();
-	uint64_t next_now = m_event_heap->peek_next_time_us ();
+	Event *next_ev = m_events->peek_next ();
+	uint64_t next_now = m_events->peek_next_time_us ();
 	while (next_ev != 0 && !m_stop) {
-		m_event_heap->remove_next ();
+		m_events->remove_next ();
 		m_clock->update_current_us (next_now);
 		TRACE ("handle " << next_ev);
 		next_ev->notify ();
 		handle_immediate ();
-		next_ev = m_event_heap->peek_next ();
-		next_now = m_event_heap->peek_next_time_us ();
+		next_ev = m_events->peek_next ();
+		next_now = m_events->peek_next_time_us ();
 	}
 }
 
@@ -126,13 +127,13 @@ void
 SimulatorPrivate::insert_in_us (Event *event, uint64_t delta)
 {
 	uint64_t current = m_clock->get_current_us ();
-	m_event_heap->insert_at_us (event, current+delta);
+	m_events->insert_at_us (event, current+delta);
 }
 void 
 SimulatorPrivate::insert_at_us (Event *event, uint64_t time)
 {
 	assert (time >= m_clock->get_current_us ());
-	m_event_heap->insert_at_us (event, time);
+	m_events->insert_at_us (event, time);
 }
 uint64_t 
 SimulatorPrivate::now_us (void)
@@ -145,14 +146,14 @@ SimulatorPrivate::insert_in_s (Event *event, double delta)
 	uint64_t now_us = m_clock->get_current_us ();
 	int64_t delta_us = (int64_t)(delta * 1000000.0);
 	uint64_t us = now_us + delta_us;
-	m_event_heap->insert_at_us (event, us);
+	m_events->insert_at_us (event, us);
 }
 void 
 SimulatorPrivate::insert_at_s (Event *event, double time)
 {
 	int64_t us = (int64_t)(time * 1000000.0);
 	assert (us >= 0);
-	m_event_heap->insert_at_us (event, (uint64_t)us);
+	m_events->insert_at_us (event, (uint64_t)us);
 }
 double 
 SimulatorPrivate::now_s (void)
@@ -171,21 +172,36 @@ SimulatorPrivate::insert_at_destroy (Event *event)
 }
 
 
+}; // namespace yans
 
 
+#include "event-list.h"
 
 
-
-
-
+namespace yans {
 
 SimulatorPrivate *Simulator::m_priv = 0;
+Simulator::ListType Simulator::m_list_type = LINKED_LIST;
 
 SimulatorPrivate *
 Simulator::get_priv (void)
 {
 	if (m_priv == 0) {
-		m_priv = new SimulatorPrivate ();
+		EventListBase *events;
+		switch (m_list_type) {
+		case LINKED_LIST:
+			events = new EventList ();
+			break;
+		case BINARY_HEAP:
+			//events = new BinaryHeap ();
+			events = 0;
+			break;
+		default: // not reached
+			events = 0;
+			assert (false); 
+			break;
+		}
+		m_priv = new SimulatorPrivate (events);
 	}
 	TRACE_S ("priv " << m_priv);
 	return m_priv;
