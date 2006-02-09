@@ -21,9 +21,9 @@ INCLUDES=\
  -I$(TOP_SRC_DIR)/src/apps \
  $(NULL)
 FLAGS=-Wall -Werror -O3 -gdwarf-2 -g3
-PYTHON_PREFIX_INC=/usr/include/python2.3
+PYTHON_PREFIX_INC=/usr/include/python2.4
 PYTHON_PREFIX_LIB=/usr/lib
-PYTHON_BIN=/usr/bin/python2.3
+PYTHON_BIN=/usr/bin/python2.4
 BOOST_PREFIX_LIB=/usr/lib
 BOOST_PREFIX_INC=/usr/include
 #TCP=bsd
@@ -176,6 +176,12 @@ YANS_CXXFLAGS += -DTCP_USE_BSD
 YANS_CXXFLAGS += -I$(TOP_SRC_DIR)/src/ipv4/tcp-bsd/
 endif
 
+# the benchmark for the simulator
+BENCH_SRC=simulator/bench-simulator.cc
+BENCH_OUTPUT=$(call gen-bin, simulator/bench-simulator)
+BENCH_CXXFLAGS=$(CXXFLAGS)
+BENCH_LDFLAGS=$(LDFLAGS) -lyans -L$(TOP_BUILD_DIR)
+
 
 # building of main-test
 TEST_SRC=test/main-test.cc
@@ -272,6 +278,7 @@ YANS_PYTHON_LDFLAGS=$(LDFLAGS) $(call gen-pymod-link-flags) -lyans -L$(TOP_BUILD
 
 ALL= \
 	YANS \
+	BENCH \
 	TEST \
 	SAMPLE_CXX_SIMPLE \
 	SAMPLE_CXX_ROUTER \
