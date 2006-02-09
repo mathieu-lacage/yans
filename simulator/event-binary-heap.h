@@ -19,27 +19,21 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#ifndef EVENT_LIST_H
-#define EVENT_LIST_H
+#ifndef EVENT_BINARY_HEAP_H
+#define EVENT_BINARY_HEAP_H
 
 #include "event-list-base.h"
-#include <list>
-#include <utility>
 #include <stdint.h>
 
 namespace yans {
 
 class Event;
 
-class EventList : public EventListBase {
- public:
-	EventList ();
-	virtual ~EventList ();
+class EventBinaryHeap : public EventListBase {
+public:
+	EventBinaryHeap ();
+	virtual ~EventBinaryHeap ();
 
-	/* the insert operations might be veeery slow
-	 * but peek_next and remove_next should be
-	 * really fast.
-	 */
 	virtual EventId insert_at_us (Event *event, uint64_t time);
 
 	virtual Event   *peek_next (void);
@@ -50,14 +44,10 @@ class EventList : public EventListBase {
 
 	virtual void clear (void);
 	virtual void print_debug (void);
-
-	typedef std::list<std::pair<Event *, uint64_t> >::iterator EventsI;
- private:
-	typedef std::list<std::pair<Event *, uint64_t> > Events;
-	Events m_events;
+private:
 };
 
 }; // namespace yans
 
 
-#endif /* EVENT_LIST_H */
+#endif /* EVENT_BINARY_HEAP_H */

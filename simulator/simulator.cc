@@ -1,6 +1,6 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 /*
- * Copyright (c) 2005 INRIA
+ * Copyright (c) 2005,2006 INRIA
  * All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -50,11 +50,12 @@ public:
 
 	void run (void);
 	void stop (void);
-	void insert_in_us (Event *event, uint64_t delta);
-	void insert_at_us (Event *event, uint64_t time);
+	EventId insert_in_us (Event *event, uint64_t delta);
+	EventId insert_in_s (Event *event, double delta);
+	EventId insert_at_us (Event *event, uint64_t time);
+	EventId insert_at_s (Event *event, double time);
+	Event *remove (EventId id);
 	uint64_t now_us (void);
-	void insert_in_s (Event *event, double delta);
-	void insert_at_s (Event *event, double time);
 	double now_s (void);
 	void insert_later (Event *event);
 	void insert_at_destroy (Event *event);
@@ -123,37 +124,37 @@ SimulatorPrivate::stop (void)
 {
 	m_stop = true;
 }
-void 
+EventId  
 SimulatorPrivate::insert_in_us (Event *event, uint64_t delta)
 {
 	uint64_t current = m_clock->get_current_us ();
-	m_events->insert_at_us (event, current+delta);
+	return m_events->insert_at_us (event, current+delta);
 }
-void 
+EventId 
 SimulatorPrivate::insert_at_us (Event *event, uint64_t time)
 {
 	assert (time >= m_clock->get_current_us ());
-	m_events->insert_at_us (event, time);
+	return m_events->insert_at_us (event, time);
 }
 uint64_t 
 SimulatorPrivate::now_us (void)
 {
 	return m_clock->get_current_us ();
 }
-void 
+EventId 
 SimulatorPrivate::insert_in_s (Event *event, double delta)
 {
 	uint64_t now_us = m_clock->get_current_us ();
 	int64_t delta_us = (int64_t)(delta * 1000000.0);
 	uint64_t us = now_us + delta_us;
-	m_events->insert_at_us (event, us);
+	return m_events->insert_at_us (event, us);
 }
-void 
+EventId 
 SimulatorPrivate::insert_at_s (Event *event, double time)
 {
 	int64_t us = (int64_t)(time * 1000000.0);
 	assert (us >= 0);
-	m_events->insert_at_us (event, (uint64_t)us);
+	return m_events->insert_at_us (event, (uint64_t)us);
 }
 double 
 SimulatorPrivate::now_s (void)
@@ -169,6 +170,12 @@ void
 SimulatorPrivate::insert_at_destroy (Event *event)
 {
 	m_destroy.push_back (event);
+}
+
+Event *
+SimulatorPrivate::remove (EventId id)
+{
+	return m_events->remove (id);
 }
 
 
@@ -225,34 +232,34 @@ Simulator::stop (void)
 	TRACE ("stop");
 	get_priv ()->stop ();
 }
-void 
+EventId 
 Simulator::insert_in_us (uint64_t delta, Event *event)
 {
 	TRACE ("insert " << event << " in " << delta << "us");
-	get_priv ()->insert_in_us (event, delta);
+	return get_priv ()->insert_in_us (event, delta);
 }
-void 
+EventId 
 Simulator::insert_at_us (uint64_t time, Event *event)
 {
 	TRACE ("insert " << event << " at " << time << "us");
-	get_priv ()->insert_at_us (event, time);
+	return get_priv ()->insert_at_us (event, time);
 }
 uint64_t 
 Simulator::now_us (void)
 {
 	return get_priv ()->now_us ();
 }
-void 
+EventId 
 Simulator::insert_in_s (double delta, Event *event)
 {
 	TRACE ("insert " << event << " in " << delta << "s");
-	get_priv ()->insert_in_s (event, delta);
+	return get_priv ()->insert_in_s (event, delta);
 }
-void 
+EventId 
 Simulator::insert_at_s (double time, Event *event)
 {
 	TRACE ("insert " << event << " at " << time << "s");
-	get_priv ()->insert_at_s (event, time);
+	return get_priv ()->insert_at_s (event, time);
 }
 double 
 Simulator::now_s (void)
@@ -270,6 +277,12 @@ Simulator::insert_at_destroy (Event *event)
 {
 	TRACE ("insert at destroy " << event);
 	return get_priv ()->insert_at_destroy (event);
+}
+
+Event *
+Simulator::remove (EventId id)
+{
+	return get_priv ()->remove (id);
 }
 
 }; // namespace yans

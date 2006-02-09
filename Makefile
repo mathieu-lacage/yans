@@ -44,6 +44,7 @@ YANS_SRC= \
 	simulator/clock.cc \
 	simulator/event-list-base.cc \
 	simulator/event-list.cc \
+	simulator/event-binary-heap.cc \
 	simulator/event.cc \
 	simulator/simulator.cc \
 	$(FIBER_CONTEXT_PLATFORM) \
@@ -193,11 +194,18 @@ TEST_LDFLAGS=$(LDFLAGS) -lyans -L$(TOP_BUILD_DIR)
 
 # building of sample applications
 SAMPLE_CXX_SIMU_SRC= \
-	samples/main-forwarding-simulator.cc \
+	samples/main-simulator.cc \
 	$(NULL)
 SAMPLE_CXX_SIMU_OUTPUT=$(call gen-bin, $(basename $(SAMPLE_CXX_SIMU_SRC)))
 SAMPLE_CXX_SIMU_CXXFLAGS=$(CXXFLAGS)
 SAMPLE_CXX_SIMU_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans
+
+SAMPLE_CXX_SIMU_FOR_SRC= \
+	samples/main-forwarding-simulator.cc \
+	$(NULL)
+SAMPLE_CXX_SIMU_FOR_OUTPUT=$(call gen-bin, $(basename $(SAMPLE_CXX_SIMU_FOR_SRC)))
+SAMPLE_CXX_SIMU_FOR_CXXFLAGS=$(CXXFLAGS)
+SAMPLE_CXX_SIMU_FOR_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans
 
 SAMPLE_CXX_SIMUTEMP_SRC= \
 	samples/main-forwarding-simulator-template.cc \
@@ -286,6 +294,7 @@ ALL= \
 	SAMPLE_CXX_ROUTER \
 	SAMPLE_CXX_TCP \
 	SAMPLE_CXX_SIMU \
+	SAMPLE_CXX_SIMU_FOR \
 	SAMPLE_CXX_SIMUTEMP \
 	SAMPLE_CXX_THREAD \
 	YANS_PYTHON \

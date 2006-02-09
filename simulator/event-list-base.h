@@ -23,6 +23,7 @@
 #define EVENT_LIST_BASE_H
 
 #include <stdint.h>
+#include "event-id.h"
 
 namespace yans {
 
@@ -36,11 +37,13 @@ class EventListBase {
 	 * but peek_next and remove_next should be
 	 * really fast.
 	 */
-	virtual void insert_at_us (Event *event, uint64_t time) = 0;
+	virtual EventId insert_at_us (Event *event, uint64_t time) = 0;
 
 	virtual Event   *peek_next (void) = 0;
 	virtual uint64_t peek_next_time_us (void) = 0;
 	virtual void     remove_next (void) = 0;
+
+	virtual Event *remove (EventId id) = 0;
 
 	virtual void clear (void) = 0;
 	virtual void print_debug (void) = 0;
@@ -49,4 +52,4 @@ class EventListBase {
 }; // namespace yans
 
 
-#endif /* EVENT_HEAP_H */
+#endif /* EVENT_LIST_BASE_H */

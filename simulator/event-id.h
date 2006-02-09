@@ -18,46 +18,20 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-
-#ifndef EVENT_LIST_H
-#define EVENT_LIST_H
-
-#include "event-list-base.h"
-#include <list>
-#include <utility>
-#include <stdint.h>
+#ifndef EVENT_ID_H
+#define EVENT_ID_H
 
 namespace yans {
 
-class Event;
-
-class EventList : public EventListBase {
- public:
-	EventList ();
-	virtual ~EventList ();
-
-	/* the insert operations might be veeery slow
-	 * but peek_next and remove_next should be
-	 * really fast.
-	 */
-	virtual EventId insert_at_us (Event *event, uint64_t time);
-
-	virtual Event   *peek_next (void);
-	virtual uint64_t peek_next_time_us (void);
-	virtual void     remove_next (void);
-
-	virtual Event *remove (EventId id);
-
-	virtual void clear (void);
-	virtual void print_debug (void);
-
-	typedef std::list<std::pair<Event *, uint64_t> >::iterator EventsI;
- private:
-	typedef std::list<std::pair<Event *, uint64_t> > Events;
-	Events m_events;
+class EventId {
+public:
+	EventId () : m_id (0) {}
+	~EventId ()  { m_id = (void*)0xdeadbeaf;}
+protected:
+	void *m_id;
 };
 
 }; // namespace yans
 
 
-#endif /* EVENT_LIST_H */
+#endif /* EVENT_ID_H */

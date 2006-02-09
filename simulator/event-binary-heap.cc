@@ -19,45 +19,49 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#ifndef EVENT_LIST_H
-#define EVENT_LIST_H
-
-#include "event-list-base.h"
-#include <list>
-#include <utility>
-#include <stdint.h>
+#include "event-binary-heap.h"
 
 namespace yans {
 
-class Event;
+EventBinaryHeap::EventBinaryHeap ()
+{}
 
-class EventList : public EventListBase {
- public:
-	EventList ();
-	virtual ~EventList ();
+EventBinaryHeap::~EventBinaryHeap ()
+{}
 
-	/* the insert operations might be veeery slow
-	 * but peek_next and remove_next should be
-	 * really fast.
-	 */
-	virtual EventId insert_at_us (Event *event, uint64_t time);
+EventId 
+EventBinaryHeap::insert_at_us (Event *event, uint64_t time)
+{
+	return EventId ();
+}
 
-	virtual Event   *peek_next (void);
-	virtual uint64_t peek_next_time_us (void);
-	virtual void     remove_next (void);
+Event   *
+EventBinaryHeap::peek_next (void)
+{
+	return 0;
+}
+uint64_t 
+EventBinaryHeap::peek_next_time_us (void)
+{
+	// XXX
+	return 0;
+}
+void     
+EventBinaryHeap::remove_next (void)
+{}
 
-	virtual Event *remove (EventId id);
+Event *
+EventBinaryHeap::remove (EventId id)
+{
+	// XXX
+	return 0;
+}
 
-	virtual void clear (void);
-	virtual void print_debug (void);
-
-	typedef std::list<std::pair<Event *, uint64_t> >::iterator EventsI;
- private:
-	typedef std::list<std::pair<Event *, uint64_t> > Events;
-	Events m_events;
-};
+void 
+EventBinaryHeap::clear (void)
+{}
+void 
+EventBinaryHeap::print_debug (void)
+{}
 
 }; // namespace yans
-
-
-#endif /* EVENT_LIST_H */

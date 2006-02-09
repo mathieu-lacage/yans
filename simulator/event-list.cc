@@ -36,22 +36,44 @@ std::cout << "LIST TRACE " << x << std::endl;
 
 namespace yans {
 
+/*  !! WARNING !! 
+ * This is a very nasty piece of code but it really should work
+ * with pretty much any implementation of a std::list.
+ * it relies on the fact that a std::list<>::iterator has a single
+ * member variable, a pointer.
+ */
+class EventListId : public EventId {
+public:
+	EventListId (EventId id) : EventId (id) {}
+	EventListId (EventList::EventsI i) {
+		assert (sizeof (i) <= sizeof (EventId));
+		strncpy ((char *)&m_id, (char *)&i, sizeof (i));
+	}
+	EventList::EventsI get_iterator (void) {
+		EventList::EventsI i;
+		assert (sizeof (i) <= sizeof (EventId));
+		strncpy ((char *)&i, (char *)&m_id, sizeof (i));
+		return i;
+	}
+};
+
 EventList::EventList ()
 {}
 EventList::~EventList ()
 {}
-void 
+EventId 
 EventList::insert_at_us (Event *event, uint64_t time)
 {
 	for (EventsI i = m_events.begin (); i != m_events.end (); i++) {
 		if ((*i).second > time) {
 			m_events.insert (i, std::make_pair (event, time));
-			return;
+			return EventListId (i);
 		}
 	}
 	m_events.push_back (std::make_pair (event, time));
 	TRACE ("inserted " << time);
 	print_debug ();
+	return EventListId (--(m_events.end ()));
 }
 Event *
 EventList::peek_next (void)
@@ -74,6 +96,15 @@ void
 EventList::remove_next (void)
 {
 	m_events.pop_front ();
+}
+
+Event *
+EventList::remove (EventId id)
+{
+	EventListId real_id (id);
+	Event *event = (*(real_id.get_iterator ())).first;
+	m_events.erase (real_id.get_iterator ());
+	return event;
 }
 
 void 
