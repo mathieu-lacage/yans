@@ -30,6 +30,8 @@ using namespace yans;
 
 #include "sys/time.h"
 
+bool g_debug = false;
+
 class Time {
 public:
 	void start (void);
@@ -126,6 +128,9 @@ Bench::cb (void)
 	if (m_current == m_distribution.end ()) {
 		m_current = m_distribution.begin ();
 	}
+	if (g_debug) {
+		std::cerr << "event at " << Simulator::now_s () << std::endl;
+	}
 	Simulator::insert_in_us (*m_current, make_event (&Bench::cb, this));
 	m_current++;
 	m_n++;
@@ -135,10 +140,23 @@ int main (int argc, char *argv[])
 {
 	char const *filename = argv[1];
 	std::istream *input;
+	argc-=2;
+	argv+= 2;
 	if (strcmp (filename, "-") == 0) {
 		input = &std::cin;
 	} else {
 		input = new std::ifstream (filename);
+	}
+	while (argc > 0) {
+		if (strcmp ("--list", argv[0]) == 0) {
+			Simulator::set_linked_list ();
+		} else if (strcmp ("--heap", argv[0]) == 0) {
+			Simulator::set_binary_heap ();
+		} else if (strcmp ("--debug", argv[0]) == 0) {
+			g_debug = true;
+		}
+		argc--;
+		argv++;
 	}
 	Bench *bench = new Bench ();
 	bench->read_distribution (*input);

@@ -183,12 +183,23 @@ SimulatorPrivate::remove (EventId id)
 
 
 #include "event-list.h"
+#include "event-binary-heap.h"
 
 
 namespace yans {
 
 SimulatorPrivate *Simulator::m_priv = 0;
 Simulator::ListType Simulator::m_list_type = LINKED_LIST;
+
+void Simulator::set_linked_list (void)
+{
+	m_list_type = LINKED_LIST;
+}
+void Simulator::set_binary_heap (void)
+{
+	m_list_type = BINARY_HEAP;
+}
+
 
 SimulatorPrivate *
 Simulator::get_priv (void)
@@ -200,8 +211,7 @@ Simulator::get_priv (void)
 			events = new EventList ();
 			break;
 		case BINARY_HEAP:
-			//events = new BinaryHeap ();
-			events = 0;
+			events = new EventBinaryHeap ();
 			break;
 		default: // not reached
 			events = 0;

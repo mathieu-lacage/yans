@@ -24,10 +24,12 @@
 
 #include "event-list-base.h"
 #include <stdint.h>
+#include <vector>
 
 namespace yans {
 
 class Event;
+class EventHolder;
 
 class EventBinaryHeap : public EventListBase {
 public:
@@ -45,6 +47,25 @@ public:
 	virtual void clear (void);
 	virtual void print_debug (void);
 private:
+	typedef std::vector<std::pair<EventHolder *, uint64_t> > BinaryHeap;
+
+	uint32_t parent (uint32_t id) const;
+	uint32_t sibling (uint32_t id) const;
+	uint32_t left_child (uint32_t id) const;
+	uint32_t right_child (uint32_t id) const;
+	uint32_t root (void) const;
+	uint32_t last (void) const;
+	bool is_root (uint32_t id) const;
+	bool is_bottom (uint32_t id) const;
+	bool is_less (uint32_t a, uint32_t b);
+	bool is_empty (void) const;
+	uint32_t smallest (uint32_t a, uint32_t b);
+
+	void exch (uint32_t a, uint32_t b);
+	void bottom_up (void);
+	void top_down (void);
+
+	BinaryHeap m_heap;
 };
 
 }; // namespace yans

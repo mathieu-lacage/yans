@@ -47,12 +47,12 @@ public:
 	EventListId (EventId id) : EventId (id) {}
 	EventListId (EventList::EventsI i) {
 		assert (sizeof (i) <= sizeof (EventId));
-		strncpy ((char *)&m_id, (char *)&i, sizeof (i));
+		strncpy ((char *)this, (char *)&i, sizeof (i));
 	}
 	EventList::EventsI get_iterator (void) {
 		EventList::EventsI i;
 		assert (sizeof (i) <= sizeof (EventId));
-		strncpy ((char *)&i, (char *)&m_id, sizeof (i));
+		strncpy ((char *)&i, (char *)this, sizeof (i));
 		return i;
 	}
 };

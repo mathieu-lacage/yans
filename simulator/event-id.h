@@ -26,8 +26,13 @@ namespace yans {
 class EventId {
 public:
 	EventId () : m_id (0) {}
+	EventId (void *id) : m_id (id) {}
 	~EventId ()  { m_id = (void*)0xdeadbeaf;}
 protected:
+	void *get_id (void) {
+		return m_id;
+	}
+private:
 	void *m_id;
 };
 
