@@ -53,7 +53,6 @@ public:
 	Ipv4Address m_saddress;
 	uint16_t m_sport;
 	uint16_t m_dport;
-	static uint32_t m_tag;
 };
 
 class TagInIpv4 : public Tag {
@@ -78,7 +77,6 @@ public:
 	Ipv4Address m_saddress;
 	uint16_t m_sport;
 	uint16_t m_dport;
-	static uint32_t m_tag;
 };
 
 }; // namespace yans

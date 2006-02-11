@@ -23,8 +23,6 @@
 
 namespace yans {
 
-uint32_t TagOutIpv4::m_tag = TagManager::instance ()->register_tag ("out-ipv4");
-
 TagOutIpv4::TagOutIpv4 (Route const*route)
 	: m_route (*route)
 {}
@@ -79,12 +77,12 @@ TagOutIpv4::get_route (void)
 uint32_t 
 TagOutIpv4::get_tag (void)
 {
-	return m_tag;
+	static uint32_t tag = TagManager::instance ()->register_tag ("out-ipv4");
+	return tag;
 }
 
 
 
-uint32_t TagInIpv4::m_tag = TagManager::instance ()->register_tag ("in-ipv4");
 
 TagInIpv4::TagInIpv4 (NetworkInterface *interface)
 	: m_interface (interface)
@@ -141,7 +139,8 @@ TagInIpv4::get_interface (void)
 uint32_t 
 TagInIpv4::get_tag (void)
 {
-	return m_tag;
+	static uint32_t tag = TagManager::instance ()->register_tag ("in-ipv4");
+	return tag;
 }
 
 }; // namespace yans
