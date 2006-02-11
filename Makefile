@@ -4,7 +4,7 @@ include ./functions.mk
 include ./platform.mk
 
 PACKAGE_NAME=yans
-PACKAGE_VERSION=0.6
+PACKAGE_VERSION=0.7
 TOP_BUILD_DIR=$(TOP)/bin
 TOP_SRC_DIR=$(TOP)
 DEFINES=-DRUN_SELF_TESTS=1
