@@ -32,7 +32,7 @@
  *    to move one if statement out of the loop.
  */
 
-#include "event-binary-heap.h"
+#include "scheduler-heap.h"
 
 #define noTRACE_HEAP 1
 
@@ -81,7 +81,7 @@ private:
 	uint32_t m_index;
 };
 
-EventBinaryHeap::EventBinaryHeap ()
+SchedulerHeap::SchedulerHeap ()
 {
 	// we purposedly waste an item at the start of
 	// the array to make sure the indexes in the
@@ -89,57 +89,57 @@ EventBinaryHeap::EventBinaryHeap ()
 	m_heap.push_back (std::make_pair ((EventHolder *)0, 0));
 }
 
-EventBinaryHeap::~EventBinaryHeap ()
+SchedulerHeap::~SchedulerHeap ()
 {}
 
 uint32_t 
-EventBinaryHeap::parent (uint32_t id) const
+SchedulerHeap::parent (uint32_t id) const
 {
 	return id / 2;
 }
 uint32_t 
-EventBinaryHeap::sibling (uint32_t id) const
+SchedulerHeap::sibling (uint32_t id) const
 {
 	return id + 1;
 }
 uint32_t 
-EventBinaryHeap::left_child (uint32_t id) const
+SchedulerHeap::left_child (uint32_t id) const
 {
 	return id * 2;
 }
 uint32_t 
-EventBinaryHeap::right_child (uint32_t id) const
+SchedulerHeap::right_child (uint32_t id) const
 {
 	return id * 2 + 1;
 }
 
 uint32_t
-EventBinaryHeap::root (void) const
+SchedulerHeap::root (void) const
 {
 	return 1;
 }
 
 bool
-EventBinaryHeap::is_root (uint32_t id) const
+SchedulerHeap::is_root (uint32_t id) const
 {
 	return (id == root ())?true:false;
 }
 
 uint32_t
-EventBinaryHeap::last (void) const
+SchedulerHeap::last (void) const
 {
 	return m_heap.size () - 1;
 }
 
 
 bool
-EventBinaryHeap::is_bottom (uint32_t id) const
+SchedulerHeap::is_bottom (uint32_t id) const
 {
 	return (id >= m_heap.size ())?true:false;
 }
 
 void
-EventBinaryHeap::exch (uint32_t a, uint32_t b) 
+SchedulerHeap::exch (uint32_t a, uint32_t b) 
 {
 	assert (b < m_heap.size () && a < m_heap.size ());
 	TRACE ("exch " << a << ", " << b);
@@ -151,25 +151,25 @@ EventBinaryHeap::exch (uint32_t a, uint32_t b)
 }
 
 bool
-EventBinaryHeap::is_less (uint32_t a, uint32_t b)
+SchedulerHeap::is_less (uint32_t a, uint32_t b)
 {
 	return (m_heap[a].second < m_heap[b].second)?true:false;
 }
 
 uint32_t 
-EventBinaryHeap::smallest (uint32_t a, uint32_t b)
+SchedulerHeap::smallest (uint32_t a, uint32_t b)
 {
 	return is_less (a,b)?a:b;
 }
 
 bool
-EventBinaryHeap::is_empty (void) const
+SchedulerHeap::is_empty (void) const
 {
 	return (m_heap.size () == 1)?true:false;
 }
 
 void
-EventBinaryHeap::bottom_up (void)
+SchedulerHeap::bottom_up (void)
 {
 	uint32_t index = last ();
 	while (!is_root (index) && 
@@ -180,7 +180,7 @@ EventBinaryHeap::bottom_up (void)
 }
 
 void
-EventBinaryHeap::top_down (void)
+SchedulerHeap::top_down (void)
 {
 	uint32_t index = root ();
 	uint32_t right = right_child (index);
@@ -210,7 +210,7 @@ EventBinaryHeap::top_down (void)
 
 
 EventId 
-EventBinaryHeap::insert_at_us (Event *event, uint64_t time)
+SchedulerHeap::insert_at_us (Event *event, uint64_t time)
 {
 	EventHolder *holder = new EventHolder (event);
 	m_heap.push_back (std::make_pair (holder, time));
@@ -220,7 +220,7 @@ EventBinaryHeap::insert_at_us (Event *event, uint64_t time)
 }
 
 Event   *
-EventBinaryHeap::peek_next (void)
+SchedulerHeap::peek_next (void)
 {
 	if (is_empty ()) {
 		return 0;
@@ -228,7 +228,7 @@ EventBinaryHeap::peek_next (void)
 	return m_heap[root ()].first->get_event ();
 }
 uint64_t 
-EventBinaryHeap::peek_next_time_us (void)
+SchedulerHeap::peek_next_time_us (void)
 {
 	if (is_empty ()) {
 		return 0;
@@ -236,7 +236,7 @@ EventBinaryHeap::peek_next_time_us (void)
 	return m_heap[root ()].second;
 }
 void     
-EventBinaryHeap::remove_next (void)
+SchedulerHeap::remove_next (void)
 {
 	assert (!is_empty ());
 	exch (root (), last ());
@@ -246,7 +246,7 @@ EventBinaryHeap::remove_next (void)
 }
 
 Event *
-EventBinaryHeap::remove (EventId fake_id)
+SchedulerHeap::remove (EventId fake_id)
 {
 	EventIdHeap id = EventIdHeap (fake_id);
 	exch (id.get_holder ()->get_index (), last ());
@@ -257,10 +257,10 @@ EventBinaryHeap::remove (EventId fake_id)
 }
 
 void 
-EventBinaryHeap::clear (void)
+SchedulerHeap::clear (void)
 {}
 void 
-EventBinaryHeap::print_debug (void)
+SchedulerHeap::print_debug (void)
 {}
 
 }; // namespace yans

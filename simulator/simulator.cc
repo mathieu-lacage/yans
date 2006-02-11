@@ -21,7 +21,7 @@
 
 #include "simulator.h"
 #include "clock.h"
-#include "event-list-base.h"
+#include "scheduler.h"
 #include "event.h"
 #include <math.h>
 #include <cassert>
@@ -45,7 +45,7 @@ namespace yans {
 
 class SimulatorPrivate {
 public:
-	SimulatorPrivate (EventListBase *events);
+	SimulatorPrivate (Scheduler *events);
 	~SimulatorPrivate ();
 
 	void run (void);
@@ -67,10 +67,10 @@ private:
 	Events m_destroy;
 	bool m_stop;
 	Clock *m_clock;
-	EventListBase *m_events;
+	Scheduler *m_events;
 };
 
-SimulatorPrivate::SimulatorPrivate (EventListBase *events)
+SimulatorPrivate::SimulatorPrivate (Scheduler *events)
 {
 	m_stop = false;
 	m_clock = new Clock ();
@@ -88,7 +88,7 @@ SimulatorPrivate::~SimulatorPrivate ()
 	delete m_clock;
 	m_clock = (Clock *)0xdeadbeaf;
 	delete m_events;
-	m_events = (EventListBase *)0xdeadbeaf;
+	m_events = (Scheduler *)0xdeadbeaf;
 }
 
 void
@@ -182,8 +182,8 @@ SimulatorPrivate::remove (EventId id)
 }; // namespace yans
 
 
-#include "event-list.h"
-#include "event-binary-heap.h"
+#include "scheduler-list.h"
+#include "scheduler-heap.h"
 
 
 namespace yans {
@@ -205,13 +205,13 @@ SimulatorPrivate *
 Simulator::get_priv (void)
 {
 	if (m_priv == 0) {
-		EventListBase *events;
+		Scheduler *events;
 		switch (m_list_type) {
 		case LINKED_LIST:
-			events = new EventList ();
+			events = new SchedulerList ();
 			break;
 		case BINARY_HEAP:
-			events = new EventBinaryHeap ();
+			events = new SchedulerHeap ();
 			break;
 		default: // not reached
 			events = 0;

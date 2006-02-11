@@ -19,7 +19,7 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "event-list.h"
+#include "scheduler-list.h"
 #include "clock.h"
 #include "event.h"
 #include <utility>
@@ -45,24 +45,24 @@ namespace yans {
 class EventListId : public EventId {
 public:
 	EventListId (EventId id) : EventId (id) {}
-	EventListId (EventList::EventsI i) {
+	EventListId (SchedulerList::EventsI i) {
 		assert (sizeof (i) <= sizeof (EventId));
 		strncpy ((char *)this, (char *)&i, sizeof (i));
 	}
-	EventList::EventsI get_iterator (void) {
-		EventList::EventsI i;
+	SchedulerList::EventsI get_iterator (void) {
+		SchedulerList::EventsI i;
 		assert (sizeof (i) <= sizeof (EventId));
 		strncpy ((char *)&i, (char *)this, sizeof (i));
 		return i;
 	}
 };
 
-EventList::EventList ()
+SchedulerList::SchedulerList ()
 {}
-EventList::~EventList ()
+SchedulerList::~SchedulerList ()
 {}
 EventId 
-EventList::insert_at_us (Event *event, uint64_t time)
+SchedulerList::insert_at_us (Event *event, uint64_t time)
 {
 	for (EventsI i = m_events.begin (); i != m_events.end (); i++) {
 		if ((*i).second > time) {
@@ -76,7 +76,7 @@ EventList::insert_at_us (Event *event, uint64_t time)
 	return EventListId (--(m_events.end ()));
 }
 Event *
-EventList::peek_next (void)
+SchedulerList::peek_next (void)
 {
 	if (m_events.empty ()) {
 		return 0;
@@ -84,7 +84,7 @@ EventList::peek_next (void)
 	return m_events.front ().first;
 }
 uint64_t
-EventList::peek_next_time_us (void)
+SchedulerList::peek_next_time_us (void)
 {
 	if (m_events.empty ()) {
 		return 0;
@@ -93,13 +93,13 @@ EventList::peek_next_time_us (void)
 }
 
 void
-EventList::remove_next (void)
+SchedulerList::remove_next (void)
 {
 	m_events.pop_front ();
 }
 
 Event *
-EventList::remove (EventId id)
+SchedulerList::remove (EventId id)
 {
 	EventListId real_id (id);
 	Event *event = (*(real_id.get_iterator ())).first;
@@ -108,7 +108,7 @@ EventList::remove (EventId id)
 }
 
 void 
-EventList::clear (void)
+SchedulerList::clear (void)
 {
 	/* We cannot really delete the items left in the event heap.
 	 * Items are left only when the user calls Simulator::stop ()
@@ -117,7 +117,7 @@ EventList::clear (void)
 }
 
 void 
-EventList::print_debug (void)
+SchedulerList::print_debug (void)
 {
 	for (EventsI i = m_events.begin (); i != m_events.end (); i++) {
 		TRACE ("time: " << (*i).second);

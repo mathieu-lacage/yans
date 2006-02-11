@@ -1,6 +1,6 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 /*
- * Copyright (c) 2005 INRIA
+ * Copyright (c) 2006 INRIA
  * All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -19,37 +19,8 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#ifndef EVENT_LIST_BASE_H
-#define EVENT_LIST_BASE_H
-
-#include <stdint.h>
-#include "event-id.h"
-
-namespace yans {
-
-class Event;
-
-class EventListBase {
- public:
-	virtual ~EventListBase () = 0;
-
-	/* the insert operations might be veeery slow
-	 * but peek_next and remove_next should be
-	 * really fast.
-	 */
-	virtual EventId insert_at_us (Event *event, uint64_t time) = 0;
-
-	virtual Event   *peek_next (void) = 0;
-	virtual uint64_t peek_next_time_us (void) = 0;
-	virtual void     remove_next (void) = 0;
-
-	virtual Event *remove (EventId id) = 0;
-
-	virtual void clear (void) = 0;
-	virtual void print_debug (void) = 0;
-};
-
-}; // namespace yans
+#include "scheduler.h"
 
 
-#endif /* EVENT_LIST_BASE_H */
+yans::Scheduler::~Scheduler () 
+{}

@@ -19,10 +19,10 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#ifndef EVENT_BINARY_HEAP_H
-#define EVENT_BINARY_HEAP_H
+#ifndef SCHEDULER_HEAP_H
+#define SCHEDULER_HEAP_H
 
-#include "event-list-base.h"
+#include "scheduler.h"
 #include <stdint.h>
 #include <vector>
 
@@ -31,10 +31,10 @@ namespace yans {
 class Event;
 class EventHolder;
 
-class EventBinaryHeap : public EventListBase {
+class SchedulerHeap : public Scheduler {
 public:
-	EventBinaryHeap ();
-	virtual ~EventBinaryHeap ();
+	SchedulerHeap ();
+	virtual ~SchedulerHeap ();
 
 	virtual EventId insert_at_us (Event *event, uint64_t time);
 
@@ -71,4 +71,4 @@ private:
 }; // namespace yans
 
 
-#endif /* EVENT_BINARY_HEAP_H */
+#endif /* SCHEDULER_HEAP_H */

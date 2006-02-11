@@ -19,10 +19,10 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#ifndef EVENT_LIST_H
-#define EVENT_LIST_H
+#ifndef SCHEDULER_LIST_H
+#define SCHEDULER_LIST_H
 
-#include "event-list-base.h"
+#include "scheduler.h"
 #include <list>
 #include <utility>
 #include <stdint.h>
@@ -31,10 +31,10 @@ namespace yans {
 
 class Event;
 
-class EventList : public EventListBase {
+class SchedulerList : public Scheduler {
  public:
-	EventList ();
-	virtual ~EventList ();
+	SchedulerList ();
+	virtual ~SchedulerList ();
 
 	/* the insert operations might be veeery slow
 	 * but peek_next and remove_next should be
@@ -60,4 +60,4 @@ class EventList : public EventListBase {
 }; // namespace yans
 
 
-#endif /* EVENT_LIST_H */
+#endif /* SCHEDULER_LIST_H */
