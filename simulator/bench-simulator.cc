@@ -1,6 +1,6 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 /*
- * Copyright (c) 2005 INRIA
+ * Copyright (c) 2006 INRIA
  * All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
