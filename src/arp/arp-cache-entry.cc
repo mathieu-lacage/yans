@@ -119,6 +119,7 @@ ArpCacheEntry::is_expired (void)
 		break;
 	default:
 		assert (false);
+		timeout = 0.0;
 		/* NOTREACHED */
 		break;
 	}
