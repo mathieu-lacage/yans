@@ -25,9 +25,9 @@ INCLUDES=\
  $(NULL)
 OPTI_FLAGS=-O0
 FLAGS=-Wall -Werror -g3 $(OPTI_FLAGS)
-PYTHON_PREFIX_INC=/usr/include/python2.4
+PYTHON_PREFIX_INC=/usr/include/python2.3
 PYTHON_PREFIX_LIB=/usr/lib
-PYTHON_BIN=/usr/bin/python2.4
+PYTHON_BIN=/usr/bin/python2.3
 BOOST_PREFIX_LIB=/usr/lib
 BOOST_PREFIX_INC=/usr/include
 #TCP=bsd
@@ -102,6 +102,7 @@ YANS_SRC= \
 	src/apps/tcp-sink.cc \
 	src/apps/periodic-generator.cc \
 	src/apps/traffic-analyser.cc \
+	src/80211/chunk-mac-80211-hdr.cc \
 	test/test.cc \
 	$(NULL)
 YANS_HDR = \
@@ -161,6 +162,7 @@ YANS_HDR = \
 	src/apps/tcp-sink.h \
 	src/apps/traffic-analyser.h \
 	src/apps/udp-source.h \
+	src/80211/chunk-mac-80211-hdr.h \
 	src/host/host.h \
 	src/host/loopback-interface.h \
 	src/host/network-interface.h \
