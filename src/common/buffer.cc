@@ -216,8 +216,7 @@ void
 Buffer::skip (int32_t delta)
 {
 	if (delta < 0) {
-		uint32_t uidelta = -delta;
-		assert (m_current >= uidelta);
+		assert (m_current >= ((uint32_t)-delta));
 	}
 	uint32_t new_current = m_current + delta;
 	assert (new_current <= m_size);

@@ -1,10 +1,13 @@
+TOP=.
+NULL=
+
+
 all: build
 
-include ./functions.mk
 include ./platform.mk
 
 PACKAGE_NAME=yans
-PACKAGE_VERSION=0.6
+PACKAGE_VERSION=0.7
 TOP_BUILD_DIR=$(TOP)/bin
 TOP_SRC_DIR=$(TOP)
 DEFINES=-DRUN_SELF_TESTS=1
@@ -20,15 +23,16 @@ INCLUDES=\
  -I$(TOP_SRC_DIR)/src/os-model \
  -I$(TOP_SRC_DIR)/src/apps \
  $(NULL)
-FLAGS=-Wall -Werror -O3 -gdwarf-2 -g3
-PYTHON_PREFIX_INC=/usr/include/python2.3
+OPTI_FLAGS=-O0
+FLAGS=-Wall -Werror -g3 $(OPTI_FLAGS)
+PYTHON_PREFIX_INC=/usr/include/python2.4
 PYTHON_PREFIX_LIB=/usr/lib
-PYTHON_BIN=/usr/bin/python2.3
+PYTHON_BIN=/usr/bin/python2.4
 BOOST_PREFIX_LIB=/usr/lib
 BOOST_PREFIX_INC=/usr/include
 #TCP=bsd
 
-LDFLAGS=
+LDFLAGS+=
 CXXFLAGS+=$(FLAGS) $(INCLUDES) $(DEFINES)
 CFLAGS+=$(FLAGS) $(INCLUDES) $(DEFINES)
 
@@ -42,7 +46,9 @@ PACKAGE_DIST= \
 # building of libyans.so
 YANS_SRC= \
 	simulator/clock.cc \
-	simulator/event-heap.cc \
+	simulator/scheduler.cc \
+	simulator/scheduler-list.cc \
+	simulator/scheduler-heap.cc \
 	simulator/event.cc \
 	simulator/simulator.cc \
 	$(FIBER_CONTEXT_PLATFORM) \
@@ -101,11 +107,14 @@ YANS_SRC= \
 YANS_HDR = \
 	test/test.h \
 	simulator/event.h \
+	simulator/event-id.h \
 	simulator/event.tcc \
 	simulator/simulator.h \
 	simulator/callback-event.tcc \
 	simulator/clock.h \
-	simulator/event-heap.h \
+	simulator/scheduler.h \
+	simulator/scheduler-list.h \
+	simulator/scheduler-heap.h \
 	src/common/buffer.h \
 	src/common/data-writer.h \
 	src/common/pcap-writer.h \
@@ -168,7 +177,7 @@ YANS_HDR = \
 YANS_CXXFLAGS=$(CXXFLAGS) $(call gen-lib-build-flags)
 YANS_CFLAGS=$(CFLAGS) $(call gen-lib-build-flags)
 YANS_LDFLAGS=$(LDFLAGS) $(call gen-lib-link-flags)
-YANS_OUTPUT=$(TOP_BUILD_DIR)/$(call gen-lib-name, yans)
+YANS_OUTPUT=$(call gen-lib-name, yans)
 ifeq ($(TCP),bsd)
 YANS_SRC += \
 	src/ipv4/tcp-bsd/tcp-bsd-connection.cc
@@ -176,55 +185,68 @@ YANS_CXXFLAGS += -DTCP_USE_BSD
 YANS_CXXFLAGS += -I$(TOP_SRC_DIR)/src/ipv4/tcp-bsd/
 endif
 
+# the benchmark for the simulator
+BENCH_SRC=simulator/bench-simulator.cc
+BENCH_OUTPUT=simulator/bench-simulator
+BENCH_CXXFLAGS=$(CXXFLAGS)
+BENCH_LDFLAGS=$(LDFLAGS) -lyans -L$(TOP_BUILD_DIR)
+
 
 # building of main-test
 TEST_SRC=test/main-test.cc
-TEST_OUTPUT=$(call gen-bin, test/main-test)
+TEST_OUTPUT=test/main-test
 TEST_CXXFLAGS=$(CXXFLAGS)
 TEST_LDFLAGS=$(LDFLAGS) -lyans -L$(TOP_BUILD_DIR)
 
 # building of sample applications
 SAMPLE_CXX_SIMU_SRC= \
-	samples/main-forwarding-simulator.cc \
+	samples/main-simulator.cc \
 	$(NULL)
-SAMPLE_CXX_SIMU_OUTPUT=$(call gen-bin, $(basename $(SAMPLE_CXX_SIMU_SRC)))
+SAMPLE_CXX_SIMU_OUTPUT=$(basename $(SAMPLE_CXX_SIMU_SRC))
 SAMPLE_CXX_SIMU_CXXFLAGS=$(CXXFLAGS)
 SAMPLE_CXX_SIMU_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans
+
+SAMPLE_CXX_SIMU_FOR_SRC= \
+	samples/main-forwarding-simulator.cc \
+	$(NULL)
+SAMPLE_CXX_SIMU_FOR_OUTPUT=$(basename $(SAMPLE_CXX_SIMU_FOR_SRC))
+SAMPLE_CXX_SIMU_FOR_CXXFLAGS=$(CXXFLAGS)
+SAMPLE_CXX_SIMU_FOR_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans
 
 SAMPLE_CXX_SIMUTEMP_SRC= \
 	samples/main-forwarding-simulator-template.cc \
 	$(NULL)
-SAMPLE_CXX_SIMUTEMP_OUTPUT=$(call gen-bin, $(basename $(SAMPLE_CXX_SIMUTEMP_SRC)))
+SAMPLE_CXX_SIMUTEMP_OUTPUT=$(basename $(SAMPLE_CXX_SIMUTEMP_SRC))
 SAMPLE_CXX_SIMUTEMP_CXXFLAGS=$(CXXFLAGS)
 SAMPLE_CXX_SIMUTEMP_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans
 
 SAMPLE_CXX_SIMPLE_SRC= \
 	samples/main-simple.cc \
 	$(NULL)
-SAMPLE_CXX_SIMPLE_OUTPUT=$(call gen-bin, $(basename $(SAMPLE_CXX_SIMPLE_SRC)))
+SAMPLE_CXX_SIMPLE_OUTPUT=$(basename $(SAMPLE_CXX_SIMPLE_SRC))
 SAMPLE_CXX_SIMPLE_CXXFLAGS=$(CXXFLAGS)
 SAMPLE_CXX_SIMPLE_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans
 
 SAMPLE_CXX_ROUTER_SRC= \
 	samples/main-router.cc \
 	$(NULL)
-SAMPLE_CXX_ROUTER_OUTPUT=$(call gen-bin, $(basename $(SAMPLE_CXX_ROUTER_SRC)))
+SAMPLE_CXX_ROUTER_OUTPUT=$(basename $(SAMPLE_CXX_ROUTER_SRC))
 SAMPLE_CXX_ROUTER_CXXFLAGS=$(CXXFLAGS)
 SAMPLE_CXX_ROUTER_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans
 
 SAMPLE_CXX_TCP_SRC= \
 	samples/main-tcp.cc \
 	$(NULL)
-SAMPLE_CXX_TCP_OUTPUT=$(call gen-bin, $(basename $(SAMPLE_CXX_TCP_SRC)))
+SAMPLE_CXX_TCP_OUTPUT=$(basename $(SAMPLE_CXX_TCP_SRC))
 SAMPLE_CXX_TCP_CXXFLAGS=$(CXXFLAGS)
 SAMPLE_CXX_TCP_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans
 
 SAMPLE_CXX_THREAD_SRC= \
 	samples/main-thread.cc \
 	$(NULL)
-SAMPLE_CXX_TREAD_OUTPUT=$(call gen-bin, $(basename $(SAMPLE_CXX_THREAD_SRC)))
-SAMPLE_CXX_TREAD_CXXFLAGS=$(CXXFLAGS)
-SAMPLE_CXX_TREAD_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans
+SAMPLE_CXX_THREAD_OUTPUT=$(basename $(SAMPLE_CXX_THREAD_SRC))
+SAMPLE_CXX_THREAD_CXXFLAGS=$(CXXFLAGS)
+SAMPLE_CXX_THREAD_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans
 
 
 
@@ -265,21 +287,27 @@ YANS_PYTHON_HDR= \
 	python/export-callback.tcc \
 	python/export-callback-traits.tcc \
 	$(NULL)
-YANS_PYTHON_OUTPUT=$(TOP_BUILD_DIR)/python/$(call gen-pymod-name, _yans)
+YANS_PYTHON_OUTPUT=python/$(call gen-pymod-name, _yans)
 YANS_PYTHON_CXXFLAGS=$(CXXFLAGS) $(call gen-pymod-build-flags)
 YANS_PYTHON_LDFLAGS=$(LDFLAGS) $(call gen-pymod-link-flags) -lyans -L$(TOP_BUILD_DIR)
 
 
 ALL= \
 	YANS \
+	BENCH \
 	TEST \
 	SAMPLE_CXX_SIMPLE \
 	SAMPLE_CXX_ROUTER \
 	SAMPLE_CXX_TCP \
 	SAMPLE_CXX_SIMU \
+	SAMPLE_CXX_SIMU_FOR \
 	SAMPLE_CXX_SIMUTEMP \
 	SAMPLE_CXX_THREAD \
 	YANS_PYTHON \
 	$(NULL)
+
+run-opti-arc-profile-hook:
+	LD_LIBRARY_PATH=bin/opti-arc $(TOP_BUILD_DIR)/opti-arc/samples/main-simple --slow --heap
+
 
 include rules.mk

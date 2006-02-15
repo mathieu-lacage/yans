@@ -1,6 +1,6 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 /*
- * Copyright (c) 2005 INRIA
+ * Copyright (c) 2005,2006 INRIA
  * All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -21,10 +21,11 @@
 
 #include "simulator.h"
 #include "clock.h"
-#include "event-heap.h"
+#include "scheduler.h"
 #include "event.h"
 #include <math.h>
 #include <cassert>
+#include <list>
 
 #define noTRACE_SIMU 1
 
@@ -44,16 +45,17 @@ namespace yans {
 
 class SimulatorPrivate {
 public:
-	SimulatorPrivate ();
+	SimulatorPrivate (Scheduler *events);
 	~SimulatorPrivate ();
 
 	void run (void);
 	void stop (void);
-	void insert_in_us (Event *event, uint64_t delta);
-	void insert_at_us (Event *event, uint64_t time);
+	EventId insert_in_us (Event *event, uint64_t delta);
+	EventId insert_in_s (Event *event, double delta);
+	EventId insert_at_us (Event *event, uint64_t time);
+	EventId insert_at_s (Event *event, double time);
+	Event *remove (EventId id);
 	uint64_t now_us (void);
-	void insert_in_s (Event *event, double delta);
-	void insert_at_s (Event *event, double time);
 	double now_s (void);
 	void insert_later (Event *event);
 	void insert_at_destroy (Event *event);
@@ -65,14 +67,14 @@ private:
 	Events m_destroy;
 	bool m_stop;
 	Clock *m_clock;
-	EventHeap *m_event_heap;
+	Scheduler *m_events;
 };
 
-SimulatorPrivate::SimulatorPrivate ()
+SimulatorPrivate::SimulatorPrivate (Scheduler *events)
 {
 	m_stop = false;
 	m_clock = new Clock ();
-	m_event_heap = new EventHeap ();
+	m_events = events;
 }
 
 SimulatorPrivate::~SimulatorPrivate ()
@@ -85,8 +87,8 @@ SimulatorPrivate::~SimulatorPrivate ()
 	}
 	delete m_clock;
 	m_clock = (Clock *)0xdeadbeaf;
-	delete m_event_heap;
-	m_event_heap = (EventHeap *)0xdeadbeaf;
+	delete m_events;
+	m_events = (Scheduler *)0xdeadbeaf;
 }
 
 void
@@ -104,16 +106,16 @@ void
 SimulatorPrivate::run (void)
 {
 	handle_immediate ();
-	Event *next_ev = m_event_heap->peek_next ();
-	uint64_t next_now = m_event_heap->peek_next_time_us ();
+	Event *next_ev = m_events->peek_next ();
+	uint64_t next_now = m_events->peek_next_time_us ();
 	while (next_ev != 0 && !m_stop) {
-		m_event_heap->remove_next ();
+		m_events->remove_next ();
 		m_clock->update_current_us (next_now);
 		TRACE ("handle " << next_ev);
 		next_ev->notify ();
 		handle_immediate ();
-		next_ev = m_event_heap->peek_next ();
-		next_now = m_event_heap->peek_next_time_us ();
+		next_ev = m_events->peek_next ();
+		next_now = m_events->peek_next_time_us ();
 	}
 }
 
@@ -122,37 +124,37 @@ SimulatorPrivate::stop (void)
 {
 	m_stop = true;
 }
-void 
+EventId  
 SimulatorPrivate::insert_in_us (Event *event, uint64_t delta)
 {
 	uint64_t current = m_clock->get_current_us ();
-	m_event_heap->insert_at_us (event, current+delta);
+	return m_events->insert_at_us (event, current+delta);
 }
-void 
+EventId 
 SimulatorPrivate::insert_at_us (Event *event, uint64_t time)
 {
 	assert (time >= m_clock->get_current_us ());
-	m_event_heap->insert_at_us (event, time);
+	return m_events->insert_at_us (event, time);
 }
 uint64_t 
 SimulatorPrivate::now_us (void)
 {
 	return m_clock->get_current_us ();
 }
-void 
+EventId 
 SimulatorPrivate::insert_in_s (Event *event, double delta)
 {
 	uint64_t now_us = m_clock->get_current_us ();
 	int64_t delta_us = (int64_t)(delta * 1000000.0);
 	uint64_t us = now_us + delta_us;
-	m_event_heap->insert_at_us (event, us);
+	return m_events->insert_at_us (event, us);
 }
-void 
+EventId 
 SimulatorPrivate::insert_at_s (Event *event, double time)
 {
 	int64_t us = (int64_t)(time * 1000000.0);
 	assert (us >= 0);
-	m_event_heap->insert_at_us (event, (uint64_t)us);
+	return m_events->insert_at_us (event, (uint64_t)us);
 }
 double 
 SimulatorPrivate::now_s (void)
@@ -170,22 +172,53 @@ SimulatorPrivate::insert_at_destroy (Event *event)
 	m_destroy.push_back (event);
 }
 
+Event *
+SimulatorPrivate::remove (EventId id)
+{
+	return m_events->remove (id);
+}
 
 
+}; // namespace yans
 
 
+#include "scheduler-list.h"
+#include "scheduler-heap.h"
 
 
-
-
+namespace yans {
 
 SimulatorPrivate *Simulator::m_priv = 0;
+Simulator::ListType Simulator::m_list_type = LINKED_LIST;
+
+void Simulator::set_linked_list (void)
+{
+	m_list_type = LINKED_LIST;
+}
+void Simulator::set_binary_heap (void)
+{
+	m_list_type = BINARY_HEAP;
+}
+
 
 SimulatorPrivate *
 Simulator::get_priv (void)
 {
 	if (m_priv == 0) {
-		m_priv = new SimulatorPrivate ();
+		Scheduler *events;
+		switch (m_list_type) {
+		case LINKED_LIST:
+			events = new SchedulerList ();
+			break;
+		case BINARY_HEAP:
+			events = new SchedulerHeap ();
+			break;
+		default: // not reached
+			events = 0;
+			assert (false); 
+			break;
+		}
+		m_priv = new SimulatorPrivate (events);
 	}
 	TRACE_S ("priv " << m_priv);
 	return m_priv;
@@ -209,34 +242,34 @@ Simulator::stop (void)
 	TRACE ("stop");
 	get_priv ()->stop ();
 }
-void 
+EventId 
 Simulator::insert_in_us (uint64_t delta, Event *event)
 {
 	TRACE ("insert " << event << " in " << delta << "us");
-	get_priv ()->insert_in_us (event, delta);
+	return get_priv ()->insert_in_us (event, delta);
 }
-void 
+EventId 
 Simulator::insert_at_us (uint64_t time, Event *event)
 {
 	TRACE ("insert " << event << " at " << time << "us");
-	get_priv ()->insert_at_us (event, time);
+	return get_priv ()->insert_at_us (event, time);
 }
 uint64_t 
 Simulator::now_us (void)
 {
 	return get_priv ()->now_us ();
 }
-void 
+EventId 
 Simulator::insert_in_s (double delta, Event *event)
 {
 	TRACE ("insert " << event << " in " << delta << "s");
-	get_priv ()->insert_in_s (event, delta);
+	return get_priv ()->insert_in_s (event, delta);
 }
-void 
+EventId 
 Simulator::insert_at_s (double time, Event *event)
 {
 	TRACE ("insert " << event << " at " << time << "s");
-	get_priv ()->insert_at_s (event, time);
+	return get_priv ()->insert_at_s (event, time);
 }
 double 
 Simulator::now_s (void)
@@ -254,6 +287,12 @@ Simulator::insert_at_destroy (Event *event)
 {
 	TRACE ("insert at destroy " << event);
 	return get_priv ()->insert_at_destroy (event);
+}
+
+Event *
+Simulator::remove (EventId id)
+{
+	return get_priv ()->remove (id);
 }
 
 }; // namespace yans

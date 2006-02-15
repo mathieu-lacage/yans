@@ -48,15 +48,24 @@ BOOST_PREFIX_LIB=/usr/lib
 BOOST_PREFIX_INC=/usr/include
 Change them to point where your dependencies are installed. If you do
 not want to build them and do not need the python modules, you can
-disable the python code by editing the line:
-all: dirs build build-python
-and removing the "build-python" item
+disable the python code by removing the line:
+  YANS_PYTHON \
+under the make rule for ALL
+
+To build with the BSD TCP code (necessary to run the main-tcp example),
+place the tcp-bsd directory in src/ipv4/tcp-bsd and uncomment the
+#TCP=bsd
+line in the Makefile.
 
 3.1 x86 linux build
 -------------------
 
 Nothing special: just type "make". The x86 target is built by 
-default.
+default.  This file is bin/libyans.so, and the sample executables
+are placed in bin/samples/
+
+It is recommended that you put the yans/bin directory into your 
+LD_LIBRARY_PATH, to pick up the libyans.so. 
 
 3.2 Darwin ppc (tiger) build
 ------------------------------

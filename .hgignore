@@ -1,16 +1,5 @@
-.*\.o
+.*\.o$
 .*~$
-\.deps
 bin
-libyans.so
-python/_simulatormodule.so
 src/ipv4/tcp-bsd
-src/test/main-test
-src/samples/main-simple
-src/samples/main-router
-src/samples/main-tcp
-src/patch
-tmp
-src/tmp
-src/samples/tmp
 patch
