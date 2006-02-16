@@ -521,7 +521,6 @@ ChunkMac80211Hdr::remove_from (Buffer *buffer)
 	m_addr1.deserialize (buffer);
 	switch (m_ctrl_type) {
 	case TYPE_MGT:
-		buffer->add_at_start (2+2+6+6+6+2);
 		m_addr2.deserialize (buffer);
 		m_addr3.deserialize (buffer);
 		set_sequence_control (buffer->read_ntoh_u16 ());
