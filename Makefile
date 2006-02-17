@@ -106,6 +106,7 @@ YANS_SRC= \
 	src/apps/traffic-analyser.cc \
 	src/80211/chunk-mac-80211-hdr.cc \
 	src/80211/chunk-mac-80211-fcs.cc \
+	src/80211/mac-stations.cc \
 	test/test.cc \
 	$(NULL)
 YANS_HDR = \
@@ -171,6 +172,7 @@ YANS_HDR = \
 	src/apps/udp-source.h \
 	src/80211/chunk-mac-80211-hdr.h \
 	src/80211/chunk-mac-80211-fcs.h \
+	src/80211/mac-stations.h \
 	src/host/host.h \
 	src/host/loopback-interface.h \
 	src/host/network-interface.h \
