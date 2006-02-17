@@ -1,6 +1,6 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 /*
- * Copyright (c) 2005 INRIA
+ * Copyright (c) 2005,2006 INRIA
  * All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,33 +16,14 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * In addition, as a special exception, the copyright holders of
- * this module give you permission to combine (via static or
- * dynamic linking) this module with free software programs or
- * libraries that are released under the GNU LGPL and with code
- * included in the standard release of ns-2 under the Apache 2.0
- * license or under otherwise-compatible licenses with advertising
- * requirements (or modified versions of such code, with unchanged
- * license).  You may copy and distribute such a system following the
- * terms of the GNU GPL for this module and the licenses of the
- * other code concerned, provided that you include the source code of
- * that other code when and as the GNU GPL requires distribution of
- * source code.
- *
- * Note that people who make modified versions of this module
- * are not obligated to grant this special exception for their
- * modified versions; it is their choice whether to do so.  The GNU
- * General Public License gives permission to release a modified
- * version without this exception; this exception also makes it
- * possible to release a modified version which carries forward this
- * exception.
- *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #ifndef AARF_MAC_STATIONS_H
 #define AARF_MAC_STATIONS_H
 
 #include "arf-mac-stations.h"
+
+namespace yans {
 
 class AarfMacStations : public ArfMacStations {
 public:
@@ -56,19 +37,21 @@ class AarfMacStation : public ArfMacStation
 {
 public:
 	AarfMacStation (MacStations *stations,
-			double successK,
-			int maxSuccessThreshold,
-			double timerK);
+			double success_k,
+			int max_success_threshold,
+			double timer_k);
 	virtual ~AarfMacStation ();
 
 private:
-	virtual void reportRecoveryFailure (void);
-	virtual void reportFailure (void);
+	virtual void report_recovery_failure (void);
+	virtual void report_failure (void);
 
-	double m_successK;
-        int m_maxSuccessThreshold;
-        double m_timerK;
+	double m_success_k;
+        int m_max_success_threshold;
+        double m_timer_k;
 };
+
+}; // namespace yans
 
 
 #endif /* AARF_MAC_STATIONS_H */

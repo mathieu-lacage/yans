@@ -1,6 +1,6 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 /*
- * Copyright (c) 2005 INRIA
+ * Copyright (c) 2005,2006 INRIA
  * All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,27 +16,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * In addition, as a special exception, the copyright holders of
- * this module give you permission to combine (via static or
- * dynamic linking) this module with free software programs or
- * libraries that are released under the GNU LGPL and with code
- * included in the standard release of ns-2 under the Apache 2.0
- * license or under otherwise-compatible licenses with advertising
- * requirements (or modified versions of such code, with unchanged
- * license).  You may copy and distribute such a system following the
- * terms of the GNU GPL for this module and the licenses of the
- * other code concerned, provided that you include the source code of
- * that other code when and as the GNU GPL requires distribution of
- * source code.
- *
- * Note that people who make modified versions of this module
- * are not obligated to grant this special exception for their
- * modified versions; it is their choice whether to do so.  The GNU
- * General Public License gives permission to release a modified
- * version without this exception; this exception also makes it
- * possible to release a modified version which carries forward this
- * exception.
- *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #ifndef ARF_MAC_STATIONS_H
@@ -44,6 +23,8 @@
 
 #include "mac-stations.h"
 #include "mac-station.h"
+
+namespace yans {
 
 class ArfMacStations : public MacStations {
 public:
@@ -62,16 +43,16 @@ public:
 		       int min_success_threshold);
 	virtual ~ArfMacStation ();
 
-	virtual void reportRxOk (double SNR, int mode);
+	virtual void report_rx_ok (double rx_snr, int tx_mode);
 
-	virtual void reportRTSFailed (void);
-	virtual void reportDataFailed (void);
-	virtual void reportRTSOk (double ctsSNR, int ctsMode);
-	virtual void reportDataOk (double ackSNR, int ackMode);
-	virtual void reportFinalRTSFailed (void);
-	virtual void reportFinalDataFailed (void);
-	virtual int getDataMode (int size);
-	virtual int getRTSMode (void);
+	virtual void report_rts_failed (void);
+	virtual void report_data_failed (void);
+	virtual void report_rts_ok (double cts_snr, int cts_mode);
+	virtual void report_data_ok (double ack_snr, int ack_mode);
+	virtual void report_final_rts_failed (void);
+	virtual void report_final_data_failed (void);
+	virtual int get_data_mode (int size);
+	virtual int get_rts_mode (void);
 
 private:
 	int m_timer;
@@ -89,26 +70,26 @@ private:
 	int m_min_success_threshold;
 	
 private:
-	virtual void reportRecoveryFailure (void);
-	virtual void reportFailure (void);
+	virtual void report_recovery_failure (void);
+	virtual void report_failure (void);
 
-	int getMaxRate (void);
-	int getMinRate (void);
+	int get_max_rate (void);
+	int get_min_rate (void);
 
-	bool needRecoveryFallback (void);
-	bool needNormalFallback (void);
+	bool need_recovery_fallback (void);
+	bool need_normal_fallback (void);
 	
 protected:
-	int getMinTimerTimeout (void);
-	int getMinSuccessThreshold (void);
+	int get_min_timer_timeout (void);
+	int get_min_success_threshold (void);
 	
-	int getTimerTimeout (void);
-	int getSuccessThreshold (void);
+	int get_timer_timeout (void);
+	int get_success_threshold (void);
 	
-	void setTimerTimeout (int timer_timeout);
-	void setSuccessThreshold (int success_threshold);
+	void set_timer_timeout (int timer_timeout);
+	void set_success_threshold (int success_threshold);
 };
 
-
+}; // namespace yans
 
 #endif /* ARF_MAC_STATIONS_H */

@@ -1,6 +1,6 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 /*
- * Copyright (c) 2004,2005 INRIA
+ * Copyright (c) 2004,2005,2006 INRIA
  * All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,27 +16,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * In addition, as a special exception, the copyright holders of
- * this module give you permission to combine (via static or
- * dynamic linking) this module with free software programs or
- * libraries that are released under the GNU LGPL and with code
- * included in the standard release of ns-2 under the Apache 2.0
- * license or under otherwise-compatible licenses with advertising
- * requirements (or modified versions of such code, with unchanged
- * license).  You may copy and distribute such a system following the
- * terms of the GNU GPL for this module and the licenses of the
- * other code concerned, provided that you include the source code of
- * that other code when and as the GNU GPL requires distribution of
- * source code.
- *
- * Note that people who make modified versions of this module
- * are not obligated to grant this special exception for their
- * modified versions; it is their choice whether to do so.  The GNU
- * General Public License gives permission to release a modified
- * version without this exception; this exception also makes it
- * possible to release a modified version which carries forward this
- * exception.
- *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
@@ -44,7 +23,9 @@
 #include "mac-station.h"
 #include "arf-mac-stations.h"
 
-#include <assert.h>
+#include <cassert>
+
+namespace yans {
 
 ArfMacStation::ArfMacStation (MacStations *stations,
 			      int min_timer_timeout,
@@ -55,7 +36,7 @@ ArfMacStation::ArfMacStation (MacStations *stations,
         m_min_success_threshold = min_success_threshold;
         m_success_threshold = m_min_success_threshold;
         m_timer_timeout = m_min_timer_timeout;
-        m_rate = getMinRate ();
+        m_rate = get_min_rate ();
 
         m_success = 0;
         m_failed = 0;
@@ -67,18 +48,18 @@ ArfMacStation::~ArfMacStation ()
 {}
 
 int 
-ArfMacStation::getMaxRate (void)
+ArfMacStation::get_max_rate (void)
 {
-	return getNModes ();
+	return get_n_modes ();
 }
 int 
-ArfMacStation::getMinRate (void)
+ArfMacStation::get_min_rate (void)
 {
 	return 0;
 }
 
 bool 
-ArfMacStation::needRecoveryFallback (void)
+ArfMacStation::need_recovery_fallback (void)
 {
 	if (m_retry == 1) {
 		return true;
@@ -87,7 +68,7 @@ ArfMacStation::needRecoveryFallback (void)
 	}
 }
 bool 
-ArfMacStation::needNormalFallback (void)
+ArfMacStation::need_normal_fallback (void)
 {
 	int retry_mod = (m_retry - 1) % 2;
 	if (retry_mod == 1) {
@@ -100,7 +81,7 @@ ArfMacStation::needNormalFallback (void)
 
 
 void 
-ArfMacStation::reportRTSFailed (void)
+ArfMacStation::report_rts_failed (void)
 {}
 /**
  * It is important to realize that "recovery" mode starts after failure of
@@ -112,7 +93,7 @@ ArfMacStation::reportRTSFailed (void)
  * transmission, be it an initial transmission or a retransmission.
  */
 void 
-ArfMacStation::reportDataFailed (void)
+ArfMacStation::report_data_failed (void)
 {
         m_timer++;
         m_failed++;
@@ -121,18 +102,18 @@ ArfMacStation::reportDataFailed (void)
 
         if (m_recovery) {
                 assert (m_retry >= 1);
-                if (needRecoveryFallback ()) {
-                        reportRecoveryFailure ();
-                        if (m_rate != getMinRate ()) {
+                if (need_recovery_fallback ()) {
+                        report_recovery_failure ();
+                        if (m_rate != get_min_rate ()) {
                                 m_rate--;
                         }
                 }
                 m_timer = 0;
         } else {
                 assert (m_retry >= 1);
-                if (needNormalFallback ()) {
-                        reportFailure ();
-                        if (m_rate != getMinRate ()) {
+                if (need_normal_fallback ()) {
+                        report_failure ();
+                        if (m_rate != get_min_rate ()) {
                                 m_rate--;
                         }
                 }
@@ -142,20 +123,20 @@ ArfMacStation::reportDataFailed (void)
         }
 }
 void 
-ArfMacStation::reportRxOk (double SNR, int mode)
+ArfMacStation::report_rx_ok (double rx_snr, int tx_mode)
 {}
-void ArfMacStation::reportRTSOk (double ctsSNR, int ctsMode)
+void ArfMacStation::report_rts_ok (double cts_snr, int cts_mode)
 {}
-void ArfMacStation::reportDataOk (double ackSNR, int ackMode)
+void ArfMacStation::report_data_ok (double ack_snr, int ack_mode)
 {
 	m_timer++;
         m_success++;
         m_failed = 0;
         m_recovery = false;
         m_retry = 0;
-        if ((m_success == getSuccessThreshold () ||
-             m_timer == getTimerTimeout ()) &&
-            (m_rate < (getMaxRate () - 1))) {
+        if ((m_success == get_success_threshold () ||
+             m_timer == get_timer_timeout ()) &&
+            (m_rate < (get_max_rate () - 1))) {
                 m_rate++;
                 m_timer = 0;
                 m_success = 0;
@@ -163,45 +144,45 @@ void ArfMacStation::reportDataOk (double ackSNR, int ackMode)
         }
 
 }
-void ArfMacStation::reportFinalRTSFailed (void)
+void ArfMacStation::report_final_rts_failed (void)
 {}
-void ArfMacStation::reportFinalDataFailed (void)
+void ArfMacStation::report_final_data_failed (void)
 {}
-int ArfMacStation::getDataMode (int size)
+int ArfMacStation::get_data_mode (int size)
 {
 	return m_rate;
 }
-int ArfMacStation::getRTSMode (void)
+int ArfMacStation::get_rts_mode (void)
 {
 	return 0;
 }
 
-void ArfMacStation::reportRecoveryFailure (void)
+void ArfMacStation::report_recovery_failure (void)
 {}
-void ArfMacStation::reportFailure (void)
+void ArfMacStation::report_failure (void)
 {}
-int ArfMacStation::getMinTimerTimeout (void)
+int ArfMacStation::get_min_timer_timeout (void)
 {
         return m_min_timer_timeout;
 }
-int ArfMacStation::getMinSuccessThreshold (void)
+int ArfMacStation::get_min_success_threshold (void)
 {
         return m_min_success_threshold;
 }
-int ArfMacStation::getTimerTimeout (void)
+int ArfMacStation::get_timer_timeout (void)
 {
         return m_timer_timeout;
 }
-int ArfMacStation::getSuccessThreshold (void)
+int ArfMacStation::get_success_threshold (void)
 {
         return m_success_threshold;
 }
-void ArfMacStation::setTimerTimeout (int timer_timeout)
+void ArfMacStation::set_timer_timeout (int timer_timeout)
 {
         assert (timer_timeout >= m_min_timer_timeout);
         m_timer_timeout = timer_timeout;
 }
-void ArfMacStation::setSuccessThreshold (int success_threshold)
+void ArfMacStation::set_success_threshold (int success_threshold)
 {
         assert (success_threshold >= m_min_success_threshold);
         m_success_threshold = success_threshold;
@@ -223,3 +204,5 @@ ArfMacStations::createStation (void)
 	return new ArfMacStation (this, 15, 10);
 }
 
+
+}; // namespace yans
