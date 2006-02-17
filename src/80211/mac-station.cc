@@ -43,9 +43,10 @@
 #include "mac-station.h"
 #include "mac-stations.h"
 
+namespace yans {
+
 MacStation::MacStation (MacStations *stations)
-	: m_sequence (0),
-	  m_associated (false),
+	: m_is_associated (false),
 	  m_stations (stations)
 {}
 
@@ -54,17 +55,19 @@ MacStation::~MacStation ()
 {}
 
 int
-MacStation::getNModes (void)
+MacStation::get_n_modes (void) const
 {
-	return m_stations->getNModes ();
+	return m_stations->get_n_modes ();
 }
 bool 
-MacStation::isAssociated (void)
+MacStation::is_associated (void) const
 {
-	return m_associated;
+	return m_is_associated;
 }
 void 
-MacStation::recordAssociated (void)
+MacStation::record_associated (void)
 {
-	m_associated = true;
+	m_is_associated = true;
 }
+
+}; // namespace yans
