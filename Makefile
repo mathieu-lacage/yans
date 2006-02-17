@@ -50,6 +50,8 @@ YANS_SRC= \
 	simulator/scheduler-list.cc \
 	simulator/scheduler-heap.cc \
 	simulator/event.cc \
+	simulator/static-event.cc \
+	simulator/cancellable-event.cc \
 	simulator/simulator.cc \
 	$(FIBER_CONTEXT_PLATFORM) \
 	src/thread/semaphore.cc \
@@ -103,6 +105,7 @@ YANS_SRC= \
 	src/apps/periodic-generator.cc \
 	src/apps/traffic-analyser.cc \
 	src/80211/chunk-mac-80211-hdr.cc \
+	src/80211/chunk-mac-80211-fcs.cc \
 	test/test.cc \
 	$(NULL)
 YANS_HDR = \
@@ -110,6 +113,10 @@ YANS_HDR = \
 	simulator/event.h \
 	simulator/event-id.h \
 	simulator/event.tcc \
+	simulator/static-event.h \
+	simulator/static-event.tcc \
+	simulator/cancellable-event.h \
+	simulator/cancellable-event.tcc \
 	simulator/simulator.h \
 	simulator/callback-event.tcc \
 	simulator/clock.h \
@@ -163,6 +170,7 @@ YANS_HDR = \
 	src/apps/traffic-analyser.h \
 	src/apps/udp-source.h \
 	src/80211/chunk-mac-80211-hdr.h \
+	src/80211/chunk-mac-80211-fcs.h \
 	src/host/host.h \
 	src/host/loopback-interface.h \
 	src/host/network-interface.h \
