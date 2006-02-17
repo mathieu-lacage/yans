@@ -103,13 +103,12 @@ PropagationModel::get_rx_power (PropagationData const rx) const
 	 * Pt = tx_power (dBm)
 	 * d = 1.0m
 	 */
-	const 
-        double numerator = dbm_to_w (rx.get_tx_power () + m_rx_gain) * m_lambda * m_lambda;
-        double denominator = 16 * PI * PI * 1.0 * 1.0 * m_system_loss;
-        double prd0 = numerator / denominator;
-
+	double numerator = dbm_to_w (rx.get_tx_power () + m_rx_gain) * m_lambda * m_lambda;
+	double denominator = 16 * PI * PI * 1.0 * 1.0 * m_system_loss;
+	double prd0 = numerator / denominator;
+	
 	double n = 3.0; /* path loss exponent */
-	double pr = 10*log10(prd0) + n * 10.0 * log10(1.0 / dist);
+	double pr = 10*log10(prd0) - n * 10.0 * log10(dist);
 	return db_to_w (pr);
 }
 
