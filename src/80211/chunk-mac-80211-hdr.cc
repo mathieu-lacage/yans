@@ -36,6 +36,26 @@ ChunkMac80211Hdr::~ChunkMac80211Hdr ()
 {}
 
 void 
+ChunkMac80211Hdr::set_addr1 (MacAddress address)
+{
+	m_addr1 = address;
+}
+void 
+ChunkMac80211Hdr::set_addr2 (MacAddress address)
+{
+	m_addr2 = address;
+}
+void 
+ChunkMac80211Hdr::set_addr3 (MacAddress address)
+{
+	m_addr3 = address;
+}
+void 
+ChunkMac80211Hdr::set_addr4 (MacAddress address)
+{
+	m_addr4 = address;
+}
+void 
 ChunkMac80211Hdr::set_type (enum Mac80211Type_e type)
 {
 	switch (m_ctrl_type) {
@@ -205,6 +225,26 @@ void ChunkMac80211Hdr::set_qos_txop_limit (uint8_t txop)
 	m_qos_stuff = txop;
 }
 
+MacAddress 
+ChunkMac80211Hdr::get_addr1 (void) const
+{
+	return m_addr1;
+}
+MacAddress 
+ChunkMac80211Hdr::get_addr2 (void) const
+{
+	return m_addr2;
+}
+MacAddress 
+ChunkMac80211Hdr::get_addr3 (void) const
+{
+	return m_addr3;
+}
+MacAddress 
+ChunkMac80211Hdr::get_addr4 (void) const
+{
+	return m_addr4;
+}
 enum Mac80211Type_e 
 ChunkMac80211Hdr::get_type (void) const
 {
@@ -339,6 +379,41 @@ ChunkMac80211Hdr::is_mgt (void) const
 {
 	return (m_ctrl_type == TYPE_MGT)?true:false;
 }
+bool 
+ChunkMac80211Hdr::is_cfpoll (void) const
+{
+	switch (get_type ()) {
+	case MAC_80211_DATA_CFPOLL:
+	case MAC_80211_DATA_CFACK_CFPOLL:
+	case MAC_80211_DATA_NULL_CFPOLL:
+	case MAC_80211_DATA_NULL_CFACK_CFPOLL:
+	case MAC_80211_QOSDATA_CFPOLL:
+	case MAC_80211_QOSDATA_CFACK_CFPOLL:
+	case MAC_80211_QOSDATA_NULL_CFPOLL:
+	case MAC_80211_QOSDATA_NULL_CFACK_CFPOLL:
+		return true;
+		break;
+	default:
+		return false;
+		break;
+	}
+}
+bool 
+ChunkMac80211Hdr::is_rts (void) const
+{
+	return (get_type () == MAC_80211_CTL_RTS)?true:false;
+}
+bool 
+ChunkMac80211Hdr::is_cts (void) const
+{
+	return (get_type () == MAC_80211_CTL_CTS)?true:false;
+}
+bool 
+ChunkMac80211Hdr::is_ack (void) const
+{
+	return (get_type () == MAC_80211_CTL_ACK)?true:false;
+}
+
 uint16_t 
 ChunkMac80211Hdr::get_duration (void) const
 {
@@ -444,6 +519,99 @@ ChunkMac80211Hdr::set_qos_control (uint16_t qos)
 	m_qos_ack_policy = (qos >> 5) & 0x0003;
 	m_qos_stuff = (qos >> 8) & 0x00ff;
 }
+
+
+void 
+ChunkMac80211Hdr::set_duration_s (double duration)
+{
+	uint16_t us = (uint16_t)(duration * 1000000);
+	us &= 0x7fff;
+	set_duration (us);
+}
+
+uint32_t 
+ChunkMac80211Hdr::get_size (void)
+{
+	uint32_t size = 0;
+	switch (m_ctrl_type) {
+	case TYPE_MGT:
+		size = 2+2+6+6+6+2;
+		break;
+	case TYPE_CTL:
+		switch (m_ctrl_subtype) {
+		case MAC_80211_CTL_RTS:
+			size = 2+2+6+6;
+			break;
+		case MAC_80211_CTL_CTS:
+		case MAC_80211_CTL_ACK:
+			size = 2+2+6;
+			break;
+		case MAC_80211_CTL_BACKREQ:
+		case MAC_80211_CTL_BACKRESP:
+			// NOT IMPLEMENTED
+			assert (false);
+			break;
+		}
+		break;
+	case TYPE_DATA:
+		size = 2+2+6+6+6+2;
+		if (m_ctrl_to_ds && m_ctrl_from_ds) {
+			size += 6;
+		}
+		if (m_ctrl_subtype & 0x08) {
+			size += 2;
+		}
+		break;
+	}
+	return size;
+}
+char const *
+ChunkMac80211Hdr::get_type_string (void)
+{
+#define FOO(x) \
+case MAC_80211_ ## x: \
+	return #x; \
+	break;
+
+	switch (get_type ()) {
+		FOO (CTL_RTS);
+		FOO (CTL_CTS);
+		FOO (CTL_ACK);
+		FOO (CTL_BACKREQ);
+		FOO (CTL_BACKRESP);
+
+		FOO (MGT_BEACON);
+		FOO (MGT_ASSOCIATION_REQUEST);
+		FOO (MGT_ASSOCIATION_RESPONSE);
+		FOO (MGT_DISASSOCIATION);
+		FOO (MGT_REASSOCIATION_REQUEST);
+		FOO (MGT_REASSOCIATION_RESPONSE);
+		FOO (MGT_PROBE_REQUEST);
+		FOO (MGT_PROBE_RESPONSE);
+		FOO (MGT_AUTHENTICATION);
+		FOO (MGT_DEAUTHENTICATION);
+		
+		FOO (DATA);
+		FOO (DATA_CFACK);
+		FOO (DATA_CFPOLL);
+		FOO (DATA_CFACK_CFPOLL);
+		FOO (DATA_NULL);
+		FOO (DATA_NULL_CFACK);
+		FOO (DATA_NULL_CFPOLL);
+		FOO (DATA_NULL_CFACK_CFPOLL);
+		FOO (QOSDATA);
+		FOO (QOSDATA_CFACK);
+		FOO (QOSDATA_CFPOLL);
+		FOO (QOSDATA_CFACK_CFPOLL);
+		FOO (QOSDATA_NULL);
+		FOO (QOSDATA_NULL_CFPOLL);
+		FOO (QOSDATA_NULL_CFACK_CFPOLL);
+	default:
+		return "ERROR";
+	}
+#undef FOO
+}
+
 
 void 
 ChunkMac80211Hdr::add_to (Buffer *buffer) const

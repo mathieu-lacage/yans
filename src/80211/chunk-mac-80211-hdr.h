@@ -66,6 +66,10 @@ class ChunkMac80211Hdr : public Chunk {
 public:
 	ChunkMac80211Hdr ();
 
+	void set_addr1 (MacAddress address);
+	void set_addr2 (MacAddress address);
+	void set_addr3 (MacAddress address);
+	void set_addr4 (MacAddress address);
 	void set_type (enum Mac80211Type_e type);
 	void set_duration (uint16_t duration);
 	void set_id (uint16_t id);
@@ -78,11 +82,19 @@ public:
 	void set_qos_tid (uint8_t tid);
 	void set_qos_txop_limit (uint8_t txop);
 
+	MacAddress get_addr1 (void) const;
+	MacAddress get_addr2 (void) const;
+	MacAddress get_addr3 (void) const;
+	MacAddress get_addr4 (void) const;
 	enum Mac80211Type_e get_type (void) const;
 	bool is_data (void) const;
 	bool is_qos_data (void) const;
 	bool is_ctl (void) const;
 	bool is_mgt (void) const;
+	bool is_cfpoll (void) const;
+	bool is_rts (void) const;
+	bool is_cts (void) const;
+	bool is_ack (void) const;
 	uint16_t get_duration (void) const;
 	uint16_t get_sequence_control (void) const;
 	bool is_retry (void) const;
@@ -92,6 +104,10 @@ public:
 	bool is_qos_ack (void) const;
 	uint8_t get_qos_tid (void) const;
 	uint8_t get_qos_txop_limit (void) const;
+
+	void set_duration_s (double duration);
+	uint32_t get_size (void);
+	char const *get_type_string (void);
 
 
 	virtual ~ChunkMac80211Hdr ();
