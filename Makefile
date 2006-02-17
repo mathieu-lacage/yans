@@ -110,6 +110,7 @@ YANS_SRC= \
 	src/80211/mac-station.cc \
 	src/80211/arf-mac-stations.cc \
 	src/80211/aarf-mac-stations.cc \
+	src/80211/propagation-model.cc \
 	test/test.cc \
 	$(NULL)
 YANS_HDR = \
@@ -179,6 +180,7 @@ YANS_HDR = \
 	src/80211/mac-station.h \
 	src/80211/arf-mac-stations.h \
 	src/80211/aarf-mac-stations.h \
+	src/80211/propagation-model.h \
 	src/host/host.h \
 	src/host/loopback-interface.h \
 	src/host/network-interface.h \
