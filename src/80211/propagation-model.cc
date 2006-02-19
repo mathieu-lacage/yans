@@ -19,11 +19,15 @@
  */
 #include "propagation-model.h"
 #include "host.h"
+#include "channel-80211.h"
+#include "simulator.h"
+#include "event.tcc"
 #include <math.h>
 
 namespace yans {
 
 const double PropagationModel::PI = 3.1415;
+const double PropagationModel::SPEED_OF_LIGHT = 300000000;
 
 PropagationData::PropagationData (double tx_power, double x, double y, double z)
 	: m_tx_power (tx_power), m_x (x), m_y (y), m_z (z)
@@ -52,38 +56,68 @@ PropagationData::get_tx_power (void) const
 
 
 PropagationModel::PropagationModel ()
+	: m_rx_callback (0)
 {}
 PropagationModel::~PropagationModel ()
-{}
+{
+	delete m_rx_callback;
+}
 
 void 
 PropagationModel::set_host (Host *host)
 {
 	m_host = host;
 }
-
-PropagationData 
-PropagationModel::get_tx_data (double tx_power) const
+	
+void 
+PropagationModel::set_channel (Channel80211 *channel)
 {
-	return PropagationData (tx_power + m_tx_gain, m_host->get_x (),
-				m_host->get_y (), m_host->get_z ());
+	m_channel = channel;
 }
-double
-PropagationModel::distance (PropagationData const &from) const
+void 
+PropagationModel::set_receive_callback (RxCallback *callback)
 {
-	double dx = m_host->get_x () - from.get_x ();
-	double dy = m_host->get_y () - from.get_y ();
-	double dz = m_host->get_z () - from.get_z ();
+	m_rx_callback = callback;
+}
+
+void 
+PropagationModel::send (Packet *packet, double tx_power, int tx_mode)
+{
+	PropagationData data (tx_power + m_tx_gain, m_host->get_x (),
+			      m_host->get_y (), m_host->get_z ());
+	m_channel->send (packet, &data, tx_mode, this);
+}
+void 
+PropagationModel::receive (Packet *packet, PropagationData const *data, int tx_mode)
+{
+	double rx_power = get_rx_power (data);
+	double delay = distance (data) / 300000000;
+	Simulator::insert_in_s (delay, make_event (&PropagationModel::forward_up, 
+						   this, packet, rx_power, tx_mode));
+}
+
+void
+PropagationModel::forward_up (Packet *packet, double rx_power, int tx_mode)
+{
+	(*m_rx_callback) (packet, rx_power, tx_mode);
+}
+
+double
+PropagationModel::distance (PropagationData const *from) const
+{
+	double dx = m_host->get_x () - from->get_x ();
+	double dy = m_host->get_y () - from->get_y ();
+	double dz = m_host->get_z () - from->get_z ();
 	return sqrt (dx*dx+dy*dy+dz*dz);
 }
 
 double 
-PropagationModel::get_rx_power (PropagationData const rx) const
+PropagationModel::get_rx_power (PropagationData const *rx) const
 {
 	double dist = distance (rx);
 	if (dist <= 1.0) {
 		// XXX
-		return dbm_to_w (rx.get_tx_power () + m_rx_gain);
+		return dbm_to_w (rx->get_tx_power () + m_rx_gain);
 	}
 	/*
 	 * Friis free space equation:
@@ -103,7 +137,7 @@ PropagationModel::get_rx_power (PropagationData const rx) const
 	 * Pt = tx_power (dBm)
 	 * d = 1.0m
 	 */
-	double numerator = dbm_to_w (rx.get_tx_power () + m_rx_gain) * m_lambda * m_lambda;
+	double numerator = dbm_to_w (rx->get_tx_power () + m_rx_gain) * m_lambda * m_lambda;
 	double denominator = 16 * PI * PI * 1.0 * 1.0 * m_system_loss;
 	double prd0 = numerator / denominator;
 	

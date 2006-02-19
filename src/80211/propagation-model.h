@@ -20,6 +20,8 @@
 #ifndef PROPAGATION_MODEL_H
 #define PROPAGATION_MODEL_H
 
+#include "callback.tcc"
+
 namespace yans {
 /**
  * This propagation model implements a path-loss model
@@ -33,6 +35,8 @@ namespace yans {
  */
 
 class Host;
+class Channel80211;
+class Packet;
 
 class PropagationData {
 public:
@@ -52,15 +56,18 @@ private:
 
 class PropagationModel {
 public:
+	typedef Callback<void (Packet *, double, int)> RxCallback;
 	PropagationModel ();
 	~PropagationModel ();
 
 	void set_host (Host *host);
+	void set_channel (Channel80211 *channel);
+	/* the unit of the power is Watt. */
+	void set_receive_callback (RxCallback *callback);
 
-	/* tx_power is dBm */
-	PropagationData get_tx_data (double tx_power) const;
-	/* rx_power is Watt */
-	double get_rx_power (PropagationData rx) const;
+	/* tx power unit: dBm */
+	void send (Packet *packet, double tx_power, int tx_mode);
+	void receive (Packet *packet, PropagationData const *data, int tx_mode);
 
 	/* unit: dBm */
 	void set_tx_gain (double tx_gain);
@@ -74,14 +81,19 @@ private:
 	double dbm_to_w (double dbm) const;
 	double db_to_w (double db) const;
 	double get_lambda (void) const;
-	double distance (PropagationData const &from) const;
+	double distance (PropagationData const *from) const;
+	void forward_up (Packet *packet, double rx_power, int tx_mode);
+	double get_rx_power (PropagationData const *rx) const;
 
+	RxCallback *m_rx_callback;
 	double m_tx_gain;
 	double m_rx_gain;
 	double m_system_loss;
 	double m_lambda;
 	Host *m_host;
-	static const double PI ;
+	Channel80211 *m_channel;
+	static const double PI;
+	static const double SPEED_OF_LIGHT;
 };
 
 }; // namespace yans
