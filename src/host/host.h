@@ -52,6 +52,13 @@ public:
 	Udp *get_udp (void);
 	Tcp *get_tcp (void);
 
+	double get_x (void) const;
+	double get_y (void) const;
+	double get_z (void) const;
+	void set_x (double x);
+	void set_y (double y);
+	void set_z (double z);
+
 private:
 	typedef std::vector<NetworkInterface *>::iterator NetworkInterfacesI;
 
@@ -62,6 +69,9 @@ private:
 	Tcp *m_tcp;
 	LoopbackInterface *m_loopback;
 	std::string *m_root;
+	double m_x;
+	double m_y;
+	double m_z;
 };
 
 }; // namespace yans
