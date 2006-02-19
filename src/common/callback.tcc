@@ -33,7 +33,7 @@ class empty {};
 
 class CallbackBase {};
 
-template<typename R, typename T1 = empty, typename T2 = empty>
+template<typename R, typename T1 = empty, typename T2 = empty, typename T3 = empty>
 class Callback : public CallbackBase {};
 
 
@@ -56,6 +56,13 @@ class Callback<R (T1, T2)> : public CallbackBase {
  public:
 	virtual ~Callback () {}
 	virtual R operator() (T1, T2) = 0;
+};
+
+	template<typename R, typename T1, typename T2, typename T3>
+	class Callback<R (T1, T2, T3)> : public CallbackBase {
+ public:
+	virtual ~Callback () {}
+	virtual R operator() (T1, T2, T3) = 0;
 };
 
 
@@ -114,6 +121,24 @@ private:
 	F m_function;
 };
 
+template<typename T, typename R, typename T1, typename T2, typename T3>
+class Callback3 : public Callback<R (T1, T2, T3)> {
+public:
+	typedef R (T::*F) (T1, T2, T3);
+
+	Callback3 (T *obj, F function) 
+		: m_obj (obj), 
+		  m_function (function) 
+	{}
+	virtual R operator() (T1 a1, T2 a2, T3 a3) {
+		return (m_obj->*m_function) (a1, a2, a3);
+	}
+private:
+	Callback3 () {}
+	T *m_obj;
+	F m_function;
+};
+
 
 template<typename T, typename R>
 Callback0<T, R> *make_callback(R (T::*f) (void), T* t) {
@@ -126,6 +151,10 @@ Callback1<T, R, T1> *make_callback(R (T::*f) (T1), T* t) {
 template<typename T, typename R, typename T1, typename T2>
 Callback2<T, R, T1, T2> *make_callback(R (T::*f) (T1, T2), T* t) {
 	return new Callback2<T, R, T1, T2>(t, f);
+}
+template<typename T, typename R, typename T1, typename T2, typename T3>
+Callback3<T, R, T1, T2, T3> *make_callback(R (T::*f) (T1, T2, T3), T* t) {
+	return new Callback3<T, R, T1, T2, T3>(t, f);
 }
 
 }; // namespace yans
