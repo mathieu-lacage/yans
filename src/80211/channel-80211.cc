@@ -16,6 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ * Author: Mathieu Lacage, <mathieu.lacage@sophia.inria.fr>
  */
 #include "channel-80211.h"
 #include "packet.h"
@@ -33,9 +34,10 @@ Channel80211::add (PropagationModel *model)
 	m_models.push_back (model);
 }
 void 
-Channel80211::send (Packet *packet, PropagationData const *data, int tx_mode, PropagationModel *caller)
+Channel80211::send (Packet const *packet, PropagationData const *data, 
+		    int tx_mode, PropagationModel const *caller) const
 {
-	for (ModelsI i = m_models.begin (); i != m_models.end (); i++) {
+	for (ModelsCI i = m_models.begin (); i != m_models.end (); i++) {
 		if (caller != (*i)) {
 			(*i)->receive (packet->copy (), data, tx_mode);
 		}

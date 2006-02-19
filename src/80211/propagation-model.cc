@@ -16,6 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ * Authors: Hossein Manshaei, Mathieu Lacage
  */
 #include "propagation-model.h"
 #include "host.h"
@@ -81,7 +82,7 @@ PropagationModel::set_receive_callback (RxCallback *callback)
 }
 
 void 
-PropagationModel::send (Packet *packet, double tx_power, int tx_mode)
+PropagationModel::send (Packet *packet, double tx_power, int tx_mode) const
 {
 	PropagationData data (tx_power + m_tx_gain, m_host->get_x (),
 			      m_host->get_y (), m_host->get_z ());

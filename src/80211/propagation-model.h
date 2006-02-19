@@ -16,6 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ * Authors: Hossein Manshaei, Mathieu Lacage
  */
 #ifndef PROPAGATION_MODEL_H
 #define PROPAGATION_MODEL_H
@@ -26,9 +27,13 @@ namespace yans {
 /**
  * This propagation model implements a path-loss model
  * with a path loss exponent of 3 and uses 1.0m as its
- * reference distance. This is coherent with the
- * model used by Gavin Holland in "A Rate-Adaptive 
- * MAC Protocol for Multi-Hop Wireless Networks"
+ * reference distance. The reference power is calculated
+ * with a Friis model. The propagation delay is calculated
+ * with a simple free-space model.
+ *
+ * This is coherent with the models used by Gavin 
+ * Holland in "A Rate-Adaptive MAC Protocol for Multi-Hop 
+ * Wireless Networks"
  *
  * The tricky aspect of this code relates to the 
  * unit conversions.
@@ -66,7 +71,7 @@ public:
 	void set_receive_callback (RxCallback *callback);
 
 	/* tx power unit: dBm */
-	void send (Packet *packet, double tx_power, int tx_mode);
+	void send (Packet *packet, double tx_power, int tx_mode) const;
 	void receive (Packet *packet, PropagationData const *data, int tx_mode);
 
 	/* unit: dBm */

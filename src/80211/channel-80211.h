@@ -16,6 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
+ * Author: Mathieu Lacage, <mathieu.lacage@sophia.inria.fr>
  */
 #ifndef CHANNEL_80211_H
 #define CHANNEL_80211_H
@@ -33,10 +34,11 @@ public:
 	Channel80211 ();
 	~Channel80211 ();
 	void add (PropagationModel *model);
-	void send (Packet *packet, PropagationData const *data, int tx_mode, PropagationModel *caller);
+	void send (Packet const *packet, PropagationData const *data, 
+		   int tx_mode, PropagationModel const*caller) const;
 private:
 	typedef std::list<PropagationModel *> Models;
-	typedef std::list<PropagationModel *>::iterator ModelsI;
+	typedef std::list<PropagationModel *>::const_iterator ModelsCI;
 	Models m_models;
 };
 
