@@ -41,6 +41,8 @@ public:
 	uint32_t get_uint (void);
 	/* return an integer in the range [0,n] */
 	uint32_t get_uint (uint32_t n);
+	/* return an integer in the range [a,b] */
+	uint32_t get_uint (uint32_t a, uint32_t b);
 	/* return a floating-point number in the 
 	 * range [0,1)
 	 */

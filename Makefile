@@ -68,7 +68,8 @@ YANS_SRC= \
 	src/common/trace-container.cc \
 	src/common/pcap-writer.cc \
 	src/common/seed-generator.cc \
-	src/common/random-uniform-gsl.cc \
+	src/common/random-uniform-mrg32k3a.cc \
+	src/common/rng-mrg32k3a.cc \
 	src/ipv4/tag-ipv4.cc \
 	src/ipv4/ipv4-end-point.cc \
 	src/ipv4/ipv4-end-points.cc \
@@ -134,6 +135,8 @@ YANS_HDR = \
 	src/common/ui-traced-variable.tcc \
 	src/common/si-traced-variable.tcc \
 	src/common/f-traced-variable.tcc \
+	src/common/seed-generator.h \
+	src/common/rng-mrg32k3a.h \
 	src/ipv4/chunk-icmp.h \
 	src/ipv4/defrag-state.h \
 	src/ipv4/ipv4-route.h \
