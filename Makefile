@@ -5,6 +5,7 @@ NULL=
 all: build
 
 include ./platform.mk
+include ./config.mk
 
 PACKAGE_NAME=yans
 PACKAGE_VERSION=0.7
@@ -25,11 +26,6 @@ INCLUDES=\
  $(NULL)
 OPTI_FLAGS=-O0
 FLAGS=-Wall -Werror -g3 $(OPTI_FLAGS)
-PYTHON_PREFIX_INC=/usr/include/python2.4
-PYTHON_PREFIX_LIB=/usr/lib
-PYTHON_BIN=/usr/bin/python2.4
-BOOST_PREFIX_LIB=/usr/lib
-BOOST_PREFIX_INC=/usr/include
 #TCP=bsd
 
 LDFLAGS+=
@@ -39,7 +35,7 @@ CFLAGS+=$(FLAGS) $(INCLUDES) $(DEFINES)
 PACKAGE_DIST= \
 	platform.mk \
 	rules.mk \
-	functions.mk \
+	config.mk \
 	Makefile \
 	$(NULL)
 
@@ -71,6 +67,8 @@ YANS_SRC= \
 	src/common/packet-logger.cc \
 	src/common/trace-container.cc \
 	src/common/pcap-writer.cc \
+	src/common/seed-generator.cc \
+	src/common/random-uniform-gsl.cc \
 	src/ipv4/tag-ipv4.cc \
 	src/ipv4/ipv4-end-point.cc \
 	src/ipv4/ipv4-end-points.cc \
@@ -173,9 +171,9 @@ YANS_HDR = \
 	src/thread/semaphore.h \
 	src/thread/thread.h \
 	$(NULL)
-YANS_CXXFLAGS=$(CXXFLAGS) $(call gen-lib-build-flags)
+YANS_CXXFLAGS=$(CXXFLAGS) $(call gen-lib-build-flags) -I$(GSL_PREFIX_INC)
 YANS_CFLAGS=$(CFLAGS) $(call gen-lib-build-flags)
-YANS_LDFLAGS=$(LDFLAGS) $(call gen-lib-link-flags)
+YANS_LDFLAGS=$(LDFLAGS) $(call gen-lib-link-flags) -L$(GSL_PREFIX_LIB) -lgsl
 YANS_OUTPUT=$(call gen-lib-name, yans)
 ifeq ($(TCP),bsd)
 YANS_SRC += \
