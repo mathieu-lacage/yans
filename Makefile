@@ -176,7 +176,7 @@ YANS_HDR = \
 	$(NULL)
 YANS_CXXFLAGS=$(CXXFLAGS) $(call gen-lib-build-flags) -I$(GSL_PREFIX_INC)
 YANS_CFLAGS=$(CFLAGS) $(call gen-lib-build-flags)
-YANS_LDFLAGS=$(LDFLAGS) $(call gen-lib-link-flags) -L$(GSL_PREFIX_LIB) -lgsl
+YANS_LDFLAGS=$(LDFLAGS) $(call gen-lib-link-flags) -L$(GSL_PREFIX_LIB) -lgslcblas -lgsl 
 YANS_OUTPUT=$(call gen-lib-name, yans)
 ifeq ($(TCP),bsd)
 YANS_SRC += \
