@@ -20,7 +20,6 @@
  */
 
 #include "event.h"
-#include "event-id.h"
 #include "simulator.h"
 #include <iostream>
 
@@ -45,15 +44,15 @@ MyEvent::notify (void)
 
 int main (int argc, char *argv[])
 {
-	EventId id;
+	Event *ev;
         Simulator::insert_at_s (10.0, new MyEvent ());
-        id = Simulator::insert_at_s (11.0, new MyEvent ());
+        ev = Simulator::insert_at_s (11.0, new MyEvent ());
         Simulator::insert_at_s (12.0, new MyEvent ());
         Simulator::insert_at_s (9.0, new MyEvent ());
         Simulator::insert_at_s (5.0, new MyEvent ());
         Simulator::insert_at_s (6.0, new MyEvent ());
 
-	Simulator::remove (id);
+	Simulator::remove (ev);
 
         Simulator::insert_at_s (8.0, new MyEvent ());
         Simulator::insert_at_s (13.0, new MyEvent ());

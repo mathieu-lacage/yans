@@ -36,44 +36,49 @@ std::cout << "LIST TRACE " << x << std::endl;
 
 namespace yans {
 
+
+SchedulerList::SchedulerList ()
+{}
+SchedulerList::~SchedulerList ()
+{}
+
 /*  !! WARNING !! 
  * This is a very nasty piece of code but it really should work
  * with pretty much any implementation of a std::list.
  * it relies on the fact that a std::list<>::iterator has a single
  * member variable, a pointer.
  */
-class EventListId : public EventId {
-public:
-	EventListId (EventId id) : EventId (id) {}
-	EventListId (SchedulerList::EventsI i) {
-		assert (sizeof (i) <= sizeof (EventId));
-		strncpy ((char *)this, (char *)&i, sizeof (i));
-	}
-	SchedulerList::EventsI get_iterator (void) {
-		SchedulerList::EventsI i;
-		assert (sizeof (i) <= sizeof (EventId));
-		strncpy ((char *)&i, (char *)this, sizeof (i));
-		return i;
-	}
-};
+void 
+SchedulerList::store_in_event (Event *ev, EventsI i)
+{
+	assert (sizeof (i) <= sizeof (Event));
+	strncpy ((char *)&(ev->m_id), (char *)&i, sizeof (void *));
+}
+SchedulerList::EventsI 
+SchedulerList::get_from_event (Event const*ev)
+{
+	SchedulerList::EventsI i;
+	assert (sizeof (i) <= sizeof (Event));
+	strncpy ((char *)&i, (char *)&(ev->m_id), sizeof (void *));
+	return i;
+}
 
-SchedulerList::SchedulerList ()
-{}
-SchedulerList::~SchedulerList ()
-{}
-EventId 
+
+Event * 
 SchedulerList::insert_at_us (Event *event, uint64_t time)
 {
 	for (EventsI i = m_events.begin (); i != m_events.end (); i++) {
 		if ((*i).second > time) {
 			m_events.insert (i, std::make_pair (event, time));
-			return EventListId (i);
+			store_in_event (event, i);
+			return event;
 		}
 	}
 	m_events.push_back (std::make_pair (event, time));
 	TRACE ("inserted " << time);
 	print_debug ();
-	return EventListId (--(m_events.end ()));
+	store_in_event (event, --(m_events.end ()));
+	return event;
 }
 Event *
 SchedulerList::peek_next (void)
@@ -99,12 +104,10 @@ SchedulerList::remove_next (void)
 }
 
 Event *
-SchedulerList::remove (EventId id)
+SchedulerList::remove (Event const*ev)
 {
-	EventListId real_id (id);
-	Event *event = (*(real_id.get_iterator ())).first;
-	m_events.erase (real_id.get_iterator ());
-	return event;
+	m_events.erase (get_from_event (ev));
+	return const_cast<Event *> (ev);
 }
 
 void 

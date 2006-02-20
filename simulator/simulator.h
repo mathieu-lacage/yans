@@ -23,7 +23,6 @@
 #define SIMULATOR_H
 
 #include <stdint.h>
-#include "event-id.h"
 
 namespace yans {
 
@@ -55,13 +54,13 @@ public:
 	 */
 	static void stop (void);
 
-	static EventId insert_in_us (uint64_t delta, Event *event);
-	static EventId insert_in_s (double delta, Event *event);
+	static Event *insert_in_us (uint64_t delta, Event *event);
+	static Event *insert_in_s (double delta, Event *event);
 
-	static EventId insert_at_us (uint64_t time, Event *event);
-	static EventId insert_at_s (double time, Event *event);
+	static Event *insert_at_us (uint64_t time, Event *event);
+	static Event *insert_at_s (double time, Event *event);
 
-	static Event *remove (EventId id);
+	static Event *remove (Event const*id);
 
 	static uint64_t now_us (void);
 	static double now_s (void);

@@ -107,7 +107,6 @@ YANS_SRC= \
 YANS_HDR = \
 	test/test.h \
 	simulator/event.h \
-	simulator/event-id.h \
 	simulator/event.tcc \
 	simulator/simulator.h \
 	simulator/callback-event.tcc \

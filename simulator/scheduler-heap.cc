@@ -33,6 +33,7 @@
  */
 
 #include "scheduler-heap.h"
+#include "event.h"
 
 #define noTRACE_HEAP 1
 
@@ -47,50 +48,29 @@ std::cout << "HEAP TRACE " << x << std::endl;
 
 namespace yans {
 
-class EventIdHeap : public EventId {
-public:
-	EventIdHeap (EventHolder *holder) 
-		: EventId (holder) {}
-	EventIdHeap (EventId id)
-		: EventId (id) {}
-	EventHolder *get_holder (void) {
-		return reinterpret_cast<EventHolder *> (EventId::get_id ());
-	}
-};
-
-class EventHolder {
-public:
-	EventHolder (Event *event) 
-		: m_event (event), m_index ()
-	{}
-	~EventHolder () {
-		m_event = (Event *)0xdeadbeaf;
-		m_index = 0xdeadbeaf;
-	}
-	Event *get_event (void) {
-		return m_event;
-	}
-	uint32_t get_index (void) {
-		return m_index;
-	}
-	void reset_index (uint32_t index) {
-		m_index = index;
-	}
-private:
-	Event *m_event;
-	uint32_t m_index;
-};
-
 SchedulerHeap::SchedulerHeap ()
 {
 	// we purposedly waste an item at the start of
 	// the array to make sure the indexes in the
 	// array start at one.
-	m_heap.push_back (std::make_pair ((EventHolder *)0, 0));
+	m_heap.push_back (std::make_pair ((Event *)0, 0));
 }
 
 SchedulerHeap::~SchedulerHeap ()
 {}
+
+ 
+void 
+SchedulerHeap::store_in_event (Event *ev, uint32_t index) const
+{
+ 	ev->m_id = (void *)index;
+}
+uint32_t 
+SchedulerHeap::get_from_event (Event const *ev) const
+{
+ 	return (uint32_t)ev->m_id;
+}
+
 
 uint32_t 
 SchedulerHeap::parent (uint32_t id) const
@@ -143,11 +123,11 @@ SchedulerHeap::exch (uint32_t a, uint32_t b)
 {
 	assert (b < m_heap.size () && a < m_heap.size ());
 	TRACE ("exch " << a << ", " << b);
-	std::pair<EventHolder *, uint64_t> tmp (m_heap[a]);
+	std::pair<Event *, uint64_t> tmp (m_heap[a]);
 	m_heap[a] = m_heap[b];
 	m_heap[b] = tmp;
-	m_heap[b].first->reset_index (b);
-	m_heap[a].first->reset_index (a);
+	store_in_event (m_heap[a].first, a);
+	store_in_event (m_heap[b].first, b);
 }
 
 bool
@@ -209,14 +189,13 @@ SchedulerHeap::top_down (void)
 }
 
 
-EventId 
+Event * 
 SchedulerHeap::insert_at_us (Event *event, uint64_t time)
 {
-	EventHolder *holder = new EventHolder (event);
-	m_heap.push_back (std::make_pair (holder, time));
-	holder->reset_index (last ());
+	m_heap.push_back (std::make_pair (event, time));
+	store_in_event (event, last ());
 	bottom_up ();
-	return EventIdHeap (holder);
+	return event;
 }
 
 Event   *
@@ -225,7 +204,7 @@ SchedulerHeap::peek_next (void)
 	if (is_empty ()) {
 		return 0;
 	}
-	return m_heap[root ()].first->get_event ();
+	return m_heap[root ()].first;
 }
 uint64_t 
 SchedulerHeap::peek_next_time_us (void)
@@ -246,14 +225,13 @@ SchedulerHeap::remove_next (void)
 }
 
 Event *
-SchedulerHeap::remove (EventId fake_id)
+SchedulerHeap::remove (Event const*ev)
 {
-	EventIdHeap id = EventIdHeap (fake_id);
-	exch (id.get_holder ()->get_index (), last ());
+	exch (get_from_event (ev), last ());
 	delete m_heap.back ().first;
 	m_heap.pop_back ();
 	top_down ();
-	return 0;
+	return const_cast <Event *> (ev);
 }
 
 void 
