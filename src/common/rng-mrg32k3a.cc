@@ -1,6 +1,5 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 /*
- *  File: RngStream.cc for multiple streams of Random Numbers 
  *  Copyright (C) 2001  Pierre L'Ecuyer (lecuyer@iro.umontreal.ca)
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -19,7 +18,7 @@
  *  02110-1301 USA
  */
 
-#include "rng.h"
+#include "rng-mrg32k3a.h"
 #include "seed-generator.h"
 #include <iostream>
 

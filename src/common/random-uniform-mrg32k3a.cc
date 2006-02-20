@@ -20,7 +20,7 @@
  */
 #include "random-uniform.h"
 #include "seed-generator.h"
-#include "rng.h"
+#include "rng-mrg32k3a.h"
 
 namespace yans {
 
