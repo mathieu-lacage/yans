@@ -97,7 +97,7 @@ class CancellableEventCallback3 : public CancellableEvent {
 public:
 	typedef void (T::*F)(T1, T2);
 
-	CancellableEventCallback2 (T *obj, F function, T1 a1, T2 a2, T3 a3) 
+	CancellableEventCallback3 (T *obj, F function, T1 a1, T2 a2, T3 a3) 
 		: m_obj (obj), 
 		  m_function (function),
 		  m_a1 (a1),
