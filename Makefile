@@ -5,6 +5,7 @@ NULL=
 all: build
 
 include ./platform.mk
+include ./config.mk
 
 PACKAGE_NAME=yans
 PACKAGE_VERSION=0.7
@@ -25,12 +26,6 @@ INCLUDES=\
  $(NULL)
 OPTI_FLAGS=-O0
 FLAGS=-Wall -Werror -g3 $(OPTI_FLAGS)
-PYTHON_PREFIX_INC=/usr/include/python2.3
-PYTHON_PREFIX_LIB=/usr/lib
-PYTHON_BIN=/usr/bin/python2.3
-BOOST_PREFIX_LIB=/usr/lib
-BOOST_PREFIX_INC=/usr/include
-#TCP=bsd
 
 LDFLAGS+=
 CXXFLAGS+=$(FLAGS) $(INCLUDES) $(DEFINES)
@@ -39,9 +34,24 @@ CFLAGS+=$(FLAGS) $(INCLUDES) $(DEFINES)
 PACKAGE_DIST= \
 	platform.mk \
 	rules.mk \
-	functions.mk \
+	config.mk \
 	Makefile \
 	$(NULL)
+
+ifeq ($(GSL_USE),y)
+RNG_UNIFORM_CXX = \
+	src/common/random-uniform-gsl.cc \
+	$(NULL)
+else
+RNG_UNIFORM_CXX = \
+	src/common/random-uniform-mrg32k3a.cc \
+	src/common/rng-mrg32k3a.cc \
+	$(NULL)
+RNG_UNIFORM_H = \
+	src/common/rng-mrg32k3a.h \
+	$(NULL)
+endif
+
 
 # building of libyans.so
 YANS_SRC= \
@@ -73,6 +83,8 @@ YANS_SRC= \
 	src/common/packet-logger.cc \
 	src/common/trace-container.cc \
 	src/common/pcap-writer.cc \
+	src/common/seed-generator.cc \
+	$(RNG_UNIFORM_CXX) \
 	src/ipv4/tag-ipv4.cc \
 	src/ipv4/ipv4-end-point.cc \
 	src/ipv4/ipv4-end-points.cc \
@@ -117,7 +129,6 @@ YANS_SRC= \
 YANS_HDR = \
 	test/test.h \
 	simulator/event.h \
-	simulator/event-id.h \
 	simulator/event.tcc \
 	simulator/static-event.h \
 	simulator/static-event.tcc \
@@ -151,6 +162,8 @@ YANS_HDR = \
 	src/common/ui-traced-variable.tcc \
 	src/common/si-traced-variable.tcc \
 	src/common/f-traced-variable.tcc \
+	src/common/seed-generator.h \
+	$(RNG_UNIFORM_H) \
 	src/ipv4/chunk-icmp.h \
 	src/ipv4/defrag-state.h \
 	src/ipv4/ipv4-route.h \
@@ -196,11 +209,11 @@ YANS_HDR = \
 	src/thread/semaphore.h \
 	src/thread/thread.h \
 	$(NULL)
-YANS_CXXFLAGS=$(CXXFLAGS) $(call gen-lib-build-flags)
+YANS_CXXFLAGS=$(CXXFLAGS) $(call gen-lib-build-flags) -I$(GSL_PREFIX_INC)
 YANS_CFLAGS=$(CFLAGS) $(call gen-lib-build-flags)
-YANS_LDFLAGS=$(LDFLAGS) $(call gen-lib-link-flags)
+YANS_LDFLAGS=$(LDFLAGS) $(call gen-lib-link-flags) -L$(GSL_PREFIX_LIB) -lgslcblas -lgsl 
 YANS_OUTPUT=$(call gen-lib-name, yans)
-ifeq ($(TCP),bsd)
+ifeq ($(TCP_USE),y)
 YANS_SRC += \
 	src/ipv4/tcp-bsd/tcp-bsd-connection.cc
 YANS_CXXFLAGS += -DTCP_USE_BSD
@@ -325,8 +338,12 @@ ALL= \
 	SAMPLE_CXX_SIMU_FOR \
 	SAMPLE_CXX_SIMUTEMP \
 	SAMPLE_CXX_THREAD \
-	YANS_PYTHON \
 	$(NULL)
+
+ifeq ($(PYTHON_USE),y)
+ALL += 	YANS_PYTHON
+endif
+
 
 run-opti-arc-profile-hook:
 	LD_LIBRARY_PATH=bin/opti-arc $(TOP_BUILD_DIR)/opti-arc/samples/main-simple --slow --heap

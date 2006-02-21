@@ -24,12 +24,6 @@ you can use.
   which means that only the short build messages are output.
   example: make VERBOSE=y
 
-- TCP:
-  build the tcp code. Set it to "tcp-bsd" to build the tcp-bsd module
-  shipped next to yans.
-  example: make TCP=tcp-bsd
-
-
 2) Targets
 ----------
 

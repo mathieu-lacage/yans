@@ -1,6 +1,6 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 /*
- * Copyright (c) 2005 INRIA
+ * Copyright (c) 2006 INRIA
  * All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -18,33 +18,23 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-
-#ifndef SCHEDULER_H
-#define SCHEDULER_H
+#ifndef SEED_GENERATOR_H
+#define SEED_GENERATOR_H
 
 #include <stdint.h>
 
 namespace yans {
 
-class Event;
+class SeedGeneratorPrivate;
 
-class Scheduler {
- public:
-	virtual ~Scheduler () = 0;
-
-	virtual Event *insert_at_us (Event *event, uint64_t time) = 0;
-
-	virtual Event   *peek_next (void) = 0;
-	virtual uint64_t peek_next_time_us (void) = 0;
-	virtual void     remove_next (void) = 0;
-
-	virtual Event *remove (Event const*ev) = 0;
-
-	virtual void clear (void) = 0;
-	virtual void print_debug (void) = 0;
+class SeedGenerator {
+public:
+	static void reset (uint32_t seed);
+	static uint32_t get (void);
+private:
+	static SeedGeneratorPrivate *get_priv (void);
 };
 
 }; // namespace yans
 
-
-#endif /* SCHEDULER_H */
+#endif /* SEED_GENERATOR_H */
