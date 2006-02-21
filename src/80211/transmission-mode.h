@@ -26,8 +26,7 @@
 
 namespace yans {
 
-class TransmissionMode
-{
+class TransmissionMode {
 public:
 	virtual ~TransmissionMode () = 0;
 
@@ -56,11 +55,10 @@ public:
 	virtual double get_chunk_success_rate (double snr, unsigned int nbits) const = 0;
 };
 
-class NoFecTransmissionMode : public TransmissionMode
-{
+class NoFecTransmissionMode : public TransmissionMode {
 public:
 	NoFecTransmissionMode (double signal_spread, double rate);
-	virtual ~NoFecTransmissionMode ();
+	virtual ~NoFecTransmissionMode () = 0;
 	virtual double get_signal_spread (void) const;
 	virtual double get_data_rate (void) const;
 	virtual double get_rate (void) const;
@@ -69,10 +67,29 @@ private:
 	double m_signal_spread;
 	double m_rate;
 protected:
-	double get_bpsk_ber (double snr);
-	double get_qam_ber (double snr, unsigned int m);
-	double log2 (double v);
+	double get_bpsk_ber (double snr) const;
+	double get_qam_ber (double snr, unsigned int m) const;
+	double log2 (double v) const;
 };
+
+class FecTransmissionMode  : public TransmissionMode {
+public:
+	FecTransmissionMode (double signal_spread, double rate, double coding_rate);
+	virtual ~FecTransmissionMode () = 0;
+	virtual double get_signal_spread (void) const;
+	virtual double get_data_rate (void) const;
+	virtual double get_rate (void) const;
+protected:
+	double calculate_pd_odd (double ber, unsigned int d) const;
+	double calculate_pd_even (double ber, unsigned int d) const;
+	double calculate_pd (double ber, unsigned int d) const;
+
+private:
+	double m_signal_spread;
+	double m_rate;
+	double m_coding_rate;
+};
+
 
 }; // namespace yans
 

@@ -124,6 +124,7 @@ YANS_SRC= \
 	src/80211/aarf-mac-stations.cc \
 	src/80211/propagation-model.cc \
 	src/80211/channel-80211.cc \
+	src/80211/transmission-mode.cc \
 	test/test.cc \
 	$(NULL)
 YANS_HDR = \

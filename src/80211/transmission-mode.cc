@@ -1,6 +1,6 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*-  *
  *
- * Copyright (c) 2004 INRIA
+ * Copyright (c) 2004,2005,2006 INRIA
  * All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,77 +16,91 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * In addition, as a special exception, the copyright holders of
- * this module give you permission to combine (via static or
- * dynamic linking) this module with free software programs or
- * libraries that are released under the GNU LGPL and with code
- * included in the standard release of ns-2 under the Apache 2.0
- * license or under otherwise-compatible licenses with advertising
- * requirements (or modified versions of such code, with unchanged
- * license).  You may copy and distribute such a system following the
- * terms of the GNU GPL for this module and the licenses of the
- * other code concerned, provided that you include the source code of
- * that other code when and as the GNU GPL requires distribution of
- * source code.
- *
- * Note that people who make modified versions of this module
- * are not obligated to grant this special exception for their
- * modified versions; it is their choice whether to do so.  The GNU
- * General Public License gives permission to release a modified
- * version without this exception; this exception also makes it
- * possible to release a modified version which carries forward this
- * exception.
- *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "base-transmission-mode.h"
+#include "transmission-mode.h"
 
 #include <math.h>
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_randist.h>
+#include <cassert>
+#include <gsl_randist.h>
 
-#include <assert.h>
+namespace yans {
 
-BaseTransmissionMode::BaseTransmissionMode (double signalSpread, double rate)
-	: TransmissionMode (),
-	  signalSpread_ (signalSpread),
-	  rate_ (rate)
+TransmissionMode::~TransmissionMode ()
 {}
 
-double BaseTransmissionMode::log2 (double val)
+NoFecTransmissionMode::NoFecTransmissionMode (double signal_spread, double rate)
+	: m_signal_spread (signal_spread),
+	  m_rate (rate)
+{}
+NoFecTransmissionMode::~NoFecTransmissionMode ()
+{}
+double 
+NoFecTransmissionMode::get_signal_spread (void) const
+{
+	return m_signal_spread;
+}
+double 
+NoFecTransmissionMode::get_data_rate (void) const
+{
+	return m_rate;
+}
+double 
+NoFecTransmissionMode::get_rate (void) const
+{
+	return m_rate;
+}
+double 
+NoFecTransmissionMode::log2 (double val) const
 {
 	return log(val) / log(2.0);
 }
-
-
-double BaseTransmissionMode::BPSKBER (double snr)
+double 
+NoFecTransmissionMode::get_bpsk_ber (double snr) const
 {
-	double EbNo = snr * getSignalSpread () / getRate ();
+	double EbNo = snr * m_signal_spread / m_rate;
 	double z = sqrt(EbNo);
         double ber = 0.5 * erfc(z);
 	return ber;
 }
-
-double BaseTransmissionMode::QAMBER (double snr, unsigned int M)
+double 
+NoFecTransmissionMode::get_qam_ber (double snr, unsigned int m) const
 {
-	double EbNo = snr * getSignalSpread () / getRate ();
-	double z = sqrt ((1.5 * log2 (M) * EbNo) / (M - 1.0));
-        double z1 = ((1.0 - 1.0 / sqrt (M)) * erfc (z)) ;
+	double EbNo = snr * m_signal_spread / m_rate;
+	double z = sqrt ((1.5 * log2 (m) * EbNo) / (m - 1.0));
+        double z1 = ((1.0 - 1.0 / sqrt (m)) * erfc (z)) ;
         double z2 = 1 - pow ((1-z1), 2.0);
-        double ber = z2 / log2 (M);
+        double ber = z2 / log2 (m);
 	return ber;
 }
 
 
 
-FECBaseTransmissionMode::FECBaseTransmissionMode (double signalSpread, double rate, double codingRate)
-	: BaseTransmissionMode (signalSpread, rate),
-	  m_codingRate (codingRate)
+FecTransmissionMode::FecTransmissionMode (double signal_spread, double rate, double coding_rate)
+	: m_signal_spread (signal_spread),
+	  m_rate (rate),
+	  m_coding_rate (coding_rate)
 {}
-FECBaseTransmissionMode::~FECBaseTransmissionMode ()
+FecTransmissionMode::~FecTransmissionMode ()
 {}
-double FECBaseTransmissionMode::calculatePdOdd (double ber, unsigned int d)
+double 
+FecTransmissionMode::get_signal_spread (void) const
+{
+	return m_signal_spread;
+}
+double 
+FecTransmissionMode::get_data_rate (void) const
+{
+	return m_rate * m_coding_rate;
+}
+double 
+FecTransmissionMode::get_rate (void) const
+{
+	return m_rate;
+}
+double 
+FecTransmissionMode::calculate_pd_odd (double ber, unsigned int d) const
 {
 	assert ((d % 2) == 1);
 	unsigned int dstart = (d + 1) / 2;
@@ -94,11 +108,12 @@ double FECBaseTransmissionMode::calculatePdOdd (double ber, unsigned int d)
 	double pd = 0;
 
 	for (unsigned int i = dstart; i < dend; i++){
-                    pd +=  gsl_ran_binomial_pdf (i, ber, d);
+		pd +=  gsl_ran_binomial_pdf (i, ber, d);
 	}
 	return pd;
 }
-double FECBaseTransmissionMode::calculatePdEven (double ber, unsigned int d)
+double 
+FecTransmissionMode::calculate_pd_even (double ber, unsigned int d) const
 {
 	assert ((d % 2) == 0);
 	unsigned int dstart = d / 2 + 1;
@@ -113,13 +128,16 @@ double FECBaseTransmissionMode::calculatePdEven (double ber, unsigned int d)
 	return pd;
 }
 
-double FECBaseTransmissionMode::calculatePd (double ber, unsigned int d)
+double 
+FecTransmissionMode::calculate_pd (double ber, unsigned int d) const
 {
 	double pd;
 	if ((d % 2) == 0) {
-		pd = calculatePdEven (ber, d);
+		pd = calculate_pd_even (ber, d);
 	} else {
-		pd = calculatePdOdd (ber, d);
+		pd = calculate_pd_odd (ber, d);
 	}
 	return pd;
 }
+
+}; // namespace yans
