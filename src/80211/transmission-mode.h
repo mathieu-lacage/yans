@@ -72,13 +72,11 @@ protected:
 	double log2 (double v) const;
 };
 
-class FecTransmissionMode  : public TransmissionMode {
+class FecTransmissionMode  : public NoFecTransmissionMode {
 public:
 	FecTransmissionMode (double signal_spread, double rate, double coding_rate);
 	virtual ~FecTransmissionMode () = 0;
-	virtual double get_signal_spread (void) const;
 	virtual double get_data_rate (void) const;
-	virtual double get_rate (void) const;
 protected:
 	double calculate_pd_odd (double ber, unsigned int d) const;
 	double calculate_pd_even (double ber, unsigned int d) const;

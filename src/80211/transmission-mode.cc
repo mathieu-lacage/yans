@@ -78,26 +78,15 @@ NoFecTransmissionMode::get_qam_ber (double snr, unsigned int m) const
 
 
 FecTransmissionMode::FecTransmissionMode (double signal_spread, double rate, double coding_rate)
-	: m_signal_spread (signal_spread),
-	  m_rate (rate),
+	: NoFecTransmissionMode (signal_spread, rate),
 	  m_coding_rate (coding_rate)
 {}
 FecTransmissionMode::~FecTransmissionMode ()
 {}
 double 
-FecTransmissionMode::get_signal_spread (void) const
-{
-	return m_signal_spread;
-}
-double 
 FecTransmissionMode::get_data_rate (void) const
 {
 	return m_rate * m_coding_rate;
-}
-double 
-FecTransmissionMode::get_rate (void) const
-{
-	return m_rate;
 }
 double 
 FecTransmissionMode::calculate_pd_odd (double ber, unsigned int d) const

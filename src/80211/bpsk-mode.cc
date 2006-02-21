@@ -1,6 +1,6 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*-  *
  *
- * Copyright (c) 2004 INRIA
+ * Copyright (c) 2004,2005,2006 INRIA
  * All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,27 +16,6 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * In addition, as a special exception, the copyright holders of
- * this module give you permission to combine (via static or
- * dynamic linking) this module with free software programs or
- * libraries that are released under the GNU LGPL and with code
- * included in the standard release of ns-2 under the Apache 2.0
- * license or under otherwise-compatible licenses with advertising
- * requirements (or modified versions of such code, with unchanged
- * license).  You may copy and distribute such a system following the
- * terms of the GNU GPL for this module and the licenses of the
- * other code concerned, provided that you include the source code of
- * that other code when and as the GNU GPL requires distribution of
- * source code.
- *
- * Note that people who make modified versions of this module
- * are not obligated to grant this special exception for their
- * modified versions; it is their choice whether to do so.  The GNU
- * General Public License gives permission to release a modified
- * version without this exception; this exception also makes it
- * possible to release a modified version which carries forward this
- * exception.
- *
  * Author: Mathieu Lacage, <mathieu.lacage@sophia.inria.fr>
  */
 
@@ -46,42 +25,45 @@
 #include <gsl/gsl_randist.h>
 #include <math.h>
 
+namespace yans {
 
-BPSKMode::BPSKMode (double signalSpread, double rate)
-	: BaseTransmissionMode (signalSpread, rate)
+NoFecBpskMode::NoFecBpskMode (double signal_spread, double rate)
+	: NoFecTransmissionMode (signal_spread, rate)
 {}
-BPSKMode::~BPSKMode ()
+NoFecBpskMode::~NoFecBpskMode ()
 {}
 
 double 
-BPSKMode::chunkSuccessRate (double snr, unsigned int nbits)
+NoFecBpskMode::get_chunk_success_rate (double snr, unsigned int nbits) const
 {
-	double ber = BPSKBER (snr);
+	double ber = get_bpsk_ber (snr);
 	double csr = pow (1 - ber, nbits);
 	return csr;
 }
 
-BPSKFECMode::BPSKFECMode (unsigned int dFree, unsigned int adFree, 
-			  double signalSpread, double rate, double codingRate)
-	: FECBaseTransmissionMode (signalSpread, rate, codingRate),
-	  dFree_ (dFree),
-	  adFree_ (adFree)
+FecBpskMode::FecBpskMode (unsigned int d_free, unsigned int ad_free, 
+			  double signal_spread, double rate, double coding_rate)
+	: FecTransmissionMode (signal_spread, rate, coding_rate),
+	  m_d_free (d_free),
+	  m_ad_free (ad_free)
 {}
-BPSKFECMode::~BPSKFECMode ()
+FecBpskMode::~FecBpskMode ()
 {}
 double
-BPSKFECMode::chunkSuccessRate (double snr, unsigned int nbits)
+FecBpskMode::get_chunk_success_rate (double snr, unsigned int nbits) const
 {
-	double ber = BPSKBER (snr);
+	double ber = get_bpsk_ber (snr);
 	//printf ("%g\n", ber);
 	if (ber == 0) {
 		return 1;
 	}
 	/* only the first term */
 	//printf ("dfree: %d, adfree: %d\n", dFree_, adFree_);
-	double pd = calculatePd (ber, dFree_);
-	double pmu = adFree_ * pd;
+	double pd = calculate_pd (ber, m_d_free);
+	double pmu = m_ad_free * pd;
 	double pms = pow (1 - pmu, nbits);
 	//printf ("ber: %g -- pd: %g -- pmu: %g -- pms: %g\n", ber, pd, pmu, pms);
 	return pms;
 }
+
+}; // namespace yans

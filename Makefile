@@ -125,6 +125,7 @@ YANS_SRC= \
 	src/80211/propagation-model.cc \
 	src/80211/channel-80211.cc \
 	src/80211/transmission-mode.cc \
+	src/80211/bpsk-mode.cc \
 	test/test.cc \
 	$(NULL)
 YANS_HDR = \
@@ -197,6 +198,8 @@ YANS_HDR = \
 	src/80211/aarf-mac-stations.h \
 	src/80211/propagation-model.h \
 	src/80211/channel-80211.h \
+	src/80211/transmission-mode.h \
+	src/80211/bpsk-mode.h \
 	src/host/host.h \
 	src/host/loopback-interface.h \
 	src/host/network-interface.h \
