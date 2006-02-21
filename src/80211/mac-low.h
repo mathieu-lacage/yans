@@ -44,11 +44,15 @@
 
 #include <vector>
 
-#include "hdr-mac-80211.h"
-#include "mac-handler.tcc"
+#include "chunk-mac-80211-hdr.h"
+#include "mac-address.h"
+
+namespace yans {
 
 class Packet;
 class NetInterface80211;
+class CancellableEvent;
+class PacketLogger;
 
 class MacLowTransmissionListener {
 public:
@@ -143,7 +147,7 @@ public:
 	void setRtsTransmissionMode (int txMode);
 
 	/* store the data packet to transmit. */
-	void setData (Packet *packet);
+	void setData (Packet *packet, ChunkMac80211Hdr const*hdr);
 
 	/* store the transmission listener. */
 	void setTransmissionListener (MacLowTransmissionListener *listener);
@@ -151,26 +155,32 @@ public:
 	/* start the transmission of the currently-stored data. */
 	void startTransmission (void);
 
-	void receive (Packet *packet);
+	void receive_ok (Packet *packet, double rx_snr, int tx_mode);
+	void receive_error (Packet *packet);
 	
 	void registerNavListener (MacLowNavListener *listener);
 private:
-	void dropPacket (Packet *packet);
+	uint32_t get_ack_size (void) const;
+	uint32_t get_rts_size (void) const;
+	uint32_t get_cts_size (void) const;
+	double get_sifs (void) const;
+	double get_pifs (void) const;
+	double get_ack_timeout (void) const;
+	double get_cts_timeout (void) const;
+	uint32_t get_current_size (void) const;
 	double now (void);
-	void forwardDown (Packet *packet);
-	int getSelf (void);
+	void forward_down (Packet *packet, int tx_mode, ChunkMac80211Hdr const *hdr);
+	void forward_up (Packet *packet, ChunkMac80211Hdr const *hdr);
+	MacAddress getSelf (void);
 	bool waitAck (void);
 	bool waitNormalAck (void);
 	bool waitFastAck (void);
 	bool waitSuperFastAck (void);
-	double getLastSNR (void);
 	double calculateTxDuration (int mode, uint32_t size);
 	double calculateOverallCurrentTxTime (void);
 	int getCtsTxModeForRts (int to,  int rtsTxMode);
 	int getAckTxModeForData (int to, int dataTxMode);
-	void notifyNav (double now, double duration,
-			enum mac_80211_packet_type type,
-			int source);
+	void notifyNav (double now, ChunkMac80211Hdr const*hdr);
 	bool isNavZero (double now);
 	void maybeCancelPrevious (void);
 	
@@ -179,18 +189,18 @@ private:
 	Packet *getACKPacket (void);
 	Packet *getRTSforPacket (Packet *data);	
 
-	void normalAckTimeout (MacCancelableEvent *event);
-	void fastAckTimeout (MacCancelableEvent *event);
-	void superFastAckTimeout (MacCancelableEvent *event);
-	void fastAckFailedTimeout (MacCancelableEvent *event);
-	void CTSTimeout (MacCancelableEvent *event);
-	void sendCTS_AfterRTS (MacCancelableEvent *macEvent);
-	void sendACK_AfterData (MacCancelableEvent *macEvent);
-	void sendDataAfterCTS (MacCancelableEvent *macEvent);
-	void waitSIFSAfterEndTx (MacCancelableEvent *macEvent);
+	void normal_ack_timeout (void);
+	void fast_ack_timeout (void);
+	void super_fast_ack_timeout (void);
+	void fast_ack_failed_timeout (void);
+	void cts_timeout (void);
+	void send_cts_after_rts (MacAddress source, double duration, int tx_mode);
+	void send_ack_after_data (MacAddress source, double duration, int tx_mode);
+	void send_data_after_cts (MacAddress source, double duration, int tx_mode);
+	void wait_sifs_after_end_tx (void);
 
-	void sendRTSForPacket (void);
-	void sendDataPacket (void);
+	void send_rts_for_packet (void);
+	void send_data_packet (void);
 	void sendCurrentTxPacket (void);
 
 	NetInterface80211 *m_interface;
@@ -199,17 +209,18 @@ private:
 	typedef std::vector<MacLowNavListener *> NavListeners;
 	NavListeners m_navListeners;
 
-	DynamicHandler<MacLow> *m_normalAckTimeoutHandler;
-	DynamicHandler<MacLow> *m_fastAckTimeoutHandler;
-	DynamicHandler<MacLow> *m_superFastAckTimeoutHandler;
-	DynamicHandler<MacLow> *m_fastAckFailedTimeoutHandler;
-	DynamicHandler<MacLow> *m_CTSTimeoutHandler;
-	DynamicHandler<MacLow> *m_sendCTSHandler;
-	DynamicHandler<MacLow> *m_sendACKHandler;
-	DynamicHandler<MacLow> *m_sendDataHandler;
-	DynamicHandler<MacLow> *m_waitSIFSHandler;
+	CancellableEvent *m_normal_ack_timeout_event;
+	CancellableEvent *m_fast_ack_timeout_event;
+	CancellableEvent *m_super_fast_ack_timeout_event;
+	CancellableEvent *m_fast_ack_failed_timeout_event;
+	CancellableEvent *m_cts_timeout_event;
+	CancellableEvent *m_send_cts_event;
+	CancellableEvent *m_send_ack_event;
+	CancellableEvent *m_send_data_event;
+	CancellableEvent *m_wait_sifs_event;
 
-	Packet *m_currentTxPacket;
+	Packet *m_current_packet;
+	ChunkMac80211Hdr m_current_hdr;
 
 	uint32_t m_nextSize;
 	int m_nextTxMode;
@@ -225,6 +236,10 @@ private:
 	double m_lastNavStart;
 	double m_lastNavDuration;
 	double m_overrideDurationId;
+
+	PacketLogger *m_drop_error;
 };
+
+}; // namespace yans
 
 #endif /* MAC_LOW_H */

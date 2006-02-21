@@ -44,12 +44,7 @@
 #include "bpsk-mode.h"
 #include "qam-mode.h"
 #include "rng-uniform.h"
-#include "hdr-mac-80211.h"
-#include "net-interface.h"
-#include "free-space-propagation.h"
 #include "transmission-mode.h"
-#include "mac-low.h"
-
 #include "packet.h"
 
 #include <math.h>
@@ -79,6 +74,8 @@
 #  define STATE_AT(at)
 #endif
 
+namespace yans {
+
 /****************************************************************
  *       This destructor is needed.
  ****************************************************************/
@@ -93,48 +90,80 @@ Phy80211Listener::~Phy80211Listener ()
 Phy80211::Phy80211 ()
 	: m_sleeping (false),
 	  m_rxing (false),
-	  m_endTx (0.0),
-	  m_previousStateChangeTime (0.0)
+	  m_end_tx (0.0),
+	  m_previous_state_change_time (0.0),
+	  m_tx_callback (0),
+	  m_rx_ok_callback (0),
+	  m_rx_error_callback (0)
 {}
 
 Phy80211::~Phy80211 ()
-{}
+{
+	delete m_tx_callback;
+	delete m_rx_ok_callback;
+	delete m_rx_error_callback;
+}
+
+void 
+Phy80211::set_tx_callback (TxCallback *callback)
+{
+	m_tx_callback = callback;
+}
+void 
+Phy80211::set_receive_ok_callback (RxOkCallback *callback)
+{
+	m_rx_ok_callback = callback;
+}
+void 
+Phy80211::set_receive_error_callback (RxErrorCallback *callback)
+{
+	m_rx_error_callback = callback;
+}
+void 
+Phy80211::receive_packet (Packet *packet, 
+			  PropagationData const &data,
+			  int tx_mode)
+{
+	// XXX
+}
+void 
+Phy80211::send_packet (Packet *packet, int tx_mode, int tx_power)
+{
+	// XXX
+}
+
+void 
+Phy80211::set_ed_threshold (double ed_threshold)
+{
+	m_ed_threshold = ed_threshold;
+}
+void 
+Phy80211::set_rx_noise (double rx_noise)
+{
+	m_rx_noise = rx_noise;
+}
+void 
+Phy80211::set_tx_power_increments (double tx_power_base, 
+				   double tx_power_end, 
+				   int n_tx_power)
+{
+	m_tx_power_base = tx_power_base;
+	m_tx_power_end = tx_power_end;
+	m_n_txpower = n_tx_power;
+}
+uint32_t 
+Phy80211::get_n_modes (void)
+{
+	return m_modes.size ();
+}
+uint32_t 
+Phy80211::get_n_txpower (void)
+{
+	return m_n_txpower;
+}
 
 void
-Phy80211::setInterface (NetInterface *interface)
-{
-	m_interface = interface;
-}
-void 
-Phy80211::setMac (MacLow *low)
-{
-	m_mac = low;
-}
-
-void 
-Phy80211::forwardUp (Packet *packet)
-{
-	m_mac->receive (packet);
-}
-
-void 
-Phy80211::setRxThreshold (double rxThreshold)
-{
-	m_rxThreshold = rxThreshold;
-}
-void 
-Phy80211::setRxNoise (double rxNoise)
-{
-	m_rxNoise = rxNoise;
-}
-void 
-Phy80211::setTxPower (double txPower)
-{
-	m_txPower = txPower;
-}
-
-void
-Phy80211::configureStandardA (void)
+Phy80211::configure_80211a (void)
 {
 	m_plcpHeaderLength = 4 + 1 + 12 + 1 + 6 + 16 + 6;
 	m_plcpPreambleDelay = 20e-6;
@@ -151,16 +180,78 @@ Phy80211::configureStandardA (void)
 }
 
 void 
-Phy80211::setPropagationModel (FreeSpacePropagation *propagation)
+Phy80211::set_propagation_model (PropagationModel propagation)
 {
 	m_propagation = propagation;
 }
 
 void 
-Phy80211::registerListener (Phy80211Listener *listener)
+Phy80211::register_listener (Phy80211Listener *listener)
 {
 	m_listeners.push_back (listener);
 }
+
+bool 
+Phy80211::is_state_idle (void)
+{
+	return (get_state () == IDLE)?true:false;
+}
+bool 
+Phy80211::is_state_busy (void)
+{
+	return (get_state () != IDLE)?true:false;
+}
+bool 
+Phy80211::is_state_rx (void)
+{
+	return (get_state () == SYNC)?true:false;
+}
+bool 
+Phy80211::is_state_tx (void)
+{
+	return (get_state () == TX)?true:false;
+}
+bool 
+Phy80211::is_state_sleep (void)
+{
+	return (get_state () == SLEEP)?true:false;
+}
+
+double
+Phy80211::get_state_duration (void)
+{
+	return now () - m_previous_state_change_time;
+}
+double 
+Phy80211::get_delay_until_idle (void)
+{
+	double retval;
+
+	switch (get_state ()) {
+	case SYNC:
+		retval = m_end_rx - now ();
+		break;
+	case TX:
+		retval = m_end_tx - now ();
+		break;
+	case IDLE:
+		retval = 0.0;
+		break;
+	case SLEEP:
+		assert (false);
+		// quiet compiler.
+		retval = 0.0;
+		break;
+	}
+	retval = max (retval, 0.0);
+	return retval;
+}
+
+
+
+/************************************
+ * Start of private code.
+ ************************************/
 
 void 
 Phy80211::notifyRxStart (double now, double duration)
@@ -252,11 +343,6 @@ Phy80211::getMaxPacketDuration (void)
 {
 	return m_maxPacketDuration;
 }
-int 
-Phy80211::getNModes (void)
-{
-	return m_modes.size ();
-}
 double
 Phy80211::now (void)
 {
@@ -283,16 +369,6 @@ double
 Phy80211::getPreambleDuration (void)
 {
 	return m_plcpPreambleDelay;
-}
-double 
-Phy80211::getEndOfTx (void)
-{
-	return m_endTx;
-}
-double 
-Phy80211::getEndOfRx (void)
-{
-	return m_endRx;
 }
 double
 Phy80211::max (double a, double b)
@@ -573,32 +649,6 @@ Phy80211::getState (void)
 		}
 	}
 }
-double
-Phy80211::getStateDuration (void)
-{
-	return now () - m_previousStateChangeTime;
-}
-double 
-Phy80211::getDelayUntilIdle (void)
-{
-	double retval;
 
-	switch (getState ()) {
-	case SYNC:
-		retval = getEndOfRx () - now ();
-		break;
-	case TX:
-		retval = getEndOfTx () - now ();
-		break;
-	case IDLE:
-		retval = 0.0;
-		break;
-	case SLEEP:
-		assert (false);
-		// quiet compiler.
-		retval = 0.0;
-		break;
-	}
-	retval = max (retval, 0.0);
-	return retval;
-}
+
+}; // namespace yans

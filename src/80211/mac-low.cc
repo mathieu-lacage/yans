@@ -1,6 +1,6 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 /*
- * Copyright (c) 2005 INRIA
+ * Copyright (c) 2005,2006 INRIA
  * All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -41,8 +41,6 @@
  */
 
 #include "mac-low.h"
-#include "mac-queue-80211e.h"
-#include "hdr-mac-80211.h"
 #include "mac-high.h"
 #include "phy-80211.h"
 #include "mac-station.h"
@@ -50,7 +48,6 @@
 #include "mac-parameters.h"
 #include "mac-traces.h"
 #include "net-interface.h"
-#include "mac-stations.h"
 #include "mac-rx-middle.h"
 #include "net-interface-80211.h"
 #include "common.h"
@@ -81,42 +78,16 @@ MacLowNavListener::MacLowNavListener ()
 MacLowNavListener::~MacLowNavListener ()
 {}
 
-class SendEvent : public MacCancelableEvent
-{
-public:
-	SendEvent (Packet *packet)
-		: m_source (HDR_MAC_80211 (packet)->getSource ()),
-		  m_duration (HDR_MAC_80211 (packet)->getDuration ()),
-		  m_txMode (HDR_MAC_80211 (packet)->getTxMode ())
-	{}
-	int getSource (void)
-	{
-		return m_source;
-	}
-	double getDuration (void)
-	{
-		return m_duration;
-	}
-	int getTxMode (void)
-	{
-		return m_txMode;
-	}
-private:
-	int m_source;
-	double m_duration;
-	int m_txMode;
-};
-
 MacLow::MacLow ()
-	: m_normalAckTimeoutHandler (new DynamicHandler<MacLow> (this, &MacLow::normalAckTimeout)),
-	  m_fastAckTimeoutHandler (new DynamicHandler<MacLow> (this, &MacLow::fastAckTimeout)),
-	  m_superFastAckTimeoutHandler (new DynamicHandler<MacLow> (this, &MacLow::superFastAckTimeout)),
-	  m_fastAckFailedTimeoutHandler (new DynamicHandler<MacLow> (this, &MacLow::fastAckFailedTimeout)),
-	  m_CTSTimeoutHandler (new DynamicHandler<MacLow> (this, &MacLow::CTSTimeout)),
-	  m_sendCTSHandler (new DynamicHandler<MacLow> (this, &MacLow::sendCTS_AfterRTS)),
-	  m_sendACKHandler (new DynamicHandler<MacLow> (this, &MacLow::sendACK_AfterData)),
-	  m_sendDataHandler (new DynamicHandler<MacLow> (this, &MacLow::sendDataAfterCTS)),
-	  m_waitSIFSHandler (new DynamicHandler<MacLow> (this, &MacLow::waitSIFSAfterEndTx)),
+	: m_normal_ack_timeout_event (0),
+	  m_fast_ack_timeout_event (0),
+	  m_super_fast_ack_timeout_event (0),
+	  m_fast_ack_failed_timeout_event (0),
+	  m_cts_timeout_event (0),
+	  m_send_cts_event (0),
+	  m_send_ack_event (0),
+	  m_send_data_event (0),
+	  m_wait_sifs_event (0),
 	  m_currentTxPacket (0)
 {
 	m_lastNavDuration = 0.0;
@@ -127,13 +98,42 @@ MacLow::MacLow ()
 
 MacLow::~MacLow ()
 {
-	delete m_normalAckTimeoutHandler;
-	delete m_fastAckTimeoutHandler;
-	delete m_fastAckFailedTimeoutHandler;
-	delete m_CTSTimeoutHandler;
-	delete m_sendCTSHandler;
-	delete m_sendACKHandler;
-	delete m_sendDataHandler;
+	if (m_normal_ack_timeout_event != 0) {
+		m_normal_ack_timeout_event->cancel ();
+		m_normal_ack_timeout_event = 0;
+	}
+	if (m_fast_ack_timeout_event != 0) {
+		m_fast_ack_timeout_event->cancel ();
+		m_fast_ack_timeout_event = 0;
+	}
+	if (m_super_fast_ack_timeout_event != 0) {
+		m_super_fast_ack_timeout_event->cancel ();
+		m_super_fast_ack_timeout_event = 0;
+	}
+	if (m_fast_ack_failed_timeout_event != 0) {
+		m_fast_ack_failed_timeout_event->cancel ();
+		m_fast_ack_failed_timeout_event = 0;
+	}
+	if (m_cts_timeout_event != 0) {
+		m_cts_timeout_event->cancel ();
+		m_cts_timeout_event= 0;
+	}
+	if (m_send_cts_event != 0) {
+		m_send_cts_event->cancel ();
+		m_send_cts_event= 0;
+	}
+	if (m_send_ack_event != 0) {
+		m_send_ack_event->cancel ();
+		m_send_ack_event= 0;
+	}
+	if (m_send_data_event != 0) {
+		m_send_data_event->cancel ();
+		m_send_data_event= 0;
+	}
+	if (m_wait_sifs_event != 0) {
+		m_wait_sifs_event->cancel ();
+		m_wait_sifs_event= 0;
+	}
 }
 
 /*****************************************************
@@ -147,11 +147,9 @@ MacLow::setInterface (NetInterface80211 *interface)
 }
 
 void
-MacLow::forwardDown (Packet *packet)
+MacLow::forwardDown (Packet *packet, int tx_mode, ChunkMac80211Hdr *const hdr)
 {
-	double txDuration = calculateTxDuration (getTxMode (packet), getSize (packet));
-	double durationId = getDuration (packet);
-	enum mac_80211_packet_type type = getType (packet);
+	double txDuration = calculateTxDuration (tx_mode, packet->get_size ());
 	m_interface->phy ()->sendDown (packet);
 	/* Note that it is really important to notify the NAV 
 	 * thing _after_ forwarding the packet to the PHY.
@@ -160,30 +158,19 @@ MacLow::forwardDown (Packet *packet)
 	 * some nasty things to the underlying memory of the 
 	 * packet)
 	 */
-	notifyNav (now ()+txDuration, durationId, type, getSelf ());
+
+	notifyNav (now ()+txDuration, hdr);
 }
 int 
 MacLow::getSelf (void)
 {
 	return m_interface->getMacAddress ();
 }
-double 
-MacLow::getLastSNR (void)
-{
-	return m_interface->phy ()->getLastRxSNR ();
-}
 double
 MacLow::calculateTxDuration (int mode, uint32_t size)
 {
 	double duration = m_interface->phy ()->calculateTxDuration (mode, size);
 	return duration;
-}
-
-void
-MacLow::dropPacket (Packet *packet)
-{
-	/* XXX: push in drop queue. */
-	Packet::free (packet);
 }
 
 int
@@ -210,208 +197,286 @@ MacLow::maybeCancelPrevious (void)
 	 * any transaction left.
 	 * See the comment in setData too.
 	 */
-	if (m_waitSIFSHandler->isRunning () ||
-	    m_normalAckTimeoutHandler->isRunning () ||
-	    m_CTSTimeoutHandler->isRunning () ||
-	    m_fastAckFailedTimeoutHandler->isRunning () ||
-	    m_fastAckTimeoutHandler->isRunning () ||
-	    m_superFastAckTimeoutHandler->isRunning ()) {
-		
-		m_waitSIFSHandler->cancel ();
-		m_normalAckTimeoutHandler->cancel ();
-		m_CTSTimeoutHandler->cancel ();
-		m_fastAckFailedTimeoutHandler->cancel ();
-		m_fastAckTimeoutHandler->cancel ();
-		m_superFastAckTimeoutHandler->cancel ();
+	if (m_normal_ack_timeout_event != 0) {
+		m_normal_ack_timeout_event->cancel ();
+		m_normal_ack_timeout_event = 0;
+	}
+	if (m_fast_ack_timeout_event != 0) {
+		m_fast_ack_timeout_event->cancel ();
+		m_fast_ack_timeout_event = 0;
+	}
+	if (m_super_fast_ack_timeout_event != 0) {
+		m_super_fast_ack_timeout_event->cancel ();
+		m_super_fast_ack_timeout_event = 0;
+	}
+	if (m_fast_ack_failed_timeout_event != 0) {
+		m_fast_ack_failed_timeout_event->cancel ();
+		m_fast_ack_failed_timeout_event = 0;
+	}
+	if (m_cts_timeout_event != 0) {
+		m_cts_timeout_event->cancel ();
+		m_cts_timeout_event= 0;
+	}
+	if (m_send_cts_event != 0) {
+		m_send_cts_event->cancel ();
+		m_send_cts_event= 0;
+	}
+	if (m_send_ack_event != 0) {
+		m_send_ack_event->cancel ();
+		m_send_ack_event= 0;
+	}
+	if (m_send_data_event != 0) {
+		m_send_data_event->cancel ();
+		m_send_data_event= 0;
+	}
+	if (m_wait_sifs_event != 0) {
+		m_wait_sifs_event->cancel ();
+		m_wait_sifs_event= 0;
+	}
 
+	if (m_transmissionListener != 0) {
 		m_transmissionListener->cancel ();
 	}
+}
+
+uint32_t 
+MacLow::get_ack_size (void) const
+{
+	ChunkMac80211Hdr ack;
+	ack.set_type (MAC_80211_CTL_ACK);
+	return ack.get_size ();
+}
+uint32_t 
+MacLow::get_rts_size (void) const
+{
+	ChunkMac80211Hdr rts;
+	rts.set_type (MAC_80211_CTL_RTS);
+	return rts.get_size ();
+}
+uint32_t 
+MacLow::get_cts_size (void) const
+{
+	ChunkMac80211Hdr cts;
+	cts.set_type (MAC_80211_CTL_CTS);
+	return cts.get_size ();
+}
+double 
+MacLow::get_sifs (void) const
+{
+	// XXX
+	return 0.0;
+}
+double 
+MacLow::get_pifs (void) const
+{
+	// XXX
+	return 0.0;
+}
+double 
+MacLow::get_ack_timeout (void) const
+{
+	// XXX
+	return 0.0;
+}
+double 
+MacLow::get_cts_timeout (void) const
+{
+	// XXX
+	return 0.0;
+}
+uint32_t 
+MacLow::get_current_size (void) const
+{
+	ChunkMac80211Fcs fcs;
+	return m_current_packet.get_size () + m_current_hdr.get_size () + fcs.get_size ();
 }
 
 double
 MacLow::now (void)
 {
 	double now;
-	now = Scheduler::instance ().clock ();
+	now = Simulator::now_s ();
 	return now;
 }
 
-Packet *
-MacLow::getRTSPacket (void)
-{
-	Packet *packet = hdr_mac_80211::create (getSelf ());
-	setSize (packet, m_interface->parameters ()->getRTSSize ());
-	setType (packet, MAC_80211_CTL_RTS);
-	return packet;
-}
-Packet *
-MacLow::getCTSPacket (void)
-{
-	Packet *packet = hdr_mac_80211::create (getSelf ());
-	setSize (packet, m_interface->parameters ()->getCTSSize ());
-	setType (packet, MAC_80211_CTL_CTS);
-	return packet;
-}
-Packet *
-MacLow::getACKPacket (void)
-{
-	Packet *packet = hdr_mac_80211::create (getSelf ());
-	setSize (packet, m_interface->parameters ()->getACKSize ());
-	setType (packet, MAC_80211_CTL_ACK);
-	return packet;
-}
-Packet *
-MacLow::getRTSforPacket (Packet *data)
-{
-	Packet *packet = getRTSPacket ();
-	setDestination (packet, getDestination (data));
-	setTxMode (packet, m_rtsTxMode);
-	double duration;
-	if (m_overrideDurationId > 0.0) {
-		duration = m_overrideDurationId;
-	} else {
-		int ackTxMode = getAckTxModeForData (getDestination (data), m_dataTxMode);
-		duration = 0.0;
-		duration += m_interface->parameters ()->getSIFS ();
-		duration += calculateTxDuration (m_rtsTxMode, m_interface->parameters ()->getCTSSize ());
-		duration += m_interface->parameters ()->getSIFS ();
-		duration += calculateTxDuration (m_dataTxMode, getSize (data));
-		duration += m_interface->parameters ()->getSIFS ();
-		duration += calculateTxDuration (ackTxMode, m_interface->parameters ()->getACKSize ());
-	}
-	setDuration (packet, duration);
-	return packet;
-}
-
-
-
 void
-MacLow::sendRTSForPacket (void)
+MacLow::send_rts_for_packet (void)
 {
 	/* send an RTS for this packet. */
-	Packet *packet = getRTSforPacket (m_currentTxPacket);
-	TRACE ("tx RTS to %d with mode %d", getDestination (packet), getTxMode (packet));
-	double txDuration = calculateTxDuration (getTxMode (packet), getSize (packet));
-	double timerDelay = txDuration + m_interface->parameters ()->getCTSTimeoutDuration ();
-	m_CTSTimeoutHandler->start (new MacCancelableEvent (),
-				    timerDelay);
-	forwardDown (packet);
-}
-void
-MacLow::sendDataPacket (void)
-{
-	/* send this packet directly. No RTS is needed. */
-	Packet *txPacket = m_currentTxPacket;
-	TRACE ("tx %s to %d with mode %d", getTypeString (txPacket), getDestination (txPacket), m_dataTxMode);
-	double txDuration = calculateTxDuration (m_dataTxMode, getSize (txPacket));
-	if (waitNormalAck ()) {
-		double timerDelay = txDuration + m_interface->parameters ()->getACKTimeoutDuration ();
-		m_normalAckTimeoutHandler->start (timerDelay);
-	} else if (waitFastAck ()) {
-		double timerDelay = txDuration + m_interface->parameters ()->getPIFS ();
-		m_fastAckTimeoutHandler->start (timerDelay);
-	} else if (waitSuperFastAck ()) {
-		double timerDelay = txDuration + m_interface->parameters ()->getPIFS ();
-		m_superFastAckTimeoutHandler->start (timerDelay);
-	}
-	setTxMode (txPacket, m_dataTxMode);
+	ChunkMac80211Hdr rts;
+	rts.set_type (MAC_80211_CTL_RTS);
+	rts.set_addr1 (m_current_hdr.get_addr1 ());
+	rts.set_addr2 (getSelf ());
 	double duration;
 	if (m_overrideDurationId > 0.0) {
 		duration = m_overrideDurationId;
 	} else {
-		int ackTxMode = getAckTxModeForData (getDestination (txPacket), m_dataTxMode);
+		int ackTxMode = getAckTxModeForData (m_current_hdr.get_addr1 (), m_dataTxMode);
+		duration = 0.0;
+		duration += m_interface->parameters ()->getSIFS ();
+		duration += calculateTxDuration (m_rtsTxMode, get_cts_size ());
+		duration += m_interface->parameters ()->getSIFS ();
+		duration += calculateTxDuration (m_dataTxMode, m_current_packet->get_size () + m_current_hdr.get_size () + 4);
+		duration += m_interface->parameters ()->getSIFS ();
+		duration += calculateTxDuration (ackTxMode, get_ack_size ());
+	}
+	rts.set_duration_s (duration);
+
+	TRACE ("tx RTS to "<< rts.get_addr1 () << ", mode=" << m_rtsTxMode);
+
+	double txDuration = calculateTxDuration (m_rtsTxMode, get_rts_size ());
+	double timerDelay = txDuration + m_interface->parameters ()->getCTSTimeoutDuration ();
+
+	assert (m_cts_timeout_event == 0);
+	m_cts_timeout_event = make_event (&MacLow::cts_timeout, this);
+	Simulator::insert_in_s (timerDelay, m_cts_timeout_event);
+
+	Packet *packet = new Packet ();
+	packet->add (&rts);
+	ChunkMac80211Fcs fcs;
+	packet->add (&fcs);
+
+	forward_down (packet, m_rtsTxMode, &rts);
+}
+void
+MacLow::send_data_packet (void)
+{
+	/* send this packet directly. No RTS is needed. */
+	TRACE ("tx "<< m_current_hdr.get_type_string () << " to " << m_current_hdr.get_addr1 () <<
+	       ", mode=" << m_dataTxMode);
+	double txDuration = calculateTxDuration (m_dataTxMode, m_current_packet.get_size () + m_current_hdr.get_size () + 4);
+	if (waitNormalAck ()) {
+		double timerDelay = txDuration + get_ack_timeout ();
+		assert (m_normal_ack_timeout_event == 0);
+		m_normal_ack_timeout_event = make_event (&MacLow::normal_ack_timeout, this);
+		Simulator::insert_in_s (timerDelay, m_normal_ack_timeout_event);
+	} else if (waitFastAck ()) {
+		double timerDelay = txDuration + get_pifs ();
+		assert (m_fast_ack_timeout_event == 0);
+		m_fast_ack_timeout_event = make_event (&MacLow::fast_ack_timeout, this);
+		Simulator::insert_in_s (timerDelay, m_fast_ack_timeout_event);
+	} else if (waitSuperFastAck ()) {
+		double timerDelay = txDuration + get_pifs ();
+		assert (m_super_fast_ack_timeout_event == 0);
+		m_super_fast_ack_timeout_event = make_event (&MacLow::super_fast_ack_timeout, this);
+		Simulator::insert_in_s (timerDelay, m_super_fast_ack_timeout_event);
+	}
+
+	double duration;
+	if (m_overrideDurationId > 0.0) {
+		duration = m_overrideDurationId;
+	} else {
+		int ackTxMode = getAckTxModeForData (m_current_hdr.get_addr1 (), m_dataTxMode);
 		duration = 0.0;
 		if (waitAck ()) {
-			duration += m_interface->parameters ()->getSIFS ();
-			duration += calculateTxDuration (ackTxMode, m_interface->parameters ()->getACKSize ());
+			duration += get_sifs ();
+			duration += calculateTxDuration (ackTxMode, get_ack_size ());
 		}
 		if (m_nextSize > 0) {
-			duration += m_interface->parameters ()->getSIFS ();
+			duration += get_sifs ();
 			duration += calculateTxDuration (m_nextTxMode, m_nextSize);
 			if (waitAck ()) {
-				duration += m_interface->parameters ()->getSIFS ();
-				duration += calculateTxDuration (ackTxMode, m_interface->parameters ()->getACKSize ());
+				duration += get_sifs ();
+				duration += calculateTxDuration (ackTxMode, get_ack_size ());
 			}
 		}
 	}
-	setDuration (txPacket, duration);
-	forwardDown (txPacket);
+	m_current_hdr.set_duration_s (duration);
+
+	m_current_packet.add (m_current_hdr);
+	ChunkMac80211Fcs fcs;
+	m_current_packet.add (&fcs);
+
+	forwardDown (m_current_packet, m_dataTxMode, m_current_hdr);
+	m_current_packet = 0;
+	m_current_hdr = 0;
 }
 
 
 void
-MacLow::sendCTS_AfterRTS (MacCancelableEvent *macEvent)
+MacLow::send_cts_after_rts (MacAddress source, double duration, int tx_mode)
 {
 	/* send a CTS when you receive a RTS 
 	 * right after SIFS.
 	 */
-	SendEvent *event = static_cast<SendEvent *> (macEvent);
-	int ctsTxMode = getCtsTxModeForRts (event->getSource (), event->getTxMode ());
-	TRACE ("tx CTS to %d with mode %d", event->getSource (), ctsTxMode);
-	Packet * cts = getCTSPacket ();
-	setDestination (cts, event->getSource ());
-	double duration = event->getDuration ();
-	duration -= calculateTxDuration (ctsTxMode, getSize (cts));
-	duration -= m_interface->parameters ()->getSIFS ();
-	setDuration (cts, duration);
-	setTxMode (cts, ctsTxMode);
-	forwardDown (cts);
+	int ctsTxMode = getCtsTxModeForRts (source, tx_mode);
+	TRACE ("tx CTS to " << source << ", mode=", ctsTxMode);
+	ChunkMac80211Hdr cts;
+	cts.set_type (MAC_80211_CTL_CTS);
+	cts.set_addr1 (source);
+	duration -= calculateTxDuration (ctsTxMode, get_cts_size ());
+	duration -= get_sifs ();
+	cts.set_duration_s (duration);
+
+	Packet *packet = new Packet ();
+	packet->add (&cts);
+	ChunkMac80211Fcs fcs;
+	packet->add (&fcs);
+
+	forwardDown (packet, ctsTxMode, &cts);
 }
 
 void
-MacLow::sendACK_AfterData (MacCancelableEvent *macEvent)
+MacLow::send_ack_after_data (MacAddress source, double duration, int tx_mode)
 {
 	/* send an ACK when you receive 
 	 * a packet after SIFS. 
 	 */
-	SendEvent *event = static_cast<SendEvent *> (macEvent);
-	int ackTxMode = getAckTxModeForData (event->getSource (), event->getTxMode ());
-	TRACE ("tx ACK to %d with mode %d", event->getSource (), ackTxMode);
-	Packet * ack = getACKPacket ();
-	setDestination (ack, event->getSource ());
-	double duration = event->getDuration ();
-	duration -= calculateTxDuration (ackTxMode, getSize (ack));
-	duration -= m_interface->parameters ()->getSIFS ();
-	setDuration (ack, duration);
-	setTxMode (ack, ackTxMode);
-	forwardDown (ack);
+	int ackTxMode = getAckTxModeForData (source, tx_mode);
+	TRACE ("tx ACK to " << source << ", mode=" << ackTxMode);
+	ChunkMac80211Hdr ack;
+	ack.set_addr1 (source);
+	duration -= calculateTxDuration (ackTxMode, get_ack_size ());
+	duration -= get_size ();
+	ack.set_duration_s (duration);
+
+	Packet *packet = new Packet ();
+	packet->add (&cts);
+	ChunkMac80211Fcs fcs;
+	packet->add (&fcs);
+
+	forwardDown (packet, ackTxMode, &ack);
 }
 
 void
-MacLow::sendDataAfterCTS (MacCancelableEvent *macEvent)
+MacLow::send_data_after_cts (MacAddress source, double duration, int tx_mode)
 {
 	/* send the third step in a 
 	 * RTS/CTS/DATA/ACK hanshake 
 	 */
 	// XXX use sendDataPacket ?
-	assert (m_currentTxPacket);
-	SendEvent *event = static_cast<SendEvent *> (macEvent);
+	assert (m_current_packet != 0);
 
-	TRACE ("tx %s to %d with mode %d seq=0x%x tid=%u", 
-	       getTypeString (m_currentTxPacket),
-	       getDestination (m_currentTxPacket),
-	       m_dataTxMode, 
-	       getSequenceControl (m_currentTxPacket),
-	       getTID (m_currentTxPacket));
-	double txDuration = calculateTxDuration (m_dataTxMode, getSize (m_currentTxPacket));
+	TRACE ("tx " << m_current_hdr.get_type_string () << " to " << m_current_hdr.get_addr2 () <<
+	       ", mode=" << m_dataTxMode << ", seq=0x"<< m_current_hdr.get_sequence_control () <<
+	       ", tid=", << m_current_hdr.get_qos_tid ());
+	double txDuration = calculateTxDuration (m_dataTxMode, m_current_packet.get_size () + m_current_hdr.get_size () + 4);
 	if (waitNormalAck ()) {
-		double timerDelay = txDuration + m_interface->parameters ()->getACKTimeoutDuration ();
-		m_normalAckTimeoutHandler->start (timerDelay);
+		double timer_delay = txDuration + get_ack_timeout ();
+		assert (m_normal_ack_timeout_event == 0);
+		m_normal_ack_timeout_event = make_event (&MacLow::normal_ack_timeout, this);
+		Simulator::insert_in_s (timer_delay, m_normal_ack_timeout_event);
 	} else if (waitFastAck ()) {
-		double timerDelay = txDuration + m_interface->parameters ()->getPIFS ();
-		m_fastAckTimeoutHandler->start (timerDelay);
+		double timer_delay = txDuration + get_pifs ();
+		m_fast_ack_timeout_event = make_event (&MacLow::fast_ack_timeout, this);
+		Simulator::insert_in_s (timer_delay, m_fast_ack_timeout_event);
 	} else if (waitSuperFastAck ()) {
-		double timerDelay = txDuration + m_interface->parameters ()->getPIFS ();
-		m_superFastAckTimeoutHandler->start (timerDelay);
+		double timer_delay = txDuration + get_pifs ();
+		m_super_fast_ack_timeout_event = make_event (&MacLow::super_fast_ack_timeout, this);
+		Simulator::insert_in_s (timer_delay, m_super_fast_ack_timeout_event);
 	}
 
-	setTxMode (m_currentTxPacket, m_dataTxMode);
-	double duration = event->getDuration ();
 	duration -= txDuration;
-	duration -= m_interface->parameters ()->getSIFS ();
-	setDuration (m_currentTxPacket, duration);
-	forwardDown (m_currentTxPacket);
-	m_currentTxPacket = 0;
+	duration -= get_sifs ();
+	m_current_hdr.set_duration_s (duration);
+
+	m_current_packet->add (&m_current_hdr);
+	ChunkMac80211Fcs fcs;
+	m_current_packet->add (&fcs);
+
+	forwardDown (m_currentTxPacket, m_dataTxMode, &m_current_hdr);
+	m_current_packet = 0;
+	m_current_hdr = 0;
 }
 
 
@@ -422,18 +487,18 @@ MacLow::waitSIFSAfterEndTx (MacCancelableEvent *macEvent)
 }
 
 void
-MacLow::normalAckTimeout (MacCancelableEvent *event)
+MacLow::normal_ack_timeout (void)
 {
 	m_transmissionListener->missedACK ();
 }
 void
-MacLow::fastAckFailedTimeout (MacCancelableEvent *event)
+MacLow::fast_ack_failed_timeout (void)
 {
 	m_transmissionListener->missedACK ();
 	TRACE ("fast Ack busy but missed");
 }
 void
-MacLow::fastAckTimeout (MacCancelableEvent *event)
+MacLow::fast_ack_timeout (void)
 {
 	if (m_interface->phy ()->getState () == Phy80211::IDLE) {
 		TRACE ("fast Ack idle missed");
@@ -441,7 +506,7 @@ MacLow::fastAckTimeout (MacCancelableEvent *event)
 	}
 }
 void
-MacLow::superFastAckTimeout (MacCancelableEvent *event)
+MacLow::super_fast_ack_timeout ()
 {
 	if (m_interface->phy ()->getState () == Phy80211::IDLE) {
 		TRACE ("super fast Ack failed");
@@ -453,7 +518,7 @@ MacLow::superFastAckTimeout (MacCancelableEvent *event)
 }
 
 void
-MacLow::CTSTimeout (MacCancelableEvent *event)
+MacLow::cts_timeout (MacCancelableEvent *event)
 {
 	m_currentTxPacket = 0;
 	m_transmissionListener->missedCTS ();
@@ -470,9 +535,7 @@ MacLow::isNavZero (double now)
 }
 
 void
-MacLow::notifyNav (double nowTime, double duration, 
-		   enum mac_80211_packet_type type,
-		   int source)
+MacLow::notifyNav (double nowTime, ChunkMac80211Hdr const *hdr)
 {
 	/* XXX
 	 * We might need to do something special for the
@@ -484,12 +547,14 @@ MacLow::notifyNav (double nowTime, double duration,
 	double oldNavStart = m_lastNavStart;
 	double oldNavEnd = oldNavStart + m_lastNavDuration;
 	double newNavStart = nowTime;
+	double duration = hdr->get_duration_s ();
 
-	if (type == MAC_80211_MGT_CFPOLL &&
-	    source == m_interface->getBSSID ()) {
+	if (hdr->is_cf_poll () &&
+	    hdr->get_addr2 () == m_interface->getBSSID ()) {
 		m_lastNavStart = newNavStart;
 		m_lastNavDuration = duration;
 		for (NavListenersCI i = m_navListeners.begin (); i != m_navListeners.end (); i++) {
+			// XXX !!!!!!!
 			(*i)->navReset (newNavStart, duration);
 		}
 		return;
@@ -519,15 +584,15 @@ MacLow::calculateOverallCurrentTxTime (void)
 {
 	double txTime = 0.0;
 	if (m_sendRTS) {
-		txTime += calculateTxDuration (m_rtsTxMode, m_interface->parameters ()->getRTSSize ());
-		txTime += calculateTxDuration (m_rtsTxMode, m_interface->parameters ()->getCTSSize ());
-		txTime += m_interface->parameters ()->getSIFS () * 2;
+		txTime += calculateTxDuration (m_rtsTxMode, get_rts_size ());
+		txTime += calculateTxDuration (m_rtsTxMode, get_cts_size ());
+		txTime += get_sifs () * 2;
 	}
-	txTime += calculateTxDuration (m_dataTxMode, getSize (m_currentTxPacket));
+	txTime += calculateTxDuration (m_dataTxMode, m_current_packet->get_size () + m_current_hdr.get_size () + 4);
 	if (waitAck ()) {
-		int ackTxMode = getAckTxModeForData (getDestination (m_currentTxPacket), m_dataTxMode);
-		txTime += m_interface->parameters ()->getSIFS ();
-		txTime += calculateTxDuration (ackTxMode, m_interface->parameters ()->getACKSize ());
+		int ackTxMode = getAckTxModeForData (m_current_hdr.get_addr1 (), m_dataTxMode);
+		txTime += get_sifs ();
+		txTime += calculateTxDuration (ackTxMode, get_ack_size ());
 	}
 	return txTime;
 }
@@ -574,9 +639,9 @@ MacLow::waitSuperFastAck (void)
  ****************************************************************************/
 
 void 
-MacLow::setData (Packet *packet)
+MacLow::setData (Packet *packet, ChunkMac80211Hdr const*hdr)
 {
-	if (m_currentTxPacket != 0) {
+	if (m_current_packet != 0) {
 		/* currentTxPacket is not NULL because someone started
 		 * a transmission and was interrupted before one of:
 		 *   - ctsTimeout
@@ -594,9 +659,10 @@ MacLow::setData (Packet *packet)
 		 * QapScheduler has taken access to the channel from
 		 * one of the Edca of the QAP.
 		 */
-		m_currentTxPacket = 0;
+		m_current_packet = 0;
 	}
-	m_currentTxPacket = packet;
+	m_current_packet = packet;
+	m_current_hdr = *hdr;
 }
 
 void 
@@ -626,24 +692,21 @@ MacLow::startTransmission (void)
 {
 	assert (m_interface->phy ()->getState () == Phy80211::IDLE);
 
-	TRACE ("startTx %d to %d", getSize (m_currentTxPacket), getDestination (m_currentTxPacket));
-
-	if (isData (m_currentTxPacket)) {
-		increaseSize (m_currentTxPacket, m_interface->parameters ()->getDataHeaderSize ());
-	}
+	TRACE ("startTx size="<< get_current_size () << ", to " << m_current_hdr.get_addr1());
 
 	if (m_nextSize > 0 && !waitAck ()) {
 		// we need to start the afterSIFS timeout now.
 		double delay = calculateOverallCurrentTxTime ();
-		delay += m_interface->parameters ()->getSIFS ();
-		m_waitSIFSHandler->start (new MacCancelableEvent (), delay);
+		delay += get_sifs ();
+		assert (m_wait_sifs_event == 0);
+		m_wait_sifs_event = make_cancellable_event (&MacLow::wait_sifs_after_end_tx, this);
+		Simulator::insert_in_s (delay, m_wait_sifs_event);
 	}
 
 	if (m_sendRTS) {
-		sendRTSForPacket ();
+		send_rts_for_packet ();
 	} else {
-		sendDataPacket ();
-		m_currentTxPacket = 0;
+		send_data_packet ();
 	}
 	/* When this method completes, we have taken ownership of the medium. */
 	assert (m_interface->phy ()->getState () == Phy80211::TX);	
@@ -701,84 +764,103 @@ MacLow::registerNavListener (MacLowNavListener *listener)
 	m_navListeners.push_back (listener);
 }
 
+void
+MacLow::receive_error (Packet *packet)
+{
+	TRACE ("rx failed ");
+	m_drop_error->log (packet);
+	if (waitFastAck ()) {
+		assert (m_fast_ack_failed_timeout_event == 0);
+		m_fast_ack_failed_timeout_event = make_cancellable_event (&MacLow::fast_ack_failed_timeout, this);
+		Simulator::insert_in_s (get_sifs (), m_fast_ack_failed_timeout_event);
+	}
+	return;
+}
 
 void 
-MacLow::receive (Packet *packet)
+MacLow::receive_ok (Packet *packet, double rx_snr, int tx_mode)
 {
 	/* A packet is received from the PHY.
 	 * When we have handled this packet,
 	 * we handle any packet present in the
 	 * packet queue.
 	 */
-	if (HDR_CMN (packet)->error ()) {
-		TRACE ("rx failed from %d",
-		       getSource (packet));
-		dropPacket (packet);
-		if (waitFastAck ()) {
-			m_fastAckFailedTimeoutHandler->start (m_interface->parameters ()->getSIFS ());
-		}
-		return;
-	}
-	m_interface->stations ()->lookup (getSource (packet))->reportRxOk (getLastSNR (), getTxMode (packet));
+	ChunkMac80211Hdr hdr;
+	packet->remove (&hdr);
+	ChunkMac80211Fcs fcs;
+	packet->remove (&fcs);
+	
+	//Tag80211 *tag = static_cast<Tag80211 *> (packet->peek_tag (Tag80211::get_tag ()));
+	// XXX
+	//m_interface->stations ()->lookup (getSource (packet))->reportRxOk (tag->get_rx_snr (), tag->get_tx_mode ());
 
 	bool isPrevNavZero = isNavZero (now ());
-	TRACE ("duration/id: %f", getDuration (packet));
-	notifyNav (now (), getDuration (packet), getType (packet), getSource (packet));
-	if (getType (packet) == MAC_80211_CTL_RTS) {
+	TRACE ("duration/id=" << hdr.get_duration ());
+	notifyNav (now (), &hdr);
+	if (hdr.is_rts ()) {
 		/* XXX see section 9.9.2.2.1 802.11e/D12.1 */
 		if (isPrevNavZero &&
-		    getDestination (packet) == getSelf ()) {
-			TRACE ("rx RTS from %d -- schedule CTS", getSource (packet));
-			m_sendCTSHandler->start (new SendEvent (packet), m_interface->parameters ()->getSIFS ());
+		    hdr.get_addr1 () == getSelf ()) {
+			TRACE ("rx RTS from " << hdr.get_addr2 () << ", schedule CTS");
+			assert (m_send_cts_event == 0);
+			m_send_cts_event = make_event (&MacLow::send_cts_after_rts, this, );
+			Simulator::insert_in_s (m_interface->parameters ()->getSIFS (),
+						m_send_cts_event);
 		} else {
-			TRACE ("rx RTS from %d -- cannot schedule CTS", getSource (packet));
+			TRACE ("rx RTS from " << hdr.get_addr2 () << ", cannot schedule CTS");
 		}
-		dropPacket (packet);
-	} else if (getType (packet) == MAC_80211_CTL_CTS &&
-		   getDestination (packet) == getSelf () &&
-		   m_CTSTimeoutHandler->isRunning () &&
+	} else if (hdr.is_cts () &&
+		   hdr.get_addr1 () == getSelf () &&
+		   m_cts_timeout_event != 0 &&
 		   m_currentTxPacket) {
-		TRACE ("rx CTS from %d", getSource (packet));
-		m_CTSTimeoutHandler->cancel ();
-		m_transmissionListener->gotCTS (getLastSNR (), getTxMode (packet));
-		m_sendDataHandler->start (new SendEvent (packet), m_interface->parameters ()->getSIFS ());
-		dropPacket (packet);
-	} else if (getType (packet) == MAC_80211_CTL_ACK &&
-		   getDestination (packet) == getSelf () &&
+		TRACE ("rx CTS");
+		m_cts_timeout_event->cancel ();
+		m_cts_timeout_event = 0;
+		m_transmissionListener->gotCTS (rx_snr, tx_mode);
+		assert (m_send_data_event == 0);
+		m_send_data_event = make_event (&MacLow::send_data_after_cts, this, 
+						hdr.get_addr1 (),
+						hdr.get_duration_s (),
+						tx_mode);
+		Simulator::insert_in_s (m_interface->parameters ()->getSIFS (),
+					m_send_data_event);
+	} else if (hdr.is_ack () &&
+		   hdr.get_addr1 () == getSelf () &&
 		   waitAck ()) {
-		TRACE ("rx ACK from %d", getSource (packet));
+		TRACE ("rx ACK");
 		if (waitNormalAck ()) {
-			m_normalAckTimeoutHandler->cancel ();
+			m_normal_ack_timeout_event->cancel ();
+			m_normal_ack_timeout_event = 0;
 		}
 		if (waitNormalAck () || waitFastAck ()) {
-			m_transmissionListener->gotACK (getLastSNR (), getTxMode (packet));
+			m_transmissionListener->gotACK (rx_snr, tx_mode);
 		}
-		dropPacket (packet);
 		if (m_nextSize > 0) {
-			m_waitSIFSHandler->start (new MacCancelableEvent (), m_interface->parameters ()->getSIFS ());
+			Simulator::insert_in_s (m_interface->parameters ()->getSIFS (),
+						make_event (&MacLow::wait_sifs_after_end_tx, this));
 		}
-	} else if (isControl (packet)) {
-		TRACE ("rx drop %s", getTypeString (packet));
-		dropPacket (packet);
-	} else {
-		if (isData (packet)) {
-			decreaseSize (packet, m_interface->parameters ()->getDataHeaderSize ());
-		}
-		if (getDestination (packet) == getSelf ()) {
-			if (!isNoAck (packet)) {
-				TRACE ("rx unicast/send_ack from %d", getSource (packet));
-				m_sendACKHandler->start (new SendEvent (packet), m_interface->parameters ()->getSIFS ());
-			} else {
-				TRACE ("rx unicast/no_ack from %d", getSource (packet));
+	} else if (hdr.is_ctl ()) {
+		TRACE ("rx drop " << hdr.get_type_string ());
+	} else if (hdr.get_addr1 () == getSelf ()) {
+			if (hdr.is_qos_data () && hdr.is_qos_no_ack ()) {
+				TRACE ("rx unicast/no_ack from "<<hdr.get_addr2 ());
+			} else if (hdr.is_data () || hdr.is_mgt ()) {
+				TRACE ("rx unicast/send_ack from " << hdr.get_addr2 ());
+				assert (m_send_ack_after_data == 0);
+				m_send_ack_event = make_event (&MacLow::send_ack_after_data, this);
+				Simulator::insert_in_s (m_interface->parameters ()->getSIFS (),
+							m_send_ack_event);
 			}
-			m_interface->rxMiddle ()->sendUp (packet);
-		} else if (getDestination (packet) == ((int)MAC_BROADCAST)) {
-			TRACE ("rx broadcast from %d", getSource (packet));
-			m_interface->rxMiddle ()->sendUp (packet);
+			forward_up (packet, &hdr);
+	} else if (hdr.get_addr1 ().is_broadcast ()) {
+		if (hdr.is_data () || hdr.is_mgt ()) {
+			TRACE ("rx broadcast from " << hdr.get_source ());
+			forward_up (packet, &hdr);
 		} else {
-			//TRACE_VERBOSE ("rx not-for-me from %d", getSource (packet));
-			dropPacket (packet);
+			// DROP.
 		}
+	} else {
+		//TRACE_VERBOSE ("rx not-for-me from %d", getSource (packet));
 	}
 	return;
 }

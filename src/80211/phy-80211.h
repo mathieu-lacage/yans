@@ -45,11 +45,13 @@
 
 #include <stdint.h>
 #include <vector>
+#include <stdint.h>
+#include "callback.tcc"
+#include "propagation-model.h"
 
-class FreeSpacePropagation;
+namespace yans {
+
 class TransmissionMode;
-class MacLow;
-class NetInterface;
 class Packet;
 
 class Phy80211Listener {
@@ -63,16 +65,16 @@ public:
 	 * rxEnd will be invoked later to report whether or not
 	 * the packet was successfully received.
 	 */
-	virtual void notifyRxStart (double now, double duration) = 0;
+	virtual void notify_rx_start (double now, double duration) = 0;
 	/* we have received the last bit of a packet for which
 	 * rxStart was invoked first. 
 	 */
-	virtual void notifyRxEnd (double now, bool receivedOk) = 0;
+	virtual void notify_rx_end (double now, bool received_ok) = 0;
 	/* we start the transmission of a packet.
 	 */
-	virtual void notifyTxStart (double now, double duration) = 0;
-	virtual void notifySleep (double now) = 0;
-	virtual void notifyWakeup (double now) = 0;
+	virtual void notify_tx_start (double now, double duration) = 0;
+	virtual void notify_sleep (double now) = 0;
+	virtual void notify_wakeup (double now) = 0;
 };
 
 
@@ -80,46 +82,63 @@ public:
 class Phy80211
 {
 public:
+	typedef Callback<void (Packet *, PropagationData const &,int tx_mode)> TxCallback;
+	typedef Callback<void (Packet *, double, int)> RxOkCallback;
+	typedef Callback<void (Packet *)> RxErrorCallback;
+
+	Phy80211 ();
+	virtual ~Phy80211 ();
+
+	void set_tx_callback (TxCallback *callback);
+	void set_receive_ok_callback (RxOkCallback *callback);
+	void set_receive_error_callback (RxErrorCallback *callback);
+
+	/* packet was sent from [x,y,z] with tx_mode 
+	 * at power tx_power (in dBm)
+	 */
+	void receive_packet (Packet *packet, 
+			     PropagationData const &data,
+			     int tx_mode);
+	void send_packet (Packet *packet, int tx_mode, int tx_power);
+
+	void sleep (void);
+	void wakeup (void);
+
+	void register_listener (Phy80211Listener *listener);
+
+	bool is_state_idle (void);
+	bool is_state_busy (void);
+	bool is_state_rx (void);
+	bool is_state_tx (void);
+	bool is_state_sleep (void);
+	double get_state_duration (void);
+	double get_delay_until_idle (void);
+
+	double calculate_tx_duration (Packet *packet);
+	double calculate_tx_duration (int payload_mode, int size);
+
+	void configure_80211a (void);
+	/* */
+	void set_ed_threshold (double rx_threshold);
+	void set_rx_noise (double rx_noise);	
+	/* tx_power_{base|end} are dBm units */
+	void set_tx_power_increments (double tx_power_base, 
+				      double tx_power_end, 
+				      int n_tx_power);
+	uint32_t get_n_modes (void);
+	uint32_t get_n_txpower (void);
+
+	void set_propagation_model (PropagationModel propagation);
+
+private:
 	enum Phy80211State {
 		SYNC,
 		TX,
 		IDLE,
 		SLEEP
 	};
+	enum Phy80211State get_state (void);
 
-	Phy80211 ();
-	virtual ~Phy80211 ();
-
-	void setInterface (NetInterface *interface);
-	
-	void setMac (MacLow *low);
-
-	void sendDown (Packet *p);
-	void sendUp (Packet *p);
-
-	void sleep (void);
-	void wakeup (void);
-
-	void registerListener (Phy80211Listener *listener);
-
-	enum Phy80211State getState (void);
-	double getStateDuration (void);
-	double getDelayUntilIdle (void);
-
-	double getLastRxSNR (void);
-
-	double calculateTxDuration (Packet *packet);
-	double calculateTxDuration (int payloadMode, int size);
-
-	void configureStandardA (void);
-	void setRxThreshold (double rxThreshold);
-	void setRxNoise (double rxNoise);
-	void setTxPower (double txPower);
-
-	void setPropagationModel (FreeSpacePropagation *propagation);
-
-	int getNModes (void);
-private:
 	virtual void startRx (Packet *packet) = 0;
 	virtual void cancelRx (void) = 0;
 protected:
@@ -147,25 +166,22 @@ private:
 	uint32_t     m_plcpHeaderLength;
 
 	double       m_systemLoss;
-	double       m_rxThreshold;
-	double       m_rxNoise;
-	double       m_txPower; // XXX
+	double       m_ed_threshold;
+	double       m_rx_noise;
+	double       m_tx_power_base;
+	double       m_tx_power_end;
+	uint32_t     m_n_txpower;
 	double       m_maxPacketDuration;
 
 	void switchToTx (double txDuration);
 	void switchToSleep (void);
 	void switchToIdleFromSleep (void);
-
-	double getEndOfTx (void);
-	double getEndOfRx (void);
-
+	
 	void addTxRxMode (TransmissionMode *mode);
 
 	double calculateNoiseFloor (double signalSpread);
 	int    getHeaderMode (Packet *packet);
 	double dBToRatio (double dB);
-	double getSystemLoss (void);
-	double getLambda (void);
 	double max (double a, double b);
 	char const *stateToString (enum Phy80211State state);
 
@@ -173,23 +189,27 @@ private:
 	void notifySleep (double now);
 	void notifyWakeup (double now);
 
-	FreeSpacePropagation *m_propagation;
+	PropagationModel m_propagation;
 	typedef std::vector<Phy80211Listener *> Listeners;
 	typedef std::vector<Phy80211Listener *>::iterator ListenersCI;
 	typedef std::vector<class TransmissionMode *> Modes;
 	typedef std::vector<class TransmissionMode *>::iterator ModesI;
 	Listeners m_listeners;
 	Modes m_modes;
-	MacLow *m_mac;
-	NetInterface *m_interface;
 
 	double m_rxStartSNR;
 	bool m_sleeping;
 	bool m_rxing;
-	double m_endTx;
-	double m_endRx;
-	double m_previousStateChangeTime;
+	double m_end_tx;
+	double m_end_rx;
+	double m_previous_state_change_time;
+
+	TxCallback *m_tx_callback;
+	RxOkCallback *m_rx_ok_callback;
+	RxErrorCallback *m_rx_error_callback;
 };
+
+}; // namespace yans
 
 
 #endif /* PHY_80211_H */
