@@ -30,8 +30,8 @@ namespace yans {
 const double PropagationModel::PI = 3.1415;
 const double PropagationModel::SPEED_OF_LIGHT = 300000000;
 
-PropagationData::PropagationData (double tx_power, double x, double y, double z)
-	: m_tx_power (tx_power), m_x (x), m_y (y), m_z (z)
+PropagationData::PropagationData (double tx_power_dbm, double x, double y, double z)
+	: m_tx_power_dbm (tx_power_dbm), m_x (x), m_y (y), m_z (z)
 {}
 
 double 
@@ -50,9 +50,9 @@ PropagationData::get_z (void) const
 	return m_z;
 }
 double 
-PropagationData::get_tx_power (void) const
+PropagationData::get_tx_power_dbm (void) const
 {
-	return m_tx_power;
+	return m_tx_power_dbm;
 }
 
 
@@ -82,9 +82,9 @@ PropagationModel::set_receive_callback (RxCallback *callback)
 }
 
 void 
-PropagationModel::send (Packet *packet, double tx_power, uint8_t tx_mode) const
+PropagationModel::send (Packet *packet, double tx_power_dbm, uint8_t tx_mode) const
 {
-	PropagationData data (tx_power + m_tx_gain, m_host->get_x (),
+	PropagationData data (tx_power_dbm + m_tx_gain_dbm, m_host->get_x (),
 			      m_host->get_y (), m_host->get_z ());
 	m_channel->send (packet, &data, tx_mode, this);
 }
@@ -118,7 +118,7 @@ PropagationModel::get_rx_power (PropagationData const *rx) const
 	double dist = distance (rx);
 	if (dist <= 1.0) {
 		// XXX
-		return dbm_to_w (rx->get_tx_power () + m_rx_gain);
+		return dbm_to_w (rx->get_tx_power_dbm () + m_rx_gain_dbm);
 	}
 	/*
 	 * Friis free space equation:
@@ -138,7 +138,7 @@ PropagationModel::get_rx_power (PropagationData const *rx) const
 	 * Pt = tx_power (dBm)
 	 * d = 1.0m
 	 */
-	double numerator = dbm_to_w (rx->get_tx_power () + m_rx_gain) * m_lambda * m_lambda;
+	double numerator = dbm_to_w (rx->get_tx_power_dbm () + m_rx_gain_dbm) * m_lambda * m_lambda;
 	double denominator = 16 * PI * PI * 1.0 * 1.0 * m_system_loss;
 	double prd0 = numerator / denominator;
 	
@@ -148,14 +148,14 @@ PropagationModel::get_rx_power (PropagationData const *rx) const
 }
 
 void 
-PropagationModel::set_tx_gain (double tx_gain)
+PropagationModel::set_tx_gain_dbm (double tx_gain)
 {
-	m_tx_gain = tx_gain;
+	m_tx_gain_dbm = tx_gain;
 }
 void 
-PropagationModel::set_rx_gain (double rx_gain)
+PropagationModel::set_rx_gain_dbm (double rx_gain)
 {
-	m_rx_gain = rx_gain;
+	m_rx_gain_dbm = rx_gain;
 }
 void 
 PropagationModel::set_system_loss (double system_loss)
@@ -163,7 +163,7 @@ PropagationModel::set_system_loss (double system_loss)
 	m_system_loss = system_loss;
 }
 void 
-PropagationModel::set_frequency (double frequency)
+PropagationModel::set_frequency_hz (double frequency)
 {
 	const double speed_of_light = 300000000;
 	double lambda = speed_of_light / frequency;

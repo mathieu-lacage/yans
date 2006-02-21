@@ -47,14 +47,14 @@ class Packet;
 class PropagationData {
 public:
 
-	PropagationData (double tx_power, double x, double y, double z);
+	PropagationData (double tx_power_dbm, double x, double y, double z);
 
 	double get_x (void) const;
 	double get_y (void) const;
 	double get_z (void) const;
-	double get_tx_power (void) const;
+	double get_tx_power_dbm (void) const;
 private:
-	double m_tx_power;
+	double m_tx_power_dbm;
 	double m_x;
 	double m_y;
 	double m_z;
@@ -76,13 +76,13 @@ public:
 	void receive (Packet *packet, PropagationData const *data, uint8_t tx_mode);
 
 	/* unit: dBm */
-	void set_tx_gain (double tx_gain);
+	void set_tx_gain_dbm (double tx_gain);
 	/* unit: dBm */
-	void set_rx_gain (double rx_gain);
+	void set_rx_gain_dbm (double rx_gain);
 	/* no unit */
 	void set_system_loss (double system_loss);
 	/* unit: Hz */
-	void set_frequency (double frequency);
+	void set_frequency_hz (double frequency);
 private:
 	double dbm_to_w (double dbm) const;
 	double db_to_w (double db) const;
@@ -92,8 +92,8 @@ private:
 	double get_rx_power (PropagationData const *rx) const;
 
 	RxCallback *m_rx_callback;
-	double m_tx_gain;
-	double m_rx_gain;
+	double m_tx_gain_dbm;
+	double m_rx_gain_dbm;
 	double m_system_loss;
 	double m_lambda;
 	Host *m_host;
