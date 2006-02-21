@@ -37,7 +37,7 @@ public:
 	/* returns the number of user bits per 
 	 * second achieved by this transmission mode 
 	 */
-	virtual double get_data_rate (void) const = 0;
+	virtual uint32_t get_data_rate (void) const = 0;
 
 	/* returns the number of raw bits per
 	 * second achieved by this transmission mode.
@@ -45,7 +45,7 @@ public:
 	 * will be different only if there is some
 	 * FEC overhead.
 	 */
-	virtual double get_rate (void) const = 0;
+	virtual uint32_t get_rate (void) const = 0;
 
 	/* @snr: the snr, (W/W)
 	 * @nbits: length of transmission (bits)
@@ -57,11 +57,11 @@ public:
 
 class NoFecTransmissionMode : public TransmissionMode {
 public:
-	NoFecTransmissionMode (double signal_spread, double rate);
+	NoFecTransmissionMode (double signal_spread, uint32_t rate);
 	virtual ~NoFecTransmissionMode () = 0;
 	virtual double get_signal_spread (void) const;
-	virtual double get_data_rate (void) const;
-	virtual double get_rate (void) const;
+	virtual uint32_t get_data_rate (void) const;
+	virtual uint32_t get_rate (void) const;
 
 private:
 	double m_signal_spread;
@@ -74,9 +74,9 @@ protected:
 
 class FecTransmissionMode  : public NoFecTransmissionMode {
 public:
-	FecTransmissionMode (double signal_spread, double rate, double coding_rate);
+	FecTransmissionMode (double signal_spread, uint32_t rate, double coding_rate);
 	virtual ~FecTransmissionMode () = 0;
-	virtual double get_data_rate (void) const;
+	virtual uint32_t get_data_rate (void) const;
 protected:
 	double calculate_pd_odd (double ber, unsigned int d) const;
 	double calculate_pd_even (double ber, unsigned int d) const;

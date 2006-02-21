@@ -29,7 +29,7 @@ namespace yans {
 class NoFecBpskMode : public NoFecTransmissionMode
 {
 public:
-	NoFecBpskMode (double signal_spread, double rate);
+	NoFecBpskMode (double signal_spread, uint32_t rate);
 	virtual ~NoFecBpskMode ();
 	virtual double get_chunk_success_rate (double snr, unsigned int nbits) const;
 private:
@@ -39,7 +39,7 @@ private:
 class FecBpskMode : public FecTransmissionMode
 {
 public:
-	FecBpskMode (double signal_spread, double rate, double coding_rate, unsigned int d_free, unsigned int ad_free);
+	FecBpskMode (double signal_spread, uint32_t rate, double coding_rate, unsigned int d_free, unsigned int ad_free);
 	virtual ~FecBpskMode ();
 	virtual double get_chunk_success_rate (double snr, unsigned int nbits) const;
 private:

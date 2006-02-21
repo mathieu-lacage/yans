@@ -30,7 +30,7 @@ namespace yans {
 TransmissionMode::~TransmissionMode ()
 {}
 
-NoFecTransmissionMode::NoFecTransmissionMode (double signal_spread, double rate)
+NoFecTransmissionMode::NoFecTransmissionMode (double signal_spread, uint32_t rate)
 	: m_signal_spread (signal_spread),
 	  m_rate (rate)
 {}
@@ -41,12 +41,12 @@ NoFecTransmissionMode::get_signal_spread (void) const
 {
 	return m_signal_spread;
 }
-double 
+uint32_t
 NoFecTransmissionMode::get_data_rate (void) const
 {
 	return m_rate;
 }
-double 
+uint32_t
 NoFecTransmissionMode::get_rate (void) const
 {
 	return m_rate;
@@ -77,16 +77,16 @@ NoFecTransmissionMode::get_qam_ber (double snr, unsigned int m) const
 
 
 
-FecTransmissionMode::FecTransmissionMode (double signal_spread, double rate, double coding_rate)
+FecTransmissionMode::FecTransmissionMode (double signal_spread, uint32_t rate, double coding_rate)
 	: NoFecTransmissionMode (signal_spread, rate),
 	  m_coding_rate (coding_rate)
 {}
 FecTransmissionMode::~FecTransmissionMode ()
 {}
-double 
+uint32_t
 FecTransmissionMode::get_data_rate (void) const
 {
-	return m_rate * m_coding_rate;
+	return (uint32_t)(m_rate * m_coding_rate);
 }
 double 
 FecTransmissionMode::calculate_pd_odd (double ber, unsigned int d) const

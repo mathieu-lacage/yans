@@ -28,7 +28,7 @@ namespace yans {
 
 class NoFecQamMode : public NoFecTransmissionMode {
 public:
-	NoFecQamMode (double signal_spread, double rate, unsigned int m);
+	NoFecQamMode (double signal_spread, uint32_t rate, unsigned int m);
 	virtual ~NoFecQamMode ();
 	virtual double get_chunk_success_rate (double snr, unsigned int nbits) const;
 private:
@@ -38,7 +38,7 @@ private:
 class FecQamMode : public FecTransmissionMode {
 public:
 	FecQamMode (double signal_spread, 
-		    double rate, 
+		    uint32_t rate, 
 		    double coding_rate,
 		    unsigned int M, unsigned int d_free, 
 		    unsigned int ad_free,

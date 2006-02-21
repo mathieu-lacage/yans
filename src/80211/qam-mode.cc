@@ -27,7 +27,7 @@
 
 namespace yans {
 
-NoFecQamMode::NoFecQamMode (double signalSpread, double rate, unsigned int M)
+NoFecQamMode::NoFecQamMode (double signalSpread, uint32_t rate, unsigned int M)
 	: NoFecTransmissionMode (signalSpread, rate),
 	  m_m (M)
 {}
@@ -42,7 +42,8 @@ NoFecQamMode::get_chunk_success_rate (double snr, unsigned int nbits) const
 	return csr;
 }
 
-FecQamMode::FecQamMode (double signalSpread, double rate,
+FecQamMode::FecQamMode (double signalSpread, 
+			uint32_t rate,
 			double codingRate,
 			unsigned int M, 
 			unsigned int dFree, 
