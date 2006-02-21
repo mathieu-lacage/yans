@@ -39,8 +39,7 @@ private:
 class FecBpskMode : public FecTransmissionMode
 {
 public:
-	FecBpskMode (unsigned int d_free, unsigned int ad_free, 
-		     double signal_spread, double rate, double coding_rate);
+	FecBpskMode (double signal_spread, double rate, double coding_rate, unsigned int d_free, unsigned int ad_free);
 	virtual ~FecBpskMode ();
 	virtual double get_chunk_success_rate (double snr, unsigned int nbits) const;
 private:

@@ -41,8 +41,8 @@ NoFecBpskMode::get_chunk_success_rate (double snr, unsigned int nbits) const
 	return csr;
 }
 
-FecBpskMode::FecBpskMode (unsigned int d_free, unsigned int ad_free, 
-			  double signal_spread, double rate, double coding_rate)
+FecBpskMode::FecBpskMode (double signal_spread, double rate, double coding_rate, 
+			  unsigned int d_free, unsigned int ad_free)
 	: FecTransmissionMode (signal_spread, rate, coding_rate),
 	  m_d_free (d_free),
 	  m_ad_free (ad_free)
