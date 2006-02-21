@@ -65,7 +65,7 @@ public:
 
 private:
 	double m_signal_spread;
-	double m_rate;
+	uint32_t m_rate;
 protected:
 	double get_bpsk_ber (double snr) const;
 	double get_qam_ber (double snr, unsigned int m) const;
@@ -83,8 +83,6 @@ protected:
 	double calculate_pd (double ber, unsigned int d) const;
 
 private:
-	double m_signal_spread;
-	double m_rate;
 	double m_coding_rate;
 };
 

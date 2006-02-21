@@ -86,7 +86,7 @@ FecTransmissionMode::~FecTransmissionMode ()
 uint32_t
 FecTransmissionMode::get_data_rate (void) const
 {
-	return (uint32_t)(m_rate * m_coding_rate);
+	return (uint32_t)(NoFecTransmissionMode::get_rate () * m_coding_rate);
 }
 double 
 FecTransmissionMode::calculate_pd_odd (double ber, unsigned int d) const
