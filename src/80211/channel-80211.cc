@@ -35,7 +35,7 @@ Channel80211::add (PropagationModel *model)
 }
 void 
 Channel80211::send (Packet const *packet, PropagationData const *data, 
-		    int tx_mode, PropagationModel const *caller) const
+		    uint8_t tx_mode, PropagationModel const *caller) const
 {
 	for (ModelsCI i = m_models.begin (); i != m_models.end (); i++) {
 		if (caller != (*i)) {

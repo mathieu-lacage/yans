@@ -21,6 +21,7 @@
 #ifndef PROPAGATION_MODEL_H
 #define PROPAGATION_MODEL_H
 
+#include <stdint.h>
 #include "callback.tcc"
 
 namespace yans {
@@ -61,7 +62,7 @@ private:
 
 class PropagationModel {
 public:
-	typedef Callback<void (Packet *, double, int)> RxCallback;
+	typedef Callback<void (Packet *, double, uint8_t)> RxCallback;
 	PropagationModel ();
 	~PropagationModel ();
 
@@ -71,8 +72,8 @@ public:
 	void set_receive_callback (RxCallback *callback);
 
 	/* tx power unit: dBm */
-	void send (Packet *packet, double tx_power, int tx_mode) const;
-	void receive (Packet *packet, PropagationData const *data, int tx_mode);
+	void send (Packet *packet, double tx_power, uint8_t tx_mode) const;
+	void receive (Packet *packet, PropagationData const *data, uint8_t tx_mode);
 
 	/* unit: dBm */
 	void set_tx_gain (double tx_gain);
@@ -87,7 +88,7 @@ private:
 	double db_to_w (double db) const;
 	double get_lambda (void) const;
 	double distance (PropagationData const *from) const;
-	void forward_up (Packet *packet, double rx_power, int tx_mode);
+	void forward_up (Packet *packet, double rx_power, uint8_t tx_mode);
 	double get_rx_power (PropagationData const *rx) const;
 
 	RxCallback *m_rx_callback;

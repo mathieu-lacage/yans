@@ -82,14 +82,14 @@ PropagationModel::set_receive_callback (RxCallback *callback)
 }
 
 void 
-PropagationModel::send (Packet *packet, double tx_power, int tx_mode) const
+PropagationModel::send (Packet *packet, double tx_power, uint8_t tx_mode) const
 {
 	PropagationData data (tx_power + m_tx_gain, m_host->get_x (),
 			      m_host->get_y (), m_host->get_z ());
 	m_channel->send (packet, &data, tx_mode, this);
 }
 void 
-PropagationModel::receive (Packet *packet, PropagationData const *data, int tx_mode)
+PropagationModel::receive (Packet *packet, PropagationData const *data, uint8_t tx_mode)
 {
 	double rx_power = get_rx_power (data);
 	double delay = distance (data) / 300000000;
@@ -98,7 +98,7 @@ PropagationModel::receive (Packet *packet, PropagationData const *data, int tx_m
 }
 
 void
-PropagationModel::forward_up (Packet *packet, double rx_power, int tx_mode)
+PropagationModel::forward_up (Packet *packet, double rx_power, uint8_t tx_mode)
 {
 	(*m_rx_callback) (packet, rx_power, tx_mode);
 }

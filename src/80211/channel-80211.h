@@ -35,7 +35,7 @@ public:
 	~Channel80211 ();
 	void add (PropagationModel *model);
 	void send (Packet const *packet, PropagationData const *data, 
-		   int tx_mode, PropagationModel const*caller) const;
+		   uint8_t tx_mode, PropagationModel const*caller) const;
 private:
 	typedef std::list<PropagationModel *> Models;
 	typedef std::list<PropagationModel *>::const_iterator ModelsCI;
