@@ -381,6 +381,11 @@ Phy80211::get_delay_until_idle (void)
 		// quiet compiler.
 		retval = 0.0;
 		break;
+	default:
+		assert (false);
+		// NOTREACHED
+		retval = 0.0;
+		break;
 	}
 	retval = max (retval, 0.0);
 	return retval;

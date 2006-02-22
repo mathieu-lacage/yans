@@ -193,6 +193,10 @@ NetworkInterface80211Factory::create (Host *host)
 	case RATE_CR:
 		stations = new CrMacStations (m_cr_data_mode, m_cr_ctl_mode);
 		break;
+	default:
+		// NOTREACHED
+		stations = 0;
+		break;
 	}
 	interface->m_stations = stations;	
 
