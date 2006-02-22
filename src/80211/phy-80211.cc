@@ -719,7 +719,7 @@ Phy80211::calculate_chunk_success_rate (double snir, uint64_t delay, Transmissio
 	double csr = mode->get_chunk_success_rate (snir, (uint32_t)nbits);
 	return csr;
 }
-#if 1
+
 double 
 Phy80211::calculate_per (RxEvent *event, NiChanges *ni) const
 {	
@@ -792,7 +792,6 @@ Phy80211::calculate_per (RxEvent *event, NiChanges *ni) const
 	double per = 1 - psr;
 	return per;
 }
-#endif
 
 
 void
