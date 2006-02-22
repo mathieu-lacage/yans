@@ -181,7 +181,6 @@ Phy80211::Phy80211 ()
 
 Phy80211::~Phy80211 ()
 {
-	delete m_propagation;
 	delete m_rx_ok_callback;
 	delete m_rx_error_callback;
 	delete m_random;
@@ -191,7 +190,10 @@ Phy80211::~Phy80211 ()
 		i++;
 	}
 	m_events.erase (m_events.begin (), m_events.end ());
-
+	for (ModesCI j = m_modes.begin (); j != m_modes.end (); j++) {
+		delete (*j);
+	}
+	m_modes.erase (m_modes.begin (), m_modes.end ());
 }
 
 void 
@@ -651,6 +653,7 @@ Phy80211::append_event (RxEvent *event)
 		EventsI i = m_events.begin ();
 		while (i != m_events.end () &&
 		       (*i)->get_end_time_us () <= end_us) {
+			delete (*i);
 			i++;
 		}
 		m_events.erase (m_events.begin (), i);
@@ -821,6 +824,7 @@ Phy80211::end_rx (Packet *packet, RxEvent *event)
 		switch_to_idle_from_sync ();
 		(*m_rx_error_callback) (packet);
 	}
+	packet->unref ();
 }
 
 

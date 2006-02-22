@@ -125,6 +125,7 @@ private:
 		double m_delta;
 	};
 	typedef std::vector<TransmissionMode *> Modes;
+	typedef std::vector<TransmissionMode *>::const_iterator ModesCI;
 	typedef std::list<Phy80211Listener *> Listeners;
 	typedef std::list<Phy80211Listener *>::const_iterator ListenersCI;
 	typedef std::list<RxEvent *> Events;

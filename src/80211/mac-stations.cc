@@ -20,6 +20,7 @@
  */
 
 #include "mac-stations.h"
+#include "mac-station.h"
 
 namespace yans {
 
@@ -27,7 +28,12 @@ MacStations::MacStations ()
 {}
 
 MacStations::~MacStations ()
-{}
+{
+	for (StationsI i = m_stations.begin (); i != m_stations.end (); i++) {
+		delete (*i).second;
+	}
+	m_stations.erase (m_stations.begin (), m_stations.end ());
+}
 
 MacStation *
 MacStations::lookup (MacAddress address)

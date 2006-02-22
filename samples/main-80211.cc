@@ -53,7 +53,7 @@ public:
 		uint32_t n_bytes = m_current - m_prev;
 		m_prev = m_current;
 		std::cout << "x="<<a->get_x ()<<", throughput="<<n_bytes / 2.0<<std::endl;
-		if (a->get_x () >= 100.0) {
+		if (a->get_x () >= 50.0) {
 			return;
 		}
 		generator->start_now ();
@@ -68,9 +68,9 @@ static MyTrace *
 setup_rx_trace (NetworkInterface80211 *wifi)
 {
 	MyTrace *trace = new MyTrace ();
-	TraceContainer *container = new TraceContainer ();
-	wifi->register_trace (container);
-	container->set_ui_variable_callback ("80211-bytes-rx", make_callback (&MyTrace::total_rx_bytes, trace));
+	TraceContainer container = TraceContainer ();
+	wifi->register_trace (&container);
+	container.set_ui_variable_callback ("80211-bytes-rx", make_callback (&MyTrace::total_rx_bytes, trace));
 	return trace;
 }
 
@@ -149,6 +149,7 @@ int main (int argc, char *argv[])
 	delete analyser;
 	delete hclient;
 	delete hserver;
+	delete trace;
 	Simulator::destroy ();
 
 	return 0;

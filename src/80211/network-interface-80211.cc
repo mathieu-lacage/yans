@@ -36,7 +36,12 @@ NetworkInterface80211::NetworkInterface80211 ()
 {}
 
 NetworkInterface80211::~NetworkInterface80211 ()
-{}
+{
+	delete m_name;
+	delete m_propagation;
+	delete m_phy;
+	delete m_stations;
+}
 
 
 void 
