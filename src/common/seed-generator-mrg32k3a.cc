@@ -38,7 +38,9 @@ private:
 };
 
 SeedGeneratorPrivate::SeedGeneratorPrivate ()
-{}
+{
+	m_generator.reset (0);
+}
 SeedGeneratorPrivate::~SeedGeneratorPrivate ()
 {}
 void 
