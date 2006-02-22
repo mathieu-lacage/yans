@@ -485,7 +485,7 @@ Phy80211::get_mode (uint8_t mode) const
 double 
 Phy80211::get_power_dbm (uint8_t power) const
 {
-	assert (m_tx_power_base_dbm < m_tx_power_end_dbm);
+	assert (m_tx_power_base_dbm <= m_tx_power_end_dbm);
 	assert (m_n_tx_power > 0);
 	double dbm = m_tx_power_base_dbm + (m_tx_power_end_dbm - m_tx_power_base_dbm) / m_n_tx_power;
 	return dbm;
