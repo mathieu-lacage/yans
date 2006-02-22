@@ -31,11 +31,8 @@
 #include <cassert>
 #include <math.h>
 
-#ifndef max
-#define max(a,b) (((a)>(b))?a:b)
-#endif /* max */
 
-#define nopePHY80211_DEBUG 1
+#define PHY80211_DEBUG 1
 #define nopePHY80211_STATE_DEBUG 1
 
 /* All the state transitions are marked by these macros. */
@@ -60,6 +57,11 @@ std::cout << "PHY80211 TRACE " << Simulator::now_s () << " " << x << std::endl;
 #else
 #  define TRACE(x)
 #endif
+
+#ifndef max
+#define max(a,b) (((a)>(b))?a:b)
+#endif /* max */
+
 
 
 namespace yans {
