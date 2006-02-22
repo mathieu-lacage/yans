@@ -19,7 +19,7 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "phy.h"
+#include "phy-80211.h"
 #include "bpsk-mode.h"
 #include "qam-mode.h"
 #include "propagation-model.h"
@@ -255,7 +255,7 @@ Phy80211::receive_packet (Packet *packet,
 	event->unref ();
 }
 void 
-Phy80211::send_packet (Packet *packet, int tx_mode, int tx_power)
+Phy80211::send_packet (Packet *packet, uint8_t tx_mode, uint8_t tx_power)
 {
 	/* Transmission can happen if:
 	 *  - we are syncing on a packet. It is the responsability of the

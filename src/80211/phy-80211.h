@@ -64,7 +64,7 @@ public:
 class Phy80211
 {
 public:
-	typedef Callback<void (Packet *, double, int)> RxOkCallback;
+	typedef Callback<void (Packet *, double, uint8_t)> RxOkCallback;
 	typedef Callback<void (Packet *)> RxErrorCallback;
 
 	Phy80211 ();
@@ -78,7 +78,7 @@ public:
 	void receive_packet (Packet *packet,
 			     double rx_power_w,
 			     uint8_t tx_mode);
-	void send_packet (Packet *packet, int tx_mode, int tx_power);
+	void send_packet (Packet *packet, uint8_t tx_mode, uint8_t tx_power);
 
 	void sleep (void);
 	void wakeup (void);
