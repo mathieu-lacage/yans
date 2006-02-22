@@ -57,12 +57,16 @@ setup_rx_trace (NetworkInterface80211 *wifi)
 
 int main (int argc, char *argv[])
 {
+	Host *hclient, *hserver;
+	hclient = new Host ("client");
+	hserver = new Host ("server");
+
 	NetworkInterface80211Factory *wifi_factory;
 	wifi_factory = new NetworkInterface80211Factory ();
 
 	NetworkInterface80211 *wifi_client, *wifi_server;
-	wifi_client = wifi_factory->create ();
-	wifi_server = wifi_factory->create ();
+	wifi_client = wifi_factory->create (hclient);
+	wifi_server = wifi_factory->create (hserver);
 	wifi_client->set_mac_address (MacAddress ("00:00:00:00:00:01"));
 	wifi_server->set_mac_address (MacAddress ("00:00:00:00:00:02"));
 	Channel80211 *channel = new Channel80211 ();
@@ -80,9 +84,6 @@ int main (int argc, char *argv[])
 	wifi_server->set_up ();
 
 	/* create hosts for the network elements*/
-	Host *hclient, *hserver;
-	hclient = new Host ("client");
-	hserver = new Host ("server");
 	hclient->add_interface (wifi_client);
 	hserver->add_interface (wifi_server);
 

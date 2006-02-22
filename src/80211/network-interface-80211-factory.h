@@ -35,6 +35,7 @@ private:
 };
 
 class NetworkInterface80211;
+class Host;
 
 class NetworkInterface80211Factory {
 public:
@@ -70,7 +71,7 @@ public:
 	void set_prop_rx_gain_dbm (double rx_gain);
 	void set_prop_frequency_hz (double frequency);
 
-	NetworkInterface80211 *create (void);
+	NetworkInterface80211 *create (Host *host);
 private:
 	enum {
 		MODE_QAP,

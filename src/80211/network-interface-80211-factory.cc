@@ -156,7 +156,7 @@ NetworkInterface80211Factory::set_prop_frequency_hz (double frequency)
 }
 
 NetworkInterface80211 *
-NetworkInterface80211Factory::create (void)
+NetworkInterface80211Factory::create (Host *host)
 {
 	NetworkInterface80211 *interface = new NetworkInterface80211 ();
 
@@ -165,6 +165,7 @@ NetworkInterface80211Factory::create (void)
 	propagation->set_rx_gain_dbm (m_prop_rx_gain_dbm);
 	propagation->set_system_loss (m_prop_system_loss);
 	propagation->set_frequency_hz (m_prop_frequency_hz);
+	propagation->set_host (host);
 	interface->m_propagation = propagation;
 
 
