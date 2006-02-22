@@ -1,6 +1,6 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 /*
- * Copyright (c) 2005 INRIA
+ * Copyright (c) 2005,2006 INRIA
  * All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,43 +16,25 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * In addition, as a special exception, the copyright holders of
- * this module give you permission to combine (via static or
- * dynamic linking) this module with free software programs or
- * libraries that are released under the GNU LGPL and with code
- * included in the standard release of ns-2 under the Apache 2.0
- * license or under otherwise-compatible licenses with advertising
- * requirements (or modified versions of such code, with unchanged
- * license).  You may copy and distribute such a system following the
- * terms of the GNU GPL for this module and the licenses of the
- * other code concerned, provided that you include the source code of
- * that other code when and as the GNU GPL requires distribution of
- * source code.
- *
- * Note that people who make modified versions of this module
- * are not obligated to grant this special exception for their
- * modified versions; it is their choice whether to do so.  The GNU
- * General Public License gives permission to release a modified
- * version without this exception; this exception also makes it
- * possible to release a modified version which carries forward this
- * exception.
- *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
 #ifndef PHY_80211_H
 #define PHY_80211_H
 
-#include <stdint.h>
 #include <vector>
+#include <list>
 #include <stdint.h>
 #include "callback.tcc"
-#include "propagation-model.h"
+
 
 namespace yans {
 
 class TransmissionMode;
 class Packet;
+class PropagationModel;
+class CancellableEvent;
+class RandomUniform;
 
 class Phy80211Listener {
 public:
@@ -82,28 +64,25 @@ public:
 class Phy80211
 {
 public:
-	typedef Callback<void (Packet *, PropagationData const &,int tx_mode)> TxCallback;
 	typedef Callback<void (Packet *, double, int)> RxOkCallback;
 	typedef Callback<void (Packet *)> RxErrorCallback;
 
 	Phy80211 ();
 	virtual ~Phy80211 ();
 
-	void set_tx_callback (TxCallback *callback);
+	void set_propagation_model (PropagationModel *propagation);
 	void set_receive_ok_callback (RxOkCallback *callback);
 	void set_receive_error_callback (RxErrorCallback *callback);
 
-	/* packet was sent from [x,y,z] with tx_mode 
-	 * at power tx_power (in dBm)
-	 */
-	void receive_packet (Packet *packet, 
-			     PropagationData const &data,
-			     int tx_mode);
+	/* rx_power unit is Watt */
+	void receive_packet (Packet *packet,
+			     double rx_power_w,
+			     uint8_t tx_mode);
 	void send_packet (Packet *packet, int tx_mode, int tx_power);
 
 	void sleep (void);
 	void wakeup (void);
-
+	
 	void register_listener (Phy80211Listener *listener);
 
 	bool is_state_idle (void);
@@ -114,21 +93,18 @@ public:
 	double get_state_duration (void);
 	double get_delay_until_idle (void);
 
-	double calculate_tx_duration (Packet *packet);
-	double calculate_tx_duration (int payload_mode, int size);
+	double calculate_tx_duration_s (uint32_t size, uint8_t payload_mode);
+	uint64_t calculate_tx_duration_us (uint32_t size, uint8_t payload_mode);
+
 
 	void configure_80211a (void);
-	/* */
-	void set_ed_threshold (double rx_threshold);
-	void set_rx_noise (double rx_noise);	
-	/* tx_power_{base|end} are dBm units */
-	void set_tx_power_increments (double tx_power_base, 
+	void set_ed_threshold_dbm (double rx_threshold);
+	void set_rx_noise_db (double rx_noise);	
+	void set_tx_power_increments_dbm (double tx_power_base, 
 				      double tx_power_end, 
 				      int n_tx_power);
 	uint32_t get_n_modes (void);
 	uint32_t get_n_txpower (void);
-
-	void set_propagation_model (PropagationModel propagation);
 
 private:
 	enum Phy80211State {
@@ -137,76 +113,81 @@ private:
 		IDLE,
 		SLEEP
 	};
+	class RxEvent;
+	class NiChange {
+	public:
+		NiChange (uint64_t time, double delta);
+		uint64_t get_time_us (void) const;
+		double get_delta (void) const;
+		bool operator < (NiChange const &o) const;
+	private:
+		uint64_t m_time;
+		double m_delta;
+	};
+	typedef std::vector<TransmissionMode *> Modes;
+	typedef std::list<Phy80211Listener *> Listeners;
+	typedef std::list<Phy80211Listener *>::const_iterator ListenersCI;
+	typedef std::list<RxEvent *> Events;
+	typedef std::list<RxEvent *>::iterator EventsI;
+	typedef std::list<RxEvent *>::const_iterator EventsCI;
+	typedef std::vector <NiChange> NiChanges;
+	typedef std::vector <NiChange>::iterator NiChangesI;
+
+private:	
 	enum Phy80211State get_state (void);
+	double get_ed_threshold_w (void);
+	double dbm_to_w (double dbm);
+	double db_to_ratio (double db);
+	double now_s (void) const;
+	uint64_t now_us (void) const;
+	uint64_t get_max_packet_duration_us (void) const;
+	void add_tx_rx_mode (TransmissionMode *mode);
+	void cancel_rx (void);
+	TransmissionMode *get_mode (uint8_t tx_mode) const;
+	double get_power_dbm (uint8_t power) const;
+	void notify_tx_start (double now, double duration);
+	void notify_sleep (double now);
+	void notify_wakeup (double now);
+	void notify_rx_start (double now, double duration);
+	void notify_rx_end (double now, bool receivedOk);
+	void switch_to_tx (double txDuration);
+	void switch_to_sleep (void);
+	void switch_to_idle_from_sleep (void);
+	void switch_to_sync_from_idle (double rxDuration);
+	void switch_to_idle_from_sync (void);
+	void append_event (RxEvent *event);
+	double calculate_noise_interference_w (RxEvent *event, NiChanges *ni) const;
+	double calculate_snr (double signal, double noise_interference, TransmissionMode *mode) const;
+	double calculate_chunk_success_rate (double snir, uint64_t delay, TransmissionMode *mode) const;
+	double calculate_per (RxEvent *event, NiChanges *ni) const;
+	void end_rx (Packet *packet, RxEvent *event);
 
-	virtual void startRx (Packet *packet) = 0;
-	virtual void cancelRx (void) = 0;
-protected:
-	void notifyRxStart (double now, double duration);
-	void notifyRxEnd (double now, bool receivedOk);
-	void switchToSyncFromIdle (double rxDuration);
-	void switchToIdleFromSync (void);
-	double now (void);
-	double calculateRxPower (Packet *p);
-	double dBmToW (double dBm);
-	double getRxThreshold (void);
-	int    getPayloadMode (Packet *packet);
-	double getMaxPacketDuration (void);
-	double calculatePacketDuration (int headerMode, int payloadMode, int size);
-	double getPreambleDuration (void);
-	double calculateHeaderDuration (int headerMode);
-	TransmissionMode *getMode (int mode);
-	void setLastRxSNR (double snr);
-	int selfAddress (void);
-	double SNR (double signal, double noiseInterference, TransmissionMode *mode);
-	void forwardUp (Packet *packet);
 private:
-	double       m_frequency;
-	double       m_plcpPreambleDelay;
-	uint32_t     m_plcpHeaderLength;
+	uint64_t     m_plcp_preamble_delay_us;
+	uint32_t     m_plcp_header_length;
+	double       m_max_packet_duration_s;
 
-	double       m_systemLoss;
-	double       m_ed_threshold;
-	double       m_rx_noise;
-	double       m_tx_power_base;
-	double       m_tx_power_end;
-	uint32_t     m_n_txpower;
-	double       m_maxPacketDuration;
+	double       m_ed_threshold_w; /* unit: W */
+	double       m_rx_noise_ratio;
+	double       m_tx_power_base_dbm;
+	double       m_tx_power_end_dbm;
+	uint32_t     m_n_tx_power;
 
-	void switchToTx (double txDuration);
-	void switchToSleep (void);
-	void switchToIdleFromSleep (void);
 	
-	void addTxRxMode (TransmissionMode *mode);
-
-	double calculateNoiseFloor (double signalSpread);
-	int    getHeaderMode (Packet *packet);
-	double dBToRatio (double dB);
-	double max (double a, double b);
-	char const *stateToString (enum Phy80211State state);
-
-	void notifyTxStart (double now, double duration);
-	void notifySleep (double now);
-	void notifyWakeup (double now);
-
-	PropagationModel m_propagation;
-	typedef std::vector<Phy80211Listener *> Listeners;
-	typedef std::vector<Phy80211Listener *>::iterator ListenersCI;
-	typedef std::vector<class TransmissionMode *> Modes;
-	typedef std::vector<class TransmissionMode *>::iterator ModesI;
-	Listeners m_listeners;
-	Modes m_modes;
-
-	double m_rxStartSNR;
 	bool m_sleeping;
 	bool m_rxing;
 	double m_end_tx;
 	double m_end_rx;
 	double m_previous_state_change_time;
 
-	TxCallback *m_tx_callback;
+	PropagationModel *m_propagation;
 	RxOkCallback *m_rx_ok_callback;
 	RxErrorCallback *m_rx_error_callback;
+	Modes m_modes;
+	Listeners m_listeners;
+	CancellableEvent *m_end_rx_event;
+	Events m_events;
+	RandomUniform *m_random;
 };
 
 }; // namespace yans

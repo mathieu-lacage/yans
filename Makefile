@@ -127,6 +127,7 @@ YANS_SRC= \
 	src/80211/transmission-mode.cc \
 	src/80211/bpsk-mode.cc \
 	src/80211/qam-mode.cc \
+	src/80211/phy-80211.cc \
 	test/test.cc \
 	$(NULL)
 YANS_HDR = \
@@ -202,6 +203,7 @@ YANS_HDR = \
 	src/80211/transmission-mode.h \
 	src/80211/bpsk-mode.h \
 	src/80211/qam-mode.h \
+	src/80211/phy-80211.h \
 	src/host/host.h \
 	src/host/loopback-interface.h \
 	src/host/network-interface.h \
