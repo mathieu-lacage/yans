@@ -22,6 +22,9 @@
 #include "network-interface-80211.h"
 #include "propagation-model.h"
 #include "phy-80211.h"
+#include "mac-stations.h"
+#include "arf-mac-stations.h"
+#include "aarf-mac-stations.h"
 
 
 namespace yans {
@@ -162,6 +165,7 @@ NetworkInterface80211Factory::create (void)
 	propagation->set_rx_gain_dbm (m_prop_rx_gain_dbm);
 	propagation->set_system_loss (m_prop_system_loss);
 	propagation->set_frequency_hz (m_prop_frequency_hz);
+	interface->m_propagation = propagation;
 
 
 	Phy80211 *phy = new Phy80211 ();
@@ -171,8 +175,23 @@ NetworkInterface80211Factory::create (void)
 	phy->set_tx_power_increments_dbm (m_phy_tx_power_base_dbm,
 					  m_phy_tx_power_end_dbm,
 					  m_phy_n_tx_power);
-	//phy->set_receive_ok_callback (make_callback ());
-	//phy->set_receive_error_callback (make_callback ());
+	phy->set_receive_ok_callback (make_callback (&NetworkInterface80211::rx_phy_ok, interface));
+	phy->set_receive_error_callback (make_callback (&NetworkInterface80211::rx_phy_error, interface));
+	interface->m_phy = phy;
+
+	MacStations *stations;
+	switch (m_rate_control_mode) {
+	case RATE_ARF:
+		stations = new ArfMacStations ();
+		break;
+	case RATE_AARF:
+		stations = new AarfMacStations ();
+		break;
+	case RATE_CR:
+		//stations = new CrMacStations ();
+		break;
+	}
+	interface->m_stations = stations;	
 
 	return interface;
 }
