@@ -180,6 +180,7 @@ NetworkInterface80211Factory::create (Host *host)
 	phy->set_receive_ok_callback (make_callback (&NetworkInterface80211::rx_phy_ok, interface));
 	phy->set_receive_error_callback (make_callback (&NetworkInterface80211::rx_phy_error, interface));
 	interface->m_phy = phy;
+	propagation->set_receive_callback (make_callback (&Phy80211::receive_packet, phy));
 
 	MacStations *stations;
 	switch (m_rate_control_mode) {
