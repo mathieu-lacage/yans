@@ -31,6 +31,10 @@ namespace yans {
 
 Host::Host (char const *path)
 {
+	m_x = 0.0;
+	m_y = 0.0;
+	m_z = 0.0;
+
 	m_ipv4 = new Ipv4 ();
 	m_ipv4->set_host (this);
 
