@@ -219,7 +219,6 @@ SchedulerHeap::remove_next (void)
 {
 	assert (!is_empty ());
 	exch (root (), last ());
-	delete m_heap.back ().first;
 	m_heap.pop_back ();
 	top_down ();
 }
@@ -228,7 +227,6 @@ Event *
 SchedulerHeap::remove (Event const*ev)
 {
 	exch (get_from_event (ev), last ());
-	delete m_heap.back ().first;
 	m_heap.pop_back ();
 	top_down ();
 	return const_cast <Event *> (ev);
