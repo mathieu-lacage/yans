@@ -25,6 +25,7 @@
 #include "network-interface.h"
 #include "mac-address.h"
 #include "ipv4-address.h"
+#include "ui-traced-variable.tcc"
 #include <string>
 
 namespace yans {
@@ -36,12 +37,14 @@ class Channel80211;
 class Phy80211;
 class PropagationModel;
 class MacStations;
+class TraceContainer;
 
 class NetworkInterface80211 : public NetworkInterface {
 public:
 	virtual ~NetworkInterface80211 ();
 
 	void connect_to (Channel80211 *channel);
+	void register_trace (TraceContainer *container);
 
 	virtual void set_host (Host *host);
 	virtual void set_mac_address (MacAddress self);
@@ -78,6 +81,8 @@ private:
 	Ipv4Address m_ipv4_address;
 	Ipv4Mask m_ipv4_mask;
 	std::string *m_name;
+
+	UiTracedVariable<uint32_t> m_bytes_rx;
 };
 
 }; // namespace yans

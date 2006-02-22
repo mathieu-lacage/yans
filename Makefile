@@ -38,21 +38,6 @@ PACKAGE_DIST= \
 	Makefile \
 	$(NULL)
 
-ifeq ($(GSL_USE),y)
-RNG_UNIFORM_CXX = \
-	src/common/random-uniform-gsl.cc \
-	$(NULL)
-else
-RNG_UNIFORM_CXX = \
-	src/common/random-uniform-mrg32k3a.cc \
-	src/common/rng-mrg32k3a.cc \
-	$(NULL)
-RNG_UNIFORM_H = \
-	src/common/rng-mrg32k3a.h \
-	$(NULL)
-endif
-
-
 # building of libyans.so
 YANS_SRC= \
 	simulator/clock.cc \
@@ -83,8 +68,9 @@ YANS_SRC= \
 	src/common/packet-logger.cc \
 	src/common/trace-container.cc \
 	src/common/pcap-writer.cc \
-	src/common/seed-generator.cc \
-	$(RNG_UNIFORM_CXX) \
+	src/common/seed-generator-mrg32k3a.cc \
+	src/common/random-uniform-mrg32k3a.cc \
+	src/common/rng-mrg32k3a.cc \
 	src/ipv4/tag-ipv4.cc \
 	src/ipv4/ipv4-end-point.cc \
 	src/ipv4/ipv4-end-points.cc \
@@ -170,7 +156,8 @@ YANS_HDR = \
 	src/common/si-traced-variable.tcc \
 	src/common/f-traced-variable.tcc \
 	src/common/seed-generator.h \
-	$(RNG_UNIFORM_H) \
+	src/common/random-uniform.h \
+	src/common/rng-mrg32k3a.h \
 	src/ipv4/chunk-icmp.h \
 	src/ipv4/defrag-state.h \
 	src/ipv4/ipv4-route.h \
@@ -251,51 +238,58 @@ TEST_LDFLAGS=$(LDFLAGS) -lyans -L$(TOP_BUILD_DIR)
 SAMPLE_CXX_SIMU_SRC= \
 	samples/main-simulator.cc \
 	$(NULL)
-SAMPLE_CXX_SIMU_OUTPUT=$(basename $(SAMPLE_CXX_SIMU_SRC))
+SAMPLE_CXX_SIMU_OUTPUT=samples/main-simulator
 SAMPLE_CXX_SIMU_CXXFLAGS=$(CXXFLAGS)
 SAMPLE_CXX_SIMU_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans
 
 SAMPLE_CXX_SIMU_FOR_SRC= \
 	samples/main-forwarding-simulator.cc \
 	$(NULL)
-SAMPLE_CXX_SIMU_FOR_OUTPUT=$(basename $(SAMPLE_CXX_SIMU_FOR_SRC))
+SAMPLE_CXX_SIMU_FOR_OUTPUT=samples/main-forwarding-simulator
 SAMPLE_CXX_SIMU_FOR_CXXFLAGS=$(CXXFLAGS)
 SAMPLE_CXX_SIMU_FOR_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans
 
 SAMPLE_CXX_SIMUTEMP_SRC= \
 	samples/main-forwarding-simulator-template.cc \
 	$(NULL)
-SAMPLE_CXX_SIMUTEMP_OUTPUT=$(basename $(SAMPLE_CXX_SIMUTEMP_SRC))
+SAMPLE_CXX_SIMUTEMP_OUTPUT=samples/main-forwarding-simulator-template
 SAMPLE_CXX_SIMUTEMP_CXXFLAGS=$(CXXFLAGS)
 SAMPLE_CXX_SIMUTEMP_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans
 
 SAMPLE_CXX_SIMPLE_SRC= \
 	samples/main-simple.cc \
 	$(NULL)
-SAMPLE_CXX_SIMPLE_OUTPUT=$(basename $(SAMPLE_CXX_SIMPLE_SRC))
+SAMPLE_CXX_SIMPLE_OUTPUT=samples/main-simple
 SAMPLE_CXX_SIMPLE_CXXFLAGS=$(CXXFLAGS)
 SAMPLE_CXX_SIMPLE_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans
 
 SAMPLE_CXX_ROUTER_SRC= \
 	samples/main-router.cc \
 	$(NULL)
-SAMPLE_CXX_ROUTER_OUTPUT=$(basename $(SAMPLE_CXX_ROUTER_SRC))
+SAMPLE_CXX_ROUTER_OUTPUT=samples/main-router
 SAMPLE_CXX_ROUTER_CXXFLAGS=$(CXXFLAGS)
 SAMPLE_CXX_ROUTER_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans
 
 SAMPLE_CXX_TCP_SRC= \
 	samples/main-tcp.cc \
 	$(NULL)
-SAMPLE_CXX_TCP_OUTPUT=$(basename $(SAMPLE_CXX_TCP_SRC))
+SAMPLE_CXX_TCP_OUTPUT=samples/main-tcp
 SAMPLE_CXX_TCP_CXXFLAGS=$(CXXFLAGS)
 SAMPLE_CXX_TCP_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans
 
 SAMPLE_CXX_THREAD_SRC= \
 	samples/main-thread.cc \
 	$(NULL)
-SAMPLE_CXX_THREAD_OUTPUT=$(basename $(SAMPLE_CXX_THREAD_SRC))
+SAMPLE_CXX_THREAD_OUTPUT=samples/main-thread
 SAMPLE_CXX_THREAD_CXXFLAGS=$(CXXFLAGS)
 SAMPLE_CXX_THREAD_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans
+
+SAMPLE_CXX_80211_SRC= \
+	samples/main-80211.cc \
+	$(NULL)
+SAMPLE_CXX_80211_OUTPUT=samples/main-80211
+SAMPLE_CXX_80211_CXXFLAGS=$(CXXFLAGS) -I$(TOP_SRC_DIR)/src/80211
+SAMPLE_CXX_80211_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans
 
 
 
@@ -352,6 +346,7 @@ ALL= \
 	SAMPLE_CXX_SIMU_FOR \
 	SAMPLE_CXX_SIMUTEMP \
 	SAMPLE_CXX_THREAD \
+	SAMPLE_CXX_80211 \
 	$(NULL)
 
 ifeq ($(PYTHON_USE),y)

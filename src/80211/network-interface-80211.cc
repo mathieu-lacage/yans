@@ -22,12 +22,17 @@
 #include "propagation-model.h"
 #include "phy-80211.h"
 #include "channel-80211.h"
-
+#include "mac-stations.h"
+#include "mac-station.h"
+#include "packet.h"
+#include "ipv4.h"
+#include "trace-container.h"
 
 namespace yans {
 
 NetworkInterface80211::NetworkInterface80211 ()
-	: m_name (new std::string ("wlan0"))
+	: m_name (new std::string ("wlan0")),
+	  m_bytes_rx (0)
 {}
 
 NetworkInterface80211::~NetworkInterface80211 ()
@@ -38,6 +43,11 @@ void
 NetworkInterface80211::connect_to (Channel80211 *channel)
 {
 	channel->add (m_propagation);
+}
+void 
+NetworkInterface80211::register_trace (TraceContainer *container)
+{
+	container->register_ui_variable ("80211-bytes-rx", &m_bytes_rx);
 }
 
 void 
@@ -111,11 +121,20 @@ NetworkInterface80211::get_ipv4_broadcast (void)
 
 void 
 NetworkInterface80211::send (Packet *packet, Ipv4Address dest)
-{}
+{
+	if (!m_phy->is_state_idle ()) {
+		return;
+	}
+	uint8_t tx_mode = m_stations->lookup (MacAddress ("ff:ff:ff:ff:ff:ff"))->get_data_mode (packet->get_size ());
+	m_phy->send_packet (packet, tx_mode, 0);
+}
 
 void 
 NetworkInterface80211::rx_phy_ok (Packet *packet, double snr, uint8_t tx_mode)
-{}
+{
+	m_bytes_rx += packet->get_size ();
+	m_ipv4->receive (packet, this);
+}
 void 
 NetworkInterface80211::rx_phy_error (Packet *packet)
 {}
