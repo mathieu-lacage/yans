@@ -239,7 +239,7 @@ namespace
 //------------------------------------------------------------------------- 
 // Generate the next random number. 
 // 
-double RNG::U01 () 
+double RngMrg32k3a::U01 () 
 { 
 	long k; 
 	double p1, p2, u; 
@@ -263,7 +263,7 @@ double RNG::U01 ()
 //------------------------------------------------------------------------- 
 // Generate the next random number with extended (53 bits) precision. 
 // 
-double RNG::U01d () 
+double RngMrg32k3a::U01d () 
 { 
 	double u; 
 	u = U01(); 
@@ -275,10 +275,10 @@ double RNG::U01d ()
 // Public members of the class start here 
 //------------------------------------------------------------------------- 
 
-RNG::RNG ()
+RngMrg32k3a::RngMrg32k3a ()
 {}
 
-void RNG::reset (long seed) 
+void RngMrg32k3a::reset (long seed) 
 {
 	for (int i = 0; i < 6; ++i) { 
 		Bg_[i] = Cg_[i] = Ig_[i] = seed; 
@@ -291,37 +291,37 @@ void RNG::reset (long seed)
 // 
 
 uint32_t 
-RNG::get_max (void) const
+RngMrg32k3a::get_max (void) const
 {
 	return MAXINT;
 }
 uint32_t 
-RNG::get_min (void) const
+RngMrg32k3a::get_min (void) const
 {
 	return 0;
 }
 
 uint32_t 
-RNG::get_uint (void)
+RngMrg32k3a::get_uint (void)
 {  
 	return get_uint (0, MAXINT);
 }
 
 uint32_t
-RNG::get_uint (uint32_t n) 
+RngMrg32k3a::get_uint (uint32_t n) 
 {
 	return get_uint (0, n);
 }
 
 uint32_t
-RNG::get_uint (uint32_t low, uint32_t high) 
+RngMrg32k3a::get_uint (uint32_t low, uint32_t high) 
 { 
 	return ((uint32_t) (low + (uint32_t) (((uint32_t) 
 					       (high-low+1)) * U01())));
 }
 
 double 
-RNG::get_double (void)
+RngMrg32k3a::get_double (void)
 {
 	
 	return U01d ();

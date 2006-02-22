@@ -22,6 +22,7 @@
 #include "random-uniform.h"
 #include "simulator.h"
 #include "event.tcc"
+#include "rng-mrg32k3a.h"
 
 namespace yans {
 
@@ -33,7 +34,7 @@ public:
 	void reset (uint32_t seed);
 	uint32_t get (void);
 private:
-	RandomUniform m_generator;
+	RngMrg32k3a m_generator;
 };
 
 SeedGeneratorPrivate::SeedGeneratorPrivate ()

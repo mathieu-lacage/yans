@@ -18,8 +18,8 @@
  *  02110-1301 USA
  *
  */
-#ifndef RNG_H_
-#define RNG_H_
+#ifndef RNG_MRG32k3A_H
+#define RNG_MRG32k3A_H
 
 #include <stdint.h>
 
@@ -27,9 +27,9 @@
 /*
  * Use class RNG in real programs.
  */
-class RNG {
+class RngMrg32k3a {
 public:
-	RNG ();
+	RngMrg32k3a ();
 
 	void reset (long seed);
 
@@ -53,4 +53,4 @@ private:
 	double Cg_[6], Bg_[6], Ig_[6]; 
 }; 
 
-#endif
+#endif /* RNG_MRG32k3A_H */

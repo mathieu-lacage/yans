@@ -39,7 +39,7 @@ public:
 	uint32_t get_uint (uint32_t a, uint32_t b);
 	double get_double (void);
 private:
-	RNG m_rng;
+	RngMrg32k3a m_rng;
 };
 
 RandomUniformPrivate::RandomUniformPrivate ()
