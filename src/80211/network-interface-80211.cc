@@ -43,6 +43,7 @@ void
 NetworkInterface80211::connect_to (Channel80211 *channel)
 {
 	channel->add (m_propagation);
+	m_propagation->set_channel (channel);
 }
 void 
 NetworkInterface80211::register_trace (TraceContainer *container)
