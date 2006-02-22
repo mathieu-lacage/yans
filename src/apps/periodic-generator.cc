@@ -25,11 +25,14 @@
 #include "chunk-constant-data.h"
 #include "event.h"
 #include "event.tcc"
+#include "cancellable-event.tcc"
 
 namespace yans {
 
 PeriodicGenerator::PeriodicGenerator ()
-	: m_n (0)
+	: m_stop_at (0.0),
+	  m_n (0),
+	  m_current_event (0)
 {}
 
 PeriodicGenerator::~PeriodicGenerator ()
@@ -55,9 +58,27 @@ PeriodicGenerator::set_packet_size (uint16_t size)
 }
 
 void 
+PeriodicGenerator::start_now (void)
+{
+	m_current_event = make_cancellable_event (&PeriodicGenerator::send_next_packet, this);
+	Simulator::insert_in_s (m_interval, m_current_event);
+}
+void 
+PeriodicGenerator::stop_now (void)
+{
+	if (m_current_event != 0) {
+		m_current_event->cancel ();
+		m_current_event = 0;
+	}
+}
+
+
+void 
 PeriodicGenerator::start_at (double start)
 {
-	Simulator::insert_at_s (start, make_event (&PeriodicGenerator::send_next_packet, this));
+	assert (m_current_event == 0);
+
+	Simulator::insert_at_s (start, m_current_event);
 }
 void 
 PeriodicGenerator::stop_at (double end)
@@ -69,12 +90,15 @@ PeriodicGenerator::stop_at (double end)
 void 
 PeriodicGenerator::send_next_packet (void)
 {
+	assert (m_current_event != 0);
+	m_current_event = 0;
 	/* stop packet transmissions.*/
 	if (m_stop_at > 0.0 && Simulator::now_s () >= m_stop_at) {
 		return;
 	}
 	/* schedule next packet transmission. */
-	Simulator::insert_in_s (m_interval, make_event (&PeriodicGenerator::send_next_packet, this));
+	m_current_event = make_cancellable_event (&PeriodicGenerator::send_next_packet, this);
+	Simulator::insert_in_s (m_interval, m_current_event);
 	/* create packet. */
 	Packet *packet = new Packet ();
 	ChunkConstantData data = ChunkConstantData (m_size, m_n);

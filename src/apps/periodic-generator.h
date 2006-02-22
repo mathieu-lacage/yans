@@ -28,7 +28,7 @@
 namespace yans {
 
 class Packet;
-
+class CancellableEvent;
 
 class PeriodicGenerator {
 public:
@@ -42,6 +42,9 @@ public:
 	void set_packet_interval (double interval);
 	void set_packet_size (uint16_t size);
 
+	void start_now (void);
+	void stop_now (void);
+
 	void start_at (double start);
 	void stop_at (double end);
 
@@ -54,6 +57,7 @@ private:
 	uint16_t m_size;
 	double m_stop_at;
 	uint32_t m_n;
+	CancellableEvent *m_current_event;
 };
 
 }; //namespace yans

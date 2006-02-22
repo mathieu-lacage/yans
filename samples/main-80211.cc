@@ -32,6 +32,7 @@
 #include "callback.tcc"
 #include "pcap-writer.h"
 #include "trace-container.h"
+#include "event.tcc"
 
 #include <iostream>
 
@@ -40,19 +41,37 @@ using namespace yans;
 class MyTrace {
 public:
 	void total_rx_bytes (uint64_t prev, uint64_t now) {
-		std::cout << "at="<<Simulator::now_s ()
-			  << ", rx=" << now - prev << std::endl;
+		m_current = now;
+	}
+	void start (PeriodicGenerator *generator, Host *a) {
+		generator->start_now ();
+		Simulator::insert_in_s (2.0, make_event (&MyTrace::advance, this, generator, a));
+	}
+	void advance (PeriodicGenerator *generator, Host *a) {
+		generator->stop_now ();
+		a->set_x (a->get_x () + 10.0);
+		uint32_t n_bytes = m_current - m_prev;
+		m_prev = m_current;
+		std::cout << "x="<<a->get_x ()<<", throughput="<<n_bytes / 2.0<<std::endl;
+		if (a->get_x () >= 100.0) {
+			return;
+		}
+		generator->start_now ();
+		Simulator::insert_in_s (2.0, make_event (&MyTrace::advance, this, generator, a));
 	}
 private:
+	uint32_t m_current;
+	uint32_t m_prev;
 };
 
-static void
+static MyTrace *
 setup_rx_trace (NetworkInterface80211 *wifi)
 {
 	MyTrace *trace = new MyTrace ();
 	TraceContainer *container = new TraceContainer ();
 	wifi->register_trace (container);
 	container->set_ui_variable_callback ("80211-bytes-rx", make_callback (&MyTrace::total_rx_bytes, trace));
+	return trace;
 }
 
 int main (int argc, char *argv[])
@@ -73,7 +92,7 @@ int main (int argc, char *argv[])
 	wifi_client->connect_to (channel);
 	wifi_server->connect_to (channel);
 
-	setup_rx_trace (wifi_server);
+	MyTrace *trace = setup_rx_trace (wifi_server);
 
 	/* associate ipv4 addresses to the ethernet network elements */
 	wifi_client->set_ipv4_address (Ipv4Address ("192.168.0.3"));
@@ -97,18 +116,17 @@ int main (int argc, char *argv[])
 	UdpSource *source = new UdpSource (hclient);
 	source->bind (Ipv4Address ("192.168.0.3"), 1025);
 	source->set_peer (Ipv4Address ("192.168.0.2"), 1026);
-	source->unbind_at (11.0);
+	source->unbind_at (10000.0);
 	/* create udp sink endpoint. */
 	UdpSink *sink = new UdpSink (hserver);
 	sink->bind (Ipv4Address ("192.168.0.2"), 1026);
-	sink->unbind_at (11.0);
+	sink->unbind_at (10000.0);
 
 
 	PeriodicGenerator *generator = new PeriodicGenerator ();
 	generator->set_packet_interval (0.01);
-	generator->set_packet_size (100);
-	generator->start_at (1.0);
-	generator->stop_at (500.0);
+	generator->set_packet_size (2000);
+	trace->start (generator, hserver);
 	generator->set_send_callback (make_callback (&UdpSource::send, source));
 
 	TrafficAnalyser *analyser = new TrafficAnalyser ();
