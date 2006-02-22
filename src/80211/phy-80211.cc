@@ -797,6 +797,8 @@ Phy80211::end_rx (Packet *packet, RxEvent *event)
 {
 	assert (is_state_rx ());
 	assert (event->get_end_time_us () == now_us ());
+	assert (m_end_rx_event != 0);
+	m_end_rx_event = 0;
 
 	NiChanges ni;
 	double noise_interference_w = calculate_noise_interference_w (event, &ni);
