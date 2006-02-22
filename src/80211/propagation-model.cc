@@ -25,6 +25,17 @@
 #include "event.tcc"
 #include <math.h>
 
+#define PROP_DEBUG 1
+
+#ifdef PROP_DEBUG
+#include <iostream>
+#  define TRACE(x) \
+std::cout << "PROP TRACE " << Simulator::now_s () << " " << x << std::endl;
+#else
+#  define TRACE(x)
+#endif
+
+
 namespace yans {
 
 const double PropagationModel::PI = 3.1415;
