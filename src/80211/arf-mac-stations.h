@@ -28,17 +28,20 @@ namespace yans {
 
 class ArfMacStations : public MacStations {
 public:
-	ArfMacStations ();
+	ArfMacStations (uint8_t n_modes);
 	virtual ~ArfMacStations ();
+
+	uint8_t get_n_modes (void) const;
 private:
-	virtual class MacStation *createStation (void);
+	virtual class MacStation *create_station (void);
+	uint8_t m_n_modes;
 };
 
 
 class ArfMacStation : public MacStation
 {
 public:
-	ArfMacStation (MacStations *stations,
+	ArfMacStation (ArfMacStations *stations,
 		       int min_timer_timeout,
 		       int min_success_threshold);
 	virtual ~ArfMacStation ();
@@ -55,6 +58,8 @@ public:
 	virtual int get_rts_mode (void);
 
 private:
+	ArfMacStations *m_stations;
+
 	int m_timer;
 	int m_success;
 	int m_failed;

@@ -25,7 +25,7 @@
 #include "mac-stations.h"
 #include "arf-mac-stations.h"
 #include "aarf-mac-stations.h"
-
+#include "cr-mac-stations.h"
 
 namespace yans {
 
@@ -175,6 +175,7 @@ NetworkInterface80211Factory::create (void)
 	phy->set_tx_power_increments_dbm (m_phy_tx_power_base_dbm,
 					  m_phy_tx_power_end_dbm,
 					  m_phy_n_tx_power);
+	phy->configure_80211a ();
 	phy->set_receive_ok_callback (make_callback (&NetworkInterface80211::rx_phy_ok, interface));
 	phy->set_receive_error_callback (make_callback (&NetworkInterface80211::rx_phy_error, interface));
 	interface->m_phy = phy;
@@ -182,13 +183,13 @@ NetworkInterface80211Factory::create (void)
 	MacStations *stations;
 	switch (m_rate_control_mode) {
 	case RATE_ARF:
-		stations = new ArfMacStations ();
+		stations = new ArfMacStations (phy->get_n_modes ());
 		break;
 	case RATE_AARF:
-		stations = new AarfMacStations ();
+		stations = new AarfMacStations (phy->get_n_modes ());
 		break;
 	case RATE_CR:
-		//stations = new CrMacStations ();
+		stations = new CrMacStations (m_cr_data_mode, m_cr_ctl_mode);
 		break;
 	}
 	interface->m_stations = stations;	

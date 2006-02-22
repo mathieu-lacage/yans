@@ -44,40 +44,38 @@
 #include "mac-station.h"
 #include "cr-mac-stations.h"
 
-#include <assert.h>
+namespace yans {
 
-CrMacStation::CrMacStation (MacStations *stations, int dataRate, int ctlRate)
-	: MacStation (stations),
-	  m_dataRate (dataRate),
-	  m_ctlRate (ctlRate)
+CrMacStation::CrMacStation (CrMacStations *stations)
+	: m_stations (stations)
 {}
 CrMacStation::~CrMacStation ()
 {}
 
 void 
-CrMacStation::reportRTSFailed (void)
+CrMacStation::report_rts_failed (void)
 {}
 void 
-CrMacStation::reportDataFailed (void)
+CrMacStation::report_data_failed (void)
 {}
 void 
-CrMacStation::reportRxOk (double SNR, int mode)
+CrMacStation::report_rx_ok (double SNR, int mode)
 {}
-void CrMacStation::reportRTSOk (double ctsSNR, int ctsMode)
+void CrMacStation::report_rts_ok (double ctsSNR, int ctsMode)
 {}
-void CrMacStation::reportDataOk (double ackSNR, int ackMode)
+void CrMacStation::report_data_ok (double ackSNR, int ackMode)
 {}
-void CrMacStation::reportFinalRTSFailed (void)
+void CrMacStation::report_final_rts_failed (void)
 {}
-void CrMacStation::reportFinalDataFailed (void)
+void CrMacStation::report_final_data_failed (void)
 {}
-int CrMacStation::getDataMode (int size)
+int CrMacStation::get_data_mode (int size)
 {
-	return m_dataRate;
+	return m_stations->get_data_mode ();
 }
-int CrMacStation::getRTSMode (void)
+int CrMacStation::get_rts_mode (void)
 {
-	return m_ctlRate;
+	return m_stations->get_ctl_mode ();
 }
 
 
@@ -85,16 +83,28 @@ int CrMacStation::getRTSMode (void)
 
 
 
-CrMacStations::CrMacStations (int dataRate, int ctlRate)
+CrMacStations::CrMacStations (uint8_t data_mode, uint8_t ctl_mode)
 	: MacStations (),
-	  m_dataRate (dataRate),
-	  m_ctlRate (ctlRate)
+	  m_data_mode (data_mode),
+	  m_ctl_mode (ctl_mode)
 {}
 CrMacStations::~CrMacStations ()
 {}
-MacStation *
-CrMacStations::createStation (void)
+uint8_t 
+CrMacStations::get_data_mode (void) const
 {
-	return new CrMacStation (this, m_dataRate, m_ctlRate);
+	return m_data_mode;
+}
+uint8_t 
+CrMacStations::get_ctl_mode (void) const
+{
+	return m_ctl_mode;
 }
 
+MacStation *
+CrMacStations::create_station (void)
+{
+	return new CrMacStation (this);
+}
+
+}; // namespace yans

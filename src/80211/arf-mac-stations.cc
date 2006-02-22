@@ -26,12 +26,12 @@
 #include <cassert>
 
 namespace yans {
-
-ArfMacStation::ArfMacStation (MacStations *stations,
+	
+ArfMacStation::ArfMacStation (ArfMacStations *stations,
 			      int min_timer_timeout,
 			      int min_success_threshold)
-	: MacStation (stations)
 {
+	m_stations = stations;
         m_min_timer_timeout = min_timer_timeout;
         m_min_success_threshold = min_success_threshold;
         m_success_threshold = m_min_success_threshold;
@@ -50,7 +50,7 @@ ArfMacStation::~ArfMacStation ()
 int 
 ArfMacStation::get_max_rate (void)
 {
-	return get_n_modes ();
+	return m_stations->get_n_modes ();
 }
 int 
 ArfMacStation::get_min_rate (void)
@@ -192,16 +192,22 @@ void ArfMacStation::set_success_threshold (int success_threshold)
 
 
 
-ArfMacStations::ArfMacStations ()
-	: MacStations ()
+ArfMacStations::ArfMacStations (uint8_t n_modes)
+	: m_n_modes (n_modes)
 {}
 ArfMacStations::~ArfMacStations ()
 {}
 MacStation *
-ArfMacStations::createStation (void)
+ArfMacStations::create_station (void)
 {
 	/* XXX: use mac to access user and PHY params. */
 	return new ArfMacStation (this, 15, 10);
+}
+
+uint8_t
+ArfMacStations::get_n_modes (void) const
+{
+	return m_n_modes;
 }
 
 

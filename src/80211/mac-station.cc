@@ -24,20 +24,14 @@
 
 namespace yans {
 
-MacStation::MacStation (MacStations *stations)
-	: m_is_associated (false),
-	  m_stations (stations)
+MacStation::MacStation ()
+	: m_is_associated (false)
 {}
 
 
 MacStation::~MacStation ()
 {}
 
-int
-MacStation::get_n_modes (void) const
-{
-	return m_stations->get_n_modes ();
-}
 bool 
 MacStation::is_associated (void) const
 {

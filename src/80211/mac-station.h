@@ -27,7 +27,7 @@ class MacStations;
 
 class MacStation {
 public:
-	MacStation (MacStations *stations);
+	MacStation ();
 
 	virtual ~MacStation ();
 
@@ -51,11 +51,8 @@ public:
 	virtual int get_data_mode (int size) = 0;
 	virtual int get_rts_mode (void) = 0;
 
-protected:
-	int get_n_modes (void) const;
 private:
 	bool m_is_associated;
-	MacStations *m_stations;
 };
 
 }; // namespace yans

@@ -122,6 +122,7 @@ YANS_SRC= \
 	src/80211/mac-station.cc \
 	src/80211/arf-mac-stations.cc \
 	src/80211/aarf-mac-stations.cc \
+	src/80211/cr-mac-stations.cc \
 	src/80211/propagation-model.cc \
 	src/80211/channel-80211.cc \
 	src/80211/transmission-mode.cc \
@@ -200,6 +201,7 @@ YANS_HDR = \
 	src/80211/mac-station.h \
 	src/80211/arf-mac-stations.h \
 	src/80211/aarf-mac-stations.h \
+	src/80211/cr-mac-stations.h \
 	src/80211/propagation-model.h \
 	src/80211/channel-80211.h \
 	src/80211/transmission-mode.h \

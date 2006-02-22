@@ -35,16 +35,11 @@ public:
 	virtual ~MacStations ();
   
 	MacStation *lookup (MacAddress address);
-
-	void set_n_modes (uint32_t n_modes);
-	int get_n_modes (void) const;
-
 private:
 	typedef std::list <std::pair<MacAddress, MacStation *> > Stations;
 	typedef std::list <std::pair<MacAddress, MacStation *> >::iterator StationsI;
-	virtual class MacStation *createStation (void) = 0;
+	virtual class MacStation *create_station (void) = 0;
 	Stations m_stations;
-	uint32_t m_n_modes;
 };
 
 }; // namespace yans

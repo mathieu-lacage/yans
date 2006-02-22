@@ -26,13 +26,13 @@
 
 namespace yans {
 
-AarfMacStations::AarfMacStations ()
-	: ArfMacStations ()
+AarfMacStations::AarfMacStations (uint8_t n_mode)
+	: ArfMacStations (n_mode)
 {}
 AarfMacStations::~AarfMacStations ()
 {}
 MacStation *
-AarfMacStations::createStation (void)
+AarfMacStations::create_station (void)
 {
 	return new AarfMacStation (this, 2.0, 60, 2.0);
 }
@@ -40,7 +40,7 @@ AarfMacStations::createStation (void)
 
 
 
-AarfMacStation::AarfMacStation (MacStations *stations, 	
+AarfMacStation::AarfMacStation (AarfMacStations *stations, 	
 				double success_k,
 				int max_success_threshold,
 				double timer_k)

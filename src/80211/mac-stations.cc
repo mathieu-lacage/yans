@@ -37,15 +37,9 @@ MacStations::lookup (MacAddress address)
 			return (*i).second;
 		}
 	}
-	MacStation *station = createStation ();
+	MacStation *station = create_station ();
 	m_stations.push_back (std::make_pair (address, station));
 	return station;
-}
-
-int 
-MacStations::get_n_modes (void) const
-{
-	return m_n_modes;
 }
 
 }; // namespace yans
