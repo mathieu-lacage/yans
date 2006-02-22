@@ -53,7 +53,7 @@ public:
 		uint32_t n_bytes = m_current - m_prev;
 		m_prev = m_current;
 		std::cout << "x="<<a->get_x ()<<", throughput="<<n_bytes / 2.0<<std::endl;
-		if (a->get_x () >= 50.0) {
+		if (a->get_x () >= 500.0) {
 			return;
 		}
 		generator->start_now ();
@@ -76,6 +76,8 @@ setup_rx_trace (NetworkInterface80211 *wifi)
 
 int main (int argc, char *argv[])
 {
+	Simulator::set_binary_heap ();
+
 	Host *hclient, *hserver;
 	hclient = new Host ("client");
 	hserver = new Host ("server");
@@ -135,7 +137,7 @@ int main (int argc, char *argv[])
 	/* run simulation */
 	Simulator::run ();
 
-	analyser->print_stats ();
+	//analyser->print_stats ();
 
 
 	/* destroy network */
