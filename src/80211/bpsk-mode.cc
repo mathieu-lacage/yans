@@ -21,8 +21,6 @@
 
 #include "bpsk-mode.h"
 
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_randist.h>
 #include <math.h>
 
 namespace yans {
