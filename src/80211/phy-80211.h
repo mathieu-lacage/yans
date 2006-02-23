@@ -47,16 +47,16 @@ public:
 	 * rxEnd will be invoked later to report whether or not
 	 * the packet was successfully received.
 	 */
-	virtual void notify_rx_start (double now, double duration) = 0;
+	virtual void notify_rx_start (uint64_t now_us, uint64_t duration_us) = 0;
 	/* we have received the last bit of a packet for which
 	 * rxStart was invoked first. 
 	 */
-	virtual void notify_rx_end (double now, bool received_ok) = 0;
+	virtual void notify_rx_end (uint64_t now_us, bool received_ok) = 0;
 	/* we start the transmission of a packet.
 	 */
-	virtual void notify_tx_start (double now, double duration) = 0;
-	virtual void notify_sleep (double now) = 0;
-	virtual void notify_wakeup (double now) = 0;
+	virtual void notify_tx_start (uint64_t now_us, uint64_t duration_us) = 0;
+	virtual void notify_sleep (uint64_t now_us) = 0;
+	virtual void notify_wakeup (uint64_t now_us) = 0;
 };
 
 
@@ -90,8 +90,8 @@ public:
 	bool is_state_rx (void);
 	bool is_state_tx (void);
 	bool is_state_sleep (void);
-	double get_state_duration (void);
-	double get_delay_until_idle (void);
+	uint64_t get_state_duration_us (void);
+	uint64_t get_delay_until_idle_us (void);
 
 	double calculate_tx_duration_s (uint32_t size, uint8_t payload_mode);
 	uint64_t calculate_tx_duration_us (uint32_t size, uint8_t payload_mode);
@@ -139,22 +139,21 @@ private:
 	double get_ed_threshold_w (void);
 	double dbm_to_w (double dbm);
 	double db_to_ratio (double db);
-	double now_s (void) const;
 	uint64_t now_us (void) const;
 	uint64_t get_max_packet_duration_us (void) const;
 	void add_tx_rx_mode (TransmissionMode *mode);
 	void cancel_rx (void);
 	TransmissionMode *get_mode (uint8_t tx_mode) const;
 	double get_power_dbm (uint8_t power) const;
-	void notify_tx_start (double now, double duration);
-	void notify_sleep (double now);
-	void notify_wakeup (double now);
-	void notify_rx_start (double now, double duration);
-	void notify_rx_end (double now, bool receivedOk);
-	void switch_to_tx (double txDuration);
+	void notify_tx_start (uint64_t now_us, uint64_t duration_us);
+	void notify_sleep (uint64_t now_us);
+	void notify_wakeup (uint64_t now_us);
+	void notify_rx_start (uint64_t now_us, uint64_t duration_us);
+	void notify_rx_end (uint64_t now_us, bool receivedOk);
+	void switch_to_tx (uint64_t tx_duration_us);
 	void switch_to_sleep (void);
 	void switch_to_idle_from_sleep (void);
-	void switch_to_sync_from_idle (double rxDuration);
+	void switch_to_sync_from_idle (uint64_t tx_duration_us);
 	void switch_to_idle_from_sync (void);
 	void append_event (RxEvent *event);
 	double calculate_noise_interference_w (RxEvent *event, NiChanges *ni) const;
@@ -166,7 +165,7 @@ private:
 private:
 	uint64_t     m_plcp_preamble_delay_us;
 	uint32_t     m_plcp_header_length;
-	double       m_max_packet_duration_s;
+	uint64_t     m_max_packet_duration_us;
 
 	double       m_ed_threshold_w; /* unit: W */
 	double       m_rx_noise_ratio;
@@ -177,9 +176,9 @@ private:
 	
 	bool m_sleeping;
 	bool m_rxing;
-	double m_end_tx;
-	double m_end_rx;
-	double m_previous_state_change_time;
+	uint64_t m_end_tx_us;
+	uint64_t m_end_rx_us;
+	uint64_t m_previous_state_change_time_us;
 
 	PropagationModel *m_propagation;
 	RxOkCallback *m_rx_ok_callback;

@@ -173,8 +173,8 @@ Phy80211::NiChange::operator < (Phy80211::NiChange const &o) const
 Phy80211::Phy80211 ()
 	: m_sleeping (false),
 	  m_rxing (false),
-	  m_end_tx (0.0),
-	  m_previous_state_change_time (0.0),
+	  m_end_tx_us (0),
+	  m_previous_state_change_time_us (0),
 	  m_rx_ok_callback (0),
 	  m_rx_error_callback (0),
 	  m_end_rx_event (0),
@@ -242,9 +242,8 @@ Phy80211::receive_packet (Packet *packet,
 	case Phy80211::IDLE: {
 		if (rx_power_w > m_ed_threshold_w) {
 			// sync to signal
-			double rx_duration_s = calculate_tx_duration_s (packet->get_size (), tx_mode);
-			notify_rx_start (now_s (), rx_duration_s);
-			switch_to_sync_from_idle (rx_duration_s);
+			notify_rx_start (now_us (), rx_duration_us);
+			switch_to_sync_from_idle (rx_duration_us);
 			assert (m_end_rx_event == 0);
 			event->ref ();
 			m_end_rx_event = make_cancellable_event (&Phy80211::end_rx, this, packet, event);
@@ -273,9 +272,9 @@ Phy80211::send_packet (Packet *packet, uint8_t tx_mode, uint8_t tx_power)
 		m_end_rx_event->cancel ();
 	}
 
-	double tx_duration = calculate_tx_duration_s (packet->get_size (), tx_mode);
-	notify_tx_start (now_s (), tx_duration);
-	switch_to_tx (tx_duration);
+	uint64_t tx_duration_us = calculate_tx_duration_us (packet->get_size (), tx_mode);
+	notify_tx_start (now_us (), tx_duration_us);
+	switch_to_tx (tx_duration_us);
 	m_propagation->send (packet, get_power_dbm (tx_power), tx_mode);
 }
 
@@ -315,7 +314,7 @@ Phy80211::configure_80211a (void)
 	m_plcp_header_length = 4 + 1 + 12 + 1 + 6 + 16 + 6;
 	m_plcp_preamble_delay_us = 20;
 	/* 4095 bytes at a 6Mb/s rate with a 1/2 coding rate. */
-	m_max_packet_duration_s = 4095.0*8.0/6000000.0*(1.0/2.0);
+	m_max_packet_duration_us = (uint64_t)(1000000 * 4095.0*8.0/6000000.0*(1.0/2.0));
 	add_tx_rx_mode (new FecBpskMode (20e6, 6000000, 0.5,   10, 11));
 	add_tx_rx_mode (new FecBpskMode (20e6, 9000000, 0.75,  5, 8));
 	add_tx_rx_mode (new FecQamMode (20e6, 12000000, 0.5,   4, 10, 11, 0));
@@ -358,39 +357,39 @@ Phy80211::is_state_sleep (void)
 	return (get_state () == SLEEP)?true:false;
 }
 
-double
-Phy80211::get_state_duration (void)
+uint64_t
+Phy80211::get_state_duration_us (void)
 {
-	return now_s () - m_previous_state_change_time;
+	return now_us () - m_previous_state_change_time_us;
 }
-double 
-Phy80211::get_delay_until_idle (void)
+uint64_t
+Phy80211::get_delay_until_idle_us (void)
 {
-	double retval;
+	int64_t retval_us;
 
 	switch (get_state ()) {
 	case SYNC:
-		retval = m_end_rx - now_s ();
+		retval_us = m_end_rx_us - now_us ();
 		break;
 	case TX:
-		retval = m_end_tx - now_s ();
+		retval_us = m_end_tx_us - now_us ();
 		break;
 	case IDLE:
-		retval = 0.0;
+		retval_us = 0;
 		break;
 	case SLEEP:
 		assert (false);
 		// quiet compiler.
-		retval = 0.0;
+		retval_us = 0;
 		break;
 	default:
 		assert (false);
 		// NOTREACHED
-		retval = 0.0;
+		retval_us = 0;
 		break;
 	}
-	retval = max (retval, 0.0);
-	return retval;
+	retval_us = max (retval_us, 0);
+	return (uint64_t)retval_us;
 }
 
 
@@ -418,22 +417,22 @@ enum Phy80211::Phy80211State
 Phy80211::get_state (void)
 {
 	if (m_sleeping) {
-		assert (m_end_tx == 0);
+		assert (m_end_tx_us == 0);
 		assert (!m_rxing);
 		return Phy80211::SLEEP;
 	} else {
-		if (m_end_tx != 0 && m_end_tx > now_s ()) {
+		if (m_end_tx_us != 0 && m_end_tx_us > now_us ()) {
 			return Phy80211::TX;
-		} else if (m_end_tx != 0) {
+		} else if (m_end_tx_us != 0) {
 			/* At one point in the past, we completed
 			 * transmission of this packet.
 			 */
 			STATE_FROM (Phy80211::TX);
 			STATE_TO (Phy80211::IDLE);
-			STATE_AT (m_end_tx);
+			STATE_AT (m_end_tx_us);
 			
-			m_previous_state_change_time = m_end_tx;
-			m_end_tx = 0;
+			m_previous_state_change_time_us = m_end_tx_us;
+			m_end_tx_us = 0;
 		}
 		if (m_rxing) {
 			return Phy80211::SYNC;
@@ -463,11 +462,6 @@ Phy80211::get_ed_threshold_w (void)
 	return m_ed_threshold_w;
 }
 
-double
-Phy80211::now_s (void) const
-{
-	return Simulator::now_s ();
-}
 uint64_t
 Phy80211::now_us (void) const
 {
@@ -476,7 +470,7 @@ Phy80211::now_us (void) const
 uint64_t 
 Phy80211::get_max_packet_duration_us (void) const
 {
-	return (uint64_t)(m_max_packet_duration_s * 1000000);
+	return m_max_packet_duration_us;
 }
 
 void
@@ -501,45 +495,45 @@ Phy80211::get_power_dbm (uint8_t power) const
 }
 
 void 
-Phy80211::notify_tx_start (double now, double duration)
+Phy80211::notify_tx_start (uint64_t now_us, uint64_t duration_us)
 {
 	for (ListenersCI i = m_listeners.begin (); i != m_listeners.end (); i++) {
-		(*i)->notify_tx_start (now, duration);
+		(*i)->notify_tx_start (now_us, duration_us);
 	}
 }
 void 
-Phy80211::notify_rx_start (double now, double duration)
+Phy80211::notify_rx_start (uint64_t now_us, uint64_t duration_us)
 {
 	for (ListenersCI i = m_listeners.begin (); i != m_listeners.end (); i++) {
-		(*i)->notify_rx_start (now, duration);
+		(*i)->notify_rx_start (now_us, duration_us);
 	}
 }
 void 
-Phy80211::notify_rx_end (double now, bool receivedOk)
+Phy80211::notify_rx_end (uint64_t now_us, bool receivedOk)
 {
 	for (ListenersCI i = m_listeners.begin (); i != m_listeners.end (); i++) {
-		(*i)->notify_rx_end (now, receivedOk);
+		(*i)->notify_rx_end (now_us, receivedOk);
 	}
 }
 void 
-Phy80211::notify_sleep (double now)
+Phy80211::notify_sleep (uint64_t now_us)
 {
 	for (ListenersCI i = m_listeners.begin (); i != m_listeners.end (); i++) {
-		(*i)->notify_sleep (now);
+		(*i)->notify_sleep (now_us);
 	}
 }
 void 
-Phy80211::notify_wakeup (double now)
+Phy80211::notify_wakeup (uint64_t now_us)
 {
 	for (ListenersCI i = m_listeners.begin (); i != m_listeners.end (); i++) {
-		(*i)->notify_wakeup (now);
+		(*i)->notify_wakeup (now_us);
 	}
 }
 
 void
-Phy80211::switch_to_tx (double txDuration)
+Phy80211::switch_to_tx (uint64_t tx_duration_us)
 {
-	assert (m_end_tx == 0);
+	assert (m_end_tx_us == 0);
 	switch (get_state ()) {
 	case Phy80211::SYNC:
 		/* If we were receiving a packet when this tx
@@ -557,23 +551,23 @@ Phy80211::switch_to_tx (double txDuration)
 		assert (false);
 		break;
 	}
-	m_previous_state_change_time = now_s ();
-	m_end_tx = now_s () + txDuration;
+	m_previous_state_change_time_us = now_us ();
+	m_end_tx_us = now_us () + tx_duration_us;
 	STATE_TO (Phy80211::TX);
-	STATE_AT (now_s ());
+	STATE_AT (now_us ());
 }
 void
-Phy80211::switch_to_sync_from_idle (double rx_duration)
+Phy80211::switch_to_sync_from_idle (uint64_t rx_duration_us)
 {
 	assert (is_state_idle ());
 	assert (!m_rxing);
-	m_previous_state_change_time = now_s ();
+	m_previous_state_change_time_us = now_us ();
 	m_rxing = true;
-	m_end_rx = now_s () + rx_duration;
+	m_end_rx_us = now_us () + rx_duration_us;
 	assert (get_state () == Phy80211::SYNC);
 	STATE_FROM (Phy80211::IDLE);
 	STATE_TO (Phy80211::SYNC);
-	STATE_AT (now_s ());
+	STATE_AT (now_us ());
 }
 void
 Phy80211::switch_to_sleep (void)
@@ -610,10 +604,10 @@ Phy80211::switch_to_sleep (void)
 	default:
 		assert (false);
 	}
-	m_previous_state_change_time = now_s ();
+	m_previous_state_change_time_us = now_us ();
 	m_sleeping = true;
 	STATE_FROM (Phy80211::SLEEP);
-	STATE_AT (now_s ());
+	STATE_AT (now_us ());
 }
 void
 Phy80211::switch_to_idle_from_sleep (void)
@@ -621,14 +615,14 @@ Phy80211::switch_to_idle_from_sleep (void)
 	assert (is_state_sleep ());
 	assert (!m_sleeping);
 
-	m_previous_state_change_time = now_s ();
+	m_previous_state_change_time_us = now_us ();
 	m_sleeping = false;
 
 	assert (is_state_idle ());
 
 	STATE_FROM (Phy80211::SLEEP);
 	STATE_TO (Phy80211::IDLE);
-	STATE_AT (now_s ());
+	STATE_AT (now_us ());
 }
 void
 Phy80211::switch_to_idle_from_sync (void)
@@ -636,14 +630,14 @@ Phy80211::switch_to_idle_from_sync (void)
 	assert (is_state_rx ());
 	assert (m_rxing);
 
-	m_previous_state_change_time = now_s ();
+	m_previous_state_change_time_us = now_us ();
 	m_rxing = false;
 
 	assert (is_state_idle ());
 
 	STATE_FROM (Phy80211::SYNC);
 	STATE_TO (Phy80211::IDLE);
-	STATE_AT (now_s ());
+	STATE_AT (now_us ());
 }
 
 void 
@@ -825,12 +819,12 @@ Phy80211::end_rx (Packet *packet, RxEvent *event)
 	double per = calculate_per (event, &ni);
 	
 	if (m_random->get_double () > per) {
-		notify_rx_end (now_s (), true);
+		notify_rx_end (now_us (), true);
 		switch_to_idle_from_sync ();
 		(*m_rx_ok_callback) (packet, snr, event->get_payload_mode ());
 	} else {
 		/* failure. */
-		notify_rx_end (now_s (), false);
+		notify_rx_end (now_us (), false);
 		switch_to_idle_from_sync ();
 		(*m_rx_error_callback) (packet);
 	}
