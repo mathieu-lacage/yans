@@ -19,30 +19,37 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#ifndef CHUNK_MAC_LLC_SNAP_H
-#define CHUNK_MAC_LLC_SNAP_H
+#ifndef CHUNK_MAC_ETH_H
+#define CHUNK_MAC_ETH_H
 
 #include "chunk.h"
-#include <stdint.h>
+#include "mac-address.h"
+#include "ipv4-address.h"
 
 namespace yans {
 
-class ChunkMacLlcSnap : public Chunk {
+class ChunkMacEth : public Chunk {
  public:
-	ChunkMacLlcSnap ();
-	virtual ~ChunkMacLlcSnap ();
+	ChunkMacEth ();
+	virtual ~ChunkMacEth ();
 
-	void set_ether_type (uint16_t ether_type);
-	uint16_t get_ether_type (void);
-	
+	void set_source (MacAddress source);
+	void set_destination (MacAddress source);
+	void set_length (uint16_t length);
+	uint16_t get_length (void);
+	MacAddress get_source (void);
+	MacAddress get_destination (void);
+
 	virtual void add_to (Buffer *buffer) const;
 	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
 private:
 	uint32_t get_size (void) const;
-	uint16_t m_ether_type;
+	MacAddress m_source;
+	MacAddress m_destination;
+	uint16_t m_length;
 };
 
 }; // namespace yans
 
-#endif /* CHUNK_MAC_LLC_SNAP_H */
+#endif /* CHUNK_MAC_ETH_H */

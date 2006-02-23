@@ -24,6 +24,7 @@
 #include "arp.h"
 #include "chunk-mac-llc-snap.h"
 #include "chunk-mac-crc.h"
+#include "chunk-mac-eth.h"
 #include "packet.h"
 #include "ipv4.h"
 #include "host.h"
@@ -164,20 +165,22 @@ EthernetNetworkInterface::recv (Packet *packet)
 {
 	TRACE ("rx init size="<<packet->get_size ());
 	m_recv_logger->log (packet);
-	ChunkMacLlcSnap header;
+	ChunkMacEth eth;
+	ChunkMacLlcSnap llc;
 	ChunkMacCrc trailer;
-	packet->remove (&header);
+	packet->remove (&eth);
+	packet->remove (&llc);
 	TRACE ("rx no header size="<<packet->get_size ());
-	if (header.get_length () < packet->get_size () - 4) {
-		uint32_t padding = packet->get_size () - 4 - header.get_length ();
+	if (eth.get_length () < packet->get_size () - 4) {
+		uint32_t padding = packet->get_size () - 4 - eth.get_length ();
 		TRACE ("rx read padding="<<padding);
 		trailer.set_pad (padding);
 	} else {
-		TRACE ("rx no padding, length="<<header.get_length ()<<", packet="<<packet->get_size ());
+		TRACE ("rx no padding, length="<<eth.get_length ()<<", packet="<<packet->get_size ());
 	}
 	packet->remove (&trailer);
 	TRACE ("rx final size="<<packet->get_size ());
-	switch (header.get_ether_type ()) {
+	switch (llc.get_ether_type ()) {
 	case ETHER_TYPE_ARP:
 		m_arp->recv_arp (packet);
 		break;
@@ -199,17 +202,19 @@ void
 EthernetNetworkInterface::send_data (Packet *packet, MacAddress dest)
 {
 	TRACE ("tx init size="<<packet->get_size ());
-	ChunkMacLlcSnap header;
-	header.set_destination (dest);
-	header.set_source (get_mac_address ());
-	header.set_length (packet->get_size ());
-	header.set_ether_type (ETHER_TYPE_IPV4);
+	ChunkMacEth eth;
+	eth.set_destination (dest);
+	eth.set_source (get_mac_address ());
+	eth.set_length (packet->get_size ());
+	ChunkMacLlcSnap llc;
+	llc.set_ether_type (ETHER_TYPE_IPV4);
 	ChunkMacCrc trailer;
 	if (packet->get_size () < 38) {
 		trailer.set_pad (38 - packet->get_size ());
 		TRACE ("tx set padding="<<38 - packet->get_size ());
 	}
-	packet->add (&header);
+	packet->add (&eth);
+	packet->add (&llc);
 	TRACE ("tx header size="<<packet->get_size ());
 	packet->add (&trailer);
 	TRACE ("tx final size="<<packet->get_size ());
@@ -221,17 +226,19 @@ void
 EthernetNetworkInterface::send_arp (Packet *packet, MacAddress dest)
 {
 	TRACE ("tx init size="<<packet->get_size ());
-	ChunkMacLlcSnap header;
-	header.set_destination (dest);
-	header.set_source (get_mac_address ());
-	header.set_length (packet->get_size ());
-	header.set_ether_type (ETHER_TYPE_ARP);
+	ChunkMacEth eth;
+	eth.set_destination (dest);
+	eth.set_source (get_mac_address ());
+	eth.set_length (packet->get_size ());
+	ChunkMacLlcSnap llc;
+	llc.set_ether_type (ETHER_TYPE_ARP);
 	ChunkMacCrc trailer;
 	if (packet->get_size () < 38) {
 		trailer.set_pad (38 - packet->get_size ());
 		TRACE ("tx set padding="<<38 - packet->get_size ());
 	}
-	packet->add (&header);
+	packet->add (&eth);
+	packet->add (&llc);
 	TRACE ("tx header size="<<packet->get_size ());
 	packet->add (&trailer);
 	TRACE ("tx final size="<<packet->get_size ());
