@@ -85,11 +85,11 @@ public:
 		return *this;
 	}
 	SiTracedVariable &operator++ () {
-		m_var++;
+		assign (get () + 1);
 		return *this;
 	}
 	SiTracedVariable &operator-- () {
-		m_var--;
+		assign (get () - 1);
 		return *this;
 	}
 	SiTracedVariable operator++ (int) {

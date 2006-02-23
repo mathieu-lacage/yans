@@ -85,11 +85,11 @@ public:
 		return *this;
 	}
 	UiTracedVariable &operator++ () {
-		m_var++;
+		assign (get () + 1);
 		return *this;
 	}
 	UiTracedVariable &operator-- () {
-		m_var--;
+		assign (get () - 1);
 		return *this;
 	}
 	UiTracedVariable operator++ (int) {
