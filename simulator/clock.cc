@@ -41,13 +41,13 @@ Clock::update_current_us (uint64_t new_time)
 {
 	assert (new_time >= m_current_us);
 	m_current_us = new_time;
+	m_current_s = ((double)m_current_us)/1000000;
 }
 
 double 
 Clock::get_current_s (void)
 {
-	double s = ((double)m_current_us)/1000000;
-	return s;
+	return m_current_s;
 }
 
 

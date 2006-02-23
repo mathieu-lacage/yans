@@ -37,6 +37,7 @@ public:
 	double get_current_s (void);
 private:
 	uint64_t m_current_us;
+	double m_current_s;
 };
 
 }; // namespace yans
