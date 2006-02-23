@@ -398,7 +398,9 @@ Phy80211::calculate_tx_duration_us (uint32_t size, uint8_t payload_mode)
 {
 	uint64_t delay = m_plcp_preamble_delay_us;
 	delay += m_plcp_header_length / get_mode (0)->get_data_rate ();
-	delay += 1000000 * (size * 8) / get_mode (payload_mode)->get_data_rate ();
+	uint64_t tmp = size * 8;
+	tmp *= 1000000;
+	delay +=  tmp / get_mode (payload_mode)->get_data_rate ();
 	return delay;
 }
 
