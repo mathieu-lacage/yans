@@ -101,16 +101,16 @@ public:
 			delete this;
 		}
 	}
-	uint64_t get_duration_us (void) {
+	uint64_t get_duration_us (void) const {
 		return m_end_time_us - m_start_time_us;
 	}
-	uint64_t get_start_time_us (void) {
+	uint64_t get_start_time_us (void) const {
 		return m_start_time_us;
 	}
-	uint64_t get_end_time_us (void) {
+	uint64_t get_end_time_us (void) const {
 		return m_end_time_us;
 	}
-	bool overlaps (uint64_t time_us) {
+	bool overlaps (uint64_t time_us) const {
 		if (m_start_time_us <= time_us &&
 		    m_end_time_us >= time_us) {
 			return true;
@@ -118,16 +118,16 @@ public:
 			return false;
 		}
 	}
-	double get_rx_power_w (void) {
+	double get_rx_power_w (void) const {
 		return m_rx_power_w;
 	}
-	uint32_t get_size (void) {
+	uint32_t get_size (void) const {
 		return m_size;
 	}
-	uint8_t get_payload_mode (void) {
+	uint8_t get_payload_mode (void) const {
 		return m_payload_mode;
 	}
-	uint8_t get_header_mode (void) {
+	uint8_t get_header_mode (void) const {
 		return 0;
 	}
 
@@ -728,7 +728,7 @@ Phy80211::calculate_chunk_success_rate (double snir, uint64_t delay, Transmissio
 }
 
 double 
-Phy80211::calculate_per (RxEvent *event, NiChanges *ni) const
+Phy80211::calculate_per (RxEvent const *event, NiChanges *ni) const
 {	
 	double psr = 1.0; /* Packet Success Rate */
 	NiChangesI j = ni->begin ();

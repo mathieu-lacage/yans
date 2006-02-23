@@ -160,7 +160,7 @@ private:
 	double calculate_noise_interference_w (RxEvent *event, NiChanges *ni) const;
 	double calculate_snr (double signal, double noise_interference, TransmissionMode *mode) const;
 	double calculate_chunk_success_rate (double snir, uint64_t delay, TransmissionMode *mode) const;
-	double calculate_per (RxEvent *event, NiChanges *ni) const;
+	double calculate_per (RxEvent const*event, NiChanges *ni) const;
 	void end_rx (Packet *packet, RxEvent *event);
 
 private:
