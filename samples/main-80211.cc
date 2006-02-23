@@ -49,10 +49,10 @@ public:
 	}
 	void advance (PeriodicGenerator *generator, Host *a) {
 		generator->stop_now ();
-		a->set_x (a->get_x () + 10.0);
+		a->set_x (a->get_x () + 5.0);
 		uint32_t n_bytes = m_current - m_prev;
 		m_prev = m_current;
-		std::cout << "x="<<a->get_x ()<<", throughput="<<n_bytes / 2.0<<std::endl;
+		std::cout << "x="<<a->get_x ()<<", throughput="<<n_bytes * 8.0 /1000000.0/ 2.0 <<"Mb/s"<<std::endl;
 		if (a->get_x () >= 500.0) {
 			return;
 		}
@@ -84,6 +84,7 @@ int main (int argc, char *argv[])
 
 	NetworkInterface80211Factory *wifi_factory;
 	wifi_factory = new NetworkInterface80211Factory ();
+	wifi_factory->set_cr (7, 7);
 
 	NetworkInterface80211 *wifi_client, *wifi_server;
 	wifi_client = wifi_factory->create (hclient);
@@ -126,7 +127,7 @@ int main (int argc, char *argv[])
 
 
 	PeriodicGenerator *generator = new PeriodicGenerator ();
-	generator->set_packet_interval (0.01);
+	generator->set_packet_interval (0.0005);
 	generator->set_packet_size (2000);
 	trace->start (generator, hserver);
 	generator->set_send_callback (make_callback (&UdpSource::send, source));
