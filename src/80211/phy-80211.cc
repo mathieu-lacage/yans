@@ -81,7 +81,7 @@ Phy80211Listener::~Phy80211Listener ()
 class Phy80211::RxEvent {
 public:
 	RxEvent (uint32_t size, uint8_t payload_mode, 
-			   uint64_t duration_us, double rx_power)
+		 uint64_t duration_us, double rx_power)
 		: m_size (size),
 		  m_payload_mode (payload_mode),
 		  m_start_time_us (Simulator::now_us ()),
@@ -399,7 +399,7 @@ Phy80211::calculate_tx_duration_us (uint32_t size, uint8_t payload_mode)
 {
 	uint64_t delay = m_plcp_preamble_delay_us;
 	delay += m_plcp_header_length / get_mode (0)->get_data_rate ();
-	delay += (size * 8) / get_mode (payload_mode)->get_data_rate ();
+	delay += 1000000 * (size * 8) / get_mode (payload_mode)->get_data_rate ();
 	return delay;
 }
 
@@ -721,6 +721,9 @@ Phy80211::calculate_noise_interference_w (RxEvent *event, NiChanges *ni) const
 double
 Phy80211::calculate_chunk_success_rate (double snir, uint64_t delay, TransmissionMode *mode) const
 {
+	if (delay == 0) {
+		return 1.0;
+	}
 	uint32_t rate = mode->get_data_rate ();
 	uint64_t nbits = rate * delay / 1000000;
 	double csr = mode->get_chunk_success_rate (snir, (uint32_t)nbits);
@@ -743,15 +746,16 @@ Phy80211::calculate_per (RxEvent const *event, NiChanges *ni) const
 
 	j++;
 	while (ni->end () != j) {
-		assert ((*j).get_time_us () >= previous_us);
+		uint64_t current_us = (*j).get_time_us ();
+		assert (current_us >= previous_us);
 		
 		if (previous_us >= plcp_payload_start_us) {
 			psr *= calculate_chunk_success_rate (calculate_snr (power_w, 
 									    noise_interference_w, payload_mode), 
-							     (*j).get_time_us () - previous_us,
+							     current_us - previous_us,
 							     payload_mode);
 		} else if (previous_us >= plcp_header_start_us) {
-			if ((*j).get_time_us () >= plcp_payload_start_us) {
+			if (current_us >= plcp_payload_start_us) {
 				psr *= calculate_chunk_success_rate (calculate_snr (power_w, 
 										    noise_interference_w, 
 										    header_mode), 
@@ -760,18 +764,18 @@ Phy80211::calculate_per (RxEvent const *event, NiChanges *ni) const
 				psr *= calculate_chunk_success_rate (calculate_snr (power_w, 
 										    noise_interference_w, 
 										    payload_mode),
-								     (*j).get_time_us () - plcp_payload_start_us,
+								     current_us - plcp_payload_start_us,
 								     payload_mode);
 			} else {
-				assert ((*j).get_time_us () >= plcp_header_start_us);
+				assert (current_us >= plcp_header_start_us);
 				psr *= calculate_chunk_success_rate (calculate_snr (power_w, 
 										    noise_interference_w, 
 										    header_mode), 
-								     (*j).get_time_us () - previous_us,
+								     current_us - previous_us,
 								     header_mode);
 			}
 		} else {
-			if ((*j).get_time_us () >= plcp_payload_start_us) {
+			if (current_us >= plcp_payload_start_us) {
 				psr *= calculate_chunk_success_rate (calculate_snr (power_w, 
 										    noise_interference_w, 
 										    header_mode), 
@@ -780,13 +784,13 @@ Phy80211::calculate_per (RxEvent const *event, NiChanges *ni) const
 				psr *= calculate_chunk_success_rate (calculate_snr (power_w, 
 										    noise_interference_w, 
 										    payload_mode), 
-								     (*j).get_time_us () - plcp_payload_start_us,
+								     current_us - plcp_payload_start_us,
 								     payload_mode);
-			} else if ((*j).get_time_us () >= plcp_header_start_us) {
+			} else if (current_us >= plcp_header_start_us) {
 				psr *= calculate_chunk_success_rate (calculate_snr (power_w, 
 										    noise_interference_w, 
 										    header_mode), 
-								     (*j).get_time_us () - plcp_header_start_us,
+								     current_us - plcp_header_start_us,
 								     header_mode);
 			}
 		}
