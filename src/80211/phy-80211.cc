@@ -724,7 +724,7 @@ Phy80211::calculate_chunk_success_rate (double snir, uint64_t delay, Transmissio
 	if (delay == 0) {
 		return 1.0;
 	}
-	uint32_t rate = mode->get_data_rate ();
+	uint32_t rate = mode->get_rate ();
 	uint64_t nbits = rate * delay / 1000000;
 	double csr = mode->get_chunk_success_rate (snir, (uint32_t)nbits);
 	return csr;
