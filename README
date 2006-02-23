@@ -104,14 +104,12 @@ In no particular order:
 - port to other architectures/OSes:
    - x86-64 linux
    - x86 win32
-- rng
 - simulator performance statistics output. i.e.:
 	> The core should be instrumented to output statistics on its performance
 	> (wall time elapsed, number of events processed, max event queue length,
 	> etc.) Simulator should output this by default to stdout and if run in
 	> quiet mode should dump to some file like testname-output/testname.log
 	> or .stat
-- timers: ability to cancel events.
 - renames:
   - Host -> Node
   
