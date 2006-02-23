@@ -40,28 +40,33 @@ using namespace yans;
 
 class MyTrace {
 public:
+	MyTrace () {
+		m_period_s = 1.0;
+	}
 	void total_rx_bytes (uint64_t prev, uint64_t now) {
 		m_current = now;
 	}
 	void start (PeriodicGenerator *generator, Host *a) {
 		generator->start_now ();
-		Simulator::insert_in_s (2.0, make_event (&MyTrace::advance, this, generator, a));
+		Simulator::insert_in_s (m_period_s, make_event (&MyTrace::advance, this, generator, a));
 	}
 	void advance (PeriodicGenerator *generator, Host *a) {
 		generator->stop_now ();
 		a->set_x (a->get_x () + 5.0);
 		uint32_t n_bytes = m_current - m_prev;
 		m_prev = m_current;
-		std::cout << "x="<<a->get_x ()<<", throughput="<<n_bytes * 8.0 /1000000.0/ 2.0 <<"Mb/s"<<std::endl;
+		double mbs = ((n_bytes * 8.0) /(1000000.0 *m_period_s));
+		std::cout << "x="<<a->get_x ()<<", throughput="<<mbs<<"Mb/s"<<std::endl;
 		if (a->get_x () >= 500.0) {
 			return;
 		}
 		generator->start_now ();
-		Simulator::insert_in_s (2.0, make_event (&MyTrace::advance, this, generator, a));
+		Simulator::insert_in_s (m_period_s, make_event (&MyTrace::advance, this, generator, a));
 	}
 private:
 	uint32_t m_current;
 	uint32_t m_prev;
+	double m_period_s;
 };
 
 static MyTrace *
@@ -84,7 +89,7 @@ int main (int argc, char *argv[])
 
 	NetworkInterface80211Factory *wifi_factory;
 	wifi_factory = new NetworkInterface80211Factory ();
-	wifi_factory->set_cr (7, 7);
+	wifi_factory->set_cr (6, 6);
 
 	NetworkInterface80211 *wifi_client, *wifi_server;
 	wifi_client = wifi_factory->create (hclient);
@@ -127,7 +132,7 @@ int main (int argc, char *argv[])
 
 
 	PeriodicGenerator *generator = new PeriodicGenerator ();
-	generator->set_packet_interval (0.0005);
+	generator->set_packet_interval (0.00001);
 	generator->set_packet_size (2000);
 	trace->start (generator, hserver);
 	generator->set_send_callback (make_callback (&UdpSource::send, source));
