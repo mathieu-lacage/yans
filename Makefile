@@ -116,8 +116,9 @@ YANS_SRC= \
 	src/80211/bpsk-mode.cc \
 	src/80211/qam-mode.cc \
 	src/80211/phy-80211.cc \
-	src/80211/network-interface-80211.cc \
-	src/80211/network-interface-80211-factory.cc \
+	src/80211/network-interface-80211-simple.cc \
+	src/80211/network-interface-80211-simple-factory.cc \
+	src/80211/mac-simple.cc \
 	test/test.cc \
 	$(NULL)
 YANS_HDR = \
@@ -196,8 +197,9 @@ YANS_HDR = \
 	src/80211/bpsk-mode.h \
 	src/80211/qam-mode.h \
 	src/80211/phy-80211.h \
-	src/80211/network-interface-80211.h \
-	src/80211/network-interface-80211-factory.h \
+	src/80211/network-interface-80211-simple.h \
+	src/80211/network-interface-80211-factory-simple.h \
+	src/80211/mac-simple.h \
 	src/host/host.h \
 	src/host/loopback-interface.h \
 	src/host/network-interface.h \

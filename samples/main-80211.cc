@@ -20,8 +20,8 @@
  */
 
 #include "host.h"
-#include "network-interface-80211.h"
-#include "network-interface-80211-factory.h"
+#include "network-interface-80211-simple.h"
+#include "network-interface-80211-simple-factory.h"
 #include "channel-80211.h"
 #include "ipv4-route.h"
 #include "simulator.h"
@@ -70,7 +70,7 @@ private:
 };
 
 static MyTrace *
-setup_rx_trace (NetworkInterface80211 *wifi)
+setup_rx_trace (NetworkInterface80211Simple *wifi)
 {
 	MyTrace *trace = new MyTrace ();
 	TraceContainer container = TraceContainer ();
@@ -87,11 +87,11 @@ int main (int argc, char *argv[])
 	hclient = new Host ("client");
 	hserver = new Host ("server");
 
-	NetworkInterface80211Factory *wifi_factory;
-	wifi_factory = new NetworkInterface80211Factory ();
+	NetworkInterface80211SimpleFactory *wifi_factory;
+	wifi_factory = new NetworkInterface80211SimpleFactory ();
 	wifi_factory->set_cr (6, 6);
 
-	NetworkInterface80211 *wifi_client, *wifi_server;
+	NetworkInterface80211Simple *wifi_client, *wifi_server;
 	wifi_client = wifi_factory->create (hclient);
 	wifi_server = wifi_factory->create (hserver);
 	wifi_client->set_mac_address (MacAddress ("00:00:00:00:00:01"));
