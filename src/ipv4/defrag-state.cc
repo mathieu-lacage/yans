@@ -62,7 +62,7 @@ DefragState::DefragState (ChunkIpv4 const *ip)
 	  m_protocol (ip->get_protocol ()),
 	  m_identification (ip->get_identification ())
 {
-	m_defrag_start = Simulator::now_s ();
+	m_defrag_start_us = Simulator::now_us ();
 }
 DefragState::~DefragState ()
 {
@@ -128,8 +128,8 @@ DefragState::get_complete (void)
 bool 
 DefragState::is_too_old (void)
 {
-	double now = Simulator::now_s ();
-	if (now - m_defrag_start > get_reassembly_timeout ()) {
+	uint64_t now_us = Simulator::now_us ();
+	if (now_us - m_defrag_start_us > get_reassembly_timeout_us ()) {
 		return true;
 	} else {
 		return false;
@@ -148,10 +148,10 @@ DefragState::matches (ChunkIpv4 const *ip)
 	}
 }
 
-double
-DefragState::get_reassembly_timeout (void)
+uint64_t
+DefragState::get_reassembly_timeout_us (void)
 {
-	return 60.0;
+	return 60000000;
 }
 
 

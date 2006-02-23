@@ -55,12 +55,12 @@ public:
 	bool is_too_old (void);
 	bool matches (ChunkIpv4 const *ip);
 private:
-	double get_reassembly_timeout (void);
+	uint64_t get_reassembly_timeout_us (void);
 
 	typedef std::list <DefragFragment> Fragments;
 	typedef std::list <DefragFragment>::iterator FragmentsI;
 
-	double m_defrag_start;
+	uint64_t m_defrag_start_us;
 	Fragments m_fragments;
 	Ipv4Address m_source;
 	Ipv4Address m_destination;
