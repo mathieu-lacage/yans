@@ -78,7 +78,7 @@ uint16_t
 NetworkInterface80211::get_mtu (void)
 {
 	// XXX
-	return 1000;
+	return 2500;
 }
 void 
 NetworkInterface80211::set_up   (void)
