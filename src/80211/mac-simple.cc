@@ -117,6 +117,9 @@ MacSimple::receive_ok (Packet *packet, double snr, uint8_t tx_mode)
 		MacStation *station = get_station (m_current_to);
 		station->report_rx_ok (snr, tx_mode);
 		station->report_rts_ok (snr, tx_mode);
+		assert (m_rts_timeout_event != 0);
+		m_rts_timeout_event->cancel ();
+		m_rts_timeout_event = 0;
 		send_data ();
 	} else if (hdr.is_data ()) {
 		MacStation *station = get_station (hdr.get_addr2 ());
@@ -127,6 +130,9 @@ MacSimple::receive_ok (Packet *packet, double snr, uint8_t tx_mode)
 		MacStation *station = get_station (m_current_to);
 		station->report_rx_ok (snr, tx_mode);
 		station->report_data_ok (snr, tx_mode);
+		assert (m_data_timeout_event != 0);
+		m_data_timeout_event->cancel ();
+		m_data_timeout_event = 0;
 		m_current->unref ();
 		m_current = 0;
 	}
@@ -211,6 +217,7 @@ MacSimple::retry_data (void)
 	station->report_data_failed ();
 	if (m_data_retry > m_data_retry_max) {
 		station->report_final_data_failed ();
+		assert (m_current != 0);
 		m_current->unref ();
 		m_current = 0;
 		return;
@@ -228,6 +235,7 @@ MacSimple::retry_rts (void)
 	station->report_rts_failed ();
 	if (m_rts_retry > m_rts_retry_max) {
 		station->report_final_rts_failed ();
+		assert (m_current != 0);
 		m_current->unref ();
 		m_current = 0;
 		return;
