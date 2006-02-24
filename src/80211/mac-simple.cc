@@ -73,6 +73,11 @@ MacSimple::set_receiver (RxCallback *data)
 {
 	m_data_rx = data;
 }
+void
+MacSimple::set_interface (NetworkInterface *interface)
+{
+	m_interface = interface;
+}
 void 
 MacSimple::enable_rts_cts (void)
 {

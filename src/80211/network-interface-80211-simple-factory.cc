@@ -155,6 +155,7 @@ NetworkInterface80211SimpleFactory::create (Host *host)
 	phy->set_receive_error_callback (make_callback (&MacSimple::receive_error, mac));
 	mac->set_phy (phy);
 	mac->set_stations (stations);
+	mac->set_interface (interface);
 	interface->m_mac = mac;
 
 	Arp *arp = new Arp (interface);
