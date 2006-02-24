@@ -200,7 +200,7 @@ YANS_HDR = \
 	src/80211/qam-mode.h \
 	src/80211/phy-80211.h \
 	src/80211/network-interface-80211-simple.h \
-	src/80211/network-interface-80211-factory-simple.h \
+	src/80211/network-interface-80211-simple-factory.h \
 	src/80211/mac-simple.h \
 	src/host/host.h \
 	src/host/loopback-interface.h \
