@@ -90,12 +90,13 @@ YANS_SRC= \
 	src/arp/arp.cc \
 	src/arp/chunk-arp.cc \
 	src/arp/arp-cache-entry.cc \
+	src/arp/chunk-mac-llc-snap.cc \
 	src/host/host.cc \
 	src/host/network-interface.cc \
 	src/host/loopback-interface.cc \
 	src/ethernet/cable.cc \
 	src/ethernet/chunk-mac-crc.cc \
-	src/ethernet/chunk-mac-llc-snap.cc \
+	src/ethernet/chunk-mac-eth.cc \
 	src/ethernet/ethernet-network-interface.cc \
 	src/apps/udp-source.cc \
 	src/apps/udp-sink.cc \
@@ -178,6 +179,7 @@ YANS_HDR = \
 	src/arp/arp-cache-entry.h \
 	src/arp/arp.h \
 	src/arp/chunk-arp.h \
+	src/arp/chunk-mac-llc-snap.h \
 	src/apps/periodic-generator.h \
 	src/apps/tcp-source.h \
 	src/apps/udp-sink.h \
@@ -205,7 +207,7 @@ YANS_HDR = \
 	src/host/network-interface.h \
 	src/ethernet/cable.h \
 	src/ethernet/chunk-mac-crc.h \
-	src/ethernet/chunk-mac-llc-snap.h \
+	src/ethernet/chunk-mac-eth.h \
 	src/ethernet/ethernet-network-interface.h \
 	src/thread/fiber-context.h \
 	src/thread/fiber.h \

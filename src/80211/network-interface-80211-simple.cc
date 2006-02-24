@@ -28,6 +28,8 @@
 #include "ipv4.h"
 #include "trace-container.h"
 #include "mac-simple.h"
+#include "arp.h"
+#include "chunk-mac-llc-snap.h"
 
 namespace yans {
 
@@ -43,6 +45,7 @@ NetworkInterface80211Simple::~NetworkInterface80211Simple ()
 	delete m_phy;
 	delete m_stations;
 	delete m_mac;
+	delete m_arp;
 }
 
 
@@ -130,19 +133,39 @@ NetworkInterface80211Simple::get_ipv4_broadcast (void)
 void 
 NetworkInterface80211Simple::send (Packet *packet, Ipv4Address dest)
 {
-	m_mac->send (packet);
+	m_arp->send_data (packet, dest);
 }
 
 void 
-NetworkInterface80211Simple::rx_phy_ok (Packet *packet, double snr, uint8_t tx_mode)
+NetworkInterface80211Simple::forward_data_up (Packet *packet)
 {
-	m_bytes_rx += packet->get_size ();
-	m_ipv4->receive (packet, this);
+	ChunkMacLlcSnap llc;
+	packet->remove (&llc);
+	switch (llc.get_ether_type ()) {
+	case ETHER_TYPE_ARP:
+		m_arp->recv_arp (packet);
+		break;
+	case ETHER_TYPE_IPV4:
+		m_ipv4->receive (packet, this);
+		break;
+	}
 }
 void 
-NetworkInterface80211Simple::rx_phy_error (Packet *packet)
-{}
-
+NetworkInterface80211Simple::send_arp (Packet *packet, MacAddress to)
+{
+	ChunkMacLlcSnap llc;
+	llc.set_ether_type (ETHER_TYPE_ARP);
+	packet->add (&llc);
+	m_mac->send (packet, to);
+}
+void 
+NetworkInterface80211Simple::send_data (Packet *packet, MacAddress to)
+{
+	ChunkMacLlcSnap llc;
+	llc.set_ether_type (ETHER_TYPE_IPV4);
+	packet->add (&llc);
+	m_mac->send (packet, to);
+}
 
 
 }; // namespace yans

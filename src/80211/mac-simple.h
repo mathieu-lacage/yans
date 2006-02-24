@@ -23,6 +23,8 @@
 
 #include <stdint.h>
 #include "cancellable-event.tcc"
+#include "mac-address.h"
+#include "callback.tcc"
 
 namespace yans {
 
@@ -30,28 +32,34 @@ class Phy80211;
 class MacStations;
 class Packet;
 class MacStation;
+class NetworkInterface;
 
 class MacSimple {
 public:
+	typedef Callback<void (Packet *)> RxCallback;
+
 	MacSimple ();
 	void set_phy (Phy80211 *phy);
 	void set_stations (MacStations *stations);
+	void set_interface (NetworkInterface *interface);
 	void enable_rts_cts (void);
+	void set_receiver (RxCallback *data);
 
-	void send (Packet *packet);
+	void send (Packet *packet, MacAddress to);
 	void receive_ok (Packet *packet, double snr, uint8_t tx_mode);
 	void receive_error (Packet *packet);
 private:
-	void send_cts (uint8_t tx_mode);
-	void send_ack (uint8_t tx_mode);
+	void send_cts (uint8_t tx_mode, MacAddress to);
+	void send_ack (uint8_t tx_mode, MacAddress to);
 	void send_rts (void);
 	void send_data (void);
-	MacStation *get_station (void);
+	MacStation *get_station (MacAddress ad);
 	void retry_data (void);
 	void retry_rts (void);
 
 	Phy80211 *m_phy;
 	MacStations *m_stations;
+	NetworkInterface *m_interface;
 	bool m_use_rts;
 	uint32_t m_rts_retry;
 	uint32_t m_data_retry;
@@ -60,8 +68,10 @@ private:
 	uint64_t m_rts_timeout_us;
 	uint64_t m_data_timeout_us;
 	Packet *m_current;
+	MacAddress m_current_to;
 	CancellableEvent *m_rts_timeout_event;
 	CancellableEvent *m_data_timeout_event;
+	RxCallback *m_data_rx;
 };
 
 }; // namespace yans

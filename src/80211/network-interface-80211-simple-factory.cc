@@ -26,6 +26,8 @@
 #include "arf-mac-stations.h"
 #include "aarf-mac-stations.h"
 #include "cr-mac-stations.h"
+#include "mac-simple.h"
+#include "arp.h"
 
 namespace yans {
 
@@ -126,10 +128,9 @@ NetworkInterface80211SimpleFactory::create (Host *host)
 					  m_phy_tx_power_end_dbm,
 					  m_phy_n_tx_power);
 	phy->configure_80211a ();
-	//phy->set_receive_ok_callback (make_callback (&NetworkInterface80211::rx_phy_ok, interface));
-	//phy->set_receive_error_callback (make_callback (&NetworkInterface80211::rx_phy_error, interface));
 	interface->m_phy = phy;
 	propagation->set_receive_callback (make_callback (&Phy80211::receive_packet, phy));
+
 
 	MacStations *stations;
 	switch (m_rate_control_mode) {
@@ -147,7 +148,21 @@ NetworkInterface80211SimpleFactory::create (Host *host)
 		stations = 0;
 		break;
 	}
-	interface->m_stations = stations;	
+	interface->m_stations = stations;
+
+	MacSimple *mac = new MacSimple ();
+	phy->set_receive_ok_callback (make_callback (&MacSimple::receive_ok, mac));
+	phy->set_receive_error_callback (make_callback (&MacSimple::receive_error, mac));
+	mac->set_phy (phy);
+	mac->set_stations (stations);
+	interface->m_mac = mac;
+
+	Arp *arp = new Arp (interface);
+	mac->set_receiver (make_callback (&NetworkInterface80211Simple::forward_data_up, interface));
+	arp->set_sender (make_callback (&NetworkInterface80211Simple::send_data, interface),
+			 make_callback (&NetworkInterface80211Simple::send_arp, interface));
+	interface->m_arp = arp;
+
 
 	return interface;
 }
