@@ -57,6 +57,7 @@ private:
 	void retry_data (void);
 	void retry_rts (void);
 	void send_later (void);
+	void send_if_we_can (void);
 	uint64_t get_rts_timeout_us (void);
 	uint64_t get_data_timeout_us (void);
 

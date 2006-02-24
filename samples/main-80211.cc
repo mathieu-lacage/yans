@@ -89,7 +89,8 @@ int main (int argc, char *argv[])
 
 	NetworkInterface80211SimpleFactory *wifi_factory;
 	wifi_factory = new NetworkInterface80211SimpleFactory ();
-	wifi_factory->set_cr (6, 6);
+	//wifi_factory->set_cr (6, 6);
+	wifi_factory->set_arf ();
 
 	NetworkInterface80211Simple *wifi_client, *wifi_server;
 	wifi_client = wifi_factory->create (hclient);

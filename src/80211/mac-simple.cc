@@ -47,16 +47,16 @@ MacSimple::MacSimple ()
 	m_use_rts = false;
 	m_rts_retry = 0;
 	m_data_retry = 0;
-	m_rts_retry_max = 0;
-	m_data_retry_max = 0;
+	m_rts_retry_max = 3;
+	m_data_retry_max = 3;
 	m_current = 0;
 
 	m_rts_timeout_event = 0;
 	m_data_timeout_event = 0;
 	m_send_later_event = 0;
 
-	m_rts_timeout_us = (uint64_t) ((10 /*cts*/ + 2/* padding for prop time*/)* 8 / 3e6 * 1e6);
-	m_data_timeout_us = (uint64_t) ((10 /*ack*/ + 2/* padding for prop time*/)* 8 / 3e6 * 1e6);
+	m_rts_timeout_us = (uint64_t) ((10 /*cts*/ + 2/* padding for prop time*/)* 8 / 3e6 * 1e6) + 80;
+	m_data_timeout_us = (uint64_t) ((10 /*ack*/ + 2/* padding for prop time*/)* 8 / 3e6 * 1e6) + 80;
 }
 
 uint64_t 
@@ -106,6 +106,8 @@ MacSimple::send (Packet *packet, MacAddress to)
 			m_current = packet;
 			m_current_to = to;
 			m_current->ref ();
+			m_rts_retry = 0;
+			m_data_retry = 0;
 			assert (m_send_later_event == 0);
 			m_send_later_event = make_event (&MacSimple::send_later, this);
 			Simulator::insert_in_us (m_phy->get_delay_until_idle_us (),
@@ -118,14 +120,14 @@ MacSimple::send (Packet *packet, MacAddress to)
 	m_current = packet;
 	m_current_to = to;
 	m_current->ref ();
+	m_rts_retry = 0;
+	m_data_retry = 0;
 	if (m_use_rts && 
 	    !m_current_to.is_broadcast ()) {
-		m_rts_retry = 0;
 		TRACE ("send rts");
 		send_rts ();
 	} else {
 		TRACE ("send data");
-		m_data_retry = 0;
 		send_data ();
 	}
 }
@@ -268,16 +270,7 @@ MacSimple::retry_data (void)
 		return;
 	}
 	TRACE ("retry data");
-	if (m_use_rts &&
-	    !m_current_to.is_broadcast ()) {
-		m_rts_retry = 0;
-		TRACE ("send rts");
-		send_rts ();
-	} else {
-		TRACE ("send data");
-		m_data_retry = 0;
-		send_data ();
-	}
+	send_if_we_can ();
 }
 
 void
@@ -296,24 +289,31 @@ MacSimple::retry_rts (void)
 		return;
 	}
 	TRACE ("retry rts");
-	send_rts ();
+	send_if_we_can ();
 }
 
 void
 MacSimple::send_later (void)
 {
 	m_send_later_event = 0;
+	send_if_we_can ();
+}
+
+void 
+MacSimple::send_if_we_can (void)
+{
 	if (!m_phy->is_state_idle ()) {
 		TRACE ("send later again");
 		assert (m_current != 0);
-		m_send_later_event = make_event (&MacSimple::send_later, this);
-		Simulator::insert_in_us (m_phy->get_delay_until_idle_us (),
-					 m_send_later_event);
+		if (m_send_later_event == 0) {
+			m_send_later_event = make_event (&MacSimple::send_later, this);
+			Simulator::insert_in_us (m_phy->get_delay_until_idle_us (),
+						 m_send_later_event);
+		}
 		return;
 	}
 	if (m_use_rts &&
 	    !m_current_to.is_broadcast ()) {
-		m_rts_retry = 0;
 		TRACE ("send rts");
 		send_rts ();
 	} else {
