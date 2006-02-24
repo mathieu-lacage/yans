@@ -29,6 +29,14 @@ enum {
 	TYPE_DATA = 2
 };
 
+enum {
+	SUBTYPE_CTL_BACKREQ = 8,
+	SUBTYPE_CTL_BACKRESP = 9,
+	SUBTYPE_CTL_RTS = 11,
+	SUBTYPE_CTL_CTS = 12,
+	SUBTYPE_CTL_ACK = 13
+};
+
 
 ChunkMac80211Hdr::ChunkMac80211Hdr ()
 {}
@@ -58,26 +66,26 @@ ChunkMac80211Hdr::set_addr4 (MacAddress address)
 void 
 ChunkMac80211Hdr::set_type (enum Mac80211Type_e type)
 {
-	switch (m_ctrl_type) {
+	switch (type) {
 	case MAC_80211_CTL_BACKREQ:
 		m_ctrl_type = TYPE_CTL;
-		m_ctrl_subtype = 8;
+		m_ctrl_subtype = SUBTYPE_CTL_BACKREQ;
 		break;
 	case MAC_80211_CTL_BACKRESP:
 		m_ctrl_type = TYPE_CTL;
-		m_ctrl_subtype = 9;
+		m_ctrl_subtype = SUBTYPE_CTL_BACKRESP;
 		break;
 	case MAC_80211_CTL_RTS:
 		m_ctrl_type = TYPE_CTL;
-		m_ctrl_subtype = 11;
+		m_ctrl_subtype = SUBTYPE_CTL_RTS;
 		break;
 	case MAC_80211_CTL_CTS:
 		m_ctrl_type = TYPE_CTL;
-		m_ctrl_subtype = 12;
+		m_ctrl_subtype = SUBTYPE_CTL_CTS;
 		break;
 	case MAC_80211_CTL_ACK:
 		m_ctrl_type = TYPE_CTL;
-		m_ctrl_subtype = 13;
+		m_ctrl_subtype = SUBTYPE_CTL_ACK;
 		break;
 	case MAC_80211_MGT_ASSOCIATION_REQUEST:
 		m_ctrl_type = TYPE_MGT;
@@ -286,19 +294,19 @@ ChunkMac80211Hdr::get_type (void) const
 		break;
 	case TYPE_CTL:
 		switch (m_ctrl_subtype) {
-		case 8:
+		case SUBTYPE_CTL_BACKREQ:
 			return MAC_80211_CTL_BACKREQ;
 			break;
-		case 9:
+		case SUBTYPE_CTL_BACKRESP:
 			return MAC_80211_CTL_BACKRESP;
 			break;
-		case 11:
+		case SUBTYPE_CTL_RTS:
 			return MAC_80211_CTL_RTS;
 			break;
-		case 12:
+		case SUBTYPE_CTL_CTS:
 			return MAC_80211_CTL_CTS;
 			break;
-		case 13:
+		case SUBTYPE_CTL_ACK:
 			return MAC_80211_CTL_ACK;
 			break;
 		}
@@ -539,15 +547,15 @@ ChunkMac80211Hdr::get_size (void)
 		break;
 	case TYPE_CTL:
 		switch (m_ctrl_subtype) {
-		case MAC_80211_CTL_RTS:
+		case SUBTYPE_CTL_RTS:
 			size = 2+2+6+6;
 			break;
-		case MAC_80211_CTL_CTS:
-		case MAC_80211_CTL_ACK:
+		case SUBTYPE_CTL_CTS:
+		case SUBTYPE_CTL_ACK:
 			size = 2+2+6;
 			break;
-		case MAC_80211_CTL_BACKREQ:
-		case MAC_80211_CTL_BACKRESP:
+		case SUBTYPE_CTL_BACKREQ:
+		case SUBTYPE_CTL_BACKRESP:
 			// NOT IMPLEMENTED
 			assert (false);
 			break;
@@ -629,7 +637,7 @@ ChunkMac80211Hdr::add_to (Buffer *buffer) const
 		break;
 	case TYPE_CTL:
 		switch (m_ctrl_subtype) {
-		case MAC_80211_CTL_RTS:
+		case SUBTYPE_CTL_RTS:
 			buffer->add_at_start (2+2+6+6);
 			buffer->seek (0);
 			buffer->write_hton_u16 (get_frame_control ());
@@ -638,8 +646,8 @@ ChunkMac80211Hdr::add_to (Buffer *buffer) const
 			m_addr2.serialize (buffer);
 			buffer->write_hton_u16 (get_sequence_control ());
 			break;
-		case MAC_80211_CTL_CTS:
-		case MAC_80211_CTL_ACK:
+		case SUBTYPE_CTL_CTS:
+		case SUBTYPE_CTL_ACK:
 			buffer->add_at_start (2+2+6);
 			buffer->seek (0);
 			buffer->write_hton_u16 (get_frame_control ());
@@ -647,8 +655,8 @@ ChunkMac80211Hdr::add_to (Buffer *buffer) const
 			m_addr1.serialize (buffer);
 			buffer->write_hton_u16 (get_sequence_control ());
 			break;
-		case MAC_80211_CTL_BACKREQ:
-		case MAC_80211_CTL_BACKRESP:
+		case SUBTYPE_CTL_BACKREQ:
+		case SUBTYPE_CTL_BACKRESP:
 			// NOT IMPLEMENTED
 			assert (false);
 			break;
@@ -695,16 +703,16 @@ ChunkMac80211Hdr::remove_from (Buffer *buffer)
 		break;
 	case TYPE_CTL:
 		switch (m_ctrl_subtype) {
-		case MAC_80211_CTL_RTS:
+		case SUBTYPE_CTL_RTS:
 			m_addr2.deserialize (buffer);
 			set_sequence_control (buffer->read_ntoh_u16 ());
 			break;
-		case MAC_80211_CTL_CTS:
-		case MAC_80211_CTL_ACK:
+		case SUBTYPE_CTL_CTS:
+		case SUBTYPE_CTL_ACK:
 			set_sequence_control (buffer->read_ntoh_u16 ());
 			break;
-		case MAC_80211_CTL_BACKREQ:
-		case MAC_80211_CTL_BACKRESP:
+		case SUBTYPE_CTL_BACKREQ:
+		case SUBTYPE_CTL_BACKRESP:
 			// NOT IMPLEMENTED
 			assert (false);
 			break;
