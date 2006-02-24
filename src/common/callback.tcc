@@ -58,7 +58,7 @@ class Callback<R (T1, T2)> : public CallbackBase {
 	virtual R operator() (T1, T2) = 0;
 };
 
-	template<typename R, typename T1, typename T2, typename T3>
+template<typename R, typename T1, typename T2, typename T3>
 	class Callback<R (T1, T2, T3)> : public CallbackBase {
  public:
 	virtual ~Callback () {}
