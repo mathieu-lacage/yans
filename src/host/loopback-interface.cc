@@ -51,8 +51,8 @@ LoopbackInterface::set_mac_address (MacAddress self)
 {
 	assert (false);
 }
-MacAddress 
-LoopbackInterface::get_mac_address (void)
+MacAddress
+LoopbackInterface::get_mac_address (void) const
 {
 	return MacAddress::get_broadcast ();
 }

@@ -39,7 +39,7 @@ public:
 	virtual uint16_t get_mtu (void);
 	virtual std::string const *get_name (void);
 	virtual void set_mac_address (MacAddress self);
-	virtual MacAddress get_mac_address (void);
+	virtual MacAddress get_mac_address (void) const;
 
 	virtual void set_up   (void);
 	virtual void set_down (void);

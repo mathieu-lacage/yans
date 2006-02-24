@@ -69,8 +69,8 @@ NetworkInterface80211Simple::set_mac_address (MacAddress self)
 {
 	m_self = self;
 }
-MacAddress 
-NetworkInterface80211Simple::get_mac_address (void)
+MacAddress
+NetworkInterface80211Simple::get_mac_address (void) const
 {
 	return m_self;
 }
@@ -146,6 +146,7 @@ NetworkInterface80211Simple::forward_data_up (Packet *packet)
 		m_arp->recv_arp (packet);
 		break;
 	case ETHER_TYPE_IPV4:
+		m_bytes_rx += packet->get_size ();
 		m_ipv4->receive (packet, this);
 		break;
 	}

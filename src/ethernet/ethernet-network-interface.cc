@@ -85,8 +85,8 @@ EthernetNetworkInterface::set_mac_address (MacAddress self)
 {
 	m_mac_address = self;
 }
-MacAddress 
-EthernetNetworkInterface::get_mac_address (void)
+MacAddress
+EthernetNetworkInterface::get_mac_address (void) const
 {
 	return m_mac_address;
 }
