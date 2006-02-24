@@ -644,7 +644,6 @@ ChunkMac80211Hdr::add_to (Buffer *buffer) const
 			buffer->write_hton_u16 (m_duration);
 			m_addr1.serialize (buffer);
 			m_addr2.serialize (buffer);
-			buffer->write_hton_u16 (get_sequence_control ());
 			break;
 		case SUBTYPE_CTL_CTS:
 		case SUBTYPE_CTL_ACK:
@@ -653,7 +652,6 @@ ChunkMac80211Hdr::add_to (Buffer *buffer) const
 			buffer->write_hton_u16 (get_frame_control ());
 			buffer->write_hton_u16 (m_duration);
 			m_addr1.serialize (buffer);
-			buffer->write_hton_u16 (get_sequence_control ());
 			break;
 		case SUBTYPE_CTL_BACKREQ:
 		case SUBTYPE_CTL_BACKRESP:
@@ -705,11 +703,9 @@ ChunkMac80211Hdr::remove_from (Buffer *buffer)
 		switch (m_ctrl_subtype) {
 		case SUBTYPE_CTL_RTS:
 			m_addr2.deserialize (buffer);
-			set_sequence_control (buffer->read_ntoh_u16 ());
 			break;
 		case SUBTYPE_CTL_CTS:
 		case SUBTYPE_CTL_ACK:
-			set_sequence_control (buffer->read_ntoh_u16 ());
 			break;
 		case SUBTYPE_CTL_BACKREQ:
 		case SUBTYPE_CTL_BACKRESP:
