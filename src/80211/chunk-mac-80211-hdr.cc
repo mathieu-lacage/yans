@@ -189,6 +189,8 @@ ChunkMac80211Hdr::set_type (enum Mac80211Type_e type)
 		m_ctrl_subtype = 15;
 		break;
 	}
+	m_ctrl_to_ds = 0;
+	m_ctrl_from_ds = 0;
 }
 void 
 ChunkMac80211Hdr::set_duration (uint16_t duration)
