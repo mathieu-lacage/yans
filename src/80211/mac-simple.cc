@@ -42,10 +42,21 @@ MacSimple::MacSimple ()
 	m_rts_timeout_event = 0;
 	m_data_timeout_event = 0;
 
-	//XXX
-	m_rts_timeout_us = 0;
-	m_data_timeout_us = 0;
+	m_rts_timeout_us = (uint64_t) ((10 /*cts*/ + 2/* padding for prop time*/)* 8 / 3e6 * 1e6);
+	m_data_timeout_us = (uint64_t) ((10 /*ack*/ + 2/* padding for prop time*/)* 8 / 3e6 * 1e6);
 }
+
+uint64_t 
+MacSimple::get_rts_timeout_us (void)
+{
+	return m_rts_timeout_us;
+}
+uint64_t 
+MacSimple::get_data_timeout_us (void)
+{
+	return m_data_timeout_us;
+}
+
 
 void 
 MacSimple::set_phy (Phy80211 *phy)
@@ -157,7 +168,7 @@ MacSimple::send_rts (void)
 	uint64_t tx_duration = m_phy->calculate_tx_duration_us (packet->get_size (), station->get_rts_mode ());
 	assert (m_rts_timeout_event == 0);
 	m_rts_timeout_event = make_cancellable_event (&MacSimple::retry_rts, this);
-	Simulator::insert_in_us (tx_duration + m_rts_timeout_us, m_rts_timeout_event);
+	Simulator::insert_in_us (tx_duration + get_rts_timeout_us (), m_rts_timeout_event);
 	m_phy->send_packet (packet, station->get_rts_mode (), 0);
 	packet->unref ();
 }
@@ -175,7 +186,7 @@ MacSimple::send_data (void)
 	uint64_t tx_duration = m_phy->calculate_tx_duration_us (packet->get_size (), station->get_data_mode (packet->get_size ()));
 	assert (m_data_timeout_event == 0);
 	m_data_timeout_event = make_cancellable_event (&MacSimple::retry_data, this);
-	Simulator::insert_in_us (tx_duration + m_data_timeout_us, m_data_timeout_event);
+	Simulator::insert_in_us (tx_duration + get_data_timeout_us (), m_data_timeout_event);
 	m_phy->send_packet (packet, station->get_data_mode (packet->get_size ()), 0);
 	packet->unref ();
 }

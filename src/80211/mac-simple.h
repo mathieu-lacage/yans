@@ -56,6 +56,8 @@ private:
 	MacStation *get_station (MacAddress ad);
 	void retry_data (void);
 	void retry_rts (void);
+	uint64_t get_rts_timeout_us (void);
+	uint64_t get_data_timeout_us (void);
 
 	Phy80211 *m_phy;
 	MacStations *m_stations;
