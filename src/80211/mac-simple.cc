@@ -318,7 +318,6 @@ MacSimple::send_if_we_can (void)
 		send_rts ();
 	} else {
 		TRACE ("send data");
-		m_data_retry = 0;
 		send_data ();
 	}	
 }
