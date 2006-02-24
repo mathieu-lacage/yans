@@ -24,7 +24,7 @@ The current implementation features:
      debugged but, due to licensing incompatibility reasons, we have not
      included it in the simulator distribution.
    - a set of python bindings.
-   - an extensive packet logging/variable tracing framework.
+   - a packet logging/variable tracing framework.
 
 3) Build instructions
 ---------------------
@@ -53,7 +53,8 @@ by setting USE_PYTHON=n
 
 To enable the TCP code, set USE_TCP=y.
 
-To enable the gsl uniform rng, set USE_GSL=y
+To compile the 802.11 code, you need gsl. We are planning on removing this
+dependency but this will take a bit of time.
 
 3.1 x86 linux build
 -------------------
