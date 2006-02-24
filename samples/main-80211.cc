@@ -57,7 +57,7 @@ public:
 		m_prev = m_current;
 		double mbs = ((n_bytes * 8.0) /(1000000.0 *m_period_s));
 		std::cout << "x="<<a->get_x ()<<", throughput="<<mbs<<"Mb/s"<<std::endl;
-		if (a->get_x () >= 500.0) {
+		if (a->get_x () >= 250.0) {
 			return;
 		}
 		generator->start_now ();
@@ -90,7 +90,7 @@ int main (int argc, char *argv[])
 	NetworkInterface80211SimpleFactory *wifi_factory;
 	wifi_factory = new NetworkInterface80211SimpleFactory ();
 	//wifi_factory->set_cr (6, 6);
-	wifi_factory->set_arf ();
+	wifi_factory->set_aarf ();
 
 	NetworkInterface80211Simple *wifi_client, *wifi_server;
 	wifi_client = wifi_factory->create (hclient);
