@@ -56,6 +56,7 @@ private:
 	MacStation *get_station (MacAddress ad);
 	void retry_data (void);
 	void retry_rts (void);
+	void send_later (void);
 	uint64_t get_rts_timeout_us (void);
 	uint64_t get_data_timeout_us (void);
 
@@ -73,6 +74,7 @@ private:
 	MacAddress m_current_to;
 	CancellableEvent *m_rts_timeout_event;
 	CancellableEvent *m_data_timeout_event;
+	Event *m_send_later_event;
 	RxCallback *m_data_rx;
 };
 

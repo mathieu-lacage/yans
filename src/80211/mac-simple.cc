@@ -23,10 +23,22 @@
 #include "mac-station.h"
 #include "mac-stations.h"
 #include "cancellable-event.tcc"
+#include "event.tcc"
 #include "simulator.h"
 #include "packet.h"
 #include "chunk-mac-80211-hdr.h"
 #include "network-interface.h"
+
+#define noMACSIMPLE_DEBUG 1
+
+#ifdef MACSIMPLE_DEBUG
+#include <iostream>
+#  define TRACE(x) \
+std::cout << "MACSIMPLE TRACE " << Simulator::now_us () << "us " << x << std::endl;
+#else
+#  define TRACE(x)
+#endif
+
 
 namespace yans {
 
@@ -41,6 +53,7 @@ MacSimple::MacSimple ()
 
 	m_rts_timeout_event = 0;
 	m_data_timeout_event = 0;
+	m_send_later_event = 0;
 
 	m_rts_timeout_us = (uint64_t) ((10 /*cts*/ + 2/* padding for prop time*/)* 8 / 3e6 * 1e6);
 	m_data_timeout_us = (uint64_t) ((10 /*ack*/ + 2/* padding for prop time*/)* 8 / 3e6 * 1e6);
@@ -89,16 +102,29 @@ MacSimple::send (Packet *packet, MacAddress to)
 {
 	if (!m_phy->is_state_idle () ||
 	    m_current != 0) {
+		if (m_current == 0) {
+			m_current = packet;
+			m_current_to = to;
+			m_current->ref ();
+			assert (m_send_later_event == 0);
+			m_send_later_event = make_event (&MacSimple::send_later, this);
+			Simulator::insert_in_us (m_phy->get_delay_until_idle_us (),
+						 m_send_later_event);
+		}
 		// busy sending something.
+		//TRACE ("don't send because busy.");
 		return;
 	}
 	m_current = packet;
 	m_current_to = to;
 	m_current->ref ();
-	if (m_use_rts) {
+	if (m_use_rts && 
+	    !m_current_to.is_broadcast ()) {
 		m_rts_retry = 0;
+		TRACE ("send rts");
 		send_rts ();
 	} else {
+		TRACE ("send data");
 		m_data_retry = 0;
 		send_data ();
 	}
@@ -106,15 +132,18 @@ MacSimple::send (Packet *packet, MacAddress to)
 void 
 MacSimple::receive_ok (Packet *packet, double snr, uint8_t tx_mode)
 {
-
 	ChunkMac80211Hdr hdr;
 	packet->remove (&hdr);
-	if (hdr.is_rts ()) {
+	if (hdr.is_rts () && 
+	    hdr.get_addr1 () == m_interface->get_mac_address ()) {
 		MacStation *station = get_station (hdr.get_addr2 ());
+		TRACE ("receive rts from "<<hdr.get_addr2 ());
 		station->report_rx_ok (snr, tx_mode);
 		send_cts (tx_mode, hdr.get_addr2 ());
-	} else if (hdr.is_cts ()) {
+	} else if (hdr.is_cts () &&
+		   hdr.get_addr1 () == m_interface->get_mac_address ()) {
 		MacStation *station = get_station (m_current_to);
+		TRACE ("receive cts from "<<m_current_to);
 		station->report_rx_ok (snr, tx_mode);
 		station->report_rts_ok (snr, tx_mode);
 		assert (m_rts_timeout_event != 0);
@@ -124,10 +153,18 @@ MacSimple::receive_ok (Packet *packet, double snr, uint8_t tx_mode)
 	} else if (hdr.is_data ()) {
 		MacStation *station = get_station (hdr.get_addr2 ());
 		station->report_rx_ok (snr, tx_mode);
-		send_ack (tx_mode, hdr.get_addr2 ());
-		(*m_data_rx) (packet);
-	} else if (hdr.is_ack ()) {
+		if (hdr.get_addr1 ().is_broadcast ()) {
+			TRACE ("receive broadcast data from " <<hdr.get_addr2 ());
+			(*m_data_rx) (packet);
+		} else if (hdr.get_addr1 () == m_interface->get_mac_address ()) {
+			TRACE ("receive unicast data from " <<hdr.get_addr2 ());
+			send_ack (tx_mode, hdr.get_addr2 ());
+			(*m_data_rx) (packet);
+		}
+	} else if (hdr.is_ack () &&
+		   hdr.get_addr1 () == m_interface->get_mac_address ()) {
 		MacStation *station = get_station (m_current_to);
+		TRACE ("receive ack from "<<m_current_to);
 		station->report_rx_ok (snr, tx_mode);
 		station->report_data_ok (snr, tx_mode);
 		assert (m_data_timeout_event != 0);
@@ -194,10 +231,17 @@ MacSimple::send_data (void)
 	hdr.set_addr1 (m_current_to);
 	hdr.set_addr2 (m_interface->get_mac_address ());
 	packet->add (&hdr);
-	uint64_t tx_duration = m_phy->calculate_tx_duration_us (packet->get_size (), station->get_data_mode (packet->get_size ()));
-	assert (m_data_timeout_event == 0);
-	m_data_timeout_event = make_cancellable_event (&MacSimple::retry_data, this);
-	Simulator::insert_in_us (tx_duration + get_data_timeout_us (), m_data_timeout_event);
+	if (m_current_to.is_broadcast ()) {
+		m_current->unref ();
+		m_current = 0;
+	} else {
+		uint64_t tx_duration = m_phy->calculate_tx_duration_us (packet->get_size (), 
+									station->get_data_mode (packet->get_size ()));
+		assert (m_data_timeout_event == 0);
+		m_data_timeout_event = make_cancellable_event (&MacSimple::retry_data, this);
+		Simulator::insert_in_us (tx_duration + get_data_timeout_us (), 
+					 m_data_timeout_event);
+	}
 	m_phy->send_packet (packet, station->get_data_mode (packet->get_size ()), 0);
 	packet->unref ();
 }
@@ -220,10 +264,20 @@ MacSimple::retry_data (void)
 		assert (m_current != 0);
 		m_current->unref ();
 		m_current = 0;
+		TRACE ("stop data retry");
 		return;
 	}
-	m_rts_retry = 0;
-	send_rts ();
+	TRACE ("retry data");
+	if (m_use_rts &&
+	    !m_current_to.is_broadcast ()) {
+		m_rts_retry = 0;
+		TRACE ("send rts");
+		send_rts ();
+	} else {
+		TRACE ("send data");
+		m_data_retry = 0;
+		send_data ();
+	}
 }
 
 void
@@ -238,9 +292,35 @@ MacSimple::retry_rts (void)
 		assert (m_current != 0);
 		m_current->unref ();
 		m_current = 0;
+		TRACE ("stop rts retry");
 		return;
 	}
+	TRACE ("retry rts");
 	send_rts ();
+}
+
+void
+MacSimple::send_later (void)
+{
+	m_send_later_event = 0;
+	if (!m_phy->is_state_idle ()) {
+		TRACE ("send later again");
+		assert (m_current != 0);
+		m_send_later_event = make_event (&MacSimple::send_later, this);
+		Simulator::insert_in_us (m_phy->get_delay_until_idle_us (),
+					 m_send_later_event);
+		return;
+	}
+	if (m_use_rts &&
+	    !m_current_to.is_broadcast ()) {
+		m_rts_retry = 0;
+		TRACE ("send rts");
+		send_rts ();
+	} else {
+		TRACE ("send data");
+		m_data_retry = 0;
+		send_data ();
+	}	
 }
 
 
