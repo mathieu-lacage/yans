@@ -151,7 +151,10 @@ MacAddress::get_broadcast (void)
 	return broadcast;
 }
 
-
+bool operator == (MacAddress const&a, MacAddress const&b)
+{
+	return a.is_equal (b);
+}
 
 std::ostream& operator<< (std::ostream& os, MacAddress const& address)
 {

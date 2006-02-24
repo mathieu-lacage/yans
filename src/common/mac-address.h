@@ -62,6 +62,8 @@ private:
 	uint8_t m_address[6];
 };
 
+bool operator == (MacAddress const&a, MacAddress const&b);
+
 std::ostream& operator<< (std::ostream& os, MacAddress const& address);
 
 }; // namespace yans
