@@ -37,6 +37,10 @@ PACKAGE_DIST= \
 	rules.mk \
 	config.mk \
 	Makefile \
+	README \
+	LICENSE \
+	BUILD \
+	NEWS \
 	$(NULL)
 
 # building of libyans.so
