@@ -34,7 +34,7 @@
 #include <iostream>
 #include "simulator.h"
 # define TRACE(x) \
-std::cout << "LLARP TRACE " << Simulator::instance ()->now_s () << " " \
+std::cout << "ARP TRACE " << Simulator::now_us () << "us " \
           << x << std::endl;
 #else /* TRACE_ARP */
 # define TRACE(format,...)
