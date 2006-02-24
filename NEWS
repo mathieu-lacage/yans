@@ -1,3 +1,13 @@
+Release 0.7 (2006-02-24)
+-----------
+
+This release features:
+   - a way to unschedule scheduled events. i.e.: Simulator::remove
+   - a way to cancel otherwise events. i.e.: a CancellableEvent class
+   - a Binary Heap event scheduler
+   - a 802.11 PHY layer which implements a BER-based model. A very 
+     simple MAC was written to test this PHY.
+
 Release 0.6 (2006-02-02)
 -----------
 
