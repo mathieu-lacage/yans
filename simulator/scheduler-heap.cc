@@ -34,6 +34,7 @@
 
 #include "scheduler-heap.h"
 #include "event.h"
+#include <cassert>
 
 #define noTRACE_HEAP 1
 

@@ -28,6 +28,7 @@
 #include "packet.h"
 #include "chunk-mac-80211-hdr.h"
 #include "network-interface.h"
+#include <cassert>
 
 #define noMACSIMPLE_DEBUG 1
 

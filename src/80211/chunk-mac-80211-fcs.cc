@@ -20,6 +20,7 @@
  */
 #include "chunk-mac-80211-fcs.h"
 #include "buffer.h"
+#include <cassert>
 
 namespace yans {
 

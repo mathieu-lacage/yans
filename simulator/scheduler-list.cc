@@ -23,6 +23,7 @@
 #include "clock.h"
 #include "event.h"
 #include <utility>
+#include <cassert>
 
 #define noTRACE_EVENT_LIST 1
 

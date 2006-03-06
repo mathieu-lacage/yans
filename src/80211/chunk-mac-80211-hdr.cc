@@ -20,6 +20,7 @@
  */
 #include "chunk-mac-80211-hdr.h"
 #include "buffer.h"
+#include <cassert>
 
 namespace yans {
 

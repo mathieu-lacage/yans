@@ -26,6 +26,8 @@
 #include "event.h"
 #include "event.tcc"
 #include "cancellable-event.tcc"
+#include <cassert>
+
 
 namespace yans {
 
