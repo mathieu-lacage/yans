@@ -22,6 +22,7 @@
 #define CHANNEL_80211_H
 
 #include <list>
+#include <stdint.h>
 
 namespace yans {
 
