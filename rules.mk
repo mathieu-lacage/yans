@@ -131,10 +131,10 @@ gcov:
 opti-arc: build-opti-arc-profile run-opti-arc-profile-hook rebuild-opti-arc-profile
 rebuild-opti-arc-profile: 
 	$(MAKE) TOP_BUILD_DIR=$(TOP_BUILD_DIR)/opti-arc cleano
-	CFLAGS=-fbranch-probabilities CXXFLAGS=-fbranch-probabilities \
+	CFLAGS=-fprofile-use CXXFLAGS=-fprofile-use \
  $(MAKE) TOP_BUILD_DIR=$(TOP_BUILD_DIR)/opti-arc OPTI_FLAGS="-O3 -DNDEBUG=1"
 build-opti-arc-profile:
-	LDFLAGS=-fprofile-arcs CFLAGS=-fprofile-arcs CXXFLAGS=-fprofile-arcs \
+	LDFLAGS=-fprofile-generate CFLAGS=-fprofile-generate CXXFLAGS=-fprofile-generate \
  $(MAKE) TOP_BUILD_DIR=$(TOP_BUILD_DIR)/opti-arc OPTI_FLAGS="-O3 -DNDEBUG=1"
 
 # dist/distcheck support
