@@ -1,3 +1,11 @@
+Release 0.7.1 (2006-03-06)
+-------------
+
+This release is a bugfix-only release:
+   - build fixes for suse 10
+   - build fixes for linux gcc 4.1.0
+   - build fixes for osx
+
 Release 0.7 (2006-02-24)
 -----------
 
