@@ -44,7 +44,16 @@ public:
 private:
 	double U01 (); 
 	double U01d (); 
-
+	double MultModM (double a, double s, double c, double m);
+	void MatVecModM (const double A[3][3], const double s[3], double v[3], 
+			 double m);
+	void MatMatModM (const double A[3][3], const double B[3][3], 
+			 double C[3][3], double m) ;
+	void MatTwoPowModM (const double A[3][3], double B[3][3], double m, 
+			    long e);
+	void MatPowModM (const double A[3][3], double B[3][3], double m, 
+			 long n);
+	int CheckSeed (const unsigned long seed[6]);
 
 	/*
 	  Vectors to store the current seed, the beginning of the current block

@@ -93,148 +93,156 @@ namespace
 		{ 2824425944.0, 32183930.0, 2093834863.0 } 
 	}; 
 
-	//------------------------------------------------------------------- 
-	// Return (a*s + c) MOD m; a, s, c and m must be < 2^35 
-	// 
+} // end of anonymous namespace 
 
-	double MultModM (double a, double s, double c, double m) 
-	{ 
-		double v; 
-		long a1; 
-		v=a*s+c; 
+//------------------------------------------------------------------- 
+// Return (a*s + c) MOD m; a, s, c and m must be < 2^35 
+// 
 
-		if (v >= two53 || v <= -two53) { 
-			a1 = static_cast<long> (a / two17); a -= a1 * two17; 
-			v =a1*s; 
-			a1 = static_cast<long> (v / m); v -= a1 * m; 
-			v = v * two17 + a * s + c; 
-		} 
-		a1 = static_cast<long> (v / m); 
-		/* in case v < 0)*/ 
-		if ((v -= a1 * m) < 0.0) return v += m; else return v; 
+double 
+RngMrg32k3a::MultModM (double a, double s, double c, double m) 
+{ 
+	double v; 
+	long a1; 
+	v=a*s+c; 
+	
+	if (v >= two53 || v <= -two53) { 
+		a1 = static_cast<long> (a / two17); a -= a1 * two17; 
+		v =a1*s; 
+		a1 = static_cast<long> (v / m); v -= a1 * m; 
+		v = v * two17 + a * s + c; 
 	} 
+	a1 = static_cast<long> (v / m); 
+	/* in case v < 0)*/ 
+	if ((v -= a1 * m) < 0.0) return v += m; else return v; 
+} 
 
-	//------------------------------------------------------------------- 
-	// Compute the vector v = A*s MOD m. Assume that -m < s[i] < m. 
-	// Works also when v = s. 
-	// 
-	void MatVecModM (const double A[3][3], const double s[3], double v[3], 
+//------------------------------------------------------------------- 
+// Compute the vector v = A*s MOD m. Assume that -m < s[i] < m. 
+// Works also when v = s. 
+// 
+void
+RngMrg32k3a::MatVecModM (const double A[3][3], const double s[3], double v[3], 
 			 double m) 
-	{ 
-		int i; 
-		double x[3]; // Necessary if v = s 
-		for (i = 0; i < 3; ++i) { 
-			x[i] = MultModM (A[i][0], s[0], 0.0, m); 
-			x[i] = MultModM (A[i][1], s[1], x[i], m); 
-			x[i] = MultModM (A[i][2], s[2], x[i], m); 
-		} 
-		for (i = 0; i < 3; ++i) 
-			v[i] = x[i]; 
+{ 
+	int i; 
+	double x[3]; // Necessary if v = s 
+	for (i = 0; i < 3; ++i) { 
+		x[i] = MultModM (A[i][0], s[0], 0.0, m); 
+		x[i] = MultModM (A[i][1], s[1], x[i], m); 
+		x[i] = MultModM (A[i][2], s[2], x[i], m); 
 	} 
+	for (i = 0; i < 3; ++i) 
+		v[i] = x[i]; 
+} 
 
-	//------------------------------------------------------------------- 
-	// Compute the matrix C = A*B MOD m. Assume that -m < s[i] < m. 
-	// Note: works also if A = C or B = C or A = B = C. 
-	// 
-	void MatMatModM (const double A[3][3], const double B[3][3], 
+//------------------------------------------------------------------- 
+// Compute the matrix C = A*B MOD m. Assume that -m < s[i] < m. 
+// Note: works also if A = C or B = C or A = B = C. 
+// 
+void 
+RngMrg32k3a::MatMatModM (const double A[3][3], const double B[3][3], 
 			 double C[3][3], double m) 
-	{ 
-		int i, j; 
-		double V[3], W[3][3]; 
-		for (i = 0; i < 3; ++i) { 
-			for (j = 0; j < 3; ++j) 
-				V[j] = B[j][i]; 
-			MatVecModM (A, V, V, m); 
-			for (j = 0; j < 3; ++j) 
-
-				W[j][i] = V[j]; 
-		} 
-		for (i = 0; i < 3; ++i) 
-			for (j = 0; j < 3; ++j) 
-				C[i][j] = W[i][j]; 
-	} 
-
-	//------------------------------------------------------------------- 
-	// Compute the matrix B = (A^(2^e) Mod m); works also if A = B. 
-	// 
-	void MatTwoPowModM (const double A[3][3], double B[3][3], double m, 
-			    long e) 
-	{ 
-		int i, j; 
-		/* initialize: B = A */ 
-		if (A != B) { 
-			for (i = 0; i < 3; ++i) 
-				for (j = 0; j < 3; ++j) 
-					B[i][j] = A[i][j]; 
-		} 
-		/* Compute B = A^(2^e) mod m */ 
-		for (i = 0; i < e; i++) 
-			MatMatModM (B, B, B, m); 
-	} 
-
-	//------------------------------------------------------------------- 
-	// Compute the matrix B = (A^n Mod m); works even if A = B. 
-	// 
-	void MatPowModM (const double A[3][3], double B[3][3], double m, 
-			 long n) 
-	{ 
-		int i, j; 
-		double W[3][3]; 
-		/* initialize: W = A; B = I */ 
-		for (i = 0; i < 3; ++i) 
-			for (j = 0; j < 3; ++j) { 
-				W[i][j] = A[i][j]; 
-				B[i][j] = 0.0; 
-			} 
+{ 
+	int i, j; 
+	double V[3], W[3][3]; 
+	for (i = 0; i < 3; ++i) { 
 		for (j = 0; j < 3; ++j) 
-			B[j][j] = 1.0; 
-		/* Compute B = A^n mod m using the binary decomposition of n */
-		while (n > 0) { 
-			if (n % 2) MatMatModM (W, B, B, m); 
-			MatMatModM (W, W, W, m); 
-
-			n/=2; 
+			V[j] = B[j][i]; 
+		MatVecModM (A, V, V, m); 
+		for (j = 0; j < 3; ++j) 
+			
+			W[j][i] = V[j]; 
 		} 
+	for (i = 0; i < 3; ++i) 
+		for (j = 0; j < 3; ++j) 
+			C[i][j] = W[i][j]; 
+} 
+
+//------------------------------------------------------------------- 
+// Compute the matrix B = (A^(2^e) Mod m); works also if A = B. 
+// 
+void 
+RngMrg32k3a::MatTwoPowModM (const double A[3][3], double B[3][3], double m, 
+			    long e) 
+{ 
+	int i, j; 
+	/* initialize: B = A */ 
+	if (A != B) { 
+		for (i = 0; i < 3; ++i) 
+			for (j = 0; j < 3; ++j) 
+				B[i][j] = A[i][j]; 
 	} 
+	/* Compute B = A^(2^e) mod m */ 
+	for (i = 0; i < e; i++) 
+		MatMatModM (B, B, B, m); 
+} 
 
-	//-------------------------------------------------------------------- 
-	// Check that the seeds are legitimate values. Returns 0 if legal 
-	// seeds, -1 otherwise. 
-	// 
-	int CheckSeed (const unsigned long seed[6]) 
-	{ 
-		int i; 
-		for (i = 0; i < 3; ++i) { 
-			if (seed[i] >= m1) { 
-				std::cerr << "****************************************" << std::endl
-					  << "ERROR: Seed["<<i<<"] >= 4294967087, Seed is not set." << std::endl
-					  << "****************************************" << std::endl;
-				return (-1); 
-			} 
+//------------------------------------------------------------------- 
+// Compute the matrix B = (A^n Mod m); works even if A = B. 
+// 
+void 
+RngMrg32k3a::MatPowModM (const double A[3][3], double B[3][3], double m, 
+			 long n) 
+{ 
+	int i, j; 
+	double W[3][3]; 
+	/* initialize: W = A; B = I */ 
+	for (i = 0; i < 3; ++i) 
+		for (j = 0; j < 3; ++j) { 
+			W[i][j] = A[i][j]; 
+			B[i][j] = 0.0; 
 		} 
-		for (i = 3; i < 6; ++i) { 
-			if (seed[i] >= m2) { 
-				std::cerr << "****************************************" << std::endl
-					  << "ERROR: Seed["<<i<<"] >= 429444443, Seed is not set."<<std::endl
-					  << "****************************************" <<std::endl;
-				return (-1); 
-			} 
-		} 
-		if (seed[0] == 0 && seed[1] == 0 && seed[2] == 0) { 
-			std::cerr<< "****************************************" << std::endl
-				 << "ERROR: First 3 seeds = 0." << std::endl 
-				 << "****************************************" << std::endl;
-			return (-1); 
-		} 
-		if (seed[3] == 0 && seed[4] == 0 && seed[5] == 0) { 
-			std::cerr << "****************************************" <<std::endl
-				  << "ERROR: Last 3 seeds = 0." << std::endl
+	for (j = 0; j < 3; ++j) 
+		B[j][j] = 1.0; 
+	/* Compute B = A^n mod m using the binary decomposition of n */
+	while (n > 0) { 
+		if (n % 2) MatMatModM (W, B, B, m); 
+		MatMatModM (W, W, W, m); 
+		
+		n/=2; 
+	} 
+} 
+
+//-------------------------------------------------------------------- 
+// Check that the seeds are legitimate values. Returns 0 if legal 
+// seeds, -1 otherwise. 
+// 
+int 
+RngMrg32k3a::CheckSeed (const unsigned long seed[6]) 
+{ 
+	int i; 
+	for (i = 0; i < 3; ++i) { 
+		if (seed[i] >= m1) { 
+			std::cerr << "****************************************" << std::endl
+				  << "ERROR: Seed["<<i<<"] >= 4294967087, Seed is not set." << std::endl
 				  << "****************************************" << std::endl;
 			return (-1); 
 		} 
-		return 0; 
 	} 
-} // end of anonymous namespace 
+	for (i = 3; i < 6; ++i) { 
+		if (seed[i] >= m2) { 
+			std::cerr << "****************************************" << std::endl
+				  << "ERROR: Seed["<<i<<"] >= 429444443, Seed is not set."<<std::endl
+				  << "****************************************" <<std::endl;
+			return (-1); 
+		} 
+	} 
+	if (seed[0] == 0 && seed[1] == 0 && seed[2] == 0) { 
+		std::cerr<< "****************************************" << std::endl
+			 << "ERROR: First 3 seeds = 0." << std::endl 
+			 << "****************************************" << std::endl;
+		return (-1); 
+	} 
+	if (seed[3] == 0 && seed[4] == 0 && seed[5] == 0) { 
+		std::cerr << "****************************************" <<std::endl
+			  << "ERROR: Last 3 seeds = 0." << std::endl
+			  << "****************************************" << std::endl;
+		return (-1); 
+	} 
+	return 0; 
+} 
+
 
 //------------------------------------------------------------------------- 
 // Generate the next random number. 
