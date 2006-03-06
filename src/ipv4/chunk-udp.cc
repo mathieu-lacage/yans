@@ -38,7 +38,7 @@ ChunkUdp::ChunkUdp ()
 ChunkUdp::~ChunkUdp ()
 {
 	m_source_port = 0xfffe;
-	m_destination_port = 0xffffe;
+	m_destination_port = 0xfffe;
 	m_payload_size = 0xfffe;
 }
 
