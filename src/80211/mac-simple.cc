@@ -138,7 +138,7 @@ MacSimple::send (Packet *packet, MacAddress to)
 	}
 }
 void 
-MacSimple::receive_ok (Packet *packet, double snr, uint8_t tx_mode)
+MacSimple::receive_ok (Packet *packet, double snr, uint8_t tx_mode, uint8_t stuff)
 {
 	ChunkMac80211Hdr hdr;
 	packet->remove (&hdr);
@@ -194,7 +194,7 @@ MacSimple::send_cts (uint8_t tx_mode, MacAddress to)
 	cts.set_type (MAC_80211_CTL_CTS);
 	cts.set_addr1 (to);
 	packet->add (&cts);
-	m_phy->send_packet (packet, tx_mode, 0);
+	m_phy->send_packet (packet, tx_mode, 0, 0);
 	packet->unref ();
 }
 
@@ -206,7 +206,7 @@ MacSimple::send_ack (uint8_t tx_mode, MacAddress to)
 	ack.set_type (MAC_80211_CTL_ACK);
 	ack.set_addr1 (to);
 	packet->add (&ack);
-	m_phy->send_packet (packet, tx_mode, 0);
+	m_phy->send_packet (packet, tx_mode, 0, 0);
 	packet->unref ();
 }
 
@@ -225,7 +225,7 @@ MacSimple::send_rts (void)
 	assert (m_rts_timeout_event == 0);
 	m_rts_timeout_event = make_cancellable_event (&MacSimple::retry_rts, this);
 	Simulator::insert_in_us (tx_duration + get_rts_timeout_us (), m_rts_timeout_event);
-	m_phy->send_packet (packet, station->get_rts_mode (), 0);
+	m_phy->send_packet (packet, station->get_rts_mode (), 0, 0);
 	packet->unref ();
 }
 
@@ -250,7 +250,7 @@ MacSimple::send_data (void)
 		Simulator::insert_in_us (tx_duration + get_data_timeout_us (), 
 					 m_data_timeout_event);
 	}
-	m_phy->send_packet (packet, station->get_data_mode (packet->get_size ()), 0);
+	m_phy->send_packet (packet, station->get_data_mode (packet->get_size ()), 0, 0);
 	packet->unref ();
 }
 

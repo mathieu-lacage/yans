@@ -236,7 +236,8 @@ Phy80211::set_receive_error_callback (RxErrorCallback *callback)
 void 
 Phy80211::receive_packet (Packet *packet, 
 			  double rx_power_w,
-			  uint8_t tx_mode)
+			  uint8_t tx_mode,
+			  uint8_t stuff)
 {
 	uint64_t rx_duration_us = calculate_tx_duration_us (packet->get_size (), tx_mode);
 
@@ -264,7 +265,7 @@ Phy80211::receive_packet (Packet *packet,
 			notify_rx_start (now_us (), rx_duration_us);
 			switch_to_sync_from_idle (rx_duration_us);
 			assert (m_end_rx_event == 0);
-			m_end_rx_event = make_cancellable_event (&Phy80211::end_rx, this, packet, event);
+			m_end_rx_event = make_cancellable_event (&Phy80211::end_rx, this, packet, event, stuff);
 			Simulator::insert_in_us (rx_duration_us, m_end_rx_event);
 		} else {
 			TRACE ("drop packet because signal power too small ("<<
@@ -276,7 +277,7 @@ Phy80211::receive_packet (Packet *packet,
 	event->unref ();
 }
 void 
-Phy80211::send_packet (Packet *packet, uint8_t tx_mode, uint8_t tx_power)
+Phy80211::send_packet (Packet *packet, uint8_t tx_mode, uint8_t tx_power, uint8_t stuff)
 {
 	/* Transmission can happen if:
 	 *  - we are syncing on a packet. It is the responsability of the
@@ -293,7 +294,7 @@ Phy80211::send_packet (Packet *packet, uint8_t tx_mode, uint8_t tx_power)
 	uint64_t tx_duration_us = calculate_tx_duration_us (packet->get_size (), tx_mode);
 	notify_tx_start (now_us (), tx_duration_us);
 	switch_to_tx (tx_duration_us);
-	m_propagation->send (packet, get_power_dbm (tx_power), tx_mode);
+	m_propagation->send (packet, get_power_dbm (tx_power), tx_mode, stuff);
 }
 
 void 
@@ -820,7 +821,7 @@ Phy80211::calculate_per (RxEvent const *event, NiChanges *ni) const
 
 
 void
-Phy80211::end_rx (Packet *packet, RxEvent *event)
+Phy80211::end_rx (Packet *packet, RxEvent *event, uint8_t stuff)
 {
 	assert (is_state_rx ());
 	assert (event->get_end_time_us () == now_us ());
@@ -841,7 +842,7 @@ Phy80211::end_rx (Packet *packet, RxEvent *event)
 	if (m_random->get_double () > per) {
 		notify_rx_end (now_us (), true);
 		switch_to_idle_from_sync ();
-		(*m_rx_ok_callback) (packet, snr, event->get_payload_mode ());
+		(*m_rx_ok_callback) (packet, snr, event->get_payload_mode (), stuff);
 	} else {
 		/* failure. */
 		notify_rx_end (now_us (), false);

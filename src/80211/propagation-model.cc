@@ -93,25 +93,27 @@ PropagationModel::set_receive_callback (RxCallback *callback)
 }
 
 void 
-PropagationModel::send (Packet *packet, double tx_power_dbm, uint8_t tx_mode) const
+PropagationModel::send (Packet *packet, double tx_power_dbm, 
+			uint8_t tx_mode, uint8_t stuff) const
 {
 	PropagationData data (tx_power_dbm + m_tx_gain_dbm, m_host->get_x (),
 			      m_host->get_y (), m_host->get_z ());
-	m_channel->send (packet, &data, tx_mode, this);
+	m_channel->send (packet, &data, tx_mode, stuff, this);
 }
 void 
-PropagationModel::receive (Packet *packet, PropagationData const *data, uint8_t tx_mode)
+PropagationModel::receive (Packet *packet, PropagationData const *data, 
+			   uint8_t tx_mode, uint8_t stuff)
 {
 	double rx_power = get_rx_power (data);
 	double delay = distance (data) / 300000000;
 	Simulator::insert_in_s (delay, make_event (&PropagationModel::forward_up, 
-						   this, packet, rx_power, tx_mode));
+						   this, packet, rx_power, tx_mode, stuff));
 }
 
 void
-PropagationModel::forward_up (Packet *packet, double rx_power, uint8_t tx_mode)
+PropagationModel::forward_up (Packet *packet, double rx_power, uint8_t tx_mode, uint8_t stuff)
 {
-	(*m_rx_callback) (packet, rx_power, tx_mode);
+	(*m_rx_callback) (packet, rx_power, tx_mode, stuff);
 }
 
 double

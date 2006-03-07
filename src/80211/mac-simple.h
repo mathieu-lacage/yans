@@ -47,7 +47,7 @@ public:
 	void set_receiver (RxCallback *data);
 
 	void send (Packet *packet, MacAddress to);
-	void receive_ok (Packet *packet, double snr, uint8_t tx_mode);
+	void receive_ok (Packet *packet, double snr, uint8_t tx_mode, uint8_t stuff);
 	void receive_error (Packet *packet);
 private:
 	void send_cts (uint8_t tx_mode, MacAddress to);
