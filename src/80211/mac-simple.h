@@ -39,6 +39,7 @@ public:
 	typedef Callback<void (Packet *)> RxCallback;
 
 	MacSimple ();
+	~MacSimple ();
 	void set_phy (Phy80211 *phy);
 	void set_stations (MacStations *stations);
 	void set_interface (NetworkInterface *interface);

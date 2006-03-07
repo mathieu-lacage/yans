@@ -60,6 +60,11 @@ MacSimple::MacSimple ()
 	m_data_timeout_us = (uint64_t) ((10 /*ack*/ + 2/* padding for prop time*/)* 8 / 3e6 * 1e6) + 80;
 }
 
+MacSimple::~MacSimple ()
+{
+	delete m_data_rx;
+}
+
 uint64_t 
 MacSimple::get_rts_timeout_us (void)
 {
