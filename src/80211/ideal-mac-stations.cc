@@ -21,6 +21,17 @@
 #include "ideal-mac-stations.h"
 #include "phy-80211.h"
 
+#define noIDEAL_DEBUG 1
+
+#ifdef IDEAL_DEBUG
+#include <iostream>
+#  define TRACE(x) \
+std::cout << "IDEAL TRACE " << x << std::endl;
+#else
+#  define TRACE(x)
+#endif
+
+
 namespace yans {
 
 IdealMacStations::IdealMacStations ()
@@ -38,30 +49,39 @@ uint8_t
 IdealMacStations::snr_to_snr (double snr)
 {
 	if (snr > m_max_snr) {
-		return 256;
+		TRACE ("snr: "<<snr<<"->"<<255);
+		return 255;
 	}
 	if (snr < m_min_snr) {
+		TRACE ("snr: "<<snr<<"->"<<0);
 		return 0;
 	}
-	double ratio = 256 * (snr - m_min_snr) / (m_max_snr - m_min_snr);
+	double ratio = 255 * (snr - m_min_snr) / (m_max_snr - m_min_snr);
+	TRACE ("snr: "<<snr<<"->"<<ratio);
 	return (uint8_t) ratio;
 }
 double 
 IdealMacStations::snr_to_snr (uint8_t snr)
 {
-	return m_min_snr + (m_max_snr - m_min_snr) * snr / 256;
+	double d = m_min_snr + (m_max_snr - m_min_snr) * snr / 255;
+	TRACE ("snr back: "<<(uint32_t)snr<<"->"<<d);
+	return d;
 }
 uint8_t 
 IdealMacStations::get_mode (uint8_t snr)
 {
+	double d_snr = snr_to_snr (snr);
 	uint8_t mode = 0;
 	for (ThresholdsI i = m_thresholds.begin (); i != m_thresholds.end (); i++) {
-		if (snr < (*i)) {
+		if (d_snr < (*i)) {
+			TRACE ("use mode="<<(uint32_t)mode<<", snr="<<d_snr);
 			return mode;
 		}
 		mode++;
 	}
-	return m_thresholds.size () - 1;
+	mode = m_thresholds.size () - 1;
+	TRACE ("use mode="<<(uint32_t)mode<<", snr="<<d_snr);
+	return mode;
 }
 void 
 IdealMacStations::initialize_thresholds (Phy80211 const *phy, double ber)
@@ -70,13 +90,16 @@ IdealMacStations::initialize_thresholds (Phy80211 const *phy, double ber)
 	for (uint8_t i = 0; i < n_modes; i++) {
 		m_thresholds.push_back (phy->calculate_snr (i, ber));
 	}
+	uint32_t k = 0;
 	for (ThresholdsI j = m_thresholds.begin (); j != m_thresholds.end (); j++) {
+		TRACE ("mode="<<k<<", threshold="<<(*j));
 		if ((*j) < m_min_snr) {
 			m_min_snr = (*j);
 		}
 		if ((*j) > m_max_snr) {
 			m_max_snr = (*j);
 		}
+		k++;
 	}
 }
 
@@ -99,11 +122,13 @@ IdealMacStation::report_data_failed (void)
 void 
 IdealMacStation::report_rts_ok (double cts_snr, uint8_t cts_mode, uint8_t rts_snr)
 {
+	TRACE ("got cts for rts snr="<<(uint32_t)rts_snr);
 	m_last_snr = rts_snr;
 }
 void 
 IdealMacStation::report_data_ok (double ack_snr, uint8_t ack_mode, uint8_t data_snr)
 {
+	TRACE ("got cts for rts snr="<<(uint32_t)data_snr);
 	m_last_snr = data_snr;
 }
 void 
