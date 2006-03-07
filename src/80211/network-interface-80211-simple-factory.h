@@ -55,6 +55,8 @@ public:
 	void set_prop_rx_gain_dbm (double rx_gain);
 	void set_prop_frequency_hz (double frequency);
 
+	void set_rts_cts_threshold (uint32_t size);
+
 	NetworkInterface80211Simple *create (Host *host);
 private:
 	enum {
@@ -79,6 +81,8 @@ private:
 	double m_prop_tx_gain_dbm;
 	double m_prop_rx_gain_dbm;
 	double m_prop_frequency_hz;
+
+	uint32_t m_rts_cts_threshold;
 };
 
 }; // namespace yans

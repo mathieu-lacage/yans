@@ -45,12 +45,12 @@ namespace yans {
 
 MacSimple::MacSimple ()
 {
-	m_use_rts = false;
 	m_rts_retry = 0;
 	m_data_retry = 0;
 	m_rts_retry_max = 3;
 	m_data_retry_max = 3;
 	m_current = 0;
+	m_rts_cts_threshold = 1;
 
 	m_rts_timeout_event = 0;
 	m_data_timeout_event = 0;
@@ -98,11 +98,10 @@ MacSimple::set_interface (NetworkInterface *interface)
 	m_interface = interface;
 }
 void 
-MacSimple::enable_rts_cts (void)
+MacSimple::set_rts_cts_threshold (uint32_t size)
 {
-	m_use_rts = true;
+	m_rts_cts_threshold = size;
 }
-  
 void 
 MacSimple::send (Packet *packet, MacAddress to)
 {
@@ -128,8 +127,7 @@ MacSimple::send (Packet *packet, MacAddress to)
 	m_current->ref ();
 	m_rts_retry = 0;
 	m_data_retry = 0;
-	if (m_use_rts && 
-	    !m_current_to.is_broadcast ()) {
+	if (use_rts ()) {
 		TRACE ("send rts");
 		send_rts ();
 	} else {
@@ -147,7 +145,7 @@ MacSimple::receive_ok (Packet *packet, double snr, uint8_t tx_mode, uint8_t stuf
 		MacStation *station = get_station (hdr.get_addr2 ());
 		TRACE ("receive rts from "<<hdr.get_addr2 ());
 		station->report_rx_ok (snr, tx_mode);
-		send_cts (tx_mode, hdr.get_addr2 (), stuff);
+		send_cts (tx_mode, hdr.get_addr2 (), station->snr_to_snr (snr));
 	} else if (hdr.is_cts () &&
 		   hdr.get_addr1 () == m_interface->get_mac_address ()) {
 		MacStation *station = get_station (m_current_to);
@@ -166,7 +164,7 @@ MacSimple::receive_ok (Packet *packet, double snr, uint8_t tx_mode, uint8_t stuf
 			(*m_data_rx) (packet);
 		} else if (hdr.get_addr1 () == m_interface->get_mac_address ()) {
 			TRACE ("receive unicast data from " <<hdr.get_addr2 ());
-			send_ack (tx_mode, hdr.get_addr2 (), stuff);
+			send_ack (tx_mode, hdr.get_addr2 (), station->snr_to_snr (snr));
 			(*m_data_rx) (packet);
 		}
 	} else if (hdr.is_ack () &&
@@ -305,6 +303,17 @@ MacSimple::send_later (void)
 	send_if_we_can ();
 }
 
+bool 
+MacSimple::use_rts (void)
+{
+	if (m_rts_cts_threshold < m_current->get_size () &&
+	    !m_current_to.is_broadcast ()) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
 void 
 MacSimple::send_if_we_can (void)
 {
@@ -318,8 +327,7 @@ MacSimple::send_if_we_can (void)
 		}
 		return;
 	}
-	if (m_use_rts &&
-	    !m_current_to.is_broadcast ()) {
+	if (use_rts ()) {
 		TRACE ("send rts");
 		send_rts ();
 	} else {

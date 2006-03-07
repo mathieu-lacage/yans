@@ -113,6 +113,12 @@ NetworkInterface80211SimpleFactory::set_prop_frequency_hz (double frequency)
 	m_prop_frequency_hz = frequency;
 }
 
+void 
+NetworkInterface80211SimpleFactory::set_rts_cts_threshold (uint32_t size)
+{
+	m_rts_cts_threshold = size;
+}
+
 NetworkInterface80211Simple *
 NetworkInterface80211SimpleFactory::create (Host *host)
 {
@@ -168,6 +174,7 @@ NetworkInterface80211SimpleFactory::create (Host *host)
 	mac->set_phy (phy);
 	mac->set_stations (stations);
 	mac->set_interface (interface);
+	mac->set_rts_cts_threshold (m_rts_cts_threshold);
 	interface->m_mac = mac;
 
 	Arp *arp = new Arp (interface);

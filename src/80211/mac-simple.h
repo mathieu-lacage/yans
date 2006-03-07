@@ -43,7 +43,7 @@ public:
 	void set_phy (Phy80211 *phy);
 	void set_stations (MacStations *stations);
 	void set_interface (NetworkInterface *interface);
-	void enable_rts_cts (void);
+	void set_rts_cts_threshold (uint32_t size);
 	void set_receiver (RxCallback *data);
 
 	void send (Packet *packet, MacAddress to);
@@ -61,11 +61,12 @@ private:
 	void send_if_we_can (void);
 	uint64_t get_rts_timeout_us (void);
 	uint64_t get_data_timeout_us (void);
+	bool use_rts (void);
 
 	Phy80211 *m_phy;
 	MacStations *m_stations;
 	NetworkInterface *m_interface;
-	bool m_use_rts;
+	uint32_t m_rts_cts_threshold;
 	uint32_t m_rts_retry;
 	uint32_t m_data_retry;
 	uint32_t m_rts_retry_max;
