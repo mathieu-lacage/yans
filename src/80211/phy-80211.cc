@@ -78,7 +78,7 @@ Phy80211Listener::~Phy80211Listener ()
  *       Phy event class
  ****************************************************************/
 
-class Phy80211::RxEvent {
+class RxEvent {
 public:
 	RxEvent (uint32_t size, uint8_t payload_mode, 
 		 uint64_t duration_us, double rx_power)
@@ -139,6 +139,25 @@ private:
 	double m_rx_power_w;
 	int m_ref_count;
 };
+
+template <>
+class EventEnvironmentHolder<RxEvent *> {
+public:
+	EventEnvironmentHolder (RxEvent *env) 
+		: m_env (env) {
+		m_env->ref ();
+	}
+	~EventEnvironmentHolder () {
+		m_env->unref ();
+		m_env = reinterpret_cast<RxEvent *> (0xdeadbeaf);
+	}
+	RxEvent *get (void) {
+		return m_env;
+	}
+private:
+	RxEvent *m_env;
+};
+
 
 /****************************************************************
  *       Class which records SNIR change events for a 
@@ -245,7 +264,6 @@ Phy80211::receive_packet (Packet *packet,
 			notify_rx_start (now_us (), rx_duration_us);
 			switch_to_sync_from_idle (rx_duration_us);
 			assert (m_end_rx_event == 0);
-			event->ref ();
 			m_end_rx_event = make_cancellable_event (&Phy80211::end_rx, this, packet, event);
 			Simulator::insert_in_us (rx_duration_us, m_end_rx_event);
 		} else {
@@ -656,7 +674,7 @@ Phy80211::append_event (RxEvent *event)
 		EventsI i = m_events.begin ();
 		while (i != m_events.end () &&
 		       (*i)->get_end_time_us () <= end_us) {
-			delete (*i);
+			(*i)->unref ();
 			i++;
 		}
 		m_events.erase (m_events.begin (), i);
@@ -830,7 +848,6 @@ Phy80211::end_rx (Packet *packet, RxEvent *event)
 		switch_to_idle_from_sync ();
 		(*m_rx_error_callback) (packet);
 	}
-	packet->unref ();
 }
 
 

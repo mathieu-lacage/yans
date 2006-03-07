@@ -4,7 +4,7 @@
  * All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as 
+ * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation;
  *
  * This program is distributed in the hope that it will be useful,
@@ -16,34 +16,28 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Author: Mathieu Lacage, <mathieu.lacage@sophia.inria.fr>
+ * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#include "channel-80211.h"
-#include "packet.h"
-#include "propagation-model.h"
+
+#ifndef EVENT_ENVIRONMENT_HOLDER_TCC
+#define EVENT_ENVIRONMENT_HOLDER_TCC
 
 namespace yans {
 
-Channel80211::Channel80211 ()
-{}
-Channel80211::~Channel80211 ()
-{}
-void 
-Channel80211::add (PropagationModel *model)
-{
-	m_models.push_back (model);
-}
-void 
-Channel80211::send (Packet const *packet, PropagationData const *data, 
-		    uint8_t tx_mode, PropagationModel const *caller) const
-{
-	for (ModelsCI i = m_models.begin (); i != m_models.end (); i++) {
-		if (caller != (*i)) {
-			Packet *copy = packet->copy ();
-			(*i)->receive (copy, data, tx_mode);
-			copy->unref ();
-		}
+template <typename T>
+class EventEnvironmentHolder {
+public:
+	EventEnvironmentHolder (T env) 
+		: m_env (env) {}
+	~EventEnvironmentHolder () {}
+	T get (void) {
+		return m_env;
 	}
-}
+private:
+	T m_env;
+};
+
 
 }; // namespace yans
+
+#endif /* EVENT_ENVIRONMENT_HOLDER_TCC */

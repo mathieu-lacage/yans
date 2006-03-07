@@ -35,6 +35,7 @@ class Packet;
 class PropagationModel;
 class CancellableEvent;
 class RandomUniform;
+class RxEvent;
 
 class Phy80211Listener {
 public:
@@ -113,7 +114,6 @@ private:
 		IDLE,
 		SLEEP
 	};
-	class RxEvent;
 	class NiChange {
 	public:
 		NiChange (uint64_t time, double delta);

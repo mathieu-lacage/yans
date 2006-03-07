@@ -23,6 +23,7 @@
 #define EVENT_TCC
 
 #include "event.h"
+#include "event-environment-holder.tcc"
 
 namespace yans {
 
@@ -55,13 +56,13 @@ public:
 		  m_a1 (a1)
 	{ }
 	virtual void notify (void) { 
-		(m_obj->*m_function) (m_a1); 
+		(m_obj->*m_function) (m_a1.get ()); 
 		delete this;
 	}
 private:
 	T* m_obj;
 	F m_function;
-	T1 m_a1;
+	EventEnvironmentHolder<T1> m_a1;
 };
 
 template<typename T, typename T1, typename T2>
@@ -76,14 +77,14 @@ public:
 		  m_a2 (a2)
 	{ }
 	virtual void notify (void) { 
-		(m_obj->*m_function) (m_a1, m_a2);
+		(m_obj->*m_function) (m_a1.get (), m_a2.get ());
 		delete this;
 	}
 private:
 	T* m_obj;
 	F m_function;
-	T1 m_a1;
-	T2 m_a2;
+	EventEnvironmentHolder<T1> m_a1;
+	EventEnvironmentHolder<T2> m_a2;
 };
 
 template<typename T, typename T1, typename T2, typename T3>
@@ -99,15 +100,15 @@ public:
 		  m_a3 (a3)
 	{ }
 	virtual void notify (void) { 
-		(m_obj->*m_function) (m_a1, m_a2, m_a3);
+		(m_obj->*m_function) (m_a1.get (), m_a2.get (), m_a3.get ());
 		delete this;
 	}
 private:
 	T* m_obj;
 	F m_function;
-	T1 m_a1;
-	T2 m_a2;
-	T3 m_a3;
+	EventEnvironmentHolder<T1> m_a1;
+	EventEnvironmentHolder<T2> m_a2;
+	EventEnvironmentHolder<T3> m_a3;
 };
 
 
