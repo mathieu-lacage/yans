@@ -111,6 +111,32 @@ private:
 	EventEnvironmentHolder<T3> m_a3;
 };
 
+template<typename T, typename T1, typename T2, typename T3, typename T4>
+class EventCallback4 : public Event {
+public:
+	typedef void (T::*F)(T1, T2, T3, T4 a4);
+
+	EventCallback4 (T *obj, F function, T1 a1, T2 a2, T3 a3, T4 a4) 
+		: m_obj (obj), 
+		  m_function (function),
+		  m_a1 (a1),
+		  m_a2 (a2),
+		  m_a3 (a3),
+		  m_a4 (a4)
+	{ }
+	virtual void notify (void) { 
+		(m_obj->*m_function) (m_a1.get (), m_a2.get (), m_a3.get (), m_a4.get ());
+		delete this;
+	}
+private:
+	T* m_obj;
+	F m_function;
+	EventEnvironmentHolder<T1> m_a1;
+	EventEnvironmentHolder<T2> m_a2;
+	EventEnvironmentHolder<T3> m_a3;
+	EventEnvironmentHolder<T4> m_a4;
+};
+
 
 template<typename T>
 EventCallback0<T> *make_event(void (T::*f) (void), T* t) {
@@ -131,6 +157,10 @@ EventCallback2<T, T1, T2> *make_event(void (T::*f) (T1, T2), T* t, T1 a1, T2 a2)
 template<typename T, typename T1, typename T2, typename T3>
 EventCallback3<T, T1, T2, T3> *make_event(void (T::*f) (T1, T2, T3), T* t, T1 a1, T2 a2, T3 a3) {
 	return new EventCallback3<T, T1, T2, T3>(t, f, a1, a2, a3);
+}
+template<typename T, typename T1, typename T2, typename T3, typename T4>
+EventCallback4<T, T1, T2, T3, T4> *make_event(void (T::*f) (T1, T2, T3, T4), T* t, T1 a1, T2 a2, T3 a3, T4 a4) {
+	return new EventCallback4<T, T1, T2, T3, T4>(t, f, a1, a2, a3, a4);
 }
 
 }; // namespace yans
