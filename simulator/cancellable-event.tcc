@@ -96,7 +96,7 @@ private:
 template<typename T, typename T1, typename T2, typename T3>
 class CancellableEventCallback3 : public CancellableEvent {
 public:
-	typedef void (T::*F)(T1, T2);
+	typedef void (T::*F)(T1, T2, T3);
 
 	CancellableEventCallback3 (T *obj, F function, T1 a1, T2 a2, T3 a3) 
 		: m_obj (obj), 
@@ -119,6 +119,34 @@ private:
 	EventEnvironmentHolder<T3> m_a3;
 };
 
+template<typename T, typename T1, typename T2, typename T3, typename T4>
+class CancellableEventCallback4 : public CancellableEvent {
+public:
+	typedef void (T::*F)(T1, T2, T3, T4);
+
+	CancellableEventCallback4 (T *obj, F function, T1 a1, T2 a2, T3 a3, T4 a4) 
+		: m_obj (obj), 
+		  m_function (function),
+		  m_a1 (a1),
+		  m_a2 (a2),
+		  m_a3 (a3),
+		  m_a4 (a4)
+	{ }
+	virtual void notify (void) { 
+		if (!CancellableEvent::is_cancelled ()) {
+			(m_obj->*m_function) (m_a1.get (), m_a2.get (), m_a3.get (), m_a4.get ());
+		}
+		delete this;
+	}
+private:
+	T* m_obj;
+	F m_function;
+	EventEnvironmentHolder<T1> m_a1;
+	EventEnvironmentHolder<T2> m_a2;
+	EventEnvironmentHolder<T3> m_a3;
+	EventEnvironmentHolder<T4> m_a4;
+};
+
 
 template<typename T>
 CancellableEventCallback0<T> *make_cancellable_event(void (T::*f) (void), T* t) {
@@ -135,6 +163,10 @@ CancellableEventCallback2<T, T1, T2> *make_cancellable_event(void (T::*f) (T1, T
 template<typename T, typename T1, typename T2, typename T3>
 CancellableEventCallback3<T, T1, T2, T3> *make_cancellable_event(void (T::*f) (T1, T2, T3), T* t, T1 a1, T2 a2, T3 a3) {
 	return new CancellableEventCallback3<T, T1, T2, T3>(t, f, a1, a2, a3);
+}
+template<typename T, typename T1, typename T2, typename T3, typename T4>
+CancellableEventCallback4<T, T1, T2, T3, T4> *make_cancellable_event(void (T::*f) (T1, T2, T3), T* t, T1 a1, T2 a2, T3 a3, T4 a4) {
+	return new CancellableEventCallback4<T, T1, T2, T3, T4>(t, f, a1, a2, a3, a4);
 }
 
 }; // namespace yans
