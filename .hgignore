@@ -3,3 +3,4 @@
 bin
 src/ipv4/tcp-bsd
 patch
+yans-.*
