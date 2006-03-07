@@ -123,12 +123,15 @@ ArfMacStation::report_data_failed (void)
         }
 }
 void 
-ArfMacStation::report_rx_ok (double rx_snr, int tx_mode)
+ArfMacStation::report_rx_ok (double rx_snr, uint8_t tx_mode)
 {}
-void ArfMacStation::report_rts_ok (double cts_snr, int cts_mode)
-{}
-void ArfMacStation::report_data_ok (double ack_snr, int ack_mode)
+void ArfMacStation::report_rts_ok (double cts_snr, uint8_t cts_mode, uint8_t rts_snr)
 {
+	assert (rts_snr == 0);
+}
+void ArfMacStation::report_data_ok (double ack_snr, uint8_t ack_mode, uint8_t data_snr)
+{
+	assert (data_snr == 0);
 	m_timer++;
         m_success++;
         m_failed = 0;
@@ -144,15 +147,22 @@ void ArfMacStation::report_data_ok (double ack_snr, int ack_mode)
         }
 
 }
+uint8_t 
+ArfMacStation::snr_to_snr (double snr)
+{
+	return 0;
+}
 void ArfMacStation::report_final_rts_failed (void)
 {}
 void ArfMacStation::report_final_data_failed (void)
 {}
-int ArfMacStation::get_data_mode (int size)
+uint8_t 
+ArfMacStation::get_data_mode (int size)
 {
 	return m_rate;
 }
-int ArfMacStation::get_rts_mode (void)
+uint8_t 
+ArfMacStation::get_rts_mode (void)
 {
 	return 0;
 }

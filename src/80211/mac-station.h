@@ -21,6 +21,8 @@
 #ifndef MAC_STATION_H
 #define MAC_STATION_H
 
+#include <stdint.h>
+
 namespace yans {
 
 class MacStations;
@@ -39,17 +41,18 @@ public:
 	void record_associated (void);	
 
 	// reception-related method
-	virtual void report_rx_ok (double rx_snr, int tx_mode) = 0;
+	virtual void report_rx_ok (double rx_snr, uint8_t tx_mode) = 0;
 
 	// transmission-related methods
 	virtual void report_rts_failed (void) = 0;
 	virtual void report_data_failed (void) = 0;
-	virtual void report_rts_ok (double cts_snr, int cts_mode) = 0;
-	virtual void report_data_ok (double ack_snr, int ack_mode) = 0;
+	virtual void report_rts_ok (double cts_snr, uint8_t cts_mode, uint8_t rts_snr) = 0;
+	virtual void report_data_ok (double ack_snr, uint8_t ack_mode, uint8_t data_snr) = 0;
 	virtual void report_final_rts_failed (void) = 0;
 	virtual void report_final_data_failed (void) = 0;
-	virtual int get_data_mode (int size) = 0;
-	virtual int get_rts_mode (void) = 0;
+	virtual uint8_t get_data_mode (int size) = 0;
+	virtual uint8_t get_rts_mode (void) = 0;
+	virtual uint8_t snr_to_snr (double snr) = 0;
 
 private:
 	bool m_is_associated;
@@ -57,4 +60,4 @@ private:
 
 }; // namespace yans
 
-#endif /* MAC_STA_H */
+#endif /* MAC_STATION_H */

@@ -26,6 +26,7 @@
 #include "arf-mac-stations.h"
 #include "aarf-mac-stations.h"
 #include "cr-mac-stations.h"
+#include "ideal-mac-stations.h"
 #include "mac-simple.h"
 #include "arp.h"
 
@@ -63,6 +64,12 @@ NetworkInterface80211SimpleFactory::set_cr (uint8_t data_mode, uint8_t ctl_mode)
 	m_rate_control_mode = RATE_CR;
 	m_cr_data_mode = data_mode;
 	m_cr_ctl_mode = ctl_mode;
+}
+void 
+NetworkInterface80211SimpleFactory::set_ideal (double ber)
+{
+	m_rate_control_mode = RATE_IDEAL;
+	m_ideal_ber = ber;
 }
 
 void 
@@ -143,6 +150,11 @@ NetworkInterface80211SimpleFactory::create (Host *host)
 	case RATE_CR:
 		stations = new CrMacStations (m_cr_data_mode, m_cr_ctl_mode);
 		break;
+	case RATE_IDEAL: {
+		IdealMacStations *ideal = new IdealMacStations ();
+		ideal->initialize_thresholds (phy, m_ideal_ber);
+		stations = ideal;
+	} break;
 	default:
 		// NOTREACHED
 		stations = 0;

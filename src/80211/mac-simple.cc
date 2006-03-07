@@ -147,13 +147,13 @@ MacSimple::receive_ok (Packet *packet, double snr, uint8_t tx_mode, uint8_t stuf
 		MacStation *station = get_station (hdr.get_addr2 ());
 		TRACE ("receive rts from "<<hdr.get_addr2 ());
 		station->report_rx_ok (snr, tx_mode);
-		send_cts (tx_mode, hdr.get_addr2 ());
+		send_cts (tx_mode, hdr.get_addr2 (), stuff);
 	} else if (hdr.is_cts () &&
 		   hdr.get_addr1 () == m_interface->get_mac_address ()) {
 		MacStation *station = get_station (m_current_to);
 		TRACE ("receive cts from "<<m_current_to);
 		station->report_rx_ok (snr, tx_mode);
-		station->report_rts_ok (snr, tx_mode);
+		station->report_rts_ok (snr, tx_mode, stuff);
 		assert (m_rts_timeout_event != 0);
 		m_rts_timeout_event->cancel ();
 		m_rts_timeout_event = 0;
@@ -166,7 +166,7 @@ MacSimple::receive_ok (Packet *packet, double snr, uint8_t tx_mode, uint8_t stuf
 			(*m_data_rx) (packet);
 		} else if (hdr.get_addr1 () == m_interface->get_mac_address ()) {
 			TRACE ("receive unicast data from " <<hdr.get_addr2 ());
-			send_ack (tx_mode, hdr.get_addr2 ());
+			send_ack (tx_mode, hdr.get_addr2 (), stuff);
 			(*m_data_rx) (packet);
 		}
 	} else if (hdr.is_ack () &&
@@ -174,7 +174,7 @@ MacSimple::receive_ok (Packet *packet, double snr, uint8_t tx_mode, uint8_t stuf
 		MacStation *station = get_station (m_current_to);
 		TRACE ("receive ack from "<<m_current_to);
 		station->report_rx_ok (snr, tx_mode);
-		station->report_data_ok (snr, tx_mode);
+		station->report_data_ok (snr, tx_mode, stuff);
 		assert (m_data_timeout_event != 0);
 		m_data_timeout_event->cancel ();
 		m_data_timeout_event = 0;
@@ -187,26 +187,26 @@ MacSimple::receive_error (Packet *packet)
 {}
 
 void
-MacSimple::send_cts (uint8_t tx_mode, MacAddress to)
+MacSimple::send_cts (uint8_t tx_mode, MacAddress to, uint8_t rts_snr)
 {
 	Packet *packet = new Packet ();
 	ChunkMac80211Hdr cts;
 	cts.set_type (MAC_80211_CTL_CTS);
 	cts.set_addr1 (to);
 	packet->add (&cts);
-	m_phy->send_packet (packet, tx_mode, 0, 0);
+	m_phy->send_packet (packet, tx_mode, 0, rts_snr);
 	packet->unref ();
 }
 
 void
-MacSimple::send_ack (uint8_t tx_mode, MacAddress to)
+MacSimple::send_ack (uint8_t tx_mode, MacAddress to, uint8_t data_snr)
 {
 	Packet *packet = new Packet ();
 	ChunkMac80211Hdr ack;
 	ack.set_type (MAC_80211_CTL_ACK);
 	ack.set_addr1 (to);
 	packet->add (&ack);
-	m_phy->send_packet (packet, tx_mode, 0, 0);
+	m_phy->send_packet (packet, tx_mode, 0, data_snr);
 	packet->unref ();
 }
 

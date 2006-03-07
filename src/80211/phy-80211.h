@@ -105,8 +105,10 @@ public:
 	void set_tx_power_increments_dbm (double tx_power_base, 
 				      double tx_power_end, 
 				      int n_tx_power);
-	uint32_t get_n_modes (void);
-	uint32_t get_n_txpower (void);
+	uint32_t get_n_modes (void) const;
+	uint32_t get_n_txpower (void) const;
+	/* return snr: W/W */
+	double calculate_snr (uint8_t tx_mode, double ber) const;
 
 private:
 	enum Phy80211State {
@@ -162,6 +164,7 @@ private:
 	double calculate_chunk_success_rate (double snir, uint64_t delay, TransmissionMode *mode) const;
 	double calculate_per (RxEvent const*event, NiChanges *ni) const;
 	void end_rx (Packet *packet, RxEvent *event, uint8_t stuff);
+	double get_snr_for_ber (TransmissionMode *mode, double ber) const;
 
 private:
 	uint64_t     m_plcp_preamble_delay_us;

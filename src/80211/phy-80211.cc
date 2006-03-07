@@ -317,14 +317,39 @@ Phy80211::set_tx_power_increments_dbm (double tx_power_base,
 	m_n_tx_power = n_tx_power;
 }
 uint32_t 
-Phy80211::get_n_modes (void)
+Phy80211::get_n_modes (void) const
 {
 	return m_modes.size ();
 }
 uint32_t 
-Phy80211::get_n_txpower (void)
+Phy80211::get_n_txpower (void) const
 {
 	return m_n_tx_power;
+}
+
+double 
+Phy80211::calculate_snr (uint8_t tx_mode, double ber) const
+{
+	return get_snr_for_ber (get_mode (tx_mode), ber);;
+}
+
+double 
+Phy80211::get_snr_for_ber (TransmissionMode *mode, double ber) const
+{
+	double low, high, precision;
+	low = 1e-10;
+	high = 10;
+	precision = 1e-8;
+	while (high - low > precision) {
+		assert (high >= low);
+		double middle = low + (high - low) / 2;
+		if ((1 - mode->get_chunk_success_rate (middle, 1)) > ber) {
+			low = middle;
+		} else {
+			high = middle;
+		}
+	}
+	return low;
 }
 
 void

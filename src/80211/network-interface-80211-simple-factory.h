@@ -38,6 +38,7 @@ public:
 	void set_arf (void);
 	void set_aarf (void);
 	void set_cr (uint8_t data_mode, uint8_t ctl_mode);
+	void set_ideal (double ber);
 
 	/* absolute reception threshold. dBm. */
 	void set_phy_ed_threshold_dbm (double dbm);
@@ -59,11 +60,14 @@ private:
 	enum {
 		RATE_ARF,
 		RATE_AARF,
-		RATE_CR
+		RATE_CR,
+		RATE_IDEAL
 	} m_rate_control_mode;
 
 	uint8_t m_cr_data_mode;
 	uint8_t m_cr_ctl_mode;
+
+	double m_ideal_ber;
 
 	double m_phy_ed_threshold_dbm;
 	double m_phy_rx_noise_db;

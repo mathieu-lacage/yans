@@ -44,6 +44,8 @@
 #include "mac-station.h"
 #include "cr-mac-stations.h"
 
+#include <cassert>
+
 namespace yans {
 
 CrMacStation::CrMacStation (CrMacStations *stations)
@@ -59,23 +61,34 @@ void
 CrMacStation::report_data_failed (void)
 {}
 void 
-CrMacStation::report_rx_ok (double SNR, int mode)
+CrMacStation::report_rx_ok (double SNR, uint8_t mode)
 {}
-void CrMacStation::report_rts_ok (double ctsSNR, int ctsMode)
-{}
-void CrMacStation::report_data_ok (double ackSNR, int ackMode)
-{}
+void CrMacStation::report_rts_ok (double ctsSNR, uint8_t ctsMode, uint8_t rts_snr)
+{
+	assert (rts_snr == 0);
+}
+void CrMacStation::report_data_ok (double ackSNR, uint8_t ackMode, uint8_t data_snr)
+{
+	assert (data_snr == 0);
+}
 void CrMacStation::report_final_rts_failed (void)
 {}
 void CrMacStation::report_final_data_failed (void)
 {}
-int CrMacStation::get_data_mode (int size)
+uint8_t
+CrMacStation::get_data_mode (int size)
 {
 	return m_stations->get_data_mode ();
 }
-int CrMacStation::get_rts_mode (void)
+uint8_t
+CrMacStation::get_rts_mode (void)
 {
 	return m_stations->get_ctl_mode ();
+}
+uint8_t 
+CrMacStation::snr_to_snr (double snr)
+{
+	return 0;
 }
 
 
