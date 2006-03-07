@@ -42,6 +42,8 @@ class MyTrace {
 public:
 	MyTrace () {
 		m_period_s = 1.0;
+		m_current = 0;
+		m_prev = 0;
 	}
 	void total_rx_bytes (uint64_t prev, uint64_t now) {
 		m_current = now;
