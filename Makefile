@@ -368,4 +368,4 @@ run-opti-arc-profile-hook:
 	LD_LIBRARY_PATH=bin/opti-arc $(TOP_BUILD_DIR)/opti-arc/samples/main-simple --slow --heap
 
 
-include rules.mk
+include ./rules.mk
