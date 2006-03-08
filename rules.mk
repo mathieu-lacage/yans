@@ -102,7 +102,7 @@ ALL_DIRS+=$$($(1)_DIRS)
 ALL_DEP+=$(TOP_BUILD_DIR)/$$($(1)_OUTPUT).P
 $(TOP_BUILD_DIR)/$$($(1)_OUTPUT).P: $$(call enumerate-dep-dirs,$(TOP_BUILD_DIR)/$$($(1)_OUTPUT).P)
 	@echo $(TOP_BUILD_DIR)/$$($(1)_OUTPUT): $$($(1)_OBJ) > $$@
-$(TOP_BUILD_DIR)/$$($(1)_OUTPUT): $(TOP_BUILD_DIR)/$$($(1)_OUTPUT).P
+$(TOP_BUILD_DIR)/$$($(1)_OUTPUT):
 	@$(call display-compile,$$(CXX) $$($(1)_LDFLAGS) -o $$@ $$(filter %.o,$$^))
 endef
 
