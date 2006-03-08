@@ -23,7 +23,6 @@
 
 #include <math.h>
 #include <cassert>
-#include <gsl_randist.h>
 
 namespace yans {
 
@@ -88,6 +87,22 @@ FecTransmissionMode::get_data_rate (void) const
 {
 	return (uint32_t)(NoFecTransmissionMode::get_rate () * m_coding_rate);
 }
+uint32_t
+FecTransmissionMode::factorial (uint32_t k) const
+{
+	uint32_t fact = 1;
+	while (k > 0) {
+		fact *= k;
+		k--;
+	}
+	return fact;
+}
+double 
+FecTransmissionMode::binomial (uint32_t k, double p, uint32_t n) const
+{
+	double retval = factorial (n) / (factorial (k) * factorial (n-k)) * pow (p, k) * pow (1-p, n-k);
+	return retval;
+}
 double 
 FecTransmissionMode::calculate_pd_odd (double ber, unsigned int d) const
 {
@@ -96,8 +111,8 @@ FecTransmissionMode::calculate_pd_odd (double ber, unsigned int d) const
 	unsigned int dend = d;
 	double pd = 0;
 
-	for (unsigned int i = dstart; i < dend; i++){
-		pd +=  gsl_ran_binomial_pdf (i, ber, d);
+	for (unsigned int i = dstart; i < dend; i++) {
+		pd += binomial (i, ber, d);
 	}
 	return pd;
 }
@@ -110,9 +125,9 @@ FecTransmissionMode::calculate_pd_even (double ber, unsigned int d) const
 	double pd = 0;
 
 	for (unsigned int i = dstart; i < dend; i++){
-                    pd +=  gsl_ran_binomial_pdf (i, ber, d);
+                    pd +=  binomial (i, ber, d);
 	}
-	pd += 0.5 * gsl_ran_binomial_pdf (d / 2, ber, d);
+	pd += 0.5 * binomial (d / 2, ber, d);
 
 	return pd;
 }

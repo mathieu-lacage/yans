@@ -83,6 +83,8 @@ protected:
 	double calculate_pd (double ber, unsigned int d) const;
 
 private:
+	uint32_t factorial (uint32_t k) const;
+	double binomial (uint32_t k, double p, uint32_t n) const;
 	double m_coding_rate;
 };
 
