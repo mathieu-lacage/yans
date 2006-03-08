@@ -220,9 +220,9 @@ YANS_HDR = \
 	src/thread/semaphore.h \
 	src/thread/thread.h \
 	$(NULL)
-YANS_CXXFLAGS=$(CXXFLAGS) $(call gen-lib-build-flags) -I$(GSL_PREFIX_INC)
+YANS_CXXFLAGS=$(CXXFLAGS) $(call gen-lib-build-flags)
 YANS_CFLAGS=$(CFLAGS) $(call gen-lib-build-flags)
-YANS_LDFLAGS=$(LDFLAGS) $(call gen-lib-link-flags) -L$(GSL_PREFIX_LIB) -lgslcblas -lgsl 
+YANS_LDFLAGS=$(LDFLAGS) $(call gen-lib-link-flags)
 YANS_OUTPUT=$(call gen-lib-name, yans)
 ifeq ($(TCP_USE),y)
 YANS_SRC += \
