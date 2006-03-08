@@ -44,10 +44,18 @@ display-compile=$(if $(VERBOSE),echo '$(1)' && $(1),echo 'Building $$@ ...' && $
 define gen-gcc-dep
 -Wp$(COMMA)-M$(COMMA)-MP$(COMMA)-MM$(COMMA)-MT$(COMMA)$(strip $(2))$(COMMA)-MF$(COMMA)$(call gen-dep, $(1))
 endef
+# this template is called to generate the proper directory dependencies for
+# directories. It is used to infer the proper order in which to invoke
+# mkdir on the TARGET dirs.
 define DIR_template
 $(1): $$(call enumerate-dep-dirs,$(1))
 	@if ! test -d $$@; then echo "mkdir $$@"; mkdir $$@; fi
 endef
+# the following templates are used to generate the targets for all object files.
+# each .o depends only on its source file. They do not depend on the build dirs
+# which could be generated with a call to enumerate-dep-dirs because 
+# the dir targets are always re-made which would trigger a re-make for all 
+# object files all the time.
 define CXXOBJ_template
 $(2): $(1)
 	@$(call display-compile,$(CXX) $(3) $$(call gen-gcc-dep,$(1),$(2)) -c -o $(2) $(1))
@@ -85,9 +93,17 @@ $$(foreach src,$$(ASSRC),$$(eval $$(call ASOBJ_template,$$(src),$$(call gen-obj,
 
 $(1)_DIRS=$$(call gen-dirs,$$($(1)_OBJ))
 ALL_DIRS+=$$($(1)_DIRS)
-$(TOP_BUILD_DIR)/$$($(1)_OUTPUT): $$($(1)_OBJ) 
+# the output.P dependency files are used to work around a gnu make bug:
+# gnu make 3.80 cannot deal with long dependency lists in targets located 
+# in templates called with a eval. So, instead of making output depend
+# directly on the object list, we store the object list in the output.P
+# file and make sure output.P is included later by adding to the ALL_DEP
+# list. fun fun.
+ALL_DEP+=$(TOP_BUILD_DIR)/$$($(1)_OUTPUT).P
+$(TOP_BUILD_DIR)/$$($(1)_OUTPUT).P: $$(call enumerate-dep-dirs,$(TOP_BUILD_DIR)/$$($(1)_OUTPUT).P)
+	@echo $(TOP_BUILD_DIR)/$$($(1)_OUTPUT): $$($(1)_OBJ) > $$@
+$(TOP_BUILD_DIR)/$$($(1)_OUTPUT): $(TOP_BUILD_DIR)/$$($(1)_OUTPUT).P
 	@$(call display-compile,$$(CXX) $$($(1)_LDFLAGS) -o $$@ $$(filter %.o,$$^))
-
 endef
 
 $(foreach output,$(ALL),$(eval $(call OUTPUT_template,$(output))))
