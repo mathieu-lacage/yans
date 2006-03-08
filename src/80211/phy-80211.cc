@@ -337,9 +337,9 @@ double
 Phy80211::get_snr_for_ber (TransmissionMode *mode, double ber) const
 {
 	double low, high, precision;
-	low = 1e-15;
-	high = 1e15;
-	precision = 1e-8;
+	low = 1e-25;
+	high = 1e25;
+	precision = 1e-12;
 	while (high - low > precision) {
 		assert (high >= low);
 		double middle = low + (high - low) / 2;
@@ -359,14 +359,27 @@ Phy80211::configure_80211a (void)
 	m_plcp_preamble_delay_us = 20;
 	/* 4095 bytes at a 6Mb/s rate with a 1/2 coding rate. */
 	m_max_packet_duration_us = (uint64_t)(1000000 * 4095.0*8.0/6000000.0*(1.0/2.0));
+
 	add_tx_rx_mode (new FecBpskMode (20e6, 6000000, 0.5,   10, 11));
 	add_tx_rx_mode (new FecBpskMode (20e6, 9000000, 0.75,  5, 8));
 	add_tx_rx_mode (new FecQamMode (20e6, 12000000, 0.5,   4, 10, 11, 0));
 	add_tx_rx_mode (new FecQamMode (20e6, 18000000, 0.75,  4, 5, 8, 31));
-	add_tx_rx_mode (new FecQamMode (20e6, 24000000, 0.5,   16, 10, 11, 0));
+	//add_tx_rx_mode (new FecQamMode (20e6, 24000000, 0.5,   16, 10, 11, 0));
 	add_tx_rx_mode (new FecQamMode (20e6, 36000000, 0.75,  16, 5, 8, 31));
-	add_tx_rx_mode (new FecQamMode (20e6, 48000000, 0.666, 64, 6, 1, 16));
+	//add_tx_rx_mode (new FecQamMode (20e6, 48000000, 0.666, 64, 6, 1, 16));
 	add_tx_rx_mode (new FecQamMode (20e6, 54000000, 0.75,  64, 5, 8, 31));
+
+#ifdef PHY80211_DEBUG
+	for (double db = 0; db < 30; db+= 0.5) {
+		std::cout <<db<<" ";
+		for (uint8_t i = 0; i < get_n_modes (); i++) {
+			TransmissionMode *mode = get_mode (i);
+			double ber = 1-mode->get_chunk_success_rate (db_to_ratio (db), 1);
+			std::cout <<ber<< " ";
+		}
+		std::cout << std::endl;
+	}
+#endif
 }
 
 void 
@@ -489,21 +502,21 @@ Phy80211::get_state (void)
 }
 
 double 
-Phy80211::db_to_ratio (double dB)
+Phy80211::db_to_ratio (double dB) const
 {
 	double ratio = pow(10.0,dB/10.0);
 	return ratio;
 }
 
 double 
-Phy80211::dbm_to_w (double dBm)
+Phy80211::dbm_to_w (double dBm) const
 {
 	double mW = pow(10.0,dBm/10.0);
 	return mW / 1000.0;
 }
 
 double
-Phy80211::get_ed_threshold_w (void)
+Phy80211::get_ed_threshold_w (void) const
 {
 	return m_ed_threshold_w;
 }
@@ -858,12 +871,14 @@ Phy80211::end_rx (Packet *packet, RxEvent *event, uint8_t stuff)
 	double snr = calculate_snr (event->get_rx_power_w (),
 				    noise_interference_w,
 				    get_mode (event->get_payload_mode ()));
-
+	
 	/* calculate the SNIR at the start of the packet and accumulate
 	 * all SNIR changes in the snir vector.
 	 */
 	double per = calculate_per (event, &ni);
-	TRACE ("snr="<<snr<<", per="<<per<<", size="<<packet->get_size ());
+	TRACE ("mode="<<((uint32_t)event->get_payload_mode ())<<
+	       ", ber="<<(1-get_mode (event->get_payload_mode ())->get_chunk_success_rate (snr, 1))<<
+	       ", snr="<<snr<<", per="<<per<<", size="<<packet->get_size ());
 	
 	if (m_random->get_double () > per) {
 		notify_rx_end (now_us (), true);
