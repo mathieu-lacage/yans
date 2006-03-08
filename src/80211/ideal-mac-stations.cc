@@ -20,6 +20,7 @@
  */
 #include "ideal-mac-stations.h"
 #include "phy-80211.h"
+#include <math.h>
 
 #define noIDEAL_DEBUG 1
 
@@ -45,8 +46,20 @@ IdealMacStations::create_station (void)
   return new IdealMacStation (this);
 }
 
+double 
+IdealMacStations::ratio_to_db (double ratio) const
+{
+	return 10 * log10 (ratio);
+}
+
+double 
+IdealMacStations::db_to_ratio (double db) const
+{
+	return pow (10, db / 10);
+}
+
 uint8_t 
-IdealMacStations::snr_to_snr (double snr)
+IdealMacStations::snr_to_snr (double snr) const
 {
 	if (snr > m_max_snr) {
 		TRACE ("snr: "<<snr<<"->"<<255);
@@ -61,14 +74,14 @@ IdealMacStations::snr_to_snr (double snr)
 	return (uint8_t) ratio;
 }
 double 
-IdealMacStations::snr_to_snr (uint8_t snr)
+IdealMacStations::snr_to_snr (uint8_t snr) const
 {
 	double d = m_min_snr + (m_max_snr - m_min_snr) * snr / 255;
 	TRACE ("snr back: "<<(uint32_t)snr<<"->"<<d);
 	return d;
 }
 uint8_t 
-IdealMacStations::get_mode (uint8_t snr)
+IdealMacStations::get_mode (uint8_t snr) const
 {
 	double d_snr = snr_to_snr (snr);
 	uint8_t mode = 0;
@@ -91,16 +104,16 @@ IdealMacStations::initialize_thresholds (Phy80211 const *phy, double ber)
 		m_thresholds.push_back (phy->calculate_snr (i, ber));
 	}
 	uint32_t k = 0;
+	m_min_snr = 0;
+	m_max_snr = 1e-15;
 	for (ThresholdsI j = m_thresholds.begin (); j != m_thresholds.end (); j++) {
 		TRACE ("mode="<<k<<", threshold="<<(*j));
-		if ((*j) < m_min_snr) {
-			m_min_snr = (*j);
-		}
 		if ((*j) > m_max_snr) {
 			m_max_snr = (*j);
 		}
 		k++;
 	}
+	TRACE ("max snr="<<m_max_snr<<", min snr="<<m_min_snr);
 }
 
 
