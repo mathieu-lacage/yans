@@ -78,6 +78,7 @@ Packet::copy (uint32_t start, uint32_t length) const
 	assert (start < get_size ());
 	assert (start + length <= get_size ());
 	Packet *other = new Packet ();
+	// XXX copy tags ?? !
 	Buffer *tmp = other->m_buffer;
 	tmp->add_at_start (length);
 	tmp->write (m_buffer->peek_data () + start, length);
