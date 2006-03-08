@@ -32,7 +32,7 @@
 #include <math.h>
 
 
-#define PHY80211_DEBUG 1
+#define nopePHY80211_DEBUG 1
 #define nopePHY80211_STATE_DEBUG 1
 
 /* All the state transitions are marked by these macros. */
@@ -337,8 +337,8 @@ double
 Phy80211::get_snr_for_ber (TransmissionMode *mode, double ber) const
 {
 	double low, high, precision;
-	low = 1e-10;
-	high = 10;
+	low = 1e-15;
+	high = 1e15;
 	precision = 1e-8;
 	while (high - low > precision) {
 		assert (high >= low);
@@ -863,6 +863,7 @@ Phy80211::end_rx (Packet *packet, RxEvent *event, uint8_t stuff)
 	 * all SNIR changes in the snir vector.
 	 */
 	double per = calculate_per (event, &ni);
+	TRACE ("snr="<<snr<<", per="<<per<<", size="<<packet->get_size ());
 	
 	if (m_random->get_double () > per) {
 		notify_rx_end (now_us (), true);
@@ -872,7 +873,7 @@ Phy80211::end_rx (Packet *packet, RxEvent *event, uint8_t stuff)
 		/* failure. */
 		notify_rx_end (now_us (), false);
 		switch_to_idle_from_sync ();
-		(*m_rx_error_callback) (packet);
+		(*m_rx_error_callback) (packet, snr);
 	}
 }
 

@@ -66,7 +66,7 @@ class Phy80211
 {
 public:
 	typedef Callback<void (Packet *, double, uint8_t, uint8_t)> RxOkCallback;
-	typedef Callback<void (Packet *)> RxErrorCallback;
+	typedef Callback<void (Packet *, double)> RxErrorCallback;
 
 	Phy80211 ();
 	virtual ~Phy80211 ();
