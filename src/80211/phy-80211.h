@@ -139,9 +139,9 @@ private:
 
 private:	
 	enum Phy80211State get_state (void);
-	double get_ed_threshold_w (void);
-	double dbm_to_w (double dbm);
-	double db_to_ratio (double db);
+	double get_ed_threshold_w (void) const;
+	double dbm_to_w (double dbm) const;
+	double db_to_ratio (double db) const;
 	uint64_t now_us (void) const;
 	uint64_t get_max_packet_duration_us (void) const;
 	void add_tx_rx_mode (TransmissionMode *mode);
@@ -165,7 +165,6 @@ private:
 	double calculate_per (RxEvent const*event, NiChanges *ni) const;
 	void end_rx (Packet *packet, RxEvent *event, uint8_t stuff);
 	double get_snr_for_ber (TransmissionMode *mode, double ber) const;
-
 private:
 	uint64_t     m_plcp_preamble_delay_us;
 	uint32_t     m_plcp_header_length;
