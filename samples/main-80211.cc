@@ -90,8 +90,11 @@ int main (int argc, char *argv[])
 	hserver = new Host ("server");
 
 	NetworkInterface80211SimpleFactory *wifi_factory;
+	// force rts/cts on all the time.
+	wifi_factory->set_rts_cts_threshold (1);
 	wifi_factory = new NetworkInterface80211SimpleFactory ();
 	//wifi_factory->set_cr (6, 6);
+	//wifi_factory->set_ideal (1e-5);
 	wifi_factory->set_aarf ();
 
 	NetworkInterface80211Simple *wifi_client, *wifi_server;
