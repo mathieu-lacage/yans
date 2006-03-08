@@ -34,12 +34,14 @@ class IdealMacStations : public MacStations {
 public:
 	IdealMacStations ();
 	virtual ~IdealMacStations ();
-	uint8_t snr_to_snr (double snr);
-	uint8_t get_mode (uint8_t snr);
+	uint8_t snr_to_snr (double snr) const;
+	uint8_t get_mode (uint8_t snr) const;
 	void initialize_thresholds (Phy80211 const *phy, double ber);
 private:
 	virtual class MacStation *create_station (void);
-	double snr_to_snr (uint8_t snr);
+	double snr_to_snr (uint8_t snr) const;
+	double ratio_to_db (double ratio) const;
+	double db_to_ratio (double db) const;
 
 	typedef std::vector<double> Thresholds;
 	typedef std::vector<double>::const_iterator ThresholdsI;
