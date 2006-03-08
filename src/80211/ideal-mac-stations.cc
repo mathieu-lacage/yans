@@ -84,11 +84,14 @@ uint8_t
 IdealMacStations::get_mode (uint8_t snr) const
 {
 	double d_snr = snr_to_snr (snr);
+	if (d_snr < (*m_thresholds.begin ())) {
+		return 0;
+	}
 	uint8_t mode = 0;
 	for (ThresholdsI i = m_thresholds.begin (); i != m_thresholds.end (); i++) {
 		if (d_snr < (*i)) {
-			TRACE ("use mode="<<(uint32_t)mode<<", snr="<<d_snr);
-			return mode;
+			TRACE ("use mode="<<(uint32_t)(mode-1)<<", snr="<<d_snr);
+			return mode - 1;
 		}
 		mode++;
 	}
