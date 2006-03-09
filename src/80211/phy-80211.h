@@ -26,6 +26,7 @@
 #include <list>
 #include <stdint.h>
 #include "callback.tcc"
+#include "ref-holder.tcc"
 
 
 namespace yans {
@@ -163,7 +164,7 @@ private:
 	double calculate_snr (double signal, double noise_interference, TransmissionMode *mode) const;
 	double calculate_chunk_success_rate (double snir, uint64_t delay, TransmissionMode *mode) const;
 	double calculate_per (RxEvent const*event, NiChanges *ni) const;
-	void end_rx (Packet *packet, RxEvent *event, uint8_t stuff);
+	void end_rx (RefHolder<Packet> packet, RefHolder<RxEvent> event, uint8_t stuff);
 	double get_snr_for_ber (TransmissionMode *mode, double ber) const;
 private:
 	uint64_t     m_plcp_preamble_delay_us;

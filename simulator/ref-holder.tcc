@@ -22,8 +22,6 @@
 #ifndef REF_HOLDER_TCC
 #define REF_HOLDER_TCC
 
-#include "holder-traits.tcc"
-
 namespace yans {
 
 template <typename T>
@@ -36,26 +34,23 @@ public:
 		m_env->ref ();
 	}
 	~RefHolder () {
-		m_env->unref ();
+		if (m_env != 0) {
+			m_env->unref ();
+		}
 	}
 	RefHolder (RefHolder const&o) {
 		m_env = o.m_env;
 		m_env->ref ();
 	}
-	operator T *() const {
-		return m_env;
+	T *remove (void) {
+		T *env = m_env;
+		m_env = 0;
+		return env;
 	}
 private:
 	RefHolder &operator = (RefHolder const& o);
 	T *m_env;
 };
-
-template <typename T>
-struct HolderTraits<RefHolder<T> > {
-  typedef RefHolder<T> held_type;
-  typedef typename RefHolder<T>::real_type real_type;
-};
-
 
 template<typename T>
 RefHolder<T>

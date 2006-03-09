@@ -23,6 +23,7 @@
 
 #include <stdint.h>
 #include "callback.tcc"
+#include "ref-holder.tcc"
 
 namespace yans {
 /**
@@ -88,7 +89,7 @@ private:
 	double db_to_w (double db) const;
 	double get_lambda (void) const;
 	double distance (PropagationData const *from) const;
-	void forward_up (Packet *packet, double rx_power, uint8_t tx_mode, uint8_t stuff);
+	void forward_up (RefHolder<Packet> packet, double rx_power, uint8_t tx_mode, uint8_t stuff);
 	double get_rx_power (PropagationData const *rx) const;
 
 	RxCallback *m_rx_callback;

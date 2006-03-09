@@ -114,9 +114,11 @@ PropagationModel::receive (Packet *packet, PropagationData const *data,
 }
 
 void
-PropagationModel::forward_up (Packet *packet, double rx_power, uint8_t tx_mode, uint8_t stuff)
+PropagationModel::forward_up (RefHolder<Packet> p, double rx_power, uint8_t tx_mode, uint8_t stuff)
 {
+	Packet *packet = p.remove ();
 	(*m_rx_callback) (packet, rx_power, tx_mode, stuff);
+	packet->unref ();
 }
 
 double

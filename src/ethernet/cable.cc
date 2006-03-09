@@ -54,8 +54,9 @@ Cable::connect_to (EthernetNetworkInterface *a,
 }
 
 void
-Cable::recv (Packet *packet, EthernetNetworkInterface *to)
+Cable::recv (RefHolder<Packet> p, EthernetNetworkInterface *to)
 {
+	Packet *packet = p.remove ();
 	to->recv (packet);
 	packet->unref ();
 }
@@ -71,7 +72,6 @@ Cable::send (Packet *packet, EthernetNetworkInterface *sender)
 		assert (sender == m_b);
 		rx = m_a;
 	}
-	packet->ref ();
 	Simulator::insert_in_s (delay, make_event (&Cable::recv, this, 
 						   make_ref_holder (packet), rx));
 }

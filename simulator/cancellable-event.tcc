@@ -23,7 +23,6 @@
 #define CANCELLABLE_EVENT_TCC
 
 #include "cancellable-event.h"
-#include "holder-traits.tcc"
 
 namespace yans {
 
@@ -50,7 +49,7 @@ private:
 template<typename T, typename T1>
 class CancellableEventCallback1 : public CancellableEvent {
 public:
-	typedef void (T::*F)(typename HolderTraits<T1>::real_type);
+	typedef void (T::*F)(T1);
 
 	CancellableEventCallback1 (T *obj, F function, T1 a1) 
 		: m_obj (obj), 
@@ -72,8 +71,7 @@ private:
 template<typename T, typename T1, typename T2>
 class CancellableEventCallback2 : public CancellableEvent {
 public:
-	typedef void (T::*F)(typename HolderTraits<T1>::real_type,
-			     typename HolderTraits<T2>::real_type);
+	typedef void (T::*F)(T1, T2);
 
 	CancellableEventCallback2 (T *obj, F function, T1 a1, T2 a2) 
 		: m_obj (obj), 
@@ -97,9 +95,7 @@ private:
 template<typename T, typename T1, typename T2, typename T3>
 class CancellableEventCallback3 : public CancellableEvent {
 public:
-	typedef void (T::*F)(typename HolderTraits<T1>::real_type,
-			     typename HolderTraits<T2>::real_type,
-			     typename HolderTraits<T3>::real_type);
+	typedef void (T::*F)(T1, T2, T3);
 
 	CancellableEventCallback3 (T *obj, F function, T1 a1, T2 a2, T3 a3) 
 		: m_obj (obj), 
@@ -125,10 +121,7 @@ private:
 template<typename T, typename T1, typename T2, typename T3, typename T4>
 class CancellableEventCallback4 : public CancellableEvent {
 public:
-	typedef void (T::*F)(typename HolderTraits<T1>::real_type,
-			     typename HolderTraits<T2>::real_type,
-			     typename HolderTraits<T3>::real_type,
-			     typename HolderTraits<T4>::real_type);
+	typedef void (T::*F)(T1, T2, T3, T4);
 
 	CancellableEventCallback4 (T *obj, F function, T1 a1, T2 a2, T3 a3, T4 a4) 
 		: m_obj (obj), 
@@ -159,28 +152,22 @@ CancellableEventCallback0<T> *make_cancellable_event(void (T::*f) (void), T* t) 
 	return new CancellableEventCallback0<T>(t, f);
 }
 template<typename T, typename T1>
-CancellableEventCallback1<T, T1> *make_cancellable_event(void (T::*f) (typename HolderTraits<T1>::real_type), 
+CancellableEventCallback1<T, T1> *make_cancellable_event(void (T::*f) (T1), 
 							 T* t, T1 a1) {
 	return new CancellableEventCallback1<T, T1>(t, f, a1);
 }
 template<typename T, typename T1, typename T2>
-CancellableEventCallback2<T, T1, T2> *make_cancellable_event(void (T::*f) (typename HolderTraits<T1>::real_type,
-									   typename HolderTraits<T2>::real_type), 
+CancellableEventCallback2<T, T1, T2> *make_cancellable_event(void (T::*f) (T1, T2), 
 							     T* t, T1 a1, T2 a2) {
 	return new CancellableEventCallback2<T, T1, T2>(t, f, a1, a2);
 }
 template<typename T, typename T1, typename T2, typename T3>
-CancellableEventCallback3<T, T1, T2, T3> *make_cancellable_event(void (T::*f) (typename HolderTraits<T1>::real_type,
-									       typename HolderTraits<T2>::real_type,
-									       typename HolderTraits<T3>::real_type), 
+CancellableEventCallback3<T, T1, T2, T3> *make_cancellable_event(void (T::*f) (T1, T2, T3), 
 								 T* t, T1 a1, T2 a2, T3 a3) {
 	return new CancellableEventCallback3<T, T1, T2, T3>(t, f, a1, a2, a3);
 }
 template<typename T, typename T1, typename T2, typename T3, typename T4>
-CancellableEventCallback4<T, T1, T2, T3, T4> *make_cancellable_event(void (T::*f) (typename HolderTraits<T1>::real_type,
-										   typename HolderTraits<T2>::real_type,
-										   typename HolderTraits<T3>::real_type,
-										   typename HolderTraits<T4>::real_type), 
+CancellableEventCallback4<T, T1, T2, T3, T4> *make_cancellable_event(void (T::*f) (T1, T2, T3, T4), 
 								     T* t, T1 a1, T2 a2, T3 a3, T4 a4) {
 	return new CancellableEventCallback4<T, T1, T2, T3, T4>(t, f, a1, a2, a3, a4);
 }

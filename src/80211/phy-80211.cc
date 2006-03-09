@@ -845,8 +845,10 @@ Phy80211::calculate_per (RxEvent const *event, NiChanges *ni) const
 
 
 void
-Phy80211::end_rx (Packet *packet, RxEvent *event, uint8_t stuff)
+Phy80211::end_rx (RefHolder<Packet> p, RefHolder<RxEvent> ev, uint8_t stuff)
 {
+	Packet *packet = p.remove ();
+	RxEvent *event = ev.remove ();
 	assert (is_state_rx ());
 	assert (event->get_end_time_us () == now_us ());
 	assert (m_end_rx_event != 0);
@@ -876,6 +878,8 @@ Phy80211::end_rx (Packet *packet, RxEvent *event, uint8_t stuff)
 		switch_to_idle_from_sync ();
 		(*m_rx_error_callback) (packet, snr);
 	}
+	packet->unref ();
+	event->unref ();
 }
 
 
