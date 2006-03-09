@@ -29,7 +29,8 @@ The current implementation features:
 3) Build instructions
 ---------------------
 
-If you want to use the python bindings, you need:
+By default, only the core C++ library and a few C++ sample scenarios are
+built. If you want to use the python bindings, you need:
    - python (tested with 2.3 and 2.4) (see http://www.python.org)
    - Boost (tested with 1.32.0 and 1.33.1) (see http://www.boost.org)
 Otherwise, you need:
@@ -39,7 +40,6 @@ Otherwise, you need:
 All of these should be available on standard linux distributions. Make
 sure you install the -devel packages associated to these packages. Fedora
 Core 3 and 4 have been tested and work.
-
 
 What you might be tempted to change in the configuration file, config.mk:
 PYTHON_PREFIX_INC=/usr/include/python2.3
@@ -51,10 +51,8 @@ Change them to point where your dependencies are installed. If you do
 not want to build the python bindings, you can disable them
 by setting USE_PYTHON=n
 
-To enable the TCP code, set USE_TCP=y.
-
-To compile the 802.11 code, you need gsl. We are planning on removing this
-dependency but this will take a bit of time.
+To enable the TCP code, set USE_TCP=y (and make sure you have downloaded 
+and installed the tcp package properly).
 
 3.1 x86 linux build
 -------------------
@@ -71,15 +69,19 @@ LD_LIBRARY_PATH, to pick up the libyans.so.
 
 Tiger comes with python installed. You need to install boost
 (tested with 1.33.1). gcc 4.0.2 (apple darwin tiger version)
-has been used. Our tests show that it does not work with
-optimization levels higher than -O0 so, don't try the others.
-Python 2.3 does not seem to work very well on darwin so, we
-recommend you use only python 2.4.
+has been used. Python 2.3 does not seem to work very well 
+on darwin so, we recommend you use only python 2.4.
 
-Make sure you set in the Makefile:
+On some Tiger systems, we have seen python 2.4 installed as follows:
 PYTHON_PREFIX_INC=/System/Library/Frameworks/Python.framework/Versions/2.4/include/python2.4
 PYTHON_BIN=/usr/bin/python2.4
-PYTHON_PREFIX_LIB does not really need to be set.
+
+Some users have reported that you can also install python 2.4
+by following these instructions: download python 2.4 
+from http://undefined.org/python/#python, install it, and then set 
+your environment variables as follows:
+PYTHON_PREFIX_INC=/Library/Frameworks/Python.framework/Versions/2.4/include/python2.4
+PYTHON_BIN=/usr/local/bin/python2.4
 
 build command: "make PLATFORM=ppc-darwin-gcc"
 notes: 
@@ -111,8 +113,8 @@ In no particular order:
 	> etc.) Simulator should output this by default to stdout and if run in
 	> quiet mode should dump to some file like testname-output/testname.log
 	> or .stat
-- renames:
-  - Host -> Node
+- A bunch of TODO items are also registered in the bug tracking system:
+  http://yans.inria.fr/bts/yans/
   
 5) Contributing/Using
 ---------------------
