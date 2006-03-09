@@ -8,7 +8,7 @@ include ./platform.mk
 include ./config.mk
 
 PACKAGE_NAME=yans
-PACKAGE_VERSION=0.7
+PACKAGE_VERSION=0.7.1
 TOP_BUILD_DIR=$(TOP)/bin
 TOP_SRC_DIR=$(TOP)
 DEFINES=-DRUN_SELF_TESTS=1
