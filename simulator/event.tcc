@@ -152,10 +152,6 @@ template<typename T, typename T1>
 EventCallback1<T, T1> *make_event(void (T::*f) (typename HolderTraits<T1>::real_type), T* t, T1 a1) {
 	return new EventCallback1<T, T1>(t, f, a1);
 }
-template<typename T, typename T1>
-EventCallback1<T, T1 &> *make_event(void (T::*f) (typename HolderTraits<T1>::real_type &), T* t, T1 &a1) {
-	return new EventCallback1<T, T1 &>(t, f, a1);
-}
 template<typename T, typename T1, typename T2>
 EventCallback2<T, T1, T2> *make_event(void (T::*f) (typename HolderTraits<T1>::real_type,
 						    typename HolderTraits<T2>::real_type), T* t, T1 a1, T2 a2) {
