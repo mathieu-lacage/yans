@@ -25,6 +25,7 @@
 #include "event.h"
 #include "event.tcc"
 #include "simulator.h"
+#include "ref-holder.tcc"
 #include <cassert>
 
 namespace yans {
@@ -71,7 +72,8 @@ Cable::send (Packet *packet, EthernetNetworkInterface *sender)
 		rx = m_a;
 	}
 	packet->ref ();
-	Simulator::insert_in_s (delay, make_event (&Cable::recv, this, packet, rx));
+	Simulator::insert_in_s (delay, make_event (&Cable::recv, this, 
+						   make_ref_holder (packet), rx));
 }
 
 }; // namespace yans

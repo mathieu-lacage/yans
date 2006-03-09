@@ -22,6 +22,8 @@
 #include "host.h"
 #include "channel-80211.h"
 #include "simulator.h"
+#include "packet.h"
+#include "ref-holder.tcc"
 #include "event.tcc"
 #include <math.h>
 
@@ -107,7 +109,8 @@ PropagationModel::receive (Packet *packet, PropagationData const *data,
 	double rx_power = get_rx_power (data);
 	double delay = distance (data) / 300000000;
 	Simulator::insert_in_s (delay, make_event (&PropagationModel::forward_up, 
-						   this, packet, rx_power, tx_mode, stuff));
+						   this, make_ref_holder (packet),
+						   rx_power, tx_mode, stuff));
 }
 
 void

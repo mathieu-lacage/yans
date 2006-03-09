@@ -29,7 +29,6 @@
 
 #include "ref-count.tcc"
 #include "callback.tcc"
-#include "event-environment-holder.tcc"
 
 namespace yans {
 
@@ -74,26 +73,6 @@ public:
 };
 
 std::ostream& operator<< (std::ostream& os, Packet const& packet);
-
-
-template <>
-class EventEnvironmentHolder<Packet *> {
-public:
-	EventEnvironmentHolder (Packet *env) 
-		: m_env (env) {
-		m_env->ref ();
-	}
-	~EventEnvironmentHolder () {
-		m_env->unref ();
-		m_env = reinterpret_cast<Packet *> (0xdeadbeaf);
-	}
-	Packet *get (void) {
-		return m_env;
-	}
-private:
-	Packet *m_env;
-};
-
 
 }; // namespace yans
 

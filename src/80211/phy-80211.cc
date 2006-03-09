@@ -27,6 +27,7 @@
 #include "packet.h"
 #include "cancellable-event.tcc"
 #include "random-uniform.h"
+#include "ref-holder.tcc"
 
 #include <cassert>
 #include <math.h>
@@ -140,24 +141,6 @@ private:
 	int m_ref_count;
 };
 
-template <>
-class EventEnvironmentHolder<RxEvent *> {
-public:
-	EventEnvironmentHolder (RxEvent *env) 
-		: m_env (env) {
-		m_env->ref ();
-	}
-	~EventEnvironmentHolder () {
-		m_env->unref ();
-		m_env = reinterpret_cast<RxEvent *> (0xdeadbeaf);
-	}
-	RxEvent *get (void) {
-		return m_env;
-	}
-private:
-	RxEvent *m_env;
-};
-
 
 /****************************************************************
  *       Class which records SNIR change events for a 
@@ -265,7 +248,10 @@ Phy80211::receive_packet (Packet *packet,
 			notify_rx_start (now_us (), rx_duration_us);
 			switch_to_sync_from_idle (rx_duration_us);
 			assert (m_end_rx_event == 0);
-			m_end_rx_event = make_cancellable_event (&Phy80211::end_rx, this, packet, event, stuff);
+			m_end_rx_event = make_cancellable_event (&Phy80211::end_rx, this, 
+								 make_ref_holder (packet), 
+								 make_ref_holder (event), 
+								 stuff);
 			Simulator::insert_in_us (rx_duration_us, m_end_rx_event);
 		} else {
 			TRACE ("drop packet because signal power too small ("<<

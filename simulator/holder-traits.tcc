@@ -18,26 +18,17 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-
-#ifndef EVENT_ENVIRONMENT_HOLDER_TCC
-#define EVENT_ENVIRONMENT_HOLDER_TCC
+#ifndef HOLDER_TRAITS_TCC
+#define HOLDER_TRAITS_TCC
 
 namespace yans {
 
 template <typename T>
-class EventEnvironmentHolder {
-public:
-	EventEnvironmentHolder (T env) 
-		: m_env (env) {}
-	~EventEnvironmentHolder () {}
-	T get (void) {
-		return m_env;
-	}
-private:
-	T m_env;
+struct HolderTraits {
+  	typedef T held_type;
+	typedef T real_type;
 };
-
 
 }; // namespace yans
 
-#endif /* EVENT_ENVIRONMENT_HOLDER_TCC */
+#endif /* HOLDER_TRAITS_TCC */
