@@ -199,6 +199,7 @@ YANS_HDR = \
 	src/80211/arf-mac-stations.h \
 	src/80211/aarf-mac-stations.h \
 	src/80211/cr-mac-stations.h \
+	src/80211/ideal-mac-stations.h \
 	src/80211/propagation-model.h \
 	src/80211/channel-80211.h \
 	src/80211/transmission-mode.h \
