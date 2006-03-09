@@ -140,17 +140,17 @@ $(ALL_DIST_TARGETS): $(DIST_DIR)/%:%
 $(ALL_DIST_DIRS):
 	@mkdir -p $@
 predist:
-	$(RM_RECURSE_DIR) -rf $(DIST_DIR)
+	$(RM_RECURSE_DIR) $(DIST_DIR)
 dist: predist $(DIST_OUTPUT)
-	$(RM_RECURSE_DIR) -rf $(DIST_DIR)
+	$(RM_RECURSE_DIR) $(DIST_DIR)
 distcheck: dist
-	$(UNTAR) zxf $(DIST_OUTPUT)
+	$(UNTAR) $(DIST_OUTPUT)
 	$(MAKE) -C $(DIST_DIR)
-	$(RM_RECURSE_DIR) -rf $(DIST_DIR)
+	$(RM_RECURSE_DIR) $(DIST_DIR)
 fastdist: $(DIST_OUTPUT)
 fastdistcheck: fastdist
 	$(MAKE) -C $(DIST_DIR)
-	$(RM_RECURSE_DIR) -rf $(DIST_DIR)
+	$(RM_RECURSE_DIR) $(DIST_DIR)
 
 -include $(ALL_DEP)
 
@@ -158,4 +158,4 @@ cleano:
 	$(RM) -f $(ALL_OBJ)
 clean:
 	find ./ -name '*~'|xargs rm -f 2>/dev/null;
-	$(RM_RECURSE_DIR) -rf $(TOP_BUILD_DIR) 2>/dev/null;
+	$(RM_RECURSE_DIR) $(TOP_BUILD_DIR) 2>/dev/null;
