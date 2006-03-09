@@ -19,26 +19,26 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#ifndef REF_HOLDER_TCC
-#define REF_HOLDER_TCC
+#ifndef COUNT_PTR_HOLDER_TCC
+#define COUNT_PTR_HOLDER_TCC
 
 namespace yans {
 
 template <typename T>
-class RefHolder {
+class CountPtrHolder {
 public:
 	typedef T *real_type;
 
-	RefHolder (T *env) 
+	CountPtrHolder (T *env) 
 		: m_env (env) {
 		m_env->ref ();
 	}
-	~RefHolder () {
+	~CountPtrHolder () {
 		if (m_env != 0) {
 			m_env->unref ();
 		}
 	}
-	RefHolder (RefHolder const&o) {
+	CountPtrHolder (CountPtrHolder const&o) {
 		m_env = o.m_env;
 		m_env->ref ();
 	}
@@ -48,14 +48,14 @@ public:
 		return env;
 	}
 private:
-	RefHolder &operator = (RefHolder const& o);
+	CountPtrHolder &operator = (CountPtrHolder const& o);
 	T *m_env;
 };
 
 template<typename T>
-RefHolder<T>
-make_ref_holder (T *t) {
-	return RefHolder<T> (t);
+CountPtrHolder<T>
+make_count_ptr_holder (T *t) {
+	return CountPtrHolder<T> (t);
 }
 
 }; // namespace yans

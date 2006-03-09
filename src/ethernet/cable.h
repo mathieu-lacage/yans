@@ -23,7 +23,7 @@
 #define CABLE_H
 
 #include <list>
-#include "ref-holder.tcc"
+#include "count-ptr-holder.tcc"
 
 namespace yans {
 
@@ -48,7 +48,7 @@ public:
 	void send (Packet *packet, EthernetNetworkInterface *sender);
 
 private:
-	void recv (RefHolder<Packet> packet, EthernetNetworkInterface *sender);
+	void recv (CountPtrHolder<Packet> packet, EthernetNetworkInterface *sender);
 	static const double SPEED_OF_LIGHT;
 	EthernetNetworkInterface *m_a;
 	EthernetNetworkInterface *m_b;

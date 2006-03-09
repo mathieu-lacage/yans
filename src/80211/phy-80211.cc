@@ -27,7 +27,7 @@
 #include "packet.h"
 #include "cancellable-event.tcc"
 #include "random-uniform.h"
-#include "ref-holder.tcc"
+#include "count-ptr-holder.tcc"
 
 #include <cassert>
 #include <math.h>
@@ -249,8 +249,8 @@ Phy80211::receive_packet (Packet *packet,
 			switch_to_sync_from_idle (rx_duration_us);
 			assert (m_end_rx_event == 0);
 			m_end_rx_event = make_cancellable_event (&Phy80211::end_rx, this, 
-								 make_ref_holder (packet), 
-								 make_ref_holder (event), 
+								 make_count_ptr_holder (packet), 
+								 make_count_ptr_holder (event), 
 								 stuff);
 			Simulator::insert_in_us (rx_duration_us, m_end_rx_event);
 		} else {
@@ -845,7 +845,7 @@ Phy80211::calculate_per (RxEvent const *event, NiChanges *ni) const
 
 
 void
-Phy80211::end_rx (RefHolder<Packet> p, RefHolder<RxEvent> ev, uint8_t stuff)
+Phy80211::end_rx (CountPtrHolder<Packet> p, CountPtrHolder<RxEvent> ev, uint8_t stuff)
 {
 	Packet *packet = p.remove ();
 	RxEvent *event = ev.remove ();

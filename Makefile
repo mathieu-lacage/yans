@@ -166,6 +166,7 @@ YANS_HDR = \
 	src/common/seed-generator.h \
 	src/common/random-uniform.h \
 	src/common/rng-mrg32k3a.h \
+	src/common/count-ptr-holder.tcc \
 	src/ipv4/chunk-icmp.h \
 	src/ipv4/defrag-state.h \
 	src/ipv4/ipv4-route.h \

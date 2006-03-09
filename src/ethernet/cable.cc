@@ -25,7 +25,7 @@
 #include "event.h"
 #include "event.tcc"
 #include "simulator.h"
-#include "ref-holder.tcc"
+#include "count-ptr-holder.tcc"
 #include <cassert>
 
 namespace yans {
@@ -54,7 +54,7 @@ Cable::connect_to (EthernetNetworkInterface *a,
 }
 
 void
-Cable::recv (RefHolder<Packet> p, EthernetNetworkInterface *to)
+Cable::recv (CountPtrHolder<Packet> p, EthernetNetworkInterface *to)
 {
 	Packet *packet = p.remove ();
 	to->recv (packet);
@@ -73,7 +73,7 @@ Cable::send (Packet *packet, EthernetNetworkInterface *sender)
 		rx = m_a;
 	}
 	Simulator::insert_in_s (delay, make_event (&Cable::recv, this, 
-						   make_ref_holder (packet), rx));
+						   make_count_ptr_holder (packet), rx));
 }
 
 }; // namespace yans

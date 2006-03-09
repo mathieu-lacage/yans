@@ -23,7 +23,7 @@
 #include "channel-80211.h"
 #include "simulator.h"
 #include "packet.h"
-#include "ref-holder.tcc"
+#include "count-ptr-holder.tcc"
 #include "event.tcc"
 #include <math.h>
 
@@ -109,12 +109,12 @@ PropagationModel::receive (Packet *packet, PropagationData const *data,
 	double rx_power = get_rx_power (data);
 	double delay = distance (data) / 300000000;
 	Simulator::insert_in_s (delay, make_event (&PropagationModel::forward_up, 
-						   this, make_ref_holder (packet),
+						   this, make_count_ptr_holder (packet),
 						   rx_power, tx_mode, stuff));
 }
 
 void
-PropagationModel::forward_up (RefHolder<Packet> p, double rx_power, uint8_t tx_mode, uint8_t stuff)
+PropagationModel::forward_up (CountPtrHolder<Packet> p, double rx_power, uint8_t tx_mode, uint8_t stuff)
 {
 	Packet *packet = p.remove ();
 	(*m_rx_callback) (packet, rx_power, tx_mode, stuff);
