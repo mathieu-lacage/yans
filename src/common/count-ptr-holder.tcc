@@ -48,6 +48,7 @@ public:
 		return env;
 	}
 private:
+	CountPtrHolder ();
 	CountPtrHolder &operator = (CountPtrHolder const& o);
 	T *m_env;
 };
