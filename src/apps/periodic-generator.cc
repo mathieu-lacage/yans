@@ -62,6 +62,8 @@ PeriodicGenerator::set_packet_size (uint16_t size)
 void 
 PeriodicGenerator::start_now (void)
 {
+	assert (m_current_event == 0);
+
 	m_current_event = make_cancellable_event (&PeriodicGenerator::send_next_packet, this);
 	Simulator::insert_in_s (m_interval, m_current_event);
 }
@@ -80,6 +82,7 @@ PeriodicGenerator::start_at (double start)
 {
 	assert (m_current_event == 0);
 
+	m_current_event = make_cancellable_event (&PeriodicGenerator::send_next_packet, this);
 	Simulator::insert_at_s (start, m_current_event);
 }
 void 
