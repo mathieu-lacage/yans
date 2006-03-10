@@ -213,8 +213,8 @@ EthernetNetworkInterface::send_data (Packet *packet, MacAddress dest)
 		trailer.set_pad (38 - packet->get_size ());
 		TRACE ("tx set padding="<<38 - packet->get_size ());
 	}
-	packet->add (&eth);
 	packet->add (&llc);
+	packet->add (&eth);
 	TRACE ("tx header size="<<packet->get_size ());
 	packet->add (&trailer);
 	TRACE ("tx final size="<<packet->get_size ());
@@ -237,8 +237,8 @@ EthernetNetworkInterface::send_arp (Packet *packet, MacAddress dest)
 		trailer.set_pad (38 - packet->get_size ());
 		TRACE ("tx set padding="<<38 - packet->get_size ());
 	}
-	packet->add (&eth);
 	packet->add (&llc);
+	packet->add (&eth);
 	TRACE ("tx header size="<<packet->get_size ());
 	packet->add (&trailer);
 	TRACE ("tx final size="<<packet->get_size ());
