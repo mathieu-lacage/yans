@@ -95,7 +95,7 @@ PropagationModel::set_receive_callback (RxCallback *callback)
 }
 
 void 
-PropagationModel::send (Packet *packet, double tx_power_dbm, 
+PropagationModel::send (Packet const*packet, double tx_power_dbm, 
 			uint8_t tx_mode, uint8_t stuff) const
 {
 	PropagationData data (tx_power_dbm + m_tx_gain_dbm, m_host->get_x (),

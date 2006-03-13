@@ -263,7 +263,7 @@ Phy80211::receive_packet (Packet const*packet,
 	event->unref ();
 }
 void 
-Phy80211::send_packet (Packet *packet, uint8_t tx_mode, uint8_t tx_power, uint8_t stuff)
+Phy80211::send_packet (Packet const*packet, uint8_t tx_mode, uint8_t tx_power, uint8_t stuff)
 {
 	/* Transmission can happen if:
 	 *  - we are syncing on a packet. It is the responsability of the

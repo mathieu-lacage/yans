@@ -73,7 +73,7 @@ public:
 	void set_receive_callback (RxCallback *callback);
 
 	/* tx power unit: dBm */
-	void send (Packet *packet, double tx_power, uint8_t tx_mode, uint8_t stuff) const;
+	void send (Packet const*packet, double tx_power, uint8_t tx_mode, uint8_t stuff) const;
 	void receive (Packet const*packet, PropagationData const *data, uint8_t tx_mode, uint8_t stuff);
 
 	/* unit: dBm */

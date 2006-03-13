@@ -81,7 +81,7 @@ public:
 			     double rx_power_w,
 			     uint8_t tx_mode,
 			     uint8_t stuff);
-	void send_packet (Packet *packet, uint8_t tx_mode, uint8_t tx_power, uint8_t stuff);
+	void send_packet (Packet const*packet, uint8_t tx_mode, uint8_t tx_power, uint8_t stuff);
 
 	void sleep (void);
 	void wakeup (void);
