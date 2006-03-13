@@ -72,6 +72,7 @@ public:
 	void set_addr4 (MacAddress address);
 	void set_type (enum Mac80211Type_e type);
 	void set_duration (uint16_t duration);
+	void set_duration_us (uint64_t duration);
 	void set_id (uint16_t id);
 	void set_sequence_number (uint16_t seq);
 	void set_fragment_number (uint8_t frag);

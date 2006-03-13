@@ -198,6 +198,12 @@ ChunkMac80211Hdr::set_duration (uint16_t duration)
 {
 	m_duration = duration;
 }
+void 
+ChunkMac80211Hdr::set_duration_us (uint64_t duration_us)
+{
+	assert (duration_us <= (1<<16) - 1);
+	m_duration = static_cast<uint16_t> (duration_us);
+}
 
 void ChunkMac80211Hdr::set_id (uint16_t id)
 {
