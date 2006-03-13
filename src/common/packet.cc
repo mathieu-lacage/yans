@@ -55,13 +55,13 @@ Packet::~Packet ()
 }
 
 void 
-Packet::ref (void)
+Packet::ref (void) const
 {
 	m_ref.ref ();
 }
 
 void 
-Packet::unref (void)
+Packet::unref (void) const
 {
 	m_ref.unref ();
 }

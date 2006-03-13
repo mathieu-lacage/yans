@@ -43,8 +43,8 @@ public:
 	Packet ();
 	~Packet ();
 
-	void ref (void);
-	void unref (void);
+	void ref (void) const;
+	void unref (void) const;
 	Packet *copy (void) const;
 	Packet *copy (uint32_t start, uint32_t length) const;
 
