@@ -541,7 +541,7 @@ ChunkMac80211Hdr::set_duration_s (double duration)
 }
 
 uint32_t 
-ChunkMac80211Hdr::get_size (void)
+ChunkMac80211Hdr::get_size (void) const
 {
 	uint32_t size = 0;
 	switch (m_ctrl_type) {

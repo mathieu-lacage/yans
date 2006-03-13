@@ -106,7 +106,7 @@ public:
 	uint8_t get_qos_txop_limit (void) const;
 
 	void set_duration_s (double duration);
-	uint32_t get_size (void);
+	uint32_t get_size (void) const;
 	char const *get_type_string (void);
 
 
