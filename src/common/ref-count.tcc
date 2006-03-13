@@ -49,11 +49,11 @@ public:
 		m_ref = 0xdeadbeaf;
 	}
 
-	void ref (void) {
+	void ref (void) const {
 		m_ref++;
 		REF_TRACE ("obj="<<m_obj<<", ref="<<m_ref);
 	}
-	void unref (void) {
+	void unref (void) const {
 		m_ref--;
 		REF_TRACE ("obj="<<m_obj<<", ref="<<m_ref);
 		if (m_ref == 0) {
@@ -61,7 +61,7 @@ public:
 		}
 	}
 private:
-	uint32_t m_ref;
+	mutable uint32_t m_ref;
 	T *m_obj;
 };
 
