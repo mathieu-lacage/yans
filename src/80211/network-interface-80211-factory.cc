@@ -26,24 +26,14 @@
 #include "arf-mac-stations.h"
 #include "aarf-mac-stations.h"
 #include "cr-mac-stations.h"
+#include "ideal-mac-stations.h"
+#include "mac-simple.h"
+#include "arp.h"
 
 namespace yans {
 
-Ssid::Ssid ()
-{}
-
-Ssid::Ssid (char const ssid[14])
-{
-	memcpy (m_ssid, ssid, 14);
-}
-
-
-
 NetworkInterface80211Factory::NetworkInterface80211Factory ()
-	: m_mac_mode (MODE_ADHOC),
-	  m_standard (STANDARD_80211_A),
-	  m_rate_control_mode (RATE_ARF),
-	  m_ssid ("default-ssid "),
+	: m_rate_control_mode (RATE_ARF),
 	  m_phy_ed_threshold_dbm (-140),
 	  m_phy_rx_noise_db (7),
 	  m_phy_tx_power_base_dbm (16.0206),
@@ -57,38 +47,6 @@ NetworkInterface80211Factory::NetworkInterface80211Factory ()
 {}
 NetworkInterface80211Factory::~NetworkInterface80211Factory ()
 {}
-
-void 
-NetworkInterface80211Factory::set_ssid (Ssid const ssid)
-{
-	m_ssid = ssid;
-}
-
-void 
-NetworkInterface80211Factory::set_qap (void)
-{
-	m_mac_mode = MODE_QAP;
-}
-void 
-NetworkInterface80211Factory::set_qsta (void)
-{
-	m_mac_mode = MODE_QSTA;
-}
-void 
-NetworkInterface80211Factory::set_nqap (void)
-{
-	m_mac_mode = MODE_NQAP;
-}
-void 
-NetworkInterface80211Factory::set_nqsta (void)
-{
-	m_mac_mode = MODE_NQSTA;
-}
-void 
-NetworkInterface80211Factory::set_adhoc (void)
-{
-	m_mac_mode = MODE_ADHOC;
-}
 
 void 
 NetworkInterface80211Factory::set_arf (void)
@@ -107,11 +65,11 @@ NetworkInterface80211Factory::set_cr (uint8_t data_mode, uint8_t ctl_mode)
 	m_cr_data_mode = data_mode;
 	m_cr_ctl_mode = ctl_mode;
 }
-
 void 
-NetworkInterface80211Factory::set_80211a (void)
+NetworkInterface80211Factory::set_ideal (double ber)
 {
-	m_standard = STANDARD_80211_A;
+	m_rate_control_mode = RATE_IDEAL;
+	m_ideal_ber = ber;
 }
 
 void 
@@ -155,6 +113,12 @@ NetworkInterface80211Factory::set_prop_frequency_hz (double frequency)
 	m_prop_frequency_hz = frequency;
 }
 
+void 
+NetworkInterface80211Factory::set_rts_cts_threshold (uint32_t size)
+{
+	m_rts_cts_threshold = size;
+}
+
 NetworkInterface80211 *
 NetworkInterface80211Factory::create (Host *host)
 {
@@ -177,10 +141,9 @@ NetworkInterface80211Factory::create (Host *host)
 					  m_phy_tx_power_end_dbm,
 					  m_phy_n_tx_power);
 	phy->configure_80211a ();
-	phy->set_receive_ok_callback (make_callback (&NetworkInterface80211::rx_phy_ok, interface));
-	phy->set_receive_error_callback (make_callback (&NetworkInterface80211::rx_phy_error, interface));
 	interface->m_phy = phy;
 	propagation->set_receive_callback (make_callback (&Phy80211::receive_packet, phy));
+
 
 	MacStations *stations;
 	switch (m_rate_control_mode) {
@@ -193,12 +156,33 @@ NetworkInterface80211Factory::create (Host *host)
 	case RATE_CR:
 		stations = new CrMacStations (m_cr_data_mode, m_cr_ctl_mode);
 		break;
+	case RATE_IDEAL: {
+		IdealMacStations *ideal = new IdealMacStations ();
+		ideal->initialize_thresholds (phy, m_ideal_ber);
+		stations = ideal;
+	} break;
 	default:
 		// NOTREACHED
 		stations = 0;
 		break;
 	}
-	interface->m_stations = stations;	
+	interface->m_stations = stations;
+
+	MacSimple *mac = new MacSimple ();
+	phy->set_receive_ok_callback (make_callback (&MacSimple::receive_ok, mac));
+	phy->set_receive_error_callback (make_callback (&MacSimple::receive_error, mac));
+	mac->set_phy (phy);
+	mac->set_stations (stations);
+	mac->set_interface (interface);
+	mac->set_rts_cts_threshold (m_rts_cts_threshold);
+	interface->m_mac = mac;
+
+	Arp *arp = new Arp (interface);
+	mac->set_receiver (make_callback (&NetworkInterface80211::forward_data_up, interface));
+	arp->set_sender (make_callback (&NetworkInterface80211::send_data, interface),
+			 make_callback (&NetworkInterface80211::send_arp, interface));
+	interface->m_arp = arp;
+
 
 	return interface;
 }

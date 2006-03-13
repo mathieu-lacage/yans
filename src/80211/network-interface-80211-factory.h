@@ -26,13 +26,6 @@
 
 namespace yans {
 
-class Ssid {
-public:
-	Ssid ();
-	Ssid (char const ssid[14]);
-private:
-	char m_ssid[14];
-};
 
 class NetworkInterface80211;
 class Host;
@@ -42,19 +35,10 @@ public:
 	NetworkInterface80211Factory ();
 	~NetworkInterface80211Factory ();
 
-	void set_ssid (Ssid const ssid);
-
-	void set_qap (void);
-	void set_qsta (void);
-	void set_nqap (void);
-	void set_nqsta (void);
-	void set_adhoc (void);
-
 	void set_arf (void);
 	void set_aarf (void);
 	void set_cr (uint8_t data_mode, uint8_t ctl_mode);
-
-	void set_80211a (void);
+	void set_ideal (double ber);
 
 	/* absolute reception threshold. dBm. */
 	void set_phy_ed_threshold_dbm (double dbm);
@@ -71,34 +55,21 @@ public:
 	void set_prop_rx_gain_dbm (double rx_gain);
 	void set_prop_frequency_hz (double frequency);
 
+	void set_rts_cts_threshold (uint32_t size);
+
 	NetworkInterface80211 *create (Host *host);
 private:
 	enum {
-		MODE_QAP,
-		MODE_NQAP,
-		MODE_QSTA,
-		MODE_NQSTA,
-		MODE_ADHOC
-	} m_mac_mode;
-
-	enum {
-		STANDARD_80211_A
-		/* This is not really implemented but it should be
-		   trivial to do.
-		   STANDARD_80211_MODE_B 
-		*/
-	} m_standard;
-
-	enum {
 		RATE_ARF,
 		RATE_AARF,
-		RATE_CR
+		RATE_CR,
+		RATE_IDEAL
 	} m_rate_control_mode;
-
-	Ssid m_ssid;
 
 	uint8_t m_cr_data_mode;
 	uint8_t m_cr_ctl_mode;
+
+	double m_ideal_ber;
 
 	double m_phy_ed_threshold_dbm;
 	double m_phy_rx_noise_db;
@@ -110,6 +81,8 @@ private:
 	double m_prop_tx_gain_dbm;
 	double m_prop_rx_gain_dbm;
 	double m_prop_frequency_hz;
+
+	uint32_t m_rts_cts_threshold;
 };
 
 }; // namespace yans
