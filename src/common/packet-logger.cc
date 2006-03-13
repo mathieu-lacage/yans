@@ -31,14 +31,14 @@ PacketLogger::~PacketLogger ()
 	delete m_callback;
 }
 void 
-PacketLogger::log (Packet *packet)
+PacketLogger::log (Packet const*packet)
 {
 	if (m_callback != 0) {
 		(*m_callback) (packet);
 	}
 }
 void 
-PacketLogger::set_callback (Callback<void (Packet *)> *callback)
+PacketLogger::set_callback (PacketLoggerCallback *callback)
 {
 	m_callback = callback;
 }

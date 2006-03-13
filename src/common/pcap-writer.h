@@ -39,7 +39,7 @@ public:
 
 	void write_header_ethernet (void);
 
-	void write_packet (Packet *packet);
+	void write_packet (Packet const*packet);
 
 private:
 	void write_data (uint8_t *buffer, uint32_t size);

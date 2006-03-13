@@ -42,7 +42,7 @@ public:
 	void set_ui_variable_callback (char const *name, Callback<void (uint64_t, uint64_t)> *callback);
 	void set_si_variable_callback (char const *name, Callback<void (int64_t, int64_t)> *callback);
 	void set_f_variable_callback (char const *name, Callback<void (double, double)> *callback);
-	void set_packet_logger_callback (char const *name, Callback<void (Packet *)> *callback);
+	void set_packet_logger_callback (char const *name, Callback<void (Packet const*)> *callback);
 
 	void register_ui_variable (char const *name, UiTracedVariableBase *var);
 	void register_si_variable (char const *name, SiTracedVariableBase *var);

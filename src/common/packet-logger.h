@@ -30,12 +30,13 @@ class Packet;
 
 class PacketLogger {
 public:
+	typedef Callback<void (Packet const *)> PacketLoggerCallback;
 	PacketLogger ();
 	~PacketLogger ();
-	void log (Packet *packet);
-	void set_callback (Callback<void (Packet *)> *callback);
+	void log (Packet const*packet);
+	void set_callback (PacketLoggerCallback *callback);
 private:
-	Callback<void (Packet *)> *m_callback;
+	PacketLoggerCallback *m_callback;
 };
 
 }; // namespace yans
