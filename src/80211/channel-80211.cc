@@ -40,9 +40,7 @@ Channel80211::send (Packet const *packet, PropagationData const *data,
 {
 	for (ModelsCI i = m_models.begin (); i != m_models.end (); i++) {
 		if (caller != (*i)) {
-			Packet *copy = packet->copy ();
-			(*i)->receive (copy, data, tx_mode, stuff);
-			copy->unref ();
+			(*i)->receive (packet, data, tx_mode, stuff);
 		}
 	}
 }

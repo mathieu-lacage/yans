@@ -217,7 +217,7 @@ Phy80211::set_receive_error_callback (RxErrorCallback *callback)
 	m_rx_error_callback = callback;
 }
 void 
-Phy80211::receive_packet (Packet *packet, 
+Phy80211::receive_packet (Packet const*packet, 
 			  double rx_power_w,
 			  uint8_t tx_mode,
 			  uint8_t stuff)
@@ -845,9 +845,9 @@ Phy80211::calculate_per (RxEvent const *event, NiChanges *ni) const
 
 
 void
-Phy80211::end_rx (CountPtrHolder<Packet> p, CountPtrHolder<RxEvent> ev, uint8_t stuff)
+Phy80211::end_rx (CountPtrHolder<Packet const> p, CountPtrHolder<RxEvent> ev, uint8_t stuff)
 {
-	Packet *packet = p.remove ();
+	Packet const*packet = p.remove ();
 	RxEvent *event = ev.remove ();
 	assert (is_state_rx ());
 	assert (event->get_end_time_us () == now_us ());

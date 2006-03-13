@@ -136,9 +136,10 @@ MacSimple::send (Packet *packet, MacAddress to)
 	}
 }
 void 
-MacSimple::receive_ok (Packet *packet, double snr, uint8_t tx_mode, uint8_t stuff)
+MacSimple::receive_ok (Packet const* p, double snr, uint8_t tx_mode, uint8_t stuff)
 {
 	ChunkMac80211Hdr hdr;
+	Packet *packet = p->copy ();
 	packet->remove (&hdr);
 	if (hdr.is_rts () && 
 	    hdr.get_addr1 () == m_interface->get_mac_address ()) {
@@ -179,9 +180,10 @@ MacSimple::receive_ok (Packet *packet, double snr, uint8_t tx_mode, uint8_t stuf
 		m_current->unref ();
 		m_current = 0;
 	}
+	packet->unref ();
 }
 void 
-MacSimple::receive_error (Packet *packet, double snr)
+MacSimple::receive_error (Packet const*packet, double snr)
 {
 	TRACE ("error packet snr="<<snr);
 }
