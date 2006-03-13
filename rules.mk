@@ -152,7 +152,13 @@ fastdistcheck: fastdist
 	$(MAKE) -C $(DIST_DIR)
 	$(RM_RECURSE_DIR) $(DIST_DIR)
 
+NINCLUDE_TARGETS := \
+	clean    \
+	$(NULL)
+
+ifeq ($(strip $(filter $(NINCLUDE_TARGETS),$(MAKECMDGOALS))),)
 -include $(ALL_DEP)
+endif
 
 cleano:
 	$(RM) -f $(ALL_OBJ)
