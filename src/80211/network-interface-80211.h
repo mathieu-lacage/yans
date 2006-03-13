@@ -38,6 +38,8 @@ class Phy80211;
 class PropagationModel;
 class MacStations;
 class TraceContainer;
+class MacSimple;
+class Arp;
 
 class NetworkInterface80211 : public NetworkInterface {
 public:
@@ -64,10 +66,17 @@ public:
 	virtual void send (Packet *packet, Ipv4Address dest);
 
 private:
-	void rx_phy_ok (Packet *packet, double snr, uint8_t tx_mode);
-	void rx_phy_error (Packet *packet);
+	void forward_data_up (Packet *packet);
+	void send_arp (Packet *packet, MacAddress to);
+	void send_data (Packet *packet, MacAddress to);
 	friend class NetworkInterface80211Factory;
 	NetworkInterface80211 ();
+
+	enum {
+		ETHER_TYPE_IPV4 = 0x0800,
+		ETHER_TYPE_ARP  = 0x0806
+	};
+
 
 	Host *m_host;
 	Ipv4 *m_ipv4;
@@ -75,6 +84,8 @@ private:
 	PropagationModel *m_propagation;
 	Phy80211 *m_phy;
 	MacStations *m_stations;
+	MacSimple *m_mac;
+	Arp *m_arp;
 
 	MacAddress m_bssid;
 	MacAddress m_self;
