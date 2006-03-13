@@ -33,6 +33,8 @@ public:
 
 	virtual ~ChunkMac80211Fcs ();
 
+	uint32_t get_size (void) const;
+
 	virtual void add_to (Buffer *buffer) const;
 	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;

@@ -30,6 +30,12 @@ ChunkMac80211Fcs::ChunkMac80211Fcs ()
 ChunkMac80211Fcs::~ChunkMac80211Fcs ()
 {}
 
+uint32_t 
+ChunkMac80211Fcs::get_size (void) const
+{
+	return 4;
+}
+
 void 
 ChunkMac80211Fcs::add_to (Buffer *buffer) const
 {
