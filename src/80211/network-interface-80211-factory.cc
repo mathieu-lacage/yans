@@ -27,7 +27,7 @@
 #include "aarf-mac-stations.h"
 #include "cr-mac-stations.h"
 #include "ideal-mac-stations.h"
-#include "mac-simple.h"
+#include "mac-low.h"
 #include "arp.h"
 
 namespace yans {
@@ -168,17 +168,13 @@ NetworkInterface80211Factory::create (Host *host)
 	}
 	interface->m_stations = stations;
 
-	MacSimple *mac = new MacSimple ();
-	phy->set_receive_ok_callback (make_callback (&MacSimple::receive_ok, mac));
-	phy->set_receive_error_callback (make_callback (&MacSimple::receive_error, mac));
-	mac->set_phy (phy);
-	mac->set_stations (stations);
-	mac->set_interface (interface);
-	mac->set_rts_cts_threshold (m_rts_cts_threshold);
-	interface->m_mac = mac;
+	MacLow *low = new MacLow ();
+	interface->m_low = low;
+
+	// XXXX
 
 	Arp *arp = new Arp (interface);
-	mac->set_receiver (make_callback (&NetworkInterface80211::forward_data_up, interface));
+	//mac->set_receiver (make_callback (&NetworkInterface80211::forward_data_up, interface));
 	arp->set_sender (make_callback (&NetworkInterface80211::send_data, interface),
 			 make_callback (&NetworkInterface80211::send_arp, interface));
 	interface->m_arp = arp;

@@ -27,9 +27,9 @@
 #include "packet.h"
 #include "ipv4.h"
 #include "trace-container.h"
-#include "mac-simple.h"
 #include "arp.h"
 #include "chunk-mac-llc-snap.h"
+#include "mac-low.h"
 
 namespace yans {
 
@@ -44,7 +44,7 @@ NetworkInterface80211::~NetworkInterface80211 ()
 	delete m_propagation;
 	delete m_phy;
 	delete m_stations;
-	delete m_mac;
+	delete m_low;
 	delete m_arp;
 }
 
@@ -157,7 +157,8 @@ NetworkInterface80211::send_arp (Packet *packet, MacAddress to)
 	ChunkMacLlcSnap llc;
 	llc.set_ether_type (ETHER_TYPE_ARP);
 	packet->add (&llc);
-	m_mac->send (packet, to);
+	// XXX
+	//m_mac->send (packet, to);
 }
 void 
 NetworkInterface80211::send_data (Packet *packet, MacAddress to)
@@ -165,7 +166,8 @@ NetworkInterface80211::send_data (Packet *packet, MacAddress to)
 	ChunkMacLlcSnap llc;
 	llc.set_ether_type (ETHER_TYPE_IPV4);
 	packet->add (&llc);
-	m_mac->send (packet, to);
+	// XXX
+	//m_mac->send (packet, to);
 }
 
 

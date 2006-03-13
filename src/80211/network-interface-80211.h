@@ -38,7 +38,7 @@ class Phy80211;
 class PropagationModel;
 class MacStations;
 class TraceContainer;
-class MacSimple;
+class MacLow;
 class Arp;
 
 class NetworkInterface80211 : public NetworkInterface {
@@ -84,7 +84,7 @@ private:
 	PropagationModel *m_propagation;
 	Phy80211 *m_phy;
 	MacStations *m_stations;
-	MacSimple *m_mac;
+	MacLow *m_low;
 	Arp *m_arp;
 
 	MacAddress m_bssid;
