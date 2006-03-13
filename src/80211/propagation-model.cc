@@ -103,7 +103,7 @@ PropagationModel::send (Packet *packet, double tx_power_dbm,
 	m_channel->send (packet, &data, tx_mode, stuff, this);
 }
 void 
-PropagationModel::receive (Packet *packet, PropagationData const *data, 
+PropagationModel::receive (Packet const*packet, PropagationData const *data, 
 			   uint8_t tx_mode, uint8_t stuff)
 {
 	double rx_power = get_rx_power (data);
@@ -114,9 +114,9 @@ PropagationModel::receive (Packet *packet, PropagationData const *data,
 }
 
 void
-PropagationModel::forward_up (CountPtrHolder<Packet> p, double rx_power, uint8_t tx_mode, uint8_t stuff)
+PropagationModel::forward_up (CountPtrHolder<Packet const> p, double rx_power, uint8_t tx_mode, uint8_t stuff)
 {
-	Packet *packet = p.remove ();
+	Packet const*packet = p.remove ();
 	(*m_rx_callback) (packet, rx_power, tx_mode, stuff);
 	packet->unref ();
 }
