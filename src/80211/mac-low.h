@@ -1,6 +1,6 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 /*
- * Copyright (c) 2005 INRIA
+ * Copyright (c) 2005, 2006 INRIA
  * All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,58 +16,42 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * In addition, as a special exception, the copyright holders of
- * this module give you permission to combine (via static or
- * dynamic linking) this module with free software programs or
- * libraries that are released under the GNU LGPL and with code
- * included in the standard release of ns-2 under the Apache 2.0
- * license or under otherwise-compatible licenses with advertising
- * requirements (or modified versions of such code, with unchanged
- * license).  You may copy and distribute such a system following the
- * terms of the GNU GPL for this module and the licenses of the
- * other code concerned, provided that you include the source code of
- * that other code when and as the GNU GPL requires distribution of
- * source code.
- *
- * Note that people who make modified versions of this module
- * are not obligated to grant this special exception for their
- * modified versions; it is their choice whether to do so.  The GNU
- * General Public License gives permission to release a modified
- * version without this exception; this exception also makes it
- * possible to release a modified version which carries forward this
- * exception.
- *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #ifndef MAC_LOW_H
 #define MAC_LOW_H
 
 #include <vector>
+#include <stdint.h>
 
 #include "chunk-mac-80211-hdr.h"
 #include "mac-address.h"
+#include "callback.tcc"
 
 namespace yans {
 
 class Packet;
-class NetInterface80211;
+class NetworkInterface80211;
+class Phy80211;
 class CancellableEvent;
 class PacketLogger;
+class MacStations;
+class MacStation;
 
 class MacLowTransmissionListener {
 public:
 	MacLowTransmissionListener ();
 	virtual ~MacLowTransmissionListener ();
 
-	virtual void gotCTS (double snr, int txMode) = 0;
-	virtual void missedCTS (void) = 0;
+	virtual void got_cts (double snr, uint8_t tx_mode) = 0;
+	virtual void missed_cts (void) = 0;
 	/* Do not rely on the gotAck method to be
 	 * given valid parameters when SuperFastAck is
 	 * enabled.
 	 */
-	virtual void gotACK (double snr, int txMode) = 0;
-	virtual void missedACK (void) = 0;
-	virtual void startNext (void) = 0;
+	virtual void got_ack (double snr, uint8_t tx_mode) = 0;
+	virtual void missed_ack (void) = 0;
+	virtual void start_next (void) = 0;
 
 	/* Invoked if this transmission was canceled 
 	 * one way or another. When this method is invoked,
@@ -83,22 +67,28 @@ class MacLowNavListener {
 public:
 	MacLowNavListener ();
 	virtual ~MacLowNavListener ();
-	virtual void navStart (double now, double duration) = 0;
-	virtual void navContinue (double duration) = 0;
-	virtual void navReset (double now, double duration) = 0;
+	virtual void nav_start_us (uint64_t now_us, uint64_t duration_us) = 0;
+	virtual void nav_continue_us (uint64_t duration_us) = 0;
+	virtual void nav_reset_us (uint64_t now_us, uint64_t duration_us) = 0;
 };
 
 class MacLow {
 public:
+	typedef Callback<void (Packet *, ChunkMac80211Hdr const*hdr)> MacLowRxCallback;
+
 	MacLow ();
 	~MacLow ();
 
-	void setInterface (NetInterface80211 *interface);
+	void set_interface (NetworkInterface80211 *interface);
+	void set_phy (Phy80211 *phy);
+	void set_stations (MacStations *stations);
+	//void set_parameters (MacParameters *parameters);
+	void set_rx_callback (MacLowRxCallback *callback);
 
 
 	/* If ACK is enabled, we wait ACKTimeout for an ACK.
 	 */
-	void enableACK (void);
+	void enable_ack (void);
 	/* If FastAck is enabled, we:
 	 *   - wait PIFS after end-of-tx. If idle, report
 	 *     FastAckMissed.
@@ -109,105 +99,103 @@ public:
 	 * This is really complicated but it is needed for
 	 * proper HCCA support.
 	 */
-	void enableFastAck (void);
+	void enable_fast_ack (void);
 	/* If SuperFastAck is enabled, we:
 	 *   - if busy at end-of-tx+PIFS, report gotAck
 	 *   - if idle at end-of-tx+PIFS, report missedAck
 	 */
-	void enableSuperFastAck (void);
+	void enable_super_fast_ack (void);
 	/* disable either Ack or FastAck, depending on
 	 * which Ack method was enabled.
 	 */
-	void disableACK (void);
+	void disable_ack (void);
 
 	/* If RTS is enabled, we wait CTSTimeout for a CTS.
 	 * Otherwise, no RTS is sent.
 	 */
-	void enableRTS (void);
-	void disableRTS (void);
+	void enable_rts (void);
+	void disable_rts (void);
 
 	/* If NextData is enabled, we add the transmission duration
 	 * of the nextData to the durationId and we notify the
 	 * transmissionListener at the end of the current
 	 * transmission + SIFS.
 	 */
-	void enableNextData (uint32_t size, int txMode);
-	void disableNextData (void);
+	void enable_next_data (uint32_t size, uint8_t tx_mode);
+	void disable_next_data (void);
 
 	/* If we enable this, we ignore all other durationId 
 	 * calculation and simply force the packet's durationId
 	 * field to this value.
 	 */
-	void enableOverrideDurationId (double durationId);
-	void disableOverrideDurationId (void);
+	void enable_override_duration_id (uint64_t duration_id_us);
+	void disable_override_duration_id (void);
 
 	/* store the transmission mode for the frames to transmit.
 	 */
-	void setDataTransmissionMode (int txMode);
-	void setRtsTransmissionMode (int txMode);
+	void set_data_transmission_mode (uint8_t txMode);
+	void set_rts_transmission_mode (uint8_t txMode);
 
 	/* store the data packet to transmit. */
-	void setData (Packet *packet, ChunkMac80211Hdr const*hdr);
+	void set_data (Packet *packet, ChunkMac80211Hdr const*hdr);
 
 	/* store the transmission listener. */
-	void setTransmissionListener (MacLowTransmissionListener *listener);
+	void set_transmission_listener (MacLowTransmissionListener *listener);
 
 	/* start the transmission of the currently-stored data. */
-	void startTransmission (void);
+	void start_transmission (void);
 
-	void receive_ok (Packet *packet, double rx_snr, int tx_mode);
-	void receive_error (Packet *packet);
+	void receive_ok (Packet const*packet, double rx_snr, uint8_t tx_mode, uint8_t stuff);
+	void receive_error (Packet const*packet, double rx_snr);
 	
-	void registerNavListener (MacLowNavListener *listener);
+	void register_nav_listener (MacLowNavListener *listener);
 private:
 	uint32_t get_ack_size (void) const;
 	uint32_t get_rts_size (void) const;
 	uint32_t get_cts_size (void) const;
-	double get_sifs (void) const;
-	double get_pifs (void) const;
-	double get_ack_timeout (void) const;
-	double get_cts_timeout (void) const;
+	uint64_t get_sifs_us (void) const;
+	uint64_t get_pifs_us (void) const;
+	uint64_t get_ack_timeout_us (void) const;
+	uint64_t get_cts_timeout_us (void) const;
 	uint32_t get_current_size (void) const;
-	double now (void);
-	void forward_down (Packet *packet, int tx_mode, ChunkMac80211Hdr const *hdr);
-	void forward_up (Packet *packet, ChunkMac80211Hdr const *hdr);
-	MacAddress getSelf (void);
-	bool waitAck (void);
-	bool waitNormalAck (void);
-	bool waitFastAck (void);
-	bool waitSuperFastAck (void);
-	double calculateTxDuration (int mode, uint32_t size);
-	double calculateOverallCurrentTxTime (void);
-	int getCtsTxModeForRts (int to,  int rtsTxMode);
-	int getAckTxModeForData (int to, int dataTxMode);
-	void notifyNav (double now, ChunkMac80211Hdr const*hdr);
-	bool isNavZero (double now);
-	void maybeCancelPrevious (void);
+	uint64_t now_us (void) const;
+	MacStation *get_station (MacAddress to) const;
+	void forward_down (Packet const*packet, ChunkMac80211Hdr const *hdr, 
+			   uint8_t tx_mode, uint8_t stuff);
+	bool wait_ack (void) const;
+	bool wait_normal_ack (void) const;
+	bool wait_fast_ack (void) const;
+	bool wait_super_fast_ack (void) const;
+	uint64_t calculate_overall_tx_time_us (void) const;
+	uint8_t get_cts_tx_mode_for_rts (MacAddress to,  uint8_t rts_tx_mode) const;
+	uint8_t get_ack_tx_mode_for_data (MacAddress to, uint8_t data_tx_mode) const;
+	void notify_nav (uint64_t now_time_us, ChunkMac80211Hdr const*hdr);
+	bool is_nav_zero (uint64_t now_time_us);
+	void maybe_cancel_previous (void);
 	
-	Packet *getRTSPacket (void);
-	Packet *getCTSPacket (void);
-	Packet *getACKPacket (void);
-	Packet *getRTSforPacket (Packet *data);	
-
 	void normal_ack_timeout (void);
 	void fast_ack_timeout (void);
 	void super_fast_ack_timeout (void);
 	void fast_ack_failed_timeout (void);
 	void cts_timeout (void);
-	void send_cts_after_rts (MacAddress source, double duration, int tx_mode);
-	void send_ack_after_data (MacAddress source, double duration, int tx_mode);
-	void send_data_after_cts (MacAddress source, double duration, int tx_mode);
+	void send_cts_after_rts (MacAddress source, uint64_t duration_us, uint8_t tx_mode, uint8_t stuff);
+	void send_ack_after_data (MacAddress source, uint64_t duration_us, uint8_t tx_mode, uint8_t stuff);
+	void send_data_after_cts (MacAddress source, uint64_t duration_us, uint8_t tx_mode);
 	void wait_sifs_after_end_tx (void);
 
 	void send_rts_for_packet (void);
 	void send_data_packet (void);
-	void sendCurrentTxPacket (void);
+	void send_current_tx_packet (void);
+	void start_ack_timers (void);
 
-	NetInterface80211 *m_interface;
-	MacLowTransmissionListener *m_transmissionListener;
+	NetworkInterface80211 *m_interface;
+	Phy80211 *m_phy;
+	MacStations *m_stations;
+	MacLowRxCallback *m_rx_callback;
+	MacLowTransmissionListener *m_transmission_listener;
 	typedef std::vector<MacLowNavListener *>::const_iterator NavListenersCI;
 	typedef std::vector<MacLowNavListener *> NavListeners;
-	NavListeners m_navListeners;
+	NavListeners m_nav_listeners;
 
 	CancellableEvent *m_normal_ack_timeout_event;
 	CancellableEvent *m_fast_ack_timeout_event;
@@ -222,20 +210,20 @@ private:
 	Packet *m_current_packet;
 	ChunkMac80211Hdr m_current_hdr;
 
-	uint32_t m_nextSize;
-	int m_nextTxMode;
+	uint32_t m_next_size;
+	uint8_t m_next_tx_mode;
 	enum {
 		ACK_NONE,
 		ACK_NORMAL,
 		ACK_FAST,
 		ACK_SUPER_FAST
-	} m_waitAck;
-	bool m_sendRTS;
-	int m_dataTxMode;
-	int m_rtsTxMode;
-	double m_lastNavStart;
-	double m_lastNavDuration;
-	double m_overrideDurationId;
+	} m_wait_ack;
+	bool m_send_rts;
+	uint8_t m_data_tx_mode;
+	uint8_t m_rts_tx_mode;
+	uint64_t m_last_nav_start_us;
+	uint64_t m_last_nav_duration_us;
+	uint64_t m_override_duration_id_us;
 
 	PacketLogger *m_drop_error;
 };

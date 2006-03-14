@@ -169,6 +169,8 @@ NetworkInterface80211Factory::create (Host *host)
 	interface->m_stations = stations;
 
 	MacLow *low = new MacLow ();
+	phy->set_receive_ok_callback (make_callback (&MacLow::receive_ok, low));
+	phy->set_receive_error_callback (make_callback (&MacLow::receive_error, low));
 	interface->m_low = low;
 
 	// XXXX

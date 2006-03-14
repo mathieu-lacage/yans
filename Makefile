@@ -125,6 +125,9 @@ YANS_SRC= \
 	src/80211/network-interface-80211-simple.cc \
 	src/80211/network-interface-80211-simple-factory.cc \
 	src/80211/mac-simple.cc \
+	src/80211/mac-low.cc \
+	src/80211/network-interface-80211.cc \
+	src/80211/network-interface-80211-factory.cc \
 	test/test.cc \
 	$(NULL)
 YANS_HDR = \
@@ -209,6 +212,9 @@ YANS_HDR = \
 	src/80211/network-interface-80211-simple.h \
 	src/80211/network-interface-80211-simple-factory.h \
 	src/80211/mac-simple.h \
+	src/80211/mac-low.h \
+	src/80211/network-interface-80211.h \
+	src/80211/network-interface-80211-factory.h \
 	src/host/host.h \
 	src/host/loopback-interface.h \
 	src/host/network-interface.h \
