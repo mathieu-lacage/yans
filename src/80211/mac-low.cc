@@ -31,15 +31,14 @@
 #include "mac-stations.h"
 #include "mac-station.h"
 
-#ifndef MAC_LOW_TRACE
-#define nopeMAC_LOW_TRACE 1
-#endif
+#define MAC_LOW_TRACE 1
 
 #ifdef MAC_LOW_TRACE
-# define TRACE(format, ...) \
-	printf ("MAC LOW %d %f " format "\n", getSelf (), now (), ## __VA_ARGS__);
+#  include <iostream>
+#  define TRACE(x) \
+  std::cout << "MAC LOW " << x << std::endl;
 #else /* MAC_LOW_TRACE */
-# define TRACE(format, ...)
+# define TRACE(x)
 #endif /* MAC_LOW_TRACE */
 
 namespace yans {
@@ -187,7 +186,7 @@ MacLow::start_transmission (void)
 {
 	assert (m_phy->is_state_idle ());
 
-	TRACE ("startTx size="<< get_current_size () << ", to " << m_current_hdr.get_addr1());
+	TRACE ("startTx size="<< get_current_size () << ", to=" << m_current_hdr.get_addr1());
 
 	if (m_next_size > 0 && !wait_ack ()) {
 		// we need to start the afterSIFS timeout now.
@@ -242,7 +241,7 @@ MacLow::receive_ok (Packet const*p, double rx_snr, uint8_t tx_mode, uint8_t stuf
 		/* XXX see section 9.9.2.2.1 802.11e/D12.1 */
 		if (is_prev_nav_zero &&
 		    hdr.get_addr1 () == m_interface->get_mac_address ()) {
-			TRACE ("rx RTS from " << hdr.get_addr2 () << ", schedule CTS");
+			TRACE ("rx RTS from=" << hdr.get_addr2 () << ", schedule CTS");
 			assert (m_send_cts_event == 0);
 			MacStation *station = m_stations->lookup (hdr.get_addr2 ());
 			station->report_rx_ok (rx_snr, tx_mode);
@@ -253,13 +252,13 @@ MacLow::receive_ok (Packet const*p, double rx_snr, uint8_t tx_mode, uint8_t stuf
 								   station->snr_to_snr (rx_snr));
 			Simulator::insert_in_us (get_sifs_us (), m_send_cts_event);
 		} else {
-			TRACE ("rx RTS from " << hdr.get_addr2 () << ", cannot schedule CTS");
+			TRACE ("rx RTS from=" << hdr.get_addr2 () << ", cannot schedule CTS");
 		}
 	} else if (hdr.is_cts () &&
 		   hdr.get_addr1 () == m_interface->get_mac_address () &&
 		   m_cts_timeout_event != 0 &&
 		   m_current_packet) {
-		TRACE ("receive cts from "<<m_current_hdr.get_addr1 ());
+		TRACE ("receive cts from="<<m_current_hdr.get_addr1 ());
 		MacStation *station = get_station (m_current_hdr.get_addr1 ());
 		station->report_rx_ok (rx_snr, tx_mode);
 		station->report_rts_ok (rx_snr, tx_mode, stuff);
@@ -277,7 +276,7 @@ MacLow::receive_ok (Packet const*p, double rx_snr, uint8_t tx_mode, uint8_t stuf
 		   hdr.get_addr1 () == m_interface->get_mac_address () &&
 		   wait_ack ()) {
 		MacStation *station = get_station (m_current_hdr.get_addr1 ());
-		TRACE ("receive ack from "<<m_current_hdr.get_addr1 ());
+		TRACE ("receive ack from="<<m_current_hdr.get_addr1 ());
 		station->report_rx_ok (rx_snr, tx_mode);
 		station->report_data_ok (rx_snr, tx_mode, stuff);
 		if (wait_normal_ack ()) {
@@ -298,9 +297,9 @@ MacLow::receive_ok (Packet const*p, double rx_snr, uint8_t tx_mode, uint8_t stuf
 		station->report_rx_ok (rx_snr, tx_mode);
 
 		if (hdr.is_qos_data () && hdr.is_qos_no_ack ()) {
-			TRACE ("rx unicast/no_ack from "<<hdr.get_addr2 ());
+			TRACE ("rx unicast/no_ack from="<<hdr.get_addr2 ());
 		} else if (hdr.is_data () || hdr.is_mgt ()) {
-			TRACE ("rx unicast/send_ack from " << hdr.get_addr2 ());
+			TRACE ("rx unicast/send_ack from=" << hdr.get_addr2 ());
 			assert (m_send_ack_event == 0);
 			m_send_ack_event = make_cancellable_event (&MacLow::send_ack_after_data, this,
 								   hdr.get_addr2 (), 
@@ -312,7 +311,7 @@ MacLow::receive_ok (Packet const*p, double rx_snr, uint8_t tx_mode, uint8_t stuf
 		(*m_rx_callback) (packet, &hdr);
 	} else if (hdr.get_addr1 ().is_broadcast ()) {
 		if (hdr.is_data () || hdr.is_mgt ()) {
-			TRACE ("rx broadcast from " << hdr.get_source ());
+			TRACE ("rx broadcast from=" << hdr.get_addr2 ());
 			(*m_rx_callback) (packet, &hdr);
 		} else {
 			// DROP.
@@ -607,7 +606,7 @@ MacLow::send_rts_for_packet (void)
 	}
 	rts.set_duration_us (duration_us);
 
-	TRACE ("tx RTS to "<< rts.get_addr1 () << ", mode=" << m_rts_tx_mode);
+	TRACE ("tx RTS to="<< rts.get_addr1 () << ", mode=" << m_rts_tx_mode);
 
 	uint64_t tx_duration_us = m_phy->calculate_tx_duration_us (get_rts_size (), m_rts_tx_mode);
 	uint64_t timer_delay_us = tx_duration_us + get_cts_timeout_us ();
@@ -650,7 +649,7 @@ void
 MacLow::send_data_packet (void)
 {
 	/* send this packet directly. No RTS is needed. */
-	TRACE ("tx "<< m_current_hdr.get_type_string () << " to " << m_current_hdr.get_addr1 () <<
+	TRACE ("tx "<< m_current_hdr.get_type_string () << " to=" << m_current_hdr.get_addr1 () <<
 	       ", mode=" << m_data_tx_mode);
 	start_ack_timers ();
 
@@ -707,7 +706,7 @@ MacLow::send_cts_after_rts (MacAddress source, uint64_t duration_us, uint8_t tx_
 	 * right after SIFS.
 	 */
 	int cts_tx_mode = get_cts_tx_mode_for_rts (source, tx_mode);
-	TRACE ("tx CTS to " << source << ", mode=", cts_tx_mode);
+	TRACE ("tx CTS to=" << source << ", mode=" << cts_tx_mode);
 	ChunkMac80211Hdr cts;
 	cts.set_type (MAC_80211_CTL_CTS);
 	cts.set_addr1 (source);
@@ -731,9 +730,9 @@ MacLow::send_data_after_cts (MacAddress source, uint64_t duration_us, uint8_t tx
 	 */
 	assert (m_current_packet != 0);
 
-	TRACE ("tx " << m_current_hdr.get_type_string () << " to " << m_current_hdr.get_addr2 () <<
-	       ", mode=" << m_dataTxMode << ", seq=0x"<< m_current_hdr.get_sequence_control () <<
-	       ", tid=", << m_current_hdr.get_qos_tid ());
+	TRACE ("tx " << m_current_hdr.get_type_string () << " to=" << m_current_hdr.get_addr2 () <<
+	       ", mode=" << m_data_tx_mode << ", seq=0x"<< m_current_hdr.get_sequence_control () <<
+	       ", tid=" << m_current_hdr.get_qos_tid ());
 
 	start_ack_timers ();
 	uint64_t tx_duration_us = m_phy->calculate_tx_duration_us (get_current_size (), m_data_tx_mode);
@@ -769,7 +768,7 @@ MacLow::send_ack_after_data (MacAddress source, uint64_t duration_us, uint8_t tx
 	/* send an ACK when you receive 
 	 * a packet after SIFS. 
 	 */
-	TRACE ("tx ACK to " << source << ", mode=" << tx_mode);
+	TRACE ("tx ACK to=" << source << ", mode=" << tx_mode);
 	ChunkMac80211Hdr ack;
 	ack.set_addr1 (source);
 	duration_us -= m_phy->calculate_tx_duration_us (get_ack_size (), tx_mode);
