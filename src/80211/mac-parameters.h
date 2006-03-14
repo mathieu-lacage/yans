@@ -16,88 +16,61 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * In addition, as a special exception, the copyright holders of
- * this module give you permission to combine (via static or
- * dynamic linking) this module with free software programs or
- * libraries that are released under the GNU LGPL and with code
- * included in the standard release of ns-2 under the Apache 2.0
- * license or under otherwise-compatible licenses with advertising
- * requirements (or modified versions of such code, with unchanged
- * license).  You may copy and distribute such a system following the
- * terms of the GNU GPL for this module and the licenses of the
- * other code concerned, provided that you include the source code of
- * that other code when and as the GNU GPL requires distribution of
- * source code.
- *
- * Note that people who make modified versions of this module
- * are not obligated to grant this special exception for their
- * modified versions; it is their choice whether to do so.  The GNU
- * General Public License gives permission to release a modified
- * version without this exception; this exception also makes it
- * possible to release a modified version which carries forward this
- * exception.
- *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #ifndef MAC_PARAMETERS_H
 #define MAC_PARAMETERS_H
 
-#include "hdr-mac-80211.h"
+#include <stdint.h>
 
-class NetInterface80211;
+namespace yans {
+
+class Phy80211;
 
 class MacParameters {
 public:
 	MacParameters ();
+	
+	void initialize_80211a (Phy80211 const*phy);
 
-	void setInterface (NetInterface80211 *interface);
+	void set_max_ssrc (uint32_t ssrc);
+	void set_max_slrc (uint32_t ssrc);
+	void set_rts_cts_threshold (uint32_t threshold);
+	void set_fragmentation_threshold (uint32_t threshold);
 
-	int getACKSize (void) const;
-	int getRTSSize (void) const;
-	int getCTSSize (void) const;
+	uint64_t get_beacon_interval_us (void) const;
+	uint8_t get_max_missed_beacon (void) const;
 
-	double getBeaconInterval (void);
-	int getMaxMissedBeacon (void);
+	uint64_t get_pifs_us (void) const;
+	uint64_t get_sifs_us (void) const;
+	uint64_t get_slot_time_us (void) const;
 
-	int getPacketSize (enum mac_80211_packet_type);
-	int getManagementPayloadSize (enum mac_80211_packet_type);
+	uint32_t get_max_ssrc (void) const;
+	uint32_t get_max_slrc (void) const;
+	uint32_t get_rts_cts_threshold (void) const;
+	uint32_t get_fragmentation_threshold (void) const;
+	uint64_t get_cts_timeout_us (void) const;
+	uint64_t get_ack_timeout_us (void) const;
+	uint64_t get_msdu_lifetime_us (void) const;
+	uint64_t get_max_propagation_delay_us (void) const;
 
-	int getDataHeaderSize (void);
-
-	double getPIFS (void);
-	double getSIFS (void);
-	double getSlotTime (void);
-
-	int getMaxSSRC (void);
-	int getMaxSLRC (void);
-	int getRTSCTSThreshold (void);
-	int getFragmentationThreshold (void);
-	double getCTSTimeoutDuration (void);
-	double getACKTimeoutDuration (void);
-
-	double getMSDULifetime (void);
-
-	double getMaxPropagationDelay (void);
-
-	int getMaxMSDUSize (void);
-	double getCapLimit (void);
-	double getMinEdcaTrafficProportion (void);
+	uint32_t get_max_msdu_size (void) const;
+	double get_cap_limit (void) const;
+	double get_min_edca_traffic_proportion (void) const;
 private:
-	int getBeaconSize (void);
-	int getAssociationResponseSize (void);
-	int getReAssociationResponseSize (void);
-	int getProbeResponseSize (void);
-	int getAssociationRequestSize (void);
-	int getReAssociationRequestSize (void);
-	int getProbeRequestSize (void);
-	int getMgtHeaderSize (void);
-
-	int getSelf (void);
-	double calculateBaseTxDuration (int size);
-
-	int m_bssid;
-	NetInterface80211 *m_interface;
+	uint64_t m_cts_timeout_us;
+	uint64_t m_ack_timeout_us;
+	uint64_t m_sifs_us;
+	uint64_t m_pifs_us;
+	uint64_t m_slot_us;
+	uint32_t m_max_ssrc;
+	uint32_t m_max_slrc;
+	uint32_t m_rts_cts_threshold;
+	uint32_t m_fragmentation_threshold;
+	uint64_t m_max_propagation_delay_us;
 	static const double SPEED_OF_LIGHT; // m/s
 };
+
+}; // namespace yans
 
 #endif /* MAC_PARAMETERS_H */

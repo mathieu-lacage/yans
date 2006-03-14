@@ -16,439 +16,165 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * In addition, as a special exception, the copyright holders of
- * this module give you permission to combine (via static or
- * dynamic linking) this module with free software programs or
- * libraries that are released under the GNU LGPL and with code
- * included in the standard release of ns-2 under the Apache 2.0
- * license or under otherwise-compatible licenses with advertising
- * requirements (or modified versions of such code, with unchanged
- * license).  You may copy and distribute such a system following the
- * terms of the GNU GPL for this module and the licenses of the
- * other code concerned, provided that you include the source code of
- * that other code when and as the GNU GPL requires distribution of
- * source code.
- *
- * Note that people who make modified versions of this module
- * are not obligated to grant this special exception for their
- * modified versions; it is their choice whether to do so.  The GNU
- * General Public License gives permission to release a modified
- * version without this exception; this exception also makes it
- * possible to release a modified version which carries forward this
- * exception.
- *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
 #include <cassert>
 
 #include "mac-parameters.h"
-#include "net-interface-80211.h"
 #include "phy-80211.h"
+#include "chunk-mac-80211-hdr.h"
 
 #define PARAM_DEBUG 1
 
 #ifdef PARAM_DEBUG
-# define DEBUG(format, ...) \
-	printf ("DEBUG %d " format "\n", getSelf (), ## __VA_ARGS__);
+#  include <iostream>
+#  define DEBUG(x) \
+   std::cout << "PARAM " << x << std::endl;
 #else /* MAC_DEBUG */
-# define DEBUG(format, ...)
+# define DEBUG(x)
 #endif /* MAC_DEBUG */
 
-const double MacParameters::SPEED_OF_LIGHT = 3e8; // m/s
-
+namespace yans {
 
 MacParameters::MacParameters ()
-{}
-
-void
-MacParameters::setInterface (NetInterface80211 *interface)
 {
-	m_interface = interface;
+	m_rts_cts_threshold = 1000;
+	m_fragmentation_threshold = 2000;
+	m_max_ssrc = 7;
+	m_max_slrc = 7;
 }
-
-int
-MacParameters::getSelf (void)
+void 
+MacParameters::initialize_80211a (Phy80211 const*phy)
 {
-	return m_interface->getMacAddress ();
-}
-double 
-MacParameters::calculateBaseTxDuration (int size)
-{
-	return m_interface->phy ()->calculateTxDuration (0, size);
-}
-
-int 
-MacParameters::getPacketSize (enum mac_80211_packet_type type)
-{
-	assert (isManagement (type) || isControl (type));
-	int size;
-	switch (type) {
-	case MAC_80211_CTL_RTS:
-		size = getRTSSize ();
-		break;
-	case MAC_80211_CTL_CTS:
-		size = getCTSSize ();
-		break;
-	case MAC_80211_CTL_ACK:
-		size = getACKSize ();
-		break;
-	case MAC_80211_CTL_BACKREQ:
-	case MAC_80211_CTL_BACKRESP:
-		/* not implemented */
-		size = 0;
-		assert (false);
-		break;
-
-	case MAC_80211_DATA:
-		/* cannot happen since assert at start of method */
-		size = 0;
-		assert (false);
-		break;
-
-	case MAC_80211_MGT_ADDBA_REQUEST:
-	case MAC_80211_MGT_ADDBA_RESPONSE:
-	case MAC_80211_MGT_DELBA_REQUEST:
-	case MAC_80211_MGT_DELBA_RESPONSE:
-	case MAC_80211_MGT_AUTHENTICATION:
-	case MAC_80211_MGT_DEAUTHENTICATION:
-	case MAC_80211_MGT_CFPOLL:
-	case MAC_80211_MGT_QOSNULL:
-	case MAC_80211_MGT_BEACON:
-	case MAC_80211_MGT_ASSOCIATION_REQUEST:
-	case MAC_80211_MGT_ASSOCIATION_RESPONSE:
-	case MAC_80211_MGT_DISASSOCIATION:
-	case MAC_80211_MGT_REASSOCIATION_REQUEST:
-	case MAC_80211_MGT_REASSOCIATION_RESPONSE:
-	case MAC_80211_MGT_PROBE_REQUEST:
-	case MAC_80211_MGT_PROBE_RESPONSE:
-	case MAC_80211_MGT_ADDTS_REQUEST:
-	case MAC_80211_MGT_ADDTS_RESPONSE:
-	case MAC_80211_MGT_DELTS_REQUEST:
-	case MAC_80211_MGT_DELTS_RESPONSE:
-		size = getMgtHeaderSize ();
-		size += getManagementPayloadSize (type);
-		break;
-	default:
-		assert (false);
-		break;
-	}
-
-	assert (size < getMaxMSDUSize ());
-
-	return size;
-}
-int 
-MacParameters::getManagementPayloadSize (enum mac_80211_packet_type type)
-{
-	assert (isManagement (type));
-	int size;
-	int tspecSize = 0 +
-		1 + // element id
-		1 + // length
-		3 + // ts info
-		2 + // nominal msdu size
-		2 + // maximum msdu size
-		4 + // minimum service interval
-		4 + // maximum service interval
-		4 + // inactivity interval
-		4 + // suspension interval
-		4 + // service start time
-		4 + // minimum data rate
-		4 + // mean data rate
-		4 + // peak data rate
-		4 + // maximum burst size
-		4 + // delay bound
-		4 + // minimum phy rate
-		2 + // surplus bandwidth allowance
-		2 + // medium time
-		0;
-	switch (type) {
-	default:
-	case MAC_80211_MGT_ADDBA_REQUEST:
-	case MAC_80211_MGT_ADDBA_RESPONSE:
-	case MAC_80211_MGT_DELBA_REQUEST:
-	case MAC_80211_MGT_DELBA_RESPONSE:
-	case MAC_80211_MGT_AUTHENTICATION:
-	case MAC_80211_MGT_DEAUTHENTICATION:
-	case MAC_80211_MGT_DISASSOCIATION:
-		// XXX not implemented
-		size = 0;
-		assert (false);
-		break;
-	case MAC_80211_MGT_CFPOLL:
-		// QOS CFPOLL has no data.
-		size = 0;
-		break;
-	case MAC_80211_MGT_QOSNULL:
-		size = 0;
-		break;
-	case MAC_80211_MGT_BEACON:
-		size = getBeaconSize ();
-		break;
-	case MAC_80211_MGT_ASSOCIATION_REQUEST:
-		size = getAssociationRequestSize ();
-		break;
-	case MAC_80211_MGT_ASSOCIATION_RESPONSE:
-		size = getAssociationResponseSize ();
-		break;
-	case MAC_80211_MGT_REASSOCIATION_REQUEST:
-		size = getReAssociationRequestSize ();
-		break;
-	case MAC_80211_MGT_REASSOCIATION_RESPONSE:
-		size = getReAssociationResponseSize ();
-		break;
-	case MAC_80211_MGT_PROBE_REQUEST:
-		size = getProbeRequestSize ();
-		break;
-	case MAC_80211_MGT_PROBE_RESPONSE:
-		size = getProbeResponseSize ();
-		break;
-	case MAC_80211_MGT_ADDTS_REQUEST:
-		size =  1 + // category
-			1 + // action
-			1 + // dialog token
-			tspecSize + 
-			// no TCLAS
-			0;
-		break;
-	case MAC_80211_MGT_ADDTS_RESPONSE:
-		size =  1 + // category
-			1 + // action
-			1 + // dialog token
-			2 + // status code
-			1 + 1 + 4 + // ts delay
-			tspecSize + 
-			// no TCLAS and no schedule
-			0;
-		break;
-	case MAC_80211_MGT_DELTS_REQUEST:
-		size =  1 + // category
-			1 + // action
-			3 + // tsinfo
-			2 + // reason code
-			0;
-		break;
-	case MAC_80211_MGT_DELTS_RESPONSE:
-		size =  1 + // category
-			1 + // action
-			3 + // tsinfo
-			2 + // reason code
-			0;
-		break;
-	}
-
-	return size;
-}
-int
-MacParameters::getDataHeaderSize (void)
-{
-	return 3*2+4*6+4;
-}
-double
-MacParameters::getPIFS (void)
-{
+	m_sifs_us = 16;
+	m_slot_us = 9;
 	/* see section 9.2.10 ieee 802.11-1999 */
-	return getSIFS () + getSlotTime ();
-}
-double 
-MacParameters::getSIFS (void)
-{
-	/* XXX 802.11a */
-	return 16e-6;
-}
-double 
-MacParameters::getSlotTime (void)
-{
-	/* XXX 802.11a */
-	return 9e-6;
-}
-
-int 
-MacParameters::getMaxSSRC (void)
-{
-	/* XXX */
-	return 7;
-}
-
-int 
-MacParameters::getMaxSLRC (void)
-{
-	/* XXX */
-	return 7;
-}
-int 
-MacParameters::getRTSCTSThreshold (void)
-{
-	/* XXX */
-	return 1000;
-}
-int
-MacParameters::getFragmentationThreshold (void)
-{
-	/* XXX */
-	int fragThreshold = 2000;
-	// if this assert is not verified, we cannot ensure
-	// that every MSDU will be fragmented in less than 
-	// 16 packets.
-	assert (getMaxMSDUSize () / 16 < fragThreshold);
-	return fragThreshold;
-}
-double
-MacParameters::getCTSTimeoutDuration (void)
-{
-	/* The Cts_Timeout is specified in the Annex C (Formal description of MAC 
-	   operation, see details on the Trsp timer setting at page 346)
+	m_pifs_us = m_sifs_us + m_slot_us;
+	// 1000m 
+	m_max_propagation_delay_us = static_cast<uint64_t> (1000 / 300000000 * 1000000);
+	/* Cts_Timeout and Ack_Timeout are specified in the Annex C 
+	   (Formal description of MAC operation, see details on the 
+	   Trsp timer setting at page 346)
 	*/
-	double ctsTimeout = getSIFS ();
-	ctsTimeout += calculateBaseTxDuration (getCTSSize ());
-	ctsTimeout += 2 * getMaxPropagationDelay ();
-	ctsTimeout += getSlotTime ();
-	return ctsTimeout;
-}
-double
-MacParameters::getACKTimeoutDuration (void)
-{
-	/* The Ack_Timeout is specified in the Annex C (Formal description of MAC 
-	   operation, see details on the Trsp timer setting at page 346)
-	*/
-	double ackTimeout = getSIFS ();
-	ackTimeout += calculateBaseTxDuration (getACKSize ());
-	ackTimeout += 2 * getMaxPropagationDelay ();
-	ackTimeout += getSlotTime ();
-	return ackTimeout;
+	ChunkMac80211Hdr hdr;
+	hdr.set_type (MAC_80211_CTL_CTS);
+	m_cts_timeout_us = m_sifs_us;
+	m_cts_timeout_us += phy->calculate_tx_duration_us (hdr.get_size (), 0);
+	m_cts_timeout_us += m_max_propagation_delay_us * 2;
+	m_cts_timeout_us += m_slot_us;
+
+	hdr.set_type (MAC_80211_CTL_ACK);
+	m_ack_timeout_us = m_sifs_us;
+	m_ack_timeout_us += phy->calculate_tx_duration_us (hdr.get_size (), 0);
+	m_ack_timeout_us += m_max_propagation_delay_us * 2;
+	m_ack_timeout_us += m_slot_us;
 }
 
-
-double
-MacParameters::getBeaconInterval (void)
+void 
+MacParameters::set_max_ssrc (uint32_t ssrc)
 {
-	// XXX
-	return 1.0;
+	m_max_ssrc = ssrc;
 }
-int
-MacParameters::getMaxMissedBeacon (void)
+void 
+MacParameters::set_max_slrc (uint32_t slrc)
 {
-	// XXX
-	return 4;
+	m_max_slrc = slrc;
 }
-
-
-double 
-MacParameters::getMSDULifetime (void)
+void 
+MacParameters::set_rts_cts_threshold (uint32_t threshold)
 {
-	return 10; // seconds.
+	m_rts_cts_threshold = threshold;
 }
-
-double 
-MacParameters::getMaxPropagationDelay (void)
+void 
+MacParameters::set_fragmentation_threshold (uint32_t threshold)
 {
-	// 1000m is the max propagation distance.
-	return 1000 / SPEED_OF_LIGHT;
+	m_fragmentation_threshold = threshold;
 }
 
-int
-MacParameters::getMaxMSDUSize (void)
+uint64_t 
+MacParameters::get_pifs_us (void) const
 {
-	// section 6.2.1.1.2
+	return m_pifs_us;
+}
+uint64_t 
+MacParameters::get_sifs_us (void) const
+{
+	return m_sifs_us;
+}
+uint64_t 
+MacParameters::get_slot_time_us (void) const
+{
+	return m_slot_us;
+}
+uint64_t 
+MacParameters::get_cts_timeout_us (void) const
+{
+	return m_cts_timeout_us;
+}
+uint64_t 
+MacParameters::get_ack_timeout_us (void) const
+{
+	return m_ack_timeout_us;
+}
+
+uint64_t 
+MacParameters::get_beacon_interval_us (void) const
+{
+	return 1000000; // 1s
+}
+uint8_t 
+MacParameters::get_max_missed_beacon (void) const
+{
+	return 10;
+}
+uint32_t 
+MacParameters::get_max_ssrc (void) const
+{
+	return m_max_ssrc;
+}
+uint32_t 
+MacParameters::get_max_slrc (void) const
+{
+	return m_max_slrc;
+}
+uint32_t 
+MacParameters::get_rts_cts_threshold (void) const
+{
+	return m_rts_cts_threshold;
+}
+uint32_t 
+MacParameters::get_fragmentation_threshold (void) const
+{
+	assert (get_max_msdu_size () / 16 < m_fragmentation_threshold);
+	return m_fragmentation_threshold;
+}
+uint64_t 
+MacParameters::get_msdu_lifetime_us (void) const
+{
+	// 10s
+	return 10000000;
+}
+uint64_t 
+MacParameters::get_max_propagation_delay_us (void) const
+{
+	return m_max_propagation_delay_us;
+}
+
+uint32_t 
+MacParameters::get_max_msdu_size (void) const
+{
 	return 2304;
 }
-
-
 double 
-MacParameters::getCapLimit (void)
+MacParameters::get_cap_limit (void) const
+{
+	return 0.4;
+}
+double 
+MacParameters::get_min_edca_traffic_proportion (void) const
 {
 	return 0.4;
 }
 
-double 
-MacParameters::getMinEdcaTrafficProportion (void)
-{
-	return 0.4;
-}
-
-
-
-/* deprecated. Use the getSize (type) method instead. */
-int
-MacParameters::getACKSize (void) const
-{
-	return 2+2+6+4;
-}
-int
-MacParameters::getRTSSize (void) const
-{
-	return 2+2+6+6+4;
-}
-int
-MacParameters::getCTSSize (void) const
-{
-	return 2+2+6+4;
-}
-int
-MacParameters::getBeaconSize (void)
-{
-	//XXX
-	return getProbeResponseSize ()+
-		256+// max DTIM
-		0;
-}
-int
-MacParameters::getAssociationResponseSize (void)
-{
-	//XXX
-	return 2+//capability
-		+//status
-		2+//associationID
-		10+//max supported rates
-		0;
-}
-int
-MacParameters::getReAssociationResponseSize (void)
-{
-	//XXX
-	return getAssociationResponseSize ();
-}
-int
-MacParameters::getProbeResponseSize (void)
-{
-	//XXX
-	return 8+//timestamp
-		2+//interval
-		2+//capability
-		34+// max SSID
-		10+// max supported rates
-		0+//phy parameter set
-		0;
-}
-int
-MacParameters::getAssociationRequestSize (void)
-{
-	//XXX
-	return 2+//capability
-		2+//listen interval
-		34+//max ssid
-		10+//max supported rates
-		0;
-}
-int
-MacParameters::getReAssociationRequestSize (void)
-{
-	//XXX
-	return getAssociationRequestSize ()+
-		6+//ap address
-		0;
-}
-int
-MacParameters::getProbeRequestSize (void)
-{
-	//XXX
-	return 34+//max ssid
-		10+//supported rates
-		0;
-}
-int 
-MacParameters::getMgtHeaderSize (void)
-{
-	return 2+2+6+6+6+2+4;
-}
+}; // namespace yans
