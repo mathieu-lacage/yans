@@ -45,8 +45,8 @@ public:
 		REF_TRACE ("obj="<<m_obj<<", ref="<<m_ref);
 	}
 	~RefCount () {
-		m_obj = (T *)0xdeadbeaf;
-		m_ref = 0xdeadbeaf;
+		m_obj = reinterpret_cast<T*> (0xdeadbeaf);
+		m_ref = 0xffffffff;
 	}
 
 	void ref (void) const {
@@ -57,7 +57,8 @@ public:
 		m_ref--;
 		REF_TRACE ("obj="<<m_obj<<", ref="<<m_ref);
 		if (m_ref == 0) {
-			delete m_obj;
+			T*const obj = m_obj;
+			delete obj;
 		}
 	}
 private:
