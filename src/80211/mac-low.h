@@ -37,6 +37,7 @@ class CancellableEvent;
 class PacketLogger;
 class MacStations;
 class MacStation;
+class MacParameters;
 
 class MacLowTransmissionListener {
 public:
@@ -82,7 +83,7 @@ public:
 	void set_interface (NetworkInterface80211 *interface);
 	void set_phy (Phy80211 *phy);
 	void set_stations (MacStations *stations);
-	//void set_parameters (MacParameters *parameters);
+	void set_parameters (MacParameters *parameters);
 	void set_rx_callback (MacLowRxCallback *callback);
 
 
@@ -191,6 +192,7 @@ private:
 	NetworkInterface80211 *m_interface;
 	Phy80211 *m_phy;
 	MacStations *m_stations;
+	MacParameters *m_parameters;
 	MacLowRxCallback *m_rx_callback;
 	MacLowTransmissionListener *m_transmission_listener;
 	typedef std::vector<MacLowNavListener *>::const_iterator NavListenersCI;

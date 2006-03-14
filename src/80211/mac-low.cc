@@ -30,6 +30,7 @@
 #include "packet-logger.h"
 #include "mac-stations.h"
 #include "mac-station.h"
+#include "mac-parameters.h"
 
 #define noMAC_LOW_TRACE 1
 
@@ -124,6 +125,11 @@ void
 MacLow::set_phy (Phy80211 *phy)
 {
 	m_phy = phy;
+}
+void 
+MacLow::set_parameters (MacParameters *parameters)
+{
+	m_parameters = parameters;
 }
 void 
 MacLow::set_rx_callback (MacLowRxCallback *callback)
@@ -423,26 +429,22 @@ MacLow::get_cts_size (void) const
 uint64_t
 MacLow::get_sifs_us (void) const
 {
-	//XXX
-	return 0;
+	return m_parameters->get_sifs_us ();
 }
 uint64_t
 MacLow::get_pifs_us (void) const
 {
-	// XXX
-	return 0;
+	return m_parameters->get_pifs_us ();
 }
 uint64_t
 MacLow::get_ack_timeout_us (void) const
 {
-	// XXX
-	return 0;
+	return m_parameters->get_ack_timeout_us ();
 }
 uint64_t
 MacLow::get_cts_timeout_us (void) const
 {
-	// XXX
-	return 0;
+	return m_parameters->get_cts_timeout_us ();
 }
 uint32_t 
 MacLow::get_current_size (void) const
