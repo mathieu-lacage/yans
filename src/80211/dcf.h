@@ -40,17 +40,17 @@ public:
 	/* Tell the listener than it can start
 	 * accessing the medium right now.
 	 */
-	virtual void accessGrantedNow (void) = 0;
+	virtual void access_granted_now (void) = 0;
 	/* ask the listener if there are candidates 
 	 * who need access to the medium.
 	 */
-	virtual bool accessNeeded (void) = 0;
+	virtual bool access_needed (void) = 0;
 	/* ask the listener if it is currently
 	 * performing an access which was granted 
 	 * earlier to him and if it will notify
 	 * the Dcf when the access is complete.
 	 */
-	virtual bool accessingAndWillNotify (void) = 0;
+	virtual bool accessing_and_will_notify (void) = 0;
 };
 
 class Dcf
@@ -59,16 +59,16 @@ public:
 	Dcf (MacDcfParameters *parameters);
 	~Dcf ();
 
-	void setInterface (NetInterface80211 *interface);
+	void set_interface (NetInterface80211 *interface);
 
-	void requestAccess (void);
+	void request_access (void);
 
-	void notifyAccessFinished (void);
-	void notifyAccessOngoingError (void);
-	void notifyAccessOngoingErrorButOk (void);
-	void notifyAccessOngoingOk (void);
+	void notify_access_finished (void);
+	void notify_access_ongoing_error (void);
+	void notify_access_ongoing_error_but_ok (void);
+	void notify_access_ongoing_ok (void);
 
-	void registerAccessListener (DcfAccessListener *listener);
+	void register_access_listener (DcfAccessListener *listener);
 
 	MacDcfParameters *parameters (void);
 
@@ -76,57 +76,57 @@ private:
 	friend class DcfPhyListener;
 	friend class DcfNavListener;
 
-	void accessTimeout (MacCancelableEvent *ev);
+	void access_timeout (MacCancelableEvent *ev);
 
 	/* trivial helpers */
-	void resetCW (void);
-	void updateFailedCW (void);
-	double pickBackoffDelay (void);
+	void reset_cw (void);
+	void update_failed_cw (void);
+	double pick_backoff_delay (void);
 	double now (void) const;
-	double mostRecent (double a, double b) const;
-	double mostRecent (double a, double b, double c) const;
-	double getDIFS (void) const;
-	double getEIFS (void) const;
+	double most_recent (double a, double b) const;
+	double most_recent (double a, double b, double c) const;
+	double get_difs (void) const;
+	double get_eifs (void) const;
 
 	/* time calculation helpers */
-	bool isBackoffNotCompleted (double now);
-	void startBackoff (void);
-	double getDelayUntilAccessGranted (double now);
-	double getAccessGrantedStart (void) const;
-	void updateBackoff (double time);
+	bool is_backoff_not_completed (double now);
+	void start_backoff (void);
+	double get_delay_until_access_granted (double now);
+	double get_access_granted_start (void) const;
+	void update_backoff (double time);
 
 	/* notification methods. */
-	void notifyRxStart (double now, double duration);
-	void notifyRxEnd (double now, bool receivedOk);
-	void notifyTxStart (double now, double duration);
-	void notifySleep (double now);
-	void notifyWakeup (double now);
-	void navReset (double now, double duration);
-	void navStart (double now, double duration);
-	void navContinue (double duration);
+	void notify_rx_start (double now, double duration);
+	void notify_rx_end (double now, bool receivedOk);
+	void notify_tx_start (double now, double duration);
+	void notify_sleep (double now);
+	void notify_wakeup (double now);
+	void nav_reset (double now, double duration);
+	void nav_start (double now, double duration);
+	void nav_continue (double duration);
 
 
 	NetInterface80211 *m_interface;
 	MacDcfParameters   *m_parameters;
-	DcfPhyListener *m_phyListener;
-	DcfNavListener *m_navListener;
-	DynamicHandler<Dcf> *m_accessTimer;
+	DcfPhyListener *m_phy_listener;
+	DcfNavListener *m_nav_listener;
+	DynamicHandler<Dcf> *m_access_timer;
 	DcfAccessListener *m_listener;
 
-	int m_CW;
+	int m__cw;
 
-	double m_backoffStart;
-	double m_backoffLeft;
-	double m_lastNavStart;
-	double m_lastNavDuration;
-	double m_lastRxStart;
-	double m_lastRxDuration;
-	bool m_lastRxReceivedOk;
-	double m_lastRxEnd;
-	double m_lastTxStart;
-	double m_lastTxDuration;
-	double m_lastSleepStart;
-	double m_lastWakeupStart;
+	double m_backoff_start;
+	double m_backoff_left;
+	double m_last_nav_start;
+	double m_last_nav_duration;
+	double m_last_rx_start;
+	double m_last_rx_duration;
+	bool m_last_rx_received_ok;
+	double m_last_rx_end;
+	double m_last_tx_start;
+	double m_last_tx_duration;
+	double m_last_sleep_start;
+	double m_last_wakeup_start;
 	bool m_rxing;
 	bool m_sleeping;
 };
