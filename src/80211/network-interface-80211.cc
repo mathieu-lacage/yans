@@ -61,6 +61,13 @@ NetworkInterface80211::register_trace (TraceContainer *container)
 	container->register_ui_variable ("80211-bytes-rx", &m_bytes_rx);
 }
 
+MacAddress 
+NetworkInterface80211::get_bssid (void) const
+{
+	// XXX
+	return MacAddress::get_broadcast ();
+}
+
 void 
 NetworkInterface80211::set_host (Host *host)
 {}

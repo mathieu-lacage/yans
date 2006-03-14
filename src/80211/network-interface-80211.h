@@ -48,6 +48,8 @@ public:
 	void connect_to (Channel80211 *channel);
 	void register_trace (TraceContainer *container);
 
+	MacAddress get_bssid (void) const;
+
 	virtual void set_host (Host *host);
 	virtual void set_mac_address (MacAddress self);
 	virtual MacAddress get_mac_address (void) const;
