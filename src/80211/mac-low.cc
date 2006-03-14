@@ -31,7 +31,7 @@
 #include "mac-stations.h"
 #include "mac-station.h"
 
-#define MAC_LOW_TRACE 1
+#define noMAC_LOW_TRACE 1
 
 #ifdef MAC_LOW_TRACE
 #  include <iostream>
@@ -357,6 +357,7 @@ MacLow::disable_rts (void)
 void 
 MacLow::set_transmission_listener (MacLowTransmissionListener *listener)
 {
+	// XXX
 	//maybe_cancel_previous ();
 	m_transmission_listener = listener;
 }
@@ -705,12 +706,11 @@ MacLow::send_cts_after_rts (MacAddress source, uint64_t duration_us, uint8_t tx_
 	/* send a CTS when you receive a RTS 
 	 * right after SIFS.
 	 */
-	int cts_tx_mode = get_cts_tx_mode_for_rts (source, tx_mode);
-	TRACE ("tx CTS to=" << source << ", mode=" << cts_tx_mode);
+	TRACE ("tx CTS to=" << source << ", mode=" << tx_mode);
 	ChunkMac80211Hdr cts;
 	cts.set_type (MAC_80211_CTL_CTS);
 	cts.set_addr1 (source);
-	duration_us -= m_phy->calculate_tx_duration_us (cts_tx_mode, get_cts_size ());
+	duration_us -= m_phy->calculate_tx_duration_us (tx_mode, get_cts_size ());
 	duration_us -= get_sifs_us ();
 	cts.set_duration_us (duration_us);
 
@@ -719,7 +719,7 @@ MacLow::send_cts_after_rts (MacAddress source, uint64_t duration_us, uint8_t tx_
 	ChunkMac80211Fcs fcs;
 	packet->add (&fcs);
 
-	forward_down (packet, &cts, cts_tx_mode, stuff);
+	forward_down (packet, &cts, tx_mode, stuff);
 }
 
 void
