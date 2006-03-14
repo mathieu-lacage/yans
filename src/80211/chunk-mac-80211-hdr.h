@@ -97,6 +97,7 @@ public:
 	bool is_cts (void) const;
 	bool is_ack (void) const;
 	uint16_t get_duration (void) const;
+	uint64_t get_duration_us (void) const;
 	uint16_t get_sequence_control (void) const;
 	bool is_retry (void) const;
 	bool is_more_fragments (void) const;

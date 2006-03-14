@@ -436,6 +436,11 @@ ChunkMac80211Hdr::get_duration (void) const
 {
 	return m_duration;
 }
+uint64_t 
+ChunkMac80211Hdr::get_duration_us (void) const
+{
+	return m_duration;
+}
 uint16_t 
 ChunkMac80211Hdr::get_sequence_control (void) const
 {
