@@ -437,7 +437,7 @@ Phy80211::get_delay_until_idle_us (void)
 
 
 uint64_t 
-Phy80211::calculate_tx_duration_us (uint32_t size, uint8_t payload_mode)
+Phy80211::calculate_tx_duration_us (uint32_t size, uint8_t payload_mode) const
 {
 	uint64_t delay = m_plcp_preamble_delay_us;
 	delay += m_plcp_header_length / get_mode (0)->get_data_rate ();
@@ -448,7 +448,7 @@ Phy80211::calculate_tx_duration_us (uint32_t size, uint8_t payload_mode)
 }
 
 double 
-Phy80211::calculate_tx_duration_s (uint32_t size, uint8_t payload_mode)
+Phy80211::calculate_tx_duration_s (uint32_t size, uint8_t payload_mode) const
 {
 	double delay = 	m_plcp_preamble_delay_us * 1e-6;
 	delay += m_plcp_header_length / get_mode (0)->get_data_rate ();

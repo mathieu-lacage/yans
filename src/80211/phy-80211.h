@@ -96,8 +96,8 @@ public:
 	uint64_t get_state_duration_us (void);
 	uint64_t get_delay_until_idle_us (void);
 
-	double calculate_tx_duration_s (uint32_t size, uint8_t payload_mode);
-	uint64_t calculate_tx_duration_us (uint32_t size, uint8_t payload_mode);
+	double calculate_tx_duration_s (uint32_t size, uint8_t payload_mode) const;
+	uint64_t calculate_tx_duration_us (uint32_t size, uint8_t payload_mode) const;
 
 
 	void configure_80211a (void);
