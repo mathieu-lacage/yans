@@ -39,88 +39,88 @@
 MacDcfParameters::MacDcfParameters ()
 {
 	/* AIFS = DIFS: 802.11 section 9.2.10 */
-	m_AIFSN = 2;
+	m__aifsn = 2;
 	/* XXX 802.11a */
-	m_CWmin = 15;
-	m_CWmax = 1023;
-	m_txopLimit = 0.0;
+	m__cwmin = 15;
+	m__cwmax = 1023;
+	m_txop_limit = 0.0;
 
-	DEBUG ("DIFS %f", getAIFS ());
-	DEBUG ("EIFS %f", getEIFS ());
-	DEBUG ("CWmin %d", getCWmin ());
-	DEBUG ("CWmax %d", getCWmax ());
+	DEBUG ("DIFS %f", get_aifs ());
+	DEBUG ("EIFS %f", get_eifs ());
+	DEBUG ("CWmin %d", get_cwmin ());
+	DEBUG ("CWmax %d", get_cwmax ());
 }
 
 void 
-MacDcfParameters::setParameters (MacParameters *parameters)
+MacDcfParameters::set_parameters (MacParameters *parameters)
 {
 	m_parameters = parameters;
 }
 
 double 
-MacDcfParameters::getAIFS (void)
+MacDcfParameters::get_aifs (void)
 {
 	return m_parameters->getSIFS () + 
 		m_AIFSN * m_parameters->getSlotTime ();
 }
 int
-MacDcfParameters::getCWmin (void)
+MacDcfParameters::get_cwmin (void)
 {
 	return m_CWmin;
 }
 int
-MacDcfParameters::getCWmax (void)
+MacDcfParameters::get_cwmax (void)
 {
 	return m_CWmax;
 }
 double 
-MacDcfParameters::getTxopLimit (void)
+MacDcfParameters::get_txop_limit (void)
 {
 	return m_txopLimit;
 }
 
 double 
-MacDcfParameters::getEIFS (Phy80211 *phy)
+MacDcfParameters::get_eifs (Phy80211 *phy)
 {
 	/* 802.11 section 9.2.10 */
 	// XXX check with regard to 802.11a
 	return m_parameters->getSIFS () + 
-		phy->calculateTxDuration (0, m_parameters->getACKSize ()) +
+		phy->calculateTxDuration (0, m_parameters->get_acksize ()) +
 		getAIFS ();
 }
 
 
 bool 
-MacDcfParameters::isACMandatory (void)
+MacDcfParameters::is_acmandatory (void)
 {
 	return m_ACM;
 }
 
 void 
-MacDcfParameters::setCWmin (uint16_t CWmin)
+MacDcfParameters::set_cwmin (uint16_t CWmin)
 {
-	m_CWmin = CWmin;
+	m__cwmin = CWmin;
 }
 void 
-MacDcfParameters::setCWmax (uint16_t CWmax)
+MacDcfParameters::set_cwmax (uint16_t CWmax)
 {
-	m_CWmax = CWmax;
+	m__cwmax = CWmax;
 }
 void 
-MacDcfParameters::setTxopLimit (double txopLimit)
+MacDcfParameters::set_txop_limit (double txopLimit)
 {
-	m_txopLimit = txopLimit;
+	m_txop_limit = txopLimit;
 }
 void 
-MacDcfParameters::setAIFSN (uint8_t AIFSN)
+MacDcfParameters::set_aifsn (uint8_t AIFSN)
 {
-	m_AIFSN = AIFSN;
+	m__aifsn = AIFSN;
 }
 
 void 
-MacDcfParameters::setACM (bool enabled)
+MacDcfParameters::set_acm (bool enabled)
 {
-	m_ACM = enabled;
+	m__acm = enabled;
 }
 
 uint8_t
@@ -134,10 +134,10 @@ MacDcfParameters::log2 (uint16_t v)
 }
 
 void
-MacDcfParameters::writeTo (uint8_t buffer[4], enum ac_e ac)
+MacDcfParameters::write_to (uint8_t buffer[4], enum ac_e ac)
 {
 	uint8_t ACM = ((m_ACM)?1:0) << 3;
-	uint8_t AIFSN = m_AIFSN << 4;
+	uint8_t AIFSN = m__aifsn << 4;
 	uint8_t ACI;
 	switch (ac) {
 	case AC_BE:
@@ -165,13 +165,13 @@ MacDcfParameters::writeTo (uint8_t buffer[4], enum ac_e ac)
 	uint8_t ECWmax = log2 (m_CWmax);
 	buffer[1] = ECWmin | ECWmax;
 
-	long int txopLimit = lrint (m_txopLimit / 32e-6);
+	long int txopLimit = lrint (m_txop_limit / 32e-6);
 	buffer[2] = (txopLimit >> 8) & 0xff;
 	buffer[3] = (txopLimit >> 0) & 0xff;
 }
 
 void
-MacDcfParameters::readFrom (uint8_t const buffer[4])
+MacDcfParameters::read_from (uint8_t const buffer[4])
 {
 	uint8_t AIFSN = (buffer[0] >> 4) & 0x0f;
 	uint8_t ACM   = (buffer[0] >> 3) & 0x01;
@@ -180,9 +180,9 @@ MacDcfParameters::readFrom (uint8_t const buffer[4])
 	uint8_t ECWmax = (buffer[1] >> 0) & 0x0f;
 	uint16_t txopLimit = (buffer[2] << 8) | buffer[3];
 
-	m_AIFSN = AIFSN;
-	m_ACM = (ACM == 1)?true:false;
-	m_CWmin = (1<<ECWmin) - 1;
-	m_CWmax = (1<<ECWmax) - 1;
-	m_txopLimit = txopLimit * 32e-6;
+	m__aifsn = AIFSN;
+	m__acm = (ACM == 1)?true:false;
+	m__cwmin = (1<<ECWmin) - 1;
+	m__cwmax = (1<<ECWmax) - 1;
+	m_txop_limit = txopLimit * 32e-6;
 }

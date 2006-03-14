@@ -32,29 +32,29 @@ class MacDcfParameters {
 public:
 	MacDcfParameters (void);
 
-	void setParameters (MacParameters *parameters);
+	void set_parameters (MacParameters *parameters);
 
-	int getCWmin (void);
-	int getCWmax (void);
-	double getTxopLimit (void);
-	double getAIFS (void);
-	double getEIFS (Phy80211 *phy);
+	int get_cwmin (void);
+	int get_cwmax (void);
+	double get_txop_limit (void);
+	double get_aifs (void);
+	double get_eifs (Phy80211 *phy);
 
-	bool isAccessAllowed (void);
-	void startAccessAllowed (double delay);
+	bool is_access_allowed (void);
+	void start_access_allowed (double delay);
 
-	bool isACMandatory (void);
+	bool is_acmandatory (void);
 
-	void setCWmin (uint16_t CWmin);
-	void setCWmax (uint16_t CWmin);
-	void setTxopLimit (double txopLimit);
-	void setAIFSN (uint8_t AIFSN);
-	void setACM (bool enabled);
+	void set_cwmin (uint16_t CWmin);
+	void set_cwmax (uint16_t CWmin);
+	void set_txop_limit (double txopLimit);
+	void set_aifsn (uint8_t AIFSN);
+	void set_acm (bool enabled);
 
 
 
-	void writeTo (uint8_t buffer[4], enum ac_e ac);
-	void readFrom (uint8_t const buffer[4]);
+	void write_to (uint8_t buffer[4], enum ac_e ac);
+	void read_from (uint8_t const buffer[4]);
 private:
 	uint8_t log2 (uint16_t c);
 
