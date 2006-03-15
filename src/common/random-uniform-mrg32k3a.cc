@@ -94,6 +94,7 @@ RandomUniform::RandomUniform ()
 RandomUniform::~RandomUniform ()
 {
 	delete m_priv;
+	m_priv = reinterpret_cast<RandomUniformPrivate *> (0xdeadbeaf);
 }
 
 void 
