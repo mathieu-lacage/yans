@@ -392,10 +392,12 @@ Dcf::notify_nav_reset (uint64_t nav_start, uint64_t duration)
 	 * because this nav reset might have brought the time of
 	 * possible access closer to us than expected.
 	 */
-	m_access_timer_event->cancel ();
-	m_access_timer_event = 0;
-	m_access_timer_event = make_cancellable_event (&Dcf::access_timeout, this);
-	Simulator::insert_in_us (new_delay_until_access_granted, m_access_timer_event);
+	if (m_access_timer_event != 0) {
+		m_access_timer_event->cancel ();
+		m_access_timer_event = 0;
+		m_access_timer_event = make_cancellable_event (&Dcf::access_timeout, this);
+		Simulator::insert_in_us (new_delay_until_access_granted, m_access_timer_event);
+	}
 }
 void
 Dcf::notify_nav_start (uint64_t nav_start, uint64_t duration)
@@ -671,6 +673,12 @@ DcfTest::start_test (void)
 void 
 DcfTest::end_test (void)
 {
+	if (!m_access_granted_expected.empty ()) {
+		failure () << "DCF: access not granted as expected"
+			   << std::endl;
+	}
+	m_access_granted_expected.erase (m_access_granted_expected.begin (),
+					 m_access_granted_expected.end ());
 	Simulator::destroy ();
 	delete m_dcf;
 	delete m_parameters;
@@ -750,6 +758,35 @@ DcfTest::run_tests (void)
 	add_rx_error_evt (31, 7);
 	add_access_request_idle (39);
 	expect_access_granted (42);
+	Simulator::run ();
+	end_test ();
+
+
+	start_test ();
+	add_rx_ok_evt (10, 20);
+	add_nav_start (30, 30, 200);
+	add_rx_ok_evt (35, 10);
+	add_nav_reset (45, 45, 0);
+	add_access_request_idle (32);
+	expect_access_granted (48);
+	Simulator::run ();
+	end_test ();
+
+	start_test ();
+	add_rx_ok_evt (10, 20);
+	add_nav_start (30, 30, 200);
+	add_rx_ok_evt (35, 10);
+	add_nav_reset (45, 45, 0);
+	Simulator::run ();
+	end_test ();
+
+	start_test ();
+	add_rx_ok_evt (10, 20);
+	add_nav_start (30, 30, 200);
+	add_rx_ok_evt (35, 10);
+	add_nav_reset (45, 45, 0);
+	add_access_request_idle (49);
+	expect_access_granted (49);
 	Simulator::run ();
 	end_test ();
 
