@@ -163,6 +163,8 @@ utils_checksum_complete (uint16_t checksum)
 #include "test.h"
 namespace yans {
 
+class UtilsTest : public Test {
+private:
 bool
 UtilsTest::test_ipv4_ascii_to_host (char const *str, uint32_t expected)
 {
@@ -256,7 +258,11 @@ if (!test_ipv4_ascii_to_host (a,b)) { \
 }
 
 
-bool 
+public:
+UtilsTest::UtilsTest ()
+	: Test ("Utils") {}
+
+virtual bool 
 UtilsTest::run_tests (void)
 {
 	bool ok = true;
@@ -276,5 +282,7 @@ UtilsTest::run_tests (void)
 	TEST_HTON_16 (0xf00f, 0xf0, 0x0f);
 	return ok;
 }
+};
+static UtilsTest g_utils_test;
 }; //namespace yans
 #endif /* RUN_SELF_TESTS */

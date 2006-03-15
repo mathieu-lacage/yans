@@ -83,8 +83,8 @@ Thread::time_s (void)
 
 
 #ifdef RUN_SELF_TESTS
-
 #include <iostream>
+#include "test.h"
 
 namespace yans {
 
@@ -156,11 +156,14 @@ private:
 };
 
 
-ThreadTest::ThreadTest ()
+class ThreadTest : public Test {
+public:
+
+ThreadTest () 
+	: Test ("Thread")
 {}
-bool 
-ThreadTest::run_tests (void)
-{
+
+virtual bool run_tests (void) {
 	bool ok = true;
 
 	Thread *a = new A ();
@@ -191,6 +194,9 @@ ThreadTest::run_tests (void)
 
 	return ok;
 }
+};
+
+static ThreadTest g_thread_test;
 
 }; // namespace yans
 

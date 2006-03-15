@@ -51,17 +51,6 @@ private:
 
 }; // namespace yans
 
-#ifdef RUN_SELF_TESTS
-#include "test.h"
-namespace yans {
-class ThreadTest : public Test {
-public:
-	ThreadTest ();
-	virtual bool run_tests (void);
-};
-}; // namespace yans
-#endif /* RUN_SELF_TESTS */
-
 #endif /* THREAD_H */
 
 

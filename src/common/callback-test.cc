@@ -20,19 +20,27 @@
  */
 
 #include "callback.tcc"
-#include "callback-test.h"
+#include "test.h"
 #include <stdio.h>
 
 namespace yans {
 
+class CallbackTest : public Test {
+private:
+	bool m_test1;
+	bool m_test2;
+	bool m_test3;
+	bool m_test4;
+public:
 CallbackTest::CallbackTest ()
-	: m_test1 (false),
+	: Test ("Callback"),
+	  m_test1 (false),
 	  m_test2 (false),
 	  m_test3 (false),
 	  m_test4 (false)
 {}
   
-bool 
+virtual bool 
 CallbackTest::run_tests (void)
 {
 	typedef yans::Callback<void (void)> A;
@@ -89,6 +97,8 @@ CallbackTest::test4 (double a, int b)
 	m_test4 = true;
 	return 4;
 }
+};
+static CallbackTest g_callback_test;
 
 }; // namespace yans
 

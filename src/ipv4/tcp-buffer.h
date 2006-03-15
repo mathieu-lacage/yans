@@ -78,22 +78,4 @@ private:
 
 }; //namespace yans
 
-#ifdef RUN_SELF_TESTS
-#include "test.h"
-
-namespace yans {
-
-class TcpBufferTest : public Test {
-public:
-	virtual bool run_tests (void);
-private:
-	bool test_buffer (uint32_t start);
-	Packet *create_one_packet (uint32_t size);
-	bool check_front_data (TcpBuffer *pieces, uint32_t expected_data, int line);
-};
-
-}; //namespace yans
-#endif /* RUN_SELF_TESTS */
-
-
 #endif /* TCP_BUFFER_H */

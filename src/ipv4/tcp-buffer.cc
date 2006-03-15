@@ -338,9 +338,13 @@ TcpBuffer::is_empty (void)
 #ifdef RUN_SELF_TESTS
 
 #include "chunk-constant-data.h"
+#include "test.h"
 
 namespace yans {
 
+
+class TcpBufferTest : public Test {
+private:
 Packet *
 TcpBufferTest::create_one_packet (uint32_t size)
 {
@@ -450,7 +454,8 @@ TcpBufferTest::test_buffer (uint32_t start)
 	CHECK_FRONT_DATA (buffer, 102);
 	return ok;
 }
-bool 
+public:
+virtual bool 
 TcpBufferTest::run_tests (void)
 {
 	bool ok = true;
@@ -471,6 +476,11 @@ TcpBufferTest::run_tests (void)
  out:
 	return ok;
 }
+TcpBufferTest ()
+	: Test ("TcpBuffer") {}
+};
+
+static TcpBufferTest g_tcp_buffer_test;
 
 }; // namespace yans
 

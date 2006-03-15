@@ -21,14 +21,11 @@
 
 #include "test.h"
 
-
 int main (int argc, char *argv[])
 {
 #ifdef RUN_SELF_TESTS
-	yans::TestManager *manager = new yans::TestManager ();
-	manager->enable_verbose ();
-	manager->run_tests ();
-	delete manager;
+	yans::TestManager::enable_verbose ();
+	yans::TestManager::run_tests ();
 #endif /* RUN_SELF_TESTS */
 
 	return 0;

@@ -149,8 +149,6 @@ YANS_HDR = \
 	src/common/buffer.h \
 	src/common/data-writer.h \
 	src/common/pcap-writer.h \
-	src/common/traced-variable-test.h \
-	src/common/callback-test.h \
 	src/common/ipv4-address.h \
 	src/common/population-analysis.h \
 	src/common/utils.h \

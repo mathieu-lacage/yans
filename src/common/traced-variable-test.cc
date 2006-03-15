@@ -19,9 +19,9 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "traced-variable-test.h"
 #include "ui-traced-variable.tcc"
 #include "si-traced-variable.tcc"
+#include "test.h"
 #include "callback.tcc"
 
 namespace yans {
@@ -31,6 +31,8 @@ public:
 	void notify (uint64_t old_val, uint64_t new_val) {}
 };
 
+class TracedVariableTest: public Test {
+public:
 void
 TracedVariableTest::run_unsigned_tests (void)
 {
@@ -225,7 +227,7 @@ TracedVariableTest::run_signed_unsigned_tests (void)
 	svar += sivar;
 }
 
-bool 
+virtual bool 
 TracedVariableTest::run_tests (void)
 {
 	run_unsigned_tests ();
@@ -233,5 +235,11 @@ TracedVariableTest::run_tests (void)
 
 	return true;
 }
+
+TracedVariableTest::TracedVariableTest ()
+	: Test ("TracedVariable") {}
+};
+
+static TracedVariableTest g_traced_variable_test;
 
 }; // namespace yans

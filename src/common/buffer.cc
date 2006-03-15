@@ -363,8 +363,10 @@ Buffer::alloc_and_zero (uint32_t size) const
 
 namespace yans {
 
+class BufferTest: public Test {
+private:
 bool
-BufferTest::ensure_written_bytes (Buffer *buffer, uint32_t n, uint8_t array[])
+ensure_written_bytes (Buffer *buffer, uint32_t n, uint8_t array[])
 {
 	bool success = true;
 	uint8_t *expected = array;
@@ -407,8 +409,9 @@ BufferTest::ensure_written_bytes (Buffer *buffer, uint32_t n, uint8_t array[])
 	} \
 }
 
-bool
-BufferTest::run_tests (void)
+public:
+virtual bool
+run_tests (void)
 {
 	bool ok = true;
 	Buffer *buffer = new Buffer ();
@@ -458,6 +461,13 @@ BufferTest::run_tests (void)
 	delete buffer;
 	return ok;
 }
+
+BufferTest ()
+	: Test ("Buffer") {}
+
+};
+
+static BufferTest g_buffer_test;
 
 }; // namespace yans
 

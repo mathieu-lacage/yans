@@ -33,6 +33,7 @@ class TestManager;
 
 class Test {
 public:
+	Test (char const *name);
 	virtual ~Test ();
 
 	virtual bool run_tests (void) = 0;
@@ -43,21 +44,27 @@ protected:
 
 class TestManager {
 public:
+	// main methods the test runner is supposed to
+	// invoke.
+	static void enable_verbose (void);
+	static bool run_tests (void);
+
+	// helper methods
+	static void add (Test *test, char const *name);
+	static std::ostream &failure (void);
+private:
+	static TestManager *get (void);
+	bool real_run_tests (void);
+
 	TestManager ();
 	~TestManager ();
 
-	void enable_verbose (void);
-	bool run_tests (void);
-
-	static std::ostream &failure (void);
-private:
 	typedef std::list<std::pair<Test *,std::string *> > Tests;
 	typedef std::list<std::pair<Test *,std::string *> >::iterator TestsI;
 	typedef std::list<std::pair<Test *,std::string *> >::const_iterator TestsCI;
 
 	Tests m_tests;
 	bool m_verbose;
-	std::string *m_test_name;
 };
 }; // namespace yans 
 
