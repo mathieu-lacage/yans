@@ -78,9 +78,13 @@ Dcf::Dcf ()
 Dcf::~Dcf ()
 {
 	delete m_random;
-	delete m_listener;
 }
 
+void 
+Dcf::reset_rng (uint32_t seed)
+{
+	m_random->reset (seed);
+}
 void
 Dcf::set_parameters (MacParameters const*parameters)
 {
@@ -102,6 +106,7 @@ Dcf::set_cw_bounds (uint32_t min, uint32_t max)
 {
 	m_cw_min = min;
 	m_cw_max = max;
+	m_cw = min;
 }
 
 void 
@@ -191,10 +196,10 @@ Dcf::notify_access_ongoing_error_but_ok (void)
 void 
 Dcf::access_timeout ()
 {
+	m_access_timer_event = 0;
 	uint64_t delay_until_access_granted  = get_delay_until_access_granted (now_us ());
 	if (delay_until_access_granted > 0) {
 		TRACE ("timeout access delayed for "<< delay_until_access_granted);
-		assert (m_access_timer_event == 0);
 		m_access_timer_event = make_cancellable_event (&Dcf::access_timeout, this);
 		Simulator::insert_in_us (delay_until_access_granted, m_access_timer_event);
 	} else {
@@ -376,7 +381,7 @@ Dcf::update_backoff (uint64_t time_us)
  *     Notification methods.
  ***************************************************************/ 
 void
-Dcf::nav_reset (uint64_t nav_start, uint64_t duration)
+Dcf::notify_nav_reset (uint64_t nav_start, uint64_t duration)
 {
 	m_last_nav_start = nav_start;
 	m_last_nav_duration = duration;
@@ -393,7 +398,7 @@ Dcf::nav_reset (uint64_t nav_start, uint64_t duration)
 	Simulator::insert_in_us (new_delay_until_access_granted, m_access_timer_event);
 }
 void
-Dcf::nav_start (uint64_t nav_start, uint64_t duration)
+Dcf::notify_nav_start (uint64_t nav_start, uint64_t duration)
 {
 	assert (m_last_nav_start < nav_start);
 	TRACE ("nav start at="<<nav_start<<", for="<<duration);
@@ -402,50 +407,323 @@ Dcf::nav_start (uint64_t nav_start, uint64_t duration)
 	m_last_nav_duration = duration;
 }
 void
-Dcf::nav_continue (uint64_t duration)
+Dcf::notify_nav_continue (uint64_t nav_start, uint64_t duration)
 {
-	m_last_nav_duration += duration;
-	TRACE ("nav continue for "<<duration);
+	notify_nav_start (nav_start, duration);
 }
 
 void 
-Dcf::notify_rx_start (uint64_t rx_start, uint64_t duration)
+Dcf::notify_rx_start_now (uint64_t duration)
 {
-	TRACE ("rx start at="<<rx_start<<", for="<<duration);
-	update_backoff (rx_start);
-	m_last_rx_start = rx_start;
+	uint64_t now = now_us ();
+	TRACE ("rx start at="<<now<<", for="<<duration);
+	update_backoff (now);
+	m_last_rx_start = now;
 	m_last_rx_duration = duration;
 	m_rxing = true;
 }
 void 
-Dcf::notify_rx_end (uint64_t rx_end, bool received_ok)
+Dcf::notify_rx_end_ok_now (void)
 {
-	TRACE ("rx end at="<<rx_end<<" -- "<<received_ok?"ok":"failed");
-	m_last_rx_end = rx_end;
-	m_last_rx_received_ok = received_ok;
+	uint64_t now = now_us ();
+	TRACE ("rx end ok at="<<now);
+	m_last_rx_end = now;
+	m_last_rx_received_ok = true;
 	m_rxing = false;
 }
 void 
-Dcf::notify_tx_start (uint64_t tx_start, uint64_t duration)
+Dcf::notify_rx_end_error_now (void)
 {
-	TRACE ("tx start at="<<tx_start<<" for "<<duration);
-	update_backoff (tx_start);
-	m_last_tx_start = tx_start;
+	uint64_t now = now_us ();
+	TRACE ("rx end error at="<<now);
+	m_last_rx_end = now;
+	m_last_rx_received_ok = false;
+	m_rxing = false;
+}
+void 
+Dcf::notify_tx_start_now (uint64_t duration)
+{
+	uint64_t now = now_us ();
+	TRACE ("tx start at="<<now<<" for "<<duration);
+	update_backoff (now);
+	m_last_tx_start = now;
 	m_last_tx_duration = duration;
 }
 void 
-Dcf::notify_sleep (uint64_t sleep_start)
+Dcf::notify_sleep_now (void)
 {
+	uint64_t now = now_us ();
 	TRACE ("sleep");
-	m_last_sleep_start = sleep_start;
+	m_last_sleep_start = now;
 	m_sleeping = true;
 }
 void 
-Dcf::notify_wakeup (uint64_t sleep_end)
+Dcf::notify_wakeup_now (void)
 {
+	uint64_t now = now_us ();
 	TRACE ("wakeup");
-	m_last_wakeup_start = sleep_end;
+	m_last_wakeup_start = now;
 	m_sleeping = false;
 }
 
 }; // namespace yans
+
+#ifdef RUN_SELF_TESTS
+#include "test.h"
+#include "event.tcc"
+#include <list>
+
+namespace yans {
+
+class DcfTest : public Test {
+public:
+	DcfTest ();
+	virtual bool run_tests (void);
+
+	// callback from DcfListener
+	void access_granted_now (void);
+	bool access_needed (void);
+	bool accessing_and_will_notify (void);
+private:
+
+	void add_rx_ok_evt (uint64_t at, uint64_t duration);
+	void add_rx_error_evt (uint64_t at, uint64_t duration);
+	void add_tx_evt (uint64_t at, uint64_t duration);
+	void add_nav_reset (uint64_t at, uint64_t start, uint64_t duration);
+	void add_nav_start (uint64_t at, uint64_t start, uint64_t duration);
+	void add_nav_continue (uint64_t at, uint64_t start, uint64_t duration);
+	void add_access_request_idle (uint64_t time);
+	void add_access_request_busy (uint64_t time);
+	void add_access_error (uint64_t time);
+	void add_access_error_but_ok (uint64_t time);
+	void add_access_ok (uint64_t time);
+
+	void expect_access_granted (uint64_t time);
+	
+	// callback to forward to DCF
+	void access_error (uint64_t time);
+	void access_error_but_ok (uint64_t time);
+	void access_ok (uint64_t time);
+
+	void start_test (void);
+	void end_test (void);
+
+	Dcf *m_dcf;
+	MacParameters *m_parameters;
+	class TestAccessListener *m_listener;
+	std::list<uint64_t> m_access_granted_expected;
+	bool m_failed;
+};
+
+class TestAccessListener : public DcfAccessListener {
+public:
+	TestAccessListener (DcfTest *test)
+		: m_test (test) {}
+	virtual ~TestAccessListener () {}
+	virtual void access_granted_now (void) {
+		m_test->access_granted_now ();
+	}
+	virtual bool access_needed (void) {
+		return m_test->access_needed ();
+	}
+	virtual bool accessing_and_will_notify (void) {
+		return m_test->accessing_and_will_notify ();
+	}
+private:
+	DcfTest *m_test;
+};
+
+
+
+DcfTest::DcfTest ()
+	: Test ("Dcf") {}
+
+void 
+DcfTest::access_granted_now (void)
+{
+	if (m_access_granted_expected.empty ()) {
+		failure () << "DCF "
+			   << "Failure: unexpected access granted at="<<Simulator::now_us ()
+			   << std::endl;
+		m_failed = true;
+		return;
+	}
+	uint64_t expected = m_access_granted_expected.front ();
+	if (expected != Simulator::now_us ()) {
+		failure () << "DCF "
+			   << "Failure: access granted at=" << Simulator::now_us ()
+			   << ", expected at ="<<expected
+			   << std::endl;
+		m_failed = true;
+		return;
+	}
+	m_access_granted_expected.erase (m_access_granted_expected.begin ());
+}
+bool 
+DcfTest::access_needed (void)
+{
+	return true;
+}
+bool 
+DcfTest::accessing_and_will_notify (void)
+{
+	return false;
+}
+
+void 
+DcfTest::add_rx_ok_evt (uint64_t at, uint64_t duration)
+{
+	Simulator::insert_at_us (at, make_event (&Dcf::notify_rx_start_now, m_dcf, duration));
+	Simulator::insert_at_us (at+duration, make_event (&Dcf::notify_rx_end_ok_now, m_dcf));
+}
+void 
+DcfTest::add_rx_error_evt (uint64_t at, uint64_t duration)
+{
+	Simulator::insert_at_us (at, make_event (&Dcf::notify_rx_start_now, m_dcf, duration));
+	Simulator::insert_at_us (at+duration, make_event (&Dcf::notify_rx_end_error_now, m_dcf));
+}
+void 
+DcfTest::add_tx_evt (uint64_t at, uint64_t duration)
+{
+	Simulator::insert_at_us (at, make_event (&Dcf::notify_tx_start_now, m_dcf, duration));
+}
+void 
+DcfTest::add_nav_reset (uint64_t at, uint64_t start, uint64_t duration)
+{
+	Simulator::insert_at_us (at, make_event (&Dcf::notify_nav_reset, m_dcf, start, duration));
+}
+void 
+DcfTest::add_nav_start (uint64_t at, uint64_t start, uint64_t duration)
+{
+	Simulator::insert_at_us (at, make_event (&Dcf::notify_nav_start, m_dcf, start, duration));
+}
+void 
+DcfTest::add_nav_continue (uint64_t at, uint64_t start, uint64_t duration)
+{
+	Simulator::insert_at_us (at, make_event (&Dcf::notify_nav_continue, m_dcf, start, duration));
+}
+void 
+DcfTest::add_access_request_idle (uint64_t time)
+{
+	Simulator::insert_at_us (time, make_event (&Dcf::request_access, m_dcf, false));
+}
+void 
+DcfTest::add_access_request_busy (uint64_t time)
+{
+	Simulator::insert_at_us (time, make_event (&Dcf::request_access, m_dcf, true));
+}
+void 
+DcfTest::add_access_error (uint64_t time)
+{
+	Simulator::insert_at_us (time, make_event (&DcfTest::access_error, this, time));
+}
+void 
+DcfTest::add_access_error_but_ok (uint64_t time)
+{
+	Simulator::insert_at_us (time, make_event (&DcfTest::access_error_but_ok, this, time));
+}
+void 
+DcfTest::add_access_ok (uint64_t time)
+{
+	Simulator::insert_at_us (time, make_event (&DcfTest::access_ok, this, time));
+}
+
+void 
+DcfTest::access_error (uint64_t time)
+{
+	m_dcf->notify_access_ongoing_error ();
+	m_dcf->notify_access_finished ();
+}
+void 
+DcfTest::access_error_but_ok (uint64_t time)
+{
+	m_dcf->notify_access_ongoing_error_but_ok ();
+	m_dcf->notify_access_finished ();
+}
+void 
+DcfTest::access_ok (uint64_t time)
+{
+	m_dcf->notify_access_ongoing_ok ();
+	m_dcf->notify_access_finished ();
+}
+
+void 
+DcfTest::expect_access_granted (uint64_t time)
+{
+	m_access_granted_expected.push_back (time);
+}
+
+/*
+	void add_rx_ok_evt (uint64_t at, uint64_t duration);
+	void add_rx_error_evt (uint64_t at, uint64_t duration);
+	void add_tx_evt (uint64_t at, uint64_t duration);
+	void add_nav_reset (uint64_t at, uint64_t start, uint64_t duration);
+	void add_nav_start (uint64_t at, uint64_t start, uint64_t duration);
+	void add_nav_continue (uint64_t at, uint64_t start, uint64_t duration);
+	void add_access_request_idle (uint64_t time);
+	void add_access_request_busy (uint64_t time);
+	void add_access_error (uint64_t time);
+	void add_access_error_but_ok (uint64_t time);
+	void add_access_ok (uint64_t time);
+
+ */
+
+void 
+DcfTest::start_test (void)
+{
+	m_dcf = new Dcf ();
+	m_dcf->reset_rng (0);
+	m_parameters = new MacParameters ();
+	m_listener = new TestAccessListener (this);
+	m_parameters->set_slot_time_us (1);
+	m_dcf->set_parameters (m_parameters);
+	m_dcf->set_difs_us (3);
+	m_dcf->set_eifs_us (4);
+	m_dcf->set_cw_bounds (8, 64);
+	m_dcf->register_access_listener (m_listener);	
+}
+void 
+DcfTest::end_test (void)
+{
+	Simulator::destroy ();
+	delete m_dcf;
+	delete m_parameters;
+	delete m_listener;
+}
+
+bool
+DcfTest::run_tests (void)
+{
+	m_failed = false;
+
+	start_test ();
+	add_rx_ok_evt (10, 20);
+	add_nav_start (30, 30, 2+8);
+	add_rx_ok_evt (32, 5);
+	add_access_request_busy (15);
+	add_access_request_busy (16);
+	add_access_request_busy (20);
+	expect_access_granted (51);
+	Simulator::run ();
+	end_test ();
+
+	start_test ();
+	add_rx_ok_evt (10, 20);
+	add_nav_start (30, 30, 2+5);
+	add_rx_ok_evt (32, 7);
+	add_access_request_busy (15);
+	add_access_request_busy (16);
+	add_access_request_busy (20);
+	expect_access_granted (50);
+	Simulator::run ();
+	end_test ();
+
+	return !m_failed;
+}
+
+static DcfTest g_test_test;
+
+}; // namespace yans
+
+
+#endif /* RUN_SELF_TESTS */

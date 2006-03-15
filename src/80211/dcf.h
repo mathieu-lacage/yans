@@ -57,6 +57,8 @@ public:
 	Dcf ();
 	~Dcf ();
 
+	void reset_rng (uint32_t seed);
+
 	void set_parameters (MacParameters const*parameters);
 	void set_difs_us (uint64_t difs_us);
 	void set_eifs_us (uint64_t eifs_us);
@@ -71,14 +73,15 @@ public:
 	void notify_access_ongoing_ok (void);
 
 	/* notification methods. */
-	void notify_rx_start (uint64_t now, uint64_t duration);
-	void notify_rx_end (uint64_t now, bool receivedOk);
-	void notify_tx_start (uint64_t now, uint64_t duration);
-	void notify_sleep (uint64_t now);
-	void notify_wakeup (uint64_t now);
-	void nav_reset (uint64_t now, uint64_t duration);
-	void nav_start (uint64_t now, uint64_t duration);
-	void nav_continue (uint64_t duration);
+	void notify_rx_start_now (uint64_t duration);
+	void notify_rx_end_ok_now (void);
+	void notify_rx_end_error_now (void);
+	void notify_tx_start_now (uint64_t duration);
+	void notify_sleep_now (void);
+	void notify_wakeup_now (void);
+	void notify_nav_reset (uint64_t now, uint64_t duration);
+	void notify_nav_start (uint64_t now, uint64_t duration);
+	void notify_nav_continue (uint64_t now, uint64_t duration);
 private:
 	void access_timeout (void);
 
