@@ -72,6 +72,12 @@ MacParameters::initialize_80211a (Phy80211 const*phy)
 }
 
 void 
+MacParameters::set_slot_time_us (uint64_t slot_time)
+{
+	m_slot_us = slot_time;
+}
+
+void 
 MacParameters::set_max_ssrc (uint32_t ssrc)
 {
 	m_max_ssrc = ssrc;

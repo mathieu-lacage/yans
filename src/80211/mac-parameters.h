@@ -32,7 +32,7 @@ public:
 	MacParameters ();
 	
 	void initialize_80211a (Phy80211 const*phy);
-
+	void set_slot_time_us (uint64_t slot_time);
 	void set_max_ssrc (uint32_t ssrc);
 	void set_max_slrc (uint32_t ssrc);
 	void set_rts_cts_threshold (uint32_t threshold);
