@@ -24,14 +24,14 @@
 #include <math.h>
 
 #include "dcf.h"
-#include "phy-80211.h"
-#include "mac-low.h"
-#include "precision.h"
-#include "mac-dcf-parameters.h"
-#include "rng-uniform.h"
+#include "random-uniform.h"
+#include "cancellable-event.tcc"
+#include "simulator.h"
 #include "mac-parameters.h"
-#include "mac-traces.h"
-#include "net-interface-80211.h"
+
+#ifndef max
+#define max(a,b) (((a)>=(b))?(a):(b))
+#endif
 
 
 #define nopeDCF_TRACE 1
@@ -44,8 +44,7 @@
 # define TRACE(x)
 #endif /* DCF_TRACE */
 
-
-static RngUniform *g_random = new RngUniform ();
+namespace yans {
 
 
 DcfAccessListener::DcfAccessListener ()
@@ -54,162 +53,55 @@ DcfAccessListener::~DcfAccessListener ()
 {}
 
 
-class DcfPhyListener : public Phy80211Listener
-{
-public:
-	DcfPhyListener (Dcf *dcf) 
-		: m_dcf (dcf) {}
-	virtual void notify_rx_start (double now, double duration) {
-		m_dcf->notify_rx_start (now, duration);
-	}
-	virtual void notify_rx_end (double now, bool receivedOk) {
-		m_dcf->notify_rx_end (now, receivedOk);
-	}
-	virtual void notify_tx_start (double now, double duration) {
-		m_dcf->notify_tx_start (now, duration);
-	}
-	virtual void notify_sleep (double now) {
-		m_dcf->notify_sleep (now);
-	}
-	virtual void notify_wakeup (double now) {
-		m_dcf->notify_wakeup (now);
-	}
-private:
-	Dcf *m_dcf;
-};
 
-class DcfNavListener : public MacLowNavListener 
-{
-public:
-	DcfNavListener (Dcf *dcf)
-		: m_dcf (dcf) {}
-	virtual void nav_reset (double now, double duration) {
-		m_dcf->nav_reset (now, duration);
-	}
-	virtual void nav_start (double now, double duration) {
-		m_dcf->nav_start (now, duration);
-	}
-	virtual void nav_continue (double duration) {
-		m_dcf->nav_continue (duration);
-	}
-private:
-	Dcf *m_dcf;
-};
-
-
-
-Dcf::_dcf (MacDcfParameters *parameters)
-	: m_parameters (parameters),
-	  m_backoff_start (0.0),
-	  m_backoff_left (0.0),
-	  m_last_nav_start (0.0),
-	  m_last_nav_duration (0.0),
-	  m_last_rx_start (0.0),
-	  m_last_rx_duration (0.0),
+Dcf::Dcf ()
+	: m_backoff_start (0),
+	  m_backoff_left (0),
+	  m_last_nav_start (0),
+	  m_last_nav_duration (0),
+	  m_last_rx_start (0),
+	  m_last_rx_duration (0),
 	  m_last_rx_received_ok (true),
-	  m_last_rx_end (0.0),
-	  m_last_tx_start (0.0),
-	  m_last_tx_duration (0.0),
-	  m_last_sleep_start (0.0),
-	  m_last_wakeup_start (0.0),
+	  m_last_rx_end (0),
+	  m_last_tx_start (0),
+	  m_last_tx_duration (0),
+	  m_last_sleep_start (0),
+	  m_last_wakeup_start (0),
 	  m_rxing (false),
 	  m_sleeping (false)
 {
-	m_phy_listener = new DcfPhyListener (this);
-	m_nav_listener = new DcfNavListener (this);
-	m_access_timer = new DynamicHandler<Dcf> (this, &Dcf::accessTimeout);
-	resetCW ();
-	//m_random = new RngUniform ();
+	m_access_timer_event = 0;
+	reset_cw ();
+	m_random = new RandomUniform ();
 }
 
 Dcf::~Dcf ()
 {
-	delete m_phyListener;
-	delete m_navListener;
-}
-
-/***************************************************************
- *     public API.
- ***************************************************************/ 
-
-MacDcfParameters *
-Dcf::parameters (void)
-{
-	return m_parameters;
+	delete m_random;
+	delete m_listener;
 }
 
 void
-Dcf::set_interface (NetInterface80211 *interface)
+Dcf::set_parameters (MacParameters const*parameters)
 {
-	m_interface = interface;
-	m_interface->low ()->registerNavListener (m_navListener);
-	m_interface->phy ()->register_listener (m_phyListener);
+	m_parameters = parameters;
 }
 
 void 
-Dcf::request_access (void)
+Dcf::set_difs_us (uint64_t difs_us)
 {
-	double delayUntilAccessGranted  = get_delay_until_access_granted (now ());
-	if (m_listener->accessing_and_will_notify ()) {
-		/* don't do anything. We will start a backoff and maybe
-		 * a timer when the txop notifies us of the end-of-access.
-		 */
-		TRACE ("accessing. will be notified.");
-	} else if (m_access_timer->is_running ()) {
-		/* we don't need to do anything because we have an access
-		 * timer which will expire soon.
-		 */
-		TRACE ("access timer running. will be notified");
-	} else if (isBackoffNotCompleted (now ()) && !m_access_timer->isRunning ()) {
-		/* start timer for ongoing backoff.
-		 */
-		TRACE ("request access X delayed for %f", delayUntilAccessGranted);
-		m_access_timer->start (delayUntilAccessGranted);
-	} else if (m_interface->phy ()->get_state () != Phy80211::IDLE) {
-		/* someone else has accessed the medium.
-		 * generate a backoff, start timer.
-		 */
-		startBackoff ();
-	} else if (delayUntilAccessGranted > 0) {
-		/* medium is IDLE, we have no backoff running but we 
-		 * need to wait a bit before accessing the medium.
-		 */
-		TRACE ("request access Y delayed for %f", delayUntilAccessGranted);
-		assert (!m_access_timer->is_running ());
-		m_access_timer->start (delayUntilAccessGranted);
-	} else {
-		/* we can access the medium now.
-		 */
-		TRACE ("access granted immediatly");
-		m_listener->accessGrantedNow ();
-	}
+	m_difs_us = difs_us;
 }
-
-void
-Dcf::notify_access_finished (void)
-{
-	TRACE ("access finished");
-	startBackoff ();
-}
-
 void 
-Dcf::notify_access_ongoing_ok (void)
+Dcf::set_eifs_us (uint64_t eifs_us)
 {
-	TRACE ("access ok");
-	resetCW ();
+	m_eifs_us = eifs_us;
 }
-
-void
-Dcf::notify_access_ongoing_error (void)
+void 
+Dcf::set_cw_bounds (uint32_t min, uint32_t max)
 {
-	TRACE ("access failed");
-	updateFailedCW ();
-}
-void
-Dcf::notify_access_ongoing_error_but_ok (void)
-{
-	TRACE ("access failed but ok");
-	resetCW ();
+	m_cw_min = min;
+	m_cw_max = max;
 }
 
 void 
@@ -218,22 +110,96 @@ Dcf::register_access_listener (DcfAccessListener *listener)
 	m_listener = listener;
 }
 
+
+/***************************************************************
+ *     public API.
+ ***************************************************************/ 
+
+void 
+Dcf::request_access (bool is_phy_busy)
+{
+	uint64_t delay_until_access_granted = get_delay_until_access_granted (now_us ());
+	if (m_listener->accessing_and_will_notify ()) {
+		/* don't do anything. We will start a backoff and maybe
+		 * a timer when the txop notifies us of the end-of-access.
+		 */
+		TRACE ("accessing. will be notified.");
+	} else if (m_access_timer_event != 0) {
+		/* we don't need to do anything because we have an access
+		 * timer which will expire soon.
+		 */
+		TRACE ("access timer running. will be notified");
+	} else if (is_backoff_not_completed (now_us ()) && m_access_timer_event == 0) {
+		/* start timer for ongoing backoff.
+		 */
+		TRACE ("request access X delayed for "<<delay_until_access_granted);
+		m_access_timer_event = make_cancellable_event (&Dcf::access_timeout, this);
+		Simulator::insert_in_us (delay_until_access_granted, m_access_timer_event);
+	} else if (is_phy_busy) {
+		/* someone else has accessed the medium.
+		 * generate a backoff, start timer.
+		 */
+		start_backoff ();
+	} else if (delay_until_access_granted > 0) {
+		/* medium is IDLE, we have no backoff running but we 
+		 * need to wait a bit before accessing the medium.
+		 */
+		TRACE ("request access Y delayed for "<< delay_until_access_granted);
+		assert (m_access_timer_event == 0);
+		m_access_timer_event = make_cancellable_event (&Dcf::access_timeout, this);
+		Simulator::insert_in_us (delay_until_access_granted, m_access_timer_event);
+	} else {
+		/* we can access the medium now.
+		 */
+		TRACE ("access granted immediatly");
+		m_listener->access_granted_now ();
+	}
+}
+
+void
+Dcf::notify_access_finished (void)
+{
+	TRACE ("access finished");
+	start_backoff ();
+}
+
+void 
+Dcf::notify_access_ongoing_ok (void)
+{
+	TRACE ("access ok");
+	reset_cw ();
+}
+
+void
+Dcf::notify_access_ongoing_error (void)
+{
+	TRACE ("access failed");
+	update_failed_cw ();
+}
+void
+Dcf::notify_access_ongoing_error_but_ok (void)
+{
+	TRACE ("access failed but ok");
+	reset_cw ();
+}
+
 /***************************************************************
  *     Timeout method. Notifies when Access is Granted.
  ***************************************************************/ 
 
 
 void 
-Dcf::access_timeout (MacCancelableEvent *event)
+Dcf::access_timeout ()
 {
-	double delayUntilAccessGranted  = get_delay_until_access_granted (now ());
-	if (delayUntilAccessGranted > 0) {
-		TRACE ("timeout access delayed for %f", delayUntilAccessGranted);
-		assert (!m_access_timer->is_running ());
-		m_access_timer->start (delayUntilAccessGranted);
+	uint64_t delay_until_access_granted  = get_delay_until_access_granted (now_us ());
+	if (delay_until_access_granted > 0) {
+		TRACE ("timeout access delayed for "<< delay_until_access_granted);
+		assert (m_access_timer_event == 0);
+		m_access_timer_event = make_cancellable_event (&Dcf::access_timeout, this);
+		Simulator::insert_in_us (delay_until_access_granted, m_access_timer_event);
 	} else {
 		TRACE ("timeout access granted");
-		m_listener->accessGrantedNow ();
+		m_listener->access_granted_now ();
 	}
 }
 
@@ -242,74 +208,72 @@ Dcf::access_timeout (MacCancelableEvent *event)
  *     Random trivial helper methods.
  ***************************************************************/ 
 
-double
-Dcf::now (void) const
+uint64_t
+Dcf::now_us (void) const
 {
-	double now;
-	now = Scheduler::instance ().clock ();
+	uint64_t now = Simulator::now_us ();
 	return now;
 }
 
-double
+uint64_t
 Dcf::pick_backoff_delay (void)
 {
-	double oooh = g_random->pick ();
-	double pickedCW = floor (oooh * m_CW);
-	TRACE ("oooh %f, CW: %d<%d<%d, picked: %f", 
-	       oooh, 
-	       m_parameters->getCWmin (),
-	       m_CW, 
-	       m_parameters->getCWmax (), 
-	       pickedCW);
-	double delay =  pickedCW * 
-		m_interface->parameters ()->getSlotTime ();
-	return delay;
+	uint32_t picked_cw = m_random->get_uint (0, m_cw);
+	TRACE ("cw="<<get_cw_min ()<<
+	       "<"<<m_cw<<"<"<<get_cw_max ()<<
+	       ", picked="<<picked_cw); 
+	uint64_t delay_us = picked_cw * m_parameters->get_slot_time_us ();
+	return delay_us;
 }
 void
 Dcf::reset_cw (void)
 {
-	m_CW = m_parameters->getCWmin ();
+	m_cw = get_cw_min ();
 }
 void
 Dcf::update_failed_cw (void)
 {
-	int CW = m_CW;
-	CW *= 2;
-	if (CW > m_parameters->get_cwmax ()) {
-		CW = m_parameters->getCWmax ();
+	uint32_t cw = m_cw;
+	cw *= 2;
+	if (cw > get_cw_max ()) {
+		cw = get_cw_max ();
 	}
-
-	m__cw = CW;
+	m_cw = cw;
 }
 
-double 
-Dcf::most_recent (double a, double b) const
+uint64_t
+Dcf::most_recent (uint64_t a, uint64_t b) const
 {
-	if (a >= b) {
-		return a;
-	} else {
-		return b;
-	}
+	return max (a, b);
 }
-double
-Dcf::most_recent (double a, double b, double c) const
+uint64_t
+Dcf::most_recent (uint64_t a, uint64_t b, uint64_t c) const
 {
-	double retval;
-	retval = max (a, b);
-	retval = max (retval, c);
+	uint64_t retval;
+	retval = most_recent (a, b);
+	retval = most_recent (retval, c);
 	return retval;
 }
 
-
-double
-Dcf::get_difs (void) const
+uint64_t 
+Dcf::get_difs_us (void) const
 {
-	return m_parameters->getAIFS ();
+	return m_difs_us;
 }
-double
-Dcf::get_eifs (void) const
+uint64_t 
+Dcf::get_eifs_us (void) const
 {
-	return m_parameters->getEIFS (m_interface->phy ());
+	return m_eifs_us;
+}
+uint32_t 
+Dcf::get_cw_min (void) const
+{
+	return m_cw_min;
+}
+uint32_t 
+Dcf::get_cw_max (void) const
+{
+	return m_cw_max;
 }
 
 /***************************************************************
@@ -319,22 +283,23 @@ Dcf::get_eifs (void) const
 void
 Dcf::start_backoff (void)
 {
-	double backoffStart = now ();
-	double backoffDuration = pickBackoffDelay ();
-	assert (m_backoff_start <= backoffStart);
-	m_backoff_start = backoffStart;
-	m_backoff_left = backoffDuration;
-	if (m_listener->accessNeeded () && !m_access_timer->is_running ()) {
-		double delayUntilAccessGranted  = get_delay_until_access_granted (now ());
-		if (delayUntilAccessGranted > 0) {
-			TRACE ("start at %f for %f", backoffStart, backoffDuration);
-			m_access_timer->start (delayUntilAccessGranted);
+	uint64_t backoff_start = now_us ();
+	uint64_t backoff_duration = pick_backoff_delay ();
+	assert (m_backoff_start <= backoff_start);
+	m_backoff_start = backoff_start;
+	m_backoff_left = backoff_duration;
+	if (m_listener->access_needed () && m_access_timer_event == 0) {
+		uint64_t delay_until_access_granted  = get_delay_until_access_granted (now_us ());
+		if (delay_until_access_granted > 0) {
+			TRACE ("start at "<<backoff_start<<", for "<<backoff_duration);
+			m_access_timer_event = make_cancellable_event (&Dcf::access_timeout, this);
+			Simulator::insert_in_us (delay_until_access_granted, m_access_timer_event);
 		} else {
 			TRACE ("access granted now");
-			m_listener->accessGrantedNow ();
+			m_listener->access_granted_now ();
 		}
 	} else {
-		if (m_access_timer->is_running ()) {
+		if (m_access_timer_event != 0) {
 			TRACE ("no access needed because timer running.");
 		} 
 		if (!m_listener->access_needed ()) {
@@ -343,36 +308,34 @@ Dcf::start_backoff (void)
 		TRACE ("no access needed for now.");
 	}
 }
-double
+uint64_t
 Dcf::get_access_granted_start (void) const
 {
 	/* This method evaluates the time where access to the
 	 * medium is allowed. The return value could be 
 	 * somewhere in the past or in the future.
 	 */
-	double rxAccessStart;
-	if (m_lastRxEnd >= m_lastRxStart) {
-		if (m_lastRxReceivedOk) {
-			rxAccessStart = m_last_rx_end + getDIFS ();
+	uint64_t rx_access_start;
+	if (m_last_rx_end >= m_last_rx_start) {
+		if (m_last_rx_received_ok) {
+			rx_access_start = m_last_rx_end + get_difs_us ();
 		} else {
-			rxAccessStart = m_last_rx_end + getEIFS ();
+			rx_access_start = m_last_rx_end + get_eifs_us ();
 		}
 	} else {
-		rxAccessStart = m_lastRxStart + m_last_rx_duration + getDIFS ();
+		rx_access_start = m_last_rx_start + m_last_rx_duration + get_difs_us ();
 	}
-	double txAccessStart = m_lastTxStart + m_last_tx_duration + getDIFS ();
-	double navAccessStart = m_lastNavStart + m_last_nav_duration + getDIFS ();
-	double accessGrantedStart = mostRecent (rxAccessStart,
-						txAccessStart,
-						navAccessStart);
-	return accessGrantedStart;
+	uint64_t tx_access_start = m_last_tx_start + m_last_tx_duration + get_difs_us ();
+	uint64_t nav_access_start = m_last_nav_start + m_last_nav_duration + get_difs_us ();
+	uint64_t access_granted_start = most_recent (rx_access_start, tx_access_start, nav_access_start);
+	return access_granted_start;
 }
 
 bool
-Dcf::is_backoff_not_completed (double now)
+Dcf::is_backoff_not_completed (uint64_t now)
 {
-	updateBackoff (now);
-	if (m_backoffLeft > 0) {
+	update_backoff (now);
+	if (m_backoff_left > 0) {
 		return true;
 	} else {
 		return false;
@@ -380,38 +343,32 @@ Dcf::is_backoff_not_completed (double now)
 }
 
 
-double 
-Dcf::get_delay_until_access_granted (double now)
+uint64_t
+Dcf::get_delay_until_access_granted (uint64_t now)
 {
-	double retval = getAccessGrantedStart () - now;
-	retval = max (retval, 0.0);
-	updateBackoff (now);
-	assert (m_backoff_left >= 0);
-	retval += m_backoffLeft;
-	retval = PRECISION_ROUND_TO_ZERO (retval);
-	assert (retval >= 0);
+	int64_t delta_to = get_access_granted_start () - now;
+	uint64_t retval = max (delta_to, 0);
+	update_backoff (now);
+	retval += m_backoff_left;
 	return retval;
 }
 void
-Dcf::update_backoff (double time)
+Dcf::update_backoff (uint64_t time_us)
 {
-	if (m_sleeping) {
-		return;
-	} else if (m_backoffLeft <= 0) {
+	if (m_sleeping || m_backoff_left == 0) {
 		return;
 	}
 	
 	//TRACE ("time: %f, backoffstart: %f\n", time, m_backoffStart);
-	assert (time >= m_backoffStart);
+	assert (time_us >= m_backoff_start);
 
-	double mostRecentEvent = max (m_backoffStart,
-				      get_access_granted_start ());
-	if (mostRecentEvent < time) {
-		m_backoff_left -= time - mostRecentEvent;
-		m_backoff_left = max (m_backoffLeft, 0.0); 
-		m_backoff_left = PRECISION_ROUND_TO_ZERO (m_backoffLeft);
-		TRACE ("at %f left %f", time, m_backoffLeft);
-		m_backoff_start = time;
+	uint64_t most_recent_event = most_recent (m_backoff_start,
+						  get_access_granted_start ());
+	if (most_recent_event < time_us) {
+		int64_t new_backoff_left = m_backoff_left - (time_us - most_recent_event);
+		m_backoff_left = max (new_backoff_left, 0); 
+		TRACE ("at="<<time_us<<", left="<< m_backoff_left);
+		m_backoff_start = time_us;
 	}
 }
 
@@ -419,76 +376,76 @@ Dcf::update_backoff (double time)
  *     Notification methods.
  ***************************************************************/ 
 void
-Dcf::nav_reset (double navStart, double duration)
+Dcf::nav_reset (uint64_t nav_start, uint64_t duration)
 {
-	double navEnd = navStart + duration;
-	double previousDelayUntilAccessGranted = get_delay_until_access_granted (navEnd);
-	m_last_nav_start = navEnd;
-	m_last_nav_duration = 0.0;
-	double newDelayUntilAccessGranted = get_delay_until_access_granted (navEnd);
-	if (newDelayUntilAccessGranted < previousDelayUntilAccessGranted &&
-	    m_access_timer->isRunning () &&
-	    m_access_timer->get_end_time () > newDelayUntilAccessGranted) {
-		/* This is quite unfortunate but we need to cancel the access timer
-		 * because it seems that this NAV reset has brought the time of
-		 * possible access closer to us than expected.
-		 */
-		m_access_timer->cancel ();
-		m_access_timer->start (newDelayUntilAccessGranted);
-	}
+	m_last_nav_start = nav_start;
+	m_last_nav_duration = duration;
+	uint64_t nav_end = nav_start + duration;
+	uint64_t new_delay_until_access_granted = get_delay_until_access_granted (nav_end);
+	assert (new_delay_until_access_granted > 0);
+	/* This is quite unfortunate but we need to cancel the access timer
+	 * because this nav reset might have brought the time of
+	 * possible access closer to us than expected.
+	 */
+	m_access_timer_event->cancel ();
+	m_access_timer_event = 0;
+	m_access_timer_event = make_cancellable_event (&Dcf::access_timeout, this);
+	Simulator::insert_in_us (new_delay_until_access_granted, m_access_timer_event);
 }
 void
-Dcf::nav_start (double navStart, double duration)
+Dcf::nav_start (uint64_t nav_start, uint64_t duration)
 {
-	assert (m_last_nav_start < navStart);
-	TRACE ("nav start at %f for %f", navStart, duration);
-	updateBackoff (navStart);
-	m_last_nav_start = navStart;
+	assert (m_last_nav_start < nav_start);
+	TRACE ("nav start at="<<nav_start<<", for="<<duration);
+	update_backoff (nav_start);
+	m_last_nav_start = nav_start;
 	m_last_nav_duration = duration;
 }
 void
-Dcf::nav_continue (double duration)
+Dcf::nav_continue (uint64_t duration)
 {
 	m_last_nav_duration += duration;
-	TRACE ("nav continue for %f", duration);
+	TRACE ("nav continue for "<<duration);
 }
 
 void 
-Dcf::notify_rx_start (double rxStart, double duration)
+Dcf::notify_rx_start (uint64_t rx_start, uint64_t duration)
 {
-	TRACE ("rx start at %f for %f", rxStart, duration);
-	updateBackoff (rxStart);
-	m_last_rx_start = rxStart;
+	TRACE ("rx start at="<<rx_start<<", for="<<duration);
+	update_backoff (rx_start);
+	m_last_rx_start = rx_start;
 	m_last_rx_duration = duration;
 	m_rxing = true;
 }
 void 
-Dcf::notify_rx_end (double rxEnd, bool receivedOk)
+Dcf::notify_rx_end (uint64_t rx_end, bool received_ok)
 {
-	TRACE ("rx end at %f -- %s", rxEnd, receivedOk?"ok":"failed");
-	m_last_rx_end = rxEnd;
-	m_last_rx_received_ok = receivedOk;
+	TRACE ("rx end at="<<rx_end<<" -- "<<received_ok?"ok":"failed");
+	m_last_rx_end = rx_end;
+	m_last_rx_received_ok = received_ok;
 	m_rxing = false;
 }
 void 
-Dcf::notify_tx_start (double txStart, double duration)
+Dcf::notify_tx_start (uint64_t tx_start, uint64_t duration)
 {
-	TRACE ("tx start at %f for %f", txStart, duration);
-	updateBackoff (txStart);
-	m_last_tx_start = txStart;
+	TRACE ("tx start at="<<tx_start<<" for "<<duration);
+	update_backoff (tx_start);
+	m_last_tx_start = tx_start;
 	m_last_tx_duration = duration;
 }
 void 
-Dcf::notify_sleep (double now)
+Dcf::notify_sleep (uint64_t sleep_start)
 {
 	TRACE ("sleep");
-	m_last_sleep_start = now;
+	m_last_sleep_start = sleep_start;
 	m_sleeping = true;
 }
 void 
-Dcf::notify_wakeup (double now)
+Dcf::notify_wakeup (uint64_t sleep_end)
 {
 	TRACE ("wakeup");
-	m_last_wakeup_start = now;
+	m_last_wakeup_start = sleep_end;
 	m_sleeping = false;
 }
+
+}; // namespace yans
