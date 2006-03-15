@@ -69,7 +69,7 @@ public:
 	MacLowNavListener ();
 	virtual ~MacLowNavListener ();
 	virtual void nav_start_us (uint64_t now_us, uint64_t duration_us) = 0;
-	virtual void nav_continue_us (uint64_t duration_us) = 0;
+	virtual void nav_continue_us (uint64_t now_us, uint64_t duration_us) = 0;
 	virtual void nav_reset_us (uint64_t now_us, uint64_t duration_us) = 0;
 };
 

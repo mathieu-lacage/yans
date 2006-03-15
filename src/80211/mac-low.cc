@@ -524,10 +524,8 @@ MacLow::notify_nav (uint64_t now_time_us, ChunkMac80211Hdr const *hdr)
 		uint64_t new_nav_end_us = new_nav_start_us + duration_us;
 		/* The two NAVs overlap */
 		if (new_nav_end_us > old_nav_end_us) {
-			uint64_t delta = new_nav_end_us - old_nav_end_us;
-			m_last_nav_duration_us += delta;
 			for (NavListenersCI i = m_nav_listeners.begin (); i != m_nav_listeners.end (); i++) {
-				(*i)->nav_continue_us (delta);
+				(*i)->nav_continue_us (new_nav_start_us, duration_us);
 			}
 		}
 	} else {
