@@ -19,35 +19,21 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #include "seed-generator.h"
-#include "random-uniform.h"
-#include "simulator.h"
-#include "event.tcc"
 #include "rng-mrg32k3a.h"
 
 namespace yans {
 
 class SeedGeneratorPrivate {
 public:
-	SeedGeneratorPrivate ();
-	~SeedGeneratorPrivate ();
-	void destroy (void);
-	void reset (uint32_t seed);
-	uint32_t get (void);
+	static void destroy (void);
+	static void reset (uint32_t seed);
+	static uint32_t get (void);
 private:
-	RngMrg32k3a m_generator;
+	static RngMrg32k3a m_generator;
 };
 
-SeedGeneratorPrivate::SeedGeneratorPrivate ()
-{
-	m_generator.reset (0);
-}
-SeedGeneratorPrivate::~SeedGeneratorPrivate ()
-{}
-void 
-SeedGeneratorPrivate::destroy (void)
-{
-	delete this;
-}
+RngMrg32k3a SeedGeneratorPrivate::m_generator;
+
 void 
 SeedGeneratorPrivate::reset (uint32_t seed)
 {
@@ -64,24 +50,12 @@ SeedGeneratorPrivate::get (void)
 void 
 SeedGenerator::reset (uint32_t seed)
 {
-	get_priv ()->reset (seed);
+	SeedGeneratorPrivate::reset (seed);
 }
 uint32_t 
 SeedGenerator::get (void)
 {
-	return get_priv ()->get ();
+	return SeedGeneratorPrivate::get ();
 }
-
-SeedGeneratorPrivate *
-SeedGenerator::get_priv (void)
-{
-	static SeedGeneratorPrivate *self = 0;
-	if (self == 0) {
-		self = new SeedGeneratorPrivate ();
-		Simulator::insert_at_destroy (make_event (&SeedGeneratorPrivate::destroy, self));
-	}
-	return self;
-}
-
 
 }; // namespace yans

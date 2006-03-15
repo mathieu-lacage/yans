@@ -32,7 +32,7 @@ public:
 	static void reset (uint32_t seed);
 	static uint32_t get (void);
 private:
-	static SeedGeneratorPrivate *get_priv (void);
+	SeedGenerator ();
 };
 
 }; // namespace yans
