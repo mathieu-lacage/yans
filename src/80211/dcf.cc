@@ -552,7 +552,7 @@ DcfTest::access_granted_now (void)
 	if (expected != Simulator::now_us ()) {
 		failure () << "DCF "
 			   << "Failure: access granted at=" << Simulator::now_us ()
-			   << ", expected at ="<<expected
+			   << ", expected at="<<expected
 			   << std::endl;
 		m_failed = true;
 		return;
@@ -653,21 +653,6 @@ DcfTest::expect_access_granted (uint64_t time)
 	m_access_granted_expected.push_back (time);
 }
 
-/*
-	void add_rx_ok_evt (uint64_t at, uint64_t duration);
-	void add_rx_error_evt (uint64_t at, uint64_t duration);
-	void add_tx_evt (uint64_t at, uint64_t duration);
-	void add_nav_reset (uint64_t at, uint64_t start, uint64_t duration);
-	void add_nav_start (uint64_t at, uint64_t start, uint64_t duration);
-	void add_nav_continue (uint64_t at, uint64_t start, uint64_t duration);
-	void add_access_request_idle (uint64_t time);
-	void add_access_request_busy (uint64_t time);
-	void add_access_error (uint64_t time);
-	void add_access_error_but_ok (uint64_t time);
-	void add_access_ok (uint64_t time);
-
- */
-
 void 
 DcfTest::start_test (void)
 {
@@ -675,12 +660,13 @@ DcfTest::start_test (void)
 	m_dcf->reset_rng (0);
 	m_parameters = new MacParameters ();
 	m_listener = new TestAccessListener (this);
-	m_parameters->set_slot_time_us (1);
 	m_dcf->set_parameters (m_parameters);
+	m_dcf->register_access_listener (m_listener);	
+
+	m_parameters->set_slot_time_us (1);
 	m_dcf->set_difs_us (3);
 	m_dcf->set_eifs_us (4);
 	m_dcf->set_cw_bounds (8, 64);
-	m_dcf->register_access_listener (m_listener);	
 }
 void 
 DcfTest::end_test (void)
@@ -718,10 +704,60 @@ DcfTest::run_tests (void)
 	Simulator::run ();
 	end_test ();
 
+	start_test ();
+	add_access_request_idle (10);
+	expect_access_granted (10);
+	Simulator::run ();
+	end_test ();
+
+	start_test ();
+	add_rx_ok_evt (10, 20);
+	add_nav_start (30, 30, 2+8);
+	add_rx_ok_evt (32, 7);
+	add_access_request_idle (40);
+	expect_access_granted (43);
+	Simulator::run ();
+	end_test ();
+
+	start_test ();
+	add_rx_ok_evt (10, 20);
+	add_nav_start (30, 30, 2+8);
+	add_rx_ok_evt (32, 7);
+	add_access_request_idle (41);
+	expect_access_granted (43);
+	Simulator::run ();
+	end_test ();
+
+	start_test ();
+	add_rx_ok_evt (10, 20);
+	add_nav_start (30, 30, 2+8);
+	add_rx_ok_evt (32, 7);
+	add_access_request_idle (43);
+	expect_access_granted (43);
+	Simulator::run ();
+	end_test ();
+
+	start_test ();
+	add_rx_error_evt (10, 20);
+	add_rx_ok_evt (31, 7);
+	add_access_request_idle (39);
+	expect_access_granted (41);
+	Simulator::run ();
+	end_test ();
+
+	start_test ();
+	add_rx_error_evt (10, 20);
+	add_rx_error_evt (31, 7);
+	add_access_request_idle (39);
+	expect_access_granted (42);
+	Simulator::run ();
+	end_test ();
+
+
 	return !m_failed;
 }
 
-static DcfTest g_test_test;
+static DcfTest g_dcf_test;
 
 }; // namespace yans
 
