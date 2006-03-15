@@ -121,6 +121,11 @@ RandomUniform::get_uint (uint32_t n)
 {
 	return m_priv->get_uint (n);
 }
+uint32_t 
+RandomUniform::get_uint (uint32_t a, uint32_t b)
+{
+	return m_priv->get_uint (a, b);
+}
 double 
 RandomUniform::get_double (void)
 {
