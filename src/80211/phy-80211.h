@@ -49,16 +49,17 @@ public:
 	 * rxEnd will be invoked later to report whether or not
 	 * the packet was successfully received.
 	 */
-	virtual void notify_rx_start (uint64_t now_us, uint64_t duration_us) = 0;
+	virtual void notify_rx_start (uint64_t duration_us) = 0;
 	/* we have received the last bit of a packet for which
 	 * rxStart was invoked first. 
 	 */
-	virtual void notify_rx_end (uint64_t now_us, bool received_ok) = 0;
+	virtual void notify_rx_end_ok (void) = 0;
+	virtual void notify_rx_end_error (void) = 0;
 	/* we start the transmission of a packet.
 	 */
-	virtual void notify_tx_start (uint64_t now_us, uint64_t duration_us) = 0;
-	virtual void notify_sleep (uint64_t now_us) = 0;
-	virtual void notify_wakeup (uint64_t now_us) = 0;
+	virtual void notify_tx_start (uint64_t duration_us) = 0;
+	virtual void notify_sleep (void) = 0;
+	virtual void notify_wakeup () = 0;
 };
 
 
@@ -149,11 +150,12 @@ private:
 	void cancel_rx (void);
 	TransmissionMode *get_mode (uint8_t tx_mode) const;
 	double get_power_dbm (uint8_t power) const;
-	void notify_tx_start (uint64_t now_us, uint64_t duration_us);
-	void notify_sleep (uint64_t now_us);
-	void notify_wakeup (uint64_t now_us);
-	void notify_rx_start (uint64_t now_us, uint64_t duration_us);
-	void notify_rx_end (uint64_t now_us, bool receivedOk);
+	void notify_tx_start (uint64_t duration_us);
+	void notify_sleep (void);
+	void notify_wakeup (void);
+	void notify_rx_start (uint64_t duration_us);
+	void notify_rx_end_ok (void);
+	void notify_rx_end_error (void);
 	void switch_to_tx (uint64_t tx_duration_us);
 	void switch_to_sleep (void);
 	void switch_to_idle_from_sleep (void);

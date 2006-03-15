@@ -245,7 +245,7 @@ Phy80211::receive_packet (Packet const*packet,
 	case Phy80211::IDLE: {
 		if (rx_power_w > m_ed_threshold_w) {
 			// sync to signal
-			notify_rx_start (now_us (), rx_duration_us);
+			notify_rx_start (rx_duration_us);
 			switch_to_sync_from_idle (rx_duration_us);
 			assert (m_end_rx_event == 0);
 			m_end_rx_event = make_cancellable_event (&Phy80211::end_rx, this, 
@@ -278,7 +278,7 @@ Phy80211::send_packet (Packet const*packet, uint8_t tx_mode, uint8_t tx_power, u
 	}
 
 	uint64_t tx_duration_us = calculate_tx_duration_us (packet->get_size (), tx_mode);
-	notify_tx_start (now_us (), tx_duration_us);
+	notify_tx_start (tx_duration_us);
 	switch_to_tx (tx_duration_us);
 	m_propagation->send (packet, get_power_dbm (tx_power), tx_mode, stuff);
 }
@@ -540,38 +540,45 @@ Phy80211::get_power_dbm (uint8_t power) const
 }
 
 void 
-Phy80211::notify_tx_start (uint64_t now_us, uint64_t duration_us)
+Phy80211::notify_tx_start (uint64_t duration_us)
 {
 	for (ListenersCI i = m_listeners.begin (); i != m_listeners.end (); i++) {
-		(*i)->notify_tx_start (now_us, duration_us);
+		(*i)->notify_tx_start (duration_us);
 	}
 }
 void 
-Phy80211::notify_rx_start (uint64_t now_us, uint64_t duration_us)
+Phy80211::notify_rx_start (uint64_t duration_us)
 {
 	for (ListenersCI i = m_listeners.begin (); i != m_listeners.end (); i++) {
-		(*i)->notify_rx_start (now_us, duration_us);
+		(*i)->notify_rx_start (duration_us);
 	}
 }
 void 
-Phy80211::notify_rx_end (uint64_t now_us, bool receivedOk)
+Phy80211::notify_rx_end_ok (void)
 {
 	for (ListenersCI i = m_listeners.begin (); i != m_listeners.end (); i++) {
-		(*i)->notify_rx_end (now_us, receivedOk);
+		(*i)->notify_rx_end_ok ();
 	}
 }
 void 
-Phy80211::notify_sleep (uint64_t now_us)
+Phy80211::notify_rx_end_error (void)
 {
 	for (ListenersCI i = m_listeners.begin (); i != m_listeners.end (); i++) {
-		(*i)->notify_sleep (now_us);
+		(*i)->notify_rx_end_error ();
 	}
 }
 void 
-Phy80211::notify_wakeup (uint64_t now_us)
+Phy80211::notify_sleep (void)
 {
 	for (ListenersCI i = m_listeners.begin (); i != m_listeners.end (); i++) {
-		(*i)->notify_wakeup (now_us);
+		(*i)->notify_sleep ();
+	}
+}
+void 
+Phy80211::notify_wakeup (void)
+{
+	for (ListenersCI i = m_listeners.begin (); i != m_listeners.end (); i++) {
+		(*i)->notify_wakeup ();
 	}
 }
 
@@ -869,12 +876,12 @@ Phy80211::end_rx (CountPtrHolder<Packet const> p, CountPtrHolder<RxEvent> ev, ui
 	       ", snr="<<snr<<", per="<<per<<", size="<<packet->get_size ());
 	
 	if (m_random->get_double () > per) {
-		notify_rx_end (now_us (), true);
+		notify_rx_end_ok ();
 		switch_to_idle_from_sync ();
 		(*m_rx_ok_callback) (packet, snr, event->get_payload_mode (), stuff);
 	} else {
 		/* failure. */
-		notify_rx_end (now_us (), false);
+		notify_rx_end_error ();
 		switch_to_idle_from_sync ();
 		(*m_rx_error_callback) (packet, snr);
 	}
