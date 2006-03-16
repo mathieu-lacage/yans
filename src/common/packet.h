@@ -55,8 +55,8 @@ public:
 	Tag *remove_tag (uint32_t tag_id);
 	
 	void add (Chunk *chunk);
-	void add_at_end (Packet *packet);
-	void add_at_end (Packet *packet, uint32_t offset, uint32_t size);
+	void add_at_end (Packet const*packet);
+	void add_at_end (Packet const*packet, uint32_t offset, uint32_t size);
 	void remove (Chunk *chunk);
 	void remove_at_end (uint32_t size);
 	void remove_at_start (uint32_t size);
