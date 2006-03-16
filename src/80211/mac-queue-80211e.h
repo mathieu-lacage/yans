@@ -52,15 +52,15 @@ public:
 	MacQueue80211e ();
 	~MacQueue80211e ();
 
-	void setParameters (MacParameters *parameters);
+	void set_parameters (MacParameters *parameters);
 
 	void enqueue (Packet *packet);
-	void enqueueToHead (Packet *packet);
+	void enqueue_to_head (Packet *packet);
 	Packet *dequeue (void);
 
 	void flush (void);
 
-	bool isEmpty (void);
+	bool is_empty (void);
 
 	int size (void);
 

@@ -34,7 +34,7 @@ MacQueue80211e::~MacQueue80211e ()
 {}
 
 void
-MacQueue80211e::setParameters (MacParameters *parameters)
+MacQueue80211e::set_parameters (MacParameters *parameters)
 {
 	m_parameters = parameters;
 }
@@ -48,7 +48,7 @@ MacQueue80211e::enqueue (Packet *packet)
 	m_queue.push_front (make_pair<Packet *, double> (packet, now));
 }
 void 
-MacQueue80211e::enqueueToHead (Packet *packet)
+MacQueue80211e::enqueue_to_head (Packet *packet)
 {
 	cleanup ();
 	double now;
@@ -68,8 +68,8 @@ MacQueue80211e::cleanup (void)
 
 	now = Scheduler::instance ().clock ();
 	tmp = m_queue.rbegin ();
-	while (tmp != m_queue.rend ()) {
-		if ((*tmp).second + m_parameters->getMSDULifetime () > now) {
+hile (tmp != m_queue.rend ()) {
+		if ((*tmp).second + m_parameters->get_msdulifetime () > now) {
 			break;
 		}
 		Packet::free ((*tmp).first);
@@ -92,7 +92,7 @@ MacQueue80211e::dequeue (void)
 }
 
 Packet *
-MacQueue80211e::peekNextPacket (void)
+MacQueue80211e::peek_next_packet (void)
 {
 	cleanup ();
 	if (!m_queue.empty ()) {
@@ -105,7 +105,7 @@ MacQueue80211e::peekNextPacket (void)
 }
 
 bool
-MacQueue80211e::isEmpty (void)
+MacQueue80211e::is_empty (void)
 {
 	cleanup ();
 	return m_queue.empty ();
