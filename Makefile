@@ -128,6 +128,8 @@ YANS_SRC= \
 	src/80211/mac-low.cc \
 	src/80211/mac-parameters.cc \
 	src/80211/dcf.cc \
+	src/80211/mac-tx-middle.cc \
+	src/80211/mac-rx-middle.cc \
 	src/80211/network-interface-80211.cc \
 	src/80211/network-interface-80211-factory.cc \
 	test/test.cc \
@@ -215,6 +217,8 @@ YANS_HDR = \
 	src/80211/mac-low.h \
 	src/80211/mac-parameters.h \
 	src/80211/dcf.h \
+	src/80211/mac-tx-middle.h \
+	src/80211/mac-rx-middle.h \
 	src/80211/network-interface-80211.h \
 	src/80211/network-interface-80211-factory.h \
 	src/host/host.h \
