@@ -38,7 +38,7 @@ class DcaTxop
 public:
 	DcaTxop (Dcf *dcf, MacQueue80211e *queue);
 
-	void setInterface (NetInterface80211 *interface);
+	void set_interface (NetInterface80211 *interface);
 
 private:
 	friend class MyDcaAccessListener;
@@ -50,25 +50,25 @@ private:
 	MacParameters *parameters (void);
 
 	/* event handlers */
-	void accessGrantedNow (void);
-	bool accessingAndWillNotify (void);
-	bool accessNeeded (void);
-	void gotCTS (double snr, int txMode);
-	void missedCTS (void);
-	void gotACK (double snr, int txMode);
-	void missedACK (void);
-	void startNext (void);
+	void access_granted_now (void);
+	bool accessing_and_will_notify (void);
+	bool access_needed (void);
+	void got_cts (double snr, int txMode);
+	void missed_cts (void);
+	void got_ack (double snr, int txMode);
+	void missed_ack (void);
+	void start_next (void);
 
-	bool needRTS (void);
-	bool needFragmentation (void);
-	int getNFragments (void);
-	int getLastFragmentSize (void);
-	int getNextFragmentSize (void);
-	int getFragmentSize (void);
-	bool isLastFragment (void);
-	void nextFragment (void);
+	bool need_rts (void);
+	bool need_fragmentation (void);
+	int get_nfragments (void);
+	int get_last_fragment_size (void);
+	int get_next_fragment_size (void);
+	int get_fragment_size (void);
+	bool is_last_fragment (void);
+	void next_fragment (void);
 	Packet *getFragmentPacket (void);
-	void dropCurrentPacket (void);
+	void drop_current_packet (void);
 	MacStation *lookupDestStation (Packet *packet);
 
 	Dcf *m_dcf;
