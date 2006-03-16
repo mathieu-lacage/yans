@@ -53,6 +53,112 @@ MacLowNavListener::MacLowNavListener ()
 MacLowNavListener::~MacLowNavListener ()
 {}
 
+MacLowTransmissionParameters::MacLowTransmissionParameters ()
+	: m_next_size (0),
+	  m_wait_ack (ACK_NONE),
+	  m_send_rts (false),
+	  m_override_duration_id_us (0)
+{}
+void 
+MacLowTransmissionParameters::enable_next_data (uint32_t size)
+{
+	m_next_size = size;
+}
+void 
+MacLowTransmissionParameters::disable_next_data (void)
+{
+	m_next_size = 0;
+}
+void 
+MacLowTransmissionParameters::enable_override_duration_id (uint64_t duration_id_us)
+{
+	m_override_duration_id_us = duration_id_us;
+}
+void 
+MacLowTransmissionParameters::disable_override_duration_id (void)
+{
+	m_override_duration_id_us = 0;
+}
+void 
+MacLowTransmissionParameters::enable_super_fast_ack (void)
+{
+	m_wait_ack = ACK_SUPER_FAST;
+}
+void 
+MacLowTransmissionParameters::enable_fast_ack (void)
+{
+	m_wait_ack = ACK_FAST;
+}
+void 
+MacLowTransmissionParameters::enable_ack (void)
+{
+	m_wait_ack = ACK_NORMAL;
+}
+void 
+MacLowTransmissionParameters::disable_ack (void)
+{
+	m_wait_ack = ACK_NONE;
+}
+void 
+MacLowTransmissionParameters::enable_rts (void)
+{
+	m_send_rts = true;
+}
+void 
+MacLowTransmissionParameters::disable_rts (void)
+{
+	m_send_rts = false;
+}
+bool 
+MacLowTransmissionParameters::must_wait_ack (void) const
+{
+	return (m_wait_ack != ACK_NONE)?true:false;
+}
+bool 
+MacLowTransmissionParameters::must_wait_normal_ack (void) const
+{
+	return (m_wait_ack == ACK_NORMAL)?true:false;
+}
+bool 
+MacLowTransmissionParameters::must_wait_fast_ack (void) const
+{
+	return (m_wait_ack == ACK_FAST)?true:false;
+}
+bool 
+MacLowTransmissionParameters::must_wait_super_fast_ack (void) const
+{
+	return (m_wait_ack == ACK_SUPER_FAST)?true:false;
+}
+bool 
+MacLowTransmissionParameters::must_send_rts (void) const
+{
+	return m_send_rts;
+}
+bool 
+MacLowTransmissionParameters::has_duration_id (void) const
+{
+	return (m_override_duration_id_us == 0)?true:false;
+}
+uint64_t 
+MacLowTransmissionParameters::get_duration_id (void) const
+{
+	assert (m_override_duration_id_us != 0);
+	return m_override_duration_id_us;
+}
+bool 
+MacLowTransmissionParameters::has_next_packet (void) const
+{
+	return (m_next_size != 0)?true:false;
+}
+uint32_t 
+MacLowTransmissionParameters::get_next_packet_size (void) const
+{
+	assert (has_next_packet ());
+	return m_next_size;
+}
+
+
+
 MacLow::MacLow ()
 	: m_rx_callback (0), 
 	  m_normal_ack_timeout_event (0),
@@ -68,48 +174,66 @@ MacLow::MacLow ()
 {
 	m_last_nav_duration_us = 0;
 	m_last_nav_start_us = 0;
-	m_override_duration_id_us = 0;
 }
 
 MacLow::~MacLow ()
 {
+	cancel_all_events ();
+	delete m_rx_callback;
+}
+
+void
+MacLow::cancel_all_events (void)
+{
+	bool one_running = false;
 	if (m_normal_ack_timeout_event != 0) {
 		m_normal_ack_timeout_event->cancel ();
 		m_normal_ack_timeout_event = 0;
+		one_running = true;
 	}
 	if (m_fast_ack_timeout_event != 0) {
 		m_fast_ack_timeout_event->cancel ();
 		m_fast_ack_timeout_event = 0;
+		one_running = true;
 	}
 	if (m_super_fast_ack_timeout_event != 0) {
 		m_super_fast_ack_timeout_event->cancel ();
 		m_super_fast_ack_timeout_event = 0;
+		one_running = true;
 	}
 	if (m_fast_ack_failed_timeout_event != 0) {
 		m_fast_ack_failed_timeout_event->cancel ();
 		m_fast_ack_failed_timeout_event = 0;
+		one_running = true;
 	}
 	if (m_cts_timeout_event != 0) {
 		m_cts_timeout_event->cancel ();
 		m_cts_timeout_event= 0;
+		one_running = true;
 	}
 	if (m_send_cts_event != 0) {
 		m_send_cts_event->cancel ();
 		m_send_cts_event= 0;
+		one_running = true;
 	}
 	if (m_send_ack_event != 0) {
 		m_send_ack_event->cancel ();
 		m_send_ack_event= 0;
+		one_running = true;
 	}
 	if (m_send_data_event != 0) {
 		m_send_data_event->cancel ();
 		m_send_data_event= 0;
+		one_running = true;
 	}
 	if (m_wait_sifs_event != 0) {
 		m_wait_sifs_event->cancel ();
 		m_wait_sifs_event= 0;
+		one_running = true;
 	}
-	delete m_rx_callback;
+	if (one_running) {
+		m_listener->cancel ();
+	}
 }
 
 /****************************************************************************
@@ -137,73 +261,59 @@ MacLow::set_rx_callback (MacLowRxCallback *callback)
 	m_rx_callback = callback;
 }
 void 
-MacLow::set_data (Packet *packet, ChunkMac80211Hdr const*hdr)
+MacLow::register_nav_listener (MacLowNavListener *listener)
 {
+	m_nav_listeners.push_back (listener);
+}
+
+
+void 
+MacLow::start_transmission (Packet *packet, 
+			    ChunkMac80211Hdr const*hdr, 
+			    MacLowTransmissionParameters parameters,
+			    MacLowTransmissionListener *listener)
+{
+	/* m_current_packet is not NULL because someone started
+	 * a transmission and was interrupted before one of:
+	 *   - ctsTimeout
+	 *   - sendDataAfterCTS
+	 * expired. This means that one of these timers is still
+	 * running. They are all cancelled below anyway by the 
+	 * call to cancel_all_events (because of at least one
+	 * of these two timer) which will trigger a call to the
+	 * previous listener's cancel method.
+	 *
+	 * This typically happens because the high-priority 
+	 * QapScheduler has taken access to the channel from
+	 * one of the Edca of the QAP.
+	 */
 	if (m_current_packet != 0) {
-		/* currentTxPacket is not NULL because someone started
-		 * a transmission and was interrupted before one of:
-		 *   - ctsTimeout
-		 *   - sendDataAfterCTS
-		 * expired. This means that one of these timers is still
-		 * running. When the caller of this method also calls
-		 * setTransmissionListener, it will trigger a positive
-		 * check in maybeCancelPrevious (because of at least one
-		 * of these two timer) which will trigger a call to the
-		 * previous listener's cancel method. That method is 
-		 * responsible for freeing the Packet because it has not 
-		 * been forwarded to the Phy yet.
-		 *
-		 * This typically happens because the high-priority 
-		 * QapScheduler has taken access to the channel from
-		 * one of the Edca of the QAP.
-		 */
 		m_current_packet->unref ();
 		m_current_packet = 0;
 	}
 	m_current_packet = packet;
 	m_current_packet->ref ();
 	m_current_hdr = *hdr;
-}
+	cancel_all_events ();
+	m_transmission_listener = listener;
+	m_tx_params = parameters;
 
-void 
-MacLow::enable_next_data (uint32_t size, uint8_t tx_mode)
-{
-	m_next_size = size;
-	m_next_tx_mode = tx_mode;
-}
-void 
-MacLow::disable_next_data (void)
-{
-	m_next_size = 0;
-}
-void 
-MacLow::enable_override_duration_id (uint64_t duration_id_us)
-{
-	m_override_duration_id_us = duration_id_us;
-}
-void 
-MacLow::disable_override_duration_id (void)
-{
-	m_override_duration_id_us = 0;
-}
-
-void 
-MacLow::start_transmission (void)
-{
 	assert (m_phy->is_state_idle ());
 
 	TRACE ("startTx size="<< get_current_size () << ", to=" << m_current_hdr.get_addr1());
 
-	if (m_next_size > 0 && !wait_ack ()) {
+	if (m_tx_params.has_next_packet () && !m_tx_params.must_wait_ack ()) {
 		// we need to start the afterSIFS timeout now.
-		uint64_t delay_us = calculate_overall_tx_time_us ();
+		uint64_t delay_us = calculate_overall_tx_time_us (get_current_size (),
+								  m_current_hdr.get_addr1(), 
+								  m_tx_params);
 		delay_us += get_sifs_us ();
 		assert (m_wait_sifs_event == 0);
 		m_wait_sifs_event = make_cancellable_event (&MacLow::wait_sifs_after_end_tx, this);
 		Simulator::insert_in_us (delay_us, m_wait_sifs_event);
 	}
 
-	if (m_send_rts) {
+	if (m_tx_params.must_send_rts ()) {
 		send_rts_for_packet ();
 	} else {
 		send_data_packet ();
@@ -218,7 +328,7 @@ MacLow::receive_error (Packet const*packet, double rx_snr)
 {
 	TRACE ("rx failed ");
 	m_drop_error->log (packet);
-	if (wait_fast_ack ()) {
+	if (m_tx_params.must_wait_fast_ack ()) {
 		assert (m_fast_ack_failed_timeout_event == 0);
 		m_fast_ack_failed_timeout_event = make_cancellable_event (&MacLow::fast_ack_failed_timeout, this);
 		Simulator::insert_in_us (get_sifs_us (), m_fast_ack_failed_timeout_event);
@@ -280,19 +390,19 @@ MacLow::receive_ok (Packet const*p, double rx_snr, uint8_t tx_mode, uint8_t stuf
 		Simulator::insert_in_us (get_sifs_us (), m_send_data_event);
 	} else if (hdr.is_ack () &&
 		   hdr.get_addr1 () == m_interface->get_mac_address () &&
-		   wait_ack ()) {
+		   m_tx_params.must_wait_ack ()) {
 		MacStation *station = get_station (m_current_hdr.get_addr1 ());
 		TRACE ("receive ack from="<<m_current_hdr.get_addr1 ());
 		station->report_rx_ok (rx_snr, tx_mode);
 		station->report_data_ok (rx_snr, tx_mode, stuff);
-		if (wait_normal_ack ()) {
+		if (m_tx_params.must_wait_normal_ack ()) {
 			m_normal_ack_timeout_event->cancel ();
 			m_normal_ack_timeout_event = 0;
 		}
-		if (wait_normal_ack () || wait_fast_ack ()) {
+		if (m_tx_params.must_wait_normal_ack () || m_tx_params.must_wait_fast_ack ()) {
 			m_transmission_listener->got_ack (rx_snr, tx_mode);
 		}
-		if (m_next_size > 0) {
+		if (m_tx_params.has_next_packet ()) {
 			m_wait_sifs_event = make_cancellable_event (&MacLow::wait_sifs_after_end_tx, this);
 			Simulator::insert_in_us (get_sifs_us (), m_wait_sifs_event);
 		}
@@ -327,82 +437,6 @@ MacLow::receive_ok (Packet const*p, double rx_snr, uint8_t tx_mode, uint8_t stuf
 	}
 	packet->unref ();
 	return;
-}
-
-
-void 
-MacLow::enable_super_fast_ack (void)
-{
-	m_wait_ack = ACK_SUPER_FAST;
-}
-void 
-MacLow::enable_fast_ack (void)
-{
-	m_wait_ack = ACK_FAST;
-}
-void 
-MacLow::enable_ack (void)
-{
-	m_wait_ack = ACK_NORMAL;
-}
-void 
-MacLow::disable_ack (void)
-{
-	m_wait_ack = ACK_NONE;
-}
-void 
-MacLow::enable_rts (void)
-{
-	m_send_rts = true;
-}
-void 
-MacLow::disable_rts (void)
-{
-	m_send_rts = false;
-}
-void 
-MacLow::set_transmission_listener (MacLowTransmissionListener *listener)
-{
-	// XXX
-	//maybe_cancel_previous ();
-	m_transmission_listener = listener;
-}
-void 
-MacLow::set_data_transmission_mode (uint8_t tx_mode)
-{
-	m_data_tx_mode = tx_mode;
-}
-void 
-MacLow::set_rts_transmission_mode (uint8_t tx_mode)
-{
-	m_rts_tx_mode = tx_mode;
-}
-void 
-MacLow::register_nav_listener (MacLowNavListener *listener)
-{
-	m_nav_listeners.push_back (listener);
-}
-
-
-bool 
-MacLow::wait_ack (void) const
-{
-	return (m_wait_ack != ACK_NONE)?true:false;
-}
-bool 
-MacLow::wait_normal_ack (void) const
-{
-	return (m_wait_ack == ACK_NORMAL)?true:false;
-}
-bool 
-MacLow::wait_fast_ack (void) const
-{
-	return (m_wait_ack == ACK_FAST)?true:false;
-}
-bool 
-MacLow::wait_super_fast_ack (void) const
-{
-	return (m_wait_ack == ACK_SUPER_FAST)?true:false;
 }
 
 uint32_t 
@@ -459,6 +493,17 @@ MacLow::now_us (void) const
 	return Simulator::now_us ();
 }
 
+uint8_t 
+MacLow::get_rts_tx_mode (MacAddress to) const
+{
+	return get_station (to)->get_rts_mode ();
+}
+uint8_t 
+MacLow::get_data_tx_mode (MacAddress to, uint32_t size) const
+{
+	return get_station (to)->get_data_mode (size);
+}
+
 uint8_t
 MacLow::get_cts_tx_mode_for_rts (MacAddress to, uint8_t rts_tx_mode) const
 {
@@ -476,23 +521,41 @@ MacLow::get_ack_tx_mode_for_data (MacAddress to, uint8_t data_tx_mode) const
 
 
 uint64_t
-MacLow::calculate_overall_tx_time_us (void) const
+MacLow::calculate_overall_tx_time_us (uint32_t data_size, MacAddress to, 
+				      MacLowTransmissionParameters const& params) const
 {
 	uint64_t tx_time_us = 0;
-	if (m_send_rts) {
-		tx_time_us += m_phy->calculate_tx_duration_us (get_rts_size (), m_rts_tx_mode);
-		uint8_t cts_tx_mode = get_cts_tx_mode_for_rts (m_current_hdr.get_addr1 (), m_rts_tx_mode);
-		tx_time_us += m_phy->calculate_tx_duration_us (get_cts_size (), cts_tx_mode);
+	MacStation *station = get_station (to);
+	uint8_t rts_mode = station->get_rts_mode ();
+	uint8_t data_mode = station->get_data_mode (data_size);
+	if (params.must_send_rts ()) {
+		tx_time_us += m_phy->calculate_tx_duration_us (get_rts_size (), rts_mode);
+		uint8_t cts_mode = get_cts_tx_mode_for_rts (m_current_hdr.get_addr1 (), rts_mode);
+		tx_time_us += m_phy->calculate_tx_duration_us (get_cts_size (), cts_mode);
 		tx_time_us += get_sifs_us () * 2;
 	}
-	tx_time_us += m_phy->calculate_tx_duration_us (get_current_size (), m_data_tx_mode);
-	if (wait_ack ()) {
-		int ack_tx_mode = get_ack_tx_mode_for_data (m_current_hdr.get_addr1 (), m_data_tx_mode);
+	tx_time_us += m_phy->calculate_tx_duration_us (data_size, data_mode);
+	if (params.must_wait_ack ()) {
+		int ack_mode = get_ack_tx_mode_for_data (m_current_hdr.get_addr1 (), data_mode);
 		tx_time_us += get_sifs_us ();
-		tx_time_us += m_phy->calculate_tx_duration_us (get_ack_size (), ack_tx_mode);
+		tx_time_us += m_phy->calculate_tx_duration_us (get_ack_size (), ack_mode);
 	}
 	return tx_time_us;
 }
+
+uint64_t
+MacLow::calculate_transmission_time (uint32_t data_size, MacAddress to, 
+				     MacLowTransmissionParameters const& params) const
+{
+	uint64_t tx_time_us = calculate_overall_tx_time_us (data_size, to, params);
+	if (params.has_next_packet ()) {
+		uint8_t data_mode = get_data_tx_mode (to, data_size );
+		tx_time_us += get_sifs_us ();
+		tx_time_us += m_phy->calculate_tx_duration_us (params.get_next_packet_size (), data_mode);
+	}
+	return tx_time_us;
+}
+
 
 void
 MacLow::notify_nav (uint64_t now_time_us, ChunkMac80211Hdr const *hdr)
@@ -580,9 +643,6 @@ MacLow::super_fast_ack_timeout ()
 	}
 }
 
-
-
-
 void
 MacLow::send_rts_for_packet (void)
 {
@@ -591,25 +651,27 @@ MacLow::send_rts_for_packet (void)
 	rts.set_type (MAC_80211_CTL_RTS);
 	rts.set_addr1 (m_current_hdr.get_addr1 ());
 	rts.set_addr2 (m_interface->get_mac_address ());
+	uint8_t rts_tx_mode = get_rts_tx_mode (m_current_hdr.get_addr1 ());
 	uint64_t duration_us;
-	if (m_override_duration_id_us > 0) {
-		duration_us = m_override_duration_id_us;
+	if (m_tx_params.has_duration_id ()) {
+		duration_us = m_tx_params.get_duration_id ();
 	} else {
-		int ack_tx_mode = get_ack_tx_mode_for_data ( m_current_hdr.get_addr1 (), m_data_tx_mode);
-		int cts_tx_mode = get_cts_tx_mode_for_rts ( m_current_hdr.get_addr1 (), m_rts_tx_mode);
+		uint8_t data_tx_mode = get_data_tx_mode (m_current_hdr.get_addr1 (), get_current_size ());
+		uint8_t ack_tx_mode = get_ack_tx_mode_for_data (m_current_hdr.get_addr1 (), data_tx_mode);
+		uint8_t cts_tx_mode = get_cts_tx_mode_for_rts (m_current_hdr.get_addr1 (), rts_tx_mode);
 		duration_us = 0;
 		duration_us += get_sifs_us ();
 		duration_us += m_phy->calculate_tx_duration_us (get_cts_size (), cts_tx_mode);
 		duration_us += get_sifs_us ();
-		duration_us += m_phy->calculate_tx_duration_us (get_current_size (), m_data_tx_mode);
+		duration_us += m_phy->calculate_tx_duration_us (get_current_size (), data_tx_mode);
 		duration_us += get_sifs_us ();
 		duration_us += m_phy->calculate_tx_duration_us (get_ack_size (), ack_tx_mode);
 	}
 	rts.set_duration_us (duration_us);
 
-	TRACE ("tx RTS to="<< rts.get_addr1 () << ", mode=" << m_rts_tx_mode);
+	TRACE ("tx RTS to="<< rts.get_addr1 () << ", mode=" << rts_tx_mode);
 
-	uint64_t tx_duration_us = m_phy->calculate_tx_duration_us (get_rts_size (), m_rts_tx_mode);
+	uint64_t tx_duration_us = m_phy->calculate_tx_duration_us (get_rts_size (), rts_tx_mode);
 	uint64_t timer_delay_us = tx_duration_us + get_cts_timeout_us ();
 
 	assert (m_cts_timeout_event == 0);
@@ -621,24 +683,25 @@ MacLow::send_rts_for_packet (void)
 	ChunkMac80211Fcs fcs;
 	packet->add (&fcs);
 
-	forward_down (packet, &rts, m_rts_tx_mode, 0);
+	forward_down (packet, &rts, rts_tx_mode, 0);
 }
 
 void
 MacLow::start_ack_timers (void)
 {
-	uint64_t tx_duration_us = m_phy->calculate_tx_duration_us (get_current_size (), m_data_tx_mode);
-	if (wait_normal_ack ()) {
+	uint8_t data_tx_mode = get_data_tx_mode (m_current_hdr.get_addr1 (), get_current_size ());
+	uint64_t tx_duration_us = m_phy->calculate_tx_duration_us (get_current_size (), data_tx_mode);
+	if (m_tx_params.must_wait_normal_ack ()) {
 		uint64_t timer_delay_us = tx_duration_us + get_ack_timeout_us ();
 		assert (m_normal_ack_timeout_event == 0);
 		m_normal_ack_timeout_event = make_cancellable_event (&MacLow::normal_ack_timeout, this);
 		Simulator::insert_in_us (timer_delay_us, m_normal_ack_timeout_event);
-	} else if (wait_fast_ack ()) {
+	} else if (m_tx_params.must_wait_fast_ack ()) {
 		uint64_t timer_delay_us = tx_duration_us + get_pifs_us ();
 		assert (m_fast_ack_timeout_event == 0);
 		m_fast_ack_timeout_event = make_cancellable_event (&MacLow::fast_ack_timeout, this);
 		Simulator::insert_in_s (timer_delay_us, m_fast_ack_timeout_event);
-	} else if (wait_super_fast_ack ()) {
+	} else if (m_tx_params.must_wait_super_fast_ack ()) {
 		uint64_t timer_delay_us = tx_duration_us + get_pifs_us ();
 		assert (m_super_fast_ack_timeout_event == 0);
 		m_super_fast_ack_timeout_event = make_cancellable_event (&MacLow::super_fast_ack_timeout, this);
@@ -650,24 +713,28 @@ void
 MacLow::send_data_packet (void)
 {
 	/* send this packet directly. No RTS is needed. */
-	TRACE ("tx "<< m_current_hdr.get_type_string () << " to=" << m_current_hdr.get_addr1 () <<
-	       ", mode=" << m_data_tx_mode);
 	start_ack_timers ();
 
+	uint8_t data_tx_mode = get_data_tx_mode (m_current_hdr.get_addr1 (), get_current_size ());
+	TRACE ("tx "<< m_current_hdr.get_type_string () << 
+	       ", to=" << m_current_hdr.get_addr1 () <<
+	       ", mode=" << data_tx_mode);
 	uint64_t duration_us;
-	if (m_override_duration_id_us > 0) {
-		duration_us = m_override_duration_id_us;
+	if (m_tx_params.has_duration_id ()) {
+		duration_us = m_tx_params.get_duration_id ();
 	} else {
-		uint8_t ack_tx_mode = get_ack_tx_mode_for_data (m_current_hdr.get_addr1 (), m_data_tx_mode);
+		uint8_t ack_tx_mode = get_ack_tx_mode_for_data (m_current_hdr.get_addr1 (), 
+								data_tx_mode);
 		duration_us = 0;
-		if (wait_ack ()) {
+		if (m_tx_params.must_wait_ack ()) {
 			duration_us += get_sifs_us ();
 			duration_us += m_phy->calculate_tx_duration_us (get_ack_size (), ack_tx_mode);
 		}
-		if (m_next_size > 0) {
+		if (m_tx_params.has_next_packet ()) {
 			duration_us += get_sifs_us ();
-			duration_us += m_phy->calculate_tx_duration_us (m_next_size, m_next_tx_mode);
-			if (wait_ack ()) {
+			duration_us += m_phy->calculate_tx_duration_us (m_tx_params.get_next_packet_size (), 
+									data_tx_mode);
+			if (m_tx_params.must_wait_ack ()) {
 				duration_us += get_sifs_us ();
 				duration_us += m_phy->calculate_tx_duration_us (get_ack_size (), ack_tx_mode);
 			}
@@ -679,7 +746,7 @@ MacLow::send_data_packet (void)
 	ChunkMac80211Fcs fcs;
 	m_current_packet->add (&fcs);
 
-	forward_down (m_current_packet, &m_current_hdr, m_data_tx_mode, 0);
+	forward_down (m_current_packet, &m_current_hdr, data_tx_mode, 0);
 	m_current_packet->unref ();
 	m_current_packet = 0;
 }
@@ -729,13 +796,14 @@ MacLow::send_data_after_cts (MacAddress source, uint64_t duration_us, uint8_t tx
 	 * RTS/CTS/DATA/ACK hanshake 
 	 */
 	assert (m_current_packet != 0);
+	uint8_t data_tx_mode = get_data_tx_mode (m_current_hdr.get_addr1 (), get_current_size ());
 
 	TRACE ("tx " << m_current_hdr.get_type_string () << " to=" << m_current_hdr.get_addr2 () <<
-	       ", mode=" << m_data_tx_mode << ", seq=0x"<< m_current_hdr.get_sequence_control () <<
+	       ", mode=" << data_tx_mode << ", seq=0x"<< m_current_hdr.get_sequence_control () <<
 	       ", tid=" << m_current_hdr.get_qos_tid ());
 
 	start_ack_timers ();
-	uint64_t tx_duration_us = m_phy->calculate_tx_duration_us (get_current_size (), m_data_tx_mode);
+	uint64_t tx_duration_us = m_phy->calculate_tx_duration_us (get_current_size (), data_tx_mode);
 	duration_us -= tx_duration_us;
 	duration_us -= get_sifs_us ();
 	m_current_hdr.set_duration_us (duration_us);
@@ -744,7 +812,7 @@ MacLow::send_data_after_cts (MacAddress source, uint64_t duration_us, uint8_t tx
 	ChunkMac80211Fcs fcs;
 	m_current_packet->add (&fcs);
 
-	forward_down (m_current_packet, &m_current_hdr, m_data_tx_mode, 0);
+	forward_down (m_current_packet, &m_current_hdr, data_tx_mode, 0);
 	m_current_packet->unref ();
 	m_current_packet = 0;
 }

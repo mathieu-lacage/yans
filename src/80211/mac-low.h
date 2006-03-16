@@ -73,20 +73,10 @@ public:
 	virtual void nav_reset_us (uint64_t now_us, uint64_t duration_us) = 0;
 };
 
-class MacLow {
+class MacLowTransmissionParameters {
 public:
-	typedef Callback<void (Packet *, ChunkMac80211Hdr const*hdr)> MacLowRxCallback;
-
-	MacLow ();
-	~MacLow ();
-
-	void set_interface (NetworkInterface80211 *interface);
-	void set_phy (Phy80211 *phy);
-	void set_stations (MacStations *stations);
-	void set_parameters (MacParameters *parameters);
-	void set_rx_callback (MacLowRxCallback *callback);
-
-
+	MacLowTransmissionParameters ();
+		
 	/* If ACK is enabled, we wait ACKTimeout for an ACK.
 	 */
 	void enable_ack (void);
@@ -106,51 +96,82 @@ public:
 	 *   - if idle at end-of-tx+PIFS, report missedAck
 	 */
 	void enable_super_fast_ack (void);
-	/* disable either Ack or FastAck, depending on
-	 * which Ack method was enabled.
-	 */
-	void disable_ack (void);
-
 	/* If RTS is enabled, we wait CTSTimeout for a CTS.
 	 * Otherwise, no RTS is sent.
 	 */
 	void enable_rts (void);
-	void disable_rts (void);
-
 	/* If NextData is enabled, we add the transmission duration
 	 * of the nextData to the durationId and we notify the
 	 * transmissionListener at the end of the current
 	 * transmission + SIFS.
 	 */
-	void enable_next_data (uint32_t size, uint8_t tx_mode);
-	void disable_next_data (void);
-
+	void enable_next_data (uint32_t size);
+	
 	/* If we enable this, we ignore all other durationId 
 	 * calculation and simply force the packet's durationId
 	 * field to this value.
 	 */
 	void enable_override_duration_id (uint64_t duration_id_us);
+	
+	void disable_ack (void);
+	void disable_rts (void);
+	void disable_next_data (void);
 	void disable_override_duration_id (void);
 
-	/* store the transmission mode for the frames to transmit.
+	bool must_wait_ack (void) const;
+	bool must_wait_normal_ack (void) const;
+	bool must_wait_fast_ack (void) const;
+	bool must_wait_super_fast_ack (void) const;
+	bool must_send_rts (void) const;
+	bool has_duration_id (void) const;
+	uint64_t get_duration_id (void) const;
+	bool has_next_packet (void) const;
+	uint32_t get_next_packet_size (void) const;
+
+private:
+	uint32_t m_next_size;
+	enum {
+		ACK_NONE,
+		ACK_NORMAL,
+		ACK_FAST,
+		ACK_SUPER_FAST
+	} m_wait_ack;
+	bool m_send_rts;
+	uint64_t m_override_duration_id_us;
+};
+
+
+class MacLow {
+public:
+	typedef Callback<void (Packet *, ChunkMac80211Hdr const*hdr)> MacLowRxCallback;
+
+	MacLow ();
+	~MacLow ();
+
+	void set_interface (NetworkInterface80211 *interface);
+	void set_phy (Phy80211 *phy);
+	void set_stations (MacStations *stations);
+	void set_parameters (MacParameters *parameters);
+	void set_rx_callback (MacLowRxCallback *callback);
+	void register_nav_listener (MacLowNavListener *listener);
+
+	/* This transmission time includes the time required for
+	 * the next packet transmission if one was selected.
 	 */
-	void set_data_transmission_mode (uint8_t txMode);
-	void set_rts_transmission_mode (uint8_t txMode);
-
-	/* store the data packet to transmit. */
-	void set_data (Packet *packet, ChunkMac80211Hdr const*hdr);
-
-	/* store the transmission listener. */
-	void set_transmission_listener (MacLowTransmissionListener *listener);
+	uint64_t calculate_transmission_time (uint32_t payload_size,
+					      MacAddress to,
+					      MacLowTransmissionParameters const&parameters) const;
 
 	/* start the transmission of the currently-stored data. */
-	void start_transmission (void);
+	void start_transmission (Packet *packet, 
+				 ChunkMac80211Hdr const*hdr, 
+				 MacLowTransmissionParameters parameters,
+				 MacLowTransmissionListener *listener);
 
 	void receive_ok (Packet const*packet, double rx_snr, uint8_t tx_mode, uint8_t stuff);
 	void receive_error (Packet const*packet, double rx_snr);
-	
-	void register_nav_listener (MacLowNavListener *listener);
 private:
+	void cancel_all_events (void);
 	uint32_t get_ack_size (void) const;
 	uint32_t get_rts_size (void) const;
 	uint32_t get_cts_size (void) const;
@@ -163,11 +184,11 @@ private:
 	MacStation *get_station (MacAddress to) const;
 	void forward_down (Packet const*packet, ChunkMac80211Hdr const *hdr, 
 			   uint8_t tx_mode, uint8_t stuff);
-	bool wait_ack (void) const;
-	bool wait_normal_ack (void) const;
-	bool wait_fast_ack (void) const;
-	bool wait_super_fast_ack (void) const;
-	uint64_t calculate_overall_tx_time_us (void) const;
+	uint64_t calculate_overall_tx_time_us (uint32_t size,
+					       MacAddress to,
+					       MacLowTransmissionParameters const &params) const;
+	uint8_t get_rts_tx_mode (MacAddress to) const;
+	uint8_t get_data_tx_mode (MacAddress to, uint32_t size) const;
 	uint8_t get_cts_tx_mode_for_rts (MacAddress to,  uint8_t rts_tx_mode) const;
 	uint8_t get_ack_tx_mode_for_data (MacAddress to, uint8_t data_tx_mode) const;
 	void notify_nav (uint64_t now_time_us, ChunkMac80211Hdr const*hdr);
@@ -211,21 +232,11 @@ private:
 
 	Packet *m_current_packet;
 	ChunkMac80211Hdr m_current_hdr;
+	MacLowTransmissionParameters m_tx_params;
+	MacLowTransmissionListener *m_listener;
 
-	uint32_t m_next_size;
-	uint8_t m_next_tx_mode;
-	enum {
-		ACK_NONE,
-		ACK_NORMAL,
-		ACK_FAST,
-		ACK_SUPER_FAST
-	} m_wait_ack;
-	bool m_send_rts;
-	uint8_t m_data_tx_mode;
-	uint8_t m_rts_tx_mode;
 	uint64_t m_last_nav_start_us;
 	uint64_t m_last_nav_duration_us;
-	uint64_t m_override_duration_id_us;
 
 	PacketLogger *m_drop_error;
 };
