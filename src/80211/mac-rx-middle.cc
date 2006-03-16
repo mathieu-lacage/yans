@@ -44,26 +44,26 @@ class OriginatorRxStatus {
 public:
 	OriginatorRxStatus () {
 		/* this is a magic value necessary. */
-		m_lastSequenceControl = 0xffff;
-		m_deFragmenting = false;
+		m_last_sequence_control = 0xffff;
+		m_de_fragmenting = false;
 	}
-	bool isDeFragmenting (void) {
+	bool is_de_fragmenting (void) {
 		return m_deFragmenting;
 	}
-	void accumulateFirstFragment (int firstFragmentSize) {
+	void accumulate_first_fragment (int firstFragmentSize) {
 		assert (!m_deFragmenting);
-		m_deFragmenting = true;
-		m_rxSize = firstFragmentSize;
+		m_de_fragmenting = true;
+		m_rx_size = firstFragmentSize;
 	}
-	int accumulateLastFragment (int fragmentSize) {
-		m_deFragmenting = false;
-		m_rxSize += fragmentSize;
+	int accumulate_last_fragment (int fragmentSize) {
+		m_de_fragmenting = false;
+		m_rx_size += fragmentSize;
 		return m_rxSize;
 	}
-	void accumulateFragment (int fragmentSize) {
-		m_rxSize += fragmentSize;
+	void accumulate_fragment (int fragmentSize) {
+		m_rx_size += fragmentSize;
 	}
-	bool isNextFragment (uint16_t sequenceControl) {
+	bool is_next_fragment (uint16_t sequenceControl) {
 		if ((sequenceControl >> 4) == (m_lastSequenceControl >> 4) &&
 		    (sequenceControl & 0x0f) == ((m_lastSequenceControl & 0x0f)+1)) {
 			return true;
@@ -71,11 +71,11 @@ public:
 			return false;
 		}
 	}
-	uint16_t getLastSequenceControl (void) {
+	uint16_t get_last_sequence_control (void) {
 		return m_lastSequenceControl;
 	}
-	void setSequenceControl (uint16_t sequenceControl) {
-		m_lastSequenceControl = sequenceControl;
+	void set_sequence_control (uint16_t sequenceControl) {
+		m_last_sequence_control = sequenceControl;
 	}
 
 private:
@@ -89,19 +89,19 @@ MacRxMiddle::MacRxMiddle ()
 {}
 
 void 
-MacRxMiddle::setInterface (NetInterface80211 *interface)
+MacRxMiddle::set_interface (NetInterface80211 *interface)
 {
 	m_interface = interface;
 }
 
 void
-MacRxMiddle::dropPacket (Packet *packet)
+MacRxMiddle::drop_packet (Packet *packet)
 {
 	Packet::free (packet);
 }
 
 bool
-MacRxMiddle::sequenceControlSmaller (int seqca, int seqcb)
+MacRxMiddle::sequence_control_smaller (int seqca, int seqcb)
 {
 	int seqa = seqca >> 4;
 	int seqb = seqcb >> 4;
@@ -118,7 +118,7 @@ MacRxMiddle::sequenceControlSmaller (int seqca, int seqcb)
 
 
 OriginatorRxStatus *
-MacRxMiddle::lookupQos (int source, int TID) 
+MacRxMiddle::lookup_qos (int source, int TID) 
 {
 	OriginatorRxStatus *originator;
 	originator = m_qosOriginatorStatus[make_pair(source, TID)];
@@ -130,7 +130,7 @@ MacRxMiddle::lookupQos (int source, int TID)
 }
 
 OriginatorRxStatus *
-MacRxMiddle::lookupNqos (int source) 
+MacRxMiddle::lookup_nqos (int source) 
 {
 	OriginatorRxStatus *originator;
 	originator = m_originatorStatus[source];
@@ -146,28 +146,28 @@ MacRxMiddle::lookup (Packet *packet)
 {
 	OriginatorRxStatus *originator;
 	if (isQos (packet) &&
-            isData (packet) &&
-            getDestination (packet) != MAC_BROADCAST) {
+            is_data (packet) &&
+            get_destination (packet) != MAC_BROADCAST) {
                 /* only for qos data broadcast frames */
-		originator = lookupQos (getSource (packet), getTID (packet));
+		originator = lookupQos (getSource (packet), get_tid (packet));
 	} else {
                 /* - management frames
                  * - qos data broadcast frames
                  * - nqos data frames
                  * see section 7.1.3.4.1
                  */
-		originator = lookupNqos (getSource (packet));
+		originator = lookup_nqos (getSource (packet));
 	}
 	return originator;
 }
 
 bool
-MacRxMiddle::handleDuplicates (Packet *packet, OriginatorRxStatus *originator)
+MacRxMiddle::handle_duplicates (Packet *packet, OriginatorRxStatus *originator)
 {
-	if (originator->getLastSequenceControl () == getSequenceControl (packet)) {
+	if (originator->getLastSequenceControl () == get_sequence_control (packet)) {
 		TRACE ("dump duplicate seq=0x%x tid=%u", 
-		       getSequenceControl (packet),
-		       getTID (packet));
+		       get_sequence_control (packet),
+		       get_tid (packet));
 		dropPacket (packet);
 		return true;
 	}
@@ -175,23 +175,23 @@ MacRxMiddle::handleDuplicates (Packet *packet, OriginatorRxStatus *originator)
 }
 
 bool
-MacRxMiddle::handleFragments (Packet *packet, OriginatorRxStatus *originator)
+MacRxMiddle::handle_fragments (Packet *packet, OriginatorRxStatus *originator)
 {
 	// defragment
-	if (originator->isDeFragmenting ()) {
+	if (originator->is_de_fragmenting ()) {
 		if (getMoreFragments (packet)) {
-			if (originator->isNextFragment (getSequenceControl (packet))) {
+			if (originator->is_next_fragment (getSequenceControl (packet))) {
 				TRACE ("accumulate fragment 0x%x %d", 
-				       getSequenceControl (packet), getSize (packet));
-				originator->accumulateFragment (getSize (packet));
-				originator->setSequenceControl (getSequenceControl (packet));
+				       getSequenceControl (packet), get_size (packet));
+				originator->accumulate_fragment (getSize (packet));
+				originator->set_sequence_control (getSequenceControl (packet));
 				dropPacket (packet);
 			} else {
 				TRACE ("drop invalid fragment");
 				dropPacket (packet);
 			}
 		} else {
-			if (originator->isNextFragment (getSequenceControl (packet))) {
+			if (originator->is_next_fragment (getSequenceControl (packet))) {
 				/* Each fragment is a copy of the original non-fragmented
 				 * packet except for its size which is set to the size of
 				 * the real fragment. This allows us to re-use the last 
@@ -199,10 +199,10 @@ MacRxMiddle::handleFragments (Packet *packet, OriginatorRxStatus *originator)
 				 * size and to pass it up to the higher-level layers.
 				 */
 				TRACE ("accumulate last fragment 0x%x %d", 
-				       getSequenceControl (packet), getSize (packet));
-				int finalSize = originator->accumulateLastFragment (getSize (packet));
+				       getSequenceControl (packet), get_size (packet));
+				int finalSize = originator->accumulate_last_fragment (getSize (packet));
 				setSize (packet, finalSize);
-				originator->setSequenceControl (getSequenceControl (packet));
+				originator->set_sequence_control (getSequenceControl (packet));
 				// pass-through to give to mac high.
 				return false;
 			} else {
@@ -213,9 +213,9 @@ MacRxMiddle::handleFragments (Packet *packet, OriginatorRxStatus *originator)
 	} else {
 		if (getMoreFragments (packet)) {
 			TRACE ("accumulate first fragment 0x%x %d", 
-			       getSequenceControl (packet), getSize (packet));
-			originator->accumulateFirstFragment (getSize (packet));
-			originator->setSequenceControl (getSequenceControl (packet));
+			       getSequenceControl (packet), get_size (packet));
+			originator->accumulate_first_fragment (getSize (packet));
+			originator->set_sequence_control (getSequenceControl (packet));
 			dropPacket (packet);
 		} else {
 			TRACE ("no defrag -- passthrough");
@@ -227,37 +227,37 @@ MacRxMiddle::handleFragments (Packet *packet, OriginatorRxStatus *originator)
 }
 
 void
-MacRxMiddle::sendUp (Packet *packet)
+MacRxMiddle::send_up (Packet *packet)
 {
 	OriginatorRxStatus *originator = lookup (packet);
 	switch (getType (packet)) {
 	case MAC_80211_MGT_ADDBA_REQUEST:
 		TRACE ("got addba req");
-		originator->setSequenceControl (getSequenceControl (packet));
+		originator->set_sequence_control (getSequenceControl (packet));
 		dropPacket (packet);
 		break;
 	case MAC_80211_DATA:
-		assert (sequenceControlSmaller (originator->getLastSequenceControl (), getSequenceControl (packet)));
+		assert (sequenceControlSmaller (originator->getLastSequenceControl (), get_sequence_control (packet)));
 		// filter duplicates.
 		if (!handleDuplicates (packet, originator) &&
 		    //!handleBlockAck (packet, originator) &&
 		    !handleFragments (packet, originator)) {
 			TRACE ("forwarding data from %d seq=0x%x tid=%u", 
-			       getSource (packet), getSequenceControl (packet),
-			       getTID (packet));
-			originator->setSequenceControl (getSequenceControl (packet));
-			m_interface->high ()->receiveFromMacLow (packet);
+			       getSource (packet), get_sequence_control (packet),
+			       get_tid (packet));
+			originator->set_sequence_control (getSequenceControl (packet));
+			m_interface->high ()->receive_from_mac_low (packet);
 		} else {
 			dropPacket (packet);
 		}
 		break;
 	default:
 		TRACE ("forwarding %s seq=0x%x tid=%u",
-		       getTypeString (packet), 
-		       getSequenceControl (packet),
-		       getTID (packet));
-		originator->setSequenceControl (getSequenceControl (packet));
-		m_interface->high ()->receiveFromMacLow (packet);
+		       get_type_string (packet), 
+		       get_sequence_control (packet),
+		       get_tid (packet));
+		originator->set_sequence_control (getSequenceControl (packet));
+		m_interface->high ()->receive_from_mac_low (packet);
 		break;
 	}
 }

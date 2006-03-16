@@ -35,17 +35,17 @@ class MacRxMiddle
 public:
 	MacRxMiddle ();
 
-	void setInterface (NetInterface80211 *interface);
+	void set_interface (NetInterface80211 *interface);
 
-	void sendUp (Packet *packet);
+	void send_up (Packet *packet);
 private:
 	OriginatorRxStatus *lookupQos (int source, int TID);
 	OriginatorRxStatus *lookupNqos (int source);
 	OriginatorRxStatus *lookup (Packet *packet);
-	bool handleDuplicates (Packet *packet, OriginatorRxStatus *originator);
-	bool handleFragments (Packet *packet, OriginatorRxStatus *originator);
-	void dropPacket (Packet *packet);
-	bool sequenceControlSmaller (int seqa, int seqb);
+	bool handle_duplicates (Packet *packet, OriginatorRxStatus *originator);
+	bool handle_fragments (Packet *packet, OriginatorRxStatus *originator);
+	void drop_packet (Packet *packet);
+	bool sequence_control_smaller (int seqa, int seqb);
 
 	std::map <int, OriginatorRxStatus *, std::less<int> > m_originatorStatus;
 	std::map <std::pair<int,int>, OriginatorRxStatus *, std::less<std::pair<int,int> > > m_qosOriginatorStatus;
