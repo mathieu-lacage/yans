@@ -43,6 +43,9 @@
 
 #include <list>
 #include <utility>
+#include "chunk-mac-80211-hdr.h"
+
+namespace yans {
 
 class MacParameters;
 class Packet;
@@ -54,26 +57,35 @@ public:
 
 	void set_parameters (MacParameters *parameters);
 
-	void enqueue (Packet *packet);
-	void enqueue_to_head (Packet *packet);
-	Packet *dequeue (void);
+	void enqueue (Packet *packet, ChunkMac80211Hdr const &hdr);
+	void enqueue_to_head (Packet *packet, ChunkMac80211Hdr const &hdr);
+	Packet *dequeue (ChunkMac80211Hdr *hdr);
+	Packet *peek (ChunkMac80211Hdr *hdr);
 
 	void flush (void);
 
 	bool is_empty (void);
-
-	int size (void);
-
-	Packet *peekNextPacket (void);
+	uint32_t get_size (void);
 
 private:
 	void cleanup (void);
-	typedef std::list< std::pair<Packet *, double> > PacketQueue;
-	typedef std::list< std::pair<Packet *, double> >::reverse_iterator PacketQueueRI;
-	typedef std::list< std::pair<Packet *, double> >::iterator PacketQueueI;
+	struct Item {
+		Item (Packet *packet, 
+		      ChunkMac80211Hdr const&hdr, 
+		      uint64_t tstamp);
+		Packet *packet;
+		ChunkMac80211Hdr hdr;
+		uint64_t tstamp;
+	};
+	typedef std::list<struct Item> PacketQueue;
+	typedef std::list<struct Item>::reverse_iterator PacketQueueRI;
+	typedef std::list<struct Item>::iterator PacketQueueI;
 	PacketQueue m_queue;
 	MacParameters *m_parameters;
+	uint32_t m_size;
 };
+
+}; // namespace yans
 
 
 #endif /* MAC_QUEUE_80211E */

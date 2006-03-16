@@ -21,17 +21,21 @@
 
 #include "mac-queue-80211e.h"
 #include "mac-parameters.h"
+#include "simulator.h"
 #include "packet.h"
-
-#include <iostream>
 
 using namespace std;
 
+namespace yans {
+
 MacQueue80211e::MacQueue80211e ()
+	: m_size (0)
 {}
 
 MacQueue80211e::~MacQueue80211e ()
-{}
+{
+	flush ();
+}
 
 void
 MacQueue80211e::set_parameters (MacParameters *parameters)
@@ -40,65 +44,69 @@ MacQueue80211e::set_parameters (MacParameters *parameters)
 }
 
 void 
-MacQueue80211e::enqueue (Packet *packet)
+MacQueue80211e::enqueue (Packet *packet, ChunkMac80211Hdr const &hdr)
 {
 	cleanup ();
-	double now;
-	now = Scheduler::instance ().clock ();
-	m_queue.push_front (make_pair<Packet *, double> (packet, now));
+	uint64_t now = Simulator::now_us ();
+	m_queue.push_front (Item (packet, hdr, now));
+	m_size++;
 }
 void 
-MacQueue80211e::enqueue_to_head (Packet *packet)
+MacQueue80211e::enqueue_to_head (Packet *packet, ChunkMac80211Hdr const &hdr)
 {
 	cleanup ();
-	double now;
-	now = Scheduler::instance ().clock ();
-	m_queue.push_back (make_pair<Packet *, double> (packet, now));
+	uint64_t now = Simulator::now_us ();
+	packet->ref ();
+	m_queue.push_back (Item (packet, hdr, now));
+	m_size++;
 }
 
 void
 MacQueue80211e::cleanup (void)
 {
 	PacketQueueRI tmp;
-	double now;
 
 	if (m_queue.empty ()) {
 		return;
 	}
 
-	now = Scheduler::instance ().clock ();
+	uint64_t now = Simulator::now_us ();
+	uint32_t n = 0;
 	tmp = m_queue.rbegin ();
-hile (tmp != m_queue.rend ()) {
-		if ((*tmp).second + m_parameters->get_msdulifetime () > now) {
+	while (tmp != m_queue.rend ()) {
+		if ((*tmp).tstamp + m_parameters->get_msdu_lifetime_us () > now) {
 			break;
 		}
-		Packet::free ((*tmp).first);
+		(*tmp).packet->unref();
+		n++;
 		tmp++;
 	}
 	m_queue.erase (tmp.base (), m_queue.end ());
+	m_size -= n;
 }
 
 Packet *
-MacQueue80211e::dequeue (void)
+MacQueue80211e::dequeue (ChunkMac80211Hdr *hdr)
 {
 	cleanup ();
 	if (!m_queue.empty ()) {
-		Packet *packet;
-		packet = m_queue.back ().first;
+		Item i = m_queue.back ();
 		m_queue.pop_back ();
-		return packet;
+		m_size--;
+		*hdr = i.hdr;
+		return i.packet;
 	}
-	return NULL;
+	return 0;
 }
 
 Packet *
-MacQueue80211e::peek_next_packet (void)
+MacQueue80211e::peek (ChunkMac80211Hdr *hdr)
 {
 	cleanup ();
 	if (!m_queue.empty ()) {
-		Packet *packet;
-		packet = m_queue.back ().first;
-		return packet;
+		Item i = m_queue.back ();
+		*hdr = i.hdr;
+		return i.packet;
 	} else {
 		return 0;
 	}
@@ -112,10 +120,10 @@ MacQueue80211e::is_empty (void)
 }
 
 
-int
-MacQueue80211e::size (void)
+uint32_t
+MacQueue80211e::get_size (void)
 {
-	return m_queue.size ();
+	return m_size;
 }
 
 void
@@ -123,8 +131,11 @@ MacQueue80211e::flush (void)
 {
 	PacketQueueI tmp;
 	for (tmp = m_queue.begin (); tmp != m_queue.end (); tmp++) {
-		Packet::free ((*tmp).first);
+		(*tmp).packet->unref ();
 		tmp++;
 	}
 	m_queue.erase (m_queue.begin (), m_queue.end ());
+	m_size = 0;
 }
+
+}; // namespace yans
