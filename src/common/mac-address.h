@@ -56,6 +56,8 @@ public:
 	void deserialize (Buffer *buffer);
 	void print (std::ostream *os) const;
 
+	uint64_t peek (void) const;
+
 	static MacAddress get_broadcast (void);
 private:
 	uint32_t get_multicast_part (void) const;
@@ -63,6 +65,7 @@ private:
 };
 
 bool operator == (MacAddress const&a, MacAddress const&b);
+bool operator < (MacAddress const&a, MacAddress const&b);
 
 std::ostream& operator<< (std::ostream& os, MacAddress const& address);
 

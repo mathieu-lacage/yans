@@ -128,6 +128,19 @@ MacAddress::deserialize (Buffer *buffer)
 	buffer->read (m_address, 6);
 }
 
+uint64_t
+MacAddress::peek (void) const
+{
+	uint64_t v = 0 |
+		(m_address[5] << 0) | 
+		(m_address[4] << 8) |
+		(m_address[3] << 16) |
+		(m_address[2] << 24) |
+		(static_cast<uint64_t> (m_address[1]) << 32) |
+		(static_cast<uint64_t> (m_address[0]) << 40);
+	return v;
+}
+
 void
 MacAddress::print (std::ostream *os) const
 {
@@ -154,6 +167,11 @@ MacAddress::get_broadcast (void)
 bool operator == (MacAddress const&a, MacAddress const&b)
 {
 	return a.is_equal (b);
+}
+
+bool operator < (MacAddress const&a, MacAddress const&b)
+{
+	return (a.peek () < b.peek ());
 }
 
 std::ostream& operator<< (std::ostream& os, MacAddress const& address)
