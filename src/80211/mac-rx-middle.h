@@ -24,33 +24,39 @@
 
 #include <map>
 #include <utility>
+#include "callback.tcc"
+#include "mac-address.h"
 
+namespace yans {
 
 class Packet;
+class ChunkMac80211Hdr;
 class OriginatorRxStatus;
-class NetInterface80211;
 
 class MacRxMiddle
 {
 public:
+	typedef Callback<void (Packet const *, ChunkMac80211Hdr const *)> ForwardUpCallback;
+
 	MacRxMiddle ();
+	~MacRxMiddle ();
 
-	void set_interface (NetInterface80211 *interface);
+	void set_callback (ForwardUpCallback *callback);
 
-	void send_up (Packet *packet);
+	void receive (Packet const*packet, ChunkMac80211Hdr const *hdr);
 private:
-	OriginatorRxStatus *lookupQos (int source, int TID);
-	OriginatorRxStatus *lookupNqos (int source);
-	OriginatorRxStatus *lookup (Packet *packet);
-	bool handle_duplicates (Packet *packet, OriginatorRxStatus *originator);
-	bool handle_fragments (Packet *packet, OriginatorRxStatus *originator);
-	void drop_packet (Packet *packet);
+	OriginatorRxStatus *lookup (ChunkMac80211Hdr const*hdr);
+	bool is_duplicate (ChunkMac80211Hdr const *hdr, OriginatorRxStatus *originator) const;
+	Packet const*handle_fragments (Packet const*packet, ChunkMac80211Hdr const*hdr,
+				       OriginatorRxStatus *originator);
 	bool sequence_control_smaller (int seqa, int seqb);
 
-	std::map <int, OriginatorRxStatus *, std::less<int> > m_originatorStatus;
-	std::map <std::pair<int,int>, OriginatorRxStatus *, std::less<std::pair<int,int> > > m_qosOriginatorStatus;
-	NetInterface80211 *m_interface;
+	std::map <MacAddress, OriginatorRxStatus *, std::less<MacAddress> > m_originator_status;
+	std::map <std::pair<MacAddress, uint8_t>, OriginatorRxStatus *, std::less<std::pair<MacAddress,uint8_t> > > m_qos_originator_status;
+	ForwardUpCallback *m_callback;
 };
+
+}; // namespace yans
 
 
 #endif /* MAC_RX_MIDDLE_H */

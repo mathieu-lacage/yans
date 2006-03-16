@@ -20,14 +20,10 @@
  */
 
 #include "mac-rx-middle.h"
-#include "mac-low.h"
-#include "mac-high.h"
-#include "mac-station.h"
-#include "mac-traces.h"
-#include "net-interface-80211.h"
-#include "common.h"
-
 #include "packet.h"
+#include "chunk-mac-80211-hdr.h"
+
+#include <cassert>
 
 #define nopeRX_MIDDLE_TRACE 1
 
@@ -39,66 +35,76 @@
 # define TRACE(x)
 #endif /* RX_MIDDLE_TRACE */
 
+namespace yans {
+
 
 class OriginatorRxStatus {
 public:
 	OriginatorRxStatus () {
 		/* this is a magic value necessary. */
 		m_last_sequence_control = 0xffff;
-		m_de_fragmenting = false;
+		m_defragmenting = false;
+	}
+	~OriginatorRxStatus () {
+		for (FragmentsCI i = m_fragments.begin (); i != m_fragments.end (); i++) {
+			(*i)->unref ();
+		}
+		m_fragments.erase (m_fragments.begin (), m_fragments.end ());
 	}
 	bool is_de_fragmenting (void) {
-		return m_deFragmenting;
+		return m_defragmenting;
 	}
-	void accumulate_first_fragment (int firstFragmentSize) {
-		assert (!m_deFragmenting);
-		m_de_fragmenting = true;
-		m_rx_size = firstFragmentSize;
+	void accumulate_first_fragment (Packet const*packet) {
+		assert (!m_defragmenting);
+		m_defragmenting = true;
+		packet->ref ();
+		m_fragments.push_back (packet);
 	}
-	int accumulate_last_fragment (int fragmentSize) {
-		m_de_fragmenting = false;
-		m_rx_size += fragmentSize;
-		return m_rxSize;
+	Packet const*accumulate_last_fragment (Packet const *packet) {
+		assert (m_defragmenting);
+		packet->ref ();
+		m_fragments.push_back (packet);
+		m_defragmenting = false;
+		Packet *full = new Packet ();
+		for (FragmentsCI i = m_fragments.begin (); i != m_fragments.end (); i++) {
+			full->add_at_end (*i);
+			(*i)->unref ();
+		}
+		m_fragments.erase (m_fragments.begin (), m_fragments.end ());
+		return full;
 	}
-	void accumulate_fragment (int fragmentSize) {
-		m_rx_size += fragmentSize;
+	void accumulate_fragment (Packet const *packet) {
+		assert (m_defragmenting);
+		packet->ref ();
+		m_fragments.push_back (packet);
 	}
-	bool is_next_fragment (uint16_t sequenceControl) {
-		if ((sequenceControl >> 4) == (m_lastSequenceControl >> 4) &&
-		    (sequenceControl & 0x0f) == ((m_lastSequenceControl & 0x0f)+1)) {
+	bool is_next_fragment (uint16_t sequence_control) {
+		if ((sequence_control >> 4) == (m_last_sequence_control >> 4) &&
+		    (sequence_control & 0x0f) == ((m_last_sequence_control & 0x0f)+1)) {
 			return true;
 		} else {
 			return false;
 		}
 	}
 	uint16_t get_last_sequence_control (void) {
-		return m_lastSequenceControl;
+		return m_last_sequence_control;
 	}
-	void set_sequence_control (uint16_t sequenceControl) {
-		m_last_sequence_control = sequenceControl;
+	void set_sequence_control (uint16_t sequence_control) {
+		m_last_sequence_control = sequence_control;
 	}
 
 private:
-	bool m_deFragmenting;
-	uint16_t m_lastSequenceControl;
-	int m_rxSize;
+	typedef std::list<Packet const*> Fragments;
+	typedef std::list<Packet const*>::const_iterator FragmentsCI;
+
+	bool m_defragmenting;
+	uint16_t m_last_sequence_control;
+	Fragments m_fragments;
 };
 
 
 MacRxMiddle::MacRxMiddle ()
 {}
-
-void 
-MacRxMiddle::set_interface (NetInterface80211 *interface)
-{
-	m_interface = interface;
-}
-
-void
-MacRxMiddle::drop_packet (Packet *packet)
-{
-	Packet::free (packet);
-}
 
 bool
 MacRxMiddle::sequence_control_smaller (int seqca, int seqcb)
@@ -106,7 +112,7 @@ MacRxMiddle::sequence_control_smaller (int seqca, int seqcb)
 	int seqa = seqca >> 4;
 	int seqb = seqcb >> 4;
 	int delta = seqb - seqa;
-	TRACE ("seqb: %d, seqa: %d, delta: %d", seqb, seqa, delta);
+	TRACE ("seqb="<<seqb<<", seqa="<<seqa<<", delta="<<delta);
 	if (delta <= 0 && delta < -2048) {
 		return true;
 	} else if (delta >= 0 && delta < 2048) {
@@ -118,146 +124,118 @@ MacRxMiddle::sequence_control_smaller (int seqca, int seqcb)
 
 
 OriginatorRxStatus *
-MacRxMiddle::lookup_qos (int source, int TID) 
+MacRxMiddle::lookup (ChunkMac80211Hdr const *hdr)
 {
 	OriginatorRxStatus *originator;
-	originator = m_qosOriginatorStatus[make_pair(source, TID)];
-	if (originator == 0) {
-		originator = new OriginatorRxStatus ();
-		m_qosOriginatorStatus[make_pair(source, TID)] = originator;
-	}
-	return originator;
-}
-
-OriginatorRxStatus *
-MacRxMiddle::lookup_nqos (int source) 
-{
-	OriginatorRxStatus *originator;
-	originator = m_originatorStatus[source];
-	if (originator == 0) {
-		originator = new OriginatorRxStatus ();
-		m_originatorStatus[source] = originator;
-	}
-	return originator;
-}
-
-OriginatorRxStatus *
-MacRxMiddle::lookup (Packet *packet)
-{
-	OriginatorRxStatus *originator;
-	if (isQos (packet) &&
-            is_data (packet) &&
-            get_destination (packet) != MAC_BROADCAST) {
-                /* only for qos data broadcast frames */
-		originator = lookupQos (getSource (packet), get_tid (packet));
+	MacAddress source = hdr->get_addr2 ();
+	if (hdr->is_qos_data () &&
+	    !hdr->get_addr2 ().is_broadcast ()) {
+                /* only for qos data non-broadcast frames */
+		originator = m_qos_originator_status[std::make_pair(source, hdr->get_qos_tid ())];
+		if (originator == 0) {
+			originator = new OriginatorRxStatus ();
+			m_qos_originator_status[std::make_pair(source, hdr->get_qos_tid ())] = originator;
+		}
 	} else {
                 /* - management frames
                  * - qos data broadcast frames
                  * - nqos data frames
                  * see section 7.1.3.4.1
                  */
-		originator = lookup_nqos (getSource (packet));
+		originator = m_originator_status[source];
+		if (originator == 0) {
+			originator = new OriginatorRxStatus ();
+			m_originator_status[source] = originator;
+		}
 	}
 	return originator;
 }
 
 bool
-MacRxMiddle::handle_duplicates (Packet *packet, OriginatorRxStatus *originator)
+MacRxMiddle::is_duplicate (ChunkMac80211Hdr const*hdr, 
+			   OriginatorRxStatus *originator) const
 {
-	if (originator->getLastSequenceControl () == get_sequence_control (packet)) {
-		TRACE ("dump duplicate seq=0x%x tid=%u", 
-		       get_sequence_control (packet),
-		       get_tid (packet));
-		dropPacket (packet);
+	if (originator->get_last_sequence_control () == hdr->get_sequence_control ()) {
 		return true;
 	}
 	return false;
 }
 
-bool
-MacRxMiddle::handle_fragments (Packet *packet, OriginatorRxStatus *originator)
+Packet const*
+MacRxMiddle::handle_fragments (Packet const*packet, ChunkMac80211Hdr const*hdr,
+			       OriginatorRxStatus *originator)
 {
-	// defragment
 	if (originator->is_de_fragmenting ()) {
-		if (getMoreFragments (packet)) {
-			if (originator->is_next_fragment (getSequenceControl (packet))) {
-				TRACE ("accumulate fragment 0x%x %d", 
-				       getSequenceControl (packet), get_size (packet));
-				originator->accumulate_fragment (getSize (packet));
-				originator->set_sequence_control (getSequenceControl (packet));
-				dropPacket (packet);
+		if (hdr->is_more_fragments ()) {
+			if (originator->is_next_fragment (hdr->get_sequence_control ())) {
+				TRACE ("accumulate fragment seq="<<hdr->get_sequence_control ()<<
+				       ", size="packet->get_size ());
+				originator->accumulate_fragment (packet);
+				originator->set_sequence_control (hdr->get_sequence_control ());
 			} else {
-				TRACE ("drop invalid fragment");
-				dropPacket (packet);
+				TRACE ("non-ordered fragment");
 			}
+			return 0;
 		} else {
-			if (originator->is_next_fragment (getSequenceControl (packet))) {
+			if (originator->is_next_fragment (hdr->get_sequence_control ())) {
 				/* Each fragment is a copy of the original non-fragmented
 				 * packet except for its size which is set to the size of
 				 * the real fragment. This allows us to re-use the last 
 				 * fragment to change its size back to the original packet 
 				 * size and to pass it up to the higher-level layers.
 				 */
-				TRACE ("accumulate last fragment 0x%x %d", 
-				       getSequenceControl (packet), get_size (packet));
-				int finalSize = originator->accumulate_last_fragment (getSize (packet));
-				setSize (packet, finalSize);
-				originator->set_sequence_control (getSequenceControl (packet));
-				// pass-through to give to mac high.
-				return false;
+				TRACE ("accumulate last fragment seq="<<hdr->get_sequence_control ()<<
+				       ", size="<<hdr->get_size ());
+				packet = originator->accumulate_last_fragment (packet);
+				originator->set_sequence_control (hdr->get_sequence_control ());
+				return packet;
 			} else {
-				TRACE ("drop packet");
-				dropPacket (packet);
+				TRACE ("non-ordered fragment");
+				return 0;
 			}
 		}
 	} else {
-		if (getMoreFragments (packet)) {
-			TRACE ("accumulate first fragment 0x%x %d", 
-			       getSequenceControl (packet), get_size (packet));
-			originator->accumulate_first_fragment (getSize (packet));
-			originator->set_sequence_control (getSequenceControl (packet));
-			dropPacket (packet);
+		if (hdr->is_more_fragments ()) {
+			TRACE ("accumulate first fragment seq="<<hdr->get_sequence_control ()<<
+			       ", size="<<packet->get_size ());
+			originator->accumulate_first_fragment (packet);
+			originator->set_sequence_control (hdr->get_sequence_control ());
+			return 0;
 		} else {
-			TRACE ("no defrag -- passthrough");
-			// pass-through to give to mac high.
-			return false;
+			return packet;
 		}
 	}
-	return true;
 }
 
 void
-MacRxMiddle::send_up (Packet *packet)
+MacRxMiddle::receive (Packet const*packet, ChunkMac80211Hdr const *hdr)
 {
-	OriginatorRxStatus *originator = lookup (packet);
-	switch (getType (packet)) {
-	case MAC_80211_MGT_ADDBA_REQUEST:
-		TRACE ("got addba req");
-		originator->set_sequence_control (getSequenceControl (packet));
-		dropPacket (packet);
-		break;
-	case MAC_80211_DATA:
-		assert (sequenceControlSmaller (originator->getLastSequenceControl (), get_sequence_control (packet)));
+	OriginatorRxStatus *originator = lookup (hdr);
+	if (hdr->is_data ()) {
+		assert (sequence_control_smaller (originator->get_last_sequence_control (), 
+						  hdr->get_sequence_control ()));
 		// filter duplicates.
-		if (!handleDuplicates (packet, originator) &&
-		    //!handleBlockAck (packet, originator) &&
-		    !handleFragments (packet, originator)) {
-			TRACE ("forwarding data from %d seq=0x%x tid=%u", 
-			       getSource (packet), get_sequence_control (packet),
-			       get_tid (packet));
-			originator->set_sequence_control (getSequenceControl (packet));
-			m_interface->high ()->receive_from_mac_low (packet);
-		} else {
-			dropPacket (packet);
+		if (is_duplicate (hdr, originator)) {
+			TRACE ("duplicate from="<<hdr->get_addr2 ()<<
+			       ", seq="<<hdr->get_sequence_control ());
+			return;
 		}
-		break;
-	default:
-		TRACE ("forwarding %s seq=0x%x tid=%u",
-		       get_type_string (packet), 
-		       get_sequence_control (packet),
-		       get_tid (packet));
-		originator->set_sequence_control (getSequenceControl (packet));
-		m_interface->high ()->receive_from_mac_low (packet);
-		break;
+		packet = handle_fragments (packet, hdr, originator);
+		if (packet == 0) {
+			return;
+		}
+		TRACE ("forwarding data from="<<hdr->get_addr2 ()<<
+		       ", seq="<<hdr->get_sequence_control ()<<
+		       ", tid="<<hdr->get_tid ());
+		originator->set_sequence_control (hdr->get_sequence_control ());
+		(*m_callback) (packet, hdr);
+	} else {
+		TRACE ("forwarding "<<hdr.get_type_string ()<<
+		       ", seq="<<hdr->get_sequence_control ()<<
+		       ", tid="<<hdr->get_qos_tid ());
+		originator->set_sequence_control (hdr->get_sequence_control ());
+		(*m_callback) (packet, hdr);
 	}
 }
+
+}; // namespace yans
