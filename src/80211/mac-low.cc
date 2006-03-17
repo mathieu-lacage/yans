@@ -137,7 +137,7 @@ MacLowTransmissionParameters::must_send_rts (void) const
 bool 
 MacLowTransmissionParameters::has_duration_id (void) const
 {
-	return (m_override_duration_id_us == 0)?true:false;
+	return (m_override_duration_id_us != 0)?true:false;
 }
 uint64_t 
 MacLowTransmissionParameters::get_duration_id (void) const
