@@ -45,6 +45,27 @@ ChunkMac80211Hdr::~ChunkMac80211Hdr ()
 {}
 
 void 
+ChunkMac80211Hdr::set_ds_from (void)
+{
+	m_ctrl_from_ds = 1;
+}
+void 
+ChunkMac80211Hdr::set_ds_not_from (void)
+{
+	m_ctrl_from_ds = 0;
+}
+void 
+ChunkMac80211Hdr::set_ds_to (void)
+{
+	m_ctrl_to_ds = 1;
+}
+void 
+ChunkMac80211Hdr::set_ds_not_to (void)
+{
+	m_ctrl_to_ds = 0;
+}
+
+void 
 ChunkMac80211Hdr::set_addr1 (MacAddress address)
 {
 	m_addr1 = address;

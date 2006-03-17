@@ -66,6 +66,10 @@ class ChunkMac80211Hdr : public Chunk {
 public:
 	ChunkMac80211Hdr ();
 
+	void set_ds_from (void);
+	void set_ds_not_from (void);
+	void set_ds_to (void);
+	void set_ds_not_to (void);
 	void set_addr1 (MacAddress address);
 	void set_addr2 (MacAddress address);
 	void set_addr3 (MacAddress address);
