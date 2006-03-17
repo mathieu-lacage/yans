@@ -121,7 +121,7 @@ Dcf::register_access_listener (DcfAccessListener *listener)
  ***************************************************************/ 
 
 void 
-Dcf::request_access (bool is_phy_busy)
+Dcf::request_access (void)
 {
 	uint64_t delay_until_access_granted = get_delay_until_access_granted (now_us ());
 	if (m_listener->accessing_and_will_notify ()) {
@@ -140,7 +140,7 @@ Dcf::request_access (bool is_phy_busy)
 		TRACE ("request access X delayed for "<<delay_until_access_granted);
 		m_access_timer_event = make_cancellable_event (&Dcf::access_timeout, this);
 		Simulator::insert_in_us (delay_until_access_granted, m_access_timer_event);
-	} else if (is_phy_busy) {
+	} else if (is_phy_busy ()) {
 		/* someone else has accessed the medium.
 		 * generate a backoff, start timer.
 		 */
@@ -284,6 +284,19 @@ Dcf::get_cw_max (void) const
 /***************************************************************
  *     Complicated timekeeping backoff methods.
  ***************************************************************/ 
+
+bool 
+Dcf::is_phy_busy (void)
+{
+	if (m_rxing || m_sleeping) {
+		return true;
+	}
+	uint64_t last_tx_end = m_last_tx_start + m_last_tx_duration;
+	if (last_tx_end > Simulator::now_us ()) {
+		return true;
+	}
+	return false;
+}
 
 void
 Dcf::start_backoff (void)
@@ -494,8 +507,7 @@ private:
 	void add_nav_reset (uint64_t at, uint64_t start, uint64_t duration);
 	void add_nav_start (uint64_t at, uint64_t start, uint64_t duration);
 	void add_nav_continue (uint64_t at, uint64_t start, uint64_t duration);
-	void add_access_request_idle (uint64_t time);
-	void add_access_request_busy (uint64_t time);
+	void add_access_request (uint64_t time);
 	void add_access_error (uint64_t time);
 	void add_access_error_but_ok (uint64_t time);
 	void add_access_ok (uint64_t time);
@@ -605,14 +617,9 @@ DcfTest::add_nav_continue (uint64_t at, uint64_t start, uint64_t duration)
 	Simulator::insert_at_us (at, make_event (&Dcf::notify_nav_continue, m_dcf, start, duration));
 }
 void 
-DcfTest::add_access_request_idle (uint64_t time)
+DcfTest::add_access_request (uint64_t time)
 {
-	Simulator::insert_at_us (time, make_event (&Dcf::request_access, m_dcf, false));
-}
-void 
-DcfTest::add_access_request_busy (uint64_t time)
-{
-	Simulator::insert_at_us (time, make_event (&Dcf::request_access, m_dcf, true));
+	Simulator::insert_at_us (time, make_event (&Dcf::request_access, m_dcf));
 }
 void 
 DcfTest::add_access_error (uint64_t time)
@@ -694,9 +701,9 @@ DcfTest::run_tests (void)
 	add_rx_ok_evt (10, 20);
 	add_nav_start (30, 30, 2+8);
 	add_rx_ok_evt (32, 5);
-	add_access_request_busy (15);
-	add_access_request_busy (16);
-	add_access_request_busy (20);
+	add_access_request (15);
+	add_access_request (16);
+	add_access_request (20);
 	expect_access_granted (51);
 	Simulator::run ();
 	end_test ();
@@ -705,15 +712,15 @@ DcfTest::run_tests (void)
 	add_rx_ok_evt (10, 20);
 	add_nav_start (30, 30, 2+5);
 	add_rx_ok_evt (32, 7);
-	add_access_request_busy (15);
-	add_access_request_busy (16);
-	add_access_request_busy (20);
+	add_access_request (15);
+	add_access_request (16);
+	add_access_request (20);
 	expect_access_granted (50);
 	Simulator::run ();
 	end_test ();
 
 	start_test ();
-	add_access_request_idle (10);
+	add_access_request (10);
 	expect_access_granted (10);
 	Simulator::run ();
 	end_test ();
@@ -722,7 +729,7 @@ DcfTest::run_tests (void)
 	add_rx_ok_evt (10, 20);
 	add_nav_start (30, 30, 2+8);
 	add_rx_ok_evt (32, 7);
-	add_access_request_idle (40);
+	add_access_request (40);
 	expect_access_granted (43);
 	Simulator::run ();
 	end_test ();
@@ -731,7 +738,7 @@ DcfTest::run_tests (void)
 	add_rx_ok_evt (10, 20);
 	add_nav_start (30, 30, 2+8);
 	add_rx_ok_evt (32, 7);
-	add_access_request_idle (41);
+	add_access_request (41);
 	expect_access_granted (43);
 	Simulator::run ();
 	end_test ();
@@ -740,7 +747,7 @@ DcfTest::run_tests (void)
 	add_rx_ok_evt (10, 20);
 	add_nav_start (30, 30, 2+8);
 	add_rx_ok_evt (32, 7);
-	add_access_request_idle (43);
+	add_access_request (43);
 	expect_access_granted (43);
 	Simulator::run ();
 	end_test ();
@@ -748,7 +755,7 @@ DcfTest::run_tests (void)
 	start_test ();
 	add_rx_error_evt (10, 20);
 	add_rx_ok_evt (31, 7);
-	add_access_request_idle (39);
+	add_access_request (39);
 	expect_access_granted (41);
 	Simulator::run ();
 	end_test ();
@@ -756,7 +763,7 @@ DcfTest::run_tests (void)
 	start_test ();
 	add_rx_error_evt (10, 20);
 	add_rx_error_evt (31, 7);
-	add_access_request_idle (39);
+	add_access_request (39);
 	expect_access_granted (42);
 	Simulator::run ();
 	end_test ();
@@ -767,7 +774,7 @@ DcfTest::run_tests (void)
 	add_nav_start (30, 30, 200);
 	add_rx_ok_evt (35, 10);
 	add_nav_reset (45, 45, 0);
-	add_access_request_idle (32);
+	add_access_request (32);
 	expect_access_granted (48);
 	Simulator::run ();
 	end_test ();
@@ -785,7 +792,7 @@ DcfTest::run_tests (void)
 	add_nav_start (30, 30, 200);
 	add_rx_ok_evt (35, 10);
 	add_nav_reset (45, 45, 0);
-	add_access_request_idle (49);
+	add_access_request (49);
 	expect_access_granted (49);
 	Simulator::run ();
 	end_test ();

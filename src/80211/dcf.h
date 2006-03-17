@@ -65,7 +65,7 @@ public:
 	void set_cw_bounds (uint32_t min, uint32_t max);
 	void register_access_listener (DcfAccessListener *listener);
 
-	void request_access (bool is_phy_busy);
+	void request_access (void);
 
 	void notify_access_finished (void);
 	void notify_access_ongoing_error (void);
@@ -98,6 +98,7 @@ private:
 	uint32_t get_cw_max (void) const;
 
 	/* time calculation helpers */
+	bool is_phy_busy (void);
 	bool is_backoff_not_completed (uint64_t now);
 	void start_backoff (void);
 	uint64_t get_delay_until_access_granted (uint64_t now);
