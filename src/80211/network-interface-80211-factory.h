@@ -55,7 +55,10 @@ public:
 	void set_prop_rx_gain_dbm (double rx_gain);
 	void set_prop_frequency_hz (double frequency);
 
-	void set_rts_cts_threshold (uint32_t size);
+	void set_mac_rts_cts_threshold (uint32_t size);
+	void set_mac_fragmentation_threshold (uint32_t size);
+	void set_mac_max_ssrc (uint32_t ssrc);
+	void set_mac_max_slrc (uint32_t slrc);
 
 	NetworkInterface80211 *create (Host *host);
 private:
@@ -82,7 +85,10 @@ private:
 	double m_prop_rx_gain_dbm;
 	double m_prop_frequency_hz;
 
-	uint32_t m_rts_cts_threshold;
+	uint32_t m_mac_rts_cts_threshold;
+	uint32_t m_mac_fragmentation_threshold;
+	uint32_t m_mac_max_ssrc;
+	uint32_t m_mac_max_slrc;
 };
 
 }; // namespace yans

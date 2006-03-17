@@ -40,6 +40,10 @@ class MacStations;
 class TraceContainer;
 class MacLow;
 class Arp;
+class MacRxMiddle;
+class MacTxMiddle;
+class MacHighAdhoc;
+class MacParameters;
 
 class NetworkInterface80211 : public NetworkInterface {
 public:
@@ -88,6 +92,10 @@ private:
 	MacStations *m_stations;
 	MacLow *m_low;
 	Arp *m_arp;
+	MacRxMiddle *m_rx_middle;
+	MacTxMiddle *m_tx_middle;
+	MacHighAdhoc *m_high;
+	MacParameters *m_parameters;
 
 	MacAddress m_bssid;
 	MacAddress m_self;

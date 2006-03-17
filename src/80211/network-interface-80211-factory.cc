@@ -29,6 +29,9 @@
 #include "ideal-mac-stations.h"
 #include "mac-low.h"
 #include "arp.h"
+#include "mac-parameters.h"
+#include "mac-tx-middle.h"
+#include "mac-rx-middle.h"
 
 namespace yans {
 
@@ -42,8 +45,11 @@ NetworkInterface80211Factory::NetworkInterface80211Factory ()
 	  m_prop_system_loss (1.0),
 	  m_prop_tx_gain_dbm (1.0),
 	  m_prop_rx_gain_dbm (1.0),
-	  m_prop_frequency_hz (5.150e9)
-	  
+	  m_prop_frequency_hz (5.150e9),
+	  m_mac_rts_cts_threshold (2000),
+	  m_mac_fragmentation_threshold (2000),
+	  m_mac_max_ssrc (7),
+	  m_mac_max_slrc (7)
 {}
 NetworkInterface80211Factory::~NetworkInterface80211Factory ()
 {}
@@ -114,10 +120,26 @@ NetworkInterface80211Factory::set_prop_frequency_hz (double frequency)
 }
 
 void 
-NetworkInterface80211Factory::set_rts_cts_threshold (uint32_t size)
+NetworkInterface80211Factory::set_mac_rts_cts_threshold (uint32_t size)
 {
-	m_rts_cts_threshold = size;
+	m_mac_rts_cts_threshold = size;
 }
+void 
+NetworkInterface80211Factory::set_mac_fragmentation_threshold (uint32_t size)
+{
+	m_mac_fragmentation_threshold = size;
+}
+void 
+NetworkInterface80211Factory::set_mac_max_ssrc (uint32_t ssrc)
+{
+	m_mac_max_ssrc = ssrc;
+}
+void 
+NetworkInterface80211Factory::set_mac_max_slrc (uint32_t slrc)
+{
+	m_mac_max_slrc = slrc;
+}
+
 
 NetworkInterface80211 *
 NetworkInterface80211Factory::create (Host *host)
@@ -168,11 +190,32 @@ NetworkInterface80211Factory::create (Host *host)
 	}
 	interface->m_stations = stations;
 
+	MacParameters *parameters = new MacParameters ();
+	parameters->initialize_80211a (phy);
+	parameters->set_rts_cts_threshold (m_mac_rts_cts_threshold);
+	parameters->set_fragmentation_threshold (m_mac_fragmentation_threshold);
+	parameters->set_max_ssrc (m_mac_max_ssrc);
+	parameters->set_max_slrc (m_mac_max_slrc);
+	interface->m_parameters = parameters;
+
 	MacLow *low = new MacLow ();
+	low->set_interface (interface);
+	low->set_phy (phy);
+	low->set_stations (stations);
+	low->set_parameters (parameters);
 	phy->set_receive_ok_callback (make_callback (&MacLow::receive_ok, low));
 	phy->set_receive_error_callback (make_callback (&MacLow::receive_error, low));
 	interface->m_low = low;
 
+	MacRxMiddle *rx_middle = new MacRxMiddle ();
+	low->set_rx_callback (make_callback (&MacRxMiddle::receive, rx_middle));
+	//rx_middle->set_callback (make_callback ());
+	interface->m_rx_middle = rx_middle;
+
+	MacTxMiddle *tx_middle = new MacTxMiddle ();
+	interface->m_tx_middle = tx_middle;
+
+	
 	// XXXX
 
 	Arp *arp = new Arp (interface);

@@ -30,6 +30,9 @@
 #include "arp.h"
 #include "chunk-mac-llc-snap.h"
 #include "mac-low.h"
+#include "mac-parameters.h"
+#include "mac-rx-middle.h"
+#include "mac-tx-middle.h"
 
 namespace yans {
 
@@ -46,6 +49,10 @@ NetworkInterface80211::~NetworkInterface80211 ()
 	delete m_stations;
 	delete m_low;
 	delete m_arp;
+	delete m_parameters;
+	delete m_tx_middle;
+	delete m_rx_middle;
+	//delete m_high;
 }
 
 
