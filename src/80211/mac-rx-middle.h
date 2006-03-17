@@ -36,18 +36,18 @@ class OriginatorRxStatus;
 class MacRxMiddle
 {
 public:
-	typedef Callback<void (Packet const *, ChunkMac80211Hdr const *)> ForwardUpCallback;
+	typedef Callback<void (Packet *, ChunkMac80211Hdr const *)> ForwardUpCallback;
 
 	MacRxMiddle ();
 	~MacRxMiddle ();
 
 	void set_callback (ForwardUpCallback *callback);
 
-	void receive (Packet const*packet, ChunkMac80211Hdr const *hdr);
+	void receive (Packet *packet, ChunkMac80211Hdr const *hdr);
 private:
 	OriginatorRxStatus *lookup (ChunkMac80211Hdr const*hdr);
 	bool is_duplicate (ChunkMac80211Hdr const *hdr, OriginatorRxStatus *originator) const;
-	Packet const*handle_fragments (Packet const*packet, ChunkMac80211Hdr const*hdr,
+	Packet *handle_fragments (Packet *packet, ChunkMac80211Hdr const*hdr,
 				       OriginatorRxStatus *originator);
 	bool sequence_control_smaller (int seqa, int seqb);
 

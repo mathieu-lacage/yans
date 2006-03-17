@@ -60,7 +60,7 @@ public:
 		packet->ref ();
 		m_fragments.push_back (packet);
 	}
-	Packet const*accumulate_last_fragment (Packet const *packet) {
+	Packet *accumulate_last_fragment (Packet const *packet) {
 		assert (m_defragmenting);
 		packet->ref ();
 		m_fragments.push_back (packet);
@@ -105,6 +105,11 @@ private:
 
 MacRxMiddle::MacRxMiddle ()
 {}
+
+MacRxMiddle::~MacRxMiddle ()
+{
+	delete m_callback;
+}
 
 bool
 MacRxMiddle::sequence_control_smaller (int seqca, int seqcb)
@@ -161,8 +166,8 @@ MacRxMiddle::is_duplicate (ChunkMac80211Hdr const*hdr,
 	return false;
 }
 
-Packet const*
-MacRxMiddle::handle_fragments (Packet const*packet, ChunkMac80211Hdr const*hdr,
+Packet *
+MacRxMiddle::handle_fragments (Packet *packet, ChunkMac80211Hdr const*hdr,
 			       OriginatorRxStatus *originator)
 {
 	if (originator->is_de_fragmenting ()) {
@@ -208,7 +213,7 @@ MacRxMiddle::handle_fragments (Packet const*packet, ChunkMac80211Hdr const*hdr,
 }
 
 void
-MacRxMiddle::receive (Packet const*packet, ChunkMac80211Hdr const *hdr)
+MacRxMiddle::receive (Packet *packet, ChunkMac80211Hdr const *hdr)
 {
 	OriginatorRxStatus *originator = lookup (hdr);
 	if (hdr->is_data ()) {
