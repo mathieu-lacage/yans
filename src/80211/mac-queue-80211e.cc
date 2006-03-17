@@ -28,6 +28,12 @@ using namespace std;
 
 namespace yans {
 
+MacQueue80211e::Item::Item (Packet *packet, 
+			    ChunkMac80211Hdr const &hdr, 
+			    uint64_t tstamp)
+	: packet (packet), hdr (hdr), tstamp (tstamp)
+{}
+
 MacQueue80211e::MacQueue80211e ()
 	: m_size (0)
 {}
