@@ -256,6 +256,11 @@ MacLow::set_parameters (MacParameters *parameters)
 	m_parameters = parameters;
 }
 void 
+MacLow::set_stations (MacStations *stations)
+{
+	m_stations = stations;
+}
+void 
 MacLow::set_rx_callback (MacLowRxCallback *callback)
 {
 	m_rx_callback = callback;
