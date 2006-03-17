@@ -132,6 +132,7 @@ YANS_SRC= \
 	src/80211/mac-rx-middle.cc \
 	src/80211/dca-txop.cc \
 	src/80211/mac-queue-80211e.cc \
+	src/80211/mac-high-adhoc.cc \
 	src/80211/network-interface-80211.cc \
 	src/80211/network-interface-80211-factory.cc \
 	test/test.cc \
@@ -223,6 +224,7 @@ YANS_HDR = \
 	src/80211/mac-rx-middle.h \
 	src/80211/mac-queue-80211e.h \
 	src/80211/dca-txop.h \
+	src/80211/mac-high-adhoc.h \
 	src/80211/network-interface-80211.h \
 	src/80211/network-interface-80211-factory.h \
 	src/host/host.h \

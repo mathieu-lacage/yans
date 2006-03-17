@@ -21,33 +21,37 @@
 #ifndef MAC_HIGH_ADHOC_H
 #define MAC_HIGH_ADHOC_H
 
-#include "mac-high.h"
+#include "mac-address.h"
+
+namespace yans {
 
 class MacQueue80211e;
 class Packet;
 class Dcf;
-class NetInterface80211;
+class Packet;
+class NetworkInterface80211;
+class ChunkMac80211Hdr;
 
-class MacHighAdhoc : public MacHigh {
+class MacHighAdhoc {
 public:
 	MacHighAdhoc ();
 	virtual ~MacHighAdhoc ();
 
-	void setInterface (NetInterface80211 *interface);
+	void set_interface (NetworkInterface80211 *interface);
+	void set_queue (MacQueue80211e *queue, Dcf *dcf);
 
 	/* invoked by Mac80211. */
-	virtual void enqueueFromLL (Packet *packet, int macDestination);
-	virtual void addTsRequest (TSpecRequest *request);
-	virtual void delTsRequest (TSpecRequest *request);
+	void enqueue_from_ll (Packet *packet, MacAddress to);
 
 	/* invoked by the MacLows. */
-	virtual void notifyAckReceivedFor (Packet *packet);
-	virtual void receiveFromMacLow (Packet *packet);
+	void notify_ack_received_for (ChunkMac80211Hdr const *hdr);
+	void receive (Packet *packet, ChunkMac80211Hdr const*hdr);
 private:
-	double now (void);
 	MacQueue80211e *m_queue;
 	Dcf *m_dcf;
-	NetInterface80211 *m_interface;
+	NetworkInterface80211 *m_interface;
 };
+
+}; // namespace yans
 
 #endif /* MAC_HIGH_ADHOC_H */

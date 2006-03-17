@@ -20,86 +20,64 @@
  */
 
 #include "mac-high-adhoc.h"
-#include "mac-low.h"
-#include "mac-parameters.h"
 #include "dcf.h"
-#include "mac-dcf-parameters.h"
-#include "mac-rx-middle.h"
 #include "mac-queue-80211e.h"
-#include "net-interface-80211.h"
 #include "dca-txop.h"
-#include "mac-traces.h"
-#include "ll-arp.h"
+#include "network-interface-80211.h"
 
 #define nopeADHOC_TRACE 1
 
 #ifdef ADHOC_TRACE
-# define TRACE(format, ...) \
-  printf ("HIGH ADHOC %d %f " format "\n", m_interface->getMacAddress (), now (), ## __VA_ARGS__);
-#else /* DCF_TRACE */
-# define TRACE(format, ...)
-#endif /* DCF_TRACE */
+# define TRACE(x) \
+  printf ("HIGH ADHOC"<<x<<std::endl);
+#else /* ADHOC_TRACE */
+# define TRACE(x)
+#endif /* ADHOC_TRACE */
 
-
+namespace yans {
 
 MacHighAdhoc::MacHighAdhoc ()
-	: MacHigh ()
-{
-}
+{}
 MacHighAdhoc::~MacHighAdhoc ()
 {}
 
 void
-MacHighAdhoc::setInterface (NetInterface80211 *interface)
+MacHighAdhoc::set_interface (NetworkInterface80211 *interface)
 {
 	m_interface = interface;
-	MacDcfParameters *parameters = new MacDcfParameters ();
-	parameters->setParameters (interface->parameters ());
-	m_dcf = new Dcf (parameters);
-	m_dcf->setInterface (interface);
-	m_queue = new MacQueue80211e ();
-	m_queue->setParameters (interface->parameters ());
-	DcaTxop *dcaTxop = new DcaTxop (m_dcf, m_queue);
-	dcaTxop->setInterface (interface);
+}
+void
+MacHighAdhoc::set_queue (MacQueue80211e *queue, Dcf *dcf)
+{
+	m_queue = queue;
+	m_dcf = dcf;
 }
 
 void 
-MacHighAdhoc::enqueueFromLL (Packet *packet, int macDestination)
+MacHighAdhoc::enqueue_from_ll (Packet *packet, MacAddress to)
 {
-	TRACE ("enqueue %d to %d (%d)", getSize (packet), 
-	       macDestination, m_queue->size ());
-	setSource (packet, m_interface->getMacAddress ());
-	setType (packet, MAC_80211_DATA);
-	setFinalDestination (packet, macDestination);
-	setDestination (packet, getFinalDestination (packet));
-	m_queue->enqueue (packet);
-	m_dcf->requestAccess ();
-}
-void 
-MacHighAdhoc::addTsRequest (TSpecRequest *request)
-{
-	assert (false);
-}
-void 
-MacHighAdhoc::delTsRequest (TSpecRequest *request)
-{
-	assert (false);
+	TRACE ("enqueue size="<<packet->get_size ()<<", to="<<to<<
+	       ", queue_size="<<m_queue->size ());
+	ChunkMac80211Hdr hdr;
+	hdr.set_type (MAC_80211_DATA);
+	hdr.set_addr1 (to);
+	hdr.set_addr2 (m_interface->get_mac_address ());
+	hdr.set_addr3 (m_interface->get_bssid ());
+	hdr.set_ds_not_from ();
+	hdr.set_ds_not_to ();
+	m_queue->enqueue (packet, hdr);
+	m_dcf->request_access ();
 }
 
 void 
-MacHighAdhoc::notifyAckReceivedFor (Packet *packet)
+MacHighAdhoc::notify_ack_received_for (ChunkMac80211Hdr const *hdr)
 {}
 
 void 
-MacHighAdhoc::receiveFromMacLow (Packet *packet)
+MacHighAdhoc::receive (Packet *packet, ChunkMac80211Hdr const *hdr)
 {
-	TRACE ("received %d from %d", getSize (packet), getSource (packet));
-	m_interface->ll ()->sendUp (packet);
+	TRACE ("received size="<<packet->get_size ()<<", from="<<hdr->get_addr2 ());
+//XXX
 }
 
-double
-MacHighAdhoc::now (void)
-{
-	return Scheduler::instance ().clock ();
-}
-
+}; // namespace yans
