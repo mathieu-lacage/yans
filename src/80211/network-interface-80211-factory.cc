@@ -32,6 +32,10 @@
 #include "mac-parameters.h"
 #include "mac-tx-middle.h"
 #include "mac-rx-middle.h"
+#include "dcf.h"
+#include "dca-txop.h"
+#include "mac-queue-80211e.h"
+#include "mac-high-adhoc.h"
 
 namespace yans {
 
@@ -140,12 +144,9 @@ NetworkInterface80211Factory::set_mac_max_slrc (uint32_t slrc)
 	m_mac_max_slrc = slrc;
 }
 
-
-NetworkInterface80211 *
-NetworkInterface80211Factory::create (Host *host)
+void
+NetworkInterface80211Factory::initialize_interface (NetworkInterface80211 *interface, Host *host)
 {
-	NetworkInterface80211 *interface = new NetworkInterface80211 ();
-
 	PropagationModel *propagation = new PropagationModel ();
 	propagation->set_tx_gain_dbm (m_prop_tx_gain_dbm);
 	propagation->set_rx_gain_dbm (m_prop_rx_gain_dbm);
@@ -215,15 +216,53 @@ NetworkInterface80211Factory::create (Host *host)
 	MacTxMiddle *tx_middle = new MacTxMiddle ();
 	interface->m_tx_middle = tx_middle;
 
-	
-	// XXXX
-
 	Arp *arp = new Arp (interface);
 	//mac->set_receiver (make_callback (&NetworkInterface80211::forward_data_up, interface));
 	arp->set_sender (make_callback (&NetworkInterface80211::send_data, interface),
 			 make_callback (&NetworkInterface80211::send_arp, interface));
 	interface->m_arp = arp;
+}
 
+
+NetworkInterface80211Adhoc *
+NetworkInterface80211Factory::create_adhoc (Host *host)
+{
+	NetworkInterface80211Adhoc *interface = new NetworkInterface80211Adhoc ();
+
+	initialize_interface (interface, host);
+
+	Dcf *dcf = new Dcf ();
+	dcf->set_parameters (interface->m_parameters);
+	// 802.11a
+	uint64_t difs = interface->m_parameters->get_sifs_us () + 
+		2 * interface->m_parameters->get_slot_time_us ();
+	uint64_t eifs = difs + interface->m_parameters->get_sifs_us () + 
+		interface->m_phy->calculate_tx_duration_us (2+2+6+4, 0);
+	dcf->set_difs_us (difs);
+	dcf->set_eifs_us (eifs);
+	dcf->set_cw_bounds (15, 1023);
+	interface->m_dcf = dcf;
+
+	MacQueue80211e *queue = new MacQueue80211e ();
+	queue->set_parameters (interface->m_parameters);
+	interface->m_queue = queue;
+
+	DcaTxop *dca = new DcaTxop ();
+	dca->set_parameters (interface->m_parameters);
+	dca->set_queue (queue);
+	dca->set_dcf (dcf);
+	dca->set_tx_middle (interface->m_tx_middle);
+	dca->set_low (interface->m_low);
+	interface->m_dca = dca;
+
+	MacHighAdhoc *high = new MacHighAdhoc ();
+	high->set_interface (interface);
+	high->set_queue (queue, dcf);
+	high->set_forward_callback (make_callback (&NetworkInterface80211::forward_up, 
+						   static_cast<NetworkInterface80211 *> (interface)));
+	dca->set_ack_received_callback (make_callback (&MacHighAdhoc::ack_received, high));
+	interface->m_rx_middle->set_forward_callback (make_callback (&MacHighAdhoc::receive, high));
+	interface->m_high = high;
 
 	return interface;
 }

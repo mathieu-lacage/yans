@@ -39,12 +39,20 @@ namespace yans {
 MacHighAdhoc::MacHighAdhoc ()
 {}
 MacHighAdhoc::~MacHighAdhoc ()
-{}
+{
+	delete m_callback;
+}
 
 void
 MacHighAdhoc::set_interface (NetworkInterface80211 *interface)
 {
 	m_interface = interface;
+
+}
+void 
+MacHighAdhoc::set_forward_callback (ForwardCallback *callback)
+{
+	m_callback = callback;
 }
 void
 MacHighAdhoc::set_queue (MacQueue80211e *queue, Dcf *dcf)
@@ -54,7 +62,7 @@ MacHighAdhoc::set_queue (MacQueue80211e *queue, Dcf *dcf)
 }
 
 void 
-MacHighAdhoc::enqueue_from_ll (Packet *packet, MacAddress to)
+MacHighAdhoc::enqueue (Packet *packet, MacAddress to)
 {
 	TRACE ("enqueue size="<<packet->get_size ()<<", to="<<to<<
 	       ", queue_size="<<m_queue->size ());
@@ -70,13 +78,14 @@ MacHighAdhoc::enqueue_from_ll (Packet *packet, MacAddress to)
 }
 
 void 
-MacHighAdhoc::notify_ack_received_for (ChunkMac80211Hdr const *hdr)
+MacHighAdhoc::ack_received (ChunkMac80211Hdr const &hdr)
 {}
 
 void 
 MacHighAdhoc::receive (Packet *packet, ChunkMac80211Hdr const *hdr)
 {
 	TRACE ("received size="<<packet->get_size ()<<", from="<<hdr->get_addr2 ());
+	(*m_callback) (packet);
 //XXX
 }
 

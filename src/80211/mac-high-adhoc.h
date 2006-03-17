@@ -22,6 +22,7 @@
 #define MAC_HIGH_ADHOC_H
 
 #include "mac-address.h"
+#include "callback.tcc"
 
 namespace yans {
 
@@ -34,22 +35,26 @@ class ChunkMac80211Hdr;
 
 class MacHighAdhoc {
 public:
+	typedef Callback<void (Packet *)> ForwardCallback;
+
 	MacHighAdhoc ();
-	virtual ~MacHighAdhoc ();
+	~MacHighAdhoc ();
 
 	void set_interface (NetworkInterface80211 *interface);
+	void set_forward_callback (ForwardCallback *callback);
 	void set_queue (MacQueue80211e *queue, Dcf *dcf);
 
 	/* invoked by Mac80211. */
-	void enqueue_from_ll (Packet *packet, MacAddress to);
+	void enqueue (Packet *packet, MacAddress to);
 
 	/* invoked by the MacLows. */
-	void notify_ack_received_for (ChunkMac80211Hdr const *hdr);
+	void ack_received (ChunkMac80211Hdr const &hdr);
 	void receive (Packet *packet, ChunkMac80211Hdr const*hdr);
 private:
 	MacQueue80211e *m_queue;
 	Dcf *m_dcf;
 	NetworkInterface80211 *m_interface;
+	ForwardCallback *m_callback;
 };
 
 }; // namespace yans

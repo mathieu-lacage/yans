@@ -26,8 +26,8 @@
 
 namespace yans {
 
-
 class NetworkInterface80211;
+class NetworkInterface80211Adhoc;
 class Host;
 
 class NetworkInterface80211Factory {
@@ -60,8 +60,9 @@ public:
 	void set_mac_max_ssrc (uint32_t ssrc);
 	void set_mac_max_slrc (uint32_t slrc);
 
-	NetworkInterface80211 *create (Host *host);
+	NetworkInterface80211Adhoc *create_adhoc (Host *host);
 private:
+	void initialize_interface (NetworkInterface80211 *interface, Host *host);
 	enum {
 		RATE_ARF,
 		RATE_AARF,

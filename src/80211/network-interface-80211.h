@@ -44,6 +44,10 @@ class MacRxMiddle;
 class MacTxMiddle;
 class MacHighAdhoc;
 class MacParameters;
+class Dcf;
+class DcaTxop;
+class MacQueue80211e;
+class MacHighAdhoc;
 
 class NetworkInterface80211 : public NetworkInterface {
 public:
@@ -71,12 +75,14 @@ public:
 
 	virtual void send (Packet *packet, Ipv4Address dest);
 
+protected:
+	NetworkInterface80211 ();
 private:
-	void forward_data_up (Packet *packet);
+	virtual void forward_down (Packet *packet, MacAddress to) = 0;
+	void forward_up (Packet *packet);
 	void send_arp (Packet *packet, MacAddress to);
 	void send_data (Packet *packet, MacAddress to);
 	friend class NetworkInterface80211Factory;
-	NetworkInterface80211 ();
 
 	enum {
 		ETHER_TYPE_IPV4 = 0x0800,
@@ -94,7 +100,6 @@ private:
 	Arp *m_arp;
 	MacRxMiddle *m_rx_middle;
 	MacTxMiddle *m_tx_middle;
-	MacHighAdhoc *m_high;
 	MacParameters *m_parameters;
 
 	MacAddress m_bssid;
@@ -104,6 +109,20 @@ private:
 	std::string *m_name;
 
 	UiTracedVariable<uint32_t> m_bytes_rx;
+};
+
+class NetworkInterface80211Adhoc : public NetworkInterface80211 {
+public:
+	NetworkInterface80211Adhoc ();
+	~NetworkInterface80211Adhoc ();
+protected:
+	virtual void forward_down (Packet *packet, MacAddress to);
+private:
+	friend class NetworkInterface80211Factory;
+	Dcf *m_dcf;
+	DcaTxop *m_dca;
+	MacQueue80211e *m_queue;
+	MacHighAdhoc *m_high;
 };
 
 }; // namespace yans

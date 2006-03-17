@@ -33,6 +33,10 @@
 #include "mac-parameters.h"
 #include "mac-rx-middle.h"
 #include "mac-tx-middle.h"
+#include "mac-high-adhoc.h"
+#include "dcf.h"
+#include "dca-txop.h"
+#include "mac-queue-80211e.h"
 
 namespace yans {
 
@@ -52,7 +56,6 @@ NetworkInterface80211::~NetworkInterface80211 ()
 	delete m_parameters;
 	delete m_tx_middle;
 	delete m_rx_middle;
-	//delete m_high;
 }
 
 
@@ -151,7 +154,7 @@ NetworkInterface80211::send (Packet *packet, Ipv4Address dest)
 }
 
 void 
-NetworkInterface80211::forward_data_up (Packet *packet)
+NetworkInterface80211::forward_up (Packet *packet)
 {
 	ChunkMacLlcSnap llc;
 	packet->remove (&llc);
@@ -171,8 +174,7 @@ NetworkInterface80211::send_arp (Packet *packet, MacAddress to)
 	ChunkMacLlcSnap llc;
 	llc.set_ether_type (ETHER_TYPE_ARP);
 	packet->add (&llc);
-	// XXX
-	//m_mac->send (packet, to);
+	forward_down (packet, to);
 }
 void 
 NetworkInterface80211::send_data (Packet *packet, MacAddress to)
@@ -180,9 +182,26 @@ NetworkInterface80211::send_data (Packet *packet, MacAddress to)
 	ChunkMacLlcSnap llc;
 	llc.set_ether_type (ETHER_TYPE_IPV4);
 	packet->add (&llc);
-	// XXX
-	//m_mac->send (packet, to);
+	forward_down (packet, to);
 }
+
+
+NetworkInterface80211Adhoc::NetworkInterface80211Adhoc ()
+{}
+NetworkInterface80211Adhoc::~NetworkInterface80211Adhoc ()
+{
+	delete m_dcf;
+	delete m_dca;
+	delete m_queue;
+	delete m_high;
+}
+
+void 
+NetworkInterface80211Adhoc::forward_down (Packet *packet, MacAddress to)
+{
+	m_high->enqueue (packet, to);
+}
+
 
 
 }; // namespace yans
