@@ -140,7 +140,7 @@ DcaTxop::set_tx_middle (MacTxMiddle *tx_middle)
 	m_tx_middle = tx_middle;
 }
 void 
-DcaTxop::set_callback (AckReceived *callback)
+DcaTxop::set_ack_received_callback (AckReceived *callback)
 {
 	m_ack_received = callback;
 }

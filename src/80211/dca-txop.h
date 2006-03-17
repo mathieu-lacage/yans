@@ -48,7 +48,7 @@ public:
 	void set_low (MacLow *low);
 	void set_parameters (MacParameters *parameters);
 	void set_tx_middle (MacTxMiddle *tx_middle);
-	void set_callback (AckReceived *callback);
+	void set_ack_received_callback (AckReceived *callback);
 
 private:
 	class AccessListener;
