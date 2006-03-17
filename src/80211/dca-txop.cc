@@ -19,83 +19,74 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-// ns header.
-#include "packet.h"
-
-// 802.11 headers.
 #include "dca-txop.h"
 #include "dcf.h"
 #include "mac-parameters.h"
 #include "mac-low.h"
 #include "mac-queue-80211e.h"
-#include "mac-station.h"
-#include "mac-stations.h"
-#include "mac-high.h"
-#include "mac-traces.h"
 #include "mac-tx-middle.h"
-#include "net-interface-80211.h"
-#include "common.h"
+#include "packet.h"
 
 
-#ifndef DCA_TXOP_TRACE
 #define nopeDCA_TXOP_TRACE 1
-#endif /* DCA_TXOP_TRACE */
 
 #ifdef DCA_TXOP_TRACE
-# define TRACE(format, ...) \
-  printf ("DCA TXOP %d " format "\n", m_interface->get_mac_address (), ## __VA_ARGS__);
+#include <iostream>
+# define TRACE(x) \
+  std::cout <<"DCA TXOP "<<x<<std::endl;
 #else /* DCA_TXOP_TRACE */
-# define TRACE(format, ...)
+# define TRACE(x)
 #endif /* DCA_TXOP_TRACE */
 
+namespace yans {
 
-class MyDcaAccessListener : public DcfAccessListener {
+class DcaTxop::AccessListener : public DcfAccessListener {
 public:
-	MyDcaAccessListener (DcaTxop *txop)
+	AccessListener (DcaTxop *txop)
 		: DcfAccessListener (),
 		  m_txop (txop) {}
 
-	virtual ~MyDcaAccessListener () {}
+	virtual ~AccessListener () {}
 
 	virtual void access_granted_now (void)
 	{
-		m_txop->accessGrantedNow ();
+		m_txop->access_granted_now ();
 	}
 	virtual bool access_needed (void)
 	{
-		return m_txop->accessNeeded ();
+		return m_txop->access_needed ();
 	}
 	virtual bool accessing_and_will_notify (void)
 	{
-		return m_txop->accessingAndWillNotify ();
+		return m_txop->accessing_and_will_notify ();
 	}
 
 private:
 	DcaTxop *m_txop;
 };
 
-class MyDcaTransmissionListener : public MacLowTransmissionListener {
+class DcaTxop::TransmissionListener : public MacLowTransmissionListener {
 public:
-	MyDcaTransmissionListener (DcaTxop *txop)
+	TransmissionListener (DcaTxop *txop)
 		: MacLowTransmissionListener (),
 		  m_txop (txop) {}
 		  
-	virtual ~MyDcaTransmissionListener () {}
+	virtual ~TransmissionListener () {}
 
-	virtual void got_cts (double snr, int txMode) {
+	virtual void got_cts (double snr, uint8_t txMode) {
 		m_txop->got_cts (snr, txMode);
 	}
 	virtual void missed_cts (void) {
-		m_txop->missedCTS ();
+		m_txop->missed_cts ();
 	}
-	virtual void got_ack (double snr, int txMode) {
+	virtual void got_ack (double snr, uint8_t txMode) {
 		m_txop->got_ack (snr, txMode);
 	}
 	virtual void missed_ack (void) {
-		m_txop->missedACK ();
+		m_txop->missed_ack ();
 	}
 	virtual void start_next (void) {
-		m_txop->startNext ();
+		m_txop->start_next ();
 	}
 
 	virtual void cancel (void) {
@@ -106,46 +97,71 @@ private:
 	DcaTxop *m_txop;
 };
 
-
-DcaTxop::_dca_txop (Dcf *dcf, MacQueue80211e *queue)
-	: m_dcf (dcf),
-	  m_queue (queue),
-	  m_current_tx_packet (0),
-	  m__ssrc (0),
-	  m__slrc (0)
+DcaTxop::DcaTxop ()
+	: m_access_listener (0),
+	  m_current_packet (0),
+	  m_ssrc (0),
+	  m_slrc (0)
 {
-	m_dcf->register_access_listener (new MyDcaAccessListener (this));
-	m_transmission_listener = new MyDcaTransmissionListener (this);
+	m_transmission_listener = new DcaTxop::TransmissionListener (this);
 }
 
-void
-DcaTxop::set_interface (NetInterface80211 *interface)
+DcaTxop::~DcaTxop ()
 {
-	m_interface = interface;
+	delete m_access_listener;
+	delete m_transmission_listener;
+}
+
+void 
+DcaTxop::set_dcf (Dcf *dcf)
+{
+	m_dcf = dcf;
+	m_access_listener = new DcaTxop::AccessListener (this);
+	m_dcf->register_access_listener (m_access_listener);
+}
+void 
+DcaTxop::set_queue (MacQueue80211e *queue)
+{
+	m_queue = queue;
+}
+void 
+DcaTxop::set_low (MacLow *low)
+{
+	m_low = low;
+}
+void 
+DcaTxop::set_parameters (MacParameters *parameters)
+{
+	m_parameters = parameters;
+}
+void 
+DcaTxop::set_tx_middle (MacTxMiddle *tx_middle)
+{
+	m_tx_middle = tx_middle;
+}
+void 
+DcaTxop::set_callback (AckReceived *callback)
+{
+	m_ack_received = callback;
 }
 
 MacLow *
 DcaTxop::low (void)
 {
-	return m_interface->low ();
+	return m_low;
 }
 
 MacParameters *
 DcaTxop::parameters (void)
 {
-	return m_interface->parameters ();
+	return m_parameters;
 }
 
-double
-DcaTxop::now (void)
-{
-	return Scheduler::instance ().clock ();
-}
 
 bool
 DcaTxop::need_rts (void)
 {
-	if (getSize (m_currentTxPacket) > parameters ()->get_rtsctsthreshold ()) {
+	if (m_current_packet->get_size () > parameters ()->get_rts_cts_threshold ()) {
 		return true;
 	} else {
 		return false;
@@ -155,18 +171,18 @@ DcaTxop::need_rts (void)
 bool
 DcaTxop::need_fragmentation (void)
 {
-	if (getSize (m_currentTxPacket) > parameters ()->get_fragmentation_threshold ()) {
+	if (m_current_packet->get_size () > parameters ()->get_fragmentation_threshold ()) {
 		return true;
 	} else {
 		return false;
 	}
 }
 
-int
-DcaTxop::get_nfragments (void)
+uint32_t
+DcaTxop::get_n_fragments (void)
 {
-	int nFragments = getSize (m_currentTxPacket) / parameters ()->getFragmentationThreshold () + 1;
-	return nFragments;
+	uint32_t n_fragments = m_current_packet->get_size () / parameters ()->get_fragmentation_threshold () + 1;
+	return n_fragments;
 }
 void
 DcaTxop::next_fragment (void)
@@ -174,62 +190,65 @@ DcaTxop::next_fragment (void)
 	m_fragment_number++;
 }
 
-int
+uint32_t
 DcaTxop::get_last_fragment_size (void)
 {
-	int lastFragmentSize = getSize (m_currentTxPacket) % parameters ()->getFragmentationThreshold ();
-	return lastFragmentSize;
+	uint32_t last_fragment_size = m_current_packet->get_size () %
+		parameters ()->get_fragmentation_threshold ();
+	return last_fragment_size;
 }
 
-int
+uint32_t
 DcaTxop::get_fragment_size (void)
 {
-	return parameters ()->getFragmentationThreshold ();
+	return parameters ()->get_fragmentation_threshold ();
 }
 bool
 DcaTxop::is_last_fragment (void) 
 {
-	if (m_fragment_number == (getNFragments () - 1)) {
+	if (m_fragment_number == (get_n_fragments () - 1)) {
 		return true;
 	} else {
 		return false;
 	}
 }
 
-int
+uint32_t
 DcaTxop::get_next_fragment_size (void) 
 {
-	if (isLastFragment ()) {
+	if (is_last_fragment ()) {
 		return 0;
 	}
 	
-	int nextFragmentNumber = m_fragment_number + 1;
-	if (nextFragmentNumber == (getNFragments () - 1)) {
-		return getLastFragmentSize ();
+	uint32_t next_fragment_number = m_fragment_number + 1;
+	if (next_fragment_number == (get_n_fragments () - 1)) {
+		return get_last_fragment_size ();
 	} else {
-		return getFragmentSize ();
+		return get_fragment_size ();
 	}
 }
 
 Packet *
-DcaTxop::get_fragment_packet (void)
+DcaTxop::get_fragment_packet (ChunkMac80211Hdr *hdr)
 {
-	Packet *fragment = m_current_tx_packet->copy ();
-	if (isLastFragment ()) {
-		setMoreFragments (fragment, false);
-		setSize (fragment, get_last_fragment_size ());
+	*hdr = m_current_hdr;
+	hdr->set_fragment_number (m_fragment_number);
+	uint32_t start_offset = m_fragment_number * get_fragment_size ();
+	Packet *fragment;
+	if (is_last_fragment ()) {
+		hdr->set_no_more_fragments ();
+		fragment = m_current_packet->copy (start_offset, get_last_fragment_size ());
 	} else {
-		setMoreFragments (fragment, true);
-		setSize (fragment, get_fragment_size ());
+		hdr->set_more_fragments ();
+		fragment = m_current_packet->copy (start_offset, get_fragment_size ());
 	}
-	setFragmentNumber (fragment, m_fragmentNumber);
 	return fragment;
 }
 
 bool 
 DcaTxop::accessing_and_will_notify (void)
 {
-	if (m_currentTxPacket != 0) {
+	if (m_current_packet != 0) {
 		return true;
 	} else {
 		return false;
@@ -239,12 +258,12 @@ DcaTxop::accessing_and_will_notify (void)
 bool 
 DcaTxop::access_needed (void)
 {
-	if (!m_queue->isEmpty () ||
-	    m_currentTxPacket != 0) {
+	if (!m_queue->is_empty () ||
+	    m_current_packet != 0) {
 		TRACE ("access needed here");
 		return true;
 	} else {
-		TRACE ("no access needed here -- %d/%p", m_queue->is_empty (), m_currentTxPacket);
+		TRACE ("no access needed here");
 		return false;
 	}
 }
@@ -252,166 +271,143 @@ DcaTxop::access_needed (void)
 void
 DcaTxop::access_granted_now (void)
 {
-	if (!m_currentTxPacket) {
+	if (!m_current_packet) {
 		if (m_queue->is_empty ()) {
 			TRACE ("queue empty");
 			return;
 		}
-		m_currentTxPacket = m_queue->dequeue ();
-		initialize (m_currentTxPacket);
-		assert (m_current_tx_packet != 0);
-		uint16_t sequence = m_interface->txMiddle ()->get_next_sequence_number_for (m_currentTxPacket);
-		setSequenceNumber (m_currentTxPacket, sequence);
-		m__ssrc = 0;
-		m__slrc = 0;
+		m_current_packet = m_queue->dequeue (&m_current_hdr);
+		assert (m_current_packet != 0);
+		uint16_t sequence = m_tx_middle->get_next_sequence_number_for (&m_current_hdr);
+		m_current_hdr.set_sequence_number (sequence);
+		m_ssrc = 0;
+		m_slrc = 0;
 		m_fragment_number = 0;
-		TRACE ("dequeued %d to %d seq: 0x%x", 
-		       get_size (m_currentTxPacket), 
-		       get_destination (m_currentTxPacket),
-		       get_sequence_control (m_currentTxPacket));
+		TRACE ("dequeued size="<<m_current_packet->get_size ()<<
+		       ", to="<<m_current_hdr.get_addr1 ()<<
+		       ", seq="<<m_current_hdr.get_sequence_control ()); 
 	}
-	low ()->disableOverrideDurationId ();
-	if (getDestination (m_currentTxPacket) == (int)MAC_BROADCAST) {
-		low ()->disableRTS ();
-		low ()->disableACK ();
-		low ()->set_data_transmission_mode (0);
-		low ()->set_transmission_listener (m_transmissionListener);
-		low ()->disableNextData ();
-		low ()->set_data (m_currentTxPacket);
-		low ()->startTransmission ();
-		m_current_tx_packet = 0;
-		m_dcf->notifyAccessOngoingOk ();
-		m_dcf->notifyAccessFinished ();
+	MacLowTransmissionParameters params;
+	params.disable_override_duration_id ();
+	if (m_current_hdr.get_addr1 ().is_broadcast ()) {
+		params.disable_rts ();
+		params.disable_ack ();
+		params.disable_next_data ();
+		low ()->start_transmission (m_current_packet,
+					    &m_current_hdr,
+					    params,
+					    m_transmission_listener);
+		m_current_packet = 0;
+		m_dcf->notify_access_ongoing_ok ();
+		m_dcf->notify_access_finished ();
 		TRACE ("tx broadcast");
 	} else {
-		int dataTxMode = lookupDestStation (m_currentTxPacket)->get_data_mode (getSize (m_currentTxPacket));
-		low ()->set_data_transmission_mode (dataTxMode);
-		low ()->enableACK ();
-		low ()->set_transmission_listener (m_transmissionListener);
-		if (needFragmentation ()) {
-			low ()->disableRTS ();
-			Packet *fragment = getFragmentPacket ();
-			if (isLastFragment ()) {
-				TRACE ("fragmenting last fragment %d", get_size (fragment));
-				low ()->disableNextData ();
+		params.enable_ack ();
+
+		if (need_fragmentation ()) {
+			params.disable_rts ();
+			ChunkMac80211Hdr hdr;
+			Packet *fragment = get_fragment_packet (&hdr);
+			if (is_last_fragment ()) {
+				TRACE ("fragmenting last fragment size="<<fragment->get_size ());
+				params.disable_next_data ();
 			} else {
-				TRACE ("fragmenting %d", get_size (fragment));
-				low ()->enable_next_data (getNextFragmentSize (), dataTxMode);
+				TRACE ("fragmenting size="<<fragment->get_size ());
+				params.enable_next_data (get_next_fragment_size ());
 			}
-			low ()->set_data (fragment);
-			low ()->startTransmission ();
+			low ()->start_transmission (fragment, &hdr, params, 
+						    m_transmission_listener);
+			fragment->unref ();
 		} else {
-			if (needRTS ()) {
-				low ()->enableRTS ();
-				int txMode = lookup_dest_station (m_currentTxPacket)->getRTSMode ();
-				low ()->set_rts_transmission_mode (txMode);
-				TRACE ("tx unicast rts mode %d/%d", txMode, dataTxMode);
+			if (need_rts ()) {
+				params.enable_rts ();
+				TRACE ("tx unicast rts");
 			} else {
-				low ()->disableRTS ();
-				TRACE ("tx unicast mode %d", dataTxMode);
+				params.disable_rts ();
+				TRACE ("tx unicast");
 			}
-			low ()->disableNextData ();
-			low ()->setData (m_current_tx_packet->copy ());
-			low ()->startTransmission ();
+			params.disable_next_data ();
+			low ()->start_transmission (m_current_packet, &m_current_hdr,
+						    params, m_transmission_listener);
 		}
 	}
 }
 
 
 void 
-DcaTxop::got_cts (double snr, int txMode)
+DcaTxop::got_cts (double snr, uint8_t txMode)
 {
 	TRACE ("got cts");
-	MacStation *station = lookup_dest_station (m_currentTxPacket);
-	station->report_rtsok (snr, txMode);
-	m__ssrc = 0;
+	m_ssrc = 0;
 }
 void 
 DcaTxop::missed_cts (void)
 {
-	TRACE ("missed cts at %f", now ());
-	MacStation *station = lookup_dest_station (m_currentTxPacket);
-	station->reportRTSFailed ();
-	m__ssrc++;
-	if (m__ssrc > parameters ()->get_max_ssrc ()) {
-		station->reportFinalRTSFailed ();
+	TRACE ("missed cts");
+	m_ssrc++;
+	if (m_ssrc > parameters ()->get_max_ssrc ()) {
 		// to reset the dcf.
-		m_dcf->notifyAccessOngoingErrorButOk ();
-		m_dcf->notifyAccessFinished ();
-		dropCurrentPacket ();
+		m_dcf->notify_access_ongoing_error_but_ok ();
+		m_dcf->notify_access_finished ();
+		m_current_packet->unref ();
+		m_current_packet = 0;
 	} else {
-		m_dcf->notifyAccessOngoingError ();
-		m_dcf->notifyAccessFinished ();
+		m_dcf->notify_access_ongoing_error ();
+		m_dcf->notify_access_finished ();
 	}
 }
 void 
-DcaTxop::got_ack (double snr, int txMode)
+DcaTxop::got_ack (double snr, uint8_t txMode)
 {
 	TRACE ("got ack");
-	MacStation *station = lookup_dest_station (m_currentTxPacket);
-	station->report_data_ok (snr, txMode);
-	m__slrc = 0;
-	if (!needFragmentation () ||
+	m_slrc = 0;
+	if (!need_fragmentation () ||
 	    is_last_fragment ()) {
-		m_interface->high ()->notify_ack_received_for (m_currentTxPacket);
+		(*m_ack_received) (m_current_hdr);
 
 		/* we are not fragmenting or we are done fragmenting
 		 * so we can get rid of that packet now.
 		 */
-		Packet::free (m_currentTxPacket);
-		m_current_tx_packet = 0;
-		m_dcf->notifyAccessOngoingOk ();
-		m_dcf->notifyAccessFinished ();
+		m_current_packet->unref ();
+		m_current_packet = 0;
+		m_dcf->notify_access_ongoing_ok ();
+		m_dcf->notify_access_finished ();
 	}
 }
 void 
 DcaTxop::missed_ack (void)
 {
 	TRACE ("missed ack");
-	MacStation *station = lookup_dest_station (m_currentTxPacket);
-	station->reportDataFailed ();
-	m__slrc++;
-	if (m__slrc > parameters ()->get_max_slrc ()) {
-		station->reportFinalDataFailed ();
-		// to reset the dcf.
-		m_dcf->notifyAccessOngoingErrorButOk ();
-		m_dcf->notifyAccessFinished ();
-		dropCurrentPacket ();
+	m_slrc++;
+	if (m_slrc > parameters ()->get_max_slrc ()) {
+		// to reset the dcf.		
+		m_dcf->notify_access_ongoing_error_but_ok ();
+		m_dcf->notify_access_finished ();
+		m_current_packet->unref ();
+		m_current_packet = 0;
 	} else {
-		setRetry (m_currentTxPacket);
-		m_dcf->notifyAccessOngoingError ();
-		m_dcf->notifyAccessFinished ();
+		// XXX
+		//setRetry (m_currentTxPacket); 
+		m_dcf->notify_access_ongoing_error ();
+		m_dcf->notify_access_finished ();
 	}
 	
 }
 void 
 DcaTxop::start_next (void)
 {
-	TRACE ("start next packet");
+	TRACE ("start next packet fragment");
 	/* this callback is used only for fragments. */
-	MacStation *station = lookup_dest_station (m_currentTxPacket);
-	low ()->disableRTS ();
-	nextFragment ();
-	Packet *fragment = getFragmentPacket ();
-	int txMode = station->get_data_mode (getSize (fragment));
-	if (isLastFragment ()) {
-		low ()->disableNextData ();
+	next_fragment ();
+	ChunkMac80211Hdr hdr;
+	Packet *fragment = get_fragment_packet (&hdr);
+	MacLowTransmissionParameters params;
+	if (is_last_fragment ()) {
+		params.disable_next_data ();
 	} else {
-		low ()->enable_next_data (getNextFragmentSize (), txMode);
+		params.enable_next_data (get_next_fragment_size ());
 	}
-	low ()->set_data_transmission_mode (txMode);
-	low ()->set_data (fragment);
-	low ()->startTransmission ();
+	low ()->start_transmission (fragment, &hdr, params, m_transmission_listener);
 }
 
-void
-DcaTxop::drop_current_packet (void)
-{
-	Packet::free (m_currentTxPacket);
-	m_current_tx_packet = 0;
-}
-MacStation *
-DcaTxop::lookup_dest_station (Packet *packet)
-{
-	return m_interface->stations ()->lookup (getDestination (packet));
-}
+}; // namespace yans

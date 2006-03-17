@@ -23,28 +23,38 @@
 #define DCA_TXOP_H
 
 #include <stdint.h>
+#include "callback.tcc"
+#include "chunk-mac-80211-hdr.h"
+
+namespace yans {
 
 class Dcf;
 class MacQueue80211e;
 class Packet;
-class MacLowTransmissionListener;
-class MacStation;
-class NetInterface80211;
 class MacLow;
 class MacParameters;
+class MacTxMiddle;
 
 class DcaTxop 
 {
 public:
-	DcaTxop (Dcf *dcf, MacQueue80211e *queue);
+	typedef Callback <void (ChunkMac80211Hdr const&)> AckReceived;
 
-	void set_interface (NetInterface80211 *interface);
+	DcaTxop ();
+	~DcaTxop ();
+
+	void set_dcf (Dcf *dcf);
+	void set_queue (MacQueue80211e *queue);
+	void set_low (MacLow *low);
+	void set_parameters (MacParameters *parameters);
+	void set_tx_middle (MacTxMiddle *tx_middle);
+	void set_callback (AckReceived *callback);
 
 private:
-	friend class MyDcaAccessListener;
-	friend class MyDcaTransmissionListener;
-
-	double now (void);
+	class AccessListener;
+	class TransmissionListener;
+	friend class AccessListener;
+	friend class TransmissionListener;
 
 	MacLow *low (void);
 	MacParameters *parameters (void);
@@ -53,33 +63,40 @@ private:
 	void access_granted_now (void);
 	bool accessing_and_will_notify (void);
 	bool access_needed (void);
-	void got_cts (double snr, int txMode);
+	void got_cts (double snr, uint8_t txMode);
 	void missed_cts (void);
-	void got_ack (double snr, int txMode);
+	void got_ack (double snr, uint8_t txMode);
 	void missed_ack (void);
 	void start_next (void);
 
 	bool need_rts (void);
 	bool need_fragmentation (void);
-	int get_nfragments (void);
-	int get_last_fragment_size (void);
-	int get_next_fragment_size (void);
-	int get_fragment_size (void);
+	uint32_t get_n_fragments (void);
+	uint32_t get_last_fragment_size (void);
+	uint32_t get_next_fragment_size (void);
+	uint32_t get_fragment_size (void);
 	bool is_last_fragment (void);
 	void next_fragment (void);
-	Packet *getFragmentPacket (void);
-	void drop_current_packet (void);
-	MacStation *lookupDestStation (Packet *packet);
+	Packet *get_fragment_packet (ChunkMac80211Hdr *hdr);
 
 	Dcf *m_dcf;
+	AckReceived *m_ack_received;
 	MacQueue80211e *m_queue;
-	NetInterface80211 *m_interface;
-	Packet *m_currentTxPacket;
-	MacLowTransmissionListener *m_transmissionListener;
-	int m_SSRC;
-	int m_SLRC;
-	int m_fragmentNumber;
+	MacTxMiddle *m_tx_middle;
+	MacLow *m_low;
+	MacParameters *m_parameters;
+	TransmissionListener *m_transmission_listener;
+	AccessListener *m_access_listener;
+	
+
+	Packet *m_current_packet;
+	ChunkMac80211Hdr m_current_hdr;
+	uint32_t m_ssrc;
+	uint32_t m_slrc;
+	uint8_t m_fragment_number;
 };
+
+}; //namespace yans
 
 
 
