@@ -41,7 +41,7 @@ public:
 	MacRxMiddle ();
 	~MacRxMiddle ();
 
-	void set_callback (ForwardUpCallback *callback);
+	void set_forward_callback (ForwardUpCallback *callback);
 
 	void receive (Packet *packet, ChunkMac80211Hdr const *hdr);
 private:

@@ -111,6 +111,12 @@ MacRxMiddle::~MacRxMiddle ()
 	delete m_callback;
 }
 
+void 
+MacRxMiddle::set_forward_callback (ForwardUpCallback *callback)
+{
+	m_callback = callback;
+}
+
 bool
 MacRxMiddle::sequence_control_smaller (int seqca, int seqcb)
 {
