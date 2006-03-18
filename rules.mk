@@ -28,8 +28,8 @@ enumerate-sub-dirs=$(if $1,$(call enumerate-sub-dirs,$(call remove-last-dir,$1))
 enumerate-dep-dirs=$(if $1,$(call enumerate-dep-dirs,$(call remove-last-dir,$1)) $(call remove-last-dir,$1),)
 gen-bin=$(strip $(addprefix $(TOP_BUILD_DIR)/,$1))
 gen-dep=$(strip $(call gen-bin, \
-	$(addsuffix .P,$(basename $(filter %.c,$1))) \
-	$(addsuffix .P,$(basename $(filter %.cc,$1))) \
+	$(addsuffix .P,$(filter %.c,$1)) \
+	$(addsuffix .P,$(filter %.cc,$1)) \
 ))
 gen-obj= $(strip $(addprefix $2, \
 	$(addsuffix .o,$(basename $(filter %.c,$1))) \
