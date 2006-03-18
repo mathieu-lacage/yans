@@ -86,10 +86,10 @@ CSRC=$$(filter %.c, $$($(1)_SRC))
 CXXSRC=$$(filter %.cc, $$($(1)_SRC))
 ASSRC=$$(filter %.s, $$($(1)_SRC))
 PYSRC=$$(filter %.py, $$($(1)_SRC))
-$$(foreach src,$$(CXXSRC),$$(eval $$(call CXXOBJ_template,$$(src),$$(call gen-obj, $$(src), $(TOP_BUILD_DIR)/),$$($(1)_CXXFLAGS))))
-$$(foreach src,$$(CSRC),$$(eval $$(call COBJ_template,$$(src),$$(call gen-obj, $$(src), $(TOP_BUILD_DIR)/),$$($(1)_CFLAGS))))
-$$(foreach src,$$(PYSRC),$$(eval $$(call PYOBJ_template,$$(src),$$(call gen-obj, $$(src), $(TOP_BUILD_DIR)/))))
-$$(foreach src,$$(ASSRC),$$(eval $$(call ASOBJ_template,$$(src),$$(call gen-obj, $$(src), $(TOP_BUILD_DIR)/),$$($(1)_ASFLAGS))))
+$$(foreach src,$$(CXXSRC),$$(eval $$(call CXXOBJ_template,$$(src),$$(call gen-obj,$$(src),$(TOP_BUILD_DIR)/),$$($(1)_CXXFLAGS))))
+$$(foreach src,$$(CSRC),$$(eval $$(call COBJ_template,$$(src),$$(call gen-obj,$$(src),$(TOP_BUILD_DIR)/),$$($(1)_CFLAGS))))
+$$(foreach src,$$(PYSRC),$$(eval $$(call PYOBJ_template,$$(src),$$(call gen-obj,$$(src),$(TOP_BUILD_DIR)/))))
+$$(foreach src,$$(ASSRC),$$(eval $$(call ASOBJ_template,$$(src),$$(call gen-obj,$$(src),$(TOP_BUILD_DIR)/),$$($(1)_ASFLAGS))))
 
 $(1)_DIRS=$$(call gen-dirs,$$($(1)_OBJ))
 ALL_DIRS+=$$($(1)_DIRS)
@@ -152,7 +152,7 @@ fastdistcheck: fastdist
 	$(RM_RECURSE_DIR) $(DIST_DIR)
 
 NINCLUDE_TARGETS := \
-	clean    \
+	clean \
 	$(NULL)
 
 ifeq ($(strip $(filter $(NINCLUDE_TARGETS),$(MAKECMDGOALS))),)
