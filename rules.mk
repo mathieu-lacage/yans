@@ -5,8 +5,7 @@ COMMA=,
 # various OS-specific commands
 CC=gcc
 CXX=g++
-RM=rm -f
-RM_RECURSE_DIR=rm -rf
+RM=rm
 CP=cp
 TAR=tar -zcf
 UNTAR=tar -zxf
