@@ -10,7 +10,7 @@ RM_RECURSE_DIR=rm -rf
 CP=cp
 TAR=tar -zcf
 UNTAR=tar -zxf
-MKDIR=XXX
+MKDIR=mkdir
 
 # my personal library of useful make functions.
 # these really should be part of the core GNU make
@@ -49,7 +49,7 @@ endef
 # mkdir on the TARGET dirs.
 define DIR_template
 $(1): $$(call enumerate-dep-dirs,$(1))
-	@if ! test -d $$@; then echo "mkdir $$@"; mkdir $$@; fi
+	$(if $(wildcard $(1)),,$(MKDIR) $(1))
 endef
 # the following templates are used to generate the targets for all object files.
 # each .o depends only on its source file. They do not depend on the build dirs
@@ -132,13 +132,12 @@ DIST_OUTPUT=$(PACKAGE_NAME)-$(PACKAGE_VERSION).tar.gz
 DIST_DIR=$(PACKAGE_NAME)-$(PACKAGE_VERSION)
 ALL_DIST_TARGETS=$(addprefix $(DIST_DIR)/,$(ALL_DIST))
 ALL_DIST_DIRS=$(call gen-dirs, $(ALL_DIST_TARGETS))
+$(foreach dir,$(sort $(ALL_DIST_DIRS)),$(eval $(call DIR_template,$(dir))))
 $(DIST_OUTPUT): $(ALL_DIST_DIRS) $(ALL_DIST_TARGETS)
 	@echo "Building $@ ..."
 	@$(TAR) $@ $(DIST_DIR)
 $(ALL_DIST_TARGETS): $(DIST_DIR)/%:%
 	@$(CP) $< $@
-$(ALL_DIST_DIRS):
-	@mkdir -p $@
 predist:
 	$(RM_RECURSE_DIR) $(DIST_DIR)
 dist: predist $(DIST_OUTPUT)
