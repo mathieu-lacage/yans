@@ -11,10 +11,19 @@ CP=cp
 TAR=tar -zcf
 UNTAR=tar -zxf
 MKDIR=mkdir
+RMDIR=rmdir
 
 # my personal library of useful make functions.
 # these really should be part of the core GNU make
 # *sigh*
+remove-trailing-slash=$(patsubst %/,%,$(1))
+append-file=$(addsuffix /$(1),$(call remove-trailing-slash,$(2)))
+find-file=$(wildcard $(call append-file,$(1),$(2)))
+rwildcard = $(foreach dir,$(wildcard $(1)*),$(call rwildcard,$(dir)/)$(filter $(subst *,%,$(2)),$(dir))) 
+path=$(subst :, ,$(PATH))
+ld-library-path=$(subst :, ,$(LD_LIBRARY_PATH))
+find-program=$(call find-file,$(1),$(path) $(2))
+#find-library=$(call find-file,$(1),$(ld-library-path))
 map=$(foreach tmp,$(2),$(call $(1),$(tmp)))
 remove-first=$(wordlist 2,$(words $1),$1)
 remove-last=$(call reverse,$(call remove-first,$(call reverse,$1)))
@@ -26,6 +35,14 @@ sub-lists=$(if $1,$(call sub-lists,$(call remove-first,$1)) $1,)
 remove-last-dir=$(call unsplit-dirs,$(call remove-last,$(call split-dirs,$1)))
 enumerate-sub-dirs=$(if $1,$(call enumerate-sub-dirs,$(call remove-last-dir,$1)) $1,)
 enumerate-dep-dirs=$(if $1,$(call enumerate-dep-dirs,$(call remove-last-dir,$1)) $(call remove-last-dir,$1),)
+is-dir=$(findstring $(call remove-trailing-slash,$(1))/,$(wildcard $(call remove-trailing-slash,$(1))/))
+is-file=$(if $(call is-dir,$(1)),,$(1))
+is-dirs=$(foreach item,$(1),$(call is-dir,$(item)))
+is-files=$(foreach item,$(1),$(call is-file,$(item)))
+mkdir-p=$(foreach dir,$(call enumerate-dep-dirs,$(1)) $(1),$(if $(wildcard $(dir)),,$(MKDIR) $(dir);))
+rmdir=$(foreach dir,$(call reverse $(call enumerate-dep-dirs,$(1))) $(1),$(if $(call is-dir (dir)),,$(RMDIR) $(dir);))
+rm-f=$(foreach file,$(1),$(if $(call is-file,$(1)),$(RM) $(file);,))
+rm-rf=$(call rm-f,$(call is-files,$(call rwildcard,$(1),*)))$(call rmdir,$(call is-dirs,$(call rwildcard,$(1),*)))
 gen-bin=$(strip $(addprefix $(TOP_BUILD_DIR)/,$1))
 gen-dep=$(strip $(call gen-bin, \
 	$(addsuffix .P,$(filter %.c,$1)) \
@@ -40,16 +57,22 @@ gen-obj= $(strip $(addprefix $2, \
 gen-dirs=$(strip $(sort $(call map,enumerate-sub-dirs,$(dir $1))))
 display-compile=$(if $(VERBOSE),echo '$(1)' && $(1),echo 'Building $$@ ...' && $(1))
 
+test-functions:
+	#$(call find-header,math.h,/usr/include /include)
+	#$(call find-program,main-simple,/home/mathieu/code/yans-current/bin/samples)
+	#$(call find-program,main-simple)
+	#$(call find-program,uname)
+	#$(call mkdir-p,a/b/c)
+	#'$(call is-dir,a)'
+	#$(call rm-rf,bin)
+	#$(call is-files,./bin bin/libyans.so)
+	#$(call rm-f,bin/libyans.so bin/libyans.so.P)
+
+
+
 
 define gen-gcc-dep
 -Wp$(COMMA)-M$(COMMA)-MP$(COMMA)-MM$(COMMA)-MT$(COMMA)$(strip $(2))$(COMMA)-MF$(COMMA)$(call gen-dep, $(1))
-endef
-# this template is called to generate the proper directory dependencies for
-# directories. It is used to infer the proper order in which to invoke
-# mkdir on the TARGET dirs.
-define DIR_template
-$(1): $$(call enumerate-dep-dirs,$(1))
-	$(if $(wildcard $(1)),,$(MKDIR) $(1))
 endef
 # the following templates are used to generate the targets for all object files.
 # each .o depends only on its source file. They do not depend on the build dirs
@@ -107,8 +130,8 @@ $(TOP_BUILD_DIR)/$$($(1)_OUTPUT):
 endef
 
 $(foreach output,$(ALL),$(eval $(call OUTPUT_template,$(output))))
-$(foreach dir,$(sort $(ALL_DIRS)),$(eval $(call DIR_template,$(dir))))
-
+$(sort $(ALL_DIRS)):
+	$(call mkdir-p,$@)
 build: $(ALL_DIRS) $(ALL_OUTPUT)
 
 opti:
@@ -132,24 +155,25 @@ DIST_OUTPUT=$(PACKAGE_NAME)-$(PACKAGE_VERSION).tar.gz
 DIST_DIR=$(PACKAGE_NAME)-$(PACKAGE_VERSION)
 ALL_DIST_TARGETS=$(addprefix $(DIST_DIR)/,$(ALL_DIST))
 ALL_DIST_DIRS=$(call gen-dirs, $(ALL_DIST_TARGETS))
-$(foreach dir,$(sort $(ALL_DIST_DIRS)),$(eval $(call DIR_template,$(dir))))
+$(sort $(ALL_DIST_DIRS)):
+	$(call mkdir-p,$@)
 $(DIST_OUTPUT): $(ALL_DIST_DIRS) $(ALL_DIST_TARGETS)
 	@echo "Building $@ ..."
 	@$(TAR) $@ $(DIST_DIR)
 $(ALL_DIST_TARGETS): $(DIST_DIR)/%:%
 	@$(CP) $< $@
 predist:
-	$(RM_RECURSE_DIR) $(DIST_DIR)
+	$(call rm-rf,$(DIST_DIR))
 dist: predist $(DIST_OUTPUT)
-	$(RM_RECURSE_DIR) $(DIST_DIR)
+	$(call rm-rf,$(DIST_DIR))
 distcheck: dist
 	$(UNTAR) $(DIST_OUTPUT)
 	$(MAKE) -C $(DIST_DIR)
-	$(RM_RECURSE_DIR) $(DIST_DIR)
+	$(call rm-rf,$(DIST_DIR))
 fastdist: $(DIST_OUTPUT)
 fastdistcheck: fastdist
 	$(MAKE) -C $(DIST_DIR)
-	$(RM_RECURSE_DIR) $(DIST_DIR)
+	$(call rm-rf,$(DIST_DIR))
 
 NINCLUDE_TARGETS := \
 	clean \
@@ -160,7 +184,7 @@ ifeq ($(strip $(filter $(NINCLUDE_TARGETS),$(MAKECMDGOALS))),)
 endif
 
 cleano:
-	$(RM) -f $(ALL_OBJ)
+	$(call rm-f,$(ALL_OBJ))
 clean:
-	find ./ -name '*~'|xargs rm -f 2>/dev/null;
-	$(RM_RECURSE_DIR) $(TOP_BUILD_DIR) 2>/dev/null;
+	$(call rm-f,$(call rwildcard,./,*~))
+	$(call rm-rf,$(TOP_BUILD_DIR))
