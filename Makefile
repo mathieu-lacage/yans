@@ -1,5 +1,9 @@
-TOP=.
-NULL=
+TOP:=.
+NULL:=
+PACKAGE_NAME:=yans
+PACKAGE_VERSION:=0.8.0
+TOP_BUILD_DIR:=$(TOP)/bin
+TOP_SRC_DIR:=$(TOP)
 
 
 all: build
@@ -7,10 +11,6 @@ all: build
 include ./platform.mk
 include ./config.mk
 
-PACKAGE_NAME=yans
-PACKAGE_VERSION=0.8.0
-TOP_BUILD_DIR=$(TOP)/bin
-TOP_SRC_DIR=$(TOP)
 DEFINES=-DRUN_SELF_TESTS=1
 INCLUDES=\
  -I$(TOP_SRC_DIR)/simulator \
