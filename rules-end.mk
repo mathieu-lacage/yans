@@ -22,11 +22,11 @@ endef
 # object files all the time.
 define CXXOBJ_template
 $(2): $(1)
-	@$(call display-compile,$(CXX) $(3) $$(call gen-gcc-dep,$(1),$(2)) -c -o $(2) $(1))
+	@$(call display-compile,$(CXX) $(3) $$($(1)_CXXFLAGS) $$(call gen-gcc-dep,$(1),$(2)) -c -o $(2) $(1))
 endef
 define COBJ_template
 $(2): $(1)
-	@$(call display-compile,$(CC) $(3) $$(call gen-gcc-dep,$(1),$(2)) -c -o $(2) $(1))
+	@$(call display-compile,$(CC) $(3) $$($(1)_CFLAGS) $$(call gen-gcc-dep,$(1),$(2)) -c -o $(2) $(1))
 endef
 define PYOBJ_template
 $(2): $(1)
@@ -34,7 +34,7 @@ $(2): $(1)
 endef
 define ASOBJ_template
 $(2): $(1)
-	@$(call display-compile,$(AS) $(3) -o $(2) $(1))
+	@$(call display-compile,$(AS) $(3) $$($(1)_ASFLAGS) -o $(2) $(1))
 endef
 
 define OUTPUT_template
