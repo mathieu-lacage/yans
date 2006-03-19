@@ -1,3 +1,7 @@
+include ./rules-start.mk
+-include ./config.mk
+include ./platform.mk
+
 TOP:=.
 NULL:=
 PACKAGE_NAME:=yans
@@ -6,10 +10,67 @@ TOP_BUILD_DIR:=$(TOP)/bin
 TOP_SRC_DIR:=$(TOP)
 
 
-all: build
+INCLUDE_SEARCH_PATHS:= \
+ /usr/include \
+ /include \
+ /usr/local/include \
+ /usr/include/python2.4 \
+ $(NULL)
+LIB_SEARCH_PATH:= \
+ /usr/lib \
+ /lib \
+ /usr/local/lib \
+ $(NULL)
+CONF_B_INC=$(call find-file-prefix,boost/python.hpp,$(INCLUDE_SEARCH_PATHS))
+CONF_P_INC=$(call find-file-prefix,Python.h,$(INCLUDE_SEARCH_PATHS))
+CONF_B_LIB=y
+CONF_P_LIB=y
+CONF_P_USE=$(if $(CONF_B_INC),$(if $(CONF_P_INC),$(if $(CONF_B_LIB),$(if $(CONF_P_LIB),y,),),),)
+CONF_TC_LIB=$(call find-library,tcmalloc,$(LIB_SEARCH_PATH))
+CONF_UNAME_BIN=$(call find-program,uname)
+CONF_UNAME_HARD=$(shell $(CONF_UNAME_BIN) -p)
+CONF_UNAME_OS=$(shell $(CONF_UNAME_BIN) -s)
+CONF_I386=$(if $(findstring i386,$(CONF_UNAME_HARD)),i386,$(if $(findstring i686,$(CONF_UNAME_HARD)),i386))
+CONF_PPC=$(if $(findstring powerpc,$(CONF_UNAME_HARD)),ppc,)
+CONF_UNAME_LINUX=$(findstring Linux,$(CONF_UNAME_OS))
+CONF_UNAME_DARWIN=$(findstring Darwin,$(CONF_UNAME_OS))
+CONF_PLATFORM_LINUX=$(if $(CONF_UNAME_LINUX),$(if $(CONF_I386),i386-linux-gcc),)
+CONF_PLATFORM_DARWIN=$(if $(CONF_UNAME_DARWIN),$(if $(CONF_PPC),ppc-darwin-gcc),)
+CONF_PLATFORM=$(if $(CONF_PLATFORM_LINUX),$(CONF_PLATFORM_LINUX),$(CONF_PLATFORM_DARWIN))
+CONF_TCP=$(call is-dir,$(TOP_SRC_DIR)/src/tcp-bsd)
+#linux RH FC4
+#uname -m=i686
+#uname -s=Linux
+#uname -r=2.6.15-1.1831_3.rhfc4.cubbi_swsusp2
+#uname -v=#1 Tue Feb 14 11:49:46 CET 2006
+#uname -p=i686
+#uname -i=i386
+#uname -o=GNU/Linux
+#osx panther:
+#uname -p=powerpc
+#uname -m=Power Macintosh
+#uname -s=Darwin
+#uname -r=8.5.0
+#uname -v=Darwin Kernel Version 8.5.0: Sun Jan 22 10:38:46 PST 2006; root:xnu-792.6.61.obj~1/RELEASE_PPC
+#machine=ppc970
+config.mk:
+	@echo "Generating config.mk..."
+	@$(call rm-f,config.mk)
+	@echo CONFIGURED:=y >config.mk
+    ifeq ($(CONF_P_USE),)
+	@echo BOOST_PREFIX_INC:=$(CONF_B_INC) >>config.mk
+	@echo PYTHON_PREFIX_INC:=$(CONF_P_INC) >>config.mk
+	@echo PYTHON_USE:=y >>config.mk
+    endif
+    ifneq ($(CONF_TC_LIB),)
+	@echo TC_LDFLAGS:=-L$(CONF_TC_LIB) -lpthread -ltcmalloc >>config.mk
+    endif
+	@echo PLATFORM:=$(CONF_PLATFORM) >>config.mk
+    ifneq ($(CONF_TCP),)
+	@echo TCP_USE=y >>config.mk
+    endif
 
-include ./platform.mk
-include ./config.mk
+ifeq ($(CONFIGURED),y)
 
 DEFINES=-DRUN_SELF_TESTS=1
 INCLUDES=\
@@ -32,7 +93,7 @@ LDFLAGS+=
 CXXFLAGS+=$(FLAGS) $(INCLUDES) $(DEFINES)
 CFLAGS+=$(FLAGS) $(INCLUDES) $(DEFINES)
 
-PACKAGE_DIST= \
+PACKAGE_DIST:= \
 	platform.mk \
 	rules.mk \
 	config.mk \
@@ -44,7 +105,7 @@ PACKAGE_DIST= \
 	$(NULL)
 
 # building of libyans.so
-YANS_SRC= \
+YANS_SRC:= \
 	simulator/clock.cc \
 	simulator/scheduler.cc \
 	simulator/scheduler-list.cc \
@@ -365,7 +426,7 @@ YANS_PYTHON_CXXFLAGS=$(CXXFLAGS) $(call gen-pymod-build-flags)
 YANS_PYTHON_LDFLAGS=$(LDFLAGS) $(call gen-pymod-link-flags) -lyans -L$(TOP_BUILD_DIR)
 
 
-ALL= \
+ALL:= \
 	YANS \
 	BENCH \
 	TEST \
@@ -387,5 +448,6 @@ endif
 run-opti-arc-profile-hook:
 	LD_LIBRARY_PATH=bin/opti-arc $(TOP_BUILD_DIR)/opti-arc/samples/main-simple --slow --heap
 
+endif #CONFIGURED
 
-include ./rules.mk
+include ./rules-end.mk

@@ -1,5 +1,3 @@
-PLATFORM=i386-linux-gcc
-
 ifeq ($(PLATFORM), i386-linux-gcc)
 FIBER_CONTEXT_PLATFORM= \
 	src/thread/fiber-context-i386-linux-gcc.c \
