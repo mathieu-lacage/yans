@@ -38,21 +38,6 @@ CONF_PLATFORM_LINUX=$(if $(CONF_UNAME_LINUX),$(if $(CONF_I386),i386-linux-gcc),)
 CONF_PLATFORM_DARWIN=$(if $(CONF_UNAME_DARWIN),$(if $(CONF_PPC),ppc-darwin-gcc),)
 CONF_PLATFORM=$(if $(CONF_PLATFORM_LINUX),$(CONF_PLATFORM_LINUX),$(CONF_PLATFORM_DARWIN))
 CONF_TCP=$(call is-dir,$(TOP_SRC_DIR)/src/tcp-bsd)
-#linux RH FC4
-#uname -m=i686
-#uname -s=Linux
-#uname -r=2.6.15-1.1831_3.rhfc4.cubbi_swsusp2
-#uname -v=#1 Tue Feb 14 11:49:46 CET 2006
-#uname -p=i686
-#uname -i=i386
-#uname -o=GNU/Linux
-#osx panther:
-#uname -p=powerpc
-#uname -m=Power Macintosh
-#uname -s=Darwin
-#uname -r=8.5.0
-#uname -v=Darwin Kernel Version 8.5.0: Sun Jan 22 10:38:46 PST 2006; root:xnu-792.6.61.obj~1/RELEASE_PPC
-#machine=ppc970
 config.mk:
 	@echo "Generating config.mk..."
 	@$(call rm-f,config.mk)
