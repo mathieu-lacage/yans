@@ -11,7 +11,7 @@ RMDIR:=rmdir
 
 # below are generic rules.
 
-COMMA:=,
+comma:=,
 
 # my personal library of useful make functions.
 # these really should be part of the core GNU make
@@ -49,13 +49,16 @@ rm-rf=$(call rm-f,$(call is-files,$(call rwildcard,$(1),*)))$(call rmdir,$(call 
 all: build
 
 test-functions:
-	#$(call find-header,math.h,/usr/include /include)
-	#$(call find-program,main-simple,/home/mathieu/code/yans-current/bin/samples)
-	#$(call find-program,main-simple)
-	#$(call find-program,uname)
-	#$(call mkdir-p,a/b/c)
-	#'$(call is-dir,a)'
-	#$(call rm-rf,bin)
-	#$(call is-files,./bin bin/libyans.so)
-	#$(call rm-f,bin/libyans.so bin/libyans.so.P)
+	#$(call mkdir-p,bin/samples)
+
+
+#$(call find-header,math.h,/usr/include /include)
+#$(call find-program,main-simple,/home/mathieu/code/yans-current/bin/samples)
+#$(call find-program,main-simple)
+#$(call find-program,uname)
+#$(call mkdir-p,a/b/c)
+#'$(call is-dir,a)'
+#$(call rm-rf,bin)
+#$(call is-files,./bin bin/libyans.so)
+#$(call rm-f,bin/libyans.so bin/libyans.so.P)
 
