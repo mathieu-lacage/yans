@@ -54,6 +54,7 @@ MacQueue80211e::enqueue (Packet *packet, ChunkMac80211Hdr const &hdr)
 {
 	cleanup ();
 	uint64_t now = Simulator::now_us ();
+	packet->ref ();
 	m_queue.push_front (Item (packet, hdr, now));
 	m_size++;
 }
