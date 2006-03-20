@@ -241,8 +241,7 @@ MacRxMiddle::receive (Packet *packet, ChunkMac80211Hdr const *hdr)
 		(*m_callback) (packet, hdr);
 	} else {
 		TRACE ("forwarding "<<hdr->get_type_string ()<<
-		       ", seq="<<hdr->get_sequence_control ()<<
-		       ", tid="<<hdr->get_qos_tid ());
+		       ", seq="<<hdr->get_sequence_control ());
 		originator->set_sequence_control (hdr->get_sequence_control ());
 		(*m_callback) (packet, hdr);
 	}
