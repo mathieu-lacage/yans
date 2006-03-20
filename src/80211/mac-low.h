@@ -208,7 +208,7 @@ private:
 	void send_rts_for_packet (void);
 	void send_data_packet (void);
 	void send_current_tx_packet (void);
-	void start_ack_timers (void);
+	void start_data_tx_timers (void);
 
 	NetworkInterface80211 *m_interface;
 	Phy80211 *m_phy;

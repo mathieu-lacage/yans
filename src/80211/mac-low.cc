@@ -231,7 +231,7 @@ MacLow::cancel_all_events (void)
 		m_wait_sifs_event= 0;
 		one_running = true;
 	}
-	if (one_running) {
+	if (one_running && m_listener != 0) {
 		m_listener->cancel ();
 	}
 }
@@ -306,17 +306,6 @@ MacLow::start_transmission (Packet *packet,
 	assert (m_phy->is_state_idle ());
 
 	TRACE ("startTx size="<< get_current_size () << ", to=" << m_current_hdr.get_addr1());
-
-	if (m_tx_params.has_next_packet () && !m_tx_params.must_wait_ack ()) {
-		// we need to start the afterSIFS timeout now.
-		uint64_t delay_us = calculate_overall_tx_time_us (get_current_size (),
-								  m_current_hdr.get_addr1(), 
-								  m_tx_params);
-		delay_us += get_sifs_us ();
-		assert (m_wait_sifs_event == 0);
-		m_wait_sifs_event = make_cancellable_event (&MacLow::wait_sifs_after_end_tx, this);
-		Simulator::insert_in_us (delay_us, m_wait_sifs_event);
-	}
 
 	if (m_tx_params.must_send_rts ()) {
 		send_rts_for_packet ();
@@ -623,12 +612,14 @@ MacLow::cts_timeout (void)
 	m_current_packet->unref ();
 	m_current_packet = 0;
 	m_listener->missed_cts ();
+	m_listener = 0;
 }
 void
 MacLow::normal_ack_timeout (void)
 {
 	m_normal_ack_timeout_event = 0;
 	m_listener->missed_ack ();
+	m_listener = 0;
 }
 void
 MacLow::fast_ack_timeout (void)
@@ -638,6 +629,7 @@ MacLow::fast_ack_timeout (void)
 		TRACE ("fast Ack idle missed");
 		m_listener->missed_ack ();
 	}
+	m_listener = 0;
 }
 void
 MacLow::super_fast_ack_timeout ()
@@ -650,6 +642,7 @@ MacLow::super_fast_ack_timeout ()
 		TRACE ("super fast Ack ok");
 		m_listener->got_ack (0.0, 0);
 	}
+	m_listener = 0;
 }
 
 void
@@ -696,7 +689,7 @@ MacLow::send_rts_for_packet (void)
 }
 
 void
-MacLow::start_ack_timers (void)
+MacLow::start_data_tx_timers (void)
 {
 	uint8_t data_tx_mode = get_data_tx_mode (m_current_hdr.get_addr1 (), get_current_size ());
 	uint64_t tx_duration_us = m_phy->calculate_tx_duration_us (get_current_size (), data_tx_mode);
@@ -715,6 +708,14 @@ MacLow::start_ack_timers (void)
 		assert (m_super_fast_ack_timeout_event == 0);
 		m_super_fast_ack_timeout_event = make_cancellable_event (&MacLow::super_fast_ack_timeout, this);
 		Simulator::insert_in_s (timer_delay_us, m_super_fast_ack_timeout_event);
+	} else if (m_tx_params.has_next_packet ()) {
+		uint64_t delay_us = tx_duration_us + get_sifs_us ();
+		assert (m_wait_sifs_event == 0);
+		m_wait_sifs_event = make_cancellable_event (&MacLow::wait_sifs_after_end_tx, this);
+		Simulator::insert_in_us (delay_us, m_wait_sifs_event);
+	} else {
+		// since we do not expect any timer to be triggered.
+		m_listener = 0;
 	}
 }
 
@@ -722,7 +723,7 @@ void
 MacLow::send_data_packet (void)
 {
 	/* send this packet directly. No RTS is needed. */
-	start_ack_timers ();
+	start_data_tx_timers ();
 
 	uint8_t data_tx_mode = get_data_tx_mode (m_current_hdr.get_addr1 (), get_current_size ());
 	TRACE ("tx "<< m_current_hdr.get_type_string () << 
@@ -812,7 +813,7 @@ MacLow::send_data_after_cts (MacAddress source, uint64_t duration_us, uint8_t tx
 	TRACE ("tx " << m_current_hdr.get_type_string () << " to=" << m_current_hdr.get_addr2 () <<
 	       ", mode=" << (uint32_t)data_tx_mode << ", seq=0x"<< m_current_hdr.get_sequence_control ());
 
-	start_ack_timers ();
+	start_data_tx_timers ();
 	uint64_t tx_duration_us = m_phy->calculate_tx_duration_us (get_current_size (), data_tx_mode);
 	duration_us -= tx_duration_us;
 	duration_us -= get_sifs_us ();
