@@ -113,7 +113,7 @@ public:
 
 	void set_duration_s (double duration);
 	uint32_t get_size (void) const;
-	char const *get_type_string (void);
+	char const *get_type_string (void) const;
 
 
 	virtual ~ChunkMac80211Hdr ();

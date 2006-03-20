@@ -609,7 +609,7 @@ ChunkMac80211Hdr::get_size (void) const
 	return size;
 }
 char const *
-ChunkMac80211Hdr::get_type_string (void)
+ChunkMac80211Hdr::get_type_string (void) const
 {
 #define FOO(x) \
 case MAC_80211_ ## x: \
