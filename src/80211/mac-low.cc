@@ -300,7 +300,7 @@ MacLow::start_transmission (Packet *packet,
 	m_current_packet->ref ();
 	m_current_hdr = *hdr;
 	cancel_all_events ();
-	m_transmission_listener = listener;
+	m_listener = listener;
 	m_tx_params = parameters;
 
 	assert (m_phy->is_state_idle ());
@@ -386,7 +386,7 @@ MacLow::receive_ok (Packet const*p, double rx_snr, uint8_t tx_mode, uint8_t stuf
 
 		m_cts_timeout_event->cancel ();
 		m_cts_timeout_event = 0;
-		m_transmission_listener->got_cts (rx_snr, tx_mode);
+		m_listener->got_cts (rx_snr, tx_mode);
 		assert (m_send_data_event == 0);
 		m_send_data_event = make_cancellable_event (&MacLow::send_data_after_cts, this, 
 							    hdr.get_addr1 (),
@@ -405,7 +405,7 @@ MacLow::receive_ok (Packet const*p, double rx_snr, uint8_t tx_mode, uint8_t stuf
 			m_normal_ack_timeout_event = 0;
 		}
 		if (m_tx_params.must_wait_normal_ack () || m_tx_params.must_wait_fast_ack ()) {
-			m_transmission_listener->got_ack (rx_snr, tx_mode);
+			m_listener->got_ack (rx_snr, tx_mode);
 		}
 		if (m_tx_params.has_next_packet ()) {
 			m_wait_sifs_event = make_cancellable_event (&MacLow::wait_sifs_after_end_tx, this);
@@ -622,13 +622,13 @@ MacLow::cts_timeout (void)
 	m_cts_timeout_event = 0;
 	m_current_packet->unref ();
 	m_current_packet = 0;
-	m_transmission_listener->missed_cts ();
+	m_listener->missed_cts ();
 }
 void
 MacLow::normal_ack_timeout (void)
 {
 	m_normal_ack_timeout_event = 0;
-	m_transmission_listener->missed_ack ();
+	m_listener->missed_ack ();
 }
 void
 MacLow::fast_ack_timeout (void)
@@ -636,7 +636,7 @@ MacLow::fast_ack_timeout (void)
 	m_fast_ack_timeout_event = 0;
 	if (m_phy->is_state_idle ()) {
 		TRACE ("fast Ack idle missed");
-		m_transmission_listener->missed_ack ();
+		m_listener->missed_ack ();
 	}
 }
 void
@@ -645,10 +645,10 @@ MacLow::super_fast_ack_timeout ()
 	m_super_fast_ack_timeout_event = 0;
 	if (m_phy->is_state_idle ()) {
 		TRACE ("super fast Ack failed");
-		m_transmission_listener->missed_ack ();
+		m_listener->missed_ack ();
 	} else {
 		TRACE ("super fast Ack ok");
-		m_transmission_listener->got_ack (0.0, 0);
+		m_listener->got_ack (0.0, 0);
 	}
 }
 
@@ -831,14 +831,14 @@ void
 MacLow::wait_sifs_after_end_tx (void)
 {
 	m_wait_sifs_event = 0;
-	m_transmission_listener->start_next ();
+	m_listener->start_next ();
 }
 
 void
 MacLow::fast_ack_failed_timeout (void)
 {
 	m_fast_ack_failed_timeout_event = 0;
-	m_transmission_listener->missed_ack ();
+	m_listener->missed_ack ();
 	TRACE ("fast Ack busy but missed");
 }
 

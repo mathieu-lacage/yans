@@ -215,7 +215,6 @@ private:
 	MacStations *m_stations;
 	MacParameters *m_parameters;
 	MacLowRxCallback *m_rx_callback;
-	MacLowTransmissionListener *m_transmission_listener;
 	typedef std::vector<MacLowNavListener *>::const_iterator NavListenersCI;
 	typedef std::vector<MacLowNavListener *> NavListeners;
 	NavListeners m_nav_listeners;
