@@ -32,7 +32,7 @@
 #include "mac-station.h"
 #include "mac-parameters.h"
 
-#define noMAC_LOW_TRACE 1
+#define MAC_LOW_TRACE 1
 
 #ifdef MAC_LOW_TRACE
 #  include <iostream>
@@ -674,7 +674,7 @@ MacLow::send_rts_for_packet (void)
 	}
 	rts.set_duration_us (duration_us);
 
-	TRACE ("tx RTS to="<< rts.get_addr1 () << ", mode=" << rts_tx_mode);
+	TRACE ("tx RTS to="<< rts.get_addr1 () << ", mode=" << (uint32_t)rts_tx_mode);
 
 	uint64_t tx_duration_us = m_phy->calculate_tx_duration_us (get_rts_size (), rts_tx_mode);
 	uint64_t timer_delay_us = tx_duration_us + get_cts_timeout_us ();
@@ -723,7 +723,7 @@ MacLow::send_data_packet (void)
 	uint8_t data_tx_mode = get_data_tx_mode (m_current_hdr.get_addr1 (), get_current_size ());
 	TRACE ("tx "<< m_current_hdr.get_type_string () << 
 	       ", to=" << m_current_hdr.get_addr1 () <<
-	       ", mode=" << data_tx_mode);
+	       ", mode=" << (uint32_t)data_tx_mode);
 	uint64_t duration_us;
 	if (m_tx_params.has_duration_id ()) {
 		duration_us = m_tx_params.get_duration_id ();
@@ -778,11 +778,11 @@ MacLow::send_cts_after_rts (MacAddress source, uint64_t duration_us, uint8_t tx_
 	/* send a CTS when you receive a RTS 
 	 * right after SIFS.
 	 */
-	TRACE ("tx CTS to=" << source << ", mode=" << tx_mode);
+	TRACE ("tx CTS to=" << source << ", mode=" << (uint32_t)tx_mode);
 	ChunkMac80211Hdr cts;
 	cts.set_type (MAC_80211_CTL_CTS);
 	cts.set_addr1 (source);
-	duration_us -= m_phy->calculate_tx_duration_us (tx_mode, get_cts_size ());
+	duration_us -= m_phy->calculate_tx_duration_us (get_cts_size (), tx_mode);
 	duration_us -= get_sifs_us ();
 	cts.set_duration_us (duration_us);
 
@@ -804,8 +804,7 @@ MacLow::send_data_after_cts (MacAddress source, uint64_t duration_us, uint8_t tx
 	uint8_t data_tx_mode = get_data_tx_mode (m_current_hdr.get_addr1 (), get_current_size ());
 
 	TRACE ("tx " << m_current_hdr.get_type_string () << " to=" << m_current_hdr.get_addr2 () <<
-	       ", mode=" << data_tx_mode << ", seq=0x"<< m_current_hdr.get_sequence_control () <<
-	       ", tid=" << m_current_hdr.get_qos_tid ());
+	       ", mode=" << (uint32_t)data_tx_mode << ", seq=0x"<< m_current_hdr.get_sequence_control ());
 
 	start_ack_timers ();
 	uint64_t tx_duration_us = m_phy->calculate_tx_duration_us (get_current_size (), data_tx_mode);
@@ -841,7 +840,7 @@ MacLow::send_ack_after_data (MacAddress source, uint64_t duration_us, uint8_t tx
 	/* send an ACK when you receive 
 	 * a packet after SIFS. 
 	 */
-	TRACE ("tx ACK to=" << source << ", mode=" << tx_mode);
+	TRACE ("tx ACK to=" << source << ", mode=" << (uint32_t)tx_mode);
 	ChunkMac80211Hdr ack;
 	ack.set_addr1 (source);
 	duration_us -= m_phy->calculate_tx_duration_us (get_ack_size (), tx_mode);

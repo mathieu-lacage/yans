@@ -26,7 +26,7 @@
 #include "network-interface-80211.h"
 #include "packet.h"
 
-#define noADHOC_TRACE 1
+#define ADHOC_TRACE 1
 
 #ifdef ADHOC_TRACE
 # include <iostream>
