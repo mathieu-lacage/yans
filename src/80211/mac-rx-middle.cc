@@ -25,7 +25,7 @@
 
 #include <cassert>
 
-#define noRX_MIDDLE_TRACE 1
+#define RX_MIDDLE_TRACE 1
 
 #ifdef RX_MIDDLE_TRACE
 #include <iostream>
@@ -236,8 +236,7 @@ MacRxMiddle::receive (Packet *packet, ChunkMac80211Hdr const *hdr)
 			return;
 		}
 		TRACE ("forwarding data from="<<hdr->get_addr2 ()<<
-		       ", seq="<<hdr->get_sequence_control ()<<
-		       ", tid="<<hdr->get_qos_tid ());
+		       ", seq="<<hdr->get_sequence_control ());
 		originator->set_sequence_control (hdr->get_sequence_control ());
 		(*m_callback) (packet, hdr);
 	} else {
