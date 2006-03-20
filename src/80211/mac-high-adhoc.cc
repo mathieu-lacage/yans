@@ -24,12 +24,14 @@
 #include "mac-queue-80211e.h"
 #include "dca-txop.h"
 #include "network-interface-80211.h"
+#include "packet.h"
 
-#define nopeADHOC_TRACE 1
+#define noADHOC_TRACE 1
 
 #ifdef ADHOC_TRACE
+# include <iostream>
 # define TRACE(x) \
-  printf ("HIGH ADHOC"<<x<<std::endl);
+  std::cout << "HIGH ADHOC "<<x<<std::endl;
 #else /* ADHOC_TRACE */
 # define TRACE(x)
 #endif /* ADHOC_TRACE */
@@ -65,7 +67,7 @@ void
 MacHighAdhoc::enqueue (Packet *packet, MacAddress to)
 {
 	TRACE ("enqueue size="<<packet->get_size ()<<", to="<<to<<
-	       ", queue_size="<<m_queue->size ());
+	       ", queue_size="<<m_queue->get_size ());
 	ChunkMac80211Hdr hdr;
 	hdr.set_type (MAC_80211_DATA);
 	hdr.set_addr1 (to);
@@ -86,7 +88,6 @@ MacHighAdhoc::receive (Packet *packet, ChunkMac80211Hdr const *hdr)
 {
 	TRACE ("received size="<<packet->get_size ()<<", from="<<hdr->get_addr2 ());
 	(*m_callback) (packet);
-//XXX
 }
 
 }; // namespace yans
