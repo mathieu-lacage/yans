@@ -48,6 +48,8 @@ class Dcf;
 class DcaTxop;
 class MacQueue80211e;
 class MacHighAdhoc;
+class MacLowNavListener;
+class Phy80211Listener;
 
 class NetworkInterface80211 : public NetworkInterface {
 public:
@@ -120,6 +122,8 @@ protected:
 private:
 	friend class NetworkInterface80211Factory;
 	Dcf *m_dcf;
+	MacLowNavListener *m_nav_listener;
+	Phy80211Listener *m_phy_listener;
 	DcaTxop *m_dca;
 	MacQueue80211e *m_queue;
 	MacHighAdhoc *m_high;

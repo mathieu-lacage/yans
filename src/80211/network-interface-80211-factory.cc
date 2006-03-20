@@ -37,6 +37,52 @@
 #include "mac-queue-80211e.h"
 #include "mac-high-adhoc.h"
 
+namespace {
+class DcfMacLowNavListener : public yans::MacLowNavListener {
+public:
+	DcfMacLowNavListener (yans::Dcf *dcf)
+		: m_dcf (dcf) {}
+	virtual ~DcfMacLowNavListener () {}
+	virtual void nav_start_us (uint64_t now_us, uint64_t duration_us) {
+		m_dcf->notify_nav_start (now_us, duration_us);
+	}
+	virtual void nav_continue_us (uint64_t now_us, uint64_t duration_us) {
+		m_dcf->notify_nav_continue (now_us, duration_us);
+	}
+	virtual void nav_reset_us (uint64_t now_us, uint64_t duration_us) {
+		m_dcf->notify_nav_reset (now_us, duration_us);
+	}
+private:
+	yans::Dcf *m_dcf;
+};
+class DcfPhy80211Listener : public yans::Phy80211Listener {
+public:
+	DcfPhy80211Listener (yans::Dcf *dcf)
+		: m_dcf (dcf) {}
+	virtual ~DcfPhy80211Listener () {}
+	virtual void notify_rx_start (uint64_t duration_us) {
+		m_dcf->notify_rx_start_now (duration_us);
+	}
+	virtual void notify_rx_end_ok (void) {
+		m_dcf->notify_rx_end_ok_now ();
+	}
+	virtual void notify_rx_end_error (void) {
+		m_dcf->notify_rx_end_error_now ();
+	}
+	virtual void notify_tx_start (uint64_t duration_us) {
+		m_dcf->notify_tx_start_now (duration_us);
+	}
+	virtual void notify_sleep (void) {
+		m_dcf->notify_sleep_now ();
+	}
+	virtual void notify_wakeup () {
+		m_dcf->notify_wakeup_now ();
+	}
+private:
+	yans::Dcf *m_dcf;
+};
+};
+
 namespace yans {
 
 NetworkInterface80211Factory::NetworkInterface80211Factory ()
@@ -242,6 +288,12 @@ NetworkInterface80211Factory::create_adhoc (Host *host)
 	dcf->set_eifs_us (eifs);
 	dcf->set_cw_bounds (15, 1023);
 	interface->m_dcf = dcf;
+
+	interface->m_nav_listener = new DcfMacLowNavListener (dcf);
+	interface->m_low->register_nav_listener (interface->m_nav_listener);
+
+	interface->m_phy_listener = new DcfPhy80211Listener (dcf);
+	interface->m_phy->register_listener (interface->m_phy_listener);
 
 	MacQueue80211e *queue = new MacQueue80211e ();
 	queue->set_parameters (interface->m_parameters);

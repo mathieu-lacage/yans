@@ -194,6 +194,8 @@ NetworkInterface80211Adhoc::~NetworkInterface80211Adhoc ()
 	delete m_dca;
 	delete m_queue;
 	delete m_high;
+	delete m_nav_listener;
+	delete m_phy_listener;
 }
 
 void 
