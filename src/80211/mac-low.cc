@@ -651,6 +651,8 @@ MacLow::send_rts_for_packet (void)
 	/* send an RTS for this packet. */
 	ChunkMac80211Hdr rts;
 	rts.set_type (MAC_80211_CTL_RTS);
+	ack.set_ds_not_from ();
+	ack.set_ds_not_to ();
 	rts.set_addr1 (m_current_hdr.get_addr1 ());
 	rts.set_addr2 (m_interface->get_mac_address ());
 	uint8_t rts_tx_mode = get_rts_tx_mode (m_current_hdr.get_addr1 ());
@@ -787,6 +789,8 @@ MacLow::send_cts_after_rts (MacAddress source, uint64_t duration_us, uint8_t tx_
 	m_send_cts_event = 0;
 	ChunkMac80211Hdr cts;
 	cts.set_type (MAC_80211_CTL_CTS);
+	ack.set_ds_not_from ();
+	ack.set_ds_not_to ();
 	cts.set_addr1 (source);
 	duration_us -= m_phy->calculate_tx_duration_us (get_cts_size (), tx_mode);
 	duration_us -= get_sifs_us ();
@@ -853,6 +857,8 @@ MacLow::send_ack_after_data (MacAddress source, uint64_t duration_us, uint8_t tx
 	m_send_ack_event = 0;
 	ChunkMac80211Hdr ack;
 	ack.set_type (MAC_80211_CTL_ACK);
+	ack.set_ds_not_from ();
+	ack.set_ds_not_to ();
 	ack.set_addr1 (source);
 	duration_us -= m_phy->calculate_tx_duration_us (get_ack_size (), tx_mode);
 	duration_us -= get_sifs_us ();
