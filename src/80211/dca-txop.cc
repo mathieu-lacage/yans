@@ -299,6 +299,7 @@ DcaTxop::access_granted_now (void)
 					    &m_current_hdr,
 					    params,
 					    m_transmission_listener);
+		m_current_packet->unref ();
 		m_current_packet = 0;
 		m_dcf->notify_access_ongoing_ok ();
 		m_dcf->notify_access_finished ();
