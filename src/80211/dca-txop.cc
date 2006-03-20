@@ -28,7 +28,7 @@
 #include "packet.h"
 
 
-#define nopeDCA_TXOP_TRACE 1
+#define DCA_TXOP_TRACE 1
 
 #ifdef DCA_TXOP_TRACE
 #include <iostream>
@@ -280,6 +280,7 @@ DcaTxop::access_granted_now (void)
 		assert (m_current_packet != 0);
 		uint16_t sequence = m_tx_middle->get_next_sequence_number_for (&m_current_hdr);
 		m_current_hdr.set_sequence_number (sequence);
+		m_current_hdr.set_no_more_fragments ();
 		m_ssrc = 0;
 		m_slrc = 0;
 		m_fragment_number = 0;
