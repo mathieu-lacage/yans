@@ -25,12 +25,12 @@
 
 #include <cassert>
 
-#define nopeRX_MIDDLE_TRACE 1
+#define noRX_MIDDLE_TRACE 1
 
 #ifdef RX_MIDDLE_TRACE
 #include <iostream>
 # define TRACE(x) \
-	printf ("RX MIDDLE "<<x<<std::endl);
+	std::cout <<"RX MIDDLE "<<x<<std::endl;
 #else /* RX_MIDDLE_TRACE */
 # define TRACE(x)
 #endif /* RX_MIDDLE_TRACE */
@@ -180,7 +180,7 @@ MacRxMiddle::handle_fragments (Packet *packet, ChunkMac80211Hdr const*hdr,
 		if (hdr->is_more_fragments ()) {
 			if (originator->is_next_fragment (hdr->get_sequence_control ())) {
 				TRACE ("accumulate fragment seq="<<hdr->get_sequence_control ()<<
-				       ", size="packet->get_size ());
+				       ", size="<<packet->get_size ());
 				originator->accumulate_fragment (packet);
 				originator->set_sequence_control (hdr->get_sequence_control ());
 			} else {
@@ -237,11 +237,11 @@ MacRxMiddle::receive (Packet *packet, ChunkMac80211Hdr const *hdr)
 		}
 		TRACE ("forwarding data from="<<hdr->get_addr2 ()<<
 		       ", seq="<<hdr->get_sequence_control ()<<
-		       ", tid="<<hdr->get_tid ());
+		       ", tid="<<hdr->get_qos_tid ());
 		originator->set_sequence_control (hdr->get_sequence_control ());
 		(*m_callback) (packet, hdr);
 	} else {
-		TRACE ("forwarding "<<hdr.get_type_string ()<<
+		TRACE ("forwarding "<<hdr->get_type_string ()<<
 		       ", seq="<<hdr->get_sequence_control ()<<
 		       ", tid="<<hdr->get_qos_tid ());
 		originator->set_sequence_control (hdr->get_sequence_control ());
