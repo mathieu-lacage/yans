@@ -23,9 +23,10 @@ LIB_SEARCH_PATH:= \
  $(NULL)
 CONF_B_INC=$(call find-file-prefix,boost/python.hpp,$(INCLUDE_SEARCH_PATHS))
 CONF_P_INC=$(call find-file-prefix,Python.h,$(INCLUDE_SEARCH_PATHS))
-CONF_B_LIB=y
-CONF_P_LIB=y
-CONF_P_USE=$(if $(CONF_B_INC),$(if $(CONF_P_INC),$(if $(CONF_B_LIB),$(if $(CONF_P_LIB),y,),),),)
+CONF_B_LIB=$(call find-library,boost,$(LIB_SEARCH_PATH))
+CONF_P_LIB=$(call find-library,python,$(LIB_SEARCH_PATH))
+#CONF_P_USE=$(if $(CONF_B_INC),$(if $(CONF_P_INC),$(if $(CONF_B_LIB),$(if $(CONF_P_LIB),y,),),),)
+CONF_P_USE=
 CONF_TC_LIB=$(call find-library,tcmalloc,$(LIB_SEARCH_PATH))
 CONF_UNAME_BIN=$(call find-program,uname)
 CONF_UNAME_HARD=$(shell $(CONF_UNAME_BIN) -p)
@@ -42,7 +43,7 @@ config.mk:
 	@echo "Generating config.mk..."
 	@$(call rm-f,config.mk)
 	@echo CONFIGURED:=y >config.mk
-    ifeq ($(CONF_P_USE),)
+    ifneq ($(CONF_P_USE),)
 	@echo BOOST_PREFIX_INC:=$(CONF_B_INC) >>config.mk
 	@echo PYTHON_PREFIX_INC:=$(CONF_P_INC) >>config.mk
 	@echo PYTHON_USE:=y >>config.mk
