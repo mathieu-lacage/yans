@@ -852,6 +852,7 @@ MacLow::send_ack_after_data (MacAddress source, uint64_t duration_us, uint8_t tx
 	TRACE ("tx ACK to=" << source << ", mode=" << (uint32_t)tx_mode);
 	m_send_ack_event = 0;
 	ChunkMac80211Hdr ack;
+	ack.set_type (MAC_80211_CTL_ACK);
 	ack.set_addr1 (source);
 	duration_us -= m_phy->calculate_tx_duration_us (get_ack_size (), tx_mode);
 	duration_us -= get_sifs_us ();
