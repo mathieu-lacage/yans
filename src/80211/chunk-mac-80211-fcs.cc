@@ -47,12 +47,12 @@ ChunkMac80211Fcs::add_to (Buffer *buffer) const
 void 
 ChunkMac80211Fcs::remove_from (Buffer *buffer)
 {
-	buffer->remove_at_end (4);
 	buffer->seek (buffer->get_size ());
 	buffer->skip (-4);
 	uint32_t fcs;
 	fcs = buffer->read_u32 ();
 	assert (fcs == 0);
+	buffer->remove_at_end (4);
 }
 void 
 ChunkMac80211Fcs::print (std::ostream *os) const
