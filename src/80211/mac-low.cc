@@ -384,16 +384,27 @@ MacLow::receive_ok (Packet const*p, double rx_snr, uint8_t tx_mode, uint8_t stuf
 		Simulator::insert_in_us (get_sifs_us (), m_send_data_event);
 	} else if (hdr.is_ack () &&
 		   hdr.get_addr1 () == m_interface->get_mac_address () &&
+		   (m_normal_ack_timeout_event || m_fast_ack_timeout_event ||
+		    m_super_fast_ack_timeout_event) &&
 		   m_tx_params.must_wait_ack ()) {
 		MacStation *station = get_station (m_current_hdr.get_addr1 ());
 		TRACE ("receive ack from="<<m_current_hdr.get_addr1 ());
 		station->report_rx_ok (rx_snr, tx_mode);
 		station->report_data_ok (rx_snr, tx_mode, stuff);
-		if (m_tx_params.must_wait_normal_ack ()) {
+		bool got_ack = false;
+		if (m_tx_params.must_wait_normal_ack () &&
+		    m_normal_ack_timeout_event != 0) {
 			m_normal_ack_timeout_event->cancel ();
 			m_normal_ack_timeout_event = 0;
+			got_ack = true;
 		}
-		if (m_tx_params.must_wait_normal_ack () || m_tx_params.must_wait_fast_ack ()) {
+		if (m_tx_params.must_wait_fast_ack () &&
+		    m_fast_ack_timeout_event != 0) {
+			m_fast_ack_timeout_event->cancel ();
+			m_fast_ack_timeout_event = 0;
+			got_ack = true;
+		}
+		if (got_ack) {
 			m_listener->got_ack (rx_snr, tx_mode);
 		}
 		if (m_tx_params.has_next_packet ()) {
@@ -651,8 +662,8 @@ MacLow::send_rts_for_packet (void)
 	/* send an RTS for this packet. */
 	ChunkMac80211Hdr rts;
 	rts.set_type (MAC_80211_CTL_RTS);
-	ack.set_ds_not_from ();
-	ack.set_ds_not_to ();
+	rts.set_ds_not_from ();
+	rts.set_ds_not_to ();
 	rts.set_addr1 (m_current_hdr.get_addr1 ());
 	rts.set_addr2 (m_interface->get_mac_address ());
 	uint8_t rts_tx_mode = get_rts_tx_mode (m_current_hdr.get_addr1 ());
@@ -789,8 +800,8 @@ MacLow::send_cts_after_rts (MacAddress source, uint64_t duration_us, uint8_t tx_
 	m_send_cts_event = 0;
 	ChunkMac80211Hdr cts;
 	cts.set_type (MAC_80211_CTL_CTS);
-	ack.set_ds_not_from ();
-	ack.set_ds_not_to ();
+	cts.set_ds_not_from ();
+	cts.set_ds_not_to ();
 	cts.set_addr1 (source);
 	duration_us -= m_phy->calculate_tx_duration_us (get_cts_size (), tx_mode);
 	duration_us -= get_sifs_us ();
