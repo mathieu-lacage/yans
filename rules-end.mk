@@ -1,47 +1,3 @@
-# below are generic rules.
-
-COMMA=,
-
-# various OS-specific commands
-CC=gcc
-CXX=g++
-RM=rm
-CP=cp
-TAR=tar -zcf
-UNTAR=tar -zxf
-MKDIR=mkdir
-RMDIR=rmdir
-
-# my personal library of useful make functions.
-# these really should be part of the core GNU make
-# *sigh*
-remove-trailing-slash=$(patsubst %/,%,$(1))
-append-file=$(addsuffix /$(1),$(call remove-trailing-slash,$(2)))
-find-file=$(wildcard $(call append-file,$(1),$(2)))
-rwildcard = $(foreach dir,$(wildcard $(1)*),$(call rwildcard,$(dir)/)$(filter $(subst *,%,$(2)),$(dir))) 
-path=$(subst :, ,$(PATH))
-ld-library-path=$(subst :, ,$(LD_LIBRARY_PATH))
-find-program=$(call find-file,$(1),$(path) $(2))
-#find-library=$(call find-file,$(1),$(ld-library-path))
-map=$(foreach tmp,$(2),$(call $(1),$(tmp)))
-remove-first=$(wordlist 2,$(words $1),$1)
-remove-last=$(call reverse,$(call remove-first,$(call reverse,$1)))
-reverse=$(if $1,$(call reverse,$(call remove-first,$1)) $(word 1,$1),)
-split-dirs=$(subst /, ,$1)
-unsplit-dirs=$(call join-items,$(strip $1),/)
-join-items=$(if $1,$(word 1,$1)$2$(call join-items,$(call remove-first,$1),$2),)
-sub-lists=$(if $1,$(call sub-lists,$(call remove-first,$1)) $1,)
-remove-last-dir=$(call unsplit-dirs,$(call remove-last,$(call split-dirs,$1)))
-enumerate-sub-dirs=$(if $1,$(call enumerate-sub-dirs,$(call remove-last-dir,$1)) $1,)
-enumerate-dep-dirs=$(if $1,$(call enumerate-dep-dirs,$(call remove-last-dir,$1)) $(call remove-last-dir,$1),)
-is-dir=$(findstring $(call remove-trailing-slash,$(1))/,$(wildcard $(call remove-trailing-slash,$(1))/))
-is-file=$(if $(call is-dir,$(1)),,$(1))
-is-dirs=$(foreach item,$(1),$(call is-dir,$(item)))
-is-files=$(foreach item,$(1),$(call is-file,$(item)))
-mkdir-p=$(foreach dir,$(call enumerate-dep-dirs,$(1)) $(1),$(if $(wildcard $(dir)),,$(MKDIR) $(dir);))
-rmdir=$(foreach dir,$(call reverse $(call enumerate-dep-dirs,$(1))) $(1),$(if $(call is-dir (dir)),,$(RMDIR) $(dir);))
-rm-f=$(foreach file,$(1),$(if $(call is-file,$(1)),$(RM) $(file);,))
-rm-rf=$(call rm-f,$(call is-files,$(call rwildcard,$(1),*)))$(call rmdir,$(call is-dirs,$(call rwildcard,$(1),*)))
 gen-bin=$(strip $(addprefix $(TOP_BUILD_DIR)/,$1))
 gen-dep=$(strip $(call gen-bin, \
 	$(addsuffix .P,$(filter %.c,$1)) \
@@ -56,20 +12,6 @@ gen-obj= $(strip $(addprefix $2, \
 gen-dirs=$(strip $(sort $(call map,enumerate-sub-dirs,$(dir $1))))
 display-compile=$(if $(VERBOSE),echo '$(1)' && $(1),echo 'Building $$@ ...' && $(1))
 
-test-functions:
-	#$(call find-header,math.h,/usr/include /include)
-	#$(call find-program,main-simple,/home/mathieu/code/yans-current/bin/samples)
-	#$(call find-program,main-simple)
-	#$(call find-program,uname)
-	#$(call mkdir-p,a/b/c)
-	#'$(call is-dir,a)'
-	#$(call rm-rf,bin)
-	#$(call is-files,./bin bin/libyans.so)
-	#$(call rm-f,bin/libyans.so bin/libyans.so.P)
-
-
-
-
 define gen-gcc-dep
 -Wp$(COMMA)-M$(COMMA)-MP$(COMMA)-MM$(COMMA)-MT$(COMMA)$(strip $(2))$(COMMA)-MF$(COMMA)$(call gen-dep, $(1))
 endef
@@ -80,11 +22,11 @@ endef
 # object files all the time.
 define CXXOBJ_template
 $(2): $(1)
-	@$(call display-compile,$(CXX) $(3) $$(call gen-gcc-dep,$(1),$(2)) -c -o $(2) $(1))
+	@$(call display-compile,$(CXX) $(3) $$($(1)_CXXFLAGS) $$(call gen-gcc-dep,$(1),$(2)) -c -o $(2) $(1))
 endef
 define COBJ_template
 $(2): $(1)
-	@$(call display-compile,$(CC) $(3) $$(call gen-gcc-dep,$(1),$(2)) -c -o $(2) $(1))
+	@$(call display-compile,$(CC) $(3) $$($(1)_CFLAGS) $$(call gen-gcc-dep,$(1),$(2)) -c -o $(2) $(1))
 endef
 define PYOBJ_template
 $(2): $(1)
@@ -92,7 +34,7 @@ $(2): $(1)
 endef
 define ASOBJ_template
 $(2): $(1)
-	@$(call display-compile,$(AS) $(3) -o $(2) $(1))
+	@$(call display-compile,$(AS) $(3) $$($(1)_ASFLAGS) -o $(2) $(1))
 endef
 
 define OUTPUT_template
@@ -179,7 +121,9 @@ NINCLUDE_TARGETS := \
 	$(NULL)
 
 ifeq ($(strip $(filter $(NINCLUDE_TARGETS),$(MAKECMDGOALS))),)
+ifneq ($(ALL_DEP),)
 -include $(ALL_DEP)
+endif
 endif
 
 cleano:

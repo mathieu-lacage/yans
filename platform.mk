@@ -1,5 +1,3 @@
-PLATFORM=i386-linux-gcc
-
 ifeq ($(PLATFORM), i386-linux-gcc)
 FIBER_CONTEXT_PLATFORM= \
 	src/thread/fiber-context-i386-linux-gcc.c \
@@ -17,7 +15,7 @@ FIBER_CONTEXT_PLATFORM= \
 	src/thread/fiber-context-ppc-darwin-gcc.c \
 	src/thread/ppc-darwin-gcc-switch.s \
 	$(NULL)
-$(TOP_BUILD_DIR)/src/thread/ppc-darwin-gcc-switch.o: ASFLAGS+=-arch ppc -g
+/src/thread/ppc-darwin-gcc-switch.s_ASFLAGS=-arch ppc -g
 gen-lib-name=$(addprefix lib, $(addsuffix .dylib, $1))
 gen-lib-build-flags=-fno-common
 gen-lib-link-flags=-dynamiclib
