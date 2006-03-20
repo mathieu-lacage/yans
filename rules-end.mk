@@ -92,7 +92,7 @@ $(2).cmd: $$(call enumerate-dep-dirs,$(2).cmd)
 	@$$(if $$(strip $$(filter-out $$($(2)_cmd_now),$$($(2)_cmd_old)) $$(filter-out $$($(2)_cmd_old),$$($(2)_cmd_now))),\
  echo $(2)_cmd_old:=$$($(2)_cmd_now) > $$@)
 $(2): $(1) $(2).cmd
-	@$(call run-command,$(2)_cmd_now)
+	@$(call run-command,$$($(2)_cmd_now))
 endef
 
 define OUTPUT_template
