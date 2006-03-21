@@ -152,10 +152,6 @@ ArfMacStation::snr_to_snr (double snr)
 {
 	return 0;
 }
-void ArfMacStation::report_final_rts_failed (void)
-{}
-void ArfMacStation::report_final_data_failed (void)
-{}
 uint8_t 
 ArfMacStation::get_data_mode (int size)
 {

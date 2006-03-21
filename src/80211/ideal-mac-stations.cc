@@ -147,12 +147,6 @@ IdealMacStation::report_data_ok (double ack_snr, uint8_t ack_mode, uint8_t data_
 	TRACE ("got cts for rts snr="<<(uint32_t)data_snr);
 	m_last_snr = data_snr;
 }
-void 
-IdealMacStation::report_final_rts_failed (void)
-{}
-void 
-IdealMacStation::report_final_data_failed (void)
-{}
 uint8_t 
 IdealMacStation::get_data_mode (int size)
 {

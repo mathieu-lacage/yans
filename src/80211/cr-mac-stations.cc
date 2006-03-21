@@ -71,10 +71,6 @@ void CrMacStation::report_data_ok (double ackSNR, uint8_t ackMode, uint8_t data_
 {
 	assert (data_snr == 0);
 }
-void CrMacStation::report_final_rts_failed (void)
-{}
-void CrMacStation::report_final_data_failed (void)
-{}
 uint8_t
 CrMacStation::get_data_mode (int size)
 {

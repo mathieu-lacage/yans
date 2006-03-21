@@ -48,8 +48,6 @@ public:
 	virtual void report_data_failed (void) = 0;
 	virtual void report_rts_ok (double cts_snr, uint8_t cts_mode, uint8_t rts_snr) = 0;
 	virtual void report_data_ok (double ack_snr, uint8_t ack_mode, uint8_t data_snr) = 0;
-	virtual void report_final_rts_failed (void) = 0;
-	virtual void report_final_data_failed (void) = 0;
 	virtual uint8_t get_data_mode (int size) = 0;
 	virtual uint8_t get_rts_mode (void) = 0;
 	virtual uint8_t snr_to_snr (double snr) = 0;

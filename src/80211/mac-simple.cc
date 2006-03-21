@@ -270,7 +270,6 @@ MacSimple::retry_data (void)
 	MacStation *station = get_station (m_current_to);
 	station->report_data_failed ();
 	if (m_data_retry > m_data_retry_max) {
-		station->report_final_data_failed ();
 		assert (m_current != 0);
 		m_current->unref ();
 		m_current = 0;
@@ -289,7 +288,6 @@ MacSimple::retry_rts (void)
 	MacStation *station = get_station (m_current_to);
 	station->report_rts_failed ();
 	if (m_rts_retry > m_rts_retry_max) {
-		station->report_final_rts_failed ();
 		assert (m_current != 0);
 		m_current->unref ();
 		m_current = 0;
