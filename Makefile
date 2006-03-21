@@ -81,8 +81,8 @@ CFLAGS+=$(FLAGS) $(INCLUDES) $(DEFINES)
 
 PACKAGE_DIST:= \
 	platform.mk \
-	rules.mk \
-	config.mk \
+	rules-start.mk \
+	rules-end.mk \
 	Makefile \
 	README \
 	LICENSE \
