@@ -52,6 +52,7 @@ public:
 	uint64_t get_cts_timeout_us (void) const;
 	uint64_t get_ack_timeout_us (void) const;
 	uint64_t get_msdu_lifetime_us (void) const;
+	uint32_t get_max_queue_size (void) const;
 	uint64_t get_max_propagation_delay_us (void) const;
 
 	uint32_t get_max_msdu_size (void) const;

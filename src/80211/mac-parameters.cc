@@ -161,6 +161,11 @@ MacParameters::get_msdu_lifetime_us (void) const
 	// 10s
 	return 10000000;
 }
+uint32_t 
+MacParameters::get_max_queue_size (void) const
+{
+	return 400;
+}
 uint64_t 
 MacParameters::get_max_propagation_delay_us (void) const
 {
