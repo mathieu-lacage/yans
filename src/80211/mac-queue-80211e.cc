@@ -81,15 +81,16 @@ MacQueue80211e::cleanup (void)
 	uint32_t n = 0;
 	tmp = m_queue.rbegin ();
 	while (tmp != m_queue.rend ()) {
-		if ((*tmp).tstamp + m_parameters->get_msdu_lifetime_us () > now) {
+		if (m_size < m_parameters->get_max_queue_size () && 
+		    (*tmp).tstamp + m_parameters->get_msdu_lifetime_us () > now) {
 			break;
 		}
 		(*tmp).packet->unref();
 		n++;
 		tmp++;
+		m_size--;
 	}
 	m_queue.erase (tmp.base (), m_queue.end ());
-	m_size -= n;
 }
 
 Packet *
@@ -107,11 +108,12 @@ MacQueue80211e::dequeue (ChunkMac80211Hdr *hdr)
 }
 
 Packet *
-MacQueue80211e::peek (ChunkMac80211Hdr *hdr)
+MacQueue80211e::look_at_back (ChunkMac80211Hdr *hdr)
 {
 	cleanup ();
 	if (!m_queue.empty ()) {
 		Item i = m_queue.back ();
+		i.packet->ref ();
 		*hdr = i.hdr;
 		return i.packet;
 	} else {

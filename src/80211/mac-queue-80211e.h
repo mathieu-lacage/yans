@@ -60,7 +60,7 @@ public:
 	void enqueue (Packet *packet, ChunkMac80211Hdr const &hdr);
 	void enqueue_to_head (Packet *packet, ChunkMac80211Hdr const &hdr);
 	Packet *dequeue (ChunkMac80211Hdr *hdr);
-	Packet *peek (ChunkMac80211Hdr *hdr);
+	Packet *look_at_back (ChunkMac80211Hdr *hdr);
 
 	void flush (void);
 
