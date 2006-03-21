@@ -111,6 +111,7 @@ DcaTxop::~DcaTxop ()
 {
 	delete m_access_listener;
 	delete m_transmission_listener;
+	delete m_ack_received;
 }
 
 void 
@@ -415,6 +416,7 @@ DcaTxop::start_next (void)
 		params.enable_next_data (get_next_fragment_size ());
 	}
 	low ()->start_transmission (fragment, &hdr, params, m_transmission_listener);
+	fragment->unref ();
 }
 
 }; // namespace yans
