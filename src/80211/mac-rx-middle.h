@@ -51,8 +51,12 @@ private:
 				       OriginatorRxStatus *originator);
 	bool sequence_control_smaller (int seqa, int seqb);
 
-	std::map <MacAddress, OriginatorRxStatus *, std::less<MacAddress> > m_originator_status;
-	std::map <std::pair<MacAddress, uint8_t>, OriginatorRxStatus *, std::less<std::pair<MacAddress,uint8_t> > > m_qos_originator_status;
+	typedef std::map <MacAddress, OriginatorRxStatus *, std::less<MacAddress> > Originators;
+	typedef std::map <std::pair<MacAddress, uint8_t>, OriginatorRxStatus *, std::less<std::pair<MacAddress,uint8_t> > > QosOriginators;
+	typedef std::map <MacAddress, OriginatorRxStatus *, std::less<MacAddress> >::iterator OriginatorsI;
+	typedef std::map <std::pair<MacAddress, uint8_t>, OriginatorRxStatus *, std::less<std::pair<MacAddress,uint8_t> > >::iterator QosOriginatorsI;
+	Originators m_originator_status;
+	QosOriginators m_qos_originator_status;
 	ForwardUpCallback *m_callback;
 };
 

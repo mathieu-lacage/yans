@@ -108,6 +108,18 @@ MacRxMiddle::MacRxMiddle ()
 
 MacRxMiddle::~MacRxMiddle ()
 {
+	for (OriginatorsI i = m_originator_status.begin ();
+	     i != m_originator_status.end (); i++) {
+		delete (*i).second;
+	}
+	m_originator_status.erase (m_originator_status.begin (),
+				   m_originator_status.end ());
+	for (QosOriginatorsI i = m_qos_originator_status.begin ();
+	     i != m_qos_originator_status.end (); i++) {
+		delete (*i).second;
+	}
+	m_qos_originator_status.erase (m_qos_originator_status.begin (),
+				       m_qos_originator_status.end ());
 	delete m_callback;
 }
 
@@ -216,6 +228,7 @@ MacRxMiddle::handle_fragments (Packet *packet, ChunkMac80211Hdr const*hdr,
 			originator->set_sequence_control (hdr->get_sequence_control ());
 			return 0;
 		} else {
+			packet->ref ();
 			return packet;
 		}
 	}
@@ -235,15 +248,16 @@ MacRxMiddle::receive (Packet *packet, ChunkMac80211Hdr const *hdr)
 			       ", frag="<<hdr->get_fragment_number ());
 			return;
 		}
-		packet = handle_fragments (packet, hdr, originator);
-		if (packet == 0) {
+		Packet *agregate = handle_fragments (packet, hdr, originator);
+		if (agregate == 0) {
 			return;
 		}
 		TRACE ("forwarding data from="<<hdr->get_addr2 ()<<
 		       ", seq="<<hdr->get_sequence_number ()<<
 		       ", frag="<<hdr->get_fragment_number ());
 		originator->set_sequence_control (hdr->get_sequence_control ());
-		(*m_callback) (packet, hdr);
+		(*m_callback) (agregate, hdr);
+		agregate->unref ();
 	} else {
 		TRACE ("forwarding "<<hdr->get_type_string ()<<
 		       ", seq="<<hdr->get_sequence_number ()<<
