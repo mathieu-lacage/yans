@@ -34,7 +34,7 @@
 #endif
 
 
-#define nopeDCF_TRACE 1
+#define noDCF_TRACE 1
 
 #ifdef DCF_TRACE
 #  include <iostream>
@@ -137,7 +137,7 @@ Dcf::request_access (void)
 	} else if (is_backoff_not_completed (now_us ()) && m_access_timer_event == 0) {
 		/* start timer for ongoing backoff.
 		 */
-		TRACE ("request access X delayed for "<<delay_until_access_granted);
+		TRACE ("request access X delayed for="<<delay_until_access_granted);
 		m_access_timer_event = make_cancellable_event (&Dcf::access_timeout, this);
 		Simulator::insert_in_us (delay_until_access_granted, m_access_timer_event);
 	} else if (is_phy_busy ()) {
@@ -149,7 +149,7 @@ Dcf::request_access (void)
 		/* medium is IDLE, we have no backoff running but we 
 		 * need to wait a bit before accessing the medium.
 		 */
-		TRACE ("request access Y delayed for "<< delay_until_access_granted);
+		TRACE ("request access Y delayed for="<< delay_until_access_granted);
 		assert (m_access_timer_event == 0);
 		m_access_timer_event = make_cancellable_event (&Dcf::access_timeout, this);
 		Simulator::insert_in_us (delay_until_access_granted, m_access_timer_event);

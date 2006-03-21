@@ -25,7 +25,7 @@
 
 #include <cassert>
 
-#define RX_MIDDLE_TRACE 1
+#define noRX_MIDDLE_TRACE 1
 
 #ifdef RX_MIDDLE_TRACE
 #include <iostream>

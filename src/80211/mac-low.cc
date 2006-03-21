@@ -32,7 +32,7 @@
 #include "mac-station.h"
 #include "mac-parameters.h"
 
-#define MAC_LOW_TRACE 1
+#define noMAC_LOW_TRACE 1
 
 #ifdef MAC_LOW_TRACE
 #  include <iostream>

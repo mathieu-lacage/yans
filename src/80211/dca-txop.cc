@@ -28,7 +28,7 @@
 #include "packet.h"
 
 
-#define DCA_TXOP_TRACE 1
+#define noDCA_TXOP_TRACE 1
 
 #ifdef DCA_TXOP_TRACE
 #include "simulator.h"
