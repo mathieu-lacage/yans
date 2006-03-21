@@ -49,16 +49,18 @@ public:
 		m_current = now;
 	}
 	void start (PeriodicGenerator *generator, Host *a) {
+		a->set_x (5);
 		generator->start_now ();
 		Simulator::insert_in_s (m_period_s, make_event (&MyTrace::advance, this, generator, a));
 	}
 	void advance (PeriodicGenerator *generator, Host *a) {
 		generator->stop_now ();
-		a->set_x (a->get_x () + 5.0);
 		uint32_t n_bytes = m_current - m_prev;
 		m_prev = m_current;
-		std::cout << "x="<<a->get_x ()<<", n bytes="<<n_bytes<<std::endl;
-		if (a->get_x () >= 250.0) {
+		double mbs = ((n_bytes * 8.0) /(1000000.0 *m_period_s));
+		std::cout << "x="<<a->get_x ()<<", throughput="<<mbs<<"Mb/s"<<std::endl;
+		a->set_x (a->get_x () + 5.0);
+		if (a->get_x () >= 210.0) {
 			return;
 		}
 		generator->start_now ();
@@ -92,9 +94,10 @@ int main (int argc, char *argv[])
 	wifi_factory = new NetworkInterface80211Factory ();
 	// force rts/cts on all the time.
 	wifi_factory->set_mac_rts_cts_threshold (1);
-	wifi_factory->set_cr (5, 5);
+	wifi_factory->set_mac_fragmentation_threshold (2200);
+	//wifi_factory->set_cr (5, 5);
 	//wifi_factory->set_ideal (1e-5);
-	//wifi_factory->set_aarf ();
+	wifi_factory->set_aarf ();
 
 	NetworkInterface80211Adhoc *wifi_client, *wifi_server;
 	wifi_client = wifi_factory->create_adhoc (hclient);
@@ -137,7 +140,7 @@ int main (int argc, char *argv[])
 
 
 	PeriodicGenerator *generator = new PeriodicGenerator ();
-	generator->set_packet_interval (0.01);
+	generator->set_packet_interval (0.00001);
 	generator->set_packet_size (2000);
 	trace->start (generator, hserver);
 	generator->set_send_callback (make_callback (&UdpSource::send, source));
