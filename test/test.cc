@@ -29,8 +29,8 @@ namespace yans {
 TestManager *
 TestManager::get (void)
 {
-	static TestManager *manager = new TestManager ();
-	return manager;
+	static TestManager manager;
+	return &manager;
 }
 
 TestManager::TestManager ()
