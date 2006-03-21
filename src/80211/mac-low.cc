@@ -621,6 +621,8 @@ MacLow::forward_down (Packet const*packet, ChunkMac80211Hdr const* hdr, uint8_t 
 void
 MacLow::cts_timeout (void)
 {
+	MacStation *station = get_station (m_current_hdr.get_addr1 ());
+	station->report_rts_failed ();
 	m_cts_timeout_event = 0;
 	m_current_packet->unref ();
 	m_current_packet = 0;
@@ -630,6 +632,8 @@ MacLow::cts_timeout (void)
 void
 MacLow::normal_ack_timeout (void)
 {
+	MacStation *station = get_station (m_current_hdr.get_addr1 ());
+	station->report_data_failed ();
 	m_normal_ack_timeout_event = 0;
 	m_listener->missed_ack ();
 	m_listener = 0;
@@ -637,6 +641,8 @@ MacLow::normal_ack_timeout (void)
 void
 MacLow::fast_ack_timeout (void)
 {
+	MacStation *station = get_station (m_current_hdr.get_addr1 ());
+	station->report_data_failed ();
 	m_fast_ack_timeout_event = 0;
 	if (m_phy->is_state_idle ()) {
 		TRACE ("fast Ack idle missed");
@@ -647,6 +653,8 @@ MacLow::fast_ack_timeout (void)
 void
 MacLow::super_fast_ack_timeout ()
 {
+	MacStation *station = get_station (m_current_hdr.get_addr1 ());
+	station->report_data_failed ();
 	m_super_fast_ack_timeout_event = 0;
 	if (m_phy->is_state_idle ()) {
 		TRACE ("super fast Ack failed");
