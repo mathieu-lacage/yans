@@ -31,9 +31,10 @@
 #define DCA_TXOP_TRACE 1
 
 #ifdef DCA_TXOP_TRACE
+#include "simulator.h"
 #include <iostream>
 # define TRACE(x) \
-  std::cout <<"DCA TXOP "<<x<<std::endl;
+  std::cout <<"DCA TXOP now="<<Simulator::now_us ()<<"us "<<x<<std::endl;
 #else /* DCA_TXOP_TRACE */
 # define TRACE(x)
 #endif /* DCA_TXOP_TRACE */
@@ -405,6 +406,9 @@ DcaTxop::start_next (void)
 	ChunkMac80211Hdr hdr;
 	Packet *fragment = get_fragment_packet (&hdr);
 	MacLowTransmissionParameters params;
+	params.enable_ack ();
+	params.disable_rts ();
+	params.disable_override_duration_id ();
 	if (is_last_fragment ()) {
 		params.disable_next_data ();
 	} else {
