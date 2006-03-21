@@ -465,7 +465,17 @@ ChunkMac80211Hdr::get_duration_us (void) const
 uint16_t 
 ChunkMac80211Hdr::get_sequence_control (void) const
 {
-	return (m_seq_frag << 12) | m_seq_seq;
+	return (m_seq_seq << 4) | m_seq_frag;
+}
+uint16_t
+ChunkMac80211Hdr::get_sequence_number (void) const
+{
+	return m_seq_seq;
+}
+uint16_t
+ChunkMac80211Hdr::get_fragment_number (void) const
+{
+	return m_seq_frag;
 }
 bool 
 ChunkMac80211Hdr::is_retry (void) const
