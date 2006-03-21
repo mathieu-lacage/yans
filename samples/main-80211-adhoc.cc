@@ -56,6 +56,7 @@ public:
 		generator->stop_now ();
 		a->set_x (a->get_x () + 5.0);
 		uint32_t n_bytes = m_current - m_prev;
+		m_prev = m_current;
 		std::cout << "x="<<a->get_x ()<<", n bytes="<<n_bytes<<std::endl;
 		if (a->get_x () >= 250.0) {
 			return;
