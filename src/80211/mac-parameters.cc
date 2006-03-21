@@ -52,7 +52,7 @@ MacParameters::initialize_80211a (Phy80211 const*phy)
 	/* see section 9.2.10 ieee 802.11-1999 */
 	m_pifs_us = m_sifs_us + m_slot_us;
 	// 1000m 
-	m_max_propagation_delay_us = static_cast<uint64_t> (1000 / 300000000 * 1000000);
+	m_max_propagation_delay_us = static_cast<uint64_t> (1000.0 / 300000000.0 * 1000000.0);
 	/* Cts_Timeout and Ack_Timeout are specified in the Annex C 
 	   (Formal description of MAC operation, see details on the 
 	   Trsp timer setting at page 346)
