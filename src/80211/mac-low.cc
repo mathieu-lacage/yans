@@ -701,6 +701,7 @@ MacLow::send_rts_for_packet (void)
 	packet->add (&fcs);
 
 	forward_down (packet, &rts, rts_tx_mode, 0);
+	packet->unref ();
 }
 
 void
@@ -815,6 +816,7 @@ MacLow::send_cts_after_rts (MacAddress source, uint64_t duration_us, uint8_t tx_
 	packet->add (&fcs);
 
 	forward_down (packet, &cts, tx_mode, stuff);
+	packet->unref ();
 }
 
 void
@@ -883,6 +885,7 @@ MacLow::send_ack_after_data (MacAddress source, uint64_t duration_us, uint8_t tx
 	packet->add (&fcs);
 
 	forward_down (packet, &ack, tx_mode, stuff);
+	packet->unref ();
 }
 
 
