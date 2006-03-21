@@ -179,7 +179,8 @@ MacRxMiddle::handle_fragments (Packet *packet, ChunkMac80211Hdr const*hdr,
 	if (originator->is_de_fragmenting ()) {
 		if (hdr->is_more_fragments ()) {
 			if (originator->is_next_fragment (hdr->get_sequence_control ())) {
-				TRACE ("accumulate fragment seq="<<hdr->get_sequence_control ()<<
+				TRACE ("accumulate fragment seq="<<hdr->get_sequence_number ()<<
+				       ", frag="<<hdr->get_fragment_number ()<<
 				       ", size="<<packet->get_size ());
 				originator->accumulate_fragment (packet);
 				originator->set_sequence_control (hdr->get_sequence_control ());
@@ -195,7 +196,8 @@ MacRxMiddle::handle_fragments (Packet *packet, ChunkMac80211Hdr const*hdr,
 				 * fragment to change its size back to the original packet 
 				 * size and to pass it up to the higher-level layers.
 				 */
-				TRACE ("accumulate last fragment seq="<<hdr->get_sequence_control ()<<
+				TRACE ("accumulate last fragment seq="<<hdr->get_sequence_number ()<<
+				       ", frag="<<hdr->get_fragment_number ()<<
 				       ", size="<<hdr->get_size ());
 				packet = originator->accumulate_last_fragment (packet);
 				originator->set_sequence_control (hdr->get_sequence_control ());
@@ -207,7 +209,8 @@ MacRxMiddle::handle_fragments (Packet *packet, ChunkMac80211Hdr const*hdr,
 		}
 	} else {
 		if (hdr->is_more_fragments ()) {
-			TRACE ("accumulate first fragment seq="<<hdr->get_sequence_control ()<<
+			TRACE ("accumulate first fragment seq="<<hdr->get_sequence_number ()<<
+			       ", frag="<<hdr->get_fragment_number ()<<
 			       ", size="<<packet->get_size ());
 			originator->accumulate_first_fragment (packet);
 			originator->set_sequence_control (hdr->get_sequence_control ());
@@ -228,7 +231,8 @@ MacRxMiddle::receive (Packet *packet, ChunkMac80211Hdr const *hdr)
 		// filter duplicates.
 		if (is_duplicate (hdr, originator)) {
 			TRACE ("duplicate from="<<hdr->get_addr2 ()<<
-			       ", seq="<<hdr->get_sequence_control ());
+			       ", seq="<<hdr->get_sequence_number ()<<
+			       ", frag="<<hdr->get_fragment_number ());
 			return;
 		}
 		packet = handle_fragments (packet, hdr, originator);
@@ -236,12 +240,14 @@ MacRxMiddle::receive (Packet *packet, ChunkMac80211Hdr const *hdr)
 			return;
 		}
 		TRACE ("forwarding data from="<<hdr->get_addr2 ()<<
-		       ", seq="<<hdr->get_sequence_control ());
+		       ", seq="<<hdr->get_sequence_number ()<<
+		       ", frag="<<hdr->get_fragment_number ());
 		originator->set_sequence_control (hdr->get_sequence_control ());
 		(*m_callback) (packet, hdr);
 	} else {
 		TRACE ("forwarding "<<hdr->get_type_string ()<<
-		       ", seq="<<hdr->get_sequence_control ());
+		       ", seq="<<hdr->get_sequence_number ()<<
+		       ", frag="<<hdr->get_fragment_number ());
 		originator->set_sequence_control (hdr->get_sequence_control ());
 		(*m_callback) (packet, hdr);
 	}
