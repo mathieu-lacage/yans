@@ -174,12 +174,14 @@ MacLow::MacLow ()
 {
 	m_last_nav_duration_us = 0;
 	m_last_nav_start_us = 0;
+	m_drop_error = new PacketLogger ();
 }
 
 MacLow::~MacLow ()
 {
 	cancel_all_events ();
 	delete m_rx_callback;
+	delete m_drop_error;
 }
 
 void
