@@ -93,11 +93,12 @@ int main (int argc, char *argv[])
 	NetworkInterface80211Factory *wifi_factory;
 	wifi_factory = new NetworkInterface80211Factory ();
 	// force rts/cts on all the time.
-	wifi_factory->set_mac_rts_cts_threshold (1);
+	wifi_factory->set_mac_rts_cts_threshold (2200);
 	wifi_factory->set_mac_fragmentation_threshold (2200);
 	//wifi_factory->set_cr (5, 5);
 	//wifi_factory->set_ideal (1e-5);
 	wifi_factory->set_aarf ();
+	//wifi_factory->set_arf ();
 
 	NetworkInterface80211Adhoc *wifi_client, *wifi_server;
 	wifi_client = wifi_factory->create_adhoc (hclient);
