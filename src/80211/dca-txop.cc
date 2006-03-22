@@ -332,8 +332,14 @@ DcaTxop::access_granted_now (void)
 				TRACE ("tx unicast");
 			}
 			params.disable_next_data ();
-			low ()->start_transmission (m_current_packet, &m_current_hdr,
+			// We need to make a copy in case we need to 
+			// retransmit the packet: the MacLow modifies the input
+			// Packet so, we would retransmit a modified packet
+			// if we were not to make a copy.
+			Packet *copy = m_current_packet->copy ();
+			low ()->start_transmission (copy, &m_current_hdr,
 						    params, m_transmission_listener);
+			copy->unref ();
 		}
 	}
 }
@@ -364,10 +370,10 @@ DcaTxop::missed_cts (void)
 void 
 DcaTxop::got_ack (double snr, uint8_t txMode)
 {
-	TRACE ("got ack");
 	m_slrc = 0;
 	if (!need_fragmentation () ||
 	    is_last_fragment ()) {
+		TRACE ("got ack. tx done.");
 		(*m_ack_received) (m_current_hdr);
 
 		/* we are not fragmenting or we are done fragmenting
@@ -377,6 +383,8 @@ DcaTxop::got_ack (double snr, uint8_t txMode)
 		m_current_packet = 0;
 		m_dcf->notify_access_ongoing_ok ();
 		m_dcf->notify_access_finished ();
+	} else {
+		TRACE ("got ack. tx not done, size="<<m_current_packet->get_size ());
 	}
 }
 void 
