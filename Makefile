@@ -93,14 +93,14 @@ endif
 
 # building of libyans.so
 YANS_SRC:= \
-	simulator/clock.cc \
-	simulator/scheduler.cc \
-	simulator/scheduler-list.cc \
-	simulator/scheduler-heap.cc \
-	simulator/event.cc \
-	simulator/static-event.cc \
-	simulator/cancellable-event.cc \
-	simulator/simulator.cc \
+	src/simulator/clock.cc \
+	src/simulator/scheduler.cc \
+	src/simulator/scheduler-list.cc \
+	src/simulator/scheduler-heap.cc \
+	src/simulator/event.cc \
+	src/simulator/static-event.cc \
+	src/simulator/cancellable-event.cc \
+	src/simulator/simulator.cc \
 	$(FIBER_CONTEXT_PLATFORM) \
 	src/thread/semaphore.cc \
 	src/thread/fiber.cc \
@@ -183,18 +183,18 @@ YANS_SRC:= \
 	src/80211/mac-high-adhoc.cc \
 	src/80211/network-interface-80211.cc \
 	src/80211/network-interface-80211-factory.cc \
-	test/test.cc \
+	src/test/test.cc \
 	$(NULL)
 YANS_INST_HDR = \
-	test/test.h \
-	simulator/event.h \
-	simulator/event.tcc \
-	simulator/static-event.h \
-	simulator/static-event.tcc \
-	simulator/cancellable-event.h \
-	simulator/cancellable-event.tcc \
-	simulator/simulator.h \
-	simulator/callback-event.tcc \
+	src/test/test.h \
+	src/simulator/event.h \
+	src/simulator/event.tcc \
+	src/simulator/static-event.h \
+	src/simulator/static-event.tcc \
+	src/simulator/cancellable-event.h \
+	src/simulator/cancellable-event.tcc \
+	src/simulator/simulator.h \
+	src/simulator/callback-event.tcc \
 	src/common/buffer.h \
 	src/common/data-writer.h \
 	src/common/pcap-writer.h \
@@ -235,10 +235,10 @@ YANS_INST_HDR = \
 	src/thread/thread.h \
 	$(NULL)
 YANS_HDR = \
-	simulator/clock.h \
-	simulator/scheduler.h \
-	simulator/scheduler-list.h \
-	simulator/scheduler-heap.h \
+	src/simulator/clock.h \
+	src/simulator/scheduler.h \
+	src/simulator/scheduler-list.h \
+	src/simulator/scheduler-heap.h \
 	src/common/sgi-hashmap.h \
 	src/common/ref-count.tcc \
 	src/common/seed-generator.h \
@@ -291,9 +291,9 @@ YANS_HDR = \
 	src/thread/fiber-scheduler.h \
 	$(NULL)
 YANS_INCLUDES=\
- -I$(TOP_SRC_DIR)/simulator \
+ -I$(TOP_SRC_DIR)/src/simulator \
  -I$(TOP_SRC_DIR)/src/common \
- -I$(TOP_SRC_DIR)/test \
+ -I$(TOP_SRC_DIR)/src/test \
  -I$(TOP_SRC_DIR)/src/host \
  -I$(TOP_SRC_DIR)/src/ipv4 \
  -I$(TOP_SRC_DIR)/src/arp \
@@ -312,7 +312,7 @@ YANS_CXXFLAGS += -I$(TOP_SRC_DIR)/src/ipv4/tcp-bsd/
 endif
 
 # the benchmark for the simulator
-BENCH_SRC=simulator/bench-simulator.cc
+BENCH_SRC=src/simulator/bench-simulator.cc
 BENCH_NAME=bench-simulator
 BENCH_OUTPUT_DIR=
 BENCH_TYPE=executable
@@ -321,7 +321,7 @@ BENCH_LDFLAGS=$(LDFLAGS) -lyans $(TC_LDFLAGS)
 
 
 # building of main-test
-TEST_SRC=test/main-test.cc
+TEST_SRC=src/test/main-test.cc
 TEST_NAME=test
 TEST_OUTPUT_DIR=
 TEST_TYPE=executable
