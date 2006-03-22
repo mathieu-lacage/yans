@@ -8,20 +8,28 @@
 # The main Makefile is supposed to store in the ALL variable
 # the list of all the project names to build. Each project
 # whose name is PROJECT_NAME can define the variables:
-#  - PROJECT_NAME_SRC
-#  - PROJECT_NAME_HDR
-#  - PROJECT_NAME_INST_HDR
-#  - PROJECT_NAME_NAME
-#  - PROJECT_NAME_TYPE
-#  - PROJECT_NAME_OUTPUT_DIR
-#  - PROJECT_NAME_CFLAGS
-#  - PROJECT_NAME_CXXFLAGS
-#  - PROJECT_NAME_ASFLAGS
+#   - PROJECT_NAME_SRC
+#   - PROJECT_NAME_HDR
+#   - PROJECT_NAME_INST_HDR
+#   - PROJECT_NAME_NAME
+#   - PROJECT_NAME_TYPE
+#   - PROJECT_NAME_OUTPUT_DIR
+#   - PROJECT_NAME_CFLAGS
+#   - PROJECT_NAME_CXXFLAGS
+#   - PROJECT_NAME_ASFLAGS
 # Furthermore, for each .c/.cc/.s file stored in a _SRC variable
 # you can define the variables:
-#  - filename_CFLAGS
-#  - filename_CXXFLAGS
-#  - filename_ASFLAGS
+#   - filename_CFLAGS
+#   - filename_CXXFLAGS
+#   - filename_ASFLAGS
+# _TYPE is one of:
+#   - shared-library
+#   - python-module
+#   - python-cxx-module
+#   - python-executable
+#   - executable
+# _NAME:
+#
 #
 # For each element in the ALL variable, the OUTPUT_template is 
 # invoked. This template generates rules to build all the
@@ -76,6 +84,7 @@ gen-obj= $(strip $(addprefix $2, \
 	$(addsuffix .o,$(basename $(filter %.cc,$1))) \
 	$(filter %.py,$1) \
 ))
+gen-hdr=$(strip $(addprefix $(TOP_BUILD_DIR)/include/$(if $(2),$(2)/),$(notdir $(1))))
 gen-dirs=$(strip $(sort $(call map,enumerate-sub-dirs,$(dir $1))))
 run-command=$(if $(VERBOSE),echo '$(1)' && $(1),echo 'Building $$@ ...' && $(1))
 
@@ -113,32 +122,52 @@ $(2).cmd: $$(call enumerate-dep-dirs,$(2).cmd)
 $(2): $(1) $(2).cmd
 	@$(call run-command,$$($(2)_cmd_now))
 endef
-
-calculate-name=$(strip \
+define HDR_template
+$(2): $(1)
+	$(CP) $(1) $(2)
+endef
+calculate-output-name=$(strip \
 $(if $(findstring shared-library,$($(1)_TYPE)),$(call platform-sharedlib-name,$($(1)_NAME)),\
-$(if $(findstring python-module,$($(1)_TYPE)),$(call platform-pymod-name,$($(1)_NAME)),\
+$(if $(findstring python-cxx-module,$($(1)_TYPE)),$(call platform-pymod-name,$($(1)_NAME)),\
+$(if $(findstring python-module,$($(1)_TYPE)),,\
+$(if $(findstring python-executable,$($(1)_TYPE)),$($(1)_NAME),\
 $(if $(findstring executable,$($(1)_TYPE)),$($(1)_NAME),\
-$(1)\
-))))
+$(warning $(1))\
+))))))
+calculate-output-dir=$(strip \
+$(TOP_BUILD_DIR)/$(strip \
+$(if $(findstring shared-library,$($(1)_TYPE)),lib,\
+$(if $(findstring python-cxx-module,$($(1)_TYPE)),lib/python,\
+$(if $(findstring python-module,$($(1)_TYPE)),lib/python/$(subst .,/,$($(1)_NAME)),\
+$(if $(findstring python-executable,$($(1)_TYPE)),bin,\
+$(if $(findstring executable,$($(1)_TYPE)),bin,\
+$(warning $(1))\
+))))))$(if $($(1)_OUTPUT_DIR),/$($(1)_OUTPUT_DIR),))
 calculate-build-flags=$(strip \
 $(if $(findstring shared-library,$($(1)_TYPE)),$(platform-sharedlib-build-flags),\
-$(if $(findstring python-module,$($(1)_TYPE)),$(platform-pymod-build-flags),\
+$(if $(findstring python-cxx-module,$($(1)_TYPE)),$(platform-pymod-build-flags),\
 $(if $(findstring executable,$($(1)_TYPE)),,\
+$(warning $(1))\
 ))))
 calculate-link-flags=$(strip \
 $(if $(findstring shared-library,$($(1)_TYPE)),$(platform-sharedlib-link-flags),\
-$(if $(findstring python-module,$($(1)_TYPE)),$(platform-pymod-link-flags),\
+$(if $(findstring python-cxx-module,$($(1)_TYPE)),$(platform-pymod-link-flags),\
 $(if $(findstring executable,$($(1)_TYPE)),,\
+$(warning $(1))\
 ))))
 define OUTPUT_template
-$(1)_OUTPUT := $(TOP_BUILD_DIR)/$(if $($(1)_OUTPUT_DIR),$($(1)_OUTPUT_DIR)/,)$(call calculate-name,$(1))
+$(1)_OUTPUT := $(call calculate-output-dir,$(1))/$(call calculate-output-name,$(1))
 $(1)_OBJ := $(call gen-obj,$($(1)_SRC),$(TOP_BUILD_DIR)/)
 $(1)_DIRS := $$(call gen-dirs,$$($(1)_OBJ))
 $(1)_CFLAGS += $(call calculate-build-flags,$(1))
+$(1)_CFLAGS += -I$(TOP_BUILD_DIR)/include
 $(1)_CXXFLAGS += $(call calculate-build-flags,$(1))
+$(1)_CXXFLAGS += -I$(TOP_BUILD_DIR)/include
 $(1)_LDFLAGS += $(call calculate-link-flags,$(1))
+$(1)_LDFLAGS += -L$(TOP_BUILD_DIR)/lib
 #$$(warning output -> $$($(1)_OUTPUT) $$($(1)_LDFLAGS))
 ALL_OUTPUT += $$($(1)_OUTPUT)
+ALL_OUTPUT += $$($(1)_INST_TARGET)
 ALL_OBJ += $$($(1)_OBJ)
 ALL_SRC += $$($(1)_SRC)
 ALL_DEP += $$(call gen-dep,$$($(1)_SRC))
@@ -156,6 +185,7 @@ $$(foreach src,$$(CXXSRC),$$(eval $$(call CXXOBJ_template,$$(src),$$(call gen-ob
 $$(foreach src,$$(CSRC),$$(eval $$(call COBJ_template,$$(src),$$(call gen-obj,$$(src),$(TOP_BUILD_DIR)/),$$($(1)_CFLAGS))))
 $$(foreach src,$$(PYSRC),$$(eval $$(call PYOBJ_template,$$(src),$$(call gen-obj,$$(src),$(TOP_BUILD_DIR)/))))
 $$(foreach src,$$(ASSRC),$$(eval $$(call ASOBJ_template,$$(src),$$(call gen-obj,$$(src),$(TOP_BUILD_DIR)/),$$($(1)_ASFLAGS))))
+$$(foreach src,$$($(1)_INST_HDR),$$(eval $$(call HDR_template,$$(src),$$(call gen-hdr,$$(src),$$($(1)_NAME)))))
 
 # the output.P dependency files are used to work around a gnu make bug:
 # gnu make 3.80 cannot deal with long dependency lists in targets located 
@@ -164,16 +194,19 @@ $$(foreach src,$$(ASSRC),$$(eval $$(call ASOBJ_template,$$(src),$$(call gen-obj,
 # file and make sure output.P is included later by adding to the ALL_DEP
 # list. fun fun.
 ALL_DEP+=$$($(1)_OUTPUT).P
+ALL_DIRS += $$(call gen-dirs,$$(call gen-hdr,$$($(1)_INST_HDR),$$($(1)_NAME)))
 $$($(1)_OUTPUT).P: $$(call enumerate-dep-dirs,$$($(1)_OUTPUT).P)
 	@echo $$($(1)_OUTPUT): $$($(1)_OBJ) > $$@
+	@echo $(1): $$($(1)_OUTPUT) $$(call gen-hdr,$$($(1)_INST_HDR),$$($(1)_NAME)) >> $$@
 $$($(1)_OUTPUT):
 	@$(call run-command,$(CXX) $$($(1)_LDFLAGS) -o $$@ $$(filter %.o,$$^))
 endef
 
 $(foreach output,$(ALL),$(if $(output),$(eval $(call OUTPUT_template,$(output)))))
+ALL_DIRS += $(TOP_BUILD_DIR)/bin $(TOP_BUILD_DIR)/lib $(TOP_BUILD_DIR)/include
 $(sort $(ALL_DIRS)):
 	$(call mkdir-p,$@)
-all: $(ALL_DIRS) $(ALL_OUTPUT)
+all: $(ALL_DIRS) $(ALL)
 
 opti:
 	$(MAKE) TOP_BUILD_DIR=$(TOP_BUILD_DIR)/opti OPTI_FLAGS="-O3 -DNDEBUG=1"
