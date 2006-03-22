@@ -195,18 +195,18 @@ $$(foreach src,$$($(1)_INST_HDR),$$(eval $$(call HDR_template,$$(src),$$(call ge
 # list. fun fun.
 ALL_DEP+=$$($(1)_OUTPUT).P
 ALL_DIRS += $$(call gen-dirs,$$(call gen-hdr,$$($(1)_INST_HDR),$$($(1)_NAME)))
+ALL_DIRS += $$(call gen-dirs,$$($(1)_OUTPUT))
 $$($(1)_OUTPUT).P: $$(call enumerate-dep-dirs,$$($(1)_OUTPUT).P)
 	@echo $$($(1)_OUTPUT): $$($(1)_OBJ) > $$@
 	@echo $(1): $$($(1)_OUTPUT) $$(call gen-hdr,$$($(1)_INST_HDR),$$($(1)_NAME)) >> $$@
 $$($(1)_OUTPUT):
-	@$(call run-command,$(CXX) $$($(1)_LDFLAGS) -o $$@ $$(filter %.o,$$^))
+	@$(call run-command,$(CXX) $$($(1)_LDFLAGS) -o $$@ $$^)
 endef
 
 $(foreach output,$(ALL),$(if $(output),$(eval $(call OUTPUT_template,$(output)))))
-ALL_DIRS += $(TOP_BUILD_DIR)/bin $(TOP_BUILD_DIR)/lib $(TOP_BUILD_DIR)/include
 $(sort $(ALL_DIRS)):
 	$(call mkdir-p,$@)
-all: $(ALL_DIRS) $(ALL)
+all: $(sort $(ALL_DIRS)) $(ALL)
 
 opti:
 	$(MAKE) TOP_BUILD_DIR=$(TOP_BUILD_DIR)/opti OPTI_FLAGS="-O3 -DNDEBUG=1"
