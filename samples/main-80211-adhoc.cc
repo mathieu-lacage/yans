@@ -19,20 +19,20 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "host.h"
-#include "network-interface-80211.h"
-#include "network-interface-80211-factory.h"
-#include "channel-80211.h"
-#include "ipv4-route.h"
-#include "simulator.h"
-#include "udp-source.h"
-#include "udp-sink.h"
-#include "periodic-generator.h"
-#include "traffic-analyser.h"
-#include "callback.tcc"
-#include "pcap-writer.h"
-#include "trace-container.h"
-#include "event.tcc"
+#include "yans/host.h"
+#include "yans/network-interface-80211.h"
+#include "yans/network-interface-80211-factory.h"
+#include "yans/channel-80211.h"
+#include "yans/ipv4-route.h"
+#include "yans/simulator.h"
+#include "yans/udp-source.h"
+#include "yans/udp-sink.h"
+#include "yans/periodic-generator.h"
+#include "yans/traffic-analyser.h"
+#include "yans/callback.tcc"
+#include "yans/pcap-writer.h"
+#include "yans/trace-container.h"
+#include "yans/event.tcc"
 
 #include <iostream>
 

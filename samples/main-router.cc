@@ -19,15 +19,15 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "host.h"
-#include "ethernet-network-interface.h"
-#include "ipv4-route.h"
-#include "cable.h"
-#include "simulator.h"
-#include "udp-source.h"
-#include "udp-sink.h"
-#include "periodic-generator.h"
-#include "traffic-analyser.h"
+#include "yans/host.h"
+#include "yans/ethernet-network-interface.h"
+#include "yans/ipv4-route.h"
+#include "yans/cable.h"
+#include "yans/simulator.h"
+#include "yans/udp-source.h"
+#include "yans/udp-sink.h"
+#include "yans/periodic-generator.h"
+#include "yans/traffic-analyser.h"
 
 using namespace yans;
 

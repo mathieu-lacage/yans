@@ -19,18 +19,18 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "host.h"
-#include "ethernet-network-interface.h"
-#include "ipv4-route.h"
-#include "cable.h"
-#include "simulator.h"
-#include "tcp-source.h"
-#include "tcp-sink.h"
-#include "periodic-generator.h"
-#include "traffic-analyser.h"
-#include "event.h"
-#include "trace-container.h"
-#include "callback-event.tcc"
+#include "yans/host.h"
+#include "yans/ethernet-network-interface.h"
+#include "yans/ipv4-route.h"
+#include "yans/cable.h"
+#include "yans/simulator.h"
+#include "yans/tcp-source.h"
+#include "yans/tcp-sink.h"
+#include "yans/periodic-generator.h"
+#include "yans/traffic-analyser.h"
+#include "yans/event.h"
+#include "yans/trace-container.h"
+#include "yans/callback-event.tcc"
 #include <iostream>
 
 using namespace yans;

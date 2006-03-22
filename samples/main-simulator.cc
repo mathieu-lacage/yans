@@ -19,8 +19,8 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "event.h"
-#include "simulator.h"
+#include "yans/event.h"
+#include "yans/simulator.h"
 #include <iostream>
 
 using namespace yans;

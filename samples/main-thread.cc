@@ -1,6 +1,6 @@
-#include "thread.h"
-#include "semaphore.h"
-#include "simulator.h"
+#include "yans/thread.h"
+#include "yans/semaphore.h"
+#include "yans/simulator.h"
 
 #include <iostream>
 # define TRACE(x) \
