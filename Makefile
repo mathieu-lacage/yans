@@ -1,6 +1,5 @@
 include ./rules-start.mk
 -include ./config.mk
-include ./platform.mk
 
 TOP:=.
 NULL:=
@@ -80,7 +79,6 @@ CXXFLAGS+=$(FLAGS) $(INCLUDES) $(DEFINES)
 CFLAGS+=$(FLAGS) $(INCLUDES) $(DEFINES)
 
 PACKAGE_DIST:= \
-	platform.mk \
 	rules-start.mk \
 	rules-end.mk \
 	Makefile \
@@ -89,6 +87,19 @@ PACKAGE_DIST:= \
 	BUILD \
 	NEWS \
 	$(NULL)
+
+ifeq ($(PLATFORM), i386-linux-gcc)
+FIBER_CONTEXT_PLATFORM:= \
+	src/thread/fiber-context-i386-linux-gcc.c \
+	$(NULL)
+endif
+ifeq ($(PLATFORM), ppc-darwin-gcc)
+FIBER_CONTEXT_PLATFORM= \
+	src/thread/fiber-context-ppc-darwin-gcc.c \
+	src/thread/ppc-darwin-gcc-switch.s \
+	$(NULL)
+/src/thread/ppc-darwin-gcc-switch.s_ASFLAGS=-arch ppc -g
+endif
 
 # building of libyans.so
 YANS_SRC:= \
@@ -184,7 +195,7 @@ YANS_SRC:= \
 	src/80211/network-interface-80211-factory.cc \
 	test/test.cc \
 	$(NULL)
-YANS_HDR = \
+YANS_INST_HDR = \
 	test/test.h \
 	simulator/event.h \
 	simulator/event.tcc \
@@ -194,10 +205,6 @@ YANS_HDR = \
 	simulator/cancellable-event.tcc \
 	simulator/simulator.h \
 	simulator/callback-event.tcc \
-	simulator/clock.h \
-	simulator/scheduler.h \
-	simulator/scheduler-list.h \
-	simulator/scheduler-heap.h \
 	src/common/buffer.h \
 	src/common/data-writer.h \
 	src/common/pcap-writer.h \
@@ -206,7 +213,6 @@ YANS_HDR = \
 	src/common/utils.h \
 	src/common/chunk-constant-data.h \
 	src/common/mac-address.h \
-	src/common/sgi-hashmap.h \
 	src/common/chunk-fake-data.h \
 	src/common/packet.h \
 	src/common/tag-manager.h \
@@ -214,14 +220,37 @@ YANS_HDR = \
 	src/common/packet-logger.h \
 	src/common/trace-container.h \
 	src/common/callback.tcc \
-	src/common/ref-count.tcc \
 	src/common/ui-traced-variable.tcc \
 	src/common/si-traced-variable.tcc \
 	src/common/f-traced-variable.tcc \
-	src/common/seed-generator.h \
 	src/common/random-uniform.h \
-	src/common/rng-mrg32k3a.h \
 	src/common/count-ptr-holder.tcc \
+	src/apps/periodic-generator.h \
+	src/apps/tcp-source.h \
+	src/apps/udp-sink.h \
+	src/apps/tcp-sink.h \
+	src/apps/traffic-analyser.h \
+	src/apps/udp-source.h \
+	src/80211/network-interface-80211-simple.h \
+	src/80211/network-interface-80211-simple-factory.h \
+	src/80211/network-interface-80211.h \
+	src/80211/network-interface-80211-factory.h \
+	src/host/host.h \
+	src/host/network-interface.h \
+	src/ethernet/cable.h \
+	src/ethernet/ethernet-network-interface.h \
+	src/thread/semaphore.h \
+	src/thread/thread.h \
+	$(NULL)
+YANS_HDR = \
+	simulator/clock.h \
+	simulator/scheduler.h \
+	simulator/scheduler-list.h \
+	simulator/scheduler-heap.h \
+	src/common/sgi-hashmap.h \
+	src/common/ref-count.tcc \
+	src/common/seed-generator.h \
+	src/common/rng-mrg32k3a.h \
 	src/ipv4/chunk-icmp.h \
 	src/ipv4/defrag-state.h \
 	src/ipv4/ipv4-route.h \
@@ -241,12 +270,6 @@ YANS_HDR = \
 	src/arp/arp.h \
 	src/arp/chunk-arp.h \
 	src/arp/chunk-mac-llc-snap.h \
-	src/apps/periodic-generator.h \
-	src/apps/tcp-source.h \
-	src/apps/udp-sink.h \
-	src/apps/tcp-sink.h \
-	src/apps/traffic-analyser.h \
-	src/apps/udp-source.h \
 	src/80211/chunk-mac-80211-hdr.h \
 	src/80211/chunk-mac-80211-fcs.h \
 	src/80211/mac-stations.h \
@@ -261,8 +284,6 @@ YANS_HDR = \
 	src/80211/bpsk-mode.h \
 	src/80211/qam-mode.h \
 	src/80211/phy-80211.h \
-	src/80211/network-interface-80211-simple.h \
-	src/80211/network-interface-80211-simple-factory.h \
 	src/80211/mac-simple.h \
 	src/80211/mac-low.h \
 	src/80211/mac-parameters.h \
@@ -272,25 +293,19 @@ YANS_HDR = \
 	src/80211/mac-queue-80211e.h \
 	src/80211/dca-txop.h \
 	src/80211/mac-high-adhoc.h \
-	src/80211/network-interface-80211.h \
-	src/80211/network-interface-80211-factory.h \
-	src/host/host.h \
 	src/host/loopback-interface.h \
-	src/host/network-interface.h \
-	src/ethernet/cable.h \
 	src/ethernet/chunk-mac-crc.h \
 	src/ethernet/chunk-mac-eth.h \
-	src/ethernet/ethernet-network-interface.h \
 	src/thread/fiber-context.h \
 	src/thread/fiber.h \
 	src/thread/fiber-scheduler.h \
-	src/thread/semaphore.h \
-	src/thread/thread.h \
 	$(NULL)
-YANS_CXXFLAGS=$(CXXFLAGS) $(call gen-lib-build-flags)
-YANS_CFLAGS=$(CFLAGS) $(call gen-lib-build-flags)
-YANS_LDFLAGS=$(LDFLAGS) $(call gen-lib-link-flags)
-YANS_OUTPUT=$(call gen-lib-name, yans)
+YANS_CXXFLAGS:=$(CXXFLAGS) $(call gen-lib-build-flags)
+YANS_CFLAGS:=$(CFLAGS) $(call gen-lib-build-flags)
+YANS_LDFLAGS:=$(LDFLAGS) $(call gen-lib-link-flags)
+YANS_NAME:=yans
+YANS_TYPE:=shared-library
+YANS_OUTPUT_DIR:=
 ifeq ($(TCP_USE),y)
 YANS_SRC += \
 	src/ipv4/tcp-bsd/tcp-bsd-connection.cc
@@ -300,14 +315,18 @@ endif
 
 # the benchmark for the simulator
 BENCH_SRC=simulator/bench-simulator.cc
-BENCH_OUTPUT=simulator/bench-simulator
+BENCH_NAME=bench-simulator
+BENCH_OUTPUT_DIR=simulator
+BENCH_TYPE=executable
 BENCH_CXXFLAGS=$(CXXFLAGS)
 BENCH_LDFLAGS=$(LDFLAGS) -lyans -L$(TOP_BUILD_DIR) $(TC_LDFLAGS)
 
 
 # building of main-test
 TEST_SRC=test/main-test.cc
-TEST_OUTPUT=test/main-test
+TEST_NAME=test
+TEST_OUTPUT_DIR=test
+TEST_TYPE=executable
 TEST_CXXFLAGS=$(CXXFLAGS)
 TEST_LDFLAGS=$(LDFLAGS) -lyans -L$(TOP_BUILD_DIR) $(TC_LDFLAGS)
 
@@ -315,63 +334,81 @@ TEST_LDFLAGS=$(LDFLAGS) -lyans -L$(TOP_BUILD_DIR) $(TC_LDFLAGS)
 SAMPLE_CXX_SIMU_SRC= \
 	samples/main-simulator.cc \
 	$(NULL)
-SAMPLE_CXX_SIMU_OUTPUT=samples/main-simulator
+SAMPLE_CXX_SIMU_NAME=main-simulator
+SAMPLE_CXX_SIMU_OUTPUT_DIR=samples
+SAMPLE_CXX_SIMU_TYPE=executable
 SAMPLE_CXX_SIMU_CXXFLAGS=$(CXXFLAGS)
 SAMPLE_CXX_SIMU_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans $(TC_LDFLAGS)
 
 SAMPLE_CXX_SIMU_FOR_SRC= \
 	samples/main-forwarding-simulator.cc \
 	$(NULL)
-SAMPLE_CXX_SIMU_FOR_OUTPUT=samples/main-forwarding-simulator
+SAMPLE_CXX_SIMU_FOR_NAME=main-forwarding-simulator
+SAMPLE_CXX_SIMU_FOR_OUTPUT_DIR=samples
+SAMPLE_CXX_SIMU_FOR_TYPE=executable
 SAMPLE_CXX_SIMU_FOR_CXXFLAGS=$(CXXFLAGS)
 SAMPLE_CXX_SIMU_FOR_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans $(TC_LDFLAGS)
 
 SAMPLE_CXX_SIMUTEMP_SRC= \
 	samples/main-forwarding-simulator-template.cc \
 	$(NULL)
-SAMPLE_CXX_SIMUTEMP_OUTPUT=samples/main-forwarding-simulator-template
+SAMPLE_CXX_SIMUTEMP_NAME=main-forwarding-simulator-template
+SAMPLE_CXX_SIMUTEMP_OUTPUT_DIR=samples
+SAMPLE_CXX_SIMUTEMP_TYPE=executable
 SAMPLE_CXX_SIMUTEMP_CXXFLAGS=$(CXXFLAGS)
 SAMPLE_CXX_SIMUTEMP_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans $(TC_LDFLAGS)
 
 SAMPLE_CXX_SIMPLE_SRC= \
 	samples/main-simple.cc \
 	$(NULL)
-SAMPLE_CXX_SIMPLE_OUTPUT=samples/main-simple
+SAMPLE_CXX_SIMPLE_NAME=main-simple
+SAMPLE_CXX_SIMPLE_OUTPUT_DIR=samples
+SAMPLE_CXX_SIMPLE_TYPE=executable
 SAMPLE_CXX_SIMPLE_CXXFLAGS=$(CXXFLAGS)
 SAMPLE_CXX_SIMPLE_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans $(TC_LDFLAGS)
 
 SAMPLE_CXX_ROUTER_SRC= \
 	samples/main-router.cc \
 	$(NULL)
-SAMPLE_CXX_ROUTER_OUTPUT=samples/main-router
+SAMPLE_CXX_ROUTER_NAME=main-router
+SAMPLE_CXX_ROUTER_OUTPUT_DIR=samples
+SAMPLE_CXX_ROUTER_TYPE=executable
 SAMPLE_CXX_ROUTER_CXXFLAGS=$(CXXFLAGS)
 SAMPLE_CXX_ROUTER_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans $(TC_LDFLAGS)
 
 SAMPLE_CXX_TCP_SRC= \
 	samples/main-tcp.cc \
 	$(NULL)
-SAMPLE_CXX_TCP_OUTPUT=samples/main-tcp
+SAMPLE_CXX_TCP_NAME=main-tcp
+SAMPLE_CXX_TCP_OUTPUT_DIR=samples
+SAMPLE_CXX_TCP_TYPE=executable
 SAMPLE_CXX_TCP_CXXFLAGS=$(CXXFLAGS)
 SAMPLE_CXX_TCP_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans $(TC_LDFLAGS)
 
 SAMPLE_CXX_THREAD_SRC= \
 	samples/main-thread.cc \
 	$(NULL)
-SAMPLE_CXX_THREAD_OUTPUT=samples/main-thread
+SAMPLE_CXX_THREAD_NAME=main-thread
+SAMPLE_CXX_THREAD_OUTPUT_DIR=samples
+SAMPLE_CXX_THREAD_TYPE=executable
 SAMPLE_CXX_THREAD_CXXFLAGS=$(CXXFLAGS)
 SAMPLE_CXX_THREAD_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans $(TC_LDFLAGS)
 
 SAMPLE_CXX_80211_SIMPLE_SRC= \
 	samples/main-80211-simple.cc \
 	$(NULL)
-SAMPLE_CXX_80211_SIMPLE_OUTPUT=samples/main-80211-simple
+SAMPLE_CXX_80211_SIMPLE_NAME=main-80211-simple
+SAMPLE_CXX_80211_SIMPLE_OUTPUT_DIR=samples
+SAMPLE_CXX_80211_SIMPLE_TYPE=executable
 SAMPLE_CXX_80211_SIMPLE_CXXFLAGS=$(CXXFLAGS) -I$(TOP_SRC_DIR)/src/80211
 SAMPLE_CXX_80211_SIMPLE_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans $(TC_LDFLAGS)
 
 SAMPLE_CXX_80211_ADHOC_SRC= \
 	samples/main-80211-adhoc.cc \
 	$(NULL)
-SAMPLE_CXX_80211_ADHOC_OUTPUT=samples/main-80211-adhoc
+SAMPLE_CXX_80211_ADHOC_NAME=main-80211-adhoc
+SAMPLE_CXX_80211_ADHOC_OUTPUT_DIR=samples
+SAMPLE_CXX_80211_ADHOC_TYPE=executable
 SAMPLE_CXX_80211_ADHOC_CXXFLAGS=$(CXXFLAGS) -I$(TOP_SRC_DIR)/src/80211
 SAMPLE_CXX_80211_ADHOC_LDFLAGS=$(LDFLAGS) -L$(TOP_BUILD_DIR) -lyans $(TC_LDFLAGS)
 
@@ -414,7 +451,9 @@ YANS_PYTHON_HDR= \
 	python/export-callback.tcc \
 	python/export-callback-traits.tcc \
 	$(NULL)
-YANS_PYTHON_OUTPUT=python/$(call gen-pymod-name, _yans)
+YANS_PYTHON_NAME=_yans
+YANS_PYTHON_OUTPUT_DIR=python
+YANS_PYTHON_TYPE=executable
 YANS_PYTHON_CXXFLAGS=$(CXXFLAGS) $(call gen-pymod-build-flags)
 YANS_PYTHON_LDFLAGS=$(LDFLAGS) $(call gen-pymod-link-flags) -lyans -L$(TOP_BUILD_DIR)
 

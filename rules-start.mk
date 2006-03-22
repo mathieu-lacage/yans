@@ -1,3 +1,5 @@
+all:
+
 # various OS-specific commands
 CC:=gcc
 CXX:=g++
@@ -44,9 +46,6 @@ mkdir-p=$(foreach dir,$(call enumerate-dep-dirs,$(1)) $(1),$(if $(wildcard $(dir
 rmdir=$(foreach dir,$(call reverse $(call enumerate-dep-dirs,$(1))) $(1),$(if $(call is-dir (dir)),,$(RMDIR) $(dir);))
 rm-f=$(foreach file,$(1),$(if $(call is-file,$(1)),$(RM) $(file);,))
 rm-rf=$(call rm-f,$(call is-files,$(call rwildcard,$(1),*)))$(call rmdir,$(call is-dirs,$(call rwildcard,$(1),*)))
-
-
-all: build
 
 test-functions:
 	#$(call mkdir-p,bin/samples)

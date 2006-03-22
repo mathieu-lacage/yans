@@ -10,7 +10,10 @@
 # whose name is PROJECT_NAME can define the variables:
 #  - PROJECT_NAME_SRC
 #  - PROJECT_NAME_HDR
-#  - PROJECT_NAME_OUTPUT
+#  - PROJECT_NAME_INST_HDR
+#  - PROJECT_NAME_NAME
+#  - PROJECT_NAME_TYPE
+#  - PROJECT_NAME_OUTPUT_DIR
 #  - PROJECT_NAME_CFLAGS
 #  - PROJECT_NAME_CXXFLAGS
 #  - PROJECT_NAME_ASFLAGS
@@ -40,7 +43,23 @@
 # which records the dependency list for the .o target during the 
 # next build.
 
+ifeq ($(PLATFORM),i386-linux-gcc)
+platform-sharedlib-name=$(addprefix lib,$(addsuffix .so,$(1)))
+platform-sharedlib-build-flags=-fPIC
+platform-sharedlib-link-flags=-shared
+platform-pymod-name=$(addsuffix module.so,$(1))
+platform-pymod-build-flags=-I$(PYTHON_PREFIX_INC) -I$(BOOST_PREFIX_INC)
+platform-pymod-link-flags=-L$(PYTHON_PREFIX_LIB) -L$(BOOST_PREFIX_LIB) -lboost_python -shared
+endif
 
+ifeq ($(PLATFORM),ppc-darwin-gcc)
+platform-sharedlib-name=$(addprefix lib,$(addsuffix .dylib,$(1)))
+platform-sharedlib-build-flags=-fno-common
+platform-sharedlib-link-flags=-dynamiclib
+platform-pymod-name=$(addsuffix module.so,$(1))
+platform-pymod-build-flags=-I$(PYTHON_PREFIX_INC) -I$(BOOST_PREFIX_INC) -fno-common
+platform-pymod-link-flags=-w -bundle -bundle_loader $(PYTHON_BIN) -framework Python -L$(BOOST_PREFIX_LIB) -lboost_python
+endif
 gen-bin=$(strip $(addprefix $(TOP_BUILD_DIR)/,$1))
 gen-dep=$(strip $(call gen-bin, \
 	$(addsuffix .o.P,$(basename $(filter %.c,$1))) \
@@ -95,16 +114,40 @@ $(2): $(1) $(2).cmd
 	@$(call run-command,$$($(2)_cmd_now))
 endef
 
+calculate-name=$(strip \
+$(if $(findstring shared-library,$($(1)_TYPE)),$(call platform-sharedlib-name,$($(1)_NAME)),\
+$(if $(findstring python-module,$($(1)_TYPE)),$(call platform-pymod-name,$($(1)_NAME)),\
+$(if $(findstring executable,$($(1)_TYPE)),$($(1)_NAME),\
+$(1)\
+))))
+calculate-build-flags=$(strip \
+$(if $(findstring shared-library,$($(1)_TYPE)),$(platform-sharedlib-build-flags),\
+$(if $(findstring python-module,$($(1)_TYPE)),$(platform-pymod-build-flags),\
+$(if $(findstring executable,$($(1)_TYPE)),,\
+))))
+calculate-link-flags=$(strip \
+$(if $(findstring shared-library,$($(1)_TYPE)),$(platform-sharedlib-link-flags),\
+$(if $(findstring python-module,$($(1)_TYPE)),$(platform-pymod-link-flags),\
+$(if $(findstring executable,$($(1)_TYPE)),,\
+))))
 define OUTPUT_template
-ALL_OUTPUT += $(TOP_BUILD_DIR)/$($(1)_OUTPUT)
-$(1)_OBJ = $$(call gen-obj,$$($(1)_SRC),$(TOP_BUILD_DIR)/)
+$(1)_OUTPUT := $(TOP_BUILD_DIR)/$(if $($(1)_OUTPUT_DIR),$($(1)_OUTPUT_DIR)/,)$(call calculate-name,$(1))
+$(1)_OBJ := $(call gen-obj,$($(1)_SRC),$(TOP_BUILD_DIR)/)
+$(1)_DIRS := $$(call gen-dirs,$$($(1)_OBJ))
+$(1)_CFLAGS += $(call calculate-build-flags,$(1))
+$(1)_CXXFLAGS += $(call calculate-build-flags,$(1))
+$(1)_LDFLAGS += $(call calculate-link-flags,$(1))
+#$$(warning output -> $$($(1)_OUTPUT) $$($(1)_LDFLAGS))
+ALL_OUTPUT += $$($(1)_OUTPUT)
 ALL_OBJ += $$($(1)_OBJ)
 ALL_SRC += $$($(1)_SRC)
 ALL_DEP += $$(call gen-dep,$$($(1)_SRC))
 ALL_DEP += $$(call gen-cmd,$$($(1)_SRC))
 ALL_DIST += $$($(1)_SRC)
 ALL_DIST += $$($(1)_HDR)
+ALL_DIST += $$($(1)_INST_HDR)
 ALL_DIST += $$($(1)_DIST)
+ALL_DIRS+=$$($(1)_DIRS)
 CSRC=$$(filter %.c, $$($(1)_SRC))
 CXXSRC=$$(filter %.cc, $$($(1)_SRC))
 ASSRC=$$(filter %.s, $$($(1)_SRC))
@@ -114,25 +157,23 @@ $$(foreach src,$$(CSRC),$$(eval $$(call COBJ_template,$$(src),$$(call gen-obj,$$
 $$(foreach src,$$(PYSRC),$$(eval $$(call PYOBJ_template,$$(src),$$(call gen-obj,$$(src),$(TOP_BUILD_DIR)/))))
 $$(foreach src,$$(ASSRC),$$(eval $$(call ASOBJ_template,$$(src),$$(call gen-obj,$$(src),$(TOP_BUILD_DIR)/),$$($(1)_ASFLAGS))))
 
-$(1)_DIRS=$$(call gen-dirs,$$($(1)_OBJ))
-ALL_DIRS+=$$($(1)_DIRS)
 # the output.P dependency files are used to work around a gnu make bug:
 # gnu make 3.80 cannot deal with long dependency lists in targets located 
 # in templates called with a eval. So, instead of making output depend
 # directly on the object list, we store the object list in the output.P
 # file and make sure output.P is included later by adding to the ALL_DEP
 # list. fun fun.
-ALL_DEP+=$(TOP_BUILD_DIR)/$($(1)_OUTPUT).P
-$(TOP_BUILD_DIR)/$($(1)_OUTPUT).P: $$(call enumerate-dep-dirs,$(TOP_BUILD_DIR)/$($(1)_OUTPUT).P)
-	@echo $(TOP_BUILD_DIR)/$($(1)_OUTPUT): $$($(1)_OBJ) > $$@
-$(TOP_BUILD_DIR)/$($(1)_OUTPUT):
-	@$(call run-command,$(CXX) $($(1)_LDFLAGS) -o $$@ $$(filter %.o,$$^))
+ALL_DEP+=$$($(1)_OUTPUT).P
+$$($(1)_OUTPUT).P: $$(call enumerate-dep-dirs,$$($(1)_OUTPUT).P)
+	@echo $$($(1)_OUTPUT): $$($(1)_OBJ) > $$@
+$$($(1)_OUTPUT):
+	@$(call run-command,$(CXX) $$($(1)_LDFLAGS) -o $$@ $$(filter %.o,$$^))
 endef
 
-$(foreach output,$(ALL),$(eval $(call OUTPUT_template,$(output))))
+$(foreach output,$(ALL),$(if $(output),$(eval $(call OUTPUT_template,$(output)))))
 $(sort $(ALL_DIRS)):
 	$(call mkdir-p,$@)
-build: $(ALL_DIRS) $(ALL_OUTPUT)
+all: $(ALL_DIRS) $(ALL_OUTPUT)
 
 opti:
 	$(MAKE) TOP_BUILD_DIR=$(TOP_BUILD_DIR)/opti OPTI_FLAGS="-O3 -DNDEBUG=1"
@@ -151,10 +192,10 @@ build-opti-arc-profile:
 
 # dist/distcheck support
 ALL_DIST += $(PACKAGE_DIST)
-DIST_OUTPUT=$(PACKAGE_NAME)-$(PACKAGE_VERSION).tar.gz
-DIST_DIR=$(PACKAGE_NAME)-$(PACKAGE_VERSION)
-ALL_DIST_TARGETS=$(addprefix $(DIST_DIR)/,$(ALL_DIST))
-ALL_DIST_DIRS=$(call gen-dirs, $(ALL_DIST_TARGETS))
+DIST_OUTPUT := $(PACKAGE_NAME)-$(PACKAGE_VERSION).tar.gz
+DIST_DIR := $(PACKAGE_NAME)-$(PACKAGE_VERSION)
+ALL_DIST_TARGETS := $(addprefix $(DIST_DIR)/,$(ALL_DIST))
+ALL_DIST_DIRS := $(call gen-dirs, $(ALL_DIST_TARGETS))
 $(sort $(ALL_DIST_DIRS)):
 	$(call mkdir-p,$@)
 $(DIST_OUTPUT): $(ALL_DIST_DIRS) $(ALL_DIST_TARGETS)
