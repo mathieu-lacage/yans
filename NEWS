@@ -4,6 +4,8 @@ Release 0.8.0 (2006-03-22)
 This release features:
    - MAC DCF 802.11 support
    - improvements to the makefile dependency tracking
+   - make it clear which headers are part of the public API
+   - re-organize the source tree
 
 Release 0.7.2 (2006-03-10)
 -------------
