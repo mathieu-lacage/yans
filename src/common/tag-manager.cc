@@ -26,8 +26,6 @@
 
 namespace yans {
 
-TagManager *TagManager::m_instance = 0;
-
 TagManager::TagManager ()
 	: m_tag_id (1)
 {}
@@ -35,18 +33,8 @@ TagManager::TagManager ()
 TagManager *
 TagManager::instance (void)
 {
-	if (m_instance == 0) {
-		m_instance = new TagManager ();
-		Simulator::insert_at_destroy (make_event (&TagManager::destroy, m_instance));
-	}
-	return m_instance;
-}
-
-void 
-TagManager::destroy (void)
-{
-	delete this;
-	m_instance = 0;
+	static TagManager manager;
+	return &manager;
 }
 
 uint32_t 

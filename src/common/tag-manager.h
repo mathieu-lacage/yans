@@ -42,11 +42,9 @@ public:
 	uint32_t lookup_tag_id (char const *name);
 
 private:
-	void destroy (void);
 	typedef Sgi::hash_map<uint32_t, char const *> TagMapping;
 	uint32_t m_tag_id;
 	TagMapping m_tag_mapping;
-	static TagManager *m_instance;
 	TagManager ();
 };
 
