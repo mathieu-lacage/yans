@@ -1,6 +1,11 @@
 .*\.o$
 .*~$
-bin
+build-dir
+massif.*
 src/ipv4/tcp-bsd
 patch
+out
+output
+config.mk
+.*.heap$
 yans-.*
