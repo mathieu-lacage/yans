@@ -43,6 +43,7 @@ PACKAGE_VERSION:=0.8.0
 TOP_BUILD_DIR:=$(TOP)/build-dir
 TOP_SRC_DIR:=$(TOP)
 
+ifeq ($(PLATFORM),)
 
 INCLUDE_SEARCH_PATHS:= \
  /usr/include \
@@ -81,13 +82,12 @@ config.mk:
 	@echo TCP_USE=y >>config.mk
     endif
 
-ifeq ($(CONFIGURED),y)
+else # PLATFORM
 
-DEFINES=-DRUN_SELF_TESTS=1
-INCLUDES=\
- $(NULL)
-OPTI_FLAGS=-O0
-FLAGS=-Wall -Werror -g3 $(OPTI_FLAGS)
+DEFINES:=-DRUN_SELF_TESTS=1
+INCLUDES:=
+OPTI_FLAGS:=-O0
+FLAGS:=-Wall -Werror -g3 $(OPTI_FLAGS)
 
 
 LDFLAGS+=
@@ -110,11 +110,11 @@ FIBER_CONTEXT_PLATFORM:= \
 	$(NULL)
 endif
 ifeq ($(PLATFORM), ppc-darwin-gcc)
-FIBER_CONTEXT_PLATFORM= \
+FIBER_CONTEXT_PLATFORM:= \
 	src/thread/fiber-context-ppc-darwin-gcc.c \
 	src/thread/ppc-darwin-gcc-switch.s \
 	$(NULL)
-/src/thread/ppc-darwin-gcc-switch.s_ASFLAGS=-arch ppc -g
+/src/thread/ppc-darwin-gcc-switch.s_ASFLAGS:=-arch ppc -g
 endif
 
 # building of libyans.so
@@ -211,7 +211,7 @@ YANS_SRC:= \
 	src/80211/network-interface-80211-factory.cc \
 	src/test/test.cc \
 	$(NULL)
-YANS_INST_HDR = \
+YANS_INST_HDR := \
 	src/test/test.h \
 	src/simulator/event.h \
 	src/simulator/event.tcc \
@@ -260,7 +260,7 @@ YANS_INST_HDR = \
 	src/thread/semaphore.h \
 	src/thread/thread.h \
 	$(NULL)
-YANS_HDR = \
+YANS_HDR := \
 	src/simulator/clock.h \
 	src/simulator/scheduler.h \
 	src/simulator/scheduler-list.h \
@@ -316,7 +316,7 @@ YANS_HDR = \
 	src/thread/fiber.h \
 	src/thread/fiber-scheduler.h \
 	$(NULL)
-YANS_INCLUDES=\
+YANS_INCLUDES:=\
  -I$(TOP_SRC_DIR)/src/simulator \
  -I$(TOP_SRC_DIR)/src/common \
  -I$(TOP_SRC_DIR)/src/test \
@@ -338,109 +338,109 @@ YANS_CXXFLAGS += -I$(TOP_SRC_DIR)/src/ipv4/tcp-bsd/
 endif
 
 # the benchmark for the simulator
-BENCH_SRC=src/simulator/bench-simulator.cc
-BENCH_NAME=bench-simulator
-BENCH_OUTPUT_DIR=
-BENCH_TYPE=executable
-BENCH_CXXFLAGS=$(CXXFLAGS)
-BENCH_LDFLAGS=$(LDFLAGS) -lyans $(TC_LDFLAGS)
+BENCH_SRC:=src/simulator/bench-simulator.cc
+BENCH_NAME:=bench-simulator
+BENCH_OUTPUT_DIR:=
+BENCH_TYPE:=executable
+BENCH_CXXFLAGS:=$(CXXFLAGS)
+BENCH_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS)
 
 
 # building of main-test
-TEST_SRC=src/test/main-test.cc
-TEST_NAME=test
-TEST_OUTPUT_DIR=
-TEST_TYPE=executable
-TEST_CXXFLAGS=$(CXXFLAGS)
-TEST_LDFLAGS=$(LDFLAGS) -lyans $(TC_LDFLAGS)
+TEST_SRC:=src/test/main-test.cc
+TEST_NAME:=test
+TEST_OUTPUT_DIR:=
+TEST_TYPE:=executable
+TEST_CXXFLAGS:=$(CXXFLAGS)
+TEST_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS)
 
 # building of sample applications
-SAMPLE_CXX_SIMU_SRC= \
+SAMPLE_CXX_SIMU_SRC:= \
 	samples/main-simulator.cc \
 	$(NULL)
-SAMPLE_CXX_SIMU_NAME=main-simulator
-SAMPLE_CXX_SIMU_OUTPUT_DIR=
-SAMPLE_CXX_SIMU_TYPE=executable
-SAMPLE_CXX_SIMU_CXXFLAGS=$(CXXFLAGS)
-SAMPLE_CXX_SIMU_LDFLAGS=$(LDFLAGS) -lyans $(TC_LDFLAGS)
+SAMPLE_CXX_SIMU_NAME:=main-simulator
+SAMPLE_CXX_SIMU_OUTPUT_DIR:=
+SAMPLE_CXX_SIMU_TYPE:=executable
+SAMPLE_CXX_SIMU_CXXFLAGS:=$(CXXFLAGS)
+SAMPLE_CXX_SIMU_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS)
 
-SAMPLE_CXX_SIMU_FOR_SRC= \
+SAMPLE_CXX_SIMU_FOR_SRC:= \
 	samples/main-forwarding-simulator.cc \
 	$(NULL)
-SAMPLE_CXX_SIMU_FOR_NAME=main-forwarding-simulator
-SAMPLE_CXX_SIMU_FOR_OUTPUT_DIR=
-SAMPLE_CXX_SIMU_FOR_TYPE=executable
-SAMPLE_CXX_SIMU_FOR_CXXFLAGS=$(CXXFLAGS)
-SAMPLE_CXX_SIMU_FOR_LDFLAGS=$(LDFLAGS) -lyans $(TC_LDFLAGS)
+SAMPLE_CXX_SIMU_FOR_NAME:=main-forwarding-simulator
+SAMPLE_CXX_SIMU_FOR_OUTPUT_DIR:=
+SAMPLE_CXX_SIMU_FOR_TYPE:=executable
+SAMPLE_CXX_SIMU_FOR_CXXFLAGS:=$(CXXFLAGS)
+SAMPLE_CXX_SIMU_FOR_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS)
 
-SAMPLE_CXX_SIMUTEMP_SRC= \
+SAMPLE_CXX_SIMUTEMP_SRC:= \
 	samples/main-forwarding-simulator-template.cc \
 	$(NULL)
-SAMPLE_CXX_SIMUTEMP_NAME=main-forwarding-simulator-template
-SAMPLE_CXX_SIMUTEMP_OUTPUT_DIR=
-SAMPLE_CXX_SIMUTEMP_TYPE=executable
-SAMPLE_CXX_SIMUTEMP_CXXFLAGS=$(CXXFLAGS)
-SAMPLE_CXX_SIMUTEMP_LDFLAGS=$(LDFLAGS) -lyans $(TC_LDFLAGS)
+SAMPLE_CXX_SIMUTEMP_NAME:=main-forwarding-simulator-template
+SAMPLE_CXX_SIMUTEMP_OUTPUT_DIR:=
+SAMPLE_CXX_SIMUTEMP_TYPE:=executable
+SAMPLE_CXX_SIMUTEMP_CXXFLAGS:=$(CXXFLAGS)
+SAMPLE_CXX_SIMUTEMP_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS)
 
-SAMPLE_CXX_SIMPLE_SRC= \
+SAMPLE_CXX_SIMPLE_SRC:= \
 	samples/main-simple.cc \
 	$(NULL)
-SAMPLE_CXX_SIMPLE_NAME=main-simple
-SAMPLE_CXX_SIMPLE_OUTPUT_DIR=
-SAMPLE_CXX_SIMPLE_TYPE=executable
-SAMPLE_CXX_SIMPLE_CXXFLAGS=$(CXXFLAGS)
-SAMPLE_CXX_SIMPLE_LDFLAGS=$(LDFLAGS) -lyans $(TC_LDFLAGS)
+SAMPLE_CXX_SIMPLE_NAME:=main-simple
+SAMPLE_CXX_SIMPLE_OUTPUT_DIR:=
+SAMPLE_CXX_SIMPLE_TYPE:=executable
+SAMPLE_CXX_SIMPLE_CXXFLAGS:=$(CXXFLAGS)
+SAMPLE_CXX_SIMPLE_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS)
 
-SAMPLE_CXX_ROUTER_SRC= \
+SAMPLE_CXX_ROUTER_SRC:= \
 	samples/main-router.cc \
 	$(NULL)
-SAMPLE_CXX_ROUTER_NAME=main-router
-SAMPLE_CXX_ROUTER_OUTPUT_DIR=
-SAMPLE_CXX_ROUTER_TYPE=executable
-SAMPLE_CXX_ROUTER_CXXFLAGS=$(CXXFLAGS)
-SAMPLE_CXX_ROUTER_LDFLAGS=$(LDFLAGS) -lyans $(TC_LDFLAGS)
+SAMPLE_CXX_ROUTER_NAME:=main-router
+SAMPLE_CXX_ROUTER_OUTPUT_DIR:=
+SAMPLE_CXX_ROUTER_TYPE:=executable
+SAMPLE_CXX_ROUTER_CXXFLAGS:=$(CXXFLAGS)
+SAMPLE_CXX_ROUTER_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS)
 
-SAMPLE_CXX_TCP_SRC= \
+SAMPLE_CXX_TCP_SRC:= \
 	samples/main-tcp.cc \
 	$(NULL)
-SAMPLE_CXX_TCP_NAME=main-tcp
-SAMPLE_CXX_TCP_OUTPUT_DIR=
-SAMPLE_CXX_TCP_TYPE=executable
-SAMPLE_CXX_TCP_CXXFLAGS=$(CXXFLAGS)
-SAMPLE_CXX_TCP_LDFLAGS=$(LDFLAGS) -lyans $(TC_LDFLAGS)
+SAMPLE_CXX_TCP_NAME:=main-tcp
+SAMPLE_CXX_TCP_OUTPUT_DIR:=
+SAMPLE_CXX_TCP_TYPE:=executable
+SAMPLE_CXX_TCP_CXXFLAGS:=$(CXXFLAGS)
+SAMPLE_CXX_TCP_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS)
 
-SAMPLE_CXX_THREAD_SRC= \
+SAMPLE_CXX_THREAD_SRC:= \
 	samples/main-thread.cc \
 	$(NULL)
-SAMPLE_CXX_THREAD_NAME=main-thread
-SAMPLE_CXX_THREAD_OUTPUT_DIR=
-SAMPLE_CXX_THREAD_TYPE=executable
-SAMPLE_CXX_THREAD_CXXFLAGS=$(CXXFLAGS)
-SAMPLE_CXX_THREAD_LDFLAGS=$(LDFLAGS) -lyans $(TC_LDFLAGS)
+SAMPLE_CXX_THREAD_NAME:=main-thread
+SAMPLE_CXX_THREAD_OUTPUT_DIR:=
+SAMPLE_CXX_THREAD_TYPE:=executable
+SAMPLE_CXX_THREAD_CXXFLAGS:=$(CXXFLAGS)
+SAMPLE_CXX_THREAD_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS)
 
-SAMPLE_CXX_80211_SIMPLE_SRC= \
+SAMPLE_CXX_80211_SIMPLE_SRC:= \
 	samples/main-80211-simple.cc \
 	$(NULL)
-SAMPLE_CXX_80211_SIMPLE_NAME=main-80211-simple
-SAMPLE_CXX_80211_SIMPLE_OUTPUT_DIR=
-SAMPLE_CXX_80211_SIMPLE_TYPE=executable
-SAMPLE_CXX_80211_SIMPLE_CXXFLAGS=$(CXXFLAGS)
-SAMPLE_CXX_80211_SIMPLE_LDFLAGS=$(LDFLAGS) -lyans $(TC_LDFLAGS)
+SAMPLE_CXX_80211_SIMPLE_NAME:=main-80211-simple
+SAMPLE_CXX_80211_SIMPLE_OUTPUT_DIR:=
+SAMPLE_CXX_80211_SIMPLE_TYPE:=executable
+SAMPLE_CXX_80211_SIMPLE_CXXFLAGS:=$(CXXFLAGS)
+SAMPLE_CXX_80211_SIMPLE_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS)
 
-SAMPLE_CXX_80211_ADHOC_SRC= \
+SAMPLE_CXX_80211_ADHOC_SRC:= \
 	samples/main-80211-adhoc.cc \
 	$(NULL)
-SAMPLE_CXX_80211_ADHOC_NAME=main-80211-adhoc
-SAMPLE_CXX_80211_ADHOC_OUTPUT_DIR=
-SAMPLE_CXX_80211_ADHOC_TYPE=executable
-SAMPLE_CXX_80211_ADHOC_CXXFLAGS=$(CXXFLAGS)
-SAMPLE_CXX_80211_ADHOC_LDFLAGS=$(LDFLAGS) -lyans $(TC_LDFLAGS)
+SAMPLE_CXX_80211_ADHOC_NAME:=main-80211-adhoc
+SAMPLE_CXX_80211_ADHOC_OUTPUT_DIR:=
+SAMPLE_CXX_80211_ADHOC_TYPE:=executable
+SAMPLE_CXX_80211_ADHOC_CXXFLAGS:=$(CXXFLAGS)
+SAMPLE_CXX_80211_ADHOC_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS)
 
 
 
 
 # building of python bindings.
-YANS_PYTHON_CXX_SRC= \
+YANS_PYTHON_CXX_SRC:= \
 	python/yans-simulator.cc \
 	python/export-simulator.cc \
 	python/function-holder.cc \
@@ -463,15 +463,15 @@ YANS_PYTHON_CXX_SRC= \
 	python/export-tcp-source.cc \
 	python/export-tcp-sink.cc \
 	$(NULL)
-YANS_PYTHON_CXX_HDR= \
+YANS_PYTHON_CXX_HDR:= \
 	python/function-holder.h \
 	python/export-callback.tcc \
 	python/export-callback-traits.tcc \
 	$(NULL)
-YANS_PYTHON_CXX_NAME=_yans
-YANS_PYTHON_CXX_TYPE=python-cxx-module
-YANS_PYTHON_CXX_CXXFLAGS=$(CXXFLAGS)
-YANS_PYTHON_CXX_LDFLAGS=$(LDFLAGS) -lyans
+YANS_PYTHON_CXX_NAME:=_yans
+YANS_PYTHON_CXX_TYPE:=python-cxx-module
+YANS_PYTHON_CXX_CXXFLAGS:=$(CXXFLAGS)
+YANS_PYTHON_CXX_LDFLAGS:=$(LDFLAGS) -lyans
 
 YANS_PYTHON_SRC:=\
 	python/yans/__init__.py \
@@ -485,35 +485,35 @@ YANS_PYTHON_SIMULATOR_SRC:=\
 YANS_PYTHON_SIMULATOR_NAME:=yans.simulator
 YANS_PYTHON_SIMULATOR_TYPE:=python-module
 
-YANS_PYTHON_TEST_PERIO_SRC=\
+YANS_PYTHON_TEST_PERIO_SRC:=\
 	python/test-periodic-generator.py \
 	$(NULL)
-YANS_PYTHON_TEST_PERIO_NAME=pytest-periodic-generator
-YANS_PYTHON_TEST_PERIO_TYPE=python-executable
+YANS_PYTHON_TEST_PERIO_NAME:=pytest-periodic-generator
+YANS_PYTHON_TEST_PERIO_TYPE:=python-executable
 
 YANS_PYTHON_SAMPLE_SIMU_SRC:=\
 	samples/test-simulator.py \
 	$(NULL)
-YANS_PYTHON_SAMPLE_SIMU_NAME=pytest-simulator
-YANS_PYTHON_SAMPLE_SIMU_TYPE=python-executable
+YANS_PYTHON_SAMPLE_SIMU_NAME:=pytest-simulator
+YANS_PYTHON_SAMPLE_SIMU_TYPE:=python-executable
 
 YANS_PYTHON_SAMPLE_THREAD_SRC:=\
 	samples/test-thread.py \
 	$(NULL)
-YANS_PYTHON_SAMPLE_THREAD_NAME=pytest-thread
-YANS_PYTHON_SAMPLE_THREAD_TYPE=python-executable
+YANS_PYTHON_SAMPLE_THREAD_NAME:=pytest-thread
+YANS_PYTHON_SAMPLE_THREAD_TYPE:=python-executable
 
 YANS_PYTHON_SAMPLE_SIMUGC_SRC:=\
 	samples/test-simulator-gc.py \
 	$(NULL)
-YANS_PYTHON_SAMPLE_SIMUGC_NAME=pytest-simu-gc
-YANS_PYTHON_SAMPLE_SIMUGC_TYPE=python-executable
+YANS_PYTHON_SAMPLE_SIMUGC_NAME:=pytest-simu-gc
+YANS_PYTHON_SAMPLE_SIMUGC_TYPE:=python-executable
 
 YANS_PYTHON_SAMPLE_SIMPLE_SRC:=\
 	samples/test-simple.py \
 	$(NULL)
-YANS_PYTHON_SAMPLE_SIMPLE_NAME=pytest-simple
-YANS_PYTHON_SAMPLE_SIMPLE_TYPE=python-executable
+YANS_PYTHON_SAMPLE_SIMPLE_NAME:=pytest-simple
+YANS_PYTHON_SAMPLE_SIMPLE_TYPE:=python-executable
 
 ALL:= \
 	YANS \
