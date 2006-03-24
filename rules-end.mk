@@ -55,7 +55,7 @@ define CXXOBJ_template
 $(2)_cmd_now:=$(CXX) $(3) $($(1)_CXXFLAGS) $(call gen-gcc-dep,$(1),$(2)) -c -o $(2) $(1)
 $(2).cmd: $$(call enumerate-dep-dirs,$(2).cmd)
 	@$$(if $$(strip $$(filter-out $$($(2)_cmd_now),$$($(2)_cmd_old)) $$(filter-out $$($(2)_cmd_old),$$($(2)_cmd_now))),\
- $($(ECHO)) $(2)_cmd_old:=$$($(2)_cmd_now) > $$@)
+ $(ECHO) $(2)_cmd_old:=$$($(2)_cmd_now) > $$@)
 $(2): $(1) $(2).cmd
 	@$$(call run-command,$$($(2)_cmd_now))
 endef
