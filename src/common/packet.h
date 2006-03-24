@@ -27,7 +27,6 @@
 #include <list>
 #include <utility>
 
-#include "ref-count.tcc"
 #include "callback.tcc"
 
 namespace yans {
@@ -68,7 +67,7 @@ public:
 	typedef std::list<std::pair<uint32_t, Tag *> >Tags;
 	typedef std::list<std::pair<uint32_t, Tag *> >::iterator TagsI;
 	Tags m_tags;
-	RefCount<Packet> m_ref;
+	mutable uint32_t m_count;
 	Buffer *m_buffer;
 };
 

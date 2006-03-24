@@ -41,7 +41,7 @@ std::cout << "PACKET TRACE " << Simulator::now_s () << " " << x << std::endl;
 namespace yans {
 
 Packet::Packet ()
-	: m_ref (this),
+	: m_count (1),
 	  m_buffer (new Buffer ())
 {}
 
@@ -57,13 +57,16 @@ Packet::~Packet ()
 void 
 Packet::ref (void) const
 {
-	m_ref.ref ();
+	m_count++;
 }
 
 void 
 Packet::unref (void) const
 {
-	m_ref.unref ();
+	m_count--;
+	if (m_count == 0) {
+		delete this;
+	}
 }
 
 Packet *
