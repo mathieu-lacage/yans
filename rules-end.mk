@@ -55,7 +55,7 @@ define CXXOBJ_template
 $(2)_cmd_now:=$(CXX) $(3) $($(1)_CXXFLAGS) $(call gen-gcc-dep,$(1),$(2)) -c -o $(2) $(1)
 $(2).cmd: $$(call enumerate-dep-dirs,$(2).cmd)
 	@$$(if $$(strip $$(filter-out $$($(2)_cmd_now),$$($(2)_cmd_old)) $$(filter-out $$($(2)_cmd_old),$$($(2)_cmd_now))),\
- echo $(2)_cmd_old:=$$($(2)_cmd_now) > $$@)
+ $($(ECHO)) $(2)_cmd_old:=$$($(2)_cmd_now) > $$@)
 $(2): $(1) $(2).cmd
 	@$$(call run-command,$$($(2)_cmd_now))
 endef
@@ -63,7 +63,7 @@ define COBJ_template
 $(2)_cmd_now:=$(CC) $(3) $($(1)_CFLAGS) $(call gen-gcc-dep,$(1),$(2)) -c -o $(2) $(1)
 $(2).cmd: $$(call enumerate-dep-dirs,$(2).cmd)
 	@$$(if $$(strip $$(filter-out $$($(2)_cmd_now),$$($(2)_cmd_old)) $$(filter-out $$($(2)_cmd_old),$$($(2)_cmd_now))),\
- echo $(2)_cmd_old:=$$($(2)_cmd_now) > $$@)
+ $(ECHO) $(2)_cmd_old:=$$($(2)_cmd_now) > $$@)
 $(2): $(1) $(2).cmd
 	@$$(call run-command,$$($(2)_cmd_now))
 endef
@@ -75,7 +75,7 @@ define ASOBJ_template
 $(2)_cmd_now:=$(AS) $(3) $($(1)_ASFLAGS) -o $(2) $(1)
 $(2).cmd: $$(call enumerate-dep-dirs,$(2).cmd)
 	@$$(if $$(strip $$(filter-out $$($(2)_cmd_now),$$($(2)_cmd_old)) $$(filter-out $$($(2)_cmd_old),$$($(2)_cmd_now))),\
- echo $(2)_cmd_old:=$$($(2)_cmd_now) > $$@)
+ $(ECHO) $(2)_cmd_old:=$$($(2)_cmd_now) > $$@)
 $(2): $(1) $(2).cmd
 	@$$(call run-command,$$($(2)_cmd_now))
 endef
@@ -119,7 +119,7 @@ $(warning unknown link flags -- $(1) $($(1)_TYPE))\
 calculate-link-command=$(strip \
 $(if $(findstring shared-library,$($(1)_TYPE)),$(CXX) $($(1)_LDFLAGS) -o $@ $^,\
 $(if $(findstring python-cxx-module,$($(1)_TYPE)),$(CXX) $($(1)_LDFLAGS) -o $@ $^,\
-$(if $(findstring python-module,$($(1)_TYPE)),$(CP) $^ $(dir $@);echo empty >$@;,\
+$(if $(findstring python-module,$($(1)_TYPE)),$(CP) $^ $(dir $@);$(ECHO) empty >$@;,\
 $(if $(findstring python-executable,$($(1)_TYPE)),$(CP) $^ $@,\
 $(if $(findstring executable,$($(1)_TYPE)),$(CXX) $($(1)_LDFLAGS) -o $@ $^,\
 $(warning unknown link command -- $(1) $($(1)_TYPE))\
@@ -166,8 +166,8 @@ ALL_DEP+=$$($(1)_OUTPUT).P
 ALL_DIRS += $$(call gen-dirs,$$(call gen-hdr,$$($(1)_INST_HDR),$$($(1)_NAME)))
 ALL_DIRS += $$(call gen-dirs,$$($(1)_OUTPUT))
 $$($(1)_OUTPUT).P: $$(call enumerate-dep-dirs,$$($(1)_OUTPUT).P)
-	@echo $$($(1)_OUTPUT): $$($(1)_OBJ) > $$@
-	@echo $(1): $$($(1)_OUTPUT) $$(call gen-hdr,$$($(1)_INST_HDR),$$($(1)_NAME)) >> $$@
+	@$(ECHO) $$($(1)_OUTPUT): $$($(1)_OBJ) > $$@
+	@$(ECHO) $(1): $$($(1)_OUTPUT) $$(call gen-hdr,$$($(1)_INST_HDR),$$($(1)_NAME)) >> $$@
 $$($(1)_OUTPUT):
 	@$$(call run-command,$$(call calculate-link-command,$(1)))
 endef
@@ -201,7 +201,7 @@ ALL_DIST_DIRS := $(call gen-dirs, $(ALL_DIST_TARGETS))
 $(sort $(ALL_DIST_DIRS)):
 	$(call mkdir-p,$@)
 $(DIST_OUTPUT): $(ALL_DIST_DIRS) $(ALL_DIST_TARGETS)
-	@echo "Building $@ ..."
+	@$(ECHO) "Building $@ ..."
 	@$(TAR) $@ $(DIST_DIR)
 $(ALL_DIST_TARGETS): $(DIST_DIR)/%:%
 	@$(CP) $< $@

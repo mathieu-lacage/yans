@@ -17,6 +17,7 @@ TAR:=tar -zcf
 UNTAR:=tar -zxf
 MKDIR:=mkdir
 RMDIR:=rmdir
+ECHO:=echo
 
 CONF_UNAME_BIN=$(call find-program,uname)
 CONF_UNAME_HARD=$(shell $(CONF_UNAME_BIN) -p)
