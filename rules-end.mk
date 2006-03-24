@@ -119,7 +119,7 @@ $(warning unknown link flags -- $(1) $($(1)_TYPE))\
 calculate-link-command=$(strip \
 $(if $(findstring shared-library,$($(1)_TYPE)),$(CXX) $($(1)_LDFLAGS) -o $@ $^,\
 $(if $(findstring python-cxx-module,$($(1)_TYPE)),$(CXX) $($(1)_LDFLAGS) -o $@ $^,\
-$(if $(findstring python-module,$($(1)_TYPE)),,\
+$(if $(findstring python-module,$($(1)_TYPE)),$(CP) $^ $(dir $@);echo empty >$@;,\
 $(if $(findstring python-executable,$($(1)_TYPE)),$(CP) $^ $@,\
 $(if $(findstring executable,$($(1)_TYPE)),$(CXX) $($(1)_LDFLAGS) -o $@ $^,\
 $(warning unknown link command -- $(1) $($(1)_TYPE))\
@@ -169,7 +169,7 @@ $$($(1)_OUTPUT).P: $$(call enumerate-dep-dirs,$$($(1)_OUTPUT).P)
 	@echo $$($(1)_OUTPUT): $$($(1)_OBJ) > $$@
 	@echo $(1): $$($(1)_OUTPUT) $$(call gen-hdr,$$($(1)_INST_HDR),$$($(1)_NAME)) >> $$@
 $$($(1)_OUTPUT):
-	$$(call run-command,$$(call calculate-link-command,$(1)))
+	@$$(call run-command,$$(call calculate-link-command,$(1)))
 endef
 
 $(foreach output,$(ALL),$(if $(output),$(eval $(call OUTPUT_template,$(output)))))
