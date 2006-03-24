@@ -68,18 +68,23 @@ CONF_TCP=$(call is-dir,$(TOP_SRC_DIR)/src/tcp-bsd)
 config.mk:
 	@echo "Generating config.mk..."
 	@$(call rm-f,config.mk)
-	@echo CONFIGURED:=y >config.mk
-	@echo PLATFORM:=$(call guess-platform) >>config.mk
-    ifneq ($(CONF_P_USE),)
+	@echo PLATFORM:=$(call guess-platform) >config.mk
 	@echo BOOST_PREFIX_INC:=$(CONF_B_INC) >>config.mk
 	@echo PYTHON_PREFIX_INC:=$(CONF_P_INC) >>config.mk
+    ifneq ($(CONF_P_USE),)
 	@echo PYTHON_USE:=y >>config.mk
+    else
+	@echo PYTHON_USE:= \# set it to \"y\" to enable python >>config.mk
     endif
     ifneq ($(CONF_TC_LIB),)
 	@echo TC_LDFLAGS:=-L$(CONF_TC_LIB) -lpthread -ltcmalloc >>config.mk
+    else
+	@echo TC_LDFLAGS:= \# cflags for the google malloc library included in the google perf tools >>config.mk
     endif
     ifneq ($(CONF_TCP),)
 	@echo TCP_USE=y >>config.mk
+    else
+	@echo TCP_USE= \# set it to \"y\" to enable the tcp code >>config.mk
     endif
 
 else # PLATFORM

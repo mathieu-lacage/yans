@@ -41,12 +41,18 @@ All of these should be available on standard linux distributions. Make
 sure you install the -devel packages associated to these packages. Fedora
 Core 3 and 4 have been tested and work.
 
-What you might be tempted to change in the configuration file, config.mk:
-PYTHON_PREFIX_INC=/usr/include/python2.3
-PYTHON_PREFIX_LIB=/usr/lib
-PYTHON_BIN=/usr/bin/python2.3
-BOOST_PREFIX_LIB=/usr/lib
-BOOST_PREFIX_INC=/usr/include
+To build the yans library, you can just run the "make" command. In most cases,
+it should be able to detect your system's configuration and build yans.
+The detected configuration is stored in the config.mk file: you can edit it
+if somethine went wrong. The following variables might be of some use to
+you:
+
+PYTHON_PREFIX_INC:=/usr/include/python2.3
+PYTHON_PREFIX_LIB:=/usr/lib
+PYTHON_BIN:=/usr/bin/python2.3
+BOOST_PREFIX_LIB:=/usr/lib
+BOOST_PREFIX_INC:=/usr/include
+
 Change them to point where your dependencies are installed. If you do
 not want to build the python bindings, you can disable them
 by setting USE_PYTHON=n
@@ -57,11 +63,13 @@ and installed the tcp package properly).
 3.1 x86 linux build
 -------------------
 
-Nothing special: just type "make". The x86 target is built by 
-default.  This file is bin/libyans.so, and the sample executables
-are placed in bin/samples/
+make sure that the config.mk file contains a line like this:
+PLATFORM:=i386-linux-gcc
 
-It is recommended that you put the yans/bin directory into your 
+Now, type "make". The yans library is build-dir/lib/libyans.so, and 
+the sample executables are placed in build-dir/bin
+
+It is recommended that you put the yans/build-dir/lib directory into your 
 LD_LIBRARY_PATH, to pick up the libyans.so. 
 
 3.2 Darwin ppc (tiger) build
@@ -72,18 +80,21 @@ Tiger comes with python installed. You need to install boost
 has been used. Python 2.3 does not seem to work very well 
 on darwin so, we recommend you use only python 2.4.
 
+make sure that the config.mk file contains a line like this:
+PLATFORM:=ppc-darwin-gcc
+
 On some Tiger systems, we have seen python 2.4 installed as follows:
-PYTHON_PREFIX_INC=/System/Library/Frameworks/Python.framework/Versions/2.4/include/python2.4
-PYTHON_BIN=/usr/bin/python2.4
+PYTHON_PREFIX_INC:=/System/Library/Frameworks/Python.framework/Versions/2.4/include/python2.4
+PYTHON_BIN:=/usr/bin/python2.4
 
 Some users have reported that you can also install python 2.4
 by following these instructions: download python 2.4 
 from http://undefined.org/python/#python, install it, and then set 
 your environment variables as follows:
-PYTHON_PREFIX_INC=/Library/Frameworks/Python.framework/Versions/2.4/include/python2.4
-PYTHON_BIN=/usr/local/bin/python2.4
+PYTHON_PREFIX_INC:=/Library/Frameworks/Python.framework/Versions/2.4/include/python2.4
+PYTHON_BIN:=/usr/local/bin/python2.4
 
-build command: "make PLATFORM=ppc-darwin-gcc"
+build command: "make"
 notes: 
   - make sure DYN_LIBRARY_PATH points to where libyans.dylib is
     located
