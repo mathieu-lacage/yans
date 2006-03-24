@@ -1,10 +1,10 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 
 #include <boost/python.hpp>
-#include "trace-container.h"
 #include "export-callback.tcc"
-#include "callback.tcc"
-#include "packet.h"
+#include "yans/trace-container.h"
+#include "yans/callback.tcc"
+#include "yans/packet.h"
 
 using namespace boost::python;
 using namespace yans;
@@ -33,13 +33,13 @@ static void set_si_variable_callback_python (TraceContainer *self, char const *n
 
 static void set_packet_logger_callback_cpp (TraceContainer *self, char const *name, std::auto_ptr<CallbackBase> callback)
 {
-	self->set_packet_logger_callback (name, static_cast <Callback<void (Packet *)> *> (callback.get ()));
+	self->set_packet_logger_callback (name, static_cast <Callback<void (Packet const*)> *> (callback.get ()));
 	callback.release ();
 }
 
 static void set_packet_logger_callback_python (TraceContainer *self, char const *name, FunctionHolder holder)
 {
-	self->set_packet_logger_callback (name, new ExportCallback1<void, Packet *> (holder));
+	self->set_packet_logger_callback (name, new ExportCallback1<void, Packet const*> (holder));
 }
 
 void export_trace_container (void)

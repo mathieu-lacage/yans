@@ -3,9 +3,9 @@
 #ifndef EXPORT_CALLBACK_TCC
 #define EXPORT_CALLBACK_TCC
 
-#include "callback.tcc"
-#include "function-holder.h"
 #include "boost/python.hpp"
+#include "yans/callback.tcc"
+#include "function-holder.h"
 #include "export-callback-traits.tcc"
 
 using namespace yans;

@@ -3,7 +3,7 @@
 #ifndef EXPORT_CALLBACK_TRAITS_TCC
 #define EXPORT_CALLBACK_TRAITS_TCC
 
-#include "packet.h"
+#include "yans/packet.h"
 #include <boost/shared_ptr.hpp>
 
 template<typename T>

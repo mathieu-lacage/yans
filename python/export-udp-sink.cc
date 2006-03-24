@@ -1,10 +1,11 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 
 #include <boost/python.hpp>
-#include "udp-sink.h"
 #include "function-holder.h"
 #include "export-callback.tcc"
-#include "host.h"
+
+#include "yans/udp-sink.h"
+#include "yans/host.h"
 
 using namespace boost::python;
 using namespace yans;

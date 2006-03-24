@@ -1,10 +1,10 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 
 #include <boost/python.hpp>
-#include "pcap-writer.h"
 #include "export-callback.tcc"
-#include "callback.tcc"
-#include "packet.h"
+#include "yans/pcap-writer.h"
+#include "yans/callback.tcc"
+#include "yans/packet.h"
 
 using namespace boost::python;
 using namespace yans;

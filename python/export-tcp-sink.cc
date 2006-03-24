@@ -1,11 +1,11 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 
 #include <boost/python.hpp>
-#include "tcp-sink.h"
 #include "function-holder.h"
 #include "export-callback.tcc"
-#include "host.h"
-#include "trace-container.h"
+#include "yans/tcp-sink.h"
+#include "yans/host.h"
+#include "yans/trace-container.h"
 
 using namespace boost::python;
 using namespace yans;

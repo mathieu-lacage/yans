@@ -20,9 +20,9 @@
  */
 
 #include <boost/python.hpp>
-#include "simulator.h"
 #include "function-holder.h"
-#include "event.h"
+#include "yans/simulator.h"
+#include "yans/event.h"
 
 using namespace yans;
 using namespace boost::python;

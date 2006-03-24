@@ -1,8 +1,8 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 
 #include <boost/python.hpp>
-#include "ipv4-route.h"
-#include "network-interface.h"
+#include "yans/ipv4-route.h"
+#include "yans/network-interface.h"
 
 using namespace boost::python;
 using namespace yans;

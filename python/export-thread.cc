@@ -20,9 +20,9 @@
  */
 
 #include <boost/python.hpp>
-#include "thread.h"
-#include "simulator.h"
-#include "event.tcc"
+#include "yans/thread.h"
+#include "yans/simulator.h"
+#include "yans/event.tcc"
 
 using namespace yans;
 using namespace boost::python;
@@ -39,13 +39,13 @@ struct ThreadWrap : Thread {
 		Py_DECREF(m_self);
 	}
 private:
-	void rethrow_exception (error_already_set &set) {
+	void rethrow_exception (error_already_set const set) {
 		throw set;
 	}
 	virtual void run (void) {
 		try {
 			call_method<void>(m_self, "run");
-		} catch (error_already_set &set) {
+		} catch (error_already_set const set) {
 			Simulator::insert_later (make_event (&ThreadWrap::rethrow_exception, this, set));
 		}
 	}
