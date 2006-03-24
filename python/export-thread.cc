@@ -45,7 +45,7 @@ private:
 	virtual void run (void) {
 		try {
 			call_method<void>(m_self, "run");
-		} catch (error_already_set const set) {
+		} catch (error_already_set const &set) {
 			Simulator::insert_later (make_event (&ThreadWrap::rethrow_exception, this, set));
 		}
 	}
