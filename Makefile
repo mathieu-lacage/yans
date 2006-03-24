@@ -1,3 +1,38 @@
+# The main Makefile is supposed to store in the ALL variable
+# the list of all the project names to build. Each project
+# whose name is PROJECT_NAME can define the variables:
+#   - PROJECT_NAME_SRC
+#   - PROJECT_NAME_HDR
+#   - PROJECT_NAME_INST_HDR
+#   - PROJECT_NAME_NAME
+#   - PROJECT_NAME_TYPE
+#   - PROJECT_NAME_OUTPUT_DIR
+#   - PROJECT_NAME_CFLAGS
+#   - PROJECT_NAME_CXXFLAGS
+#   - PROJECT_NAME_ASFLAGS
+# Furthermore, for each .c/.cc/.s file stored in a _SRC variable
+# you can define the variables:
+#   - filename_CFLAGS
+#   - filename_CXXFLAGS
+#   - filename_ASFLAGS
+# _TYPE is one of:
+#   - shared-library
+#   - python-module
+#   - python-cxx-module
+#   - python-executable
+#   - executable
+# _NAME:
+#   - if _TYPE is shared-library, _NAME is used to generate the name
+#     of the final shared library binary file. On linux, the final
+#     binary file is libFOO_NAME.so and it is installed in 
+#     TOP_BUILD_DIR/lib. _NAME is also used to generate the
+#     name of the directory which contains the headers listed in 
+#     INST_HDR. i.e., the headers are installed in 
+#     TOP_BUILD_DIR/include/FOO_NAME.
+#   - if _TYPE is python-cxx-module, _NAME is used to generate the
+#     name of the final python module which is installed in 
+#     TOP_BUILD_DIR/lib/python.
+
 include ./rules-start.mk
 -include ./config.mk
 
@@ -14,6 +49,7 @@ INCLUDE_SEARCH_PATHS:= \
  /include \
  /usr/local/include \
  /usr/include/python2.4 \
+ /usr/include/python2.3 \
  $(NULL)
 LIB_SEARCH_PATH:= \
  /usr/lib \
@@ -22,26 +58,17 @@ LIB_SEARCH_PATH:= \
  $(NULL)
 CONF_B_INC=$(call find-file-prefix,boost/python.hpp,$(INCLUDE_SEARCH_PATHS))
 CONF_P_INC=$(call find-file-prefix,Python.h,$(INCLUDE_SEARCH_PATHS))
-CONF_B_LIB=$(call find-library,boost,$(LIB_SEARCH_PATH))
-CONF_P_LIB=$(call find-library,python,$(LIB_SEARCH_PATH))
-#CONF_P_USE=$(if $(CONF_B_INC),$(if $(CONF_P_INC),$(if $(CONF_B_LIB),$(if $(CONF_P_LIB),y,),),),)
-CONF_P_USE=
+CONF_B_LIB=$(call find-library,boost_python,$(LIB_SEARCH_PATH))
+CONF_P_LIB=$(call find-one-library,python2.4 python2.3,$(LIB_SEARCH_PATH))
+CONF_P_USE=$(if $(CONF_B_INC),$(if $(CONF_P_INC),$(if $(CONF_B_LIB),$(if $(CONF_P_LIB),y,),),),)
+#CONF_P_USE=
 CONF_TC_LIB=$(call find-library,tcmalloc,$(LIB_SEARCH_PATH))
-CONF_UNAME_BIN=$(call find-program,uname)
-CONF_UNAME_HARD=$(shell $(CONF_UNAME_BIN) -p)
-CONF_UNAME_OS=$(shell $(CONF_UNAME_BIN) -s)
-CONF_I386=$(if $(findstring i386,$(CONF_UNAME_HARD)),i386,$(if $(findstring i686,$(CONF_UNAME_HARD)),i386))
-CONF_PPC=$(if $(findstring powerpc,$(CONF_UNAME_HARD)),ppc,)
-CONF_UNAME_LINUX=$(findstring Linux,$(CONF_UNAME_OS))
-CONF_UNAME_DARWIN=$(findstring Darwin,$(CONF_UNAME_OS))
-CONF_PLATFORM_LINUX=$(if $(CONF_UNAME_LINUX),$(if $(CONF_I386),i386-linux-gcc),)
-CONF_PLATFORM_DARWIN=$(if $(CONF_UNAME_DARWIN),$(if $(CONF_PPC),ppc-darwin-gcc),)
-CONF_PLATFORM=$(if $(CONF_PLATFORM_LINUX),$(CONF_PLATFORM_LINUX),$(CONF_PLATFORM_DARWIN))
 CONF_TCP=$(call is-dir,$(TOP_SRC_DIR)/src/tcp-bsd)
 config.mk:
 	@echo "Generating config.mk..."
 	@$(call rm-f,config.mk)
 	@echo CONFIGURED:=y >config.mk
+	@echo PLATFORM:=$(call guess-platform) >>config.mk
     ifneq ($(CONF_P_USE),)
 	@echo BOOST_PREFIX_INC:=$(CONF_B_INC) >>config.mk
 	@echo PYTHON_PREFIX_INC:=$(CONF_P_INC) >>config.mk
@@ -50,7 +77,6 @@ config.mk:
     ifneq ($(CONF_TC_LIB),)
 	@echo TC_LDFLAGS:=-L$(CONF_TC_LIB) -lpthread -ltcmalloc >>config.mk
     endif
-	@echo PLATFORM:=$(CONF_PLATFORM) >>config.mk
     ifneq ($(CONF_TCP),)
 	@echo TCP_USE=y >>config.mk
     endif
@@ -436,7 +462,6 @@ YANS_PYTHON_CXX_SRC= \
 	python/export-pcap-writer.cc \
 	python/export-tcp-source.cc \
 	python/export-tcp-sink.cc \
-	python/test-periodic-generator.py \
 	$(NULL)
 YANS_PYTHON_CXX_HDR= \
 	python/function-holder.h \
@@ -459,6 +484,12 @@ YANS_PYTHON_SIMULATOR_SRC:=\
 	$(NULL)
 YANS_PYTHON_SIMULATOR_NAME:=yans.simulator
 YANS_PYTHON_SIMULATOR_TYPE:=python-module
+
+YANS_PYTHON_TEST_PERIO_SRC=\
+	python/test-periodic-generator.py \
+	$(NULL)
+YANS_PYTHON_TEST_PERIO_NAME=pytest-periodic-generator
+YANS_PYTHON_TEST_PERIO_TYPE=python-executable
 
 YANS_PYTHON_SAMPLE_SIMU_SRC:=\
 	samples/test-simulator.py \
@@ -503,6 +534,7 @@ ifeq ($(PYTHON_USE),y)
 ALL += \
 	YANS_PYTHON_CXX \
 	YANS_PYTHON \
+	YANS_PYTHON_TEST_PERIO \
 	YANS_PYTHON_SIMULATOR \
 	YANS_PYTHON_SAMPLE_SIMU \
 	YANS_PYTHON_SAMPLE_THREAD \

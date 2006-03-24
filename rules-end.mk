@@ -5,32 +5,6 @@
 # Third Edition", by Robert Mecklenburg. This book is available
 # online free of charge, from the O'Reilly website.
 #
-# The main Makefile is supposed to store in the ALL variable
-# the list of all the project names to build. Each project
-# whose name is PROJECT_NAME can define the variables:
-#   - PROJECT_NAME_SRC
-#   - PROJECT_NAME_HDR
-#   - PROJECT_NAME_INST_HDR
-#   - PROJECT_NAME_NAME
-#   - PROJECT_NAME_TYPE
-#   - PROJECT_NAME_OUTPUT_DIR
-#   - PROJECT_NAME_CFLAGS
-#   - PROJECT_NAME_CXXFLAGS
-#   - PROJECT_NAME_ASFLAGS
-# Furthermore, for each .c/.cc/.s file stored in a _SRC variable
-# you can define the variables:
-#   - filename_CFLAGS
-#   - filename_CXXFLAGS
-#   - filename_ASFLAGS
-# _TYPE is one of:
-#   - shared-library
-#   - python-module
-#   - python-cxx-module
-#   - python-executable
-#   - executable
-# _NAME:
-#
-#
 # For each element in the ALL variable, the OUTPUT_template is 
 # invoked. This template generates rules to build all the
 # PROJECT_NAME_OUTPUT targets. The list of targets
@@ -51,23 +25,6 @@
 # which records the dependency list for the .o target during the 
 # next build.
 
-ifeq ($(PLATFORM),i386-linux-gcc)
-platform-sharedlib-name=$(addprefix lib,$(addsuffix .so,$(1)))
-platform-sharedlib-build-flags=-fPIC
-platform-sharedlib-link-flags=-shared
-platform-pymod-name=$(addsuffix module.so,$(1))
-platform-pymod-build-flags=-I$(PYTHON_PREFIX_INC) -I$(BOOST_PREFIX_INC)
-platform-pymod-link-flags=-L$(PYTHON_PREFIX_LIB) -L$(BOOST_PREFIX_LIB) -lboost_python -shared
-endif
-
-ifeq ($(PLATFORM),ppc-darwin-gcc)
-platform-sharedlib-name=$(addprefix lib,$(addsuffix .dylib,$(1)))
-platform-sharedlib-build-flags=-fno-common
-platform-sharedlib-link-flags=-dynamiclib
-platform-pymod-name=$(addsuffix module.so,$(1))
-platform-pymod-build-flags=-I$(PYTHON_PREFIX_INC) -I$(BOOST_PREFIX_INC) -fno-common
-platform-pymod-link-flags=-w -bundle -bundle_loader $(PYTHON_BIN) -framework Python -L$(BOOST_PREFIX_LIB) -lboost_python
-endif
 gen-bin=$(strip $(addprefix $(TOP_BUILD_DIR)/,$1))
 gen-dep=$(strip $(call gen-bin, \
 	$(addsuffix .o.P,$(basename $(filter %.c,$1))) \
@@ -86,7 +43,7 @@ gen-obj= $(strip $(addprefix $2, \
 ))
 gen-hdr=$(strip $(addprefix $(TOP_BUILD_DIR)/include/$(if $(2),$(2)/),$(notdir $(1))))
 gen-dirs=$(strip $(sort $(call map,enumerate-sub-dirs,$(dir $1))))
-run-command=$(if $(VERBOSE),echo '$(1)' && $(1),echo 'Building $$@ ...' && $(1))
+run-command=$(if $(1),$(if $(VERBOSE),echo '$(1)' && $(1),echo 'Building $@ ...' && $(1)))
 
 gen-gcc-dep=-Wp,-M,-MP,-MM,-MT,$(strip $(2)),-MF,$(call gen-dep, $(1))
 # the following templates are used to generate the targets for all object files.
@@ -100,7 +57,7 @@ $(2).cmd: $$(call enumerate-dep-dirs,$(2).cmd)
 	@$$(if $$(strip $$(filter-out $$($(2)_cmd_now),$$($(2)_cmd_old)) $$(filter-out $$($(2)_cmd_old),$$($(2)_cmd_now))),\
  echo $(2)_cmd_old:=$$($(2)_cmd_now) > $$@)
 $(2): $(1) $(2).cmd
-	@$(call run-command,$$($(2)_cmd_now))
+	@$$(call run-command,$$($(2)_cmd_now))
 endef
 define COBJ_template
 $(2)_cmd_now:=$(CC) $(3) $($(1)_CFLAGS) $(call gen-gcc-dep,$(1),$(2)) -c -o $(2) $(1)
@@ -108,11 +65,11 @@ $(2).cmd: $$(call enumerate-dep-dirs,$(2).cmd)
 	@$$(if $$(strip $$(filter-out $$($(2)_cmd_now),$$($(2)_cmd_old)) $$(filter-out $$($(2)_cmd_old),$$($(2)_cmd_now))),\
  echo $(2)_cmd_old:=$$($(2)_cmd_now) > $$@)
 $(2): $(1) $(2).cmd
-	@$(call run-command,$$($(2)_cmd_now))
+	@$$(call run-command,$$($(2)_cmd_now))
 endef
 define PYOBJ_template
 $(2): $(1)
-	@$(call run-command,$(CP) $(1) $(2))
+	@$$(call run-command,$(CP) $(1) $(2))
 endef
 define ASOBJ_template
 $(2)_cmd_now:=$(AS) $(3) $($(1)_ASFLAGS) -o $(2) $(1)
@@ -120,19 +77,19 @@ $(2).cmd: $$(call enumerate-dep-dirs,$(2).cmd)
 	@$$(if $$(strip $$(filter-out $$($(2)_cmd_now),$$($(2)_cmd_old)) $$(filter-out $$($(2)_cmd_old),$$($(2)_cmd_now))),\
  echo $(2)_cmd_old:=$$($(2)_cmd_now) > $$@)
 $(2): $(1) $(2).cmd
-	@$(call run-command,$$($(2)_cmd_now))
+	@$$(call run-command,$$($(2)_cmd_now))
 endef
 define HDR_template
 $(2): $(1)
-	$(CP) $(1) $(2)
+	@$$(call run-command,$(CP) $(1) $(2))
 endef
 calculate-output-name=$(strip \
 $(if $(findstring shared-library,$($(1)_TYPE)),$(call platform-sharedlib-name,$($(1)_NAME)),\
 $(if $(findstring python-cxx-module,$($(1)_TYPE)),$(call platform-pymod-name,$($(1)_NAME)),\
-$(if $(findstring python-module,$($(1)_TYPE)),,\
+$(if $(findstring python-module,$($(1)_TYPE)),$($(1)_NAME),\
 $(if $(findstring python-executable,$($(1)_TYPE)),$($(1)_NAME),\
 $(if $(findstring executable,$($(1)_TYPE)),$($(1)_NAME),\
-$(warning $(1))\
+$(warning unknown output name -- $(1))\
 ))))))
 calculate-output-dir=$(strip \
 $(TOP_BUILD_DIR)/$(strip \
@@ -141,20 +98,32 @@ $(if $(findstring python-cxx-module,$($(1)_TYPE)),lib/python,\
 $(if $(findstring python-module,$($(1)_TYPE)),lib/python/$(subst .,/,$($(1)_NAME)),\
 $(if $(findstring python-executable,$($(1)_TYPE)),bin,\
 $(if $(findstring executable,$($(1)_TYPE)),bin,\
-$(warning $(1))\
+$(warning unknown output dir -- $(1) $($(1)_TYPE))\
 ))))))$(if $($(1)_OUTPUT_DIR),/$($(1)_OUTPUT_DIR),))
 calculate-build-flags=$(strip \
 $(if $(findstring shared-library,$($(1)_TYPE)),$(platform-sharedlib-build-flags),\
 $(if $(findstring python-cxx-module,$($(1)_TYPE)),$(platform-pymod-build-flags),\
+$(if $(findstring python-module,$($(1)_TYPE)),,\
+$(if $(findstring python-executable,$($(1)_TYPE)),,\
 $(if $(findstring executable,$($(1)_TYPE)),,\
-$(warning $(1))\
-))))
+$(warning unknown build flags -- $(1) $($(1)_TYPE))\
+))))))
 calculate-link-flags=$(strip \
 $(if $(findstring shared-library,$($(1)_TYPE)),$(platform-sharedlib-link-flags),\
 $(if $(findstring python-cxx-module,$($(1)_TYPE)),$(platform-pymod-link-flags),\
+$(if $(findstring python-module,$($(1)_TYPE)),,\
+$(if $(findstring python-executable,$($(1)_TYPE)),,\
 $(if $(findstring executable,$($(1)_TYPE)),,\
-$(warning $(1))\
-))))
+$(warning unknown link flags -- $(1) $($(1)_TYPE))\
+))))))
+calculate-link-command=$(strip \
+$(if $(findstring shared-library,$($(1)_TYPE)),$(CXX) $($(1)_LDFLAGS) -o $@ $^,\
+$(if $(findstring python-cxx-module,$($(1)_TYPE)),$(CXX) $($(1)_LDFLAGS) -o $@ $^,\
+$(if $(findstring python-module,$($(1)_TYPE)),,\
+$(if $(findstring python-executable,$($(1)_TYPE)),$(CP) $^ $@,\
+$(if $(findstring executable,$($(1)_TYPE)),$(CXX) $($(1)_LDFLAGS) -o $@ $^,\
+$(warning unknown link command -- $(1) $($(1)_TYPE))\
+))))))
 define OUTPUT_template
 $(1)_OUTPUT := $(call calculate-output-dir,$(1))/$(call calculate-output-name,$(1))
 $(1)_OBJ := $(call gen-obj,$($(1)_SRC),$(TOP_BUILD_DIR)/)
@@ -200,7 +169,7 @@ $$($(1)_OUTPUT).P: $$(call enumerate-dep-dirs,$$($(1)_OUTPUT).P)
 	@echo $$($(1)_OUTPUT): $$($(1)_OBJ) > $$@
 	@echo $(1): $$($(1)_OUTPUT) $$(call gen-hdr,$$($(1)_INST_HDR),$$($(1)_NAME)) >> $$@
 $$($(1)_OUTPUT):
-	@$(call run-command,$(CXX) $$($(1)_LDFLAGS) -o $$@ $$^)
+	$$(call run-command,$$(call calculate-link-command,$(1)))
 endef
 
 $(foreach output,$(ALL),$(if $(output),$(eval $(call OUTPUT_template,$(output)))))

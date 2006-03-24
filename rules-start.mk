@@ -1,6 +1,14 @@
 all:
 
-# various OS-specific commands
+# a small set of functions needed below to bootstrap 
+# the platform guesses.
+remove-trailing-slash=$(patsubst %/,%,$(1))
+append-file=$(addsuffix /$(1),$(call remove-trailing-slash,$(2)))
+find-file=$(wildcard $(call append-file,$(1),$(2)))
+path=$(subst :, ,$(PATH))
+find-program=$(call find-file,$(1),$(path) $(2))
+
+# various OS/system-specific commands
 CC:=gcc
 CXX:=g++
 RM:=rm
@@ -10,23 +18,51 @@ UNTAR:=tar -zxf
 MKDIR:=mkdir
 RMDIR:=rmdir
 
+CONF_UNAME_BIN=$(call find-program,uname)
+CONF_UNAME_HARD=$(shell $(CONF_UNAME_BIN) -p)
+CONF_UNAME_OS=$(shell $(CONF_UNAME_BIN) -s)
+CONF_I386=$(if $(findstring i386,$(CONF_UNAME_HARD)),i386,$(if $(findstring i686,$(CONF_UNAME_HARD)),i386))
+CONF_PPC=$(if $(findstring powerpc,$(CONF_UNAME_HARD)),ppc,)
+CONF_UNAME_LINUX=$(findstring Linux,$(CONF_UNAME_OS))
+CONF_UNAME_DARWIN=$(findstring Darwin,$(CONF_UNAME_OS))
+CONF_PLATFORM_LINUX=$(if $(CONF_UNAME_LINUX),$(if $(CONF_I386),i386-linux-gcc),)
+CONF_PLATFORM_DARWIN=$(if $(CONF_UNAME_DARWIN),$(if $(CONF_PPC),ppc-darwin-gcc),)
+guess-platform=$(strip \
+$(if $(CONF_PLATFORM_LINUX),$(CONF_PLATFORM_LINUX),\
+$(if $(CONF_PLATFORM_DARWIN),$(CONF_PLATFORM_DARWIN),$(warning could not guess platform)\
+)))
 
-# below are generic rules.
+LOCAL_PLATFORM:=$(strip \
+$(if $(PLATFORM),$(PLATFORM),\
+$(if $(call guess-platform),$(call guess-platform),$(warning could not detect platform)\
+)))
+ifeq ($(LOCAL_PLATFORM),i386-linux-gcc)
+platform-sharedlib-name=$(addprefix lib,$(addsuffix .so,$(1)))
+platform-sharedlib-build-flags=-fPIC
+platform-sharedlib-link-flags=-shared
+platform-pymod-name=$(addsuffix module.so,$(1))
+platform-pymod-build-flags=-I$(PYTHON_PREFIX_INC) -I$(BOOST_PREFIX_INC)
+platform-pymod-link-flags=-L$(PYTHON_PREFIX_LIB) -L$(BOOST_PREFIX_LIB) -lboost_python -shared
+endif
 
-comma:=,
+ifeq ($(LOCAL_PLATFORM),ppc-darwin-gcc)
+platform-sharedlib-name=$(addprefix lib,$(addsuffix .dylib,$(1)))
+platform-sharedlib-build-flags=-fno-common
+platform-sharedlib-link-flags=-dynamiclib
+platform-pymod-name=$(addsuffix module.so,$(1))
+platform-pymod-build-flags=-I$(PYTHON_PREFIX_INC) -I$(BOOST_PREFIX_INC) -fno-common
+platform-pymod-link-flags=-w -bundle -bundle_loader $(PYTHON_BIN) -framework Python -L$(BOOST_PREFIX_LIB) -lboost_python
+endif
 
 # my personal library of useful make functions.
 # these really should be part of the core GNU make
 # *sigh*
-remove-trailing-slash=$(patsubst %/,%,$(1))
-append-file=$(addsuffix /$(1),$(call remove-trailing-slash,$(2)))
-find-file=$(wildcard $(call append-file,$(1),$(2)))
+comma:=,
 find-file-prefix=$(call remove-trailing-slash,$(patsubst %$(1),%,$(wildcard $(call append-file,$(1),$(2)))))
 rwildcard=$(foreach dir,$(wildcard $(1)*),$(call rwildcard,$(dir)/)$(filter $(subst *,%,$(2)),$(dir))) 
-path=$(subst :, ,$(PATH))
 ld-library-path=$(subst :, ,$(LD_LIBRARY_PATH))
-find-program=$(call find-file,$(1),$(path) $(2))
-find-library=$(call find-file,lib$(1).so,$(2))
+find-library=$(call find-file,$(call platform-sharedlib-name,$(1)),$(2))
+find-one-library=$(firstword $(foreach lib,$(1),$(call find-library,$(lib),$(2))))
 map=$(foreach tmp,$(2),$(call $(1),$(tmp)))
 remove-first=$(wordlist 2,$(words $1),$1)
 remove-last=$(call reverse,$(call remove-first,$(call reverse,$1)))
