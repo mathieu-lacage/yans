@@ -65,6 +65,7 @@ private:
 };
 
 bool operator == (MacAddress const&a, MacAddress const&b);
+bool operator != (MacAddress const&a, MacAddress const&b);
 bool operator < (MacAddress const&a, MacAddress const&b);
 
 std::ostream& operator<< (std::ostream& os, MacAddress const& address);

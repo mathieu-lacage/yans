@@ -169,6 +169,11 @@ bool operator == (MacAddress const&a, MacAddress const&b)
 	return a.is_equal (b);
 }
 
+bool operator != (MacAddress const&a, MacAddress const&b)
+{
+	return (a.peek () != b.peek ());
+}
+
 bool operator < (MacAddress const&a, MacAddress const&b)
 {
 	return (a.peek () < b.peek ());
