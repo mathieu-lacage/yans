@@ -23,6 +23,7 @@
 #define NETWORK_INTERFACE_80211_FACTORY_H
 
 #include <stdint.h>
+#include "ssid.h"
 
 namespace yans {
 
@@ -60,7 +61,10 @@ public:
 	void set_mac_max_ssrc (uint32_t ssrc);
 	void set_mac_max_slrc (uint32_t slrc);
 
+	void set_ssid (Ssid ssid);
+
 	NetworkInterface80211Adhoc *create_adhoc (Host *host);
+	NetworkInterface80211Nqsta *create_nqsta (Host *host);
 private:
 	void initialize_interface (NetworkInterface80211 *interface, Host *host);
 	enum {
@@ -90,6 +94,8 @@ private:
 	uint32_t m_mac_fragmentation_threshold;
 	uint32_t m_mac_max_ssrc;
 	uint32_t m_mac_max_slrc;
+
+	Ssid m_ssid;
 };
 
 }; // namespace yans
