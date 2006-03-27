@@ -20,12 +20,10 @@
  */
 #include "chunk-probe.h"
 #include "buffer.h"
+#include "simulator.h"
 
 namespace yans {
 
-ChunkProbeRequest::ChunkProbeRequest ()
-	: m_n_rates (0)
-{}
 ChunkProbeRequest::~ChunkProbeRequest ()
 {}
 
@@ -35,65 +33,123 @@ ChunkProbeRequest::set_ssid (Ssid ssid)
 	m_ssid = ssid;
 }
 Ssid 
-ChunkProbeRequest::get_ssid (void)
+ChunkProbeRequest::get_ssid (void) const
 {
 	return m_ssid;
 }
 void 
-ChunkProbeRequest::add_supported_rate (uint32_t bs)
+ChunkProbeRequest::set_supported_rates (SupportedRates rates)
 {
-	assert (m_n_rates <= 8);
-	m_rates[m_n_rates] = bs/500000;
-	m_n_rates++;
-}
-bool 
-ChunkProbeRequest::is_supported_rate (uint32_t bs)
-{
-	uint8_t rate = bs / 500000;
-	for (uint8_t i = 0; i < m_n_rates; i++) {
-		if (rate == m_rates[i]) {
-			return true;
-		}
-	}
-	return false;
+	m_rates = rates;
 }
 
+SupportedRates 
+ChunkProbeRequest::get_supported_rates (void) const
+{
+	return m_rates;
+}
 void 
 ChunkProbeRequest::add_to (Buffer *buffer) const
 {
 	uint32_t size = 0;
 	size += m_ssid.get_size ();
-	size += 1 + 1 + m_n_rates;
+	size += m_rates.get_size ();
 	
 	buffer->add_at_start (size);
 	buffer->seek (0);
 	m_ssid.write_to (buffer);
-	buffer->write_u8 (1); // supported rates element id
-	buffer->write_u8 (m_n_rates);
-	for (uint8_t i = 0; i < m_n_rates; i++) {
-		buffer->write_u8 (m_rates[i]);
-	}
+	m_rates.write_to (buffer);
 }
 void 
 ChunkProbeRequest::remove_from (Buffer *buffer)
 {
 	uint32_t size = 0;
 	size += m_ssid.read_from (buffer);
-	uint8_t rates_id = buffer->read_u8 ();
-	assert (rates_id == 1);
-	m_n_rates = buffer->read_u8 ();
-	size += m_n_rates;
-	assert (m_n_rates <= 8);
-	for (uint8_t i = 0; i < m_n_rates; i++) {
-		m_rates[i] = buffer->read_u8 ();
-	}
+	size += m_rates.read_from (buffer);
 	buffer->remove_at_start (size);
+
 }
 void 
 ChunkProbeRequest::print (std::ostream *os) const
 {
 	//XXX
 }
+
+ChunkProbeResponse::ChunkProbeResponse ()
+{}
+ChunkProbeResponse::~ChunkProbeResponse ()
+{}
+
+Ssid 
+ChunkProbeResponse::get_ssid (void) const
+{
+	return m_ssid;
+}
+uint64_t 
+ChunkProbeResponse::get_beacon_interval_us (void) const
+{
+	return m_beacon_interval;
+}
+
+void 
+ChunkProbeResponse::set_ssid (Ssid ssid)
+{
+	m_ssid = ssid;
+}
+void 
+ChunkProbeResponse::set_beacon_interval_us (uint64_t us)
+{
+	m_beacon_interval = us;
+}
+
+void 
+ChunkProbeResponse::add_to (Buffer *buffer) const
+{
+	// timestamp
+	// beacon interval
+	// capability information
+	// ssid
+	// supported rates
+	// fh parameter set
+	// ds parameter set
+	// cf parameter set
+	// ibss parameter set
+	//XXX
+	uint32_t size = 0;
+	size += 8; // timestamp
+	size += 2; // beacon interval
+	size += m_capability.get_size (); // capability information
+	size += m_ssid.get_size ();
+	size += m_rates.get_size ();
+	size += 3; // ds parameter set
+	buffer->add_at_start (size);
+	buffer->seek (0);
+	buffer->write_u64 (Simulator::now_us ());
+	buffer->write_u16 (m_beacon_interval / 1024);
+	m_capability.write_to (buffer);
+	m_ssid.write_to (buffer);
+	m_rates.write_to (buffer);
+	buffer->skip (3); // ds parameter set
+}
+void 
+ChunkProbeResponse::remove_from (Buffer *buffer)
+{
+	buffer->seek (0);
+	uint32_t size = 0;
+	size += 8; // timestamp
+	size += 2; // beacon interval
+	size += m_capability.read_from (buffer);
+	size += m_ssid.read_from (buffer);
+	size += m_rates.read_from (buffer);
+	size += 3; // ds parameter set
+	buffer->remove_at_start (size);
+}
+void 
+ChunkProbeResponse::print (std::ostream *os) const
+{
+	//XXX
+}
+
 
 
 }; // namespace yans

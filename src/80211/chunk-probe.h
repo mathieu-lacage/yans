@@ -23,26 +23,26 @@
 
 #include "chunk.h"
 #include "ssid.h"
+#include "supported-rates.h"
+#include "capability-information.h"
 
 namespace yans {
 
 class ChunkProbeRequest : public Chunk {
 public:
-	ChunkProbeRequest ();
 	virtual ~ChunkProbeRequest ();
 
 	void set_ssid (Ssid ssid);
-	Ssid get_ssid (void);
-	void add_supported_rate (uint32_t bs);
-	bool is_supported_rate (uint32_t bs);
+	void set_supported_rates (SupportedRates rates);
+	Ssid get_ssid (void) const;
+	SupportedRates get_supported_rates (void) const;
 
 	virtual void add_to (Buffer *buffer) const;
 	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
 private:
 	Ssid m_ssid;
-	uint8_t m_n_rates;
-	uint8_t m_rates[8];
+	SupportedRates m_rates;
 };
 
 class ChunkProbeResponse : public Chunk {
@@ -50,13 +50,22 @@ public:
   	ChunkProbeResponse ();
 	virtual ~ChunkProbeResponse ();
 
+	Ssid get_ssid (void) const;
+	uint64_t get_beacon_interval_us (void) const;
+	SupportedRates get_supported_rates (void) const;
+
 	void set_ssid (Ssid ssid);
+	void set_beacon_interval_us (uint64_t us);
+	void set_supported_rates (SupportedRates rates);
 
 	virtual void add_to (Buffer *buffer) const;
 	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
 private:
 	Ssid m_ssid;
+	uint64_t m_beacon_interval;
+	SupportedRates m_rates;
+	CapabilityInformation m_capability;
 };
 
 }; // namespace yans
