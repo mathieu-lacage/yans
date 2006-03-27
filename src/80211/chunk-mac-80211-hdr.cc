@@ -451,6 +451,57 @@ ChunkMac80211Hdr::is_ack (void) const
 {
 	return (get_type () == MAC_80211_CTL_ACK)?true:false;
 }
+bool 
+ChunkMac80211Hdr::is_assoc_req (void) const
+{
+	return (get_type () == MAC_80211_MGT_ASSOCIATION_REQUEST)?true:false;
+}
+bool 
+ChunkMac80211Hdr::is_assoc_resp (void) const
+{
+	return (get_type () == MAC_80211_MGT_ASSOCIATION_RESPONSE)?true:false;
+}
+bool 
+ChunkMac80211Hdr::is_reassoc_req (void) const
+{
+	return (get_type () == MAC_80211_MGT_REASSOCIATION_REQUEST)?true:false;
+}
+bool 
+ChunkMac80211Hdr::is_reassoc_resp (void) const
+{
+	return (get_type () == MAC_80211_MGT_REASSOCIATION_RESPONSE)?true:false;
+}
+bool 
+ChunkMac80211Hdr::is_probe_req (void) const
+{
+	return (get_type () == MAC_80211_MGT_PROBE_REQUEST)?true:false;
+}
+bool 
+ChunkMac80211Hdr::is_probe_resp (void) const
+{
+	return (get_type () == MAC_80211_MGT_PROBE_RESPONSE)?true:false;
+}
+bool 
+ChunkMac80211Hdr::is_beacon (void) const
+{
+	return (get_type () == MAC_80211_MGT_BEACON)?true:false;
+}
+bool 
+ChunkMac80211Hdr::is_disassociation (void) const
+{
+	return (get_type () == MAC_80211_MGT_DISASSOCIATION)?true:false;
+}
+bool 
+ChunkMac80211Hdr::is_authentication (void) const
+{
+	return (get_type () == MAC_80211_MGT_AUTHENTICATION)?true:false;
+}
+bool 
+ChunkMac80211Hdr::is_deauthentication (void) const
+{
+	return (get_type () == MAC_80211_MGT_DEAUTHENTICATION)?true:false;
+}
+
 
 uint16_t 
 ChunkMac80211Hdr::get_duration (void) const

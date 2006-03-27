@@ -100,6 +100,16 @@ public:
 	bool is_rts (void) const;
 	bool is_cts (void) const;
 	bool is_ack (void) const;
+	bool is_assoc_req (void) const;
+	bool is_assoc_resp (void) const;
+	bool is_reassoc_req (void) const;
+	bool is_reassoc_resp (void) const;
+	bool is_probe_req (void) const;
+	bool is_probe_resp (void) const;
+	bool is_beacon (void) const;
+	bool is_disassociation (void) const;
+	bool is_authentication (void) const;
+	bool is_deauthentication (void) const;
 	uint16_t get_duration (void) const;
 	uint64_t get_duration_us (void) const;
 	uint16_t get_sequence_control (void) const;
