@@ -1,6 +1,6 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 /*
- * Copyright (c) 2005 INRIA
+ * Copyright (c) 2005,2006 INRIA
  * All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,63 +16,67 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * In addition, as a special exception, the copyright holders of
- * this module give you permission to combine (via static or
- * dynamic linking) this module with free software programs or
- * libraries that are released under the GNU LGPL and with code
- * included in the standard release of ns-2 under the Apache 2.0
- * license or under otherwise-compatible licenses with advertising
- * requirements (or modified versions of such code, with unchanged
- * license).  You may copy and distribute such a system following the
- * terms of the GNU GPL for this module and the licenses of the
- * other code concerned, provided that you include the source code of
- * that other code when and as the GNU GPL requires distribution of
- * source code.
- *
- * Note that people who make modified versions of this module
- * are not obligated to grant this special exception for their
- * modified versions; it is their choice whether to do so.  The GNU
- * General Public License gives permission to release a modified
- * version without this exception; this exception also makes it
- * possible to release a modified version which carries forward this
- * exception.
- *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef MAC_HIGH_NQSTA_H
-#define MAC_HIGH_NQSTA_H
+#ifndef MAC_HIGH_NSQTA_H
+#define MAC_HIGH_NSQTA_H
 
-#include "mac-high-sta.h"
+#include "mac-address.h"
+#include "callback.tcc"
+#include "supported-rates.h"
+#include <stdint.h>
 
+namespace yans {
+
+class Phy80211;
+class CancellableEvent;
 class Packet;
-class Dcf;
-class MacDcfParameters;
-class MacQueue80211e;
-class NetInterface80211;
+class ChunkMac80211Hdr;
+class NetworkInterface80211;
+class DcaTxop;
 
-class MacHighNqsta : public MacHighSta {
+class MacHighNqsta {
 public:
-	MacHighNqsta (int apAddress);
-	virtual ~MacHighNqsta ();
+	typedef Callback<void (Packet *)> ForwardCallback;
+	MacHighNqsta ();
+	~MacHighNqsta ();
 
-	void setInterface (NetInterface80211 *interface);
+	void set_phy (Phy80211 *phy);
+	void set_dca_txop (DcaTxop *dca);
+	void set_interface (NetworkInterface80211 *interface);
+	void set_forward_callback (ForwardCallback *callback);
 
-	virtual void addTsRequest (TSpecRequest *request);
-	virtual void delTsRequest (TSpecRequest *request);
+	void queue (Packet *packet, MacAddress to);
 
+	void receive (Packet *packet, ChunkMac80211Hdr const *hdr);
 private:
-	Dcf *m_dcf;
-	MacDcfParameters *m_dcfParameters;
-	MacQueue80211e *m_dcfQueue;
-
-	virtual void enqueueToLow (Packet *packet);
-	virtual void gotCFPoll (Packet *packet);
-	virtual void gotBeacon (Packet *packet);
-	virtual void gotAssociated (Packet *packet);
-	virtual void gotReAssociated (Packet *packet);
-	virtual void gotAddTsResponse (Packet *packet);
-	virtual void gotDelTsResponse (Packet *packet);
-	virtual void flush (void);
+	MacAddress get_broadcast_bssid (void);
+	void send_probe_request (void);
+	void send_association_request ();
+	void try_to_ensure_associated (void);
+	void assoc_request_timeout (void);
+	void probe_request_timeout (void);
+	bool is_associated (void);
+	SupportedRates get_supported_rates (void);
+	enum {
+		ASSOCIATED,
+		WAIT_PROBE_RESP,
+		WAIT_ASSOC_RESP,
+		BEACON_MISSED,
+		REFUSED
+	} m_state;
+	uint64_t m_probe_request_timeout_us;
+	uint64_t m_assoc_request_timeout_us;
+	CancellableEvent *m_probe_request_event;
+	CancellableEvent *m_assoc_request_event;
+	NetworkInterface80211 *m_interface;
+	ForwardCallback *m_forward;
+	Phy80211 *m_phy;
+	DcaTxop *m_dca;
+	uint64_t m_beacon_interval;
 };
 
-#endif /* MAC_HIGH_NQSTA_H */
+}; // namespace yans
+
+
+#endif /* MAC_HIGH_NSQTA_H */

@@ -1,6 +1,6 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 /*
- * Copyright (c) 2005 INRIA
+ * Copyright (c) 2005,2006 INRIA
  * All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,104 +16,258 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * In addition, as a special exception, the copyright holders of
- * this module give you permission to combine (via static or
- * dynamic linking) this module with free software programs or
- * libraries that are released under the GNU LGPL and with code
- * included in the standard release of ns-2 under the Apache 2.0
- * license or under otherwise-compatible licenses with advertising
- * requirements (or modified versions of such code, with unchanged
- * license).  You may copy and distribute such a system following the
- * terms of the GNU GPL for this module and the licenses of the
- * other code concerned, provided that you include the source code of
- * that other code when and as the GNU GPL requires distribution of
- * source code.
- *
- * Note that people who make modified versions of this module
- * are not obligated to grant this special exception for their
- * modified versions; it is their choice whether to do so.  The GNU
- * General Public License gives permission to release a modified
- * version without this exception; this exception also makes it
- * possible to release a modified version which carries forward this
- * exception.
- *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-
-#include "packet.h"
-
 #include "mac-high-nqsta.h"
-#include "dcf.h"
-#include "mac-dcf-parameters.h"
-#include "mac-queue-80211e.h"
+#include "chunk-mac-80211-hdr.h"
+#include "network-interface-80211.h"
+#include "packet.h"
+#include "chunk-mgt.h"
+#include "phy-80211.h"
+#include "cancellable-event.h"
+#include "cancellable-event.tcc"
 #include "dca-txop.h"
-#include "net-interface-80211.h"
+#include "simulator.h"
+
+#define noNQSTA_DEBUG 1
+
+#ifdef NQSTA_DEBUG
+#include <iostream>
+#  define TRACE(x) \
+std::cout << "NQSTA " << Simulator::now_us () << "us " << x << std::endl;
+#else
+#  define TRACE(x)
+#endif
 
 
-MacHighNqsta::MacHighNqsta (int apAddress)
-	: MacHighSta (apAddress)
-{
-	m_dcfParameters = new MacDcfParameters ();
-	m_dcf = new Dcf (m_dcfParameters);
-	m_dcfQueue = new MacQueue80211e ();
-}
+namespace yans {
+
+MacHighNqsta::MacHighNqsta ()
+	: m_state (BEACON_MISSED),
+	  m_probe_request_timeout_us (500000), // 0.5s
+	  m_assoc_request_timeout_us (500000), // 0.5s
+	  m_probe_request_event (0),
+	  m_assoc_request_event (0)
+{}
 
 MacHighNqsta::~MacHighNqsta ()
-{}
+{
+	delete m_forward;
+}
+
+void 
+MacHighNqsta::set_phy (Phy80211 *phy)
+{
+	m_phy = phy;
+}
+void 
+MacHighNqsta::set_dca_txop (DcaTxop *dca)
+{
+	m_dca = dca;
+}
+void 
+MacHighNqsta::set_interface (NetworkInterface80211 *interface)
+{
+	m_interface = interface;
+}
+void 
+MacHighNqsta::set_forward_callback (ForwardCallback *callback)
+{
+	m_forward = callback;
+}
+MacAddress
+MacHighNqsta::get_broadcast_bssid (void)
+{
+	return MacAddress::get_broadcast ();
+}
+SupportedRates
+MacHighNqsta::get_supported_rates (void)
+{
+	SupportedRates rates;
+	for (uint32_t mode = 0; mode < m_phy->get_n_modes (); mode++) {
+		rates.add_supported_rate (m_phy->get_mode_bit_rate (mode));
+	}
+	return rates;
+}
 
 void
-MacHighNqsta::setInterface (NetInterface80211 *interface)
+MacHighNqsta::send_probe_request (void)
 {
-	MacHighSta::notifySetNetInterface (interface);
-	m_dcfParameters->setParameters (interface->parameters ());
-	m_dcf->setInterface (interface);
-	m_dcfQueue->setParameters (interface->parameters ());
-	DcaTxop *dcaTxop = new DcaTxop (m_dcf, m_dcfQueue);
-	dcaTxop->setInterface (interface);
+	TRACE ("send probe request");
+	ChunkMac80211Hdr hdr;
+	hdr.set_type (MAC_80211_DATA);
+	hdr.set_addr1 (get_broadcast_bssid ());
+	hdr.set_addr2 (m_interface->get_mac_address ());
+	hdr.set_addr3 (get_broadcast_bssid ());
+	hdr.set_ds_not_from ();
+	hdr.set_ds_to ();
+	Packet *packet = new Packet ();
+	ChunkMgtProbeRequest probe;
+	probe.set_ssid (m_interface->get_ssid ());
+	SupportedRates rates = get_supported_rates ();
+	probe.set_supported_rates (rates);
+	packet->add (&probe);
+	
+	m_dca->queue (packet, hdr);
+
+	m_probe_request_event = make_cancellable_event (&MacHighNqsta::probe_request_timeout, this);
+	Simulator::insert_in_us (m_probe_request_timeout_us,
+				 m_probe_request_event);
 }
 
 void
-MacHighNqsta::gotCFPoll (Packet *packet)
+MacHighNqsta::send_association_request ()
 {
-	Packet::free (packet);
+	TRACE ("send assoc request");
+	ChunkMac80211Hdr hdr;
+	hdr.set_type (MAC_80211_DATA);
+	hdr.set_addr1 (m_interface->get_bssid ());
+	hdr.set_addr2 (m_interface->get_mac_address ());
+	hdr.set_addr3 (m_interface->get_bssid ());
+	hdr.set_ds_not_from ();
+	hdr.set_ds_to ();
+	Packet *packet = new Packet ();
+	ChunkMgtAssocRequest assoc;
+	assoc.set_ssid (m_interface->get_ssid ());
+	SupportedRates rates = get_supported_rates ();
+	assoc.set_supported_rates (rates);
+	packet->add (&assoc);
+	
+	m_dca->queue (packet, hdr);
+
+	m_probe_request_event = make_cancellable_event (&MacHighNqsta::probe_request_timeout, this);
+	Simulator::insert_in_us (m_probe_request_timeout_us,
+				 m_probe_request_event);
 }
 void
-MacHighNqsta::enqueueToLow (Packet *packet)
+MacHighNqsta::try_to_ensure_associated (void)
 {
-	m_dcfQueue->enqueue (packet);
-	m_dcf->requestAccess ();
+	switch (m_state) {
+	case ASSOCIATED:
+		return;
+		break;
+	case WAIT_PROBE_RESP:
+		/* we have sent a probe request earlier so we
+		   do not need to re-send a probe request immediately.
+		   We just need to wait until probe-request-timeout
+		   or until we get a probe response
+		 */
+		break;
+	case BEACON_MISSED:
+		/* we were associated but we missed a bunch of beacons
+		 * so we should assume we are not associated anymore.
+		 * We try to initiate a probe request now.
+		 */
+		m_state = WAIT_PROBE_RESP;
+		send_probe_request ();
+		break;
+	case WAIT_ASSOC_RESP:
+		/* we have sent an assoc request so we do not need to
+		   re-send an assoc request right not. We just need to
+		   wait until either assoc-request-timeout or until
+		   we get an assoc response.
+		 */
+		break;
+	case REFUSED:
+		/* we have send an assoc request and received a negative
+		   assoc resp. We wait until someone restarts an 
+		   association with a given ssid.
+		 */
+		break;
+	}
 }
 
 void
-MacHighNqsta::flush (void)
+MacHighNqsta::assoc_request_timeout (void)
 {
-	m_dcfQueue->flush ();
+}
+void
+MacHighNqsta::probe_request_timeout (void)
+{
+	m_probe_request_event = 0;
+}
+bool
+MacHighNqsta::is_associated (void)
+{
+	return (m_state == ASSOCIATED)?true:false;
 }
 
 void 
-MacHighNqsta::gotBeacon (Packet *packet)
-{}
-void 
-MacHighNqsta::gotAssociated (Packet *packet)
-{}
-void 
-MacHighNqsta::gotReAssociated (Packet *packet)
-{}
-void 
-MacHighNqsta::gotAddTsResponse (Packet *packet)
-{}
-void 
-MacHighNqsta::gotDelTsResponse (Packet *packet)
-{}
+MacHighNqsta::queue (Packet *packet, MacAddress to)
+{
+	if (!is_associated ()) {
+		try_to_ensure_associated ();
+		return;
+	}
+	TRACE ("enqueue size="<<packet->get_size ()<<", to="<<to<<
+	       ", queue_size="<<m_queue->get_size ());
+	ChunkMac80211Hdr hdr;
+	hdr.set_type (MAC_80211_DATA);
+	hdr.set_addr1 (m_interface->get_bssid ());
+	hdr.set_addr2 (m_interface->get_mac_address ());
+	hdr.set_addr3 (to);
+	hdr.set_ds_not_from ();
+	hdr.set_ds_to ();
+	m_dca->queue (packet, hdr);
+}
 
 void 
-MacHighNqsta::addTsRequest (TSpecRequest *request)
+MacHighNqsta::receive (Packet *packet, ChunkMac80211Hdr const *hdr)
 {
-	/* really, this should not happen.*/
-	assert (false);
+	assert (!hdr->is_ctl ());
+	if (hdr->get_addr1 () != m_interface->get_mac_address () ||
+	    hdr->get_addr1 ().is_broadcast ()) {
+		// packet is not for us
+	} else if (hdr->is_data ()) {
+		(*m_forward) (packet);
+	} else if (hdr->is_probe_req () ||
+		   hdr->is_assoc_req ()) {
+		// we cannot deal with requests.
+		assert (false);
+	} else if (hdr->is_beacon ()) {
+		ChunkMgtBeacon beacon;
+		packet->remove (&beacon);
+		if (m_interface->get_ssid ().is_broadcast ()) {
+			// we do not have any special ssid so this
+			// beacon is as good as another.
+			m_state = WAIT_ASSOC_RESP;
+			send_association_request ();
+		} else if (beacon.get_ssid ().is_equal (m_interface->get_ssid ())) {
+			//beacon for our ssid.
+			m_state = WAIT_ASSOC_RESP;
+			send_association_request ();
+		}
+	} else if (hdr->is_probe_resp ()) {
+		if (m_state == WAIT_PROBE_RESP) {
+			ChunkMgtProbeResponse probe_resp;
+			packet->remove (&probe_resp);
+			if (!probe_resp.get_ssid ().is_equal (m_interface->get_ssid ())) {
+				//not a probe resp for our ssid.
+				return;
+			}
+			m_beacon_interval = probe_resp.get_beacon_interval_us ();
+			if (m_probe_request_event != 0) {
+				m_probe_request_event->cancel ();
+				m_probe_request_event = 0;
+			}
+			m_state = WAIT_ASSOC_RESP;
+			send_association_request ();
+		}
+	} else if (hdr->is_assoc_resp ()) {
+		if (m_state == WAIT_ASSOC_RESP) {
+			ChunkMgtAssocResponse assoc_resp;
+			packet->remove (&assoc_resp);
+			if (m_assoc_request_event != 0) {
+				m_assoc_request_event->cancel ();
+				m_assoc_request_event = 0;
+			}
+			if (assoc_resp.is_success ()) {
+				m_state = ASSOCIATED;
+			} else {
+				m_state = REFUSED;
+			}
+		}
+	}
 }
-void 
-MacHighNqsta::delTsRequest (TSpecRequest *request)
-{
-	assert (false);
-}
+
+}; // namespace yans
