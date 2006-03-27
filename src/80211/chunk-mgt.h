@@ -18,8 +18,8 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef CHUNK_ASSOC_H
-#define CHUNK_ASSOC_H
+#ifndef CHUNK_MGT_H
+#define CHUNK_MGT_H
 
 #include <stdint.h>
 
@@ -33,10 +33,10 @@ namespace yans {
 
 class Buffer;
 
-class ChunkAssocRequest : public Chunk {
+class ChunkMgtAssocRequest : public Chunk {
 public:
-	ChunkAssocRequest ();
-	virtual ~ChunkAssocRequest ();
+	ChunkMgtAssocRequest ();
+	virtual ~ChunkMgtAssocRequest ();
 
 	void set_ssid (Ssid ssid);
 	void set_supported_rates (SupportedRates rates);
@@ -56,10 +56,10 @@ private:
 	uint64_t m_listen_interval;
 };
 
-class ChunkAssocResponse : public Chunk {
+class ChunkMgtAssocResponse : public Chunk {
 public:
-	ChunkAssocResponse ();
-	virtual ~ChunkAssocResponse ();
+	ChunkMgtAssocResponse ();
+	virtual ~ChunkMgtAssocResponse ();
 
 	bool is_success (void);
 
@@ -73,6 +73,49 @@ private:
 	uint16_t m_aid;
 };
 
+class ChunkMgtProbeRequest : public Chunk {
+public:
+	virtual ~ChunkMgtProbeRequest ();
+
+	void set_ssid (Ssid ssid);
+	void set_supported_rates (SupportedRates rates);
+	Ssid get_ssid (void) const;
+	SupportedRates get_supported_rates (void) const;
+
+	virtual void add_to (Buffer *buffer) const;
+	virtual void remove_from (Buffer *buffer);
+	virtual void print (std::ostream *os) const;
+private:
+	Ssid m_ssid;
+	SupportedRates m_rates;
+};
+
+class ChunkMgtProbeResponse : public Chunk {
+public:
+  	ChunkMgtProbeResponse ();
+	virtual ~ChunkMgtProbeResponse ();
+
+	Ssid get_ssid (void) const;
+	uint64_t get_beacon_interval_us (void) const;
+	SupportedRates get_supported_rates (void) const;
+
+	void set_ssid (Ssid ssid);
+	void set_beacon_interval_us (uint64_t us);
+	void set_supported_rates (SupportedRates rates);
+
+	virtual void add_to (Buffer *buffer) const;
+	virtual void remove_from (Buffer *buffer);
+	virtual void print (std::ostream *os) const;
+private:
+	Ssid m_ssid;
+	uint64_t m_beacon_interval;
+	SupportedRates m_rates;
+	CapabilityInformation m_capability;
+};
+
+class ChunkMgtBeacon : public ChunkMgtProbeResponse {};
+
+
 }; // namespace yans
 
-#endif /* CHUNK_ASSOC_H */
+#endif /* CHUNK_MGT_H */
