@@ -71,6 +71,14 @@ Ssid::is_equal (Ssid const &o) const
 	}
 	return true;
 }
+bool 
+Ssid::is_broadcast (void) const
+{
+	if (m_ssid[0] == 0) {
+		return true;
+	}
+	return false;
+}
 uint32_t 
 Ssid::get_size (void) const
 {

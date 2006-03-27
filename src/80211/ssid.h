@@ -35,6 +35,7 @@ public:
 	Ssid (char const ssid[32], uint8_t length);
 
 	bool is_equal (Ssid const &o) const;
+	bool is_broadcast (void) const;
 
 	uint32_t get_size (void) const;
 	void write_to (Buffer *buffer) const;
