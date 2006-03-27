@@ -248,6 +248,14 @@ Buffer::write_u32 (uint32_t data)
 	m_current += 4;
 }
 void 
+Buffer::write_u64 (uint64_t data)
+{
+	assert (m_current + 8 <= m_size);
+	uint64_t *buffer = (uint64_t *)(get_start () + m_current);
+	*buffer = data;
+	m_current += 8;
+}
+void 
 Buffer::write (uint8_t const *data, uint16_t size)
 {
 	assert (m_current + size <= m_size);
@@ -270,6 +278,28 @@ Buffer::write_hton_u32 (uint32_t data)
 {
 	assert (m_current + 4 <= m_size);
 	uint8_t *buffer = get_start ();
+	buffer[m_current] = (data >> 24)  & 0xff;
+	m_current++;
+	buffer[m_current] = (data >> 16)  & 0xff;
+	m_current++;
+	buffer[m_current] = (data >> 8) & 0xff;
+	m_current++;
+	buffer[m_current] = (data >> 0) & 0xff;
+	m_current++;
+}
+void 
+Buffer::write_hton_u64 (uint64_t data)
+{
+	assert (m_current + 8 <= m_size);
+	uint8_t *buffer = get_start ();
+	buffer[m_current] = (data >> 56)  & 0xff;
+	m_current++;
+	buffer[m_current] = (data >> 48)  & 0xff;
+	m_current++;
+	buffer[m_current] = (data >> 40) & 0xff;
+	m_current++;
+	buffer[m_current] = (data >> 32) & 0xff;
+	m_current++;
 	buffer[m_current] = (data >> 24)  & 0xff;
 	m_current++;
 	buffer[m_current] = (data >> 16)  & 0xff;
@@ -307,6 +337,15 @@ Buffer::read_u32 (void)
 	m_current += 4;
 	return retval;
 }
+uint64_t 
+Buffer::read_u64 (void)
+{
+	assert (m_current + 8 <= m_size);
+	uint64_t *buffer = (uint64_t *)(get_start () + m_current);
+	uint64_t retval = *buffer;
+	m_current += 8;
+	return retval;
+}
 void 
 Buffer::read (uint8_t *buffer, uint16_t size)
 {
@@ -341,6 +380,30 @@ Buffer::read_ntoh_u32 (void)
 	retval |= buffer[m_current] << 8;
 	m_current++;
 	retval |= buffer[m_current] << 0;
+	m_current++;
+	return retval;
+}
+uint64_t 
+Buffer::read_ntoh_u64 (void)
+{
+	assert (m_current + 8 <= m_size);
+	uint64_t retval = 0;
+	uint8_t *buffer = get_start ();
+	retval |= static_cast<uint64_t>(buffer[m_current]) << 56;
+	m_current++;
+	retval |= static_cast<uint64_t>(buffer[m_current]) << 48;
+	m_current++;
+	retval |= static_cast<uint64_t>(buffer[m_current]) << 40;
+	m_current++;
+	retval |= static_cast<uint64_t>(buffer[m_current]) << 32;
+	m_current++;
+	retval |= static_cast<uint64_t>(buffer[m_current]) << 24;
+	m_current++;
+	retval |= static_cast<uint64_t>(buffer[m_current]) << 16;
+	m_current++;
+	retval |= static_cast<uint64_t>(buffer[m_current]) << 8;
+	m_current++;
+	retval |= static_cast<uint64_t>(buffer[m_current]) << 0;
 	m_current++;
 	return retval;
 }

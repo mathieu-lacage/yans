@@ -50,16 +50,20 @@ public:
 	void write_u8  (uint8_t  data);
 	void write_u16 (uint16_t data);
 	void write_u32 (uint32_t data);
-	void write (uint8_t const*buffer, uint16_t size);
+	void write_u64 (uint64_t data);
 	void write_hton_u16 (uint16_t data);
 	void write_hton_u32 (uint32_t data);
+	void write_hton_u64 (uint64_t data);
+	void write (uint8_t const*buffer, uint16_t size);
 
 	uint8_t  read_u8 (void);
 	uint16_t read_u16 (void);
 	uint32_t read_u32 (void);
-	void read (uint8_t *buffer, uint16_t size);
+	uint64_t read_u64 (void);
 	uint16_t read_ntoh_u16 (void);
 	uint32_t read_ntoh_u32 (void);
+	uint64_t read_ntoh_u64 (void);
+	void read (uint8_t *buffer, uint16_t size);
 
 private:
 	uint8_t *alloc_and_zero (uint32_t size) const;
