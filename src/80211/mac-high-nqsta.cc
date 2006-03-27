@@ -53,6 +53,7 @@ MacHighNqsta::MacHighNqsta ()
 MacHighNqsta::~MacHighNqsta ()
 {
 	delete m_forward;
+	delete m_associated_callback;
 }
 
 void 
@@ -74,6 +75,11 @@ void
 MacHighNqsta::set_forward_callback (ForwardCallback *callback)
 {
 	m_forward = callback;
+}
+void 
+MacHighNqsta::set_associated_callback (AssociatedCallback *callback)
+{
+	m_associated_callback = callback;
 }
 MacAddress
 MacHighNqsta::get_broadcast_bssid (void)
@@ -163,13 +169,13 @@ MacHighNqsta::try_to_ensure_associated (void)
 		break;
 	case WAIT_ASSOC_RESP:
 		/* we have sent an assoc request so we do not need to
-		   re-send an assoc request right not. We just need to
+		   re-send an assoc request right now. We just need to
 		   wait until either assoc-request-timeout or until
 		   we get an assoc response.
 		 */
 		break;
 	case REFUSED:
-		/* we have send an assoc request and received a negative
+		/* we have sent an assoc request and received a negative
 		   assoc resp. We wait until someone restarts an 
 		   association with a given ssid.
 		 */
@@ -180,11 +186,16 @@ MacHighNqsta::try_to_ensure_associated (void)
 void
 MacHighNqsta::assoc_request_timeout (void)
 {
+	m_assoc_request_event = 0;
+	m_state = WAIT_ASSOC_RESP;
+	send_association_request ();
 }
 void
 MacHighNqsta::probe_request_timeout (void)
 {
 	m_probe_request_event = 0;
+	m_state = WAIT_PROBE_RESP;
+	send_probe_request ();
 }
 bool
 MacHighNqsta::is_associated (void)
@@ -230,10 +241,12 @@ MacHighNqsta::receive (Packet *packet, ChunkMac80211Hdr const *hdr)
 		if (m_interface->get_ssid ().is_broadcast ()) {
 			// we do not have any special ssid so this
 			// beacon is as good as another.
+			m_beacon_interval = beacon.get_beacon_interval_us ();
 			m_state = WAIT_ASSOC_RESP;
 			send_association_request ();
 		} else if (beacon.get_ssid ().is_equal (m_interface->get_ssid ())) {
 			//beacon for our ssid.
+			m_beacon_interval = beacon.get_beacon_interval_us ();
 			m_state = WAIT_ASSOC_RESP;
 			send_association_request ();
 		}
@@ -263,6 +276,7 @@ MacHighNqsta::receive (Packet *packet, ChunkMac80211Hdr const *hdr)
 			}
 			if (assoc_resp.is_success ()) {
 				m_state = ASSOCIATED;
+				(*m_associated_callback) ();
 			} else {
 				m_state = REFUSED;
 			}

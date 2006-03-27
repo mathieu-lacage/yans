@@ -38,6 +38,8 @@ class DcaTxop;
 class MacHighNqsta {
 public:
 	typedef Callback<void (Packet *)> ForwardCallback;
+	typedef Callback<void (void)> AssociatedCallback;
+
 	MacHighNqsta ();
 	~MacHighNqsta ();
 
@@ -45,6 +47,7 @@ public:
 	void set_dca_txop (DcaTxop *dca);
 	void set_interface (NetworkInterface80211 *interface);
 	void set_forward_callback (ForwardCallback *callback);
+	void set_associated_callback (AssociatedCallback *callback);
 
 	void queue (Packet *packet, MacAddress to);
 
@@ -71,6 +74,7 @@ private:
 	CancellableEvent *m_assoc_request_event;
 	NetworkInterface80211 *m_interface;
 	ForwardCallback *m_forward;
+	AssociatedCallback *m_associated_callback;
 	Phy80211 *m_phy;
 	DcaTxop *m_dca;
 	uint64_t m_beacon_interval;

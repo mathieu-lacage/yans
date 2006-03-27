@@ -26,6 +26,7 @@
 #include "mac-address.h"
 #include "ipv4-address.h"
 #include "ui-traced-variable.tcc"
+#include "ssid.h"
 #include <string>
 
 namespace yans {
@@ -59,6 +60,7 @@ public:
 	void register_trace (TraceContainer *container);
 
 	MacAddress get_bssid (void) const;
+	Ssid get_ssid (void) const;
 
 	virtual void set_host (Host *host);
 	virtual void set_mac_address (MacAddress self);

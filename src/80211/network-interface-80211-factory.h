@@ -29,6 +29,7 @@ namespace yans {
 
 class NetworkInterface80211;
 class NetworkInterface80211Adhoc;
+class NetworkInterface80211Nqsta;
 class Host;
 
 class NetworkInterface80211Factory {
