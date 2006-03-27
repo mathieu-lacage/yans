@@ -34,6 +34,8 @@ public:
 	Ssid (char const *ssid);
 	Ssid (char const ssid[32], uint8_t length);
 
+	bool is_equal (Ssid const &o) const;
+
 	uint32_t get_size (void) const;
 	void write_to (Buffer *buffer) const;
 	// returns the number of bytes read.

@@ -57,6 +57,20 @@ Ssid::Ssid (char const ssid[32], uint8_t length)
 		len++;
 	}
 }
+bool 
+Ssid::is_equal (Ssid const &o) const
+{
+	uint8_t i = 0;
+	while (i < 32 && 
+	       m_ssid[i] == o.m_ssid[i] &&
+	       m_ssid[i] != 0) {
+		i++;
+	}
+	if (m_ssid[i] != o.m_ssid[i]) {
+		return false;
+	}
+	return true;
+}
 uint32_t 
 Ssid::get_size (void) const
 {
