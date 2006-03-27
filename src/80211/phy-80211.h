@@ -108,6 +108,7 @@ public:
 				      double tx_power_end, 
 				      int n_tx_power);
 	uint32_t get_n_modes (void) const;
+	uint32_t get_mode_bit_rate (uint8_t mode) const;
 	uint32_t get_n_txpower (void) const;
 	/* return snr: W/W */
 	double calculate_snr (uint8_t tx_mode, double ber) const;

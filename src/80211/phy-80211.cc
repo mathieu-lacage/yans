@@ -308,6 +308,11 @@ Phy80211::get_n_modes (void) const
 	return m_modes.size ();
 }
 uint32_t 
+Phy80211::get_mode_bit_rate (uint8_t mode) const
+{
+	return get_mode (mode)->get_rate ();
+}
+uint32_t 
 Phy80211::get_n_txpower (void) const
 {
 	return m_n_tx_power;
