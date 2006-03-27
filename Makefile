@@ -212,6 +212,8 @@ YANS_SRC:= \
 	src/80211/dca-txop.cc \
 	src/80211/mac-queue-80211e.cc \
 	src/80211/mac-high-adhoc.cc \
+	src/80211/ssid.cc \
+	src/80211/chunk-probe.cc \
 	src/80211/network-interface-80211.cc \
 	src/80211/network-interface-80211-factory.cc \
 	src/test/test.cc \
@@ -258,6 +260,7 @@ YANS_INST_HDR := \
 	src/80211/network-interface-80211.h \
 	src/80211/network-interface-80211-factory.h \
 	src/80211/channel-80211.h \
+	src/80211/ssid.h \
 	src/host/host.h \
 	src/host/network-interface.h \
 	src/ethernet/cable.h \
@@ -314,6 +317,7 @@ YANS_HDR := \
 	src/80211/mac-queue-80211e.h \
 	src/80211/dca-txop.h \
 	src/80211/mac-high-adhoc.h \
+	src/80211/chunk-probe.h \
 	src/host/loopback-interface.h \
 	src/ethernet/chunk-mac-crc.h \
 	src/ethernet/chunk-mac-eth.h \
