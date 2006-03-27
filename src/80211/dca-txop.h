@@ -32,6 +32,7 @@ class Dcf;
 class MacQueue80211e;
 class Packet;
 class MacLow;
+class Phy80211;
 class MacParameters;
 class MacTxMiddle;
 
@@ -43,16 +44,24 @@ public:
 	DcaTxop ();
 	~DcaTxop ();
 
-	void set_dcf (Dcf *dcf);
-	void set_queue (MacQueue80211e *queue);
 	void set_low (MacLow *low);
+	void set_phy (Phy80211 *phy);
 	void set_parameters (MacParameters *parameters);
 	void set_tx_middle (MacTxMiddle *tx_middle);
 	void set_ack_received_callback (AckReceived *callback);
 
+	void set_difs_us (uint64_t difs_us);
+	void set_eifs_us (uint64_t eifs_us);
+	void set_cw_bounds (uint32_t min, uint32_t max);
+	void set_max_queue_size (uint32_t size);
+	void set_max_queue_delay_us (uint64_t us);
+
+	void queue (Packet *packet, ChunkMac80211Hdr const &hdr);
 private:
 	class AccessListener;
 	class TransmissionListener;
+	class NavListener;
+	class PhyListener;
 	friend class AccessListener;
 	friend class TransmissionListener;
 
@@ -87,6 +96,8 @@ private:
 	MacParameters *m_parameters;
 	TransmissionListener *m_transmission_listener;
 	AccessListener *m_access_listener;
+	NavListener *m_nav_listener;
+	PhyListener *m_phy_listener;
 	
 
 	Packet *m_current_packet;

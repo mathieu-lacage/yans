@@ -20,7 +20,6 @@
  */
 
 #include "mac-queue-80211e.h"
-#include "mac-parameters.h"
 #include "simulator.h"
 #include "packet.h"
 
@@ -43,12 +42,16 @@ MacQueue80211e::~MacQueue80211e ()
 	flush ();
 }
 
-void
-MacQueue80211e::set_parameters (MacParameters *parameters)
+void 
+MacQueue80211e::set_max_size (uint32_t max_size)
 {
-	m_parameters = parameters;
+	m_max_size = max_size;
 }
-
+void 
+MacQueue80211e::set_max_delay_us (uint64_t us)
+{
+	m_max_delay_us = us;
+}
 void 
 MacQueue80211e::enqueue (Packet *packet, ChunkMac80211Hdr const &hdr)
 {
@@ -81,8 +84,8 @@ MacQueue80211e::cleanup (void)
 	uint32_t n = 0;
 	tmp = m_queue.rbegin ();
 	while (tmp != m_queue.rend ()) {
-		if (m_size < m_parameters->get_max_queue_size () && 
-		    (*tmp).tstamp + m_parameters->get_msdu_lifetime_us () > now) {
+		if (m_size < m_max_size && 
+		    (*tmp).tstamp + m_max_delay_us > now) {
 			break;
 		}
 		(*tmp).packet->unref();

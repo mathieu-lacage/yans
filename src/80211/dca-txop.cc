@@ -26,6 +26,7 @@
 #include "mac-queue-80211e.h"
 #include "mac-tx-middle.h"
 #include "packet.h"
+#include "phy-80211.h"
 
 
 #define noDCA_TXOP_TRACE 1
@@ -39,7 +40,56 @@
 # define TRACE(x)
 #endif /* DCA_TXOP_TRACE */
 
+namespace {
+};
+
+
 namespace yans {
+
+class DcaTxop::NavListener : public yans::MacLowNavListener {
+public:
+	NavListener (yans::Dcf *dcf)
+		: m_dcf (dcf) {}
+	virtual ~NavListener () {}
+	virtual void nav_start_us (uint64_t now_us, uint64_t duration_us) {
+		m_dcf->notify_nav_start (now_us, duration_us);
+	}
+	virtual void nav_continue_us (uint64_t now_us, uint64_t duration_us) {
+		m_dcf->notify_nav_continue (now_us, duration_us);
+	}
+	virtual void nav_reset_us (uint64_t now_us, uint64_t duration_us) {
+		m_dcf->notify_nav_reset (now_us, duration_us);
+	}
+private:
+	yans::Dcf *m_dcf;
+};
+class DcaTxop::PhyListener : public yans::Phy80211Listener {
+public:
+	PhyListener (yans::Dcf *dcf)
+		: m_dcf (dcf) {}
+	virtual ~PhyListener () {}
+	virtual void notify_rx_start (uint64_t duration_us) {
+		m_dcf->notify_rx_start_now (duration_us);
+	}
+	virtual void notify_rx_end_ok (void) {
+		m_dcf->notify_rx_end_ok_now ();
+	}
+	virtual void notify_rx_end_error (void) {
+		m_dcf->notify_rx_end_error_now ();
+	}
+	virtual void notify_tx_start (uint64_t duration_us) {
+		m_dcf->notify_tx_start_now (duration_us);
+	}
+	virtual void notify_sleep (void) {
+		m_dcf->notify_sleep_now ();
+	}
+	virtual void notify_wakeup () {
+		m_dcf->notify_wakeup_now ();
+	}
+private:
+	yans::Dcf *m_dcf;
+};
+
 
 class DcaTxop::AccessListener : public DcfAccessListener {
 public:
@@ -105,6 +155,10 @@ DcaTxop::DcaTxop ()
 	  m_slrc (0)
 {
 	m_transmission_listener = new DcaTxop::TransmissionListener (this);
+	m_dcf = new Dcf ();
+	m_access_listener = new DcaTxop::AccessListener (this);
+	m_dcf->register_access_listener (m_access_listener);
+	
 }
 
 DcaTxop::~DcaTxop ()
@@ -112,29 +166,28 @@ DcaTxop::~DcaTxop ()
 	delete m_access_listener;
 	delete m_transmission_listener;
 	delete m_ack_received;
+	delete m_nav_listener;
+	delete m_phy_listener;
 }
 
-void 
-DcaTxop::set_dcf (Dcf *dcf)
-{
-	m_dcf = dcf;
-	m_access_listener = new DcaTxop::AccessListener (this);
-	m_dcf->register_access_listener (m_access_listener);
-}
-void 
-DcaTxop::set_queue (MacQueue80211e *queue)
-{
-	m_queue = queue;
-}
 void 
 DcaTxop::set_low (MacLow *low)
 {
 	m_low = low;
+	m_nav_listener = new DcaTxop::NavListener (m_dcf);
+	m_low->register_nav_listener (m_nav_listener);
+}
+void
+DcaTxop::set_phy (Phy80211 *phy)
+{
+	m_phy_listener = new DcaTxop::PhyListener (m_dcf);
+	phy->register_listener (m_phy_listener);
 }
 void 
 DcaTxop::set_parameters (MacParameters *parameters)
 {
 	m_parameters = parameters;
+	m_dcf->set_parameters (parameters);
 }
 void 
 DcaTxop::set_tx_middle (MacTxMiddle *tx_middle)
@@ -146,6 +199,40 @@ DcaTxop::set_ack_received_callback (AckReceived *callback)
 {
 	m_ack_received = callback;
 }
+
+void 
+DcaTxop::set_difs_us (uint64_t difs_us)
+{
+	m_dcf->set_difs_us (difs_us);
+}
+void 
+DcaTxop::set_eifs_us (uint64_t eifs_us)
+{
+	m_dcf->set_eifs_us (eifs_us);
+}
+void 
+DcaTxop::set_cw_bounds (uint32_t min, uint32_t max)
+{
+	m_dcf->set_cw_bounds (min, max);
+}
+void 
+DcaTxop::set_max_queue_size (uint32_t size)
+{
+	m_queue->set_max_size (size);
+}
+void 
+DcaTxop::set_max_queue_delay_us (uint64_t us)
+{
+	m_queue->set_max_delay_us (us);
+}
+
+void 
+DcaTxop::queue (Packet *packet, ChunkMac80211Hdr const &hdr)
+{
+	m_queue->enqueue (packet, hdr);
+	m_dcf->request_access ();
+}
+
 
 MacLow *
 DcaTxop::low (void)

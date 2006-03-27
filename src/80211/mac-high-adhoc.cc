@@ -20,8 +20,6 @@
  */
 
 #include "mac-high-adhoc.h"
-#include "dcf.h"
-#include "mac-queue-80211e.h"
 #include "dca-txop.h"
 #include "network-interface-80211.h"
 #include "packet.h"
@@ -57,10 +55,9 @@ MacHighAdhoc::set_forward_callback (ForwardCallback *callback)
 	m_callback = callback;
 }
 void
-MacHighAdhoc::set_queue (MacQueue80211e *queue, Dcf *dcf)
+MacHighAdhoc::set_dca_txop (DcaTxop *dca)
 {
-	m_queue = queue;
-	m_dcf = dcf;
+	m_dca = dca;
 }
 
 void 
@@ -75,8 +72,7 @@ MacHighAdhoc::enqueue (Packet *packet, MacAddress to)
 	hdr.set_addr3 (m_interface->get_bssid ());
 	hdr.set_ds_not_from ();
 	hdr.set_ds_not_to ();
-	m_queue->enqueue (packet, hdr);
-	m_dcf->request_access ();
+	m_dca->queue (packet, hdr);
 }
 
 void 

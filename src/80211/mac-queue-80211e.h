@@ -55,7 +55,8 @@ public:
 	MacQueue80211e ();
 	~MacQueue80211e ();
 
-	void set_parameters (MacParameters *parameters);
+	void set_max_size (uint32_t max_size);
+	void set_max_delay_us (uint64_t us);
 
 	void enqueue (Packet *packet, ChunkMac80211Hdr const &hdr);
 	void enqueue_to_head (Packet *packet, ChunkMac80211Hdr const &hdr);
@@ -83,6 +84,8 @@ private:
 	PacketQueue m_queue;
 	MacParameters *m_parameters;
 	uint32_t m_size;
+	uint32_t m_max_size;
+	uint64_t m_max_delay_us;
 };
 
 }; // namespace yans

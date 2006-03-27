@@ -37,52 +37,6 @@
 #include "mac-queue-80211e.h"
 #include "mac-high-adhoc.h"
 
-namespace {
-class DcfMacLowNavListener : public yans::MacLowNavListener {
-public:
-	DcfMacLowNavListener (yans::Dcf *dcf)
-		: m_dcf (dcf) {}
-	virtual ~DcfMacLowNavListener () {}
-	virtual void nav_start_us (uint64_t now_us, uint64_t duration_us) {
-		m_dcf->notify_nav_start (now_us, duration_us);
-	}
-	virtual void nav_continue_us (uint64_t now_us, uint64_t duration_us) {
-		m_dcf->notify_nav_continue (now_us, duration_us);
-	}
-	virtual void nav_reset_us (uint64_t now_us, uint64_t duration_us) {
-		m_dcf->notify_nav_reset (now_us, duration_us);
-	}
-private:
-	yans::Dcf *m_dcf;
-};
-class DcfPhy80211Listener : public yans::Phy80211Listener {
-public:
-	DcfPhy80211Listener (yans::Dcf *dcf)
-		: m_dcf (dcf) {}
-	virtual ~DcfPhy80211Listener () {}
-	virtual void notify_rx_start (uint64_t duration_us) {
-		m_dcf->notify_rx_start_now (duration_us);
-	}
-	virtual void notify_rx_end_ok (void) {
-		m_dcf->notify_rx_end_ok_now ();
-	}
-	virtual void notify_rx_end_error (void) {
-		m_dcf->notify_rx_end_error_now ();
-	}
-	virtual void notify_tx_start (uint64_t duration_us) {
-		m_dcf->notify_tx_start_now (duration_us);
-	}
-	virtual void notify_sleep (void) {
-		m_dcf->notify_sleep_now ();
-	}
-	virtual void notify_wakeup () {
-		m_dcf->notify_wakeup_now ();
-	}
-private:
-	yans::Dcf *m_dcf;
-};
-};
-
 namespace yans {
 
 NetworkInterface80211Factory::NetworkInterface80211Factory ()
@@ -277,39 +231,26 @@ NetworkInterface80211Factory::create_adhoc (Host *host)
 
 	initialize_interface (interface, host);
 
-	Dcf *dcf = new Dcf ();
-	dcf->set_parameters (interface->m_parameters);
+	DcaTxop *dca = new DcaTxop ();
+	dca->set_parameters (interface->m_parameters);
+	dca->set_tx_middle (interface->m_tx_middle);
+	dca->set_low (interface->m_low);
+	dca->set_phy (interface->m_phy);
 	// 802.11a
 	uint64_t difs = interface->m_parameters->get_sifs_us () + 
 		2 * interface->m_parameters->get_slot_time_us ();
 	uint64_t eifs = difs + interface->m_parameters->get_sifs_us () + 
 		interface->m_phy->calculate_tx_duration_us (2+2+6+4, 0);
-	dcf->set_difs_us (difs);
-	dcf->set_eifs_us (eifs);
-	dcf->set_cw_bounds (15, 1023);
-	interface->m_dcf = dcf;
-
-	interface->m_nav_listener = new DcfMacLowNavListener (dcf);
-	interface->m_low->register_nav_listener (interface->m_nav_listener);
-
-	interface->m_phy_listener = new DcfPhy80211Listener (dcf);
-	interface->m_phy->register_listener (interface->m_phy_listener);
-
-	MacQueue80211e *queue = new MacQueue80211e ();
-	queue->set_parameters (interface->m_parameters);
-	interface->m_queue = queue;
-
-	DcaTxop *dca = new DcaTxop ();
-	dca->set_parameters (interface->m_parameters);
-	dca->set_queue (queue);
-	dca->set_dcf (dcf);
-	dca->set_tx_middle (interface->m_tx_middle);
-	dca->set_low (interface->m_low);
+	dca->set_difs_us (difs);
+	dca->set_eifs_us (eifs);
+	dca->set_cw_bounds (15, 1023);
+	dca->set_max_queue_size (400);
+	dca->set_max_queue_delay_us (10000000); // 10s
 	interface->m_dca = dca;
 
 	MacHighAdhoc *high = new MacHighAdhoc ();
 	high->set_interface (interface);
-	high->set_queue (queue, dcf);
+	high->set_dca_txop (dca);
 	high->set_forward_callback (make_callback (&NetworkInterface80211::forward_up, 
 						   static_cast<NetworkInterface80211 *> (interface)));
 	dca->set_ack_received_callback (make_callback (&MacHighAdhoc::ack_received, high));

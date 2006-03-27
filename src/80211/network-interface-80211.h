@@ -121,11 +121,7 @@ protected:
 	virtual void forward_down (Packet *packet, MacAddress to);
 private:
 	friend class NetworkInterface80211Factory;
-	Dcf *m_dcf;
-	MacLowNavListener *m_nav_listener;
-	Phy80211Listener *m_phy_listener;
 	DcaTxop *m_dca;
-	MacQueue80211e *m_queue;
 	MacHighAdhoc *m_high;
 };
 

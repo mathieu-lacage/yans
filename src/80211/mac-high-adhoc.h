@@ -26,9 +26,8 @@
 
 namespace yans {
 
-class MacQueue80211e;
 class Packet;
-class Dcf;
+class DcaTxop;
 class Packet;
 class NetworkInterface80211;
 class ChunkMac80211Hdr;
@@ -42,7 +41,7 @@ public:
 
 	void set_interface (NetworkInterface80211 *interface);
 	void set_forward_callback (ForwardCallback *callback);
-	void set_queue (MacQueue80211e *queue, Dcf *dcf);
+	void set_dca_txop (DcaTxop *dca);
 
 	/* invoked by Mac80211. */
 	void enqueue (Packet *packet, MacAddress to);
@@ -51,8 +50,7 @@ public:
 	void ack_received (ChunkMac80211Hdr const &hdr);
 	void receive (Packet *packet, ChunkMac80211Hdr const*hdr);
 private:
-	MacQueue80211e *m_queue;
-	Dcf *m_dcf;
+	DcaTxop *m_dca;
 	NetworkInterface80211 *m_interface;
 	ForwardCallback *m_callback;
 };
