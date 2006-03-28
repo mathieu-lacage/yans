@@ -75,8 +75,24 @@ MacAddress
 NetworkInterface80211::get_bssid (void) const
 {
 	// XXX
-	return MacAddress::get_broadcast ();
+	return m_bssid;
 }
+Ssid 
+NetworkInterface80211::get_ssid (void) const
+{
+	return m_ssid;
+}
+void 
+NetworkInterface80211::set_ssid (Ssid ssid)
+{
+	m_ssid = ssid;
+}
+void 
+NetworkInterface80211::set_bssid (MacAddress bssid)
+{
+	m_bssid = bssid;
+}
+
 
 void 
 NetworkInterface80211::set_host (Host *host)

@@ -62,6 +62,9 @@ public:
 	MacAddress get_bssid (void) const;
 	Ssid get_ssid (void) const;
 
+	void set_ssid (Ssid ssid);
+	void set_bssid (MacAddress bssid);
+
 	virtual void set_host (Host *host);
 	virtual void set_mac_address (MacAddress self);
 	virtual MacAddress get_mac_address (void) const;
@@ -107,6 +110,7 @@ private:
 	MacParameters *m_parameters;
 
 	MacAddress m_bssid;
+	Ssid m_ssid;
 	MacAddress m_self;
 	Ipv4Address m_ipv4_address;
 	Ipv4Mask m_ipv4_mask;

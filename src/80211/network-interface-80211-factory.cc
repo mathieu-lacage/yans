@@ -228,6 +228,8 @@ NetworkInterface80211Adhoc *
 NetworkInterface80211Factory::create_adhoc (Host *host)
 {
 	NetworkInterface80211Adhoc *interface = new NetworkInterface80211Adhoc ();
+	interface->m_bssid = MacAddress::get_broadcast ();
+	interface->m_ssid = m_ssid;
 
 	initialize_interface (interface, host);
 

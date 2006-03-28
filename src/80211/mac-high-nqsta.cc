@@ -40,6 +40,22 @@ std::cout << "NQSTA " << Simulator::now_us () << "us " << x << std::endl;
 #  define TRACE(x)
 #endif
 
+/*
+ * The state machine for this NQSTA is:
+ --------------                                          -----------
+ | Associated |   <--------------------      ------->    | Refused |
+ --------------                        \    /            -----------
+    \                                   \  /
+     \    -----------------     -----------------------------
+      \-> | Beacon Missed | --> | Wait Association Response |
+          -----------------     -----------------------------
+	        \                       ^
+		 \                      |
+		  \    -----------------------
+	           \-> | Wait Probe Response |
+		       -----------------------
+ */
+
 
 namespace yans {
 
@@ -250,17 +266,23 @@ MacHighNqsta::receive (Packet *packet, ChunkMac80211Hdr const *hdr)
 	} else if (hdr->is_beacon ()) {
 		ChunkMgtBeacon beacon;
 		packet->remove (&beacon);
+		bool good_beacon = false;
 		if (m_interface->get_ssid ().is_broadcast ()) {
 			// we do not have any special ssid so this
 			// beacon is as good as another.
 			m_timeout->restart ();
 			m_timeout->set_interval (beacon.get_beacon_interval_us ());
-			m_state = WAIT_ASSOC_RESP;
-			send_association_request ();
+			good_beacon = true;
 		} else if (beacon.get_ssid ().is_equal (m_interface->get_ssid ())) {
 			//beacon for our ssid.
 			m_timeout->restart ();
 			m_timeout->set_interval (beacon.get_beacon_interval_us ());
+			good_beacon = true;
+		}
+		if (good_beacon) {
+			m_interface->set_bssid (hdr->get_addr3 ());
+		}
+		if (good_beacon && m_state == BEACON_MISSED) {
 			m_state = WAIT_ASSOC_RESP;
 			send_association_request ();
 		}
@@ -272,6 +294,7 @@ MacHighNqsta::receive (Packet *packet, ChunkMac80211Hdr const *hdr)
 				//not a probe resp for our ssid.
 				return;
 			}
+			m_interface->set_bssid (hdr->get_addr3 ());
 			m_timeout->set_interval (probe_resp.get_beacon_interval_us ());
 			if (m_probe_request_event != 0) {
 				m_probe_request_event->cancel ();
