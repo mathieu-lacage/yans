@@ -18,8 +18,8 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef MAC_HIGH_NSQTA_H
-#define MAC_HIGH_NSQTA_H
+#ifndef MAC_HIGH_NQSTA_H
+#define MAC_HIGH_NQSTA_H
 
 #include "mac-address.h"
 #include "callback.tcc"
@@ -83,7 +83,6 @@ private:
 	ForwardCallback *m_forward;
 	AssociatedCallback *m_associated_callback;
 	SupportedRates m_rates;
-	Phy80211 *m_phy;
 	DcaTxop *m_dca;
 	Timeout *m_timeout;
 };
@@ -91,4 +90,4 @@ private:
 }; // namespace yans
 
 
-#endif /* MAC_HIGH_NSQTA_H */
+#endif /* MAC_HIGH_NQSTA_H */
