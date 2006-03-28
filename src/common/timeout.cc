@@ -24,23 +24,33 @@
 
 namespace yans {
 
-Timeout::Timeout (uint64_t interval_us, uint32_t count)
-	: m_interval_us (interval_us),
-	  m_count (count),
-	  m_current_count (count),
+Timeout::Timeout (ExpireCallback *callback)
+	: m_interval_us (0),
+	  m_count (0),
+	  m_current_count (0),
 	  m_stop (false),
-	  m_callback (0)
+	  m_callback (callback)
 {}
 Timeout::~Timeout ()
 {
 	delete m_callback;
 }
+void 
+Timeout::set_interval (uint64_t us)
+{
+	m_interval_us = us;
+}
+void 
+Timeout::set_count (uint32_t count)
+{
+	m_count = count;
+}
 
-void Timeout::start (ExpireCallback *callback)
+
+void Timeout::start (void)
 {
 	Simulator::insert_in_us (m_interval_us,
 				 make_event (&Timeout::expire, this));
-	m_callback = callback;
 }
 void Timeout::stop (void)
 {

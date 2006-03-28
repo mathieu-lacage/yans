@@ -30,10 +30,11 @@ namespace yans {
 class Timeout {
 public:
 	typedef Callback<void (void)> ExpireCallback;
-	Timeout (uint64_t interval_us, uint32_t count);
+	Timeout (ExpireCallback *callback);
 	~Timeout ();
-
-	void start (ExpireCallback *callback);
+	void set_interval (uint64_t us);
+	void set_count (uint32_t count);
+	void start (void);
 	void stop (void);
 	void restart (void);
 private:
