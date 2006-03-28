@@ -28,6 +28,7 @@
 #include "cancellable-event.tcc"
 #include "dca-txop.h"
 #include "simulator.h"
+#include "timeout.h"
 
 #define noNQSTA_DEBUG 1
 
@@ -47,7 +48,8 @@ MacHighNqsta::MacHighNqsta ()
 	  m_probe_request_timeout_us (500000), // 0.5s
 	  m_assoc_request_timeout_us (500000), // 0.5s
 	  m_probe_request_event (0),
-	  m_assoc_request_event (0)
+	  m_assoc_request_event (0),
+	  m_timeout (new Timeout (make_callback (&MacHighNqsta::missed_beacons, this)))
 {}
 
 MacHighNqsta::~MacHighNqsta ()
@@ -80,6 +82,11 @@ void
 MacHighNqsta::set_associated_callback (AssociatedCallback *callback)
 {
 	m_associated_callback = callback;
+}
+void 
+MacHighNqsta::set_max_missed_beacons (uint32_t missed)
+{
+	m_timeout->set_count (missed);
 }
 MacAddress
 MacHighNqsta::get_broadcast_bssid (void)
@@ -197,6 +204,11 @@ MacHighNqsta::probe_request_timeout (void)
 	m_state = WAIT_PROBE_RESP;
 	send_probe_request ();
 }
+void 
+MacHighNqsta::missed_beacons (void)
+{
+	m_state = BEACON_MISSED;
+}
 bool
 MacHighNqsta::is_associated (void)
 {
@@ -241,12 +253,14 @@ MacHighNqsta::receive (Packet *packet, ChunkMac80211Hdr const *hdr)
 		if (m_interface->get_ssid ().is_broadcast ()) {
 			// we do not have any special ssid so this
 			// beacon is as good as another.
-			m_beacon_interval = beacon.get_beacon_interval_us ();
+			m_timeout->restart ();
+			m_timeout->set_interval (beacon.get_beacon_interval_us ());
 			m_state = WAIT_ASSOC_RESP;
 			send_association_request ();
 		} else if (beacon.get_ssid ().is_equal (m_interface->get_ssid ())) {
 			//beacon for our ssid.
-			m_beacon_interval = beacon.get_beacon_interval_us ();
+			m_timeout->restart ();
+			m_timeout->set_interval (beacon.get_beacon_interval_us ());
 			m_state = WAIT_ASSOC_RESP;
 			send_association_request ();
 		}
@@ -258,7 +272,7 @@ MacHighNqsta::receive (Packet *packet, ChunkMac80211Hdr const *hdr)
 				//not a probe resp for our ssid.
 				return;
 			}
-			m_beacon_interval = probe_resp.get_beacon_interval_us ();
+			m_timeout->set_interval (probe_resp.get_beacon_interval_us ());
 			if (m_probe_request_event != 0) {
 				m_probe_request_event->cancel ();
 				m_probe_request_event = 0;

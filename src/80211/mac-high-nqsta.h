@@ -34,6 +34,7 @@ class Packet;
 class ChunkMac80211Hdr;
 class NetworkInterface80211;
 class DcaTxop;
+class Timeout;
 
 class MacHighNqsta {
 public:
@@ -48,6 +49,7 @@ public:
 	void set_interface (NetworkInterface80211 *interface);
 	void set_forward_callback (ForwardCallback *callback);
 	void set_associated_callback (AssociatedCallback *callback);
+	void set_max_missed_beacons (uint32_t missed);
 
 	void queue (Packet *packet, MacAddress to);
 
@@ -61,6 +63,7 @@ private:
 	void probe_request_timeout (void);
 	bool is_associated (void);
 	SupportedRates get_supported_rates (void);
+	void missed_beacons (void);
 	enum {
 		ASSOCIATED,
 		WAIT_PROBE_RESP,
@@ -77,7 +80,7 @@ private:
 	AssociatedCallback *m_associated_callback;
 	Phy80211 *m_phy;
 	DcaTxop *m_dca;
-	uint64_t m_beacon_interval;
+	Timeout *m_timeout;
 };
 
 }; // namespace yans
