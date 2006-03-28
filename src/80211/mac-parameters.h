@@ -38,8 +38,8 @@ public:
 	void set_rts_cts_threshold (uint32_t threshold);
 	void set_fragmentation_threshold (uint32_t threshold);
 
+	// XXX AP-specific
 	uint64_t get_beacon_interval_us (void) const;
-	uint8_t get_max_missed_beacon (void) const;
 
 	uint64_t get_pifs_us (void) const;
 	uint64_t get_sifs_us (void) const;

@@ -129,11 +129,6 @@ MacParameters::get_beacon_interval_us (void) const
 {
 	return 1000000; // 1s
 }
-uint8_t 
-MacParameters::get_max_missed_beacon (void) const
-{
-	return 10;
-}
 uint32_t 
 MacParameters::get_max_ssrc (void) const
 {
