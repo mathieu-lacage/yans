@@ -53,7 +53,7 @@ private:
 	Ssid m_ssid;
 	SupportedRates m_rates;
 	CapabilityInformation m_capability;
-	uint64_t m_listen_interval;
+	uint16_t m_listen_interval;
 };
 
 class ChunkMgtAssocResponse : public Chunk {
