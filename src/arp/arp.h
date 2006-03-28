@@ -42,6 +42,8 @@ class Arp {
 	Arp (NetworkInterface *interface);
 	~Arp ();
 
+	void flush (void);
+
 	void set_alive_timeout (double aliveTimeout);
 	void set_dead_timeout (double deadTimeout);
 	void set_wait_reply_timeout (double waitReplyTimeout);

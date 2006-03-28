@@ -51,16 +51,22 @@ Arp::Arp (NetworkInterface *interface)
 {}
 Arp::~Arp ()
 {
-	for (ArpCacheI i = m_arp_cache.begin (); i != m_arp_cache.end (); i++) {
-		delete (*i).second;
-	}
-	m_arp_cache.erase (m_arp_cache.begin (), m_arp_cache.end ());
+	flush ();
 	delete m_send_data;
 	delete m_send_arp;
 	m_send_data = 0;
 	m_send_arp = 0;
 	delete m_drop;
 	m_drop = 0;
+}
+
+void 
+Arp::flush (void)
+{
+	for (ArpCacheI i = m_arp_cache.begin (); i != m_arp_cache.end (); i++) {
+		delete (*i).second;
+	}
+	m_arp_cache.erase (m_arp_cache.begin (), m_arp_cache.end ());
 }
 
 void 
