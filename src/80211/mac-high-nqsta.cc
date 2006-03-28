@@ -66,7 +66,11 @@ MacHighNqsta::MacHighNqsta ()
 	  m_probe_request_event (0),
 	  m_assoc_request_event (0),
 	  m_timeout (new Timeout (make_callback (&MacHighNqsta::missed_beacons, this)))
-{}
+{
+	// this is the default value for the number of beacons missed 
+	// before attempting to reassociate.
+	m_timeout->set_count (10);
+}
 
 MacHighNqsta::~MacHighNqsta ()
 {
@@ -104,6 +108,17 @@ MacHighNqsta::set_max_missed_beacons (uint32_t missed)
 {
 	m_timeout->set_count (missed);
 }
+void 
+MacHighNqsta::set_probe_request_timeout (uint64_t us)
+{
+	m_probe_request_timeout_us = us;
+}
+void 
+MacHighNqsta::set_assoc_request_timeout (uint64_t us)
+{
+	m_assoc_request_timeout_us = us;
+}
+
 MacAddress
 MacHighNqsta::get_broadcast_bssid (void)
 {

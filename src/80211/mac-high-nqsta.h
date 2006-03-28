@@ -49,7 +49,10 @@ public:
 	void set_interface (NetworkInterface80211 *interface);
 	void set_forward_callback (ForwardCallback *callback);
 	void set_associated_callback (AssociatedCallback *callback);
+
 	void set_max_missed_beacons (uint32_t missed);
+	void set_probe_request_timeout (uint64_t us);
+	void set_assoc_request_timeout (uint64_t us);
 
 	void queue (Packet *packet, MacAddress to);
 
