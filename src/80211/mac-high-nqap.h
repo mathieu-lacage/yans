@@ -1,6 +1,6 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 /*
- * Copyright (c) 2005 INRIA
+ * Copyright (c) 2005,2006 INRIA
  * All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -16,73 +16,47 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * In addition, as a special exception, the copyright holders of
- * this module give you permission to combine (via static or
- * dynamic linking) this module with free software programs or
- * libraries that are released under the GNU LGPL and with code
- * included in the standard release of ns-2 under the Apache 2.0
- * license or under otherwise-compatible licenses with advertising
- * requirements (or modified versions of such code, with unchanged
- * license).  You may copy and distribute such a system following the
- * terms of the GNU GPL for this module and the licenses of the
- * other code concerned, provided that you include the source code of
- * that other code when and as the GNU GPL requires distribution of
- * source code.
- *
- * Note that people who make modified versions of this module
- * are not obligated to grant this special exception for their
- * modified versions; it is their choice whether to do so.  The GNU
- * General Public License gives permission to release a modified
- * version without this exception; this exception also makes it
- * possible to release a modified version which carries forward this
- * exception.
- *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef MAC_HIGH_NQAP
-#define MAC_HIGH_NQAP
+#ifndef MAC_HIGH_NQAP_H
+#define MAC_HIGH_NQAP_H
 
-#include "mac-high-ap.h"
-#include "mac-handler.tcc"
+#include "mac-address.h"
+#include "callback.tcc"
+#include "supported-rates.h"
+#include <stdint.h>
+
+namespace yans {
 
 class Packet;
-class MacDcfParameters;
-class MacQueue80211e;
-class Dcf;
-class MacParameters;
+class ChunkMac80211Hdr;
+class NetworkInterface80211;
+class DcaTxop;
 
-class MacHighNqap : public MacHighAp {
+class MacHighNqap {
 public:
+	typedef Callback<void (Packet *)> ForwardCallback;
+
 	MacHighNqap ();
-	virtual ~MacHighNqap ();
+	~MacHighNqap ();
 
-	void setInterface (NetInterface80211 *interface);
+	void set_dca_txop (DcaTxop *dca);
+	void set_interface (NetworkInterface80211 *interface);
+	void set_forward_callback (ForwardCallback *callback);
+	void set_supported_rates (SupportedRates rates);
 
-	virtual void addTsRequest (TSpecRequest *request);
-	virtual void delTsRequest (TSpecRequest *request);
+	void queue (Packet *packet, MacAddress to);
 
+	void ack_received (ChunkMac80211Hdr const &hdr);
+	void receive (Packet *packet, ChunkMac80211Hdr const *hdr);
 private:
-	MacParameters *parameters (void);
-	Packet *getPacketFor (int destination);
-	void sendBeacon (void);
-
-	virtual NetInterface80211 *interface (void);
-	virtual void enqueueToLow (Packet *packet);
-	virtual void forwardQueueToLow (Packet *packet);
-	virtual void sendAssociationResponseOk (int destination);
-	virtual void sendReAssociationResponseOk (int destination);
-	virtual void sendProbeResponse (int destination);
-	virtual void gotAddTsRequest (Packet *packet);
-	virtual void gotDelTsRequest (Packet *packet);
-	virtual void gotCFPoll (Packet *packet);
-	virtual void gotQosNull (Packet *packet);
-
-	MacDcfParameters *m_dcfParameters;
-	MacQueue80211e *m_queue;
-	Dcf *m_dcf;
-	NetInterface80211 *m_interface;
-
-	StaticHandler<MacHighNqap> *m_sendBeaconTimer;
+	DcaTxop *m_dca;
+	NetworkInterface80211 *m_interface;
+	ForwardCallback *m_forward;
+	SupportedRates m_rates;
 };
 
-#endif /* MAC_HIGH_NQAP */
+}; // namespace yans
+
+
+#endif /* MAC_HIGH_NQAP_H */

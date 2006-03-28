@@ -119,6 +119,17 @@ MacHighNqsta::set_assoc_request_timeout (uint64_t us)
 	m_assoc_request_timeout_us = us;
 }
 
+MacAddress 
+MacHighNqsta::get_bssid (void) const
+{
+	return m_bssid;
+}
+void 
+MacHighNqsta::set_bssid (MacAddress bssid)
+{
+	m_bssid = bssid;
+}
+
 MacAddress
 MacHighNqsta::get_broadcast_bssid (void)
 {
@@ -161,9 +172,9 @@ MacHighNqsta::send_association_request ()
 	TRACE ("send assoc request");
 	ChunkMac80211Hdr hdr;
 	hdr.set_type (MAC_80211_DATA);
-	hdr.set_addr1 (m_interface->get_bssid ());
+	hdr.set_addr1 (get_bssid ());
 	hdr.set_addr2 (m_interface->get_mac_address ());
-	hdr.set_addr3 (m_interface->get_bssid ());
+	hdr.set_addr3 (get_bssid ());
 	hdr.set_ds_not_from ();
 	hdr.set_ds_to ();
 	Packet *packet = new Packet ();
@@ -253,7 +264,7 @@ MacHighNqsta::queue (Packet *packet, MacAddress to)
 	       ", queue_size="<<m_queue->get_size ());
 	ChunkMac80211Hdr hdr;
 	hdr.set_type (MAC_80211_DATA);
-	hdr.set_addr1 (m_interface->get_bssid ());
+	hdr.set_addr1 (get_bssid ());
 	hdr.set_addr2 (m_interface->get_mac_address ());
 	hdr.set_addr3 (to);
 	hdr.set_ds_not_from ();
@@ -294,7 +305,7 @@ MacHighNqsta::receive (Packet *packet, ChunkMac80211Hdr const *hdr)
 			good_beacon = true;
 		}
 		if (good_beacon) {
-			m_interface->set_bssid (hdr->get_addr3 ());
+			set_bssid (hdr->get_addr3 ());
 		}
 		if (good_beacon && m_state == BEACON_MISSED) {
 			m_state = WAIT_ASSOC_RESP;
@@ -308,7 +319,7 @@ MacHighNqsta::receive (Packet *packet, ChunkMac80211Hdr const *hdr)
 				//not a probe resp for our ssid.
 				return;
 			}
-			m_interface->set_bssid (hdr->get_addr3 ());
+			set_bssid (hdr->get_addr3 ());
 			m_timeout->set_interval (probe_resp.get_beacon_interval_us ());
 			if (m_probe_request_event != 0) {
 				m_probe_request_event->cancel ();

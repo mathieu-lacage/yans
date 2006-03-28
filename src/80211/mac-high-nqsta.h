@@ -28,7 +28,6 @@
 
 namespace yans {
 
-class Phy80211;
 class CancellableEvent;
 class Packet;
 class ChunkMac80211Hdr;
@@ -54,11 +53,14 @@ public:
 	void set_probe_request_timeout (uint64_t us);
 	void set_assoc_request_timeout (uint64_t us);
 
+	MacAddress get_bssid (void) const;
+
 	void queue (Packet *packet, MacAddress to);
 
 	void ack_received (ChunkMac80211Hdr const &hdr);
 	void receive (Packet *packet, ChunkMac80211Hdr const *hdr);
 private:
+	void set_bssid (MacAddress bssid);
 	MacAddress get_broadcast_bssid (void);
 	void send_probe_request (void);
 	void send_association_request ();
@@ -85,6 +87,7 @@ private:
 	SupportedRates m_rates;
 	DcaTxop *m_dca;
 	Timeout *m_timeout;
+	MacAddress m_bssid;
 };
 
 }; // namespace yans

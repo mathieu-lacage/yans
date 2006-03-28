@@ -219,6 +219,7 @@ YANS_SRC:= \
 	src/80211/status-code.cc \
 	src/80211/chunk-mgt.cc \
 	src/80211/mac-high-nqsta.cc \
+	src/80211/mac-high-nqap.cc \
 	src/80211/network-interface-80211.cc \
 	src/80211/network-interface-80211-factory.cc \
 	src/test/test.cc \
@@ -328,6 +329,7 @@ YANS_HDR := \
 	src/80211/status-code.h \
 	src/80211/chunk-mgt.h \
 	src/80211/mac-high-nqsta.h \
+	src/80211/mac-high-nqap.h \
 	src/host/loopback-interface.h \
 	src/ethernet/chunk-mac-crc.h \
 	src/ethernet/chunk-mac-eth.h \

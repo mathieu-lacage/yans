@@ -50,6 +50,7 @@ class DcaTxop;
 class MacQueue80211e;
 class MacHighAdhoc;
 class MacHighNqsta;
+class MacHighNqap;
 
 class NetworkInterface80211 : public NetworkInterface {
 public:
@@ -58,11 +59,9 @@ public:
 	void connect_to (Channel80211 *channel);
 	void register_trace (TraceContainer *container);
 
-	MacAddress get_bssid (void) const;
-	Ssid get_ssid (void) const;
-
-	void set_ssid (Ssid ssid);
-	void set_bssid (MacAddress bssid);
+	virtual MacAddress get_bssid (void) const = 0;
+	virtual Ssid get_ssid (void) const = 0;
+	virtual void set_ssid (Ssid ssid) = 0;
 
 	virtual void set_host (Host *host);
 	virtual void set_mac_address (MacAddress self);
@@ -110,8 +109,6 @@ private:
 	MacTxMiddle *m_tx_middle;
 	MacParameters *m_parameters;
 
-	MacAddress m_bssid;
-	Ssid m_ssid;
 	MacAddress m_self;
 	Ipv4Address m_ipv4_address;
 	Ipv4Mask m_ipv4_mask;
@@ -123,10 +120,15 @@ private:
 class NetworkInterface80211Adhoc : public NetworkInterface80211 {
 public:
 	NetworkInterface80211Adhoc ();
-	~NetworkInterface80211Adhoc ();
+	virtual ~NetworkInterface80211Adhoc ();
+
+	virtual MacAddress get_bssid (void) const;
+	virtual Ssid get_ssid (void) const;
+	virtual void set_ssid (Ssid ssid);
 private:
 	virtual void forward_down (Packet *packet, MacAddress to);
 	friend class NetworkInterface80211Factory;
+	Ssid m_ssid;
 	DcaTxop *m_dca;
 	MacHighAdhoc *m_high;
 };
@@ -134,13 +136,35 @@ private:
 class NetworkInterface80211Nqsta : public NetworkInterface80211 {
 public:
 	NetworkInterface80211Nqsta ();
-	~NetworkInterface80211Nqsta ();
+	virtual ~NetworkInterface80211Nqsta ();
+
+	virtual MacAddress get_bssid (void) const;
+	virtual Ssid get_ssid (void) const;
+	virtual void set_ssid (Ssid ssid);
 private:
 	void associated (void);
 	virtual void forward_down (Packet *packet, MacAddress to);
 	friend class NetworkInterface80211Factory;
+	Ssid m_ssid;
 	DcaTxop *m_dca;
 	MacHighNqsta *m_high;
+};
+
+class NetworkInterface80211Nqap : public NetworkInterface80211 {
+public:
+	NetworkInterface80211Nqap ();
+	virtual ~NetworkInterface80211Nqap ();
+
+	virtual MacAddress get_bssid (void) const;
+	virtual Ssid get_ssid (void) const;
+	virtual void set_ssid (Ssid ssid);
+	
+private:
+	virtual void forward_down (Packet *packet, MacAddress to);
+	friend class NetworkInterface80211Factory;
+	Ssid m_ssid;
+	DcaTxop *m_dca;
+	MacHighNqap *m_high;
 };
 
 }; // namespace yans

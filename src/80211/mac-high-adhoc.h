@@ -43,6 +43,8 @@ public:
 	void set_forward_callback (ForwardCallback *callback);
 	void set_dca_txop (DcaTxop *dca);
 
+	MacAddress get_bssid (void) const;
+
 	void enqueue (Packet *packet, MacAddress to);
 
 	/* invoked by the MacLows. */

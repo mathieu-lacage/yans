@@ -35,6 +35,7 @@
 #include "mac-tx-middle.h"
 #include "mac-high-adhoc.h"
 #include "mac-high-nqsta.h"
+#include "mac-high-nqap.h"
 #include "dca-txop.h"
 
 namespace yans {
@@ -69,29 +70,6 @@ NetworkInterface80211::register_trace (TraceContainer *container)
 {
 	container->register_ui_variable ("80211-bytes-rx", &m_bytes_rx);
 }
-
-MacAddress 
-NetworkInterface80211::get_bssid (void) const
-{
-	// XXX
-	return m_bssid;
-}
-Ssid 
-NetworkInterface80211::get_ssid (void) const
-{
-	return m_ssid;
-}
-void 
-NetworkInterface80211::set_ssid (Ssid ssid)
-{
-	m_ssid = ssid;
-}
-void 
-NetworkInterface80211::set_bssid (MacAddress bssid)
-{
-	m_bssid = bssid;
-}
-
 
 void 
 NetworkInterface80211::set_host (Host *host)
@@ -212,7 +190,22 @@ NetworkInterface80211Adhoc::~NetworkInterface80211Adhoc ()
 	delete m_dca;
 	delete m_high;
 }
-
+MacAddress 
+NetworkInterface80211Adhoc::get_bssid (void) const
+{
+	return m_high->get_bssid ();
+}
+Ssid 
+NetworkInterface80211Adhoc::get_ssid (void) const
+{
+	return m_ssid;
+}
+void 
+NetworkInterface80211Adhoc::set_ssid (Ssid ssid)
+{
+	// XXX restart adhoc network join.
+	m_ssid = ssid;
+}
 void 
 NetworkInterface80211Adhoc::forward_down (Packet *packet, MacAddress to)
 {
@@ -228,6 +221,22 @@ NetworkInterface80211Nqsta::~NetworkInterface80211Nqsta ()
 	delete m_dca;
 	delete m_high;
 }
+MacAddress 
+NetworkInterface80211Nqsta::get_bssid (void) const
+{
+	return m_high->get_bssid ();
+}
+Ssid 
+NetworkInterface80211Nqsta::get_ssid (void) const
+{
+	return m_ssid;
+}
+void 
+NetworkInterface80211Nqsta::set_ssid (Ssid ssid)
+{
+	// XXX restart ap scan
+	m_ssid = ssid;
+}
 void 
 NetworkInterface80211Nqsta::forward_down (Packet *packet, MacAddress to)
 {
@@ -239,6 +248,34 @@ NetworkInterface80211Nqsta::associated (void)
 	flush_arp_cache ();
 }
 
+
+NetworkInterface80211Nqap::NetworkInterface80211Nqap ()
+{}
+NetworkInterface80211Nqap::~NetworkInterface80211Nqap ()
+{
+	delete m_dca;
+	delete m_high;
+}
+MacAddress 
+NetworkInterface80211Nqap::get_bssid (void) const
+{
+	return get_mac_address ();
+}
+Ssid 
+NetworkInterface80211Nqap::get_ssid (void) const
+{
+	return m_ssid;
+}
+void 
+NetworkInterface80211Nqap::set_ssid (Ssid ssid)
+{
+	m_ssid = ssid;
+}
+void 
+NetworkInterface80211Nqap::forward_down (Packet *packet, MacAddress to)
+{
+	m_high->queue (packet, to);
+}
 
 
 }; // namespace yans
