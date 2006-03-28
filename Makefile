@@ -155,6 +155,7 @@ YANS_SRC:= \
 	src/common/seed-generator-mrg32k3a.cc \
 	src/common/random-uniform-mrg32k3a.cc \
 	src/common/rng-mrg32k3a.cc \
+	src/common/timeout.cc \
 	src/ipv4/tag-ipv4.cc \
 	src/ipv4/ipv4-end-point.cc \
 	src/ipv4/ipv4-end-points.cc \
@@ -252,6 +253,7 @@ YANS_INST_HDR := \
 	src/common/f-traced-variable.tcc \
 	src/common/random-uniform.h \
 	src/common/count-ptr-holder.tcc \
+	src/common/timeout.h \
 	src/ipv4/ipv4-route.h \
 	src/apps/periodic-generator.h \
 	src/apps/tcp-source.h \
