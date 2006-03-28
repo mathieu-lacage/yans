@@ -30,7 +30,9 @@ namespace yans {
 class NetworkInterface80211;
 class NetworkInterface80211Adhoc;
 class NetworkInterface80211Nqsta;
+class NetworkInterface80211Nqap;
 class Host;
+class DcaTxop;
 
 class NetworkInterface80211Factory {
 public:
@@ -66,8 +68,10 @@ public:
 
 	NetworkInterface80211Adhoc *create_adhoc (Host *host);
 	NetworkInterface80211Nqsta *create_nqsta (Host *host);
+	NetworkInterface80211Nqap *create_nqap (Host *host);
 private:
-	void initialize_interface (NetworkInterface80211 *interface, Host *host);
+	void initialize_interface (NetworkInterface80211 *interface, Host *host) const;
+	DcaTxop *create_dca (NetworkInterface80211 const*interface) const;
 	enum {
 		RATE_ARF,
 		RATE_AARF,

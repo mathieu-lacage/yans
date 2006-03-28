@@ -49,8 +49,7 @@ class Dcf;
 class DcaTxop;
 class MacQueue80211e;
 class MacHighAdhoc;
-class MacLowNavListener;
-class Phy80211Listener;
+class MacHighNqsta;
 
 class NetworkInterface80211 : public NetworkInterface {
 public:
@@ -84,9 +83,11 @@ public:
 
 protected:
 	NetworkInterface80211 ();
+	void flush_arp_cache (void);
 private:
 	virtual void forward_down (Packet *packet, MacAddress to) = 0;
 	void forward_up (Packet *packet);
+	void associated (void);
 	void send_arp (Packet *packet, MacAddress to);
 	void send_data (Packet *packet, MacAddress to);
 	friend class NetworkInterface80211Factory;
@@ -123,12 +124,23 @@ class NetworkInterface80211Adhoc : public NetworkInterface80211 {
 public:
 	NetworkInterface80211Adhoc ();
 	~NetworkInterface80211Adhoc ();
-protected:
-	virtual void forward_down (Packet *packet, MacAddress to);
 private:
+	virtual void forward_down (Packet *packet, MacAddress to);
 	friend class NetworkInterface80211Factory;
 	DcaTxop *m_dca;
 	MacHighAdhoc *m_high;
+};
+
+class NetworkInterface80211Nqsta : public NetworkInterface80211 {
+public:
+	NetworkInterface80211Nqsta ();
+	~NetworkInterface80211Nqsta ();
+private:
+	void associated (void);
+	virtual void forward_down (Packet *packet, MacAddress to);
+	friend class NetworkInterface80211Factory;
+	DcaTxop *m_dca;
+	MacHighNqsta *m_high;
 };
 
 }; // namespace yans

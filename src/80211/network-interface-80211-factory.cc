@@ -32,10 +32,10 @@
 #include "mac-parameters.h"
 #include "mac-tx-middle.h"
 #include "mac-rx-middle.h"
-#include "dcf.h"
 #include "dca-txop.h"
-#include "mac-queue-80211e.h"
 #include "mac-high-adhoc.h"
+#include "mac-high-nqsta.h"
+#include "supported-rates.h"
 
 namespace yans {
 
@@ -145,7 +145,7 @@ NetworkInterface80211Factory::set_mac_max_slrc (uint32_t slrc)
 }
 
 void
-NetworkInterface80211Factory::initialize_interface (NetworkInterface80211 *interface, Host *host)
+NetworkInterface80211Factory::initialize_interface (NetworkInterface80211 *interface, Host *host) const
 {
 	PropagationModel *propagation = new PropagationModel ();
 	propagation->set_tx_gain_dbm (m_prop_tx_gain_dbm);
@@ -223,16 +223,9 @@ NetworkInterface80211Factory::initialize_interface (NetworkInterface80211 *inter
 	interface->m_arp = arp;
 }
 
-
-NetworkInterface80211Adhoc *
-NetworkInterface80211Factory::create_adhoc (Host *host)
+DcaTxop *
+NetworkInterface80211Factory::create_dca (NetworkInterface80211 const*interface) const
 {
-	NetworkInterface80211Adhoc *interface = new NetworkInterface80211Adhoc ();
-	interface->m_bssid = MacAddress::get_broadcast ();
-	interface->m_ssid = m_ssid;
-
-	initialize_interface (interface, host);
-
 	DcaTxop *dca = new DcaTxop ();
 	dca->set_parameters (interface->m_parameters);
 	dca->set_tx_middle (interface->m_tx_middle);
@@ -248,7 +241,22 @@ NetworkInterface80211Factory::create_adhoc (Host *host)
 	dca->set_cw_bounds (15, 1023);
 	dca->set_max_queue_size (400);
 	dca->set_max_queue_delay_us (10000000); // 10s
+	return dca;
+}
+
+
+NetworkInterface80211Adhoc *
+NetworkInterface80211Factory::create_adhoc (Host *host)
+{
+	NetworkInterface80211Adhoc *interface = new NetworkInterface80211Adhoc ();
+	interface->m_bssid = MacAddress::get_broadcast ();
+	interface->m_ssid = m_ssid;
+
+	initialize_interface (interface, host);
+
+	DcaTxop *dca = create_dca (interface);
 	interface->m_dca = dca;
+
 
 	MacHighAdhoc *high = new MacHighAdhoc ();
 	high->set_interface (interface);
@@ -261,6 +269,38 @@ NetworkInterface80211Factory::create_adhoc (Host *host)
 
 	return interface;
 }
+
+NetworkInterface80211Nqsta *
+NetworkInterface80211Factory::create_nqsta (Host *host)
+{
+	NetworkInterface80211Nqsta *interface = new NetworkInterface80211Nqsta ();
+	interface->m_bssid = MacAddress::get_broadcast ();
+	interface->m_ssid = m_ssid;
+
+	initialize_interface (interface, host);
+
+	DcaTxop *dca = create_dca (interface);
+	interface->m_dca = dca;
+
+	SupportedRates rates;
+	for (uint32_t mode = 0; mode < interface->m_phy->get_n_modes (); mode++) {
+		rates.add_supported_rate (interface->m_phy->get_mode_bit_rate (mode));
+	}
+
+	MacHighNqsta *high = new MacHighNqsta ();
+	high->set_interface (interface);
+	high->set_dca_txop (dca);
+	high->set_forward_callback (make_callback (&NetworkInterface80211::forward_up, 
+						   static_cast<NetworkInterface80211 *> (interface)));
+	high->set_associated_callback (make_callback (&NetworkInterface80211Nqsta::associated, interface));
+	high->set_supported_rates (rates);
+	dca->set_ack_received_callback (make_callback (&MacHighNqsta::ack_received, high));
+	interface->m_rx_middle->set_forward_callback (make_callback (&MacHighNqsta::receive, high));
+	interface->m_high = high;
+
+	return interface;
+}
+
 
 }; // namespace yans
 

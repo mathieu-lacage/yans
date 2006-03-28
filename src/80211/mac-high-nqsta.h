@@ -44,11 +44,11 @@ public:
 	MacHighNqsta ();
 	~MacHighNqsta ();
 
-	void set_phy (Phy80211 *phy);
 	void set_dca_txop (DcaTxop *dca);
 	void set_interface (NetworkInterface80211 *interface);
 	void set_forward_callback (ForwardCallback *callback);
 	void set_associated_callback (AssociatedCallback *callback);
+	void set_supported_rates (SupportedRates rates);
 
 	void set_max_missed_beacons (uint32_t missed);
 	void set_probe_request_timeout (uint64_t us);
@@ -56,6 +56,7 @@ public:
 
 	void queue (Packet *packet, MacAddress to);
 
+	void ack_received (ChunkMac80211Hdr const &hdr);
 	void receive (Packet *packet, ChunkMac80211Hdr const *hdr);
 private:
 	MacAddress get_broadcast_bssid (void);
@@ -81,6 +82,7 @@ private:
 	NetworkInterface80211 *m_interface;
 	ForwardCallback *m_forward;
 	AssociatedCallback *m_associated_callback;
+	SupportedRates m_rates;
 	Phy80211 *m_phy;
 	DcaTxop *m_dca;
 	Timeout *m_timeout;

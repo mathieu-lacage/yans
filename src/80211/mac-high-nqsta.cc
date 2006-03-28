@@ -79,9 +79,9 @@ MacHighNqsta::~MacHighNqsta ()
 }
 
 void 
-MacHighNqsta::set_phy (Phy80211 *phy)
+MacHighNqsta::set_supported_rates (SupportedRates rates)
 {
-	m_phy = phy;
+	m_rates = rates;
 }
 void 
 MacHighNqsta::set_dca_txop (DcaTxop *dca)
@@ -127,11 +127,7 @@ MacHighNqsta::get_broadcast_bssid (void)
 SupportedRates
 MacHighNqsta::get_supported_rates (void)
 {
-	SupportedRates rates;
-	for (uint32_t mode = 0; mode < m_phy->get_n_modes (); mode++) {
-		rates.add_supported_rate (m_phy->get_mode_bit_rate (mode));
-	}
-	return rates;
+	return m_rates;
 }
 
 void
@@ -265,6 +261,9 @@ MacHighNqsta::queue (Packet *packet, MacAddress to)
 	m_dca->queue (packet, hdr);
 }
 
+void 
+MacHighNqsta::ack_received (ChunkMac80211Hdr const &hdr)
+{}
 void 
 MacHighNqsta::receive (Packet *packet, ChunkMac80211Hdr const *hdr)
 {

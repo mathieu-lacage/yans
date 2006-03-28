@@ -34,9 +34,8 @@
 #include "mac-rx-middle.h"
 #include "mac-tx-middle.h"
 #include "mac-high-adhoc.h"
-#include "dcf.h"
+#include "mac-high-nqsta.h"
 #include "dca-txop.h"
-#include "mac-queue-80211e.h"
 
 namespace yans {
 
@@ -162,7 +161,11 @@ NetworkInterface80211::get_ipv4_broadcast (void)
 	Ipv4Address broadcast = Ipv4Address (address | (~mask));
 	return broadcast;
 }
-
+void 
+NetworkInterface80211::flush_arp_cache (void)
+{
+	m_arp->flush ();
+}
 void 
 NetworkInterface80211::send (Packet *packet, Ipv4Address dest)
 {
@@ -214,6 +217,26 @@ void
 NetworkInterface80211Adhoc::forward_down (Packet *packet, MacAddress to)
 {
 	m_high->enqueue (packet, to);
+}
+
+
+
+NetworkInterface80211Nqsta::NetworkInterface80211Nqsta ()
+{}
+NetworkInterface80211Nqsta::~NetworkInterface80211Nqsta ()
+{
+	delete m_dca;
+	delete m_high;
+}
+void 
+NetworkInterface80211Nqsta::forward_down (Packet *packet, MacAddress to)
+{
+	m_high->queue (packet, to);
+}
+void 
+NetworkInterface80211Nqsta::associated (void)
+{
+	flush_arp_cache ();
 }
 
 
