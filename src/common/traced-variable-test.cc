@@ -33,6 +33,11 @@ public:
 
 class TracedVariableTest: public Test {
 public:
+	TracedVariableTest ();
+	void run_unsigned_tests (void);
+	void run_signed_unsigned_tests (void);
+	virtual bool run_tests (void);
+};
 void
 TracedVariableTest::run_unsigned_tests (void)
 {
@@ -227,7 +232,7 @@ TracedVariableTest::run_signed_unsigned_tests (void)
 	svar += sivar;
 }
 
-virtual bool 
+bool 
 TracedVariableTest::run_tests (void)
 {
 	run_unsigned_tests ();
@@ -238,7 +243,6 @@ TracedVariableTest::run_tests (void)
 
 TracedVariableTest::TracedVariableTest ()
 	: Test ("TracedVariable") {}
-};
 
 static TracedVariableTest g_traced_variable_test;
 

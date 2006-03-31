@@ -32,6 +32,14 @@ private:
 	bool m_test3;
 	bool m_test4;
 public:
+	CallbackTest ();
+	virtual bool run_tests (void);
+	void test1 (void);
+	int test2 (void);
+	void test3 (double a);
+	int test4 (double a, int b);
+};
+
 CallbackTest::CallbackTest ()
 	: Test ("Callback"),
 	  m_test1 (false),
@@ -40,7 +48,7 @@ CallbackTest::CallbackTest ()
 	  m_test4 (false)
 {}
   
-virtual bool 
+bool 
 CallbackTest::run_tests (void)
 {
 	typedef yans::Callback<void (void)> A;
@@ -97,7 +105,6 @@ CallbackTest::test4 (double a, int b)
 	m_test4 = true;
 	return 4;
 }
-};
 static CallbackTest g_callback_test;
 
 }; // namespace yans

@@ -34,7 +34,7 @@ struct ThreadWrap : Thread {
 	{
 		Py_INCREF(m_self);
 	}
-	ThreadWrap::~ThreadWrap() 
+	~ThreadWrap() 
 	{
 		Py_DECREF(m_self);
 	}

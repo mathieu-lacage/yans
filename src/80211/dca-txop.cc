@@ -28,6 +28,8 @@
 #include "packet.h"
 #include "phy-80211.h"
 
+#include <cassert>
+
 
 #define noDCA_TXOP_TRACE 1
 
@@ -39,10 +41,6 @@
 #else /* DCA_TXOP_TRACE */
 # define TRACE(x)
 #endif /* DCA_TXOP_TRACE */
-
-namespace {
-};
-
 
 namespace yans {
 

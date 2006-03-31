@@ -344,7 +344,14 @@ namespace yans {
 
 
 class TcpBufferTest : public Test {
+public:
+	TcpBufferTest ();
 private:
+	Packet *create_one_packet (uint32_t size);
+	bool check_front_data (TcpBuffer *buffer, uint32_t expected_data, int line);
+	bool test_buffer (uint32_t start);
+	virtual bool run_tests (void);
+};
 Packet *
 TcpBufferTest::create_one_packet (uint32_t size)
 {
@@ -454,8 +461,7 @@ TcpBufferTest::test_buffer (uint32_t start)
 	CHECK_FRONT_DATA (buffer, 102);
 	return ok;
 }
-public:
-virtual bool 
+bool 
 TcpBufferTest::run_tests (void)
 {
 	bool ok = true;
@@ -476,9 +482,8 @@ TcpBufferTest::run_tests (void)
  out:
 	return ok;
 }
-TcpBufferTest ()
+TcpBufferTest::TcpBufferTest ()
 	: Test ("TcpBuffer") {}
-};
 
 static TcpBufferTest g_tcp_buffer_test;
 
