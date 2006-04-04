@@ -185,9 +185,22 @@ private:
 	CallbackImpl<R,T1,T2,T3,T4> *m_impl;
 };
 
-template <typename OBJ_PTR, typename MEM_PTR>
-Callback<void> make_callback (MEM_PTR mem_ptr, OBJ_PTR obj_ptr) {
-	return Callback<void> (obj_ptr, mem_ptr);
+template <typename T>
+class TypeT;
+
+template <typename T>
+class TypeT<T *> {
+public:
+	typedef T Deref;
+};
+
+template <typename OBJ_PTR, typename R>
+Callback<R> make_callback (R (TypeT<OBJ_PTR>::Deref::*mem_ptr) (), OBJ_PTR obj_ptr) {
+	return Callback<R> (obj_ptr, mem_ptr);
+}
+template <typename OBJ_PTR, typename R, typename T1>
+Callback<R,T1> make_callback (R (TypeT<OBJ_PTR>::Deref::*mem_ptr) (T1), OBJ_PTR obj_ptr) {
+	return Callback<R,T1> (obj_ptr, mem_ptr);
 }
 
 }; // namespace yans

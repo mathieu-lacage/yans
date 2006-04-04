@@ -89,8 +89,8 @@ CallbackTest::run_tests (void)
 	
 	//A a = A (this, &CallbackTest::test1);
 	A a = yans::make_callback (&CallbackTest::test1, this);
-	B b = B (this, &CallbackTest::test2);
-	//B b = yans::make_callback (&CallbackTest::test2, this);
+	//B b = B (this, &CallbackTest::test2);
+	B b = yans::make_callback (&CallbackTest::test2, this);
 	C c = C (this, &CallbackTest::test3);// = yans::make_callback (&CallbackTest::test3, this);
 	D d = D (this, &CallbackTest::test4);// = yans::make_callback (&CallbackTest::test4, this);
 	E e = E (&test5);
