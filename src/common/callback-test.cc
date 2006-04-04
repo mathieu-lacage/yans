@@ -19,13 +19,19 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "callback.tcc"
 #include "test.h"
-#include <stdio.h>
+#include "callback.h"
 
 namespace yans {
 
-class CallbackTest : public Test {
+static bool g_test5 = false;
+
+void test5 (void)
+{
+	g_test5 = true;
+}
+
+class CallbackTest : public yans::Test {
 private:
 	bool m_test1;
 	bool m_test2;
@@ -41,47 +47,12 @@ public:
 };
 
 CallbackTest::CallbackTest ()
-	: Test ("Callback"),
+	: yans::Test ("Callback"),
 	  m_test1 (false),
 	  m_test2 (false),
 	  m_test3 (false),
 	  m_test4 (false)
 {}
-  
-bool 
-CallbackTest::run_tests (void)
-{
-	typedef yans::Callback<void (void)> A;
-	typedef yans::Callback<int (void)> B;
-	typedef yans::Callback<void (double)> C;
-	typedef yans::Callback<int (double, int)> D;
-	
-	A * a = yans::make_callback (&CallbackTest::test1, this);
-	B * b = yans::make_callback (&CallbackTest::test2, this);
-	C * c = yans::make_callback (&CallbackTest::test3, this);
-	D * d = yans::make_callback (&CallbackTest::test4, this);
-	
-	(*a) ();
-
-	(*b) ();
-
-	(*c) (0.0);
-
-	(*d) (0.0, 1);
-
-	delete a;
-	delete b;
-	delete c;
-	delete d;
-
-	if (m_test1 &&
-	    m_test2 &&
-	    m_test3 &&
-	    m_test4) {
-		return true;
-	}
-	return false;
-}
 
 void 
 CallbackTest::test1 (void)
@@ -105,7 +76,46 @@ CallbackTest::test4 (double a, int b)
 	m_test4 = true;
 	return 4;
 }
+
+  
+bool 
+CallbackTest::run_tests (void)
+{
+	typedef yans::Callback<void> A;
+	typedef yans::Callback<int> B;
+	typedef yans::Callback<void, double> C;
+	typedef yans::Callback<int, double, int> D;
+	typedef yans::Callback<void> E;
+	
+	//A a = A (this, &CallbackTest::test1);
+	A a = yans::make_callback (&CallbackTest::test1, this);
+	B b = B (this, &CallbackTest::test2);
+	//B b = yans::make_callback (&CallbackTest::test2, this);
+	C c = C (this, &CallbackTest::test3);// = yans::make_callback (&CallbackTest::test3, this);
+	D d = D (this, &CallbackTest::test4);// = yans::make_callback (&CallbackTest::test4, this);
+	E e = E (&test5);
+	
+	a ();
+
+	b ();
+
+	c (0.0);
+	
+	d (0.0, 1);
+
+	e ();
+
+	if (m_test1 &&
+	    m_test2 &&
+	    m_test3 &&
+	    m_test4 &&
+	    g_test5) {
+		return true;
+	}
+	return false;
+}
+
 static CallbackTest g_callback_test;
 
-}; // namespace yans
+}; // namespace
 
