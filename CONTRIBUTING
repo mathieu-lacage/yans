@@ -1,0 +1,96 @@
+I) Integration process
+----------------------
+
+If you want to integrate a model in the yans source tree, you
+need to be ready to:
+  - conform to the yans coding style
+  - maintain the code once integrated
+  - accept at least one code review before integration
+  - perform yourself code reviews on new modules
+
+This process is not very formal which reflects our belief
+that formality kills contributions. As such, we are quite
+open to change it and/or adapt it to various special cases.
+
+II) Coding style
+----------------
+
+Coding styles are a religious issue. You might not like this
+coding style and you are free to. However, the whole
+point of a coding style is that it is applied uniformly
+on all the code. As such, we encourage you to embrace
+this coding style and adhere to it, whatever your
+beliefs are.
+
+The coding style of yans is based on the Linux Kernel coding
+style. The original linux kernel coding style can be
+found in the Documentation/CodingStyle file in the linux kernel
+source tree.
+
+Style
+-----
+
+1) indentation is 8 spaces (not tabs, not 4 spaces)
+2) put opening braces last on the line and put closing braces
+   first on the line. i.e.:
+        if (foo) {
+	        /* code */
+	} else {
+	        /* code */
+	}
+3) Naming:
+   - types should be MixedCase. This includes structure, class 
+     and typedef names
+   - variable, function and method names should use 
+     underscore_to_separate_words.
+   - member variables should be prefixed with m_
+   - global variables (static or non-static) should be prefixed 
+     with g_. Actually, you should not use global variables.
+4) Filenames: 
+   Each c++ class should define a .h and a .cc file.
+   The .h file should be minimal, that is, it should only include
+   the other .h files necessary to compile an empty .cc file which
+   includes this .h. The class MathieuFoo should be stored in the
+   files mathieu-foo.h/cc: the dash character (-) is used to separate
+   words in filenames.
+5) namespaces: if you wnat your code to be integrated in yans, 
+   your classes and your functions need to be put in the yans namespace.
+
+Taste
+-----
+
+While style is important, taste is even more important. If taste
+and style disagree, taste wins. Taste is about common sense, 
+about being right.
+
+1) Naming:
+   Types, methods, functions and variable names should be descriptive.
+   Avoid using acronyms, expand them, do not hesitate to use long names,
+   avoid shortcuts such as sz for size. Long names sometimes get in the 
+   way of being able to read the code:
+        for (int loop_count = 0; loop_count < max; loop_count++) {
+		// code
+	}
+   loop_count should be renamed to something shorter. i, j, k, l, m, 
+   and n are widely used names which identify loop counters:
+        for (int i = 0; i < max; i++) {
+		// code
+	}
+   Similarly, tmp is a common way to denote temporary variables. On
+   the other hand, foo is not an appropriate name: it says nothing
+   about the purpose of the variable.
+   If you use predicates (that is, functions or methods which return
+   a single bool value), prefix the function name with a is_ or has_.
+
+2) memory management: as much as possible, try to pass around objects
+   by value and allocated them on the stack. If you need to allocate
+   objects on the heap with new, make sure that the corresponding
+   call to delete happens where the new took place. i.e., avoid
+   passing around pointer ownership.
+   Avoid the use of reference counting and, more generaly, strive to
+   keep the memory-management model simple.
+
+3) templates: for now, templates are defined only in the simulator
+   core and are used everywhere else. Try to keep it that way by 
+   avoiding defining new templaes.
+
