@@ -1,6 +1,6 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 /*
- * Copyright (c) 2005 INRIA
+ * Copyright (c) 2005,2006 INRIA
  * All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -30,6 +30,22 @@ namespace yans {
  * It was subsequently rewritten to follow the architecture
  * outlined in "Modern C++ Design" by Andrei Alexandrescu in 
  * chapter 5, "Generalized Functors".
+ *
+ * This code uses:
+ *   - default template parameters to saves users from having to
+ *     specify empty parameters when the number of parameters
+ *     is smaller than the maximum supported number
+ *   - the pimpl idiom: the Callback class is passed around by 
+ *     value and delegates the crux of the work to its pimpl
+ *     pointer.
+ *   - two pimpl implementations which derive from CallbackImpl
+ *     FunctorCallbackImpl can be used with any functor-type
+ *     while MemPtrCallbackImpl can be used with pointers to
+ *     member functions.
+ *
+ * This code most notably departs from the alexandrescu 
+ * implementation in that it does not use type lists to specify
+ * and pass around the types of the callback arguments.
  */
 class empty {};
 class CallbackBase {};
@@ -185,24 +201,47 @@ private:
 	CallbackImpl<R,T1,T2,T3,T4> *m_impl;
 };
 
-template <typename T>
-class TypeT;
-
-template <typename T>
-class TypeT<T *> {
-public:
-	typedef T Deref;
-};
-
-template <typename OBJ_PTR, typename R>
-Callback<R> make_callback (R (TypeT<OBJ_PTR>::Deref::*mem_ptr) (), OBJ_PTR obj_ptr) {
+template <typename OBJ, typename R>
+Callback<R> make_callback (R (OBJ::*mem_ptr) (), OBJ *const obj_ptr) {
 	return Callback<R> (obj_ptr, mem_ptr);
 }
-template <typename OBJ_PTR, typename R, typename T1>
-Callback<R,T1> make_callback (R (TypeT<OBJ_PTR>::Deref::*mem_ptr) (T1), OBJ_PTR obj_ptr) {
+template <typename OBJ, typename R, typename T1>
+Callback<R,T1> make_callback (R (OBJ::*mem_ptr) (T1), OBJ *const obj_ptr) {
 	return Callback<R,T1> (obj_ptr, mem_ptr);
 }
+template <typename OBJ, typename R, typename T1, typename T2>
+Callback<R,T1,T2> make_callback (R (OBJ::*mem_ptr) (T1,T2), OBJ *const obj_ptr) {
+	return Callback<R,T1,T2> (obj_ptr, mem_ptr);
+}
+template <typename OBJ, typename R, typename T1,typename T2, typename T3>
+Callback<R,T1,T2,T3> make_callback (R (OBJ::*mem_ptr) (T1,T2,T3), OBJ *const obj_ptr) {
+	return Callback<R,T1,T2,T3> (obj_ptr, mem_ptr);
+}
+template <typename OBJ, typename R, typename T1, typename T2, typename T3, typename T4>
+Callback<R,T1,T2,T3,T4> make_callback (R (OBJ::*mem_ptr) (T1,T2,T3,T4), OBJ *const obj_ptr) {
+	return Callback<R,T1,T2,T3,T4> (obj_ptr, mem_ptr);
+}
 
+template <typename R>
+Callback<R> make_callback (R (*fn_ptr) ()) {
+	return Callback<R> (fn_ptr);
+}
+template <typename R, typename T1>
+Callback<R,T1> make_callback (R (*fn_ptr) (T1)) {
+	return Callback<R,T1> (fn_ptr);
+}
+template <typename R, typename T1, typename T2>
+Callback<R,T1,T2> make_callback (R (*fn_ptr) (T1,T2)) {
+	return Callback<R,T1,T2> (fn_ptr);
+}
+template <typename R, typename T1, typename T2,typename T3>
+Callback<R,T1,T2,T3> make_callback (R (*fn_ptr) (T1,T2,T3)) {
+	return Callback<R,T1,T2,T3> (fn_ptr);
+}
+template <typename R, typename T1, typename T2,typename T3,typename T4>
+Callback<R,T1,T2,T3,T4> make_callback (R (*fn_ptr) (T1,T2,T3,T4)) {
+	return Callback<R,T1,T2,T3,T4> (fn_ptr);
+}
 }; // namespace yans
 
 

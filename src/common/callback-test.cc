@@ -1,6 +1,6 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 /*
- * Copyright (c) 2005 INRIA
+ * Copyright (c) 2005,2006 INRIA
  * All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -25,10 +25,23 @@
 namespace yans {
 
 static bool g_test5 = false;
+static bool g_test6 = false;
+static bool g_test7 = false;
 
 void test5 (void)
 {
 	g_test5 = true;
+}
+
+void test6 (int)
+{
+	g_test6 = true;
+}
+
+int test7 (int a)
+{
+	g_test7 = true;
+	return a;
 }
 
 class CallbackTest : public yans::Test {
@@ -40,6 +53,8 @@ private:
 public:
 	CallbackTest ();
 	virtual bool run_tests (void);
+	void reset (void);
+	bool is_wrong (void);
 	void test1 (void);
 	int test2 (void);
 	void test3 (double a);
@@ -76,43 +91,89 @@ CallbackTest::test4 (double a, int b)
 	m_test4 = true;
 	return 4;
 }
+bool
+CallbackTest::is_wrong (void)
+{
+	if (!m_test1 ||
+	    !m_test2 ||
+	    !m_test3 ||
+	    !m_test4 ||
+	    !g_test5 ||
+	    !g_test6 ||
+	    !g_test7) {
+		return true;
+	}
+	return false;
+}
+
+void
+CallbackTest::reset (void)
+{
+	m_test1 = false;
+	m_test2 = false;
+	m_test3 = false;
+	m_test4 = false;
+	g_test5 = false;
+	g_test6 = false;
+	g_test7 = false;
+}
 
   
 bool 
 CallbackTest::run_tests (void)
 {
+	bool ok = true;
+
 	typedef yans::Callback<void> A;
 	typedef yans::Callback<int> B;
 	typedef yans::Callback<void, double> C;
 	typedef yans::Callback<int, double, int> D;
 	typedef yans::Callback<void> E;
+	typedef yans::Callback<void,int> F;
+	typedef yans::Callback<int,int> G;
 	
-	//A a = A (this, &CallbackTest::test1);
-	A a = yans::make_callback (&CallbackTest::test1, this);
-	//B b = B (this, &CallbackTest::test2);
-	B b = yans::make_callback (&CallbackTest::test2, this);
-	C c = C (this, &CallbackTest::test3);// = yans::make_callback (&CallbackTest::test3, this);
-	D d = D (this, &CallbackTest::test4);// = yans::make_callback (&CallbackTest::test4, this);
-	E e = E (&test5);
-	
-	a ();
+	A a0 = A (this, &CallbackTest::test1);
+	B b0 = B (this, &CallbackTest::test2);
+	C c0 = C (this, &CallbackTest::test3);
+	D d0 = D (this, &CallbackTest::test4);
+	E e0 = E (&test5);
+	F f0 = F (&test6);
+	G g0 = G (&test7);
 
-	b ();
+	a0 ();
+	b0 ();
+	c0 (0.0);
+	d0 (0.0, 1);
+	e0 ();
+	f0 (1);
+	g0 (1);
 
-	c (0.0);
-	
-	d (0.0, 1);
-
-	e ();
-
-	if (m_test1 &&
-	    m_test2 &&
-	    m_test3 &&
-	    m_test4 &&
-	    g_test5) {
-		return true;
+	if (is_wrong ()) {
+		ok = false;
 	}
-	return false;
+
+	reset ();
+
+	A a1 = yans::make_callback (&CallbackTest::test1, this);
+	B b1 = yans::make_callback (&CallbackTest::test2, this);
+	C c1 = yans::make_callback (&CallbackTest::test3, this);
+	D d1 = yans::make_callback (&CallbackTest::test4, this);
+	E e1 = yans::make_callback (&test5);
+	F f1 = yans::make_callback (&test6);
+	G g1 = yans::make_callback (&test7);
+	
+	a1 ();
+	b1 ();
+	c1 (0.0);
+	d1 (0.0, 1);
+	e1 ();
+	f1 (1);
+	g1 (2);
+
+	if (is_wrong ()) {
+		ok = false;
+	}
+	return ok;
 }
 
 static CallbackTest g_callback_test;
