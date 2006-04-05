@@ -59,6 +59,7 @@ public:
 	int test2 (void);
 	void test3 (double a);
 	int test4 (double a, int b);
+	void test8 (Callback<void, int> callback);
 };
 
 CallbackTest::CallbackTest ()
@@ -90,6 +91,11 @@ CallbackTest::test4 (double a, int b)
 {
 	m_test4 = true;
 	return 4;
+}
+void
+CallbackTest::test8 (Callback<void,int> callback)
+{
+	callback (3);
 }
 bool
 CallbackTest::is_wrong (void)
@@ -132,7 +138,7 @@ CallbackTest::run_tests (void)
 	typedef yans::Callback<void,int> F;
 	typedef yans::Callback<int,int> G;
 	
-	A a0 = A (this, &CallbackTest::test1);
+	A a0 (this, &CallbackTest::test1);
 	B b0 = B (this, &CallbackTest::test2);
 	C c0 = C (this, &CallbackTest::test3);
 	D d0 = D (this, &CallbackTest::test4);
@@ -169,6 +175,8 @@ CallbackTest::run_tests (void)
 	e1 ();
 	f1 (1);
 	g1 (2);
+
+	test8 (f1);
 
 	if (is_wrong ()) {
 		ok = false;

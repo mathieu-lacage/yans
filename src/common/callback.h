@@ -22,6 +22,8 @@
 #ifndef CALLBACK_H
 #define CALLBACK_H
 
+#include "reference-list.h"
+
 namespace yans {
 
 /***
@@ -42,13 +44,14 @@ namespace yans {
  *     FunctorCallbackImpl can be used with any functor-type
  *     while MemPtrCallbackImpl can be used with pointers to
  *     member functions.
+ *   - a reference list implementation to implement the Callback's
+ *     value semantics.
  *
  * This code most notably departs from the alexandrescu 
  * implementation in that it does not use type lists to specify
  * and pass around the types of the callback arguments.
  */
 class empty {};
-class CallbackBase {};
 
 // declare the CallbackImpl class
 template <typename R, typename T1, typename T2, typename T3, typename T4>
@@ -59,7 +62,6 @@ class CallbackImpl<R,empty,empty,empty,empty> {
 public:
 	virtual ~CallbackImpl () {}
 	virtual R operator() (void) = 0;
-	virtual CallbackImpl *copy (void) const = 0;
 };
 // define CallbackImpl for 1 params
 template <typename R, typename T1>
@@ -67,7 +69,6 @@ class CallbackImpl<R,T1,empty,empty,empty> {
 public:
 	virtual ~CallbackImpl () {}
 	virtual R operator() (T1) = 0;
-	virtual CallbackImpl *copy (void) const = 0;
 };
 // define CallbackImpl for 2 params
 template <typename R, typename T1, typename T2>
@@ -75,7 +76,6 @@ class CallbackImpl<R,T1,T2,empty,empty> {
 public:
 	virtual ~CallbackImpl () {}
 	virtual R operator() (T1, T2) = 0;
-	virtual CallbackImpl *copy (void) const = 0;
 };
 // define CallbackImpl for 3 params
 template <typename R, typename T1, typename T2, typename T3>
@@ -83,7 +83,6 @@ class CallbackImpl<R,T1,T2,T3,empty> {
 public:
 	virtual ~CallbackImpl () {}
 	virtual R operator() (T1, T2, T3) = 0;
-	virtual CallbackImpl *copy (void) const = 0;
 };
 // define CallbackImpl for 4 params
 template <typename R, typename T1, typename T2, typename T3, typename T4>
@@ -91,7 +90,6 @@ class CallbackImpl {
 public:
 	virtual ~CallbackImpl () {}
 	virtual R operator() (T1, T2, T3, T4) = 0;
-	virtual CallbackImpl *copy (void) const = 0;
 };
 
 
@@ -102,9 +100,6 @@ public:
 	FunctorCallbackImpl (T const &functor)
 		: m_functor (functor) {}
 	virtual ~FunctorCallbackImpl () {}
-	virtual FunctorCallbackImpl *copy (void) const {
-		return new FunctorCallbackImpl (*this);
-	}
 	R operator() (void) {
 		return m_functor ();
 	}
@@ -131,9 +126,6 @@ public:
 	MemPtrCallbackImpl (OBJ_PTR const&obj_ptr, MEM_PTR mem_ptr)
 		: m_obj_ptr (obj_ptr), m_mem_ptr (mem_ptr) {}
 	virtual ~MemPtrCallbackImpl () {}
-	virtual MemPtrCallbackImpl *copy (void) const {
-		return new MemPtrCallbackImpl (*this);
-	}
 	R operator() (void) {
 		return ((*m_obj_ptr).*m_mem_ptr) ();
 	}
@@ -155,13 +147,13 @@ private:
 };
 
 
-
+class CallbackBase {};
 
 // declare and define Callback class
 template<typename R, 
 	 typename T1 = empty, typename T2 = empty, 
 	 typename T3 = empty, typename T4 = empty>
-class Callback : public CallbackBase {
+class Callback : CallbackBase {
 public:
 	template <typename FUNCTOR>
 	Callback (FUNCTOR const &functor) 
@@ -172,33 +164,23 @@ public:
 	Callback (OBJ_PTR const &obj_ptr, MEM_PTR mem_ptr)
 		: m_impl (new MemPtrCallbackImpl<OBJ_PTR,MEM_PTR,R,T1,T2,T3,T4> (obj_ptr, mem_ptr))
 	{}
-
-	Callback () : m_impl (0) {}
-	~Callback () {delete m_impl;}
-	Callback (Callback const&o) : m_impl (o.m_impl->copy ()) {}
-	Callback &operator = (Callback const&o) {
-		delete m_impl;
-		m_impl = o.m_impl->copy ();
-		return *this;
-	}
-
 	R operator() (void) {
-		return (*m_impl) ();
+		return (*(m_impl.get ())) ();
 	}
 	R operator() (T1 a1) {
-		return (*m_impl) (a1);
+		return (*(m_impl.get ())) (a1);
 	}
 	R operator() (T1 a1, T2 a2) {
-		return (*m_impl) (a1,a2);
+		return (*(m_impl).get ()) (a1,a2);
 	}
 	R operator() (T1 a1, T2 a2, T3 a3) {
-		return (*m_impl) (a1,a2,a3);
+		return (*(m_impl).get ()) (a1,a2,a3);
 	}
 	R operator() (T1 a1, T2 a2, T3 a3, T4 a4) {
-		return (*m_impl) (a1,a2,a3,a4);
+		return (*(m_impl).get ()) (a1,a2,a3,a4);
 	}
 private:
-	CallbackImpl<R,T1,T2,T3,T4> *m_impl;
+	ReferenceList<CallbackImpl<R,T1,T2,T3,T4>*> m_impl;
 };
 
 template <typename OBJ, typename R>

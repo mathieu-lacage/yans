@@ -148,6 +148,7 @@ YANS_SRC:= \
 	src/common/population-analysis.cc \
 	src/common/data-writer.cc \
 	src/common/callback-test.cc \
+	src/common/reference-list-test.cc \
 	src/common/traced-variable-test.cc \
 	src/common/packet-logger.cc \
 	src/common/trace-container.cc \
@@ -249,6 +250,8 @@ YANS_INST_HDR := \
 	src/common/packet-logger.h \
 	src/common/trace-container.h \
 	src/common/callback.tcc \
+	src/common/callback.h \
+	src/common/reference-list.h \
 	src/common/ui-traced-variable.tcc \
 	src/common/si-traced-variable.tcc \
 	src/common/f-traced-variable.tcc \
