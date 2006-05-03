@@ -234,7 +234,6 @@ YANS_INST_HDR := \
 	src/simulator/cancellable-event.h \
 	src/simulator/cancellable-event.tcc \
 	src/simulator/simulator.h \
-	src/simulator/callback-event.tcc \
 	src/common/buffer.h \
 	src/common/data-writer.h \
 	src/common/pcap-writer.h \
@@ -249,7 +248,6 @@ YANS_INST_HDR := \
 	src/common/chunk.h \
 	src/common/packet-logger.h \
 	src/common/trace-container.h \
-	src/common/callback.tcc \
 	src/common/callback.h \
 	src/common/reference-list.h \
 	src/common/ui-traced-variable.tcc \
@@ -469,7 +467,7 @@ YANS_PYTHON_CXX_SRC:= \
 	python/export-simulator.cc \
 	python/function-holder.cc \
 	python/export-thread.cc \
-	python/export-callback.cc \
+	python/export-cpp-callback-factory.cc \
 	python/export-periodic-generator.cc \
 	python/export-traffic-analyser.cc \
 	python/export-packet.cc \

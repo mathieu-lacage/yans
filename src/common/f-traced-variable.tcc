@@ -22,41 +22,33 @@
 #ifndef F_TRACED_VARIABLE_TCC
 #define F_TRACED_VARIABLE_TCC
 
-#include "callback.tcc"
+#include "callback.h"
 #include <stdint.h>
-#include <cassert>
 
 namespace yans {
 
 class FTracedVariableBase {
 public:
-	typedef Callback<void (double, double)> ChangeNotifyCallback;
+	typedef Callback<void,double, double> ChangeNotifyCallback;
 
-	FTracedVariableBase ()
-		: m_callback (0) {}
-	FTracedVariableBase (FTracedVariableBase const &o)
-		: m_callback (0) {}
+	FTracedVariableBase () {}
 	FTracedVariableBase &operator = (FTracedVariableBase const &o) {
 		return *this;
 	}
 
-	~FTracedVariableBase () {
-		delete m_callback;
-		m_callback = (ChangeNotifyCallback *)0xdeadbeaf;
-	}
+	~FTracedVariableBase () {}
 
-	void set_callback(ChangeNotifyCallback *callback) {
-		assert (m_callback == 0);
+	void set_callback(ChangeNotifyCallback callback) {
 		m_callback = callback;
 	}
 protected:
 	void notify (double old_val, double new_val) {
-		if (old_val != new_val && m_callback != 0) {
-			(*m_callback) (old_val, new_val);
+		if (old_val != new_val && !m_callback.is_null ()) {
+			m_callback (old_val, new_val);
 		}
 	}
 private:
-	ChangeNotifyCallback *m_callback;
+	ChangeNotifyCallback m_callback;
 };
 
 

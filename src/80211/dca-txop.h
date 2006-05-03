@@ -23,7 +23,7 @@
 #define DCA_TXOP_H
 
 #include <stdint.h>
-#include "callback.tcc"
+#include "callback.h"
 #include "chunk-mac-80211-hdr.h"
 
 namespace yans {
@@ -39,7 +39,7 @@ class MacTxMiddle;
 class DcaTxop 
 {
 public:
-	typedef Callback <void (ChunkMac80211Hdr const&)> AckReceived;
+	typedef Callback <void, ChunkMac80211Hdr const&> AckReceived;
 
 	DcaTxop ();
 	~DcaTxop ();
@@ -48,7 +48,7 @@ public:
 	void set_phy (Phy80211 *phy);
 	void set_parameters (MacParameters *parameters);
 	void set_tx_middle (MacTxMiddle *tx_middle);
-	void set_ack_received_callback (AckReceived *callback);
+	void set_ack_received_callback (AckReceived callback);
 
 	void set_difs_us (uint64_t difs_us);
 	void set_eifs_us (uint64_t eifs_us);
@@ -89,7 +89,7 @@ private:
 	Packet *get_fragment_packet (ChunkMac80211Hdr *hdr);
 
 	Dcf *m_dcf;
-	AckReceived *m_ack_received;
+	AckReceived m_ack_received;
 	MacQueue80211e *m_queue;
 	MacTxMiddle *m_tx_middle;
 	MacLow *m_low;

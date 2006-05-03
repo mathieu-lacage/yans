@@ -24,7 +24,7 @@
 
 #include <map>
 #include <utility>
-#include "callback.tcc"
+#include "callback.h"
 #include "mac-address.h"
 
 namespace yans {
@@ -36,12 +36,12 @@ class OriginatorRxStatus;
 class MacRxMiddle
 {
 public:
-	typedef Callback<void (Packet *, ChunkMac80211Hdr const *)> ForwardUpCallback;
+	typedef Callback<void, Packet *, ChunkMac80211Hdr const *> ForwardUpCallback;
 
 	MacRxMiddle ();
 	~MacRxMiddle ();
 
-	void set_forward_callback (ForwardUpCallback *callback);
+	void set_forward_callback (ForwardUpCallback callback);
 
 	void receive (Packet *packet, ChunkMac80211Hdr const *hdr);
 private:
@@ -57,7 +57,7 @@ private:
 	typedef std::map <std::pair<MacAddress, uint8_t>, OriginatorRxStatus *, std::less<std::pair<MacAddress,uint8_t> > >::iterator QosOriginatorsI;
 	Originators m_originator_status;
 	QosOriginators m_qos_originator_status;
-	ForwardUpCallback *m_callback;
+	ForwardUpCallback m_callback;
 };
 
 }; // namespace yans

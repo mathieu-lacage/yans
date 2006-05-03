@@ -22,7 +22,7 @@
 #define PROPAGATION_MODEL_H
 
 #include <stdint.h>
-#include "callback.tcc"
+#include "callback.h"
 #include "count-ptr-holder.tcc"
 
 namespace yans {
@@ -63,14 +63,14 @@ private:
 
 class PropagationModel {
 public:
-	typedef Callback<void (Packet const*, double, uint8_t, uint8_t)> RxCallback;
+	typedef Callback<void,Packet const*, double, uint8_t, uint8_t> RxCallback;
 	PropagationModel ();
 	~PropagationModel ();
 
 	void set_host (Host *host);
 	void set_channel (Channel80211 *channel);
 	/* the unit of the power is Watt. */
-	void set_receive_callback (RxCallback *callback);
+	void set_receive_callback (RxCallback callback);
 
 	/* tx power unit: dBm */
 	void send (Packet const*packet, double tx_power, uint8_t tx_mode, uint8_t stuff) const;
@@ -92,7 +92,7 @@ private:
 	void forward_up (CountPtrHolder<Packet const> packet, double rx_power, uint8_t tx_mode, uint8_t stuff);
 	double get_rx_power (PropagationData const *rx) const;
 
-	RxCallback *m_rx_callback;
+	RxCallback m_rx_callback;
 	double m_tx_gain_dbm;
 	double m_rx_gain_dbm;
 	double m_system_loss;

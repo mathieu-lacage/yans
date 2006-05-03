@@ -30,6 +30,8 @@
 #include "simulator.h"
 #include "timeout.h"
 
+#include <cassert>
+
 #define noNQSTA_DEBUG 1
 
 #ifdef NQSTA_DEBUG
@@ -73,10 +75,7 @@ MacHighNqsta::MacHighNqsta ()
 }
 
 MacHighNqsta::~MacHighNqsta ()
-{
-	delete m_forward;
-	delete m_associated_callback;
-}
+{}
 
 void 
 MacHighNqsta::set_supported_rates (SupportedRates rates)
@@ -94,12 +93,12 @@ MacHighNqsta::set_interface (NetworkInterface80211 *interface)
 	m_interface = interface;
 }
 void 
-MacHighNqsta::set_forward_callback (ForwardCallback *callback)
+MacHighNqsta::set_forward_callback (ForwardCallback callback)
 {
 	m_forward = callback;
 }
 void 
-MacHighNqsta::set_associated_callback (AssociatedCallback *callback)
+MacHighNqsta::set_associated_callback (AssociatedCallback callback)
 {
 	m_associated_callback = callback;
 }
@@ -283,7 +282,7 @@ MacHighNqsta::receive (Packet *packet, ChunkMac80211Hdr const *hdr)
 	    hdr->get_addr1 ().is_broadcast ()) {
 		// packet is not for us
 	} else if (hdr->is_data ()) {
-		(*m_forward) (packet);
+		m_forward (packet);
 	} else if (hdr->is_probe_req () ||
 		   hdr->is_assoc_req ()) {
 		// we cannot deal with requests.
@@ -338,7 +337,7 @@ MacHighNqsta::receive (Packet *packet, ChunkMac80211Hdr const *hdr)
 			}
 			if (assoc_resp.is_success ()) {
 				m_state = ASSOCIATED;
-				(*m_associated_callback) ();
+				m_associated_callback ();
 			} else {
 				m_state = REFUSED;
 			}

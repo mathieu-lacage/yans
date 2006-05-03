@@ -20,6 +20,7 @@
  */
 
 
+#include "callback.h"
 #include "tcp-source.h"
 #include "packet.h"
 #include "host.h"
@@ -27,7 +28,8 @@
 #include "ipv4-route.h"
 #include "ipv4-end-point.h"
 #include "tcp-connection.h"
-#include "callback-event.tcc"
+#include "simulator.h"
+#include "event.tcc"
 
 #define TRACE_TCP_SOURCE 1
 
@@ -73,12 +75,12 @@ TcpSource::start_connect_now (Ipv4Address address, uint16_t port)
 {
 	m_end_point->set_peer (address, port);
 	m_connection = m_host->get_tcp ()->create_connection (m_end_point);
-	m_connection->set_callbacks (make_callback_event (&TcpSource::connect_completed, this),
-				     make_callback_event (&TcpSource::disconnect_requested, this),
-				     make_callback_event (&TcpSource::disconnect_completed, this),
-				     make_callback_event (&TcpSource::transmitted, this), 
-				     make_callback_event (&TcpSource::receive, this),
-				     make_callback_event (&TcpSource::got_ack, this));
+	m_connection->set_callbacks (make_callback (&TcpSource::connect_completed, this),
+				     make_callback (&TcpSource::disconnect_requested, this),
+				     make_callback (&TcpSource::disconnect_completed, this),
+				     make_callback (&TcpSource::transmitted, this), 
+				     make_callback (&TcpSource::receive, this),
+				     make_callback (&TcpSource::got_ack, this));
 
 	m_connection->start_connect ();
 }

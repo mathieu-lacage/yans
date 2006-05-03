@@ -37,10 +37,10 @@ class MyPyFunctionNHolder:
 def make_callback(function, *args):
     try:
         if inspect.ismethod (function):
-            name = "_yans." + function.im_class.__name__ + "_" + function.__name__ + "_callback"
+            name = "_yans." + function.im_class.__name__ + "_" + function.__name__ + "_callback_tag"
             command = name + '(args[0])';
         else:
-            name = "_yans." + method.__name__ + "_callback"
+            name = "_yans." + method.__name__ + "_callback_tag"
             command = name + '()'
         holder = eval (command)
     except:

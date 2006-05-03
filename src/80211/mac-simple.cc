@@ -61,9 +61,7 @@ MacSimple::MacSimple ()
 }
 
 MacSimple::~MacSimple ()
-{
-	delete m_data_rx;
-}
+{}
 
 uint64_t 
 MacSimple::get_rts_timeout_us (void)
@@ -88,7 +86,7 @@ MacSimple::set_stations (MacStations *stations)
 	m_stations = stations;
 }
 void 
-MacSimple::set_receiver (RxCallback *data)
+MacSimple::set_receiver (RxCallback data)
 {
 	m_data_rx = data;
 }
@@ -162,11 +160,11 @@ MacSimple::receive_ok (Packet const* p, double snr, uint8_t tx_mode, uint8_t stu
 		station->report_rx_ok (snr, tx_mode);
 		if (hdr.get_addr1 ().is_broadcast ()) {
 			TRACE ("receive broadcast data from " <<hdr.get_addr2 ());
-			(*m_data_rx) (packet);
+			m_data_rx (packet);
 		} else if (hdr.get_addr1 () == m_interface->get_mac_address ()) {
 			TRACE ("receive unicast data from " <<hdr.get_addr2 ());
 			send_ack (tx_mode, hdr.get_addr2 (), station->snr_to_snr (snr));
-			(*m_data_rx) (packet);
+			m_data_rx (packet);
 		}
 	} else if (hdr.is_ack () &&
 		   hdr.get_addr1 () == m_interface->get_mac_address ()) {

@@ -177,16 +177,12 @@ Phy80211::Phy80211 ()
 	  m_rxing (false),
 	  m_end_tx_us (0),
 	  m_previous_state_change_time_us (0),
-	  m_rx_ok_callback (0),
-	  m_rx_error_callback (0),
 	  m_end_rx_event (0),
 	  m_random (new RandomUniform ())
 {}
 
 Phy80211::~Phy80211 ()
 {
-	delete m_rx_ok_callback;
-	delete m_rx_error_callback;
 	delete m_random;
 	EventsI i = m_events.begin ();
 	while (i != m_events.end ()) {
@@ -207,12 +203,12 @@ Phy80211::set_propagation_model (PropagationModel *propagation)
 }
 
 void 
-Phy80211::set_receive_ok_callback (RxOkCallback *callback)
+Phy80211::set_receive_ok_callback (RxOkCallback callback)
 {
 	m_rx_ok_callback = callback;
 }
 void 
-Phy80211::set_receive_error_callback (RxErrorCallback *callback)
+Phy80211::set_receive_error_callback (RxErrorCallback callback)
 {
 	m_rx_error_callback = callback;
 }
@@ -883,12 +879,12 @@ Phy80211::end_rx (CountPtrHolder<Packet const> p, CountPtrHolder<RxEvent> ev, ui
 	if (m_random->get_double () > per) {
 		notify_rx_end_ok ();
 		switch_to_idle_from_sync ();
-		(*m_rx_ok_callback) (packet, snr, event->get_payload_mode (), stuff);
+		m_rx_ok_callback (packet, snr, event->get_payload_mode (), stuff);
 	} else {
 		/* failure. */
 		notify_rx_end_error ();
 		switch_to_idle_from_sync ();
-		(*m_rx_error_callback) (packet, snr);
+		m_rx_error_callback (packet, snr);
 	}
 	packet->unref ();
 	event->unref ();

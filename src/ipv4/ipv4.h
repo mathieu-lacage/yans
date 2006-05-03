@@ -25,7 +25,7 @@
 #include <vector>
 
 #include "ipv4-address.h"
-#include "callback.tcc"
+#include "callback.h"
 
 namespace yans {
 
@@ -43,7 +43,7 @@ class TraceContainer;
 
 class Ipv4 {
 public:
-	typedef Callback<void (Packet *)> TransportProtocolCallback;
+	typedef Callback<void,Packet *> TransportProtocolCallback;
 
 	Ipv4 ();
 	~Ipv4 ();
@@ -56,14 +56,14 @@ public:
 	void register_trace (TraceContainer *container);
 
 	/* invoked from higher-layers. */
-	void register_transport_protocol (TransportProtocolCallback *callback, uint8_t protocol);
+	void register_transport_protocol (TransportProtocolCallback callback, uint8_t protocol);
 	/* invoked from lower-layers. */
 	void receive (Packet *packet, NetworkInterface *from);
 
 private:
 	bool forwarding (Packet *packet, ChunkIpv4 *ip, NetworkInterface *from);
 	Ipv4Route *get_route (void);
-	TransportProtocolCallback *lookup_protocol (uint8_t id);
+	TransportProtocolCallback lookup_protocol (uint8_t id);
 	void send_icmp_time_exceeded_ttl (Packet *original, ChunkIpv4 *ip, NetworkInterface *interface);
 	bool send_out (Packet *packet, ChunkIpv4 *ip, Route const*route);
 	void send_real_out (Packet *packet, ChunkIpv4 *ip, Route const*route);
@@ -74,13 +74,13 @@ private:
 	static const uint8_t ICMP_PROTOCOL;
 
 	Host *m_host;
-	typedef std::vector<std::pair<uint8_t, TransportProtocolCallback *> > Protocols;
-	typedef std::vector<std::pair<uint8_t, TransportProtocolCallback *> >::iterator ProtocolsI;
+	typedef std::vector<std::pair<uint8_t, TransportProtocolCallback > > Protocols;
+	typedef std::vector<std::pair<uint8_t, TransportProtocolCallback > >::iterator ProtocolsI;
 	Protocols m_protocols;
 	Ipv4Address m_send_destination;
 	uint8_t m_send_protocol;
 	uint8_t m_default_ttl;
-	TransportProtocolCallback *m_icmp_callback;
+	TransportProtocolCallback m_icmp_callback;
 	uint16_t m_identification;
 	DefragStates *m_defrag_states;
 	PacketLogger *m_send_logger;

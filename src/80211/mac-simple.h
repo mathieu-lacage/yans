@@ -24,7 +24,7 @@
 #include <stdint.h>
 #include "cancellable-event.tcc"
 #include "mac-address.h"
-#include "callback.tcc"
+#include "callback.h"
 
 namespace yans {
 
@@ -36,7 +36,7 @@ class NetworkInterface;
 
 class MacSimple {
 public:
-	typedef Callback<void (Packet *)> RxCallback;
+	typedef Callback<void, Packet *> RxCallback;
 
 	MacSimple ();
 	~MacSimple ();
@@ -44,7 +44,7 @@ public:
 	void set_stations (MacStations *stations);
 	void set_interface (NetworkInterface *interface);
 	void set_rts_cts_threshold (uint32_t size);
-	void set_receiver (RxCallback *data);
+	void set_receiver (RxCallback data);
 
 	void send (Packet *packet, MacAddress to);
 	void receive_ok (Packet const*packet, double snr, uint8_t tx_mode, uint8_t stuff);
@@ -78,7 +78,7 @@ private:
 	CancellableEvent *m_rts_timeout_event;
 	CancellableEvent *m_data_timeout_event;
 	Event *m_send_later_event;
-	RxCallback *m_data_rx;
+	RxCallback m_data_rx;
 };
 
 }; // namespace yans

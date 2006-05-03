@@ -22,7 +22,7 @@
 #define MAC_HIGH_ADHOC_H
 
 #include "mac-address.h"
-#include "callback.tcc"
+#include "callback.h"
 
 namespace yans {
 
@@ -34,13 +34,13 @@ class ChunkMac80211Hdr;
 
 class MacHighAdhoc {
 public:
-	typedef Callback<void (Packet *)> ForwardCallback;
+	typedef Callback<void, Packet *> ForwardCallback;
 
 	MacHighAdhoc ();
 	~MacHighAdhoc ();
 
 	void set_interface (NetworkInterface80211 *interface);
-	void set_forward_callback (ForwardCallback *callback);
+	void set_forward_callback (ForwardCallback callback);
 	void set_dca_txop (DcaTxop *dca);
 
 	MacAddress get_bssid (void) const;
@@ -53,7 +53,7 @@ public:
 private:
 	DcaTxop *m_dca;
 	NetworkInterface80211 *m_interface;
-	ForwardCallback *m_callback;
+	ForwardCallback m_callback;
 };
 
 }; // namespace yans

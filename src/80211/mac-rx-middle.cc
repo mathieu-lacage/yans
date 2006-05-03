@@ -120,11 +120,10 @@ MacRxMiddle::~MacRxMiddle ()
 	}
 	m_qos_originator_status.erase (m_qos_originator_status.begin (),
 				       m_qos_originator_status.end ());
-	delete m_callback;
 }
 
 void 
-MacRxMiddle::set_forward_callback (ForwardUpCallback *callback)
+MacRxMiddle::set_forward_callback (ForwardUpCallback callback)
 {
 	m_callback = callback;
 }
@@ -256,14 +255,14 @@ MacRxMiddle::receive (Packet *packet, ChunkMac80211Hdr const *hdr)
 		       ", seq="<<hdr->get_sequence_number ()<<
 		       ", frag="<<hdr->get_fragment_number ());
 		originator->set_sequence_control (hdr->get_sequence_control ());
-		(*m_callback) (agregate, hdr);
+		m_callback (agregate, hdr);
 		agregate->unref ();
 	} else {
 		TRACE ("forwarding "<<hdr->get_type_string ()<<
 		       ", seq="<<hdr->get_sequence_number ()<<
 		       ", frag="<<hdr->get_fragment_number ());
 		originator->set_sequence_control (hdr->get_sequence_control ());
-		(*m_callback) (packet, hdr);
+		m_callback (packet, hdr);
 	}
 }
 

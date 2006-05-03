@@ -22,7 +22,8 @@
 #include "ui-traced-variable.tcc"
 #include "si-traced-variable.tcc"
 #include "test.h"
-#include "callback.tcc"
+#include "callback.h"
+
 
 namespace yans {
 
@@ -247,3 +248,5 @@ TracedVariableTest::TracedVariableTest ()
 static TracedVariableTest g_traced_variable_test;
 
 }; // namespace yans
+
+

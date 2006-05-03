@@ -27,7 +27,7 @@
 #include <list>
 #include <utility>
 
-#include "callback.tcc"
+#include "callback.h"
 
 namespace yans {
 
@@ -38,7 +38,7 @@ class Tag;
 
 class Packet {
 public:
-	typedef Callback<void (uint8_t *, uint32_t)> PacketReadWriteCallback;
+	typedef Callback<void,uint8_t *,uint32_t> PacketReadWriteCallback;
 	Packet ();
 	~Packet ();
 
@@ -60,8 +60,8 @@ public:
 	void remove_at_end (uint32_t size);
 	void remove_at_start (uint32_t size);
 
-	void write (PacketReadWriteCallback *callback) const;
-	void read (PacketReadWriteCallback *callback, uint32_t to_read);
+	void write (PacketReadWriteCallback callback) const;
+	void read (PacketReadWriteCallback callback, uint32_t to_read);
 
  private:
 	typedef std::list<std::pair<uint32_t, Tag *> >Tags;

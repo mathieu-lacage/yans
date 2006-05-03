@@ -22,7 +22,7 @@
 #ifndef TCP_CONNECTION_LISTENER_H
 #define TCP_CONNECTION_LISTENER_H
 
-#include "callback.tcc"
+#include "callback.h"
 #include "ipv4-address.h"
 #include <stdint.h>
 
@@ -38,9 +38,9 @@ class Chunk;
 
 class TcpConnectionListener {
 public:
-	typedef Callback<bool (Ipv4Address, uint16_t)> ConnectionAcception;
-	typedef Callback<void (TcpConnection *, Ipv4EndPoint *)> ConnectionCreated;
-	typedef Callback<void (TcpConnectionListener *)> TcpConnectionListenerDestroy;
+	typedef Callback<bool, Ipv4Address, uint16_t> ConnectionAcception;
+	typedef Callback<void, TcpConnection *, Ipv4EndPoint *> ConnectionCreated;
+	typedef Callback<void, TcpConnectionListener *> TcpConnectionListenerDestroy;
 
 	TcpConnectionListener ();
 	~TcpConnectionListener ();
@@ -52,11 +52,11 @@ public:
 
 	void receive (Packet *packet, Chunk *chunk);
 
-	void set_callbacks (ConnectionAcception *connection_acception,
-			    ConnectionCreated *connection_created);
+	void set_callbacks (ConnectionAcception connection_acception,
+			    ConnectionCreated connection_created);
 private:
-	ConnectionAcception *m_acception;
-	ConnectionCreated *m_creation;
+	ConnectionAcception m_acception;
+	ConnectionCreated m_creation;
 	Host *m_host;
 	Ipv4 *m_ipv4;
 	Tcp *m_tcp;

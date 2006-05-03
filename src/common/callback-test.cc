@@ -21,6 +21,7 @@
 
 #include "test.h"
 #include "callback.h"
+#include <stdint.h>
 
 namespace yans {
 
@@ -139,7 +140,8 @@ CallbackTest::run_tests (void)
 	typedef yans::Callback<int,int> G;
 	
 	A a0 (this, &CallbackTest::test1);
-	B b0 = B (this, &CallbackTest::test2);
+	B b0;
+	b0 = B (this, &CallbackTest::test2);
 	C c0 = C (this, &CallbackTest::test3);
 	D d0 = D (this, &CallbackTest::test4);
 	E e0 = E (&test5);
@@ -177,6 +179,8 @@ CallbackTest::run_tests (void)
 	g1 (2);
 
 	test8 (f1);
+
+	Callback<void, int64_t,int64_t> a2;
 
 	if (is_wrong ()) {
 		ok = false;

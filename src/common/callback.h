@@ -50,6 +50,9 @@ namespace yans {
  * This code most notably departs from the alexandrescu 
  * implementation in that it does not use type lists to specify
  * and pass around the types of the callback arguments.
+ * Of course, it also does not use copy-destruction semantics
+ * and relies on a reference list rather than auto_ptr to hold
+ * the pointer.
  */
 class empty {};
 
@@ -147,13 +150,11 @@ private:
 };
 
 
-class CallbackBase {};
-
 // declare and define Callback class
 template<typename R, 
 	 typename T1 = empty, typename T2 = empty, 
 	 typename T3 = empty, typename T4 = empty>
-class Callback : CallbackBase {
+class Callback {
 public:
 	template <typename FUNCTOR>
 	Callback (FUNCTOR const &functor) 
@@ -164,6 +165,16 @@ public:
 	Callback (OBJ_PTR const &obj_ptr, MEM_PTR mem_ptr)
 		: m_impl (new MemPtrCallbackImpl<OBJ_PTR,MEM_PTR,R,T1,T2,T3,T4> (obj_ptr, mem_ptr))
 	{}
+
+	Callback (ReferenceList<CallbackImpl<R,T1,T2,T3,T4> *> const &impl) 
+		: m_impl (impl)
+	{}
+
+	bool is_null (void) {
+		return (m_impl.get () == 0)?true:false;
+	}
+
+	Callback () : m_impl () {}
 	R operator() (void) {
 		return (*(m_impl.get ())) ();
 	}

@@ -38,14 +38,23 @@ template <typename OBJ_PTR>
 class ReferenceList {
 public:
 	ReferenceList () 
-		:  m_obj_ptr (), 
+		:  m_obj_ptr (),
 		   m_prev (this), 
-		   m_next (this) {}
-	ReferenceList (ReferenceList &o) {
-		insert_in_list (o);
+		   m_next (this) 
+	{}
+	ReferenceList (ReferenceList &o) 
+		: m_obj_ptr (),
+		  m_prev (this), 
+		  m_next (this)
+	{
+		insert_self_in_other (o);
 	}
-	ReferenceList (ReferenceList const&o) {
-		insert_in_list (o);
+	ReferenceList (ReferenceList const&o) 
+		: m_obj_ptr (),
+		  m_prev (this), 
+		  m_next (this)
+	{
+		insert_self_in_other (o);
 	}
 	ReferenceList (OBJ_PTR const &obj_ptr)
 		: m_obj_ptr (obj_ptr), 
@@ -55,9 +64,9 @@ public:
 	~ReferenceList () {
 		remove_from_list ();
 	}
-	ReferenceList & operator= (ReferenceList &o) {
+	ReferenceList & operator= (ReferenceList const&o) {
 		remove_from_list ();
-		insert_in_list (o);
+		insert_self_in_other (o);
 		return *this;
 	}
 	OBJ_PTR operator-> () {
@@ -72,9 +81,10 @@ public:
 		return m_obj_ptr;
 	}
 private:
-	void insert_in_list (ReferenceList const&o) {
+	void insert_self_in_other (ReferenceList const&o) {
 		m_prev = &o;
 		m_next = o.m_next;
+		m_next->m_prev = this;
 		o.m_next = this;
 		m_obj_ptr = o.m_obj_ptr;
 	}
@@ -82,6 +92,7 @@ private:
 		if (m_prev == this) {
 			//assert (m_next == this);
 			delete m_obj_ptr;
+			m_obj_ptr = OBJ_PTR ();
 		}
 		m_prev->m_next = m_next;
 		m_next->m_prev = m_prev;

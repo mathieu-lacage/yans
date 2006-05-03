@@ -20,6 +20,16 @@
  */
 
 #include "ipv4-end-point.h"
+#include "simulator.h"
+#include "event.tcc"
+
+namespace {
+void
+invoke_now (yans::Ipv4EndPoint::DestroyCallback callback, yans::Ipv4EndPoint *end_point)
+{
+	callback (end_point);
+}
+};
 
 namespace yans {
 
@@ -27,17 +37,12 @@ Ipv4EndPoint::Ipv4EndPoint (Ipv4Address address, uint16_t port)
 	: m_local_addr (address), 
 	  m_local_port (port),
 	  m_peer_addr (Ipv4Address::get_any ()),
-	  m_peer_port (0),
-	  m_reception (0),
-	  m_destroy (0)
+	  m_peer_port (0)
 {}
 Ipv4EndPoint::~Ipv4EndPoint ()
 {
-	m_destroy->invoke_later (this);
-	delete m_destroy;
-	if (m_reception != 0) {
-		delete m_reception;
-	}
+	Event * ev = make_event (invoke_now, m_destroy, this);
+	Simulator::insert_later (ev);
 }
 
 Ipv4Address 
@@ -70,16 +75,16 @@ Ipv4EndPoint::set_peer (Ipv4Address address, uint16_t port)
 void 
 Ipv4EndPoint::receive (Packet *packet, Chunk *chunk)
 {
-	(*m_reception) (packet, chunk);
+	m_reception (packet, chunk);
 }
 void 
-Ipv4EndPoint::set_callback (Ipv4EndPointReceptionCallback *reception)
+Ipv4EndPoint::set_callback (ReceptionCallback reception)
 {
 	m_reception = reception;
 }
 
 void 
-Ipv4EndPoint::set_destroy_callback (Ipv4EndPointDestroyCallback *destroy)
+Ipv4EndPoint::set_destroy_callback (DestroyCallback destroy)
 {
 	m_destroy = destroy;
 }

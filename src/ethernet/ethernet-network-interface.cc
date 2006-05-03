@@ -28,9 +28,10 @@
 #include "packet.h"
 #include "ipv4.h"
 #include "host.h"
-#include "callback.tcc"
+#include "callback.h"
 #include "packet-logger.h"
 #include "trace-container.h"
+#include <cassert>
 
 #define noTRACE_ETHERNET 1
 

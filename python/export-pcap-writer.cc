@@ -1,9 +1,9 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 
 #include <boost/python.hpp>
-#include "export-callback.tcc"
+#include "method-callback.tcc"
 #include "yans/pcap-writer.h"
-#include "yans/callback.tcc"
+#include "yans/callback.h"
 #include "yans/packet.h"
 
 using namespace boost::python;
@@ -16,6 +16,5 @@ void export_pcap_writer (void)
 	writer.def ("write_header_ethernet", &PcapWriter::write_header_ethernet);
 	writer.def ("write_packet", &PcapWriter::write_packet);
 
-	export_method_as_callback<struct foo> ("PcapWriter_write_packet_callback",
-					       &PcapWriter::write_packet);
+	EXPORT_METHOD_AS_CALLBACK (PcapWriter,write_packet);
 }

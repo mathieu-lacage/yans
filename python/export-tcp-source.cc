@@ -1,7 +1,7 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 
 #include <boost/python.hpp>
-#include "export-callback.tcc"
+#include "method-callback.tcc"
 #include "yans/tcp-source.h"
 #include "yans/host.h"
 #include "yans/trace-container.h"
@@ -19,5 +19,5 @@ void export_tcp_source (void)
 	tcp.def ("start_disconnect_now", &TcpSource::start_disconnect_at);
 	tcp.def ("register_trace", &TcpSource::register_trace);
 
-	export_method_as_callback<struct TcpSource_send> ("TcpSource_send_callback", &TcpSource::send);
+	EXPORT_METHOD_AS_CALLBACK (TcpSource, send);
 }

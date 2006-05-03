@@ -33,8 +33,7 @@ namespace yans {
 
 UdpSink::UdpSink (Host *host)
 	: m_host (host),
-	  m_end_point (0),
-	  m_callback (0)
+	  m_end_point (0)
 {}
 
 UdpSink::~UdpSink ()
@@ -44,13 +43,11 @@ UdpSink::~UdpSink ()
 	}
 	m_end_point = (Ipv4EndPoint *) 0xdeadbeaf;
 	m_host = (Host *)0xdeadbeaf;
-	delete m_callback;
 }
 
 void 
-UdpSink::set_receive_callback (UdpSinkCallback *callback)
+UdpSink::set_receive_callback (UdpSinkCallback callback)
 {
-	assert (m_callback == 0);
 	m_callback = callback;
 }
 
@@ -77,8 +74,8 @@ UdpSink::unbind_at (double at)
 void
 UdpSink::receive (Packet *packet, Chunk *chunk)
 {
-	if (m_callback != 0) {
-		(*m_callback) (packet);
+	if (!m_callback.is_null ()) {
+		m_callback (packet);
 	}
 }
 

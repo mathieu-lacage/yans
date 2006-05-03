@@ -22,41 +22,33 @@
 #ifndef SI_TRACED_VARIABLE_TCC
 #define SI_TRACED_VARIABLE_TCC
 
-#include "callback.tcc"
+#include "callback.h"
 #include <stdint.h>
-#include <cassert>
 
 namespace yans {
 
 class SiTracedVariableBase {
 public:
-	typedef Callback<void (int64_t, int64_t)> ChangeNotifyCallback;
+	typedef Callback<void,int64_t, int64_t> ChangeNotifyCallback;
 
-	SiTracedVariableBase ()
-		: m_callback (0) {}
-	SiTracedVariableBase (SiTracedVariableBase const &o)
-		: m_callback (0) {}
+	SiTracedVariableBase () {}
 	SiTracedVariableBase &operator = (SiTracedVariableBase const &o) {
 		return *this;
 	}
 
-	~SiTracedVariableBase () {
-		delete m_callback;
-		m_callback = (ChangeNotifyCallback *)0xdeadbeaf;
-	}
+	~SiTracedVariableBase () {}
 
-	void set_callback(ChangeNotifyCallback *callback) {
-		assert (m_callback == 0);
+	void set_callback(ChangeNotifyCallback callback) {
 		m_callback = callback;
 	}
 protected:
 	void notify (int64_t old_val, int64_t new_val) {
-		if (old_val != new_val && m_callback != 0) {
-			(*m_callback) (old_val, new_val);
+		if (old_val != new_val && !m_callback.is_null ()) {
+			m_callback (old_val, new_val);
 		}
 	}
 private:
-	ChangeNotifyCallback *m_callback;
+	ChangeNotifyCallback m_callback;
 };
 
 template <typename T>

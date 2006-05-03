@@ -23,14 +23,14 @@
 #define TIMEOUT_H
 
 #include <stdint.h>
-#include "callback.tcc"
+#include "callback.h"
 
 namespace yans {
 
 class Timeout {
 public:
-	typedef Callback<void (void)> ExpireCallback;
-	Timeout (ExpireCallback *callback);
+	typedef Callback<void> ExpireCallback;
+	Timeout (ExpireCallback callback);
 	~Timeout ();
 	void set_interval (uint64_t us);
 	void set_count (uint32_t count);
@@ -44,7 +44,7 @@ private:
 	uint32_t m_count;
 	uint32_t m_current_count;
 	bool m_stop;
-	ExpireCallback *m_callback;
+	ExpireCallback m_callback;
 };
 
 }; // namespace yans

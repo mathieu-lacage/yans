@@ -24,21 +24,16 @@
 namespace yans {
 
 PacketLogger::PacketLogger ()
-	: m_callback (0)
 {}
-PacketLogger::~PacketLogger ()
-{
-	delete m_callback;
-}
 void 
 PacketLogger::log (Packet const*packet)
 {
-	if (m_callback != 0) {
-		(*m_callback) (packet);
+	if (!m_callback.is_null ()) {
+		m_callback (packet);
 	}
 }
 void 
-PacketLogger::set_callback (PacketLoggerCallback *callback)
+PacketLogger::set_callback (PacketLoggerCallback callback)
 {
 	m_callback = callback;
 }

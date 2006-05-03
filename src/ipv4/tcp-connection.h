@@ -22,8 +22,8 @@
 #ifndef TCP_CONNECTION_H
 #define TCP_CONNECTION_H
 
-#include "callback-event.tcc"
 #include "ipv4-address.h"
+#include "callback.h"
 #include <stdint.h>
 
 namespace yans {
@@ -38,13 +38,13 @@ class TraceContainer;
 
 class TcpConnection {
 public:
-	typedef CallbackEvent<void (void)> ConnectCompletedCallback;
-	typedef CallbackEvent<void (void)> DisConnectRequestedCallback;
-	typedef CallbackEvent<void (void)> DisConnectCompletedCallback;
-	typedef CallbackEvent<void (void)> DataReceivedCallback;
-	typedef CallbackEvent<void (void)> DataTransmittedCallback;
-	typedef CallbackEvent<void (Packet *)> AckReceivedCallback;
-	typedef CallbackEvent<void (TcpConnection *)> TcpConnectionDestroy;
+	typedef Callback<void> ConnectCompletedCallback;
+	typedef Callback<void> DisConnectRequestedCallback;
+	typedef Callback<void> DisConnectCompletedCallback;
+	typedef Callback<void> DataReceivedCallback;
+	typedef Callback<void> DataTransmittedCallback;
+	typedef Callback<void, Packet *> AckReceivedCallback;
+	typedef Callback<void, TcpConnection *> TcpConnectionDestroy;
 
 	virtual ~TcpConnection () = 0;
 
@@ -52,16 +52,16 @@ public:
 	virtual void set_host (Host *host) = 0;
 	virtual void set_end_point (Ipv4EndPoint *end_point) = 0;
 	virtual void set_route (Route *route) = 0;
-	virtual void set_destroy_handler (TcpConnectionDestroy *handler) = 0;
+	virtual void set_destroy_handler (TcpConnectionDestroy handler) = 0;
 
 	virtual void register_trace (TraceContainer *container) = 0;
 
-	virtual void set_callbacks (ConnectCompletedCallback *connect_completed,
-				    DisConnectRequestedCallback *disconnect_requested,
-				    DisConnectCompletedCallback *disconnect_completed,
-				    DataTransmittedCallback *data_transmitted,
-				    DataReceivedCallback *data_received,
-				    AckReceivedCallback *ack_received) = 0;
+	virtual void set_callbacks (ConnectCompletedCallback connect_completed,
+				    DisConnectRequestedCallback disconnect_requested,
+				    DisConnectCompletedCallback disconnect_completed,
+				    DataTransmittedCallback data_transmitted,
+				    DataReceivedCallback data_received,
+				    AckReceivedCallback ack_received) = 0;
 	virtual void start_connect (void) = 0;
 	virtual void start_disconnect (void) = 0;
 

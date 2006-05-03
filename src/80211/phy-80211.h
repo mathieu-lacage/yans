@@ -25,7 +25,7 @@
 #include <vector>
 #include <list>
 #include <stdint.h>
-#include "callback.tcc"
+#include "callback.h"
 #include "count-ptr-holder.tcc"
 
 
@@ -67,15 +67,15 @@ public:
 class Phy80211
 {
 public:
-	typedef Callback<void (Packet const*, double, uint8_t, uint8_t)> RxOkCallback;
-	typedef Callback<void (Packet const*, double)> RxErrorCallback;
+	typedef Callback<void,Packet const*, double, uint8_t, uint8_t> RxOkCallback;
+	typedef Callback<void,Packet const*, double> RxErrorCallback;
 
 	Phy80211 ();
 	virtual ~Phy80211 ();
 
 	void set_propagation_model (PropagationModel *propagation);
-	void set_receive_ok_callback (RxOkCallback *callback);
-	void set_receive_error_callback (RxErrorCallback *callback);
+	void set_receive_ok_callback (RxOkCallback callback);
+	void set_receive_error_callback (RxErrorCallback callback);
 
 	/* rx_power unit is Watt */
 	void receive_packet (Packet const*packet,
@@ -188,8 +188,8 @@ private:
 	uint64_t m_previous_state_change_time_us;
 
 	PropagationModel *m_propagation;
-	RxOkCallback *m_rx_ok_callback;
-	RxErrorCallback *m_rx_error_callback;
+	RxOkCallback m_rx_ok_callback;
+	RxErrorCallback m_rx_error_callback;
 	Modes m_modes;
 	Listeners m_listeners;
 	CancellableEvent *m_end_rx_event;

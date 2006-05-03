@@ -163,7 +163,6 @@ DcaTxop::~DcaTxop ()
 {
 	delete m_access_listener;
 	delete m_transmission_listener;
-	delete m_ack_received;
 	delete m_nav_listener;
 	delete m_phy_listener;
 }
@@ -193,7 +192,7 @@ DcaTxop::set_tx_middle (MacTxMiddle *tx_middle)
 	m_tx_middle = tx_middle;
 }
 void 
-DcaTxop::set_ack_received_callback (AckReceived *callback)
+DcaTxop::set_ack_received_callback (AckReceived callback)
 {
 	m_ack_received = callback;
 }
@@ -459,7 +458,7 @@ DcaTxop::got_ack (double snr, uint8_t txMode)
 	if (!need_fragmentation () ||
 	    is_last_fragment ()) {
 		TRACE ("got ack. tx done.");
-		(*m_ack_received) (m_current_hdr);
+		m_ack_received (m_current_hdr);
 
 		/* we are not fragmenting or we are done fragmenting
 		 * so we can get rid of that packet now.

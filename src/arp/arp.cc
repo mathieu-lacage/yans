@@ -52,10 +52,6 @@ Arp::Arp (NetworkInterface *interface)
 Arp::~Arp ()
 {
 	flush ();
-	delete m_send_data;
-	delete m_send_arp;
-	m_send_data = 0;
-	m_send_arp = 0;
 	delete m_drop;
 	m_drop = 0;
 }
@@ -109,8 +105,8 @@ Arp::get_wait_reply_timeout (void)
 
 
 void 
-Arp::set_sender (ArpSendDataCallback *send_data,
-		 ArpSendArpCallback *send_arp)
+Arp::set_sender (ArpSendDataCallback send_data,
+		 ArpSendArpCallback send_arp)
 {
 	m_send_data = send_data;
 	m_send_arp = send_arp;
@@ -125,7 +121,7 @@ Arp::send_arp_request (Ipv4Address to)
 			 to);
 	Packet *packet = new Packet ();
 	packet->add (&arp);
-	(*m_send_arp) (packet, MacAddress::get_broadcast ());
+	m_send_arp (packet, MacAddress::get_broadcast ());
 	packet->unref ();
 }
 
@@ -138,7 +134,7 @@ Arp::send_arp_reply (Ipv4Address to_ip, MacAddress to_mac)
 		       to_mac, to_ip);
 	Packet *packet = new Packet ();
 	packet->add (&arp);
-	(*m_send_arp) (packet, to_mac);
+	m_send_arp (packet, to_mac);
 	packet->unref ();
 }
 
@@ -169,7 +165,7 @@ Arp::send_data (Packet *packet, Ipv4Address to)
 				m_drop->log (packet);
 			} else if (entry->is_alive ()) {
 				TRACE ("alive entry for " << to << " valid -- send");
-				(*m_send_data) (packet, entry->get_mac_address ());
+				m_send_data (packet, entry->get_mac_address ());
 			} else if (entry->is_wait_reply ()) {
 				TRACE ("wait reply for " << to << " valid -- drop previous");
 				Packet *old = entry->update_wait_reply (packet);
@@ -208,7 +204,7 @@ Arp::recv_arp (Packet *packet)
 				       << " for waiting entry -- flush");
 				MacAddress from_mac = arp.get_source_hardware_address ();
 				Packet *waiting = entry->mark_alive (from_mac);
-				(*m_send_data) (waiting, from_mac);
+				m_send_data (waiting, from_mac);
 				waiting->unref ();
 			} else {
 				// ignore this reply which might well be an attempt 

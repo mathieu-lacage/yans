@@ -22,7 +22,7 @@
 #define MAC_HIGH_NQSTA_H
 
 #include "mac-address.h"
-#include "callback.tcc"
+#include "callback.h"
 #include "supported-rates.h"
 #include <stdint.h>
 
@@ -37,16 +37,16 @@ class Timeout;
 
 class MacHighNqsta {
 public:
-	typedef Callback<void (Packet *)> ForwardCallback;
-	typedef Callback<void (void)> AssociatedCallback;
+	typedef Callback<void, Packet *> ForwardCallback;
+	typedef Callback<void> AssociatedCallback;
 
 	MacHighNqsta ();
 	~MacHighNqsta ();
 
 	void set_dca_txop (DcaTxop *dca);
 	void set_interface (NetworkInterface80211 *interface);
-	void set_forward_callback (ForwardCallback *callback);
-	void set_associated_callback (AssociatedCallback *callback);
+	void set_forward_callback (ForwardCallback callback);
+	void set_associated_callback (AssociatedCallback callback);
 	void set_supported_rates (SupportedRates rates);
 
 	void set_max_missed_beacons (uint32_t missed);
@@ -82,8 +82,8 @@ private:
 	CancellableEvent *m_probe_request_event;
 	CancellableEvent *m_assoc_request_event;
 	NetworkInterface80211 *m_interface;
-	ForwardCallback *m_forward;
-	AssociatedCallback *m_associated_callback;
+	ForwardCallback m_forward;
+	AssociatedCallback m_associated_callback;
 	SupportedRates m_rates;
 	DcaTxop *m_dca;
 	Timeout *m_timeout;

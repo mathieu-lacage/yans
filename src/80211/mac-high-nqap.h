@@ -22,7 +22,7 @@
 #define MAC_HIGH_NQAP_H
 
 #include "mac-address.h"
-#include "callback.tcc"
+#include "callback.h"
 #include "supported-rates.h"
 #include <stdint.h>
 
@@ -35,14 +35,14 @@ class DcaTxop;
 
 class MacHighNqap {
 public:
-	typedef Callback<void (Packet *)> ForwardCallback;
+	typedef Callback<void, Packet *> ForwardCallback;
 
 	MacHighNqap ();
 	~MacHighNqap ();
 
 	void set_dca_txop (DcaTxop *dca);
 	void set_interface (NetworkInterface80211 *interface);
-	void set_forward_callback (ForwardCallback *callback);
+	void set_forward_callback (ForwardCallback callback);
 	void set_supported_rates (SupportedRates rates);
 
 	void queue (Packet *packet, MacAddress to);
@@ -52,7 +52,7 @@ public:
 private:
 	DcaTxop *m_dca;
 	NetworkInterface80211 *m_interface;
-	ForwardCallback *m_forward;
+	ForwardCallback m_forward;
 	SupportedRates m_rates;
 };
 

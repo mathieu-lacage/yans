@@ -80,7 +80,7 @@ void
 Tcp::set_ipv4 (Ipv4 *ipv4)
 {
 	m_ipv4 = ipv4;
-	m_ipv4->register_transport_protocol (make_callback (&Tcp::receive, this), 
+	m_ipv4->register_transport_protocol (make_callback (&Tcp::receive, this),
 					     TCP_PROTOCOL);
 }
 
@@ -189,7 +189,7 @@ Tcp::create_connection (Ipv4EndPoint *end_p)
 	connection->set_end_point (end_p);
 	Route *route = m_host->get_routing_table ()->lookup (end_p->get_peer_address ());
 	connection->set_route (route);
-	connection->set_destroy_handler (make_callback_event (&Tcp::destroy_connection, this));
+	connection->set_destroy_handler (make_callback (&Tcp::destroy_connection, this));
 	m_connections.push_back (connection);
 	if (!m_running) {
 		Simulator::insert_in_us (FAST_TIMER_DELAY_US, m_fast_timer);

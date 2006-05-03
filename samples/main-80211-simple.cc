@@ -29,7 +29,7 @@
 #include "yans/udp-sink.h"
 #include "yans/periodic-generator.h"
 #include "yans/traffic-analyser.h"
-#include "yans/callback.tcc"
+#include "yans/callback.h"
 #include "yans/pcap-writer.h"
 #include "yans/trace-container.h"
 #include "yans/event.tcc"

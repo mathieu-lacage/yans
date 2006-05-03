@@ -26,7 +26,7 @@
 
 #include "chunk-mac-80211-hdr.h"
 #include "mac-address.h"
-#include "callback.tcc"
+#include "callback.h"
 
 namespace yans {
 
@@ -143,7 +143,7 @@ private:
 
 class MacLow {
 public:
-	typedef Callback<void (Packet *, ChunkMac80211Hdr const*hdr)> MacLowRxCallback;
+	typedef Callback<void, Packet *, ChunkMac80211Hdr const*> MacLowRxCallback;
 
 	MacLow ();
 	~MacLow ();
@@ -152,7 +152,7 @@ public:
 	void set_phy (Phy80211 *phy);
 	void set_stations (MacStations *stations);
 	void set_parameters (MacParameters *parameters);
-	void set_rx_callback (MacLowRxCallback *callback);
+	void set_rx_callback (MacLowRxCallback callback);
 	void register_nav_listener (MacLowNavListener *listener);
 
 	/* This transmission time includes the time required for
@@ -214,7 +214,7 @@ private:
 	Phy80211 *m_phy;
 	MacStations *m_stations;
 	MacParameters *m_parameters;
-	MacLowRxCallback *m_rx_callback;
+	MacLowRxCallback m_rx_callback;
 	typedef std::vector<MacLowNavListener *>::const_iterator NavListenersCI;
 	typedef std::vector<MacLowNavListener *> NavListeners;
 	NavListeners m_nav_listeners;

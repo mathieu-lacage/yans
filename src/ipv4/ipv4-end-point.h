@@ -22,8 +22,7 @@
 #ifndef IPV4_END_POINT_H
 #define IPV4_END_POINT_H
 
-#include "callback.tcc"
-#include "callback-event.tcc"
+#include "callback.h"
 #include "ipv4-address.h"
 #include <stdint.h>
 
@@ -34,8 +33,8 @@ class Chunk;
 
 class Ipv4EndPoint {
 public:
-	typedef Callback<void (Packet *, Chunk *)> Ipv4EndPointReceptionCallback;
-	typedef CallbackEvent<void (Ipv4EndPoint *)> Ipv4EndPointDestroyCallback;
+	typedef Callback<void,Packet *, Chunk *> ReceptionCallback;
+	typedef Callback<void,Ipv4EndPoint *> DestroyCallback;
 
 	Ipv4EndPoint (Ipv4Address address, uint16_t port);
 	~Ipv4EndPoint ();
@@ -48,15 +47,15 @@ public:
 	void set_peer (Ipv4Address address, uint16_t port);
 
 	void receive (Packet *packet, Chunk *chunk);
-	void set_callback (Ipv4EndPointReceptionCallback *reception);
-	void set_destroy_callback (Ipv4EndPointDestroyCallback *destroy);
+	void set_callback (ReceptionCallback reception);
+	void set_destroy_callback (DestroyCallback destroy);
 private:
 	Ipv4Address m_local_addr;
 	uint16_t m_local_port;
 	Ipv4Address m_peer_addr;
 	uint16_t m_peer_port;
-	Ipv4EndPointReceptionCallback *m_reception;
-	Ipv4EndPointDestroyCallback *m_destroy;
+	ReceptionCallback m_reception;
+	DestroyCallback m_destroy;
 };
 
 }; // namespace yans

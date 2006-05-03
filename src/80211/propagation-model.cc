@@ -70,12 +70,9 @@ PropagationData::get_tx_power_dbm (void) const
 
 
 PropagationModel::PropagationModel ()
-	: m_rx_callback (0)
 {}
 PropagationModel::~PropagationModel ()
-{
-	delete m_rx_callback;
-}
+{}
 
 void 
 PropagationModel::set_host (Host *host)
@@ -89,7 +86,7 @@ PropagationModel::set_channel (Channel80211 *channel)
 	m_channel = channel;
 }
 void 
-PropagationModel::set_receive_callback (RxCallback *callback)
+PropagationModel::set_receive_callback (RxCallback callback)
 {
 	m_rx_callback = callback;
 }
@@ -117,7 +114,7 @@ void
 PropagationModel::forward_up (CountPtrHolder<Packet const> p, double rx_power, uint8_t tx_mode, uint8_t stuff)
 {
 	Packet const*packet = p.remove ();
-	(*m_rx_callback) (packet, rx_power, tx_mode, stuff);
+	m_rx_callback (packet, rx_power, tx_mode, stuff);
 	packet->unref ();
 }
 

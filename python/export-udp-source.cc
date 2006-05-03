@@ -1,7 +1,7 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 
 #include <boost/python.hpp>
-#include "export-callback.tcc"
+#include "method-callback.tcc"
 #include "yans/udp-source.h"
 #include "yans/host.h"
 
@@ -16,5 +16,5 @@ void export_udp_source (void)
 	udp.def ("set_peer", &UdpSource::set_peer);
 	udp.def ("send", &UdpSource::send);
 
-	export_method_as_callback<struct UdpSource_send> ("UdpSource_send_callback", &UdpSource::send);
+	EXPORT_METHOD_AS_CALLBACK (UdpSource,send);
 }

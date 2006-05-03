@@ -35,10 +35,7 @@ namespace yans {
 TcpConnectionListener::TcpConnectionListener ()
 {}
 TcpConnectionListener::~TcpConnectionListener ()
-{
-	delete m_acception;
-	delete m_creation;
-}
+{}
 
 void 
 TcpConnectionListener::receive (Packet *packet, Chunk *chunk)
@@ -48,7 +45,7 @@ TcpConnectionListener::receive (Packet *packet, Chunk *chunk)
 	ChunkTcp *tcp_chunk = static_cast <ChunkTcp *> (chunk);
 	if (tcp_chunk->is_flag_syn () &&
 	    !tcp_chunk->is_flag_ack ()) {
-		if ((*m_acception) (tag->get_saddress (), tag->get_sport ())) {
+		if (m_acception (tag->get_saddress (), tag->get_sport ())) {
 			Ipv4EndPoint *end_point = m_tcp->allocate (m_end_point->get_local_address (),
 								  m_end_point->get_local_port (), 
 								  tag->get_saddress (), 
@@ -72,7 +69,7 @@ TcpConnectionListener::receive (Packet *packet, Chunk *chunk)
 				return;
 			}
 			TcpConnection *connection = m_host->get_tcp ()->create_connection (end_point);
-			(*m_creation) (connection, end_point);
+			m_creation (connection, end_point);
 			end_point->receive (packet, chunk);
 		}
 	}
@@ -80,8 +77,8 @@ TcpConnectionListener::receive (Packet *packet, Chunk *chunk)
 }
 
 void 
-TcpConnectionListener::set_callbacks (ConnectionAcception *connection_acception,
-				      ConnectionCreated *connection_created)
+TcpConnectionListener::set_callbacks (ConnectionAcception connection_acception,
+				      ConnectionCreated connection_created)
 {
 	m_acception = connection_acception;
 	m_creation = connection_created;

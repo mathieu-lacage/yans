@@ -24,7 +24,7 @@
 
 #include <stdint.h>
 #include "ipv4-address.h"
-#include "callback.tcc"
+#include "callback.h"
 
 namespace yans {
 
@@ -36,12 +36,12 @@ class Chunk;
 
 class UdpSink {
 public:
-	typedef Callback<void (Packet *)> UdpSinkCallback;
+	typedef Callback<void, Packet *> UdpSinkCallback;
 
 	UdpSink (Host *host);
 	~UdpSink ();
 
-	void set_receive_callback (UdpSinkCallback *callback);
+	void set_receive_callback (UdpSinkCallback callback);
 
 	bool bind (Ipv4Address address, uint16_t port);
 	void unbind_at (double at);
@@ -50,7 +50,7 @@ private:
 	void unbind_now (void);
 	Host *m_host;
 	Ipv4EndPoint *m_end_point;
-	UdpSinkCallback *m_callback;
+	UdpSinkCallback m_callback;
 };
 
 }; // namespace yans

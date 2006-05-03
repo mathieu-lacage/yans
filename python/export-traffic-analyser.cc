@@ -1,9 +1,9 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 
 #include <boost/python.hpp>
-#include "export-callback.tcc"
+#include "method-callback.tcc"
 #include "yans/traffic-analyser.h"
-#include "yans/callback.tcc"
+#include "yans/callback.h"
 #include "yans/packet.h"
 
 using namespace boost::python;
@@ -15,6 +15,5 @@ void export_traffic_analyser (void)
 	analyser.def ("print_stats", &TrafficAnalyser::print_stats);
 	analyser.def ("receive", &TrafficAnalyser::receive);
 
-	export_method_as_callback<struct foo> ("TrafficAnalyser_receive_callback",
-					       &TrafficAnalyser::receive);
+	EXPORT_METHOD_AS_CALLBACK (TrafficAnalyser,receive);
 }

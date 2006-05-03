@@ -2,7 +2,8 @@
 
 #include <boost/python.hpp>
 #include "function-holder.h"
-#include "export-callback.tcc"
+#include "python-callback.tcc"
+#include "method-callback.tcc"
 #include "yans/tcp-sink.h"
 #include "yans/host.h"
 #include "yans/trace-container.h"
@@ -10,17 +11,15 @@
 using namespace boost::python;
 using namespace yans;
 
-static void set_receive_callback_cpp (TcpSink *self, std::auto_ptr<CallbackBase> callback)
+static void set_receive_callback_cpp (TcpSink *self, CppCallbackFactoryBase *factory)
 {
-	self->set_receive_callback (static_cast<Callback<void (Packet *)> *> (callback.get ()));
-	callback.release ();
+	self->set_receive_callback (make_method_callback<void,Packet *> (factory));
 }
+
 static void set_receive_callback_python (TcpSink *self, FunctionHolder holder)
 {
-	self->set_receive_callback (new ExportCallback1<void, Packet *> (holder));
+	self->set_receive_callback (make_python_callback<void, Packet *> (holder));
 }
-
-
 
 void export_tcp_sink (void)
 {

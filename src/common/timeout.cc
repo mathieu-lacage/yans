@@ -24,7 +24,7 @@
 
 namespace yans {
 
-Timeout::Timeout (ExpireCallback *callback)
+Timeout::Timeout (ExpireCallback callback)
 	: m_interval_us (0),
 	  m_count (0),
 	  m_current_count (0),
@@ -32,9 +32,7 @@ Timeout::Timeout (ExpireCallback *callback)
 	  m_callback (callback)
 {}
 Timeout::~Timeout ()
-{
-	delete m_callback;
-}
+{}
 void 
 Timeout::set_interval (uint64_t us)
 {
@@ -55,7 +53,6 @@ void Timeout::start (void)
 void Timeout::stop (void)
 {
 	m_stop = true;
-	delete m_callback;
 }
 void Timeout::restart (void)
 {
@@ -69,7 +66,7 @@ Timeout::expire (void)
 	}
 	m_current_count--;
 	if (m_current_count == 0) {
-		(*m_callback) ();
+		m_callback ();
 		return;
 	}
 	Simulator::insert_in_us (m_interval_us,

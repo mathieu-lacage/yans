@@ -25,7 +25,7 @@
 
 #include <stdint.h>
 #include "ipv4-address.h"
-#include "callback.tcc"
+#include "callback.h"
 
 namespace yans {
 
@@ -38,12 +38,12 @@ class TraceContainer;
 
 class TcpSink {
 public:
-	typedef Callback<void (Packet *)> TcpSinkCallback;
+	typedef Callback<void, Packet *> TcpSinkCallback;
 
 	TcpSink (Host *host);
 	~TcpSink ();
 
-	void set_receive_callback (TcpSinkCallback *callback);
+	void set_receive_callback (TcpSinkCallback callback);
 
 	bool bind (Ipv4Address address, uint16_t port);
 
@@ -65,7 +65,7 @@ private:
 	Ipv4EndPoint *m_real_end_point;
 	TcpConnectionListener *m_connections;
 	TcpConnection *m_connection;
-	TcpSinkCallback *m_callback;
+	TcpSinkCallback m_callback;
 };
 
 }; // namespace yans

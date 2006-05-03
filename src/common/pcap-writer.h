@@ -22,7 +22,7 @@
 #ifndef PCAP_WRITER_H
 #define PCAP_WRITER_H
 
-#include "callback.tcc"
+#include "callback.h"
 #include <stdint.h>
 
 namespace yans {
@@ -46,7 +46,7 @@ private:
 	void write_32 (uint32_t data);
 	void write_16 (uint16_t data);
 	DataWriter *m_writer;
-	Callback<void (uint8_t *, uint32_t)> *m_write_callback;
+	Callback<void,uint8_t *,uint32_t> m_write_callback;
 };
 
 }; // namespace yans

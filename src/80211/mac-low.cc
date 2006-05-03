@@ -32,6 +32,8 @@
 #include "mac-station.h"
 #include "mac-parameters.h"
 
+#include <cassert>
+
 #define noMAC_LOW_TRACE 1
 
 #ifdef MAC_LOW_TRACE
@@ -160,8 +162,7 @@ MacLowTransmissionParameters::get_next_packet_size (void) const
 
 
 MacLow::MacLow ()
-	: m_rx_callback (0), 
-	  m_normal_ack_timeout_event (0),
+	: m_normal_ack_timeout_event (0),
 	  m_fast_ack_timeout_event (0),
 	  m_super_fast_ack_timeout_event (0),
 	  m_fast_ack_failed_timeout_event (0),
@@ -180,7 +181,6 @@ MacLow::MacLow ()
 MacLow::~MacLow ()
 {
 	cancel_all_events ();
-	delete m_rx_callback;
 	delete m_drop_error;
 }
 
@@ -263,7 +263,7 @@ MacLow::set_stations (MacStations *stations)
 	m_stations = stations;
 }
 void 
-MacLow::set_rx_callback (MacLowRxCallback *callback)
+MacLow::set_rx_callback (MacLowRxCallback callback)
 {
 	m_rx_callback = callback;
 }
@@ -431,11 +431,11 @@ MacLow::receive_ok (Packet const*p, double rx_snr, uint8_t tx_mode, uint8_t stuf
 								   station->snr_to_snr (rx_snr));
 			Simulator::insert_in_us (get_sifs_us (), m_send_ack_event);
 		}
-		(*m_rx_callback) (packet, &hdr);
+		m_rx_callback (packet, &hdr);
 	} else if (hdr.get_addr1 ().is_broadcast ()) {
 		if (hdr.is_data () || hdr.is_mgt ()) {
 			TRACE ("rx broadcast from=" << hdr.get_addr2 ());
-			(*m_rx_callback) (packet, &hdr);
+			m_rx_callback (packet, &hdr);
 		} else {
 			// DROP.
 		}

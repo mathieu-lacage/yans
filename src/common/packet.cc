@@ -22,7 +22,6 @@
 #include "packet.h"
 #include "chunk.h"
 #include "buffer.h"
-#include "callback.tcc"
 #include "tag-manager.h"
 #include <cassert>
 
@@ -164,20 +163,20 @@ Packet::remove_at_start (uint32_t size)
 }
 
 void
-Packet::write (PacketReadWriteCallback *callback) const
+Packet::write (PacketReadWriteCallback callback) const
 {
 	uint8_t *data = m_buffer->peek_data ();
 	uint32_t to_write = get_size ();
-	(*callback) (data, to_write);
+	callback (data, to_write);
 }
 
 void 
-Packet::read (PacketReadWriteCallback *callback, 
+Packet::read (PacketReadWriteCallback callback, 
 	      uint32_t to_read)
 {
 	m_buffer->add_at_start (to_read);
 	uint8_t *data = m_buffer->peek_data ();
-	(*callback) (data, to_read);
+	callback (data, to_read);
 }
 
 

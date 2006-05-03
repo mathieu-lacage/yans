@@ -23,7 +23,7 @@
 #define PERIODIC_GENERATOR_H
 
 #include <stdint.h>
-#include "callback.tcc"
+#include "callback.h"
 
 namespace yans {
 
@@ -32,12 +32,12 @@ class CancellableEvent;
 
 class PeriodicGenerator {
 public:
-	typedef Callback<void (Packet *)> GeneratorCallback;
+	typedef Callback<void, Packet *> GeneratorCallback;
 
 	PeriodicGenerator ();
 	~PeriodicGenerator ();
 
-	void set_send_callback (GeneratorCallback *callback);
+	void set_send_callback (GeneratorCallback callback);
 
 	void set_packet_interval (double interval);
 	void set_packet_size (uint16_t size);
@@ -52,7 +52,7 @@ private:
 	friend class PeriodicGeneratorEvent;
 	void send_next_packet (void);
 
-	GeneratorCallback *m_callback;
+	GeneratorCallback m_callback;
 	double m_interval;
 	uint16_t m_size;
 	double m_stop_at;

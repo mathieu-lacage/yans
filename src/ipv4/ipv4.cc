@@ -62,12 +62,8 @@ Ipv4::Ipv4 ()
 }
 Ipv4::~Ipv4 ()
 {
-	m_icmp_callback = (TransportProtocolCallback *)0xdeadbeaf;
 	delete m_defrag_states;
 	m_defrag_states = (DefragStates *)0xdeadbeaf;
-	for (ProtocolsI i = m_protocols.begin (); i != m_protocols.end (); i++) {
-		delete (*i).second;
-	}
 	m_protocols.erase (m_protocols.begin (), m_protocols.end ());
 	delete m_send_logger;
 	delete m_recv_logger;
@@ -123,13 +119,13 @@ Ipv4::send (Packet *packet)
 }
 
 void 
-Ipv4::register_transport_protocol (TransportProtocolCallback *callback, uint8_t protocol)
+Ipv4::register_transport_protocol (TransportProtocolCallback callback, uint8_t protocol)
 {
-	assert (lookup_protocol (protocol) == 0);
+	assert (lookup_protocol (protocol).is_null ());
 	m_protocols.push_back (std::make_pair (protocol, callback));
 }
 
-Ipv4::TransportProtocolCallback *
+Ipv4::TransportProtocolCallback 
 Ipv4::lookup_protocol (uint8_t protocol)
 {
 	for (ProtocolsI i = m_protocols.begin (); i != m_protocols.end (); i++) {
@@ -137,7 +133,7 @@ Ipv4::lookup_protocol (uint8_t protocol)
 			return (*i).second;
 		}
 	}
-	return 0;
+	return TransportProtocolCallback ();
 }
 
 void
@@ -309,9 +305,9 @@ Ipv4::receive_packet (Packet *packet, ChunkIpv4 *ip, NetworkInterface *interface
 	packet->add_tag (TagInIpv4::get_tag (), tag);
 	tag->set_daddress (ip->get_destination ());
 	tag->set_saddress (ip->get_source ());
-	TransportProtocolCallback *protocol = lookup_protocol (ip->get_protocol ());
-	if (protocol != 0) {
-		(*protocol) (packet);
+	TransportProtocolCallback protocol = lookup_protocol (ip->get_protocol ());
+	if (!protocol.is_null ()) {
+		protocol (packet);
 	}
 }
 

@@ -30,7 +30,8 @@
 #include "yans/traffic-analyser.h"
 #include "yans/event.h"
 #include "yans/trace-container.h"
-#include "yans/callback-event.tcc"
+#include "yans/callback.h"
+#include "yans/event.tcc"
 #include <iostream>
 
 using namespace yans;

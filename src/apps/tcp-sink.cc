@@ -26,7 +26,8 @@
 #include "tcp.h"
 #include "host.h"
 #include "packet.h"
-#include "callback-event.tcc"
+#include "simulator.h"
+#include "event.tcc"
 
 #define noTRACE_TCP_SINK 1
 
@@ -45,8 +46,7 @@ TcpSink::TcpSink (Host *host)
 	: m_host (host),
 	  m_end_point (0),
 	  m_real_end_point (0),
-	  m_connection (0),
-	  m_callback (0)
+	  m_connection (0)
 {
 	m_host = host;
 }
@@ -58,8 +58,6 @@ TcpSink::~TcpSink ()
 	}
 	m_end_point = (Ipv4EndPoint *) 0xdeadbeaf;
 	m_host = (Host *)0xdeadbeaf;
-	delete m_callback;
-	m_callback = (TcpSinkCallback *)0xdeadbeaf;
 	delete m_connections;
 	if (m_connection != 0) {
 		delete m_connection;
@@ -76,8 +74,8 @@ TcpSink::receive (void)
 	if (packet == 0) {
 		return;
 	}
-	if (m_callback != 0) {
-		(*m_callback) (packet);
+	if (!m_callback.is_null ()) {
+		m_callback (packet);
 	}
 	packet->unref ();
 }
@@ -148,17 +146,17 @@ TcpSink::connection_created (TcpConnection *connection, Ipv4EndPoint *end_point)
 	TRACE ("connection created");
 	m_connection = connection;
 	m_real_end_point = end_point;
-	connection->set_callbacks (make_callback_event (&TcpSink::connect_completed, this),
-				   make_callback_event (&TcpSink::disconnect_requested, this),
-				   make_callback_event (&TcpSink::disconnect_completed, this),
-				   make_callback_event (&TcpSink::transmitted, this), 
-				   make_callback_event (&TcpSink::receive, this),
-				   make_callback_event (&TcpSink::got_ack, this));
+	connection->set_callbacks (make_callback (&TcpSink::connect_completed, this),
+				   make_callback (&TcpSink::disconnect_requested, this),
+				   make_callback (&TcpSink::disconnect_completed, this),
+				   make_callback (&TcpSink::transmitted, this), 
+				   make_callback (&TcpSink::receive, this),
+				   make_callback (&TcpSink::got_ack, this));
 }
 
 
 void 
-TcpSink::set_receive_callback (TcpSinkCallback *callback)
+TcpSink::set_receive_callback (TcpSinkCallback callback)
 {
 	m_callback = callback;
 }

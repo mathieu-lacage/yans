@@ -25,7 +25,6 @@
  */
 
 #include "pcap-writer.h"
-#include "callback.tcc"
 #include "simulator.h"
 #include "packet.h"
 #include "data-writer.h"
@@ -43,7 +42,6 @@ PcapWriter::PcapWriter ()
 }
 PcapWriter::~PcapWriter ()
 {
-	delete m_write_callback;
 	delete m_writer;
 }
 

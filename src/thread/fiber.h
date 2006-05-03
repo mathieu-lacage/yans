@@ -24,7 +24,7 @@
 
 #include <stdint.h>
 #include <string>
-#include "callback.tcc"
+#include "callback.h"
 
 struct FiberContext;
 
@@ -34,9 +34,9 @@ class Semaphore;
 
 class Fiber {
 public:
-	typedef Callback<void (void)> FiberRunnable;
-	Fiber (FiberRunnable *runnable, char const *name);
-	Fiber (FiberRunnable *runnable, char const *name, uint32_t stack_size);
+	typedef Callback<void> FiberRunnable;
+	Fiber (FiberRunnable runnable, char const *name);
+	Fiber (FiberRunnable runnable, char const *name, uint32_t stack_size);
 	virtual ~Fiber ();
 
 	bool is_running (void) const;
@@ -72,7 +72,7 @@ private:
 	enum FiberState_e m_state;
 	FiberContext *m_context;
 	std::string *m_name;
-	FiberRunnable *m_runnable;
+	FiberRunnable m_runnable;
 	Semaphore *m_sem_dead;
 };
 

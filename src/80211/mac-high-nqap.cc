@@ -25,9 +25,7 @@ namespace yans {
 MacHighNqap::MacHighNqap ()
 {}
 MacHighNqap::~MacHighNqap ()
-{
-	delete m_forward;
-}
+{}
 
 void 
 MacHighNqap::set_dca_txop (DcaTxop *dca)
@@ -40,7 +38,7 @@ MacHighNqap::set_interface (NetworkInterface80211 *interface)
 	m_interface = interface;
 }
 void 
-MacHighNqap::set_forward_callback (ForwardCallback *callback)
+MacHighNqap::set_forward_callback (ForwardCallback callback)
 {
 	m_forward = callback;
 }

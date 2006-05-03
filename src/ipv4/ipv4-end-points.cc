@@ -62,7 +62,7 @@ Ipv4EndPoints::allocate (void)
 		return 0;
 	}
 	Ipv4EndPoint *end_point = new Ipv4EndPoint (Ipv4Address::get_any (), port);
-	end_point->set_destroy_callback (make_callback_event (&Ipv4EndPoints::destroy_end_point, this));
+	end_point->set_destroy_callback (make_callback (&Ipv4EndPoints::destroy_end_point, this));
 	m_end_points.push_back (end_point);
 	return end_point;
 }
@@ -74,7 +74,7 @@ Ipv4EndPoints::allocate (Ipv4Address address)
 		return 0;
 	}
 	Ipv4EndPoint *end_point = new Ipv4EndPoint (address, port);
-	end_point->set_destroy_callback (make_callback_event (&Ipv4EndPoints::destroy_end_point, this));
+	end_point->set_destroy_callback (make_callback (&Ipv4EndPoints::destroy_end_point, this));
 	m_end_points.push_back (end_point);
 	return end_point;
 }
@@ -85,7 +85,7 @@ Ipv4EndPoints::allocate (Ipv4Address address, uint16_t port)
 		return 0;
 	}
 	Ipv4EndPoint *end_point = new Ipv4EndPoint (address, port);
-	end_point->set_destroy_callback (make_callback_event (&Ipv4EndPoints::destroy_end_point, this));
+	end_point->set_destroy_callback (make_callback (&Ipv4EndPoints::destroy_end_point, this));
 	m_end_points.push_back (end_point);
 	return end_point;
 }
@@ -105,7 +105,7 @@ Ipv4EndPoints::allocate (Ipv4Address local_address, uint16_t local_port,
 	}
 	Ipv4EndPoint *end_point = new Ipv4EndPoint (local_address, local_port);
 	end_point->set_peer (peer_address, peer_port);
-	end_point->set_destroy_callback (make_callback_event (&Ipv4EndPoints::destroy_end_point, this));
+	end_point->set_destroy_callback (make_callback (&Ipv4EndPoints::destroy_end_point, this));
 	m_end_points.push_back (end_point);
 	return end_point;
 }

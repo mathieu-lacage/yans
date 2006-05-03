@@ -22,6 +22,7 @@
 #include "trace-container.h"
 #include "packet-logger.h"
 #include <utility>
+#include <cassert>
 
 namespace yans {
 
@@ -35,7 +36,7 @@ TraceContainer::~TraceContainer ()
 }
 
 void 
-TraceContainer::set_ui_variable_callback (char const *name, Callback<void (uint64_t, uint64_t)> *callback)
+TraceContainer::set_ui_variable_callback (char const *name, Callback<void,uint64_t, uint64_t> callback)
 {
 	for (UiListI i = m_ui_list.begin (); i != m_ui_list.end (); i++) {
 		if ((*i).second == name) {
@@ -46,7 +47,7 @@ TraceContainer::set_ui_variable_callback (char const *name, Callback<void (uint6
 	assert (false);
 }
 void 
-TraceContainer::set_si_variable_callback (char const *name, Callback<void (int64_t, int64_t)> *callback)
+TraceContainer::set_si_variable_callback (char const *name, Callback<void,int64_t, int64_t> callback)
 {
 	for (SiListI i = m_si_list.begin (); i != m_si_list.end (); i++) {
 		if ((*i).second == name) {
@@ -57,12 +58,12 @@ TraceContainer::set_si_variable_callback (char const *name, Callback<void (int64
 	assert (false);
 }
 void 
-TraceContainer::set_f_variable_callback (char const *name, Callback<void (double, double)> *callback)
+TraceContainer::set_f_variable_callback (char const *name, Callback<void,double, double> callback)
 {
 	assert (false);
 }
 void 
-TraceContainer::set_packet_logger_callback (char const *name, Callback<void (Packet const*)> *callback)
+TraceContainer::set_packet_logger_callback (char const *name, Callback<void,Packet const*> callback)
 {
 	for (PacketLoggerListI i = m_packet_logger_list.begin (); i != m_packet_logger_list.end (); i++) {
 		if ((*i).second == name) {

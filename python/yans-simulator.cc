@@ -23,7 +23,6 @@
 void export_simulator (void);
 void export_function_holder (void);
 void export_thread (void);
-void export_callback (void);
 void export_packet (void);
 void export_periodic_generator (void);
 void export_traffic_analyser (void);
@@ -40,6 +39,7 @@ void export_pcap_writer (void);
 void export_trace_container (void);
 void export_tcp_source (void);
 void export_tcp_sink (void);
+void export_cpp_callback_factory (void);
 
 
 BOOST_PYTHON_MODULE(_yans)
@@ -47,7 +47,7 @@ BOOST_PYTHON_MODULE(_yans)
 	export_simulator ();
 	export_function_holder ();
 	export_thread ();
-	export_callback ();
+	export_cpp_callback_factory ();
 	export_packet ();
 	export_periodic_generator ();
 	export_traffic_analyser ();

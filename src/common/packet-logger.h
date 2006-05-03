@@ -22,7 +22,7 @@
 #ifndef PACKET_LOGGER_H
 #define PACKET_LOGGER_H
 
-#include "callback.tcc"
+#include "callback.h"
 
 namespace yans {
 
@@ -30,13 +30,12 @@ class Packet;
 
 class PacketLogger {
 public:
-	typedef Callback<void (Packet const *)> PacketLoggerCallback;
+	typedef Callback<void,Packet const *> PacketLoggerCallback;
 	PacketLogger ();
-	~PacketLogger ();
 	void log (Packet const*packet);
-	void set_callback (PacketLoggerCallback *callback);
+	void set_callback (PacketLoggerCallback callback);
 private:
-	PacketLoggerCallback *m_callback;
+	PacketLoggerCallback m_callback;
 };
 
 }; // namespace yans

@@ -38,12 +38,10 @@ PeriodicGenerator::PeriodicGenerator ()
 {}
 
 PeriodicGenerator::~PeriodicGenerator ()
-{
-	delete m_callback;
-}
+{}
 
 void 
-PeriodicGenerator::set_send_callback (GeneratorCallback *callback)
+PeriodicGenerator::set_send_callback (GeneratorCallback callback)
 {
 	m_callback = callback;
 }
@@ -108,7 +106,7 @@ PeriodicGenerator::send_next_packet (void)
 	Packet *packet = new Packet ();
 	ChunkConstantData data = ChunkConstantData (m_size, m_n);
 	packet->add (&data);
-	(*m_callback) (packet);
+	m_callback (packet);
 	packet->unref ();
 	m_n++;
 }

@@ -24,7 +24,7 @@
 #define TCP_H
 
 #include "ipv4-address.h"
-#include "callback.tcc"
+#include "callback.h"
 #include <list>
 
 namespace yans {
