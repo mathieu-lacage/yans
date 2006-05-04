@@ -508,10 +508,19 @@ YANS_PYTHON_SIMULATOR_NAME:=yans.simulator
 YANS_PYTHON_SIMULATOR_TYPE:=python-module
 
 YANS_PYTHON_TEST_PERIO_SRC:=\
-	python/test-periodic-generator.py \
+	samples/test-periodic-generator.py \
 	$(NULL)
 YANS_PYTHON_TEST_PERIO_NAME:=pytest-periodic-generator
 YANS_PYTHON_TEST_PERIO_TYPE:=python-executable
+
+YANS_CPP_TEST_PERIO_SRC:=\
+	samples/test-periodic-generator.cc \
+	$(NULL)
+YANS_CPP_TEST_PERIO_CXXFLAGS:=$(CXXFLAGS)
+YANS_CPP_TEST_PERIO_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS)
+YANS_CPP_TEST_PERIO_NAME:=cpptest-periodic-generator
+YANS_CPP_TEST_PERIO_TYPE:=executable
+
 
 YANS_PYTHON_SAMPLE_SIMU_SRC:=\
 	samples/test-simulator.py \
@@ -550,6 +559,7 @@ ALL:= \
 	SAMPLE_CXX_THREAD \
 	SAMPLE_CXX_80211_SIMPLE \
 	SAMPLE_CXX_80211_ADHOC \
+	YANS_CPP_TEST_PERIO \
 	$(NULL)
 
 ifeq ($(PYTHON_USE),y)
