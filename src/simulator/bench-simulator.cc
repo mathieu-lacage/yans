@@ -152,6 +152,8 @@ int main (int argc, char *argv[])
 			Simulator::set_linked_list ();
 		} else if (strcmp ("--heap", argv[0]) == 0) {
 			Simulator::set_binary_heap ();
+		} else if (strcmp ("--map", argv[0]) == 0) {
+			Simulator::set_std_map ();
 		} else if (strcmp ("--debug", argv[0]) == 0) {
 			g_debug = true;
 		}
