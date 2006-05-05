@@ -128,6 +128,7 @@ YANS_SRC:= \
 	src/simulator/scheduler.cc \
 	src/simulator/scheduler-list.cc \
 	src/simulator/scheduler-heap.cc \
+	src/simulator/scheduler-map.cc \
 	src/simulator/event.cc \
 	src/simulator/static-event.cc \
 	src/simulator/cancellable-event.cc \
@@ -281,6 +282,7 @@ YANS_HDR := \
 	src/simulator/scheduler.h \
 	src/simulator/scheduler-list.h \
 	src/simulator/scheduler-heap.h \
+	src/simulator/scheduler-map.h \
 	src/common/sgi-hashmap.h \
 	src/common/ref-count.tcc \
 	src/common/seed-generator.h \
