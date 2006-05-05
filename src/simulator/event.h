@@ -46,6 +46,7 @@ private:
 	friend class SimulatorPrivate;
 	friend class SchedulerHeap;
 	friend class SchedulerList;
+	friend class SchedulerMap;
 	void *m_id;
 };
 

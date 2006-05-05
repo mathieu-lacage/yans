@@ -184,6 +184,7 @@ SimulatorPrivate::remove (Event const*ev)
 
 #include "scheduler-list.h"
 #include "scheduler-heap.h"
+#include "scheduler-map.h"
 
 
 namespace yans {
@@ -199,6 +200,10 @@ void Simulator::set_binary_heap (void)
 {
 	m_list_type = BINARY_HEAP;
 }
+void Simulator::set_std_map (void)
+{
+	m_list_type = STD_MAP;
+}
 
 
 SimulatorPrivate *
@@ -212,6 +217,9 @@ Simulator::get_priv (void)
 			break;
 		case BINARY_HEAP:
 			events = new SchedulerHeap ();
+			break;
+		case STD_MAP:
+			events = new SchedulerMap ();
 			break;
 		default: // not reached
 			events = 0;

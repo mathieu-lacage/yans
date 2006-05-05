@@ -42,6 +42,7 @@ class Simulator {
 public:
 	static void set_linked_list (void);
 	static void set_binary_heap (void);
+	static void set_std_map (void);
 
 	static void destroy (void);
 
@@ -76,6 +77,7 @@ private:
 	static enum ListType {
 		LINKED_LIST,
 		BINARY_HEAP,
+		STD_MAP
 	} m_list_type;
 };
 
