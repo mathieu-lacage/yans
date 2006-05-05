@@ -66,8 +66,9 @@ SupportedRates::write_to (Buffer *buffer) const
 uint32_t 
 SupportedRates::read_from (Buffer *buffer)
 {
-	uint8_t rates_id = buffer->read_u8 ();
-	assert (rates_id == 1);
+	//uint8_t rates_id = buffer->read_u8 ();
+	//assert (rates_id == 1);
+	buffer->read_u8 ();
 	m_n_rates = buffer->read_u8 ();
 	assert (m_n_rates <= 8);
 	for (uint8_t i = 0; i < m_n_rates; i++) {

@@ -102,8 +102,9 @@ Ssid::write_to (Buffer *buffer) const
 uint32_t 
 Ssid::read_from (Buffer *buffer)
 {
-	uint8_t element_id = buffer->read_u8 ();
-	assert (element_id == 0);
+	//uint8_t element_id = buffer->read_u8 ();
+	//assert (element_id == 0);
+	buffer->read_u8 ();
 	uint8_t size = buffer->read_u8 ();
 	assert (size <= 32);
 	for (uint8_t i = 0; i < size; i++) {
