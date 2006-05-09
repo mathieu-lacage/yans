@@ -156,7 +156,7 @@ DcaTxop::DcaTxop ()
 	m_dcf = new Dcf ();
 	m_access_listener = new DcaTxop::AccessListener (this);
 	m_dcf->register_access_listener (m_access_listener);
-	
+	m_queue = new MacQueue80211e ();
 }
 
 DcaTxop::~DcaTxop ()
@@ -165,6 +165,7 @@ DcaTxop::~DcaTxop ()
 	delete m_transmission_listener;
 	delete m_nav_listener;
 	delete m_phy_listener;
+	delete m_queue;
 }
 
 void 
