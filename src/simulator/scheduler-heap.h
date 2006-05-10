@@ -43,9 +43,6 @@ public:
 	virtual void     remove_next (void);
 
 	virtual Event *remove (Event const*ev);
-
-	virtual void clear (void);
-	virtual void print_debug (void);
 private:
 	typedef std::vector<std::pair<Event*, uint64_t> > BinaryHeap;
 	void store_in_event (Event *ev, uint32_t index) const;

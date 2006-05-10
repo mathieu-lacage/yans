@@ -40,8 +40,6 @@ class Scheduler {
 
 	virtual Event *remove (Event const*ev) = 0;
 
-	virtual void clear (void) = 0;
-	virtual void print_debug (void) = 0;
 };
 
 }; // namespace yans

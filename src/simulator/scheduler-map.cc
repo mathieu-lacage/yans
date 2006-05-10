@@ -121,11 +121,5 @@ SchedulerMap::remove (Event const*ev)
 	return const_cast <Event *> (ev);
 }
 
-void 
-SchedulerMap::clear (void)
-{}
-void 
-SchedulerMap::print_debug (void)
-{}
 
 }; // namespace yans

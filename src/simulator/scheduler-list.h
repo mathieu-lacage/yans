@@ -48,9 +48,6 @@ class SchedulerList : public Scheduler {
 
 	virtual Event *remove (Event const*ev);
 
-	virtual void clear (void);
-	virtual void print_debug (void);
-
  private:
 	typedef std::list<std::pair<Event *, uint64_t> > Events;
 	typedef std::list<std::pair<Event *, uint64_t> >::iterator EventsI;

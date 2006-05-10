@@ -77,7 +77,6 @@ SchedulerList::insert_at_us (Event *event, uint64_t time)
 	}
 	m_events.push_back (std::make_pair (event, time));
 	TRACE ("inserted " << time);
-	print_debug ();
 	store_in_event (event, --(m_events.end ()));
 	return event;
 }
@@ -109,24 +108,6 @@ SchedulerList::remove (Event const*ev)
 {
 	m_events.erase (get_from_event (ev));
 	return const_cast<Event *> (ev);
-}
-
-void 
-SchedulerList::clear (void)
-{
-	/* We cannot really delete the items left in the event heap.
-	 * Items are left only when the user calls Simulator::stop ()
-	 */
-	m_events.erase (m_events.begin (), m_events.end ());
-}
-
-void 
-SchedulerList::print_debug (void)
-{
-	for (EventsI i = m_events.begin (); i != m_events.end (); i++) {
-		TRACE ("time: " << (*i).second);
-	}
-	TRACE ("end");
 }
 
 }; // namespace yans

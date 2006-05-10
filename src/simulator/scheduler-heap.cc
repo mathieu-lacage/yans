@@ -233,11 +233,4 @@ SchedulerHeap::remove (Event const*ev)
 	return const_cast <Event *> (ev);
 }
 
-void 
-SchedulerHeap::clear (void)
-{}
-void 
-SchedulerHeap::print_debug (void)
-{}
-
 }; // namespace yans

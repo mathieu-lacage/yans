@@ -41,9 +41,6 @@ public:
 	virtual void     remove_next (void);
 
 	virtual Event *remove (Event const*ev);
-
-	virtual void clear (void);
-	virtual void print_debug (void);
 private:
 	/* Note that we have to use a key made of the expiration time
 	 * and a uid unique to each packet because std::map is a unique
