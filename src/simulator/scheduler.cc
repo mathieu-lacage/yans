@@ -20,7 +20,27 @@
  */
 
 #include "scheduler.h"
+#include <cassert>
 
 
 yans::Scheduler::~Scheduler () 
 {}
+
+/* Note the invariants which this function must provide:
+ * - irreflexibility: f (x,x) is false)
+ * - antisymmetry: f(x,y) = !f(y,x)
+ * - transitivity: f(x,y) and f(y,z) => f(x,z)
+ */
+bool
+yans::Scheduler::EventKeyCompare::operator () (struct EventKey a, struct EventKey b)
+{
+	assert (a.m_uid != b.m_uid);
+	if (a.m_time < b.m_time) {
+		return true;
+	} else if (a.m_time == b.m_time && a.m_uid < b.m_uid) {
+		return true;
+	} else {
+		return false;
+	}
+}
+

@@ -36,21 +36,16 @@ class SchedulerList : public Scheduler {
 	SchedulerList ();
 	virtual ~SchedulerList ();
 
-	/* the insert operations might be veeery slow
-	 * but peek_next and remove_next should be
-	 * really fast.
-	 */
-	virtual Event *insert_at_us (Event *event, uint64_t time);
-
-	virtual Event   *peek_next (void);
-	virtual uint64_t peek_next_time_us (void);
-	virtual void     remove_next (void);
-
+	virtual Event *insert (Event *event, EventKey key);
+	virtual bool is_empty (void) const;
+	virtual Event *peek_next (void) const;
+	virtual Scheduler::EventKey peek_next_key (void) const;
+	virtual void remove_next (void);
 	virtual Event *remove (Event const*ev);
 
  private:
-	typedef std::list<std::pair<Event *, uint64_t> > Events;
-	typedef std::list<std::pair<Event *, uint64_t> >::iterator EventsI;
+	typedef std::list<std::pair<Event *, EventKey> > Events;
+	typedef std::list<std::pair<Event *, EventKey> >::iterator EventsI;
 	void store_in_event (Event *ev, EventsI i);
 	EventsI get_from_event (Event const*ev);
 	Events m_events;

@@ -25,18 +25,7 @@
 #include <utility>
 #include <cassert>
 
-#define noTRACE_EVENT_LIST 1
-
-#ifdef TRACE_EVENT_LIST
-#include <iostream>
-# define TRACE(x) \
-std::cout << "LIST TRACE " << x << std::endl;
-#else /* TRACE_EVENT_LIST */
-# define TRACE(format,...)
-#endif /* TRACE_EVENT_LIST */
-
 namespace yans {
-
 
 SchedulerList::SchedulerList ()
 {}
@@ -66,34 +55,35 @@ SchedulerList::get_from_event (Event const*ev)
 
 
 Event * 
-SchedulerList::insert_at_us (Event *event, uint64_t time)
+SchedulerList::insert (Event *event, Scheduler::EventKey key)
 {
+	Scheduler::EventKeyCompare compare;
 	for (EventsI i = m_events.begin (); i != m_events.end (); i++) {
-		if ((*i).second > time) {
-			m_events.insert (i, std::make_pair (event, time));
+		if (compare ((*i).second, key)) {
+			m_events.insert (i, std::make_pair (event, key));
 			store_in_event (event, i);
 			return event;
 		}
 	}
-	m_events.push_back (std::make_pair (event, time));
-	TRACE ("inserted " << time);
+	m_events.push_back (std::make_pair (event, key));
 	store_in_event (event, --(m_events.end ()));
 	return event;
 }
-Event *
-SchedulerList::peek_next (void)
+bool 
+SchedulerList::is_empty (void) const
 {
-	if (m_events.empty ()) {
-		return 0;
-	}
+	return m_events.empty ();
+}
+Event *
+SchedulerList::peek_next (void) const
+{
+	assert (!is_empty ());
 	return m_events.front ().first;
 }
-uint64_t
-SchedulerList::peek_next_time_us (void)
+Scheduler::EventKey
+SchedulerList::peek_next_key (void) const
 {
-	if (m_events.empty ()) {
-		return 0;
-	}
+	assert (!is_empty ());
 	return m_events.front ().second;
 }
 

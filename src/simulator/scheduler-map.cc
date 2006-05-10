@@ -37,27 +37,8 @@ std::cout << "MAP TRACE " << x << std::endl;
 
 namespace yans {
 
-/* Note the invariants which this function must provide:
- * - irreflexibility: f (x,x) is false)
- * - antisymmetry: f(x,y) = !f(y,x)
- * - transitivity: f(x,y) and f(y,z) => f(x,z)
- */
-bool
-SchedulerMap::EventMapKeyCompare::operator () (struct EventMapKey a, struct EventMapKey b)
-{
-	assert (a.m_uid != b.m_uid);
-	if (a.m_time < b.m_time) {
-		return true;
-	} else if (a.m_time == b.m_time && a.m_uid < b.m_uid) {
-		return true;
-	} else {
-		return false;
-	}
-}
-
 
 SchedulerMap::SchedulerMap ()
-	: m_uid (0)
 {}
 SchedulerMap::~SchedulerMap ()
 {}
@@ -77,47 +58,48 @@ SchedulerMap::get_from_event (Event const *ev) const
 }
 
 Event * 
-SchedulerMap::insert_at_us (Event *event, uint64_t time)
+SchedulerMap::insert (Event *event, Scheduler::EventKey key)
 {
-	EventMapKey key = {time, m_uid};
 	std::pair<EventMapI,bool> result = m_list.insert (std::make_pair (key, event));
 	assert (result.second);
 	store_in_event (event, result.first);
-	m_uid++;
 	return event;
 }
 
-Event   *
-SchedulerMap::peek_next (void)
+bool
+SchedulerMap::is_empty (void) const
 {
-	if (m_list.empty ()) {
-		return 0;
-	}
-	EventMapI i = m_list.begin ();
+	return m_list.empty ();
+}
+
+Event *
+SchedulerMap::peek_next (void) const
+{
+	assert (!is_empty ());
+	EventMapCI i = m_list.begin ();
 	assert (i != m_list.end ());
 	return (*i).second;
 }
-uint64_t 
-SchedulerMap::peek_next_time_us (void)
+Scheduler::EventKey
+SchedulerMap::peek_next_key (void) const
 {
-	if (m_list.empty ()) {
-		return 0;
-	}
-	EventMapI i = m_list.begin ();
+	assert (!is_empty ());
+	EventMapCI i = m_list.begin ();
 	assert (i != m_list.end ());
-	return (*i).first.m_time;
+	return (*i).first;
 }
-void     
+void
 SchedulerMap::remove_next (void)
 {
-	assert (!m_list.empty ());
+	assert (!is_empty ());
 	m_list.erase (m_list.begin ());
 }
 
 Event *
 SchedulerMap::remove (Event const*ev)
 {
-	assert (!m_list.empty ());
+	assert (!is_empty ());
+	m_list.erase (get_from_event (ev));
 	return const_cast <Event *> (ev);
 }
 

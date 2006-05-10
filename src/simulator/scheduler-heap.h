@@ -36,15 +36,14 @@ public:
 	SchedulerHeap ();
 	virtual ~SchedulerHeap ();
 
-	virtual Event *insert_at_us (Event *event, uint64_t time);
-
-	virtual Event   *peek_next (void);
-	virtual uint64_t peek_next_time_us (void);
-	virtual void     remove_next (void);
-
+	virtual Event *insert (Event *event, Scheduler::EventKey key);
+	virtual bool is_empty (void) const;
+	virtual Event *peek_next (void) const;
+	virtual Scheduler::EventKey peek_next_key (void) const;
+	virtual void remove_next (void);
 	virtual Event *remove (Event const*ev);
 private:
-	typedef std::vector<std::pair<Event*, uint64_t> > BinaryHeap;
+	typedef std::vector<std::pair<Event*, Scheduler::EventKey> > BinaryHeap;
 	void store_in_event (Event *ev, uint32_t index) const;
 	uint32_t get_from_event (Event const *ev) const;
 
@@ -57,7 +56,6 @@ private:
 	bool is_root (uint32_t id) const;
 	bool is_bottom (uint32_t id) const;
 	bool is_less (uint32_t a, uint32_t b);
-	bool is_empty (void) const;
 	uint32_t smallest (uint32_t a, uint32_t b);
 
 	void exch (uint32_t a, uint32_t b);

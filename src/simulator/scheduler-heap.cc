@@ -54,7 +54,8 @@ SchedulerHeap::SchedulerHeap ()
 	// we purposedly waste an item at the start of
 	// the array to make sure the indexes in the
 	// array start at one.
-	m_heap.push_back (std::make_pair ((Event *)0, 0));
+	Scheduler::EventKey empty_key;
+	m_heap.push_back (std::make_pair ((Event *)0, empty_key));
 }
 
 SchedulerHeap::~SchedulerHeap ()
@@ -124,7 +125,7 @@ SchedulerHeap::exch (uint32_t a, uint32_t b)
 {
 	assert (b < m_heap.size () && a < m_heap.size ());
 	TRACE ("exch " << a << ", " << b);
-	std::pair<Event *, uint64_t> tmp (m_heap[a]);
+	std::pair<Event *, Scheduler::EventKey> tmp (m_heap[a]);
 	m_heap[a] = m_heap[b];
 	m_heap[b] = tmp;
 	store_in_event (m_heap[a].first, a);
@@ -134,7 +135,8 @@ SchedulerHeap::exch (uint32_t a, uint32_t b)
 bool
 SchedulerHeap::is_less (uint32_t a, uint32_t b)
 {
-	return (m_heap[a].second < m_heap[b].second)?true:false;
+	Scheduler::EventKeyCompare compare;
+	return compare (m_heap[a].second, m_heap[b].second);
 }
 
 uint32_t 
@@ -191,28 +193,24 @@ SchedulerHeap::top_down (void)
 
 
 Event * 
-SchedulerHeap::insert_at_us (Event *event, uint64_t time)
+SchedulerHeap::insert (Event *event, Scheduler::EventKey key)
 {
-	m_heap.push_back (std::make_pair (event, time));
+	m_heap.push_back (std::make_pair (event, key));
 	store_in_event (event, last ());
 	bottom_up ();
 	return event;
 }
 
 Event   *
-SchedulerHeap::peek_next (void)
+SchedulerHeap::peek_next (void) const
 {
-	if (is_empty ()) {
-		return 0;
-	}
+	assert (!is_empty ());
 	return m_heap[root ()].first;
 }
-uint64_t 
-SchedulerHeap::peek_next_time_us (void)
+Scheduler::EventKey
+SchedulerHeap::peek_next_key (void) const
 {
-	if (is_empty ()) {
-		return 0;
-	}
+	assert (!is_empty ());
 	return m_heap[root ()].second;
 }
 void     

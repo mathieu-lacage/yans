@@ -34,29 +34,16 @@ public:
 	SchedulerMap ();
 	virtual ~SchedulerMap ();
 
-	virtual Event *insert_at_us (Event *event, uint64_t time);
-
-	virtual Event   *peek_next (void);
-	virtual uint64_t peek_next_time_us (void);
-	virtual void     remove_next (void);
-
+	virtual Event *insert (Event *event, Scheduler::EventKey key);
+	virtual bool is_empty (void) const;
+	virtual Event *peek_next (void) const;
+	virtual Scheduler::EventKey peek_next_key (void) const;
+	virtual void remove_next (void);
 	virtual Event *remove (Event const*ev);
 private:
-	/* Note that we have to use a key made of the expiration time
-	 * and a uid unique to each packet because std::map is a unique
-	 * key sorted container. i.e., no two elements can have "equal"
-	 * keys.
-	 */
-	struct EventMapKey {
-		uint64_t m_time;
-		uint32_t m_uid;
-	};
-	class EventMapKeyCompare {
-	public:
-		bool operator () (struct EventMapKey a, struct EventMapKey b);
-	};
-	typedef std::map<EventMapKey, Event*, EventMapKeyCompare> EventMap;
-	typedef std::map<EventMapKey, Event*, EventMapKeyCompare>::iterator EventMapI;
+	typedef std::map<Scheduler::EventKey, Event*, Scheduler::EventKeyCompare> EventMap;
+	typedef std::map<Scheduler::EventKey, Event*, Scheduler::EventKeyCompare>::iterator EventMapI;
+	typedef std::map<Scheduler::EventKey, Event*, Scheduler::EventKeyCompare>::const_iterator EventMapCI;
 
 	void store_in_event (Event *ev, EventMapI i) const;
 	EventMapI get_from_event (Event const *ev) const;
