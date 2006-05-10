@@ -177,7 +177,11 @@ ChunkIpv4::get_destination (void) const
 bool
 ChunkIpv4::is_checksum_ok (void) const
 {
+#if DISABLE_IPV4_CHECKSUM
+	return true;
+#else
 	return m_good_checksum;
+#else
 }
 
 

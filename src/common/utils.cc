@@ -130,6 +130,9 @@ ascii_to_mac_network (char const *str, uint8_t address[6])
 uint16_t 
 utils_checksum_calculate (uint16_t checksum, uint8_t *buffer, uint16_t size)
 {
+#if DISABLE_IPV4_CHECKSUM
+	return 0;
+#else
 	/* see RFC 1071 to understand this code. */
 	uint32_t sum = checksum;
 	uint16_t *data = (uint16_t *) buffer;
@@ -147,6 +150,7 @@ utils_checksum_calculate (uint16_t checksum, uint8_t *buffer, uint16_t size)
 		sum = (sum & 0xffff) + (sum >> 16);
 	}
 	return sum;
+#endif
 }
 
 uint16_t 
