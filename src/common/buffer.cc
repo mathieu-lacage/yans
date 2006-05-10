@@ -412,7 +412,9 @@ uint8_t *
 Buffer::alloc_and_zero (uint32_t size) const
 {
 	uint8_t *buffer = new uint8_t [size];
-	memset (buffer, 0x33, size);
+#ifndef NDEBUG
+        memset (buffer, 0x33, size);
+#endif
 	return buffer;
 }
 
