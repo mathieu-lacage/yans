@@ -35,7 +35,9 @@ void
 ChunkConstantData::add_to (Buffer *buffer) const
 {
 	buffer->add_at_start (m_len);
+#ifndef NDEBUG
 	memset (buffer->peek_data (), m_data, m_len);
+#endif
 }
 void 
 ChunkConstantData::remove_from (Buffer *buffer)
