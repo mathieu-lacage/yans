@@ -68,6 +68,7 @@ private:
 	bool m_stop;
 	Clock *m_clock;
 	Scheduler *m_events;
+	uint32_t m_uid;
 };
 
 SimulatorPrivate::SimulatorPrivate (Scheduler *events)
@@ -75,6 +76,7 @@ SimulatorPrivate::SimulatorPrivate (Scheduler *events)
 	m_stop = false;
 	m_clock = new Clock ();
 	m_events = events;
+	m_uid = 0;
 }
 
 SimulatorPrivate::~SimulatorPrivate ()
@@ -106,16 +108,14 @@ void
 SimulatorPrivate::run (void)
 {
 	handle_immediate ();
-	Event *next_ev = m_events->peek_next ();
-	uint64_t next_now = m_events->peek_next_time_us ();
-	while (next_ev != 0 && !m_stop) {
+	while (!m_events->is_empty () && !m_stop) {
+		Event *next_ev = m_events->peek_next ();
+		Scheduler::EventKey next_key = m_events->peek_next_key ();
 		m_events->remove_next ();
-		m_clock->update_current_us (next_now);
+		m_clock->update_current_us (next_key.m_time);
 		TRACE ("handle " << next_ev);
 		next_ev->notify ();
 		handle_immediate ();
-		next_ev = m_events->peek_next ();
-		next_now = m_events->peek_next_time_us ();
 	}
 }
 
@@ -128,13 +128,15 @@ Event *
 SimulatorPrivate::insert_in_us (Event *event, uint64_t delta)
 {
 	uint64_t current = m_clock->get_current_us ();
-	return m_events->insert_at_us (event, current+delta);
+	return insert_at_us (event, current+delta);
 }
 Event * 
 SimulatorPrivate::insert_at_us (Event *event, uint64_t time)
 {
 	assert (time >= m_clock->get_current_us ());
-	return m_events->insert_at_us (event, time);
+	Scheduler::EventKey key = {time, m_uid};
+	m_uid++;
+	return m_events->insert (event, key);
 }
 uint64_t 
 SimulatorPrivate::now_us (void)
@@ -147,14 +149,14 @@ SimulatorPrivate::insert_in_s (Event *event, double delta)
 	uint64_t now_us = m_clock->get_current_us ();
 	int64_t delta_us = (int64_t)(delta * 1000000.0);
 	uint64_t us = now_us + delta_us;
-	return m_events->insert_at_us (event, us);
+	return insert_at_us (event, us);
 }
 Event * 
 SimulatorPrivate::insert_at_s (Event *event, double time)
 {
 	int64_t us = (int64_t)(time * 1000000.0);
 	assert (us >= 0);
-	return m_events->insert_at_us (event, (uint64_t)us);
+	return insert_at_us (event, (uint64_t)us);
 }
 double 
 SimulatorPrivate::now_s (void)
