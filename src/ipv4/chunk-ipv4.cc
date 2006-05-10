@@ -181,7 +181,7 @@ ChunkIpv4::is_checksum_ok (void) const
 	return true;
 #else
 	return m_good_checksum;
-#else
+#endif
 }
 
 
