@@ -30,14 +30,21 @@ class Event;
 
 class Scheduler {
  public:
+	struct EventKey {
+		uint64_t m_time;
+		uint32_t m_uid;
+	};
+	class EventKeyCompare {
+	public:
+		bool operator () (struct EventKey a, struct EventKey b);
+	};
+
 	virtual ~Scheduler () = 0;
-
-	virtual Event *insert_at_us (Event *event, uint64_t time) = 0;
-
-	virtual Event   *peek_next (void) = 0;
-	virtual uint64_t peek_next_time_us (void) = 0;
-	virtual void     remove_next (void) = 0;
-
+	virtual Event *insert (Event *event, EventKey key) = 0;
+	virtual bool is_empty (void) const = 0;
+	virtual Event *peek_next (void) const = 0;
+	virtual EventKey peek_next_key (void) const = 0;
+	virtual void remove_next (void) = 0;
 	virtual Event *remove (Event const*ev) = 0;
 
 };
