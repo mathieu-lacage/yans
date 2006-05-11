@@ -59,7 +59,7 @@ private:
 			} insert_remove;
 		};
 	};
-	void execute_log_commands (void);
+	void execute_log_commands (uint32_t uid);
 
 	typedef std::deque<struct Command> Commands;
 	typedef std::deque<struct Command>::iterator CommandsI;
@@ -148,7 +148,7 @@ LogReader::read_from_filename (char const *filename)
 	}
 }
 void
-LogReader::execute_log_commands (void)
+LogReader::execute_log_commands (uint32_t uid)
 {
 	if (m_commands.empty ()) {
 		return;
@@ -157,18 +157,20 @@ LogReader::execute_log_commands (void)
 	struct Command cmd;
 	cmd = m_commands.front ();
 	//std::cout << "cmd uid=" <<cmd.m_uid<< std::endl;
-	while (cmd.m_uid == m_uid) {
+	while (cmd.m_uid == uid) {
 		m_commands.pop_front ();
 		switch (cmd.m_type) {
 		case Command::INSERT:
 			//std::cout << "exec insert now=" << Simulator::now_us ()
 			//<< ", time=" << cmd.insert.m_ev_us << std::endl;
 			Simulator::insert_at_us (cmd.insert.m_ev_us, 
-						 make_event (&LogReader::execute_log_commands, this));
+						 make_event (&LogReader::execute_log_commands, this, m_uid));
+			m_uid++;
 			break;
 		case Command::INSERT_LATER:
 			//std::cout << "exec insert later" << std::endl;
-			Simulator::insert_later (make_event (&LogReader::execute_log_commands, this));
+			Simulator::insert_later (make_event (&LogReader::execute_log_commands, this, m_uid));
+			m_uid++;
 			break;
 		case Command::REMOVE: {
 			//std::cout << "exec remove" << std::endl;
@@ -179,14 +181,14 @@ LogReader::execute_log_commands (void)
 		} break;
 		case Command::INSERT_REMOVE: {
 			//std::cout << "exec insert remove" << std::endl;
-			Event *ev = make_event (&LogReader::execute_log_commands, this);
+			Event *ev = make_event (&LogReader::execute_log_commands, this, m_uid);
 			Simulator::insert_at_us (cmd.insert_remove.m_ev_us, ev);
 			m_remove_events[cmd.insert_remove.m_ev_loc] = ev;
+			m_uid++;
 		} break;
 		}
 		cmd = m_commands.front ();
 	}
-	m_uid = cmd.m_uid;
 }
 
 void
@@ -213,7 +215,7 @@ LogReader::run (void)
 	}
 	std::cout << "inserts="<<n_inserts<<", removes="<<n_removes<<std::endl;
 	std::cout << "run simulation..."<<std::endl;
-	execute_log_commands ();
+	execute_log_commands (m_uid);
 	Simulator::run ();
 	
 }
