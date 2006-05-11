@@ -19,9 +19,10 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "simulator.h"
-#include "event.h"
-#include "event.tcc"
+#include "yans/simulator.h"
+#include "yans/event.h"
+#include "yans/event.tcc"
+#include "yans/wall-clock-us.h"
 #include <vector>
 #include <deque>
 #include <fstream>
@@ -215,9 +216,13 @@ LogReader::run (void)
 	}
 	std::cout << "inserts="<<n_inserts<<", removes="<<n_removes<<std::endl;
 	std::cout << "run simulation..."<<std::endl;
+	WallClockUs time;
+	time.start ();
 	execute_log_commands (m_uid);
 	Simulator::run ();
-	
+	unsigned long long delta = time.end ();
+	double delay = ((double)delta)/1000000;
+	std::cout << "runtime="<<delay<<std::endl;
 }
 
 
