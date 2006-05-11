@@ -22,7 +22,7 @@
 #include "yans/simulator.h"
 #include "yans/event.h"
 #include "yans/event.tcc"
-#include "yans/wall-clock-us.h"
+#include "yans/wall-clock-ms.h"
 #include <vector>
 #include <deque>
 #include <fstream>
@@ -33,8 +33,8 @@ using namespace yans;
 class LogReader {
 public:
 	void read_from_filename (char const *filename);
-
 	void run (void);
+	void print_stats (void);
 private:
 	struct Command {
 		enum {
@@ -68,6 +68,7 @@ private:
 	
 
 	Commands m_commands;
+	CommandsI m_command;
 	RemoveEvents m_remove_events;
 	uint32_t m_uid;
 };
@@ -151,15 +152,14 @@ LogReader::read_from_filename (char const *filename)
 void
 LogReader::execute_log_commands (uint32_t uid)
 {
-	if (m_commands.empty ()) {
+	if (m_command == m_commands.end ()) {
 		return;
 	}
 	//std::cout << "one event, uid=" <<m_uid<< std::endl;
-	struct Command cmd;
-	cmd = m_commands.front ();
+	struct Command cmd = *m_command;
 	//std::cout << "cmd uid=" <<cmd.m_uid<< std::endl;
 	while (cmd.m_uid == uid) {
-		m_commands.pop_front ();
+		m_command++;
 		switch (cmd.m_type) {
 		case Command::INSERT:
 			//std::cout << "exec insert now=" << Simulator::now_us ()
@@ -188,14 +188,13 @@ LogReader::execute_log_commands (uint32_t uid)
 			m_uid++;
 		} break;
 		}
-		cmd = m_commands.front ();
+		cmd = *m_command;
 	}
 }
 
 void
-LogReader::run (void)
+LogReader::print_stats (void)
 {
-	m_uid = 0;
 	uint32_t n_inserts = 0;
 	uint32_t n_removes = 0;
 	for (CommandsI i = m_commands.begin (); i != m_commands.end (); i++) {
@@ -216,21 +215,52 @@ LogReader::run (void)
 	}
 	std::cout << "inserts="<<n_inserts<<", removes="<<n_removes<<std::endl;
 	std::cout << "run simulation..."<<std::endl;
-	WallClockUs time;
+}
+
+void
+LogReader::run (void)
+{
+	m_uid = 0;
+	WallClockMs time;
 	time.start ();
+	m_command = m_commands.begin ();
 	execute_log_commands (m_uid);
 	Simulator::run ();
 	unsigned long long delta = time.end ();
-	double delay = ((double)delta)/1000000;
+	double delay = ((double)delta)/1000;
 	std::cout << "runtime="<<delay<<"s"<<std::endl;
 }
 
 
 int main (int argc, char *argv[])
 {
-	Simulator::set_std_map ();
+	char const *input = 0;
+	uint32_t n = 1;
+	while (argc > 0) {
+		if (strcmp ("--list", argv[0]) == 0) {
+			Simulator::set_linked_list ();
+		} else if (strcmp ("--heap", argv[0]) == 0) {
+			Simulator::set_binary_heap ();
+		} else if (strcmp ("--map", argv[0]) == 0) {
+			Simulator::set_std_map ();
+		} else if (strncmp ("--n=", argv[0], strlen("--n=")) == 0) {
+			n = atoi (argv[0]+strlen ("--n="));
+		} else if (strncmp ("--input=", argv[0],strlen ("--input=")) == 0) {
+			input = argv[0] + strlen ("--input=");
+		} else if (strncmp ("--log=", argv[0],strlen ("--log=")) == 0) {
+			char const *filename = argv[0] + strlen ("--log=");
+			Simulator::enable_log_to (filename);
+		}
+		argc--;
+		argv++;
+	}
+	if (input == 0) {
+		std::cerr << "need --input=[filename] option" << std::endl;
+		return 1;
+	}
 	LogReader log;
-	log.read_from_filename (argv[1]);
-	//Simulator::enable_log_to ("test.log");
-	log.run ();
+	log.read_from_filename (input);
+	for (uint32_t i = 0; i < n; i++) {
+		log.run ();
+	}
 }
