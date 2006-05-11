@@ -20,7 +20,6 @@
  */
 
 #include "scheduler-list.h"
-#include "clock.h"
 #include "event.h"
 #include <utility>
 #include <cassert>
