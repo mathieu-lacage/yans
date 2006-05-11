@@ -19,12 +19,12 @@
  * Author: Mathieu Lacage <mathieu.lacage.inria.fr>
  */
 
-#include "wall-clock-us.h"
+#include "wall-clock-ms.h"
 #include <sys/time.h>
 
 namespace yans {
 
-class WallClockUsPrivate {
+class WallClockMsPrivate {
 public:
 	void start (void);
 	unsigned long long end (void);
@@ -34,14 +34,14 @@ private:
 };
 
 void 
-WallClockUsPrivate::start (void)
+WallClockMsPrivate::start (void)
 {
 	struct timezone tz;
 	gettimeofday (&m_start_tv, &tz);
 }
 
 unsigned long long 
-WallClockUsPrivate::end (void)
+WallClockMsPrivate::end (void)
 {
 	struct timezone tz;
 	gettimeofday (&m_end_tv, &tz);
@@ -50,23 +50,23 @@ WallClockUsPrivate::end (void)
 	return end - start;
 }
 
-WallClockUs::WallClockUs ()
-	: m_priv (new WallClockUsPrivate ())
+WallClockMs::WallClockMs ()
+	: m_priv (new WallClockMsPrivate ())
 {}
 
-WallClockUs::~WallClockUs ()
+WallClockMs::~WallClockMs ()
 {
 	delete m_priv;
 	m_priv = 0;
 }
 
 void
-WallClockUs::start (void)
+WallClockMs::start (void)
 {
 	m_priv->start ();
 }
 unsigned long long
-WallClockUs::end (void)
+WallClockMs::end (void)
 {
 	return m_priv->end ();
 }

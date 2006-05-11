@@ -231,6 +231,6 @@ int main (int argc, char *argv[])
 	Simulator::set_std_map ();
 	LogReader log;
 	log.read_from_filename (argv[1]);
-	Simulator::enable_log_to ("test.log");
+	//Simulator::enable_log_to ("test.log");
 	log.run ();
 }
