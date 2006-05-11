@@ -44,6 +44,8 @@ public:
 	static void set_binary_heap (void);
 	static void set_std_map (void);
 
+	static void enable_log_to (char const *filename);
+
 	static void destroy (void);
 
 	/* this is a blocking call which will return

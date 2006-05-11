@@ -20,12 +20,15 @@
  */
 
 #include "simulator.h"
-#include "clock.h"
 #include "scheduler.h"
 #include "event.h"
+#include "event.tcc"
 #include <math.h>
 #include <cassert>
+#include <fstream>
 #include <list>
+
+#include <iostream>
 
 #define noTRACE_SIMU 1
 
@@ -48,6 +51,8 @@ public:
 	SimulatorPrivate (Scheduler *events);
 	~SimulatorPrivate ();
 
+	void enable_log_to (char const *filename);
+
 	void run (void);
 	void stop (void);
 	Event *insert_in_us (Event *event, uint64_t delta);
@@ -62,61 +67,93 @@ public:
 
 private:
 	void handle_immediate (void);
-	typedef std::list<Event *> Events;
+	void update_current_us (uint64_t us);
+	typedef std::list<std::pair<Event *,uint32_t> > Events;
 	Events m_immediate;
 	Events m_destroy;
 	bool m_stop;
-	Clock *m_clock;
 	Scheduler *m_events;
 	uint32_t m_uid;
+	uint32_t m_current_uid;
+	uint64_t m_current_us;
+	double m_current_s;
+	std::ofstream m_log;
+	std::ifstream m_input_log;
+	bool m_log_enable;
 };
 
 SimulatorPrivate::SimulatorPrivate (Scheduler *events)
 {
 	m_stop = false;
-	m_clock = new Clock ();
 	m_events = events;
-	m_uid = 0;
+	m_uid = 0;	
+	m_log_enable = false;
 }
 
 SimulatorPrivate::~SimulatorPrivate ()
 {
 	while (!m_destroy.empty ()) {
-		Event *ev = m_destroy.front ();
+		Event *ev = m_destroy.front ().first;
 		m_destroy.pop_front ();
 		TRACE ("handle destroy " << ev);
 		ev->notify ();
 	}
-	delete m_clock;
-	m_clock = (Clock *)0xdeadbeaf;
 	delete m_events;
 	m_events = (Scheduler *)0xdeadbeaf;
+}
+
+void 
+SimulatorPrivate::update_current_us (uint64_t new_time)
+{
+	m_current_us = new_time;
+	m_current_s = ((double)m_current_us)/1000000;
+}
+
+
+void
+SimulatorPrivate::enable_log_to (char const *filename)
+{
+	m_log.open (filename);
+	m_log_enable = true;
 }
 
 void
 SimulatorPrivate::handle_immediate (void)
 {
 	while (!m_immediate.empty ()) {
-		Event *ev = m_immediate.front ();
+		Event *next_ev = m_immediate.front ().first;
+		uint32_t next_uid = m_immediate.front ().second;
 		m_immediate.pop_front ();
-		TRACE ("handle imm " << ev);
-		ev->notify ();
+		if (m_log_enable) {
+			m_log << "el "<<next_uid
+			      << std::endl;
+		}
+		TRACE ("handle imm " << next_ev);
+		next_ev->notify ();
 	}
 }
 
 void
 SimulatorPrivate::run (void)
 {
+	m_current_uid = 0;
+	update_current_us (0);
 	handle_immediate ();
 	while (!m_events->is_empty () && !m_stop) {
 		Event *next_ev = m_events->peek_next ();
 		Scheduler::EventKey next_key = m_events->peek_next_key ();
 		m_events->remove_next ();
-		m_clock->update_current_us (next_key.m_time);
 		TRACE ("handle " << next_ev);
+		update_current_us (next_key.m_time);
+		m_current_uid = next_key.m_uid;
+		if (m_log_enable) {
+			m_log << "e "<<next_key.m_uid << " " << next_key.m_time << std::endl;
+		}
+
 		next_ev->notify ();
 		handle_immediate ();
 	}
+	m_log.close ();
 }
 
 void 
@@ -127,28 +164,31 @@ SimulatorPrivate::stop (void)
 Event *  
 SimulatorPrivate::insert_in_us (Event *event, uint64_t delta)
 {
-	uint64_t current = m_clock->get_current_us ();
+	uint64_t current = now_us ();
 	return insert_at_us (event, current+delta);
 }
 Event * 
 SimulatorPrivate::insert_at_us (Event *event, uint64_t time)
 {
-	assert (time >= m_clock->get_current_us ());
+	assert (time >= now_us ());
 	Scheduler::EventKey key = {time, m_uid};
+	if (m_log_enable) {
+		m_log << "i "<<m_current_uid<<" "<<now_us ()<<" "
+		      <<m_uid<<" "<<time << std::endl;
+	}
 	m_uid++;
 	return m_events->insert (event, key);
 }
 uint64_t 
 SimulatorPrivate::now_us (void)
 {
-	return m_clock->get_current_us ();
+	return m_current_us;
 }
 Event * 
 SimulatorPrivate::insert_in_s (Event *event, double delta)
 {
-	uint64_t now_us = m_clock->get_current_us ();
 	int64_t delta_us = (int64_t)(delta * 1000000.0);
-	uint64_t us = now_us + delta_us;
+	uint64_t us = now_us () + delta_us;
 	return insert_at_us (event, us);
 }
 Event * 
@@ -161,23 +201,38 @@ SimulatorPrivate::insert_at_s (Event *event, double time)
 double 
 SimulatorPrivate::now_s (void)
 {
-	return m_clock->get_current_s ();
+	return m_current_s;
 }
 void
 SimulatorPrivate::insert_later (Event *event)
 {
-	m_immediate.push_back (event);
+	m_immediate.push_back (std::make_pair (event, m_uid));
+	if (m_log_enable) {
+		m_log << "il " << m_current_uid << " " << now_us () << " "
+		      <<m_uid << " " << now_us () << std::endl;
+	}
+	m_uid++;
 }
 void
 SimulatorPrivate::insert_at_destroy (Event *event)
 {
-	m_destroy.push_back (event);
+	m_destroy.push_back (std::make_pair (event, m_uid));
+	if (m_log_enable) {
+		m_log << "id " << m_current_uid << " " << now_us () << " "
+		      << m_uid << std::endl;
+	}
+	m_uid++;
 }
 
 Event *
 SimulatorPrivate::remove (Event const*ev)
 {
-	return m_events->remove (ev);
+	Scheduler::EventKey key = m_events->remove (ev);
+	if (m_log_enable) {
+		m_log << "r " << m_current_uid << " " << now_us () << " "
+		      << key.m_uid << " " << key.m_time << std::endl;
+	}
+	return const_cast<Event *>(ev);
 }
 
 
@@ -205,6 +260,10 @@ void Simulator::set_binary_heap (void)
 void Simulator::set_std_map (void)
 {
 	m_list_type = STD_MAP;
+}
+void Simulator::enable_log_to (char const *filename)
+{
+	get_priv ()->enable_log_to (filename);
 }
 
 
