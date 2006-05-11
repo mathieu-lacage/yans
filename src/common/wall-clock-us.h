@@ -19,15 +19,22 @@
  * Author: Mathieu Lacage <mathieu.lacage.inria.fr>
  */
 
-#ifndef TIME_H
-#define TIME_H
+#ifndef WALL_CLOCK_US_H
+#define WALL_CLOCK_US_H
 
-class Time {
+namespace yans {
+
+class WallClockUs {
 public:
+	WallClockUs ();
+	~WallClockUs ();
+
 	void start (void);
 	unsigned long long end (void);
 private:
-	class TimePrivate *m_priv;
+	class WallClockUsPrivate *m_priv;
 };
 
-#endif /* TIME_H */
+}; // namespace yans
+
+#endif /* WALL_CLOCK_US_H */
