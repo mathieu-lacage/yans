@@ -153,50 +153,77 @@ LogReader::execute_log_commands (void)
 	if (m_commands.empty ()) {
 		return;
 	}
+	//std::cout << "one event, uid=" <<m_uid<< std::endl;
 	struct Command cmd;
 	cmd = m_commands.front ();
+	//std::cout << "cmd uid=" <<cmd.m_uid<< std::endl;
 	while (cmd.m_uid == m_uid) {
 		m_commands.pop_front ();
 		switch (cmd.m_type) {
 		case Command::INSERT:
+			//std::cout << "exec insert now=" << Simulator::now_us ()
+			//<< ", time=" << cmd.insert.m_ev_us << std::endl;
 			Simulator::insert_at_us (cmd.insert.m_ev_us, 
 						 make_event (&LogReader::execute_log_commands, this));
-			m_uid++;
 			break;
 		case Command::INSERT_LATER:
+			//std::cout << "exec insert later" << std::endl;
 			Simulator::insert_later (make_event (&LogReader::execute_log_commands, this));
-			m_uid++;
 			break;
 		case Command::REMOVE: {
+			//std::cout << "exec remove" << std::endl;
 			Event *ev = m_remove_events.front ();
 			m_remove_events.pop_front ();
 			Simulator::remove (ev);
 			// XXX: we should delete the event.
 		} break;
 		case Command::INSERT_REMOVE: {
+			//std::cout << "exec insert remove" << std::endl;
 			Event *ev = make_event (&LogReader::execute_log_commands, this);
 			Simulator::insert_at_us (cmd.insert_remove.m_ev_us, ev);
 			m_remove_events[cmd.insert_remove.m_ev_loc] = ev;
-			m_uid++;
 		} break;
 		}
 		cmd = m_commands.front ();
 	}
+	m_uid = cmd.m_uid;
 }
 
 void
 LogReader::run (void)
 {
 	m_uid = 0;
-	execute_log_commands ();
+	uint32_t n_inserts = 0;
+	uint32_t n_removes = 0;
+	for (CommandsI i = m_commands.begin (); i != m_commands.end (); i++) {
+		switch (i->m_type) {
+		case Command::INSERT:
+			n_inserts++;
+			break;
+		case Command::INSERT_LATER:
+			n_inserts++;
+			break;
+		case Command::INSERT_REMOVE:
+			n_inserts++;
+			break;
+		case Command::REMOVE:
+			n_removes++;
+			break;
+		}
+	}
+	std::cout << "inserts="<<n_inserts<<", removes="<<n_removes<<std::endl;
 	std::cout << "run simulation..."<<std::endl;
+	execute_log_commands ();
 	Simulator::run ();
+	
 }
 
 
 int main (int argc, char *argv[])
 {
+	Simulator::set_std_map ();
 	LogReader log;
 	log.read_from_filename (argv[1]);
-	//log.run ();
+	Simulator::enable_log_to ("test.log");
+	log.run ();
 }
