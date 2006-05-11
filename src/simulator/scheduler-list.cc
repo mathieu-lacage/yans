@@ -93,11 +93,13 @@ SchedulerList::remove_next (void)
 	m_events.pop_front ();
 }
 
-Event *
+Scheduler::EventKey
 SchedulerList::remove (Event const*ev)
 {
+	EventsI i = get_from_event (ev);
+	EventKey key = (*i).second;
 	m_events.erase (get_from_event (ev));
-	return const_cast<Event *> (ev);
+	return key;
 }
 
 }; // namespace yans

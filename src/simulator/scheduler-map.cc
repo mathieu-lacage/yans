@@ -95,12 +95,14 @@ SchedulerMap::remove_next (void)
 	m_list.erase (m_list.begin ());
 }
 
-Event *
+Scheduler::EventKey
 SchedulerMap::remove (Event const*ev)
 {
 	assert (!is_empty ());
-	m_list.erase (get_from_event (ev));
-	return const_cast <Event *> (ev);
+	EventMapI i = get_from_event (ev);
+	EventKey key = (*i).first;
+	m_list.erase (i);
+	return key;
 }
 
 

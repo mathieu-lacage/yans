@@ -41,7 +41,7 @@ public:
 	virtual Event *peek_next (void) const;
 	virtual Scheduler::EventKey peek_next_key (void) const;
 	virtual void remove_next (void);
-	virtual Event *remove (Event const*ev);
+	virtual Scheduler::EventKey remove (Event const*ev);
 private:
 	typedef std::vector<std::pair<Event*, Scheduler::EventKey> > BinaryHeap;
 	void store_in_event (Event *ev, uint32_t index) const;

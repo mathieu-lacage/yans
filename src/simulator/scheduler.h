@@ -45,7 +45,7 @@ class Scheduler {
 	virtual Event *peek_next (void) const = 0;
 	virtual EventKey peek_next_key (void) const = 0;
 	virtual void remove_next (void) = 0;
-	virtual Event *remove (Event const*ev) = 0;
+	virtual EventKey remove (Event const*ev) = 0;
 
 };
 

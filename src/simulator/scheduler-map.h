@@ -39,7 +39,7 @@ public:
 	virtual Event *peek_next (void) const;
 	virtual Scheduler::EventKey peek_next_key (void) const;
 	virtual void remove_next (void);
-	virtual Event *remove (Event const*ev);
+	virtual Scheduler::EventKey remove (Event const*ev);
 private:
 	typedef std::map<Scheduler::EventKey, Event*, Scheduler::EventKeyCompare> EventMap;
 	typedef std::map<Scheduler::EventKey, Event*, Scheduler::EventKeyCompare>::iterator EventMapI;

@@ -222,13 +222,15 @@ SchedulerHeap::remove_next (void)
 	top_down ();
 }
 
-Event *
+Scheduler::EventKey
 SchedulerHeap::remove (Event const*ev)
 {
-	exch (get_from_event (ev), last ());
+	uint32_t i = get_from_event (ev);
+	EventKey key = m_heap[i].second;
+	exch (i, last ());
 	m_heap.pop_back ();
 	top_down ();
-	return const_cast <Event *> (ev);
+	return key;
 }
 
 }; // namespace yans
