@@ -19,9 +19,9 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "simulator.h"
-#include "event.h"
-#include "event.tcc"
+#include "yans/simulator.h"
+#include "yans/event.h"
+#include "yans/event.tcc"
 #include <iostream>
 #include <fstream>
 #include <vector>

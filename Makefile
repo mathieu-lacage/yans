@@ -124,7 +124,6 @@ endif
 
 # building of libyans.so
 YANS_SRC:= \
-	src/simulator/clock.cc \
 	src/simulator/scheduler.cc \
 	src/simulator/scheduler-list.cc \
 	src/simulator/scheduler-heap.cc \
@@ -138,6 +137,7 @@ YANS_SRC:= \
 	src/thread/fiber.cc \
 	src/thread/fiber-scheduler.cc \
 	src/thread/thread.cc \
+	src/common/wall-clock-us-unix.cc \
 	src/common/buffer.cc \
 	src/common/chunk.cc \
 	src/common/packet.cc \
@@ -235,6 +235,7 @@ YANS_INST_HDR := \
 	src/simulator/cancellable-event.h \
 	src/simulator/cancellable-event.tcc \
 	src/simulator/simulator.h \
+	src/common/wall-clock-us.h \
 	src/common/buffer.h \
 	src/common/data-writer.h \
 	src/common/pcap-writer.h \
@@ -361,8 +362,14 @@ YANS_CXXFLAGS += -DTCP_USE_BSD
 YANS_CXXFLAGS += -I$(TOP_SRC_DIR)/src/ipv4/tcp-bsd/
 endif
 
+REPLAY_SIMULATION_SRC:=utils/replay-simulation.cc
+REPLAY_SIMULATION_NAME:=replay-simulation
+REPLAY_SIMULATION_TYPE:=executable
+REPLAY_SIMULATION_CXXFLAGS:=$(CXXFLAGS)
+REPLAY_SIMULATION_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS)
+
 # the benchmark for the simulator
-BENCH_SRC:=src/simulator/bench-simulator.cc
+BENCH_SRC:=utils/bench-simulator.cc
 BENCH_NAME:=bench-simulator
 BENCH_OUTPUT_DIR:=
 BENCH_TYPE:=executable
@@ -550,6 +557,7 @@ YANS_PYTHON_SAMPLE_SIMPLE_TYPE:=python-executable
 
 ALL:= \
 	YANS \
+	REPLAY_SIMULATION \
 	BENCH \
 	TEST \
 	SAMPLE_CXX_SIMPLE \
