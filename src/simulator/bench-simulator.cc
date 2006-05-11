@@ -156,6 +156,9 @@ int main (int argc, char *argv[])
 			Simulator::set_std_map ();
 		} else if (strcmp ("--debug", argv[0]) == 0) {
 			g_debug = true;
+		} else if (strncmp ("--log=", argv[0],strlen ("--log=")) == 0) {
+			char const *filename = argv[0] + strlen ("--log=");
+			Simulator::enable_log_to (filename);
 		}
 		argc--;
 		argv++;
