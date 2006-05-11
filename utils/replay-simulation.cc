@@ -222,7 +222,7 @@ LogReader::run (void)
 	Simulator::run ();
 	unsigned long long delta = time.end ();
 	double delay = ((double)delta)/1000000;
-	std::cout << "runtime="<<delay<<std::endl;
+	std::cout << "runtime="<<delay<<"s"<<std::endl;
 }
 
 
