@@ -54,7 +54,7 @@ SchedulerHeap::SchedulerHeap ()
 	// we purposedly waste an item at the start of
 	// the array to make sure the indexes in the
 	// array start at one.
-	Scheduler::EventKey empty_key;
+	Scheduler::EventKey empty_key = {0,0};
 	m_heap.push_back (std::make_pair ((Event *)0, empty_key));
 }
 
