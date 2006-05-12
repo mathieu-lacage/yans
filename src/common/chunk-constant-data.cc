@@ -36,14 +36,14 @@ ChunkConstantData::add_to (Buffer *buffer) const
 {
 	buffer->add_at_start (m_len);
 #ifndef NDEBUG
-	memset (buffer->peek_data (), m_data, m_len);
+	buffer->begin ().write_u8 (m_data, m_len);
 #endif
 }
 void 
 ChunkConstantData::remove_from (Buffer *buffer)
 {
 	m_len = buffer->get_size ();
-	m_data = buffer->read_u8 ();
+	m_data = buffer->begin ().read_u8 ();
 	buffer->remove_at_start (m_len);
 }
 void 
