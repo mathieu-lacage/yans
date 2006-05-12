@@ -28,42 +28,64 @@ namespace yans {
 
 class Buffer {
 public:
+	class Iterator {
+	public:
+		Iterator ();
+		Iterator (Iterator const&o);
+		Iterator &operator = (Iterator const &o);
+		void next (void);
+		void prev (void);
+		void next (uint32_t delta);
+		void prev (uint32_t delta);
+
+		bool is_end (void);
+		bool is_start (void);
+
+		// what an evil method !!
+		uint8_t *peek_data (void);
+
+		void write (Iterator start, Iterator end);
+
+		void write_u8  (uint8_t  data);
+		void write_u16 (uint16_t data);
+		void write_u32 (uint32_t data);
+		void write_u64 (uint64_t data);
+		void write_hton_u16 (uint16_t data);
+		void write_hton_u32 (uint32_t data);
+		void write_hton_u64 (uint64_t data);
+		void write (uint8_t const*buffer, uint16_t size);
+
+		uint8_t  read_u8 (void);
+		uint16_t read_u16 (void);
+		uint32_t read_u32 (void);
+		uint64_t read_u64 (void);
+		uint16_t read_ntoh_u16 (void);
+		uint32_t read_ntoh_u32 (void);
+		uint64_t read_ntoh_u64 (void);
+		void read (uint8_t *buffer, uint16_t size);
+	private:
+		friend class Buffer;
+		Iterator (uint8_t *start, uint8_t *end, uint8_t *current);
+		uint8_t *m_start;
+		uint8_t *m_end;
+		uint8_t *m_current;
+	};
+
 	Buffer ();
 	~Buffer ();
 
 	uint32_t get_size (void) const;
-	uint8_t *peek_data (void);
 
 	/* after a call to any of these methods, 
-	 * the current position is invalidated.
+	 * any iterator is invalidated.
 	 */
 	void add_at_start (uint32_t start);
 	void add_at_end (uint32_t end);
 	void remove_at_start (uint32_t start);
 	void remove_at_end (uint32_t end);
 
-
-	uint32_t get_current (void) const;
-	void seek (uint32_t offset);
-	void skip (int32_t delta);
-
-	void write_u8  (uint8_t  data);
-	void write_u16 (uint16_t data);
-	void write_u32 (uint32_t data);
-	void write_u64 (uint64_t data);
-	void write_hton_u16 (uint16_t data);
-	void write_hton_u32 (uint32_t data);
-	void write_hton_u64 (uint64_t data);
-	void write (uint8_t const*buffer, uint16_t size);
-
-	uint8_t  read_u8 (void);
-	uint16_t read_u16 (void);
-	uint32_t read_u32 (void);
-	uint64_t read_u64 (void);
-	uint16_t read_ntoh_u16 (void);
-	uint32_t read_ntoh_u32 (void);
-	uint64_t read_ntoh_u64 (void);
-	void read (uint8_t *buffer, uint16_t size);
+	Buffer::Iterator begin (void) const;
+	Buffer::Iterator end (void) const;
 
 private:
 	uint8_t *alloc_and_zero (uint32_t size) const;

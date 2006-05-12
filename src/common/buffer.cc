@@ -104,11 +104,6 @@ Buffer::get_start (void) const
 	return &m_data[m_start];
 }
 
-uint8_t *
-Buffer::peek_data (void)
-{
-	return get_start ();
-}
 uint32_t 
 Buffer::get_size (void) const
 {
@@ -200,214 +195,6 @@ Buffer::remove_at_end (uint32_t end)
 	m_current = 0;
 }
 
-uint32_t 
-Buffer::get_current (void) const
-{
-	return m_current;
-}
-
-void 
-Buffer::seek (uint32_t offset)
-{
-	assert (offset <= m_size);
-	m_current = offset;
-}
-void 
-Buffer::skip (int32_t delta)
-{
-	if (delta < 0) {
-		assert (m_current >= ((uint32_t)-delta));
-	}
-	uint32_t new_current = m_current + delta;
-	assert (new_current <= m_size);
-	m_current = new_current;
-}
-
-void 
-Buffer::write_u8 (uint8_t data)
-{
-	assert (m_current + 1 <= m_size);
-	uint8_t *buffer = get_start ();
-	buffer[m_current] = data;
-	m_current++;
-}
-void 
-Buffer::write_u16 (uint16_t data)
-{
-	assert (m_current + 2 <= m_size);
-	uint16_t *buffer = (uint16_t *)(get_start () + m_current);
-	*buffer = data;
-	m_current += 2;
-}
-void 
-Buffer::write_u32 (uint32_t data)
-{
-	assert (m_current + 4 <= m_size);
-	uint32_t *buffer = (uint32_t *)(get_start () + m_current);
-	*buffer = data;
-	m_current += 4;
-}
-void 
-Buffer::write_u64 (uint64_t data)
-{
-	assert (m_current + 8 <= m_size);
-	uint64_t *buffer = (uint64_t *)(get_start () + m_current);
-	*buffer = data;
-	m_current += 8;
-}
-void 
-Buffer::write (uint8_t const *data, uint16_t size)
-{
-	assert (m_current + size <= m_size);
-	memcpy (get_start ()+m_current, data, size);
-	m_current += size;
-}
-void 
-Buffer::write_hton_u16 (uint16_t data)
-{
-	assert (m_current + 2 <= m_size);
-	uint8_t *buffer = get_start ();
-	buffer[m_current] = (data >> 8) & 0xff;
-	m_current++;
-	buffer[m_current] = (data >> 0) & 0xff;
-	m_current++;
-}
-
-void 
-Buffer::write_hton_u32 (uint32_t data)
-{
-	assert (m_current + 4 <= m_size);
-	uint8_t *buffer = get_start ();
-	buffer[m_current] = (data >> 24)  & 0xff;
-	m_current++;
-	buffer[m_current] = (data >> 16)  & 0xff;
-	m_current++;
-	buffer[m_current] = (data >> 8) & 0xff;
-	m_current++;
-	buffer[m_current] = (data >> 0) & 0xff;
-	m_current++;
-}
-void 
-Buffer::write_hton_u64 (uint64_t data)
-{
-	assert (m_current + 8 <= m_size);
-	uint8_t *buffer = get_start ();
-	buffer[m_current] = (data >> 56)  & 0xff;
-	m_current++;
-	buffer[m_current] = (data >> 48)  & 0xff;
-	m_current++;
-	buffer[m_current] = (data >> 40) & 0xff;
-	m_current++;
-	buffer[m_current] = (data >> 32) & 0xff;
-	m_current++;
-	buffer[m_current] = (data >> 24)  & 0xff;
-	m_current++;
-	buffer[m_current] = (data >> 16)  & 0xff;
-	m_current++;
-	buffer[m_current] = (data >> 8) & 0xff;
-	m_current++;
-	buffer[m_current] = (data >> 0) & 0xff;
-	m_current++;
-}
-
-uint8_t 
-Buffer::read_u8 (void)
-{
-	assert (m_current + 1 <= m_size);
-	uint8_t *buffer = get_start ();
-	uint8_t retval = buffer[m_current];
-	m_current++;
-	return retval;
-}
-uint16_t 
-Buffer::read_u16 (void)
-{
-	assert (m_current + 2 <= m_size);
-	uint16_t *buffer = (uint16_t *)(get_start () + m_current);
-	uint16_t retval = *buffer;
-	m_current += 2;
-	return retval;
-}
-uint32_t 
-Buffer::read_u32 (void)
-{
-	assert (m_current + 4 <= m_size);
-	uint32_t *buffer = (uint32_t *)(get_start () + m_current);
-	uint32_t retval = *buffer;
-	m_current += 4;
-	return retval;
-}
-uint64_t 
-Buffer::read_u64 (void)
-{
-	assert (m_current + 8 <= m_size);
-	uint64_t *buffer = (uint64_t *)(get_start () + m_current);
-	uint64_t retval = *buffer;
-	m_current += 8;
-	return retval;
-}
-void 
-Buffer::read (uint8_t *buffer, uint16_t size)
-{
-	assert (m_current + size <= m_size);
-	memcpy (buffer, get_start ()+m_current, size);
-	m_current += size;
-}
-
-uint16_t 
-Buffer::read_ntoh_u16 (void)
-{
-	assert (m_current + 2 <= m_size);
-	uint16_t retval = 0;
-	uint8_t *buffer = get_start ();
-	retval |= buffer[m_current] << 8;
-	m_current++;
-	retval |= buffer[m_current] << 0;
-	m_current++;
-	return retval;
-}
-
-uint32_t 
-Buffer::read_ntoh_u32 (void)
-{
-	assert (m_current + 4 <= m_size);
-	uint32_t retval = 0;
-	uint8_t *buffer = get_start ();
-	retval |= buffer[m_current] << 24;
-	m_current++;
-	retval |= buffer[m_current] << 16;
-	m_current++;
-	retval |= buffer[m_current] << 8;
-	m_current++;
-	retval |= buffer[m_current] << 0;
-	m_current++;
-	return retval;
-}
-uint64_t 
-Buffer::read_ntoh_u64 (void)
-{
-	assert (m_current + 8 <= m_size);
-	uint64_t retval = 0;
-	uint8_t *buffer = get_start ();
-	retval |= static_cast<uint64_t>(buffer[m_current]) << 56;
-	m_current++;
-	retval |= static_cast<uint64_t>(buffer[m_current]) << 48;
-	m_current++;
-	retval |= static_cast<uint64_t>(buffer[m_current]) << 40;
-	m_current++;
-	retval |= static_cast<uint64_t>(buffer[m_current]) << 32;
-	m_current++;
-	retval |= static_cast<uint64_t>(buffer[m_current]) << 24;
-	m_current++;
-	retval |= static_cast<uint64_t>(buffer[m_current]) << 16;
-	m_current++;
-	retval |= static_cast<uint64_t>(buffer[m_current]) << 8;
-	m_current++;
-	retval |= static_cast<uint64_t>(buffer[m_current]) << 0;
-	m_current++;
-	return retval;
-}
-
 uint8_t *
 Buffer::alloc_and_zero (uint32_t size) const
 {
@@ -416,6 +203,224 @@ Buffer::alloc_and_zero (uint32_t size) const
         memset (buffer, 0x33, size);
 #endif
 	return buffer;
+}
+
+
+Buffer::Iterator 
+Buffer::begin (void) const
+{
+	uint8_t *start = get_start ();
+	uint8_t *end = start + m_size;
+	return Buffer::Iterator (start, end, start);
+}
+Buffer::Iterator 
+Buffer::end (void) const
+{
+	uint8_t *start = get_start ();
+	uint8_t *end = start + m_size;
+	return Buffer::Iterator (start, end, end);
+}
+
+Buffer::Iterator::Iterator ()
+	: m_start (0), m_end (0), m_current (0)
+{}
+
+Buffer::Iterator::Iterator (Iterator const&o)
+	: m_start (o.m_start), m_end (o.m_end), m_current (o.m_current)
+{}
+Buffer::Iterator &
+Buffer::Iterator::operator = (Iterator const &o)
+{
+	m_start = o.m_start;
+	m_end = o.m_end;
+	m_current = o.m_current;
+	return *this;
+}
+void 
+Buffer::Iterator::next (void)
+{
+	assert (m_current + 1 < m_end);
+	m_current++;
+}
+void 
+Buffer::Iterator::prev (void)
+{
+	assert (m_current - 1 >= m_start);
+	m_current--;
+}
+void 
+Buffer::Iterator::next (uint32_t delta)
+{
+	assert (m_current + delta < m_end);
+	m_current += delta;
+}
+void 
+Buffer::Iterator::prev (uint32_t delta)
+{
+	assert (m_current - delta >= m_start);
+	m_current -= delta;
+}
+
+bool 
+Buffer::Iterator::is_end (void)
+{
+	return m_current == m_end;
+}
+bool 
+Buffer::Iterator::is_start (void)
+{
+	return m_current == m_start;
+}
+
+uint8_t *
+Buffer::Iterator::peek_data (void)
+{
+	return m_current;
+}
+
+void 
+Buffer::Iterator::write (Iterator start, Iterator end)
+{
+	assert (start.m_current <= end.m_current);
+	assert (start.m_start == end.m_start);
+	assert (start.m_end == end.m_end);
+	unsigned long int i_end = reinterpret_cast<unsigned long int> (end.m_current);
+	unsigned long int i_start = reinterpret_cast<unsigned long int> (start.m_current);
+	unsigned long int i_size = i_end - i_start;
+	assert (m_current + i_size < m_end);
+	memcpy (m_current, start.m_current, i_size);
+}
+
+void 
+Buffer::Iterator::write_u8  (uint8_t  data)
+{
+	assert (m_current + 1 < m_end);
+	*m_current = data;
+}
+void 
+Buffer::Iterator::write_u16 (uint16_t data)
+{
+	assert (m_current + 2 < m_end);
+	uint16_t *buffer = (uint16_t *)m_current;
+	*buffer = data;
+}
+void 
+Buffer::Iterator::write_u32 (uint32_t data)
+{
+	assert (m_current + 4 < m_end);
+	uint32_t *buffer = (uint32_t *)m_current;
+	*buffer = data;
+}
+void 
+Buffer::Iterator::write_u64 (uint64_t data)
+{
+	assert (m_current + 8 < m_end);
+	uint64_t *buffer = (uint64_t *)m_current;
+	*buffer = data;
+}
+void 
+Buffer::Iterator::write_hton_u16 (uint16_t data)
+{
+	assert (m_current + 2 < m_end);
+	*(m_current+0) = (data >> 8) & 0xff;
+	*(m_current+1) = (data >> 0) & 0xff;
+}
+void 
+Buffer::Iterator::write_hton_u32 (uint32_t data)
+{
+	assert (m_current + 4 < m_end);
+	*(m_current+0) = (data >> 24) & 0xff;
+	*(m_current+1) = (data >> 16) & 0xff;
+	*(m_current+2) = (data >> 8) & 0xff;
+	*(m_current+3) = (data >> 0) & 0xff;
+}
+void 
+Buffer::Iterator::write_hton_u64 (uint64_t data)
+{
+	assert (m_current + 4 < m_end);
+	*(m_current+0) = (data >> 56) & 0xff;
+	*(m_current+1) = (data >> 48) & 0xff;
+	*(m_current+2) = (data >> 40) & 0xff;
+	*(m_current+3) = (data >> 32) & 0xff;
+	*(m_current+4) = (data >> 24) & 0xff;
+	*(m_current+5) = (data >> 16) & 0xff;
+	*(m_current+6) = (data >> 8) & 0xff;
+	*(m_current+7) = (data >> 0) & 0xff;
+}
+void 
+Buffer::Iterator::write (uint8_t const*buffer, uint16_t size)
+{
+	assert (m_current + size < m_end);
+	memcpy (m_current, buffer, size);
+}
+
+uint8_t  
+Buffer::Iterator::read_u8 (void)
+{
+	assert (m_current + 1 < m_end);
+	return *m_current;
+}
+uint16_t 
+Buffer::Iterator::read_u16 (void)
+{
+	assert (m_current + 2 < m_end);
+	uint16_t *buffer = reinterpret_cast<uint16_t *>(m_current);
+	return *buffer;
+}
+uint32_t 
+Buffer::Iterator::read_u32 (void)
+{
+	assert (m_current + 4 < m_end);
+	uint32_t *buffer = reinterpret_cast<uint32_t *>(m_current);
+	return *buffer;
+}
+uint64_t 
+Buffer::Iterator::read_u64 (void)
+{
+	assert (m_current + 8 < m_end);
+	uint64_t *buffer = reinterpret_cast<uint64_t *>(m_current);
+	return *buffer;
+}
+uint16_t 
+Buffer::Iterator::read_ntoh_u16 (void)
+{
+	assert (m_current + 2 < m_end);
+	uint16_t retval = 0;
+	retval |= *reinterpret_cast<uint16_t *>(m_current+0) << 8;
+	retval |= *reinterpret_cast<uint16_t *>(m_current+1) << 0;
+	return retval;
+}
+uint32_t 
+Buffer::Iterator::read_ntoh_u32 (void)
+{
+	assert (m_current + 4 < m_end);
+	uint32_t retval = 0;
+	retval |= *reinterpret_cast<uint32_t *>(m_current+0) << 24;
+	retval |= *reinterpret_cast<uint32_t *>(m_current+1) << 16;
+	retval |= *reinterpret_cast<uint32_t *>(m_current+2) << 8;
+	retval |= *reinterpret_cast<uint32_t *>(m_current+3) << 0;
+	return retval;
+}
+uint64_t 
+Buffer::Iterator::read_ntoh_u64 (void)
+{
+	assert (m_current + 8 < m_end);
+	uint64_t retval = 0;
+	retval |= *reinterpret_cast<uint64_t *>(m_current+0) << 56;
+	retval |= *reinterpret_cast<uint64_t *>(m_current+1) << 48;
+	retval |= *reinterpret_cast<uint64_t *>(m_current+2) << 40;
+	retval |= *reinterpret_cast<uint64_t *>(m_current+3) << 32;
+	retval |= *reinterpret_cast<uint64_t *>(m_current+4) << 24;
+	retval |= *reinterpret_cast<uint64_t *>(m_current+5) << 16;
+	retval |= *reinterpret_cast<uint64_t *>(m_current+6) << 8;
+	retval |= *reinterpret_cast<uint64_t *>(m_current+7) << 0;
+	return retval;
+}
+void 
+Buffer::Iterator::read (uint8_t *buffer, uint16_t size)
+{
+	assert (m_current + size < m_end);
+	memcpy (buffer, m_current, size);
 }
 
 }; // namespace yans
@@ -431,14 +436,14 @@ namespace yans {
 class BufferTest: public Test {
 private:
 bool
-ensure_written_bytes (Buffer *buffer, uint32_t n, uint8_t array[])
+ensure_written_bytes (Buffer::Iterator i, uint32_t n, uint8_t array[])
 {
 	bool success = true;
 	uint8_t *expected = array;
 	uint8_t *got;
-	got = buffer->peek_data ();
-	for (uint32_t i = 0; i < n; i++) {
-		if (got[i] != expected[i]) {
+	got = i.peek_data ();
+	for (uint32_t j = 0; j < n; j++) {
+		if (got[j] != expected[j]) {
 			success = false;
 		}
 	}
@@ -447,15 +452,14 @@ ensure_written_bytes (Buffer *buffer, uint32_t n, uint8_t array[])
 		failure () << "expected: ";
 		failure () << n << " ";
 		failure ().setf (std::ios::hex, std::ios::basefield);
-		for (uint32_t i = 0; i < n; i++) {
-			failure () << (uint16_t)expected[i] << " ";
+		for (uint32_t j = 0; j < n; j++) {
+			failure () << (uint16_t)expected[j] << " ";
 		}
 		failure ().setf (std::ios::dec, std::ios::basefield);
 		failure () << "got: ";
-		failure () << buffer->get_current () << " ";
 		failure ().setf (std::ios::hex, std::ios::basefield);
-		for (uint32_t i = 0; i < n; i++) {
-			failure () << (uint16_t)got[i] << " ";
+		for (uint32_t j = 0; j < n; j++) {
+			failure () << (uint16_t)got[j] << " ";
 		}
 		failure () << std::endl;
 	}
@@ -466,10 +470,10 @@ ensure_written_bytes (Buffer *buffer, uint32_t n, uint8_t array[])
  * available which is the case for gcc.
  * XXX
  */
-#define ENSURE_WRITTEN_BYTES(buffer, n, ...) \
+#define ENSURE_WRITTEN_BYTES(iterator, n, ...) \
 { \
 	uint8_t bytes[] = {__VA_ARGS__}; \
-	if (!ensure_written_bytes (buffer, n , bytes)) { \
+	if (!ensure_written_bytes (iterator, n , bytes)) { \
 		ok = false; \
 	} \
 }
@@ -480,49 +484,57 @@ run_tests (void)
 {
 	bool ok = true;
 	Buffer *buffer = new Buffer ();
+	Buffer::Iterator i;
 	buffer->add_at_start (6);
-	buffer->write_u8 (0x66);
-	ENSURE_WRITTEN_BYTES (buffer, 1, 0x66);
-	buffer->seek (0);
-	buffer->write_u8 (0x67);
-	ENSURE_WRITTEN_BYTES (buffer, 1, 0x67);
-	buffer->write_hton_u16 (0x6568);
-	ENSURE_WRITTEN_BYTES (buffer, 3, 0x67, 0x65, 0x68);
-	buffer->seek (0);
-	buffer->write_hton_u16 (0x6369);
-	ENSURE_WRITTEN_BYTES (buffer, 2, 0x63, 0x69);
-	buffer->write_hton_u32 (0xdeadbeaf);
-	ENSURE_WRITTEN_BYTES (buffer, 6, 0x63, 0x69, 0xde, 0xad, 0xbe, 0xaf);
+	i = buffer->begin ();
+	i.write_u8 (0x66);
+	ENSURE_WRITTEN_BYTES (i, 1, 0x66);
+	i = buffer->begin ();
+	i.write_u8 (0x67);
+	ENSURE_WRITTEN_BYTES (i, 1, 0x67);
+	i.next ();
+	i.write_hton_u16 (0x6568);
+	i = buffer->begin ();
+	ENSURE_WRITTEN_BYTES (i, 3, 0x67, 0x65, 0x68);
+	i.write_hton_u16 (0x6369);
+	ENSURE_WRITTEN_BYTES (i, 2, 0x63, 0x69);
+	i.next (2);
+	i.write_hton_u32 (0xdeadbeaf);
+	ENSURE_WRITTEN_BYTES (i, 6, 0x63, 0x69, 0xde, 0xad, 0xbe, 0xaf);
 	buffer->add_at_start (2);
-	buffer->seek (0);
-	buffer->write_u16 (0);
-	ENSURE_WRITTEN_BYTES (buffer, 8, 0, 0, 0x63, 0x69, 0xde, 0xad, 0xbe, 0xaf);
+	i = buffer->begin ();
+	i.write_u16 (0);
+	ENSURE_WRITTEN_BYTES (i, 8, 0, 0, 0x63, 0x69, 0xde, 0xad, 0xbe, 0xaf);
 	buffer->add_at_end (2);
-	buffer->seek (8);
-	buffer->write_u16 (0);
-	ENSURE_WRITTEN_BYTES (buffer, 10, 0, 0, 0x63, 0x69, 0xde, 0xad, 0xbe, 0xaf, 0, 0);
+	i = buffer->begin ();
+	i.next (8);
+	i.write_u16 (0);
+	ENSURE_WRITTEN_BYTES (i, 10, 0, 0, 0x63, 0x69, 0xde, 0xad, 0xbe, 0xaf, 0, 0);
 	buffer->remove_at_start (3);
-	ENSURE_WRITTEN_BYTES (buffer, 7, 0x69, 0xde, 0xad, 0xbe, 0xaf, 0, 0);
+	i = buffer->begin ();
+	ENSURE_WRITTEN_BYTES (i, 7, 0x69, 0xde, 0xad, 0xbe, 0xaf, 0, 0);
 	buffer->remove_at_end (4);
-	ENSURE_WRITTEN_BYTES (buffer, 3, 0x69, 0xde, 0xad);
+	i = buffer->begin ();
+	ENSURE_WRITTEN_BYTES (i, 3, 0x69, 0xde, 0xad);
 	buffer->add_at_start (1);
-	buffer->seek (0);
-	buffer->write_u8 (0xff);
-	ENSURE_WRITTEN_BYTES (buffer, 4, 0xff, 0x69, 0xde, 0xad);
+	i = buffer->begin ();
+	i.write_u8 (0xff);
+	ENSURE_WRITTEN_BYTES (i, 4, 0xff, 0x69, 0xde, 0xad);
 	buffer->add_at_end (1);
-	buffer->seek (4);
-	buffer->write_u8 (0xff);
-	buffer->skip (-2);
-	uint16_t saved = buffer->read_u16 ();
-	buffer->skip (-2);
-	buffer->write_hton_u16 (0xff00);
-	buffer->skip (-2);
-	if (buffer->read_ntoh_u16 () != 0xff00) {
+	i = buffer->begin ();
+	i.next (4);
+	i.write_u8 (0xff);
+	i.prev (2);
+	uint16_t saved = i.read_u16 ();
+	i.prev (2);
+	i.write_hton_u16 (0xff00);
+	i.prev (2);
+	if (i.read_ntoh_u16 () != 0xff00) {
 		ok = false;
 	}
-	buffer->skip (-2);
-	buffer->write_u16 (saved);
-	ENSURE_WRITTEN_BYTES (buffer, 4, 0xff, 0x69, 0xde, 0xad, 0xff);
+	i.prev (2);
+	i.write_u16 (saved);
+	ENSURE_WRITTEN_BYTES (i, 4, 0xff, 0x69, 0xde, 0xad, 0xff);
 	delete buffer;
 	return ok;
 }
