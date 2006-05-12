@@ -74,16 +74,22 @@ Packet::copy (void) const
 	return copy (0, get_size ());
 }
 Packet *
-Packet::copy (uint32_t start, uint32_t length) const
+Packet::copy (uint32_t start_off, uint32_t length) const
 {
 	assert (length <= get_size ());
-	assert (start < get_size ());
-	assert (start + length <= get_size ());
+	assert (start_off < get_size ());
+	assert (start_off + length <= get_size ());
 	Packet *other = new Packet ();
 	// XXX copy tags ?? !
 	Buffer *tmp = other->m_buffer;
 	tmp->add_at_start (length);
-	tmp->write (m_buffer->peek_data () + start, length);
+	Buffer::Iterator dest, start, end;
+	dest = tmp->begin ();
+	start = m_buffer->begin ();
+	start.next (start_off);
+	end = start;
+	end.next (length);
+	dest.write (start, end);
 	return other;
 }
 
@@ -131,19 +137,25 @@ Packet::add (Chunk *chunk)
 void 
 Packet::add_at_end (Packet const*packet)
 {
-	Buffer *tmp = packet->m_buffer;
-	m_buffer->add_at_end (tmp->get_size ());
-	m_buffer->seek (m_buffer->get_size () - tmp->get_size ());
-	m_buffer->write (tmp->peek_data (), tmp->get_size ());
+	Buffer *src = packet->m_buffer;
+	m_buffer->add_at_end (src->get_size ());
+	Buffer::Iterator dest_start = m_buffer->end ();
+	dest_start.prev (src->get_size ());
+	dest_start.write (src->begin (), src->end ());
 }
 void 
 Packet::add_at_end (Packet const*packet, uint32_t start, uint32_t size)
 {
 	assert (packet->get_size () <= start + size);
-	Buffer *tmp = packet->m_buffer;
-	m_buffer->add_at_end (tmp->get_size ());
-	m_buffer->seek (m_buffer->get_size () - size);
-	m_buffer->write (tmp->peek_data () + start, size);
+	Buffer *src = packet->m_buffer;
+	m_buffer->add_at_end (src->get_size ());
+	Buffer::Iterator dest_start = m_buffer->end ();
+	dest_start.prev (size);
+	Buffer::Iterator src_start = src->begin ();
+	src_start.next (start);
+	Buffer::Iterator src_end = src_start;
+	src_end.next (size);
+	dest_start.write (src_start, src_end);
 }
 
 void 
@@ -165,7 +177,7 @@ Packet::remove_at_start (uint32_t size)
 void
 Packet::write (PacketReadWriteCallback callback) const
 {
-	uint8_t *data = m_buffer->peek_data ();
+	uint8_t *data = m_buffer->begin ().peek_data ();
 	uint32_t to_write = get_size ();
 	callback (data, to_write);
 }
@@ -175,7 +187,7 @@ Packet::read (PacketReadWriteCallback callback,
 	      uint32_t to_read)
 {
 	m_buffer->add_at_start (to_read);
-	uint8_t *data = m_buffer->peek_data ();
+	uint8_t *data = m_buffer->begin ().peek_data ();
 	callback (data, to_read);
 }
 
