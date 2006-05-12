@@ -84,9 +84,9 @@ setup_rx_trace (NetworkInterface80211Adhoc *wifi)
 
 int main (int argc, char *argv[])
 {
-	Simulator::set_std_map ();
+	Simulator::set_linked_list ();
 
-	Simulator::enable_log_to ("80211.log");
+	//Simulator::enable_log_to ("80211.log");
 
 	Host *hclient, *hserver;
 	hclient = new Host ("client");
