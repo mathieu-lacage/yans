@@ -38,15 +38,14 @@ public:
 		void next (uint32_t delta);
 		void prev (uint32_t delta);
 
-		bool is_end (void);
-		bool is_start (void);
+		bool is_end (void) const;
+		bool is_start (void) const;
 
 		// what an evil method !!
 		uint8_t *peek_data (void);
 
-		void write (Iterator start, Iterator end);
-
-		void write_u8  (uint8_t  data);
+		void write_u8 (uint8_t  data);
+		void write_u8 (uint8_t data, uint32_t len);
 		void write_u16 (uint16_t data);
 		void write_u32 (uint32_t data);
 		void write_u64 (uint64_t data);
@@ -54,6 +53,7 @@ public:
 		void write_hton_u32 (uint32_t data);
 		void write_hton_u64 (uint64_t data);
 		void write (uint8_t const*buffer, uint16_t size);
+		void write (Iterator start, Iterator end);
 
 		uint8_t  read_u8 (void);
 		uint16_t read_u16 (void);

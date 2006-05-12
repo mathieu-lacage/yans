@@ -262,12 +262,12 @@ Buffer::Iterator::prev (uint32_t delta)
 }
 
 bool 
-Buffer::Iterator::is_end (void)
+Buffer::Iterator::is_end (void) const
 {
 	return m_current == m_end;
 }
 bool 
-Buffer::Iterator::is_start (void)
+Buffer::Iterator::is_start (void) const
 {
 	return m_current == m_start;
 }
@@ -292,43 +292,50 @@ Buffer::Iterator::write (Iterator start, Iterator end)
 }
 
 void 
+Buffer::Iterator::write_u8 (uint8_t  data, uint32_t len)
+{
+	assert (m_current + len <= m_end);
+	memset (m_current, data, len);
+}
+
+void 
 Buffer::Iterator::write_u8  (uint8_t  data)
 {
-	assert (m_current + 1 < m_end);
+	assert (m_current + 1 <= m_end);
 	*m_current = data;
 }
 void 
 Buffer::Iterator::write_u16 (uint16_t data)
 {
-	assert (m_current + 2 < m_end);
+	assert (m_current + 2 <= m_end);
 	uint16_t *buffer = (uint16_t *)m_current;
 	*buffer = data;
 }
 void 
 Buffer::Iterator::write_u32 (uint32_t data)
 {
-	assert (m_current + 4 < m_end);
+	assert (m_current + 4 <= m_end);
 	uint32_t *buffer = (uint32_t *)m_current;
 	*buffer = data;
 }
 void 
 Buffer::Iterator::write_u64 (uint64_t data)
 {
-	assert (m_current + 8 < m_end);
+	assert (m_current + 8 <= m_end);
 	uint64_t *buffer = (uint64_t *)m_current;
 	*buffer = data;
 }
 void 
 Buffer::Iterator::write_hton_u16 (uint16_t data)
 {
-	assert (m_current + 2 < m_end);
+	assert (m_current + 2 <= m_end);
 	*(m_current+0) = (data >> 8) & 0xff;
 	*(m_current+1) = (data >> 0) & 0xff;
 }
 void 
 Buffer::Iterator::write_hton_u32 (uint32_t data)
 {
-	assert (m_current + 4 < m_end);
+	assert (m_current + 4 <= m_end);
 	*(m_current+0) = (data >> 24) & 0xff;
 	*(m_current+1) = (data >> 16) & 0xff;
 	*(m_current+2) = (data >> 8) & 0xff;
@@ -337,7 +344,7 @@ Buffer::Iterator::write_hton_u32 (uint32_t data)
 void 
 Buffer::Iterator::write_hton_u64 (uint64_t data)
 {
-	assert (m_current + 4 < m_end);
+	assert (m_current + 8 <= m_end);
 	*(m_current+0) = (data >> 56) & 0xff;
 	*(m_current+1) = (data >> 48) & 0xff;
 	*(m_current+2) = (data >> 40) & 0xff;
@@ -350,41 +357,41 @@ Buffer::Iterator::write_hton_u64 (uint64_t data)
 void 
 Buffer::Iterator::write (uint8_t const*buffer, uint16_t size)
 {
-	assert (m_current + size < m_end);
+	assert (m_current + size <= m_end);
 	memcpy (m_current, buffer, size);
 }
 
 uint8_t  
 Buffer::Iterator::read_u8 (void)
 {
-	assert (m_current + 1 < m_end);
+	assert (m_current + 1 <= m_end);
 	return *m_current;
 }
 uint16_t 
 Buffer::Iterator::read_u16 (void)
 {
-	assert (m_current + 2 < m_end);
+	assert (m_current + 2 <= m_end);
 	uint16_t *buffer = reinterpret_cast<uint16_t *>(m_current);
 	return *buffer;
 }
 uint32_t 
 Buffer::Iterator::read_u32 (void)
 {
-	assert (m_current + 4 < m_end);
+	assert (m_current + 4 <= m_end);
 	uint32_t *buffer = reinterpret_cast<uint32_t *>(m_current);
 	return *buffer;
 }
 uint64_t 
 Buffer::Iterator::read_u64 (void)
 {
-	assert (m_current + 8 < m_end);
+	assert (m_current + 8 <= m_end);
 	uint64_t *buffer = reinterpret_cast<uint64_t *>(m_current);
 	return *buffer;
 }
 uint16_t 
 Buffer::Iterator::read_ntoh_u16 (void)
 {
-	assert (m_current + 2 < m_end);
+	assert (m_current + 2 <= m_end);
 	uint16_t retval = 0;
 	retval |= *reinterpret_cast<uint16_t *>(m_current+0) << 8;
 	retval |= *reinterpret_cast<uint16_t *>(m_current+1) << 0;
@@ -393,7 +400,7 @@ Buffer::Iterator::read_ntoh_u16 (void)
 uint32_t 
 Buffer::Iterator::read_ntoh_u32 (void)
 {
-	assert (m_current + 4 < m_end);
+	assert (m_current + 4 <= m_end);
 	uint32_t retval = 0;
 	retval |= *reinterpret_cast<uint32_t *>(m_current+0) << 24;
 	retval |= *reinterpret_cast<uint32_t *>(m_current+1) << 16;
@@ -404,7 +411,7 @@ Buffer::Iterator::read_ntoh_u32 (void)
 uint64_t 
 Buffer::Iterator::read_ntoh_u64 (void)
 {
-	assert (m_current + 8 < m_end);
+	assert (m_current + 8 <= m_end);
 	uint64_t retval = 0;
 	retval |= *reinterpret_cast<uint64_t *>(m_current+0) << 56;
 	retval |= *reinterpret_cast<uint64_t *>(m_current+1) << 48;
@@ -419,7 +426,7 @@ Buffer::Iterator::read_ntoh_u64 (void)
 void 
 Buffer::Iterator::read (uint8_t *buffer, uint16_t size)
 {
-	assert (m_current + size < m_end);
+	assert (m_current + size <= m_end);
 	memcpy (buffer, m_current, size);
 }
 
