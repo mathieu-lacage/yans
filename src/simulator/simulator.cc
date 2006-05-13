@@ -88,6 +88,8 @@ SimulatorPrivate::SimulatorPrivate (Scheduler *events)
 	m_events = events;
 	m_uid = 0;	
 	m_log_enable = false;
+	m_current_us = 0;
+	m_current_s = 0.0;
 }
 
 SimulatorPrivate::~SimulatorPrivate ()
