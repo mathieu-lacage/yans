@@ -310,12 +310,14 @@ Buffer::Iterator::write_u8 (uint8_t  data, uint32_t len)
 	memset (m_current, data, len);
 }
 
+#ifndef INL_EXPE
 void 
 Buffer::Iterator::write_u8  (uint8_t  data)
 {
 	assert (m_current + 1 <= m_end);
 	*m_current = data;
 }
+#endif
 void 
 Buffer::Iterator::write_u16 (uint16_t data)
 {
@@ -337,6 +339,7 @@ Buffer::Iterator::write_u64 (uint64_t data)
 	uint64_t *buffer = (uint64_t *)m_current;
 	*buffer = data;
 }
+#ifndef INL_EXPE
 void 
 Buffer::Iterator::write_hton_u16 (uint16_t data)
 {
@@ -344,6 +347,7 @@ Buffer::Iterator::write_hton_u16 (uint16_t data)
 	*(m_current+0) = (data >> 8) & 0xff;
 	*(m_current+1) = (data >> 0) & 0xff;
 }
+#endif
 void 
 Buffer::Iterator::write_hton_u32 (uint32_t data)
 {

@@ -45,12 +45,12 @@ public:
 		// what an evil method !!
 		uint8_t *peek_data (void);
 
-		void write_u8 (uint8_t  data);
+		INL_EXPE void write_u8 (uint8_t  data);
 		void write_u8 (uint8_t data, uint32_t len);
 		void write_u16 (uint16_t data);
 		void write_u32 (uint32_t data);
 		void write_u64 (uint64_t data);
-		void write_hton_u16 (uint16_t data);
+		INL_EXPE void write_hton_u16 (uint16_t data);
 		void write_hton_u32 (uint32_t data);
 		void write_hton_u64 (uint64_t data);
 		void write (uint8_t const*buffer, uint16_t size);
@@ -108,6 +108,25 @@ private:
 };
 
 
-
 }; // namespace yans
+
+#ifdef INL_EXPE
+#include <cassert>
+namespace yans {
+void 
+Buffer::Iterator::write_u8  (uint8_t  data)
+{
+	assert (m_current + 1 <= m_end);
+	*m_current = data;
+}
+void 
+Buffer::Iterator::write_hton_u16 (uint16_t data)
+{
+	assert (m_current + 2 <= m_end);
+	*(m_current+0) = (data >> 8) & 0xff;
+	*(m_current+1) = (data >> 0) & 0xff;
+}
+}
+#endif
+
 #endif /* BUFFER_H */
