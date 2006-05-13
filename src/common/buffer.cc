@@ -405,8 +405,8 @@ Buffer::Iterator::read_ntoh_u16 (void)
 {
 	assert (m_current + 2 <= m_end);
 	uint16_t retval = 0;
-	retval |= *reinterpret_cast<uint16_t *>(m_current+0) << 8;
-	retval |= *reinterpret_cast<uint16_t *>(m_current+1) << 0;
+	retval |= static_cast<uint16_t> (m_current[0]) << 8;
+	retval |= static_cast<uint16_t> (m_current[1]) << 0;
 	return retval;
 }
 uint32_t 
@@ -414,10 +414,10 @@ Buffer::Iterator::read_ntoh_u32 (void)
 {
 	assert (m_current + 4 <= m_end);
 	uint32_t retval = 0;
-	retval |= *reinterpret_cast<uint32_t *>(m_current+0) << 24;
-	retval |= *reinterpret_cast<uint32_t *>(m_current+1) << 16;
-	retval |= *reinterpret_cast<uint32_t *>(m_current+2) << 8;
-	retval |= *reinterpret_cast<uint32_t *>(m_current+3) << 0;
+	retval |= static_cast<uint32_t> (m_current[0]) << 24;
+	retval |= static_cast<uint32_t> (m_current[1]) << 16;
+	retval |= static_cast<uint32_t> (m_current[2]) << 8;
+	retval |= static_cast<uint32_t> (m_current[3]) << 0;
 	return retval;
 }
 uint64_t 
@@ -425,14 +425,14 @@ Buffer::Iterator::read_ntoh_u64 (void)
 {
 	assert (m_current + 8 <= m_end);
 	uint64_t retval = 0;
-	retval |= *reinterpret_cast<uint64_t *>(m_current+0) << 56;
-	retval |= *reinterpret_cast<uint64_t *>(m_current+1) << 48;
-	retval |= *reinterpret_cast<uint64_t *>(m_current+2) << 40;
-	retval |= *reinterpret_cast<uint64_t *>(m_current+3) << 32;
-	retval |= *reinterpret_cast<uint64_t *>(m_current+4) << 24;
-	retval |= *reinterpret_cast<uint64_t *>(m_current+5) << 16;
-	retval |= *reinterpret_cast<uint64_t *>(m_current+6) << 8;
-	retval |= *reinterpret_cast<uint64_t *>(m_current+7) << 0;
+	retval |= static_cast<uint64_t> (m_current[0]) << 56;
+	retval |= static_cast<uint64_t> (m_current[1]) << 48;
+	retval |= static_cast<uint64_t> (m_current[2]) << 40;
+	retval |= static_cast<uint64_t> (m_current[3]) << 32;
+	retval |= static_cast<uint64_t> (m_current[4]) << 24;
+	retval |= static_cast<uint64_t> (m_current[5]) << 16;
+	retval |= static_cast<uint64_t> (m_current[6]) << 8;
+	retval |= static_cast<uint64_t> (m_current[7]) << 0;
 	return retval;
 }
 void 
