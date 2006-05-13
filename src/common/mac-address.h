@@ -27,8 +27,6 @@
 
 namespace yans {
 
-class Buffer;
-
 class MacAddress {
 public:
 	MacAddress (void);
@@ -52,11 +50,10 @@ public:
 	bool is_multicast (void) const;
 	bool is_multicast_equal (MacAddress other) const;
 
-	void serialize (Buffer *buffer) const;
-	void deserialize (Buffer *buffer);
 	void print (std::ostream *os) const;
 
-	uint64_t peek (void) const;
+	void peek (uint8_t ad[6]) const;
+	void set (uint8_t const ad[6]);
 
 	static MacAddress get_broadcast (void);
 private:

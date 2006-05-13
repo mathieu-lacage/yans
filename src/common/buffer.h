@@ -37,6 +37,7 @@ public:
 		void prev (void);
 		void next (uint32_t delta);
 		void prev (uint32_t delta);
+		uint32_t get_distance_from (Iterator const &o) const;
 
 		bool is_end (void) const;
 		bool is_start (void) const;
@@ -105,6 +106,8 @@ private:
 	uint32_t m_total_added_start;
 	uint32_t m_total_added_end;
 };
+
+
 
 }; // namespace yans
 #endif /* BUFFER_H */

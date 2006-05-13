@@ -20,7 +20,6 @@
  */
 
 #include "supported-rates.h"
-#include "buffer.h"
 
 #include <cassert>
 
@@ -48,33 +47,31 @@ SupportedRates::is_supported_rate (uint32_t bs) const
 	}
 	return false;
 }
+uint8_t 
+SupportedRates::get_n_rates (void) const
+{
+	return m_n_rates;
+}
+void 
+SupportedRates::peek_rates (uint8_t rates[8]) const
+{
+	for (uint8_t i = 0; i < 8; i++) {
+		rates[i] = m_rates[i];
+	}
+}
+void 
+SupportedRates::set_rates (uint8_t rates[8], uint8_t n_rates)
+{
+	for (uint8_t i = 0; i < n_rates; i++) {
+		m_rates[i] = rates[i];
+	}
+	m_n_rates = n_rates;
+}
 
 uint32_t 
 SupportedRates::get_size (void) const
 {
 	return 1 + 1 + m_n_rates;
-}
-void 
-SupportedRates::write_to (Buffer *buffer) const
-{
-	buffer->write_u8 (1); // supported rates element id
-	buffer->write_u8 (m_n_rates);
-	for (uint8_t i = 0; i < m_n_rates; i++) {
-		buffer->write_u8 (m_rates[i]);
-	}
-}
-uint32_t 
-SupportedRates::read_from (Buffer *buffer)
-{
-	//uint8_t rates_id = buffer->read_u8 ();
-	//assert (rates_id == 1);
-	buffer->read_u8 ();
-	m_n_rates = buffer->read_u8 ();
-	assert (m_n_rates <= 8);
-	for (uint8_t i = 0; i < m_n_rates; i++) {
-		m_rates[i] = buffer->read_u8 ();
-	}
-	return get_size ();
 }
 
 }; // namespace yans

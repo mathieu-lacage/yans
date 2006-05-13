@@ -22,6 +22,23 @@
 #include "buffer.h"
 #include <cassert>
 
+namespace {
+void
+write_mac (yans::Buffer::Iterator i, yans::MacAddress const mac)
+{
+	uint8_t ad[6];
+	mac.peek (ad);
+	i.write (ad, 6);
+}
+void
+read_mac (yans::Buffer::Iterator i, yans::MacAddress &mac)
+{
+	uint8_t ad[6];
+	i.read (ad, 6);
+	mac.set (ad);
+}
+
+}
 namespace yans {
 
 enum {
@@ -720,34 +737,45 @@ case MAC_80211_ ## x: \
 void 
 ChunkMac80211Hdr::add_to (Buffer *buffer) const
 {
+	Buffer::Iterator i;
 	switch (m_ctrl_type) {
 	case TYPE_MGT:
 		buffer->add_at_start (2+2+6+6+6+2);
-		buffer->seek (0);
-		buffer->write_hton_u16 (get_frame_control ());
-		buffer->write_hton_u16 (m_duration);
-		m_addr1.serialize (buffer);
-		m_addr2.serialize (buffer);
-		m_addr3.serialize (buffer);
-		buffer->write_hton_u16 (get_sequence_control ());
+		i = buffer->begin ();
+		i.write_hton_u16 (get_frame_control ());
+		i.next (2);
+		i.write_hton_u16 (m_duration);
+		write_mac (i, m_addr1);
+		i.next (6);
+		write_mac (i, m_addr2);
+		i.next (6);
+		write_mac (i, m_addr3);
+		i.next (6);
+		i.write_hton_u16 (get_sequence_control ());
 		break;
 	case TYPE_CTL:
 		switch (m_ctrl_subtype) {
 		case SUBTYPE_CTL_RTS:
 			buffer->add_at_start (2+2+6+6);
-			buffer->seek (0);
-			buffer->write_hton_u16 (get_frame_control ());
-			buffer->write_hton_u16 (m_duration);
-			m_addr1.serialize (buffer);
-			m_addr2.serialize (buffer);
+			i = buffer->begin ();
+			i.write_hton_u16 (get_frame_control ());
+			i.next (2);
+			i.write_hton_u16 (m_duration);
+			i.next (2);
+			write_mac (i, m_addr1);
+			i.next (2);
+			write_mac (i, m_addr2);
+			i.next (2);
 			break;
 		case SUBTYPE_CTL_CTS:
 		case SUBTYPE_CTL_ACK:
 			buffer->add_at_start (2+2+6);
-			buffer->seek (0);
-			buffer->write_hton_u16 (get_frame_control ());
-			buffer->write_hton_u16 (m_duration);
-			m_addr1.serialize (buffer);
+			i = buffer->begin ();
+			i.write_hton_u16 (get_frame_control ());
+			i.next (2);
+			i.write_hton_u16 (m_duration);
+			i.next (2);
+			write_mac (i, m_addr1);
 			break;
 		case SUBTYPE_CTL_BACKREQ:
 		case SUBTYPE_CTL_BACKRESP:
@@ -765,18 +793,26 @@ ChunkMac80211Hdr::add_to (Buffer *buffer) const
 			size += 2;
 		}
 		buffer->add_at_start (size);
-		buffer->seek (0);
-		buffer->write_hton_u16 (get_frame_control ());
-		buffer->write_hton_u16 (m_duration);
-		m_addr1.serialize (buffer);
-		m_addr2.serialize (buffer);
-		m_addr3.serialize (buffer);
-		buffer->write_hton_u16 (get_sequence_control ());
+		i = buffer->begin ();
+		i.write_hton_u16 (get_frame_control ());
+		i.next (2);
+		i.write_hton_u16 (m_duration);
+		i.next (2);
+		write_mac (i, m_addr1);
+		i.next (6);
+		write_mac (i, m_addr2);
+		i.next (6);
+		write_mac (i, m_addr3);
+		i.next (6);
+		i.write_hton_u16 (get_sequence_control ());
+		i.next (2);
 		if (m_ctrl_to_ds && m_ctrl_from_ds) {
-			m_addr4.serialize (buffer);
+			write_mac (i, m_addr4);
+			i.next (6);
 		}
 		if (m_ctrl_subtype & 0x08) {
-			buffer->write_hton_u16 (get_qos_control ());
+			i.write_hton_u16 (get_qos_control ());
+			i.next (2);
 		}
 		} break;
 	}
@@ -784,21 +820,28 @@ ChunkMac80211Hdr::add_to (Buffer *buffer) const
 void 
 ChunkMac80211Hdr::remove_from (Buffer *buffer)
 {
-	buffer->seek (0);
-	uint32_t frame_control = buffer->read_ntoh_u16 ();
+	Buffer::Iterator i = buffer->begin ();
+	uint32_t frame_control = i.read_ntoh_u16 ();
+	i.next (2);
 	set_frame_control (frame_control);
-	m_duration = buffer->read_ntoh_u16 ();
-	m_addr1.deserialize (buffer);
+	m_duration = i.read_ntoh_u16 ();
+	i.next (2);
+	read_mac (i, m_addr1);
+	i.next (6);
 	switch (m_ctrl_type) {
 	case TYPE_MGT:
-		m_addr2.deserialize (buffer);
-		m_addr3.deserialize (buffer);
-		set_sequence_control (buffer->read_ntoh_u16 ());
+		read_mac (i, m_addr2);
+		i.next (6);
+		read_mac (i, m_addr3);
+		i.next (6);
+		set_sequence_control (i.read_ntoh_u16 ());
+		i.next (2);
 		break;
 	case TYPE_CTL:
 		switch (m_ctrl_subtype) {
 		case SUBTYPE_CTL_RTS:
-			m_addr2.deserialize (buffer);
+			read_mac (i, m_addr2);
+			i.next (6);
 			break;
 		case SUBTYPE_CTL_CTS:
 		case SUBTYPE_CTL_ACK:
@@ -818,18 +861,23 @@ ChunkMac80211Hdr::remove_from (Buffer *buffer)
 		if (m_ctrl_subtype & 0x08) {
 			size += 2;
 		}
-		m_addr2.deserialize (buffer);
-		m_addr3.deserialize (buffer);
-		set_sequence_control (buffer->read_ntoh_u16 ());
+		read_mac (i, m_addr2);
+		i.next (6);
+		read_mac (i, m_addr3);
+		i.next (6);
+		set_sequence_control (i.read_ntoh_u16 ());
+		i.next (2);
 		if (m_ctrl_to_ds && m_ctrl_from_ds) {
-			m_addr4.deserialize (buffer);
+			read_mac (i, m_addr4);
+			i.next (6);
 		}
 		if (m_ctrl_subtype & 0x08) {
-			set_qos_control (buffer->read_ntoh_u16 ());
+			set_qos_control (i.read_ntoh_u16 ());
+			i.next (2);
 		}
 		break;
 	}
-	buffer->remove_at_start (buffer->get_current ());
+	buffer->remove_at_start (get_size ());
 }
 void 
 ChunkMac80211Hdr::print (std::ostream *os) const

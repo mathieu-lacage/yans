@@ -27,8 +27,6 @@
 
 namespace yans {
 
-class Buffer;
-
 /* Ipv4 addresses are stored in host order in
  * this class.
  */
@@ -51,10 +49,9 @@ public:
 	 * It is there only for chunk-ipv4.
 	 */
 	uint32_t get_host_order (void) const;
-
-	void serialize (Buffer *buffer) const;
+	void set_host_order (uint32_t ip);
 	void serialize (uint8_t buf[4]) const;
-	void deserialize (Buffer *buffer);
+
 	void print (std::ostream *os) const;
 
 	bool is_broadcast (void);

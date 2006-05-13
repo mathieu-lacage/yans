@@ -25,19 +25,16 @@
 
 namespace yans {
 
-class Buffer;
-
 class StatusCode {
 public:
 	StatusCode ();
 	void set_success (void);
 	void set_failure (void);
 
-	bool is_success (void);
-
+	bool is_success (void) const;
+	uint16_t peek_code (void) const;
+	void set_code (uint16_t code);
 	uint32_t get_size (void) const;
-	void write_to (Buffer *buffer) const;
-	uint32_t read_from (Buffer *buffer);
 private:
 	uint16_t m_code;
 };

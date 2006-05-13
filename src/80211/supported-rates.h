@@ -25,19 +25,17 @@
 
 namespace yans {
 
-class Buffer;
-
 class SupportedRates {
 public:
 	SupportedRates ();
 
 	void add_supported_rate (uint32_t bs);
 	bool is_supported_rate (uint32_t bs) const;
+	uint8_t get_n_rates (void) const;
+	void peek_rates (uint8_t[8]) const;
+	void set_rates (uint8_t [8], uint8_t);
 
 	uint32_t get_size (void) const;
-	void write_to (Buffer *buffer) const;
-	// returns the number of bytes read.
-	uint32_t read_from (Buffer *buffer);
 private:
 	uint8_t m_n_rates;
 	uint8_t m_rates[8];

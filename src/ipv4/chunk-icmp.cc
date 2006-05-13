@@ -82,46 +82,64 @@ void
 ChunkIcmp::add_to (Buffer *buffer) const
 {
 	buffer->add_at_start (get_size ());
-	buffer->seek (0);
-	buffer->write_u8 (m_type);
-	buffer->write_u8 (m_code);
-	buffer->write_hton_u16 (0);
+	Buffer::Iterator i = buffer->begin ();
+	i.write_u8 (m_type);
+	i.next ();
+	i.write_u8 (m_code);
+	i.next ();
+	i.write_hton_u16 (0);
+	i.next (2);
 	if (m_type == UNREACH ||
 	    m_type == TIME_EXCEEDED ||
 	    m_type == SOURCE_QUENCH) {
 		/* unused */
-		buffer->write_hton_u32 (0);
+		i.write_hton_u32 (0);
+		i.next (4);
 	} else if (m_type == PARAMETER_PROBLEM) {
 		/* pointer */
-		buffer->write_u8 (0);
+		i.write_u8 (0);
+		i.next ();
 		/* unused */
-		buffer->write_u8 (0);
-		buffer->write_u8 (0);
-		buffer->write_u8 (0);
+		i.write_u8 (0);
+		i.next ();
+		i.write_u8 (0);
+		i.next ();
+		i.write_u8 (0);
+		i.next ();
 	} else if (m_type == REDIRECT) {
-		m_gateway.serialize (buffer);
+		i.write_hton_u32 (m_gateway.get_host_order ());
+		i.next (4);
 	} else if (m_type == ECHO ||
 		   m_type == ECHO_REPLY) {
-		buffer->write_hton_u16 (m_identifier);
-		buffer->write_hton_u16 (m_seq_number);
+		i.write_hton_u16 (m_identifier);
+		i.next (2);
+		i.write_hton_u16 (m_seq_number);
+		i.next (2);
 	} else if (m_type == TIMESTAMP ||
 		   m_type == TIMESTAMP_REPLY) {
-		buffer->write_hton_u16 (m_identifier);
-		buffer->write_hton_u16 (m_seq_number);
-		buffer->write_hton_u32 (m_org_timestamp);
-		buffer->write_hton_u32 (m_rx_timestamp);
-		buffer->write_hton_u32 (m_tx_timestamp);
+		i.write_hton_u16 (m_identifier);
+		i.next (2);
+		i.write_hton_u16 (m_seq_number);
+		i.next (2);
+		i.write_hton_u32 (m_org_timestamp);
+		i.next (4);
+		i.write_hton_u32 (m_rx_timestamp);
+		i.next (4);
+		i.write_hton_u32 (m_tx_timestamp);
+		i.next (4);
 	} else if (m_type == INFORMATION_REQUEST ||
 		   m_type == INFORMATION_REPLY) {
-		buffer->write_hton_u16 (m_identifier);
-		buffer->write_hton_u16 (m_seq_number);		
+		i.write_hton_u16 (m_identifier);
+		i.next (2);
+		i.write_hton_u16 (m_seq_number);
+		i.next (2);
 	}	
 }
 void 
 ChunkIcmp::remove_from (Buffer *buffer)
 {
-	buffer->seek (0);
-	m_type = buffer->read_u8 ();
+	Buffer::Iterator i = buffer->begin ();
+	m_type = i.read_u8 ();
 	buffer->remove_at_start (get_size ());
 }
 void 

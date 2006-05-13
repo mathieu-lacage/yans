@@ -94,31 +94,51 @@ void
 ChunkArp::add_to (Buffer *buffer) const
 {
 	buffer->add_at_start (get_size ());
-	buffer->seek (0);
+	Buffer::Iterator i = buffer->begin ();
 
 	/* ethernet */
-	buffer->write_hton_u16 (0x0001);
+	i.write_hton_u16 (0x0001);
+	i.next (2);
 	/* ipv4 */
-	buffer->write_hton_u16 (0x0800);
-	buffer->write_u8 (6);
-	buffer->write_u8 (4);
-	buffer->write_hton_u16 (m_type);
-	m_mac_source.serialize (buffer);
-	m_ipv4_source.serialize (buffer);
-	m_mac_dest.serialize (buffer);
-	m_ipv4_dest.serialize (buffer);
+	i.write_hton_u16 (0x0800);
+	i.next (2);
+	i.write_u8 (6);
+	i.next ();
+	i.write_u8 (4);
+	i.next ();
+	i.write_hton_u16 (m_type);
+	i.next (2);
+	uint8_t mac_src[6];
+	uint8_t mac_dst[6];
+	m_mac_source.peek (mac_src);
+	m_mac_dest.peek (mac_dst);
+	i.write (mac_src, 6);
+	i.next (6);
+	i.write_hton_u32 (m_ipv4_source.get_host_order ());
+	i.next (4);
+	i.write (mac_dst, 6);
+	i.next (6);
+	i.write_hton_u32 (m_ipv4_dest.get_host_order ());
+	i.next (4);
 }
 void 
 ChunkArp::remove_from (Buffer *buffer)
 {
-	buffer->seek (0);
-	buffer->skip (2+2+1+1);
-	m_type = buffer->read_ntoh_u16 ();
-	m_mac_source.deserialize (buffer);
-	m_ipv4_source.deserialize (buffer);
-	m_mac_dest.deserialize (buffer);
-	m_ipv4_dest.deserialize (buffer);
-
+	Buffer::Iterator i = buffer->begin ();
+	i.next (2+2+1+1);
+	m_type = i.read_ntoh_u16 ();
+	i.next (2);
+	uint8_t mac_src[6];
+	uint8_t mac_dst[6];
+	i.read (mac_src, 6);
+	i.next (6);
+	m_mac_source.set (mac_src);
+	m_ipv4_source.set_host_order (i.read_ntoh_u32 ());
+	i.next (4);
+	i.read (mac_dst, 6);
+	i.next (6);
+	m_mac_source.set (mac_dst);
+	m_ipv4_dest.set_host_order (i.read_ntoh_u32 ());
 }
 void 
 ChunkArp::print (std::ostream *os) const

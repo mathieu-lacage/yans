@@ -224,6 +224,9 @@ Buffer::end (void) const
 Buffer::Iterator::Iterator ()
 	: m_start (0), m_end (0), m_current (0)
 {}
+Buffer::Iterator::Iterator (uint8_t *start, uint8_t *end, uint8_t *current)
+	: m_start (start), m_end (end), m_current (current)
+{}
 
 Buffer::Iterator::Iterator (Iterator const&o)
 	: m_start (o.m_start), m_end (o.m_end), m_current (o.m_current)
@@ -259,6 +262,15 @@ Buffer::Iterator::prev (uint32_t delta)
 {
 	assert (m_current - delta >= m_start);
 	m_current -= delta;
+}
+uint32_t
+Buffer::Iterator::get_distance_from (Iterator const &o) const
+{
+	assert (m_start == o.m_start);
+	assert (m_end == o.m_end);
+	unsigned long int start = reinterpret_cast<unsigned long int> (m_current);
+	unsigned long int end = reinterpret_cast<unsigned long int> (o.m_current);
+	return end - start;
 }
 
 bool 

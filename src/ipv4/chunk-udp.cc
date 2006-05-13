@@ -96,26 +96,32 @@ void
 ChunkUdp::add_to (Buffer *buffer) const
 {
 	buffer->add_at_start (get_size ());
-	buffer->seek (0);
-	buffer->write_hton_u16 (m_source_port);
-	buffer->write_hton_u16 (m_destination_port);
-	buffer->write_hton_u16 (m_payload_size + get_size ());
-	buffer->write_hton_u16 (0);
+	Buffer::Iterator i = buffer->begin ();
+	i.write_hton_u16 (m_source_port);
+	i.next (2);
+	i.write_hton_u16 (m_destination_port);
+	i.next (2);
+	i.write_hton_u16 (m_payload_size + get_size ());
+	i.next (2);
+	i.write_hton_u16 (0);
 
+	i = buffer->begin ();
 	uint16_t checksum = utils_checksum_calculate (m_initial_checksum, 
-						      buffer->peek_data (), 
+						      i.peek_data (), 
 						      get_size () + m_payload_size);
 	checksum = utils_checksum_complete (checksum);
-	buffer->skip (-2);
-	buffer->write_u16 (checksum);
+	i.next (6);
+	i.write_u16 (checksum);
 }
 void 
 ChunkUdp::remove_from (Buffer *buffer)
 {
-	buffer->seek (0);
-	m_source_port = buffer->read_ntoh_u16 ();
-	m_destination_port = buffer->read_ntoh_u16 ();
-	m_payload_size = buffer->read_ntoh_u16 () - get_size ();
+	Buffer::Iterator i = buffer->begin ();
+	m_source_port = i.read_ntoh_u16 ();
+	i.next (2);
+	m_destination_port = i.read_ntoh_u16 ();
+	i.next (2);
+	m_payload_size = i.read_ntoh_u16 () - get_size ();
 	buffer->remove_at_start (get_size ());
 	// XXX verify checksum.
 }

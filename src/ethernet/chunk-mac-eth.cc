@@ -87,21 +87,33 @@ void
 ChunkMacEth::add_to (Buffer *buffer) const
 {
 	buffer->add_at_start (get_size ());
-	buffer->seek (0);
-	m_source.serialize (buffer);
-	m_destination.serialize (buffer);
+	Buffer::Iterator i = buffer->begin ();
+	uint8_t src[6];
+	uint8_t dst[6];
+	m_source.peek (src);
+	m_destination.peek (dst);
+	i.write (src, 6);
+	i.next (6);
+	i.write (dst, 6);
+	i.next (6);
 	assert (m_length <= 0x05dc);
 	/* ieee 802.3 says length is msb. */
 	TRACE ("length="<<m_length);
-	buffer->write_hton_u16 (m_length + 8);
+	i.write_hton_u16 (m_length + 8);
 }
 void 
 ChunkMacEth::remove_from (Buffer *buffer)
 {
-	buffer->seek (0);
-	m_source.deserialize (buffer);
-	m_destination.deserialize (buffer);
-	m_length = buffer->read_ntoh_u16 () - 8;
+	Buffer::Iterator i = buffer->begin ();
+	uint8_t src[6];
+	uint8_t dst[6];
+	i.read (src, 6);
+	i.next (6);
+	i.read (dst, 6);
+	i.next (6);
+	m_source.set (src);
+	m_destination.set (dst);
+	m_length = i.read_ntoh_u16 () - 8;
 	TRACE ("length="<<m_length);
 	buffer->remove_at_start (get_size ());
 }

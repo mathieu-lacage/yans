@@ -20,7 +20,6 @@
  */
 
 #include "status-code.h"
-#include "buffer.h"
 
 namespace yans {
 
@@ -38,9 +37,19 @@ StatusCode::set_failure (void)
 }
 
 bool 
-StatusCode::is_success (void)
+StatusCode::is_success (void) const
 {
 	return (m_code == 0)?true:false;
+}
+uint16_t 
+StatusCode::peek_code (void) const
+{
+	return m_code;
+}
+void 
+StatusCode::set_code (uint16_t code)
+{
+	m_code = code;
 }
 
 uint32_t 
@@ -48,17 +57,5 @@ StatusCode::get_size (void) const
 {
 	return 2;
 }
-void 
-StatusCode::write_to (Buffer *buffer) const
-{
-	buffer->write_hton_u16 (m_code);
-}
-uint32_t 
-StatusCode::read_from (Buffer *buffer)
-{
-	m_code = buffer->read_ntoh_u16 ();
-	return 2;
-}
-
 
 }; // namespace yans

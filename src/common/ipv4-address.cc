@@ -121,13 +121,12 @@ Ipv4Address::get_host_order (void) const
 {
 	return m_address;
 }
-
 void 
-Ipv4Address::serialize (Buffer *buffer) const
+Ipv4Address::set_host_order (uint32_t ip)
 {
-	buffer->write_hton_u32 (m_address);
+	m_address = ip;
 }
-void 
+void
 Ipv4Address::serialize (uint8_t buf[4]) const
 {
 	buf[0] = (m_address >> 24) & 0xff;
@@ -135,11 +134,7 @@ Ipv4Address::serialize (uint8_t buf[4]) const
 	buf[2] = (m_address >> 8) & 0xff;
 	buf[3] = (m_address >> 0) & 0xff;
 }
-void 
-Ipv4Address::deserialize (Buffer *buffer)
-{
-	m_address = buffer->read_ntoh_u32 ();
-}
+
 void 
 Ipv4Address::print (std::ostream *os) const
 {

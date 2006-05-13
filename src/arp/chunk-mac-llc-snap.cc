@@ -64,20 +64,17 @@ void
 ChunkMacLlcSnap::add_to (Buffer *buffer) const
 {
 	buffer->add_at_start (get_size ());
-	buffer->seek (0);
-	buffer->write_u8 (0xaa);
-	buffer->write_u8 (0xaa);
-	buffer->write_u8 (0x03);
-	buffer->write_u8 (0);
-	buffer->write_u8 (0);
-	buffer->write_u8 (0);
-	buffer->write_hton_u16 (m_ether_type);
+	Buffer::Iterator i = buffer->begin ();
+	uint8_t buf[] = {0xaa, 0x03, 0, 0, 0};
+	i.write (buf, 5);
+	i.next (5);
+	i.write_hton_u16 (m_ether_type);
 }
 void 
 ChunkMacLlcSnap::remove_from (Buffer *buffer)
 {
-	buffer->seek (6);
-	m_ether_type = buffer->read_ntoh_u16 ();
+	Buffer::Iterator i = buffer->begin ();
+	m_ether_type = i.read_ntoh_u16 ();
 	buffer->remove_at_start (get_size ());
 }
 

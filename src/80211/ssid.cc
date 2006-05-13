@@ -19,7 +19,6 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #include "ssid.h"
-#include "buffer.h"
 #include <cassert>
 
 namespace yans {
@@ -89,28 +88,20 @@ Ssid::get_size (void) const
 	assert (size <= 32);
 	return size;
 }
-void 
-Ssid::write_to (Buffer *buffer) const
+
+void
+Ssid::peek (uint8_t ssid[32]) const
 {
-	buffer->write_u8 (0); // ssid element id
-	uint32_t size = get_size ();
-	buffer->write_u8 (size);
-	for (uint8_t i = 0; i < size; i++) {
-		buffer->write_u8 (m_ssid[i]);
+	for (uint8_t i = 0; i < 32; i++) {
+		ssid[i] = m_ssid[i];
 	}
 }
-uint32_t 
-Ssid::read_from (Buffer *buffer)
+void 
+Ssid::set (uint8_t ssid[32])
 {
-	//uint8_t element_id = buffer->read_u8 ();
-	//assert (element_id == 0);
-	buffer->read_u8 ();
-	uint8_t size = buffer->read_u8 ();
-	assert (size <= 32);
-	for (uint8_t i = 0; i < size; i++) {
-		m_ssid[i] = buffer->read_u8 ();
-	}
-	return 1 + 1 + size;
+	for (uint8_t i = 0; i < 32; i++) {
+		m_ssid[i] = ssid[i];
+	}	
 }
 
 Ssid 

@@ -25,16 +25,11 @@
 
 namespace yans {
 
-class Buffer;
-
 class CapabilityInformation {
 public:
 	CapabilityInformation ();
 
 	uint32_t get_size (void) const;
-	void write_to (Buffer *buffer) const;
-	// returns the number of bytes read.
-	uint32_t read_from (Buffer *buffer);	
 };
 
 }; // namespace yans

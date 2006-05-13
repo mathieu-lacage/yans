@@ -19,7 +19,6 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #include "capability-information.h"
-#include "buffer.h"
 
 namespace yans {
 
@@ -29,17 +28,6 @@ CapabilityInformation::CapabilityInformation ()
 uint32_t 
 CapabilityInformation::get_size (void) const
 {
-	return 2;
-}
-void 
-CapabilityInformation::write_to (Buffer *buffer) const
-{
-	buffer->skip (2);
-}
-uint32_t 
-CapabilityInformation::read_from (Buffer *buffer)
-{
-	buffer->skip (2);
 	return 2;
 }
 

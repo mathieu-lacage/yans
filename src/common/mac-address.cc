@@ -117,28 +117,16 @@ MacAddress::get_multicast_part (void) const
 	return part;
 }
 
-void 
-MacAddress::serialize (Buffer *buffer) const
-{
-	buffer->write (m_address, 6);
-}
-void 
-MacAddress::deserialize (Buffer *buffer)
-{
-	buffer->read (m_address, 6);
-}
 
-uint64_t
-MacAddress::peek (void) const
+void
+MacAddress::peek (uint8_t ad[6]) const
 {
-	uint64_t v = 0 |
-		(m_address[5] << 0) | 
-		(m_address[4] << 8) |
-		(m_address[3] << 16) |
-		(m_address[2] << 24) |
-		(static_cast<uint64_t> (m_address[1]) << 32) |
-		(static_cast<uint64_t> (m_address[0]) << 40);
-	return v;
+	memcpy (ad, m_address, 6);
+}
+void
+MacAddress::set (uint8_t const ad[6])
+{
+	memcpy (m_address, ad, 6);
 }
 
 void
@@ -171,12 +159,23 @@ bool operator == (MacAddress const&a, MacAddress const&b)
 
 bool operator != (MacAddress const&a, MacAddress const&b)
 {
-	return (a.peek () != b.peek ());
+	return !a.is_equal (b);
 }
 
 bool operator < (MacAddress const&a, MacAddress const&b)
 {
-	return (a.peek () < b.peek ());
+	uint8_t a_p[6];
+	uint8_t b_p[6];
+	a.peek (a_p);
+	b.peek (b_p);
+	for (uint8_t i = 0; i < 6; i++) {
+		if (a_p[i] < b_p[i]) {
+			return true;
+		} else if (a_p[i] > b_p[i]) {
+			return false;
+		}
+	}
+	return false;
 }
 
 std::ostream& operator<< (std::ostream& os, MacAddress const& address)

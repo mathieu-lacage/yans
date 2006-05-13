@@ -103,6 +103,8 @@ private:
 	bool is_flag (uint8_t n) const;
 	void enable_flag (uint8_t n);
 	void disable_flag (uint8_t n);
+	uint32_t get_raw_size (void) const;
+	uint32_t get_padding (void) const;
 
 	uint16_t m_source_port;
 	uint16_t m_destination_port;

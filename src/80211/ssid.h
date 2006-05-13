@@ -25,8 +25,6 @@
 
 namespace yans {
 
-class Buffer;
-
 class Ssid {
 public:
 	/* 0-terminated string */
@@ -38,9 +36,8 @@ public:
 	bool is_broadcast (void) const;
 
 	uint32_t get_size (void) const;
-	void write_to (Buffer *buffer) const;
-	// returns the number of bytes read.
-	uint32_t read_from (Buffer *buffer);
+	void peek (uint8_t[32]) const;
+	void set (uint8_t[32]);
 
 	static Ssid get_broadcast (void);
 private:
