@@ -244,7 +244,6 @@ YANS_INST_HDR := \
 	src/common/utils.h \
 	src/common/chunk-constant-data.h \
 	src/common/mac-address.h \
-	src/common/chunk-fake-data.h \
 	src/common/packet.h \
 	src/common/tag-manager.h \
 	src/common/chunk.h \
