@@ -140,6 +140,7 @@ YANS_SRC:= \
 	src/common/wall-clock-ms-unix.cc \
 	src/common/buffer.cc \
 	src/common/chunk.cc \
+	src/common/chunk-utils.cc \
 	src/common/packet.cc \
 	src/common/chunk-constant-data.cc \
 	src/common/ipv4-address.cc \
@@ -284,6 +285,7 @@ YANS_HDR := \
 	src/simulator/scheduler-heap.h \
 	src/simulator/scheduler-map.h \
 	src/common/sgi-hashmap.h \
+	src/common/chunk-utils.h \
 	src/common/ref-count.tcc \
 	src/common/seed-generator.h \
 	src/common/rng-mrg32k3a.h \
