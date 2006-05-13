@@ -242,7 +242,7 @@ Buffer::Iterator::operator = (Iterator const &o)
 void 
 Buffer::Iterator::next (void)
 {
-	assert (m_current + 1 < m_end);
+	assert (m_current + 1 <= m_end);
 	m_current++;
 }
 void 
@@ -254,7 +254,7 @@ Buffer::Iterator::prev (void)
 void 
 Buffer::Iterator::next (uint32_t delta)
 {
-	assert (m_current + delta < m_end);
+	assert (m_current + delta <= m_end);
 	m_current += delta;
 }
 void 
@@ -299,7 +299,7 @@ Buffer::Iterator::write (Iterator start, Iterator end)
 	unsigned long int i_end = reinterpret_cast<unsigned long int> (end.m_current);
 	unsigned long int i_start = reinterpret_cast<unsigned long int> (start.m_current);
 	unsigned long int i_size = i_end - i_start;
-	assert (m_current + i_size < m_end);
+	assert (m_current + i_size <= m_end);
 	memcpy (m_current, start.m_current, i_size);
 }
 
