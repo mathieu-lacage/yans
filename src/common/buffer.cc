@@ -519,16 +519,16 @@ run_tests (void)
 	ENSURE_WRITTEN_BYTES (i, 2, 0x63, 0x69);
 	i.next (2);
 	i.write_hton_u32 (0xdeadbeaf);
-	ENSURE_WRITTEN_BYTES (i, 6, 0x63, 0x69, 0xde, 0xad, 0xbe, 0xaf);
+	ENSURE_WRITTEN_BYTES (buffer->begin (), 6, 0x63, 0x69, 0xde, 0xad, 0xbe, 0xaf);
 	buffer->add_at_start (2);
 	i = buffer->begin ();
 	i.write_u16 (0);
-	ENSURE_WRITTEN_BYTES (i, 8, 0, 0, 0x63, 0x69, 0xde, 0xad, 0xbe, 0xaf);
+	ENSURE_WRITTEN_BYTES (buffer->begin (), 8, 0, 0, 0x63, 0x69, 0xde, 0xad, 0xbe, 0xaf);
 	buffer->add_at_end (2);
 	i = buffer->begin ();
 	i.next (8);
 	i.write_u16 (0);
-	ENSURE_WRITTEN_BYTES (i, 10, 0, 0, 0x63, 0x69, 0xde, 0xad, 0xbe, 0xaf, 0, 0);
+	ENSURE_WRITTEN_BYTES (buffer->begin (), 10, 0, 0, 0x63, 0x69, 0xde, 0xad, 0xbe, 0xaf, 0, 0);
 	buffer->remove_at_start (3);
 	i = buffer->begin ();
 	ENSURE_WRITTEN_BYTES (i, 7, 0x69, 0xde, 0xad, 0xbe, 0xaf, 0, 0);
@@ -543,17 +543,14 @@ run_tests (void)
 	i = buffer->begin ();
 	i.next (4);
 	i.write_u8 (0xff);
-	i.prev (2);
+	i.prev (1);
 	uint16_t saved = i.read_u16 ();
-	i.prev (2);
 	i.write_hton_u16 (0xff00);
-	i.prev (2);
 	if (i.read_ntoh_u16 () != 0xff00) {
 		ok = false;
 	}
-	i.prev (2);
 	i.write_u16 (saved);
-	ENSURE_WRITTEN_BYTES (i, 4, 0xff, 0x69, 0xde, 0xad, 0xff);
+	ENSURE_WRITTEN_BYTES (buffer->begin (), 5, 0xff, 0x69, 0xde, 0xad, 0xff);
 	delete buffer;
 	return ok;
 }
