@@ -74,6 +74,7 @@ void
 ChunkMacLlcSnap::remove_from (Buffer *buffer)
 {
 	Buffer::Iterator i = buffer->begin ();
+	i.next (5);
 	m_ether_type = i.read_ntoh_u16 ();
 	buffer->remove_at_start (get_size ());
 }
