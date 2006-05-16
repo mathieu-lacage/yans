@@ -44,9 +44,9 @@ namespace yans {
 
 Arp::Arp (NetworkInterface *interface)
 	: m_interface (interface),
-	  m_alive_timeout (1200.0),
-	  m_dead_timeout (100.0),
-	  m_wait_reply_timeout (1.0),
+	  m_alive_timeout_us (1200000000),
+	  m_dead_timeout_us (100000000),
+	  m_wait_reply_timeout_us (1000000),
 	  m_drop (new PacketLogger ())
 {}
 Arp::~Arp ()
@@ -72,35 +72,35 @@ Arp::register_trace (TraceContainer *container)
 }
 
 void 
-Arp::set_alive_timeout (double alive_timeout)
+Arp::set_alive_timeout_us (uint64_t alive_timeout_us)
 {
-	m_alive_timeout = alive_timeout;
+	m_alive_timeout_us = alive_timeout_us;
 }
 void 
-Arp::set_dead_timeout (double dead_timeout)
+Arp::set_dead_timeout_us (uint64_t dead_timeout_us)
 {
-	m_dead_timeout = dead_timeout;
+	m_dead_timeout_us = dead_timeout_us;
 }
 void 
-Arp::set_wait_reply_timeout (double wait_reply_timeout)
+Arp::set_wait_reply_timeout_us (uint64_t wait_reply_timeout_us)
 {
-	m_wait_reply_timeout = wait_reply_timeout;
+	m_wait_reply_timeout_us = wait_reply_timeout_us;
 }
 
-double 
-Arp::get_alive_timeout (void)
+uint64_t
+Arp::get_alive_timeout_us (void)
 {
-	return m_alive_timeout;
+	return m_alive_timeout_us;
 }
-double 
-Arp::get_dead_timeout (void)
+uint64_t
+Arp::get_dead_timeout_us (void)
 {
-	return m_dead_timeout;
+	return m_dead_timeout_us;
 }
-double 
-Arp::get_wait_reply_timeout (void)
+uint64_t
+Arp::get_wait_reply_timeout_us (void)
 {
-	return m_wait_reply_timeout;
+	return m_wait_reply_timeout_us;
 }
 
 

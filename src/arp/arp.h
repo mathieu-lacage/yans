@@ -44,12 +44,12 @@ class Arp {
 
 	void flush (void);
 
-	void set_alive_timeout (double aliveTimeout);
-	void set_dead_timeout (double deadTimeout);
-	void set_wait_reply_timeout (double waitReplyTimeout);
-	double get_alive_timeout (void);
-	double get_dead_timeout (void);
-	double get_wait_reply_timeout (void);
+	void set_alive_timeout_us (uint64_t alive_timeout);
+	void set_dead_timeout_us (uint64_t dead_timeout);
+	void set_wait_reply_timeout_us (uint64_t wait_reply_timeout);
+	uint64_t get_alive_timeout_us (void);
+	uint64_t get_dead_timeout_us (void);
+	uint64_t get_wait_reply_timeout_us (void);
 
 	void set_sender (ArpSendDataCallback send_data,
 			 ArpSendArpCallback send_arp);
@@ -71,9 +71,9 @@ private:
 	NetworkInterface *m_interface;
 	ArpSendDataCallback m_send_data;
 	ArpSendArpCallback m_send_arp;
-	double m_alive_timeout;
-	double m_dead_timeout;
-	double m_wait_reply_timeout;
+	uint64_t m_alive_timeout_us;
+	uint64_t m_dead_timeout_us;
+	uint64_t m_wait_reply_timeout_us;
 	ArpCache m_arp_cache;
 	PacketLogger *m_drop;
 };

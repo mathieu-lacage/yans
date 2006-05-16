@@ -47,11 +47,10 @@ private:
 	};
 
 	void update_seen (void);
-	double now (void);
 	ArpCacheEntryState_e get_state (void);
 	Arp *m_arp;
 	ArpCacheEntryState_e m_state;
-	double m_last_seen_time;
+	uint64_t m_last_seen_time_us;
 	MacAddress m_mac_address;
 	Packet *m_waiting;
 };

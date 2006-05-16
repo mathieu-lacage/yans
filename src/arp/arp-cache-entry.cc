@@ -106,25 +106,25 @@ ArpCacheEntry::get_mac_address (void)
 bool 
 ArpCacheEntry::is_expired (void)
 {
-	double timeout;
+	uint64_t timeout_us;
 	switch (m_state) {
 	case ArpCacheEntry::WAIT_REPLY:
-		timeout = m_arp->get_wait_reply_timeout ();
+		timeout_us = m_arp->get_wait_reply_timeout_us ();
 		break;
 	case ArpCacheEntry::DEAD:
-		timeout = m_arp->get_dead_timeout ();
+		timeout_us = m_arp->get_dead_timeout_us ();
 		break;
 	case ArpCacheEntry::ALIVE:
-		timeout = m_arp->get_alive_timeout ();
+		timeout_us = m_arp->get_alive_timeout_us ();
 		break;
 	default:
 		assert (false);
-		timeout = 0.0;
+		timeout_us = 0;
 		/* NOTREACHED */
 		break;
 	}
-	double elapsed_since_last_event = now () - m_last_seen_time;
-	if (elapsed_since_last_event >= timeout) {
+	uint64_t elapsed_since_last_event_us = Simulator::now_us () - m_last_seen_time_us;
+	if (elapsed_since_last_event_us >= timeout_us) {
 		return true;
 	} else {
 		return false;
@@ -133,12 +133,7 @@ ArpCacheEntry::is_expired (void)
 void 
 ArpCacheEntry::update_seen (void)
 {
-	m_last_seen_time = now ();
-}
-double 
-ArpCacheEntry::now (void)
-{
-	return Simulator::now_s ();
+	m_last_seen_time_us = Simulator::now_us ();
 }
 
 }; // namespace yans
