@@ -104,10 +104,10 @@ PropagationModel::receive (Packet const*packet, PropagationData const *data,
 			   uint8_t tx_mode, uint8_t stuff)
 {
 	double rx_power = get_rx_power (data);
-	double delay = distance (data) / 300000000;
-	Simulator::insert_in_s (delay, make_event (&PropagationModel::forward_up, 
-						   this, make_count_ptr_holder (packet),
-						   rx_power, tx_mode, stuff));
+	uint64_t delay_us = (uint64_t) (distance (data) / 300000000 * 1000000);
+	Simulator::insert_in_us (delay_us, make_event (&PropagationModel::forward_up, 
+						       this, make_count_ptr_holder (packet),
+						       rx_power, tx_mode, stuff));
 }
 
 void
