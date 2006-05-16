@@ -76,7 +76,6 @@ private:
 	uint32_t m_uid;
 	uint32_t m_current_uid;
 	uint64_t m_current_us;
-	double m_current_s;
 	std::ofstream m_log;
 	std::ifstream m_input_log;
 	bool m_log_enable;
@@ -89,7 +88,6 @@ SimulatorPrivate::SimulatorPrivate (Scheduler *events)
 	m_uid = 0;	
 	m_log_enable = false;
 	m_current_us = 0;
-	m_current_s = 0.0;
 }
 
 SimulatorPrivate::~SimulatorPrivate ()
@@ -108,7 +106,6 @@ void
 SimulatorPrivate::update_current_us (uint64_t new_time)
 {
 	m_current_us = new_time;
-	m_current_s = ((double)m_current_us)/1000000;
 }
 
 
@@ -203,7 +200,9 @@ SimulatorPrivate::insert_at_s (Event *event, double time)
 double 
 SimulatorPrivate::now_s (void)
 {
-	return m_current_s;
+	double us = m_current_us;
+	us /= 1000000;
+	return us;
 }
 void
 SimulatorPrivate::insert_later (Event *event)
