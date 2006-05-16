@@ -41,7 +41,7 @@
  * Otherwise, it is returned to the caller.
  */
 
-#include <list>
+#include <deque>
 #include <utility>
 #include "chunk-mac-80211-hdr.h"
 
@@ -59,9 +59,7 @@ public:
 	void set_max_delay_us (uint64_t us);
 
 	void enqueue (Packet *packet, ChunkMac80211Hdr const &hdr);
-	void enqueue_to_head (Packet *packet, ChunkMac80211Hdr const &hdr);
 	Packet *dequeue (ChunkMac80211Hdr *hdr);
-	Packet *look_at_back (ChunkMac80211Hdr *hdr);
 
 	void flush (void);
 
@@ -78,9 +76,9 @@ private:
 		ChunkMac80211Hdr hdr;
 		uint64_t tstamp;
 	};
-	typedef std::list<struct Item> PacketQueue;
-	typedef std::list<struct Item>::reverse_iterator PacketQueueRI;
-	typedef std::list<struct Item>::iterator PacketQueueI;
+	typedef std::deque<struct Item> PacketQueue;
+	typedef std::deque<struct Item>::reverse_iterator PacketQueueRI;
+	typedef std::deque<struct Item>::iterator PacketQueueI;
 	PacketQueue m_queue;
 	MacParameters *m_parameters;
 	uint32_t m_size;

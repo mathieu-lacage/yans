@@ -56,44 +56,34 @@ void
 MacQueue80211e::enqueue (Packet *packet, ChunkMac80211Hdr const &hdr)
 {
 	cleanup ();
-	uint64_t now = Simulator::now_us ();
-	packet->ref ();
-	m_queue.push_front (Item (packet, hdr, now));
-	m_size++;
-}
-void 
-MacQueue80211e::enqueue_to_head (Packet *packet, ChunkMac80211Hdr const &hdr)
-{
-	cleanup ();
+	if (m_size == m_max_size) {
+		return;
+	}
 	uint64_t now = Simulator::now_us ();
 	packet->ref ();
 	m_queue.push_back (Item (packet, hdr, now));
 	m_size++;
 }
-
 void
 MacQueue80211e::cleanup (void)
 {
-	PacketQueueRI tmp;
-
 	if (m_queue.empty ()) {
 		return;
 	}
 
 	uint64_t now = Simulator::now_us ();
 	uint32_t n = 0;
-	tmp = m_queue.rbegin ();
-	while (tmp != m_queue.rend ()) {
-		if (m_size < m_max_size && 
-		    (*tmp).tstamp + m_max_delay_us > now) {
+	PacketQueueI end = m_queue.begin ();
+	for (PacketQueueI i = m_queue.begin (); i != m_queue.end (); i++) {
+		if (i->tstamp + m_max_delay_us > now) {
+			end = i;
 			break;
 		}
-		(*tmp).packet->unref();
+		i->packet->unref();
 		n++;
-		tmp++;
-		m_size--;
 	}
-	m_queue.erase (tmp.base (), m_queue.end ());
+	m_size -= n;
+	m_queue.erase (m_queue.begin (), end);
 }
 
 Packet *
@@ -101,8 +91,8 @@ MacQueue80211e::dequeue (ChunkMac80211Hdr *hdr)
 {
 	cleanup ();
 	if (!m_queue.empty ()) {
-		Item i = m_queue.back ();
-		m_queue.pop_back ();
+		Item i = m_queue.front ();
+		m_queue.pop_front ();
 		m_size--;
 		*hdr = i.hdr;
 		return i.packet;
@@ -110,19 +100,6 @@ MacQueue80211e::dequeue (ChunkMac80211Hdr *hdr)
 	return 0;
 }
 
-Packet *
-MacQueue80211e::look_at_back (ChunkMac80211Hdr *hdr)
-{
-	cleanup ();
-	if (!m_queue.empty ()) {
-		Item i = m_queue.back ();
-		i.packet->ref ();
-		*hdr = i.hdr;
-		return i.packet;
-	} else {
-		return 0;
-	}
-}
 
 bool
 MacQueue80211e::is_empty (void)
@@ -141,10 +118,8 @@ MacQueue80211e::get_size (void)
 void
 MacQueue80211e::flush (void)
 {
-	PacketQueueI tmp;
-	for (tmp = m_queue.begin (); tmp != m_queue.end (); tmp++) {
-		(*tmp).packet->unref ();
-		tmp++;
+	for (PacketQueueI tmp = m_queue.begin (); tmp != m_queue.end (); tmp++) {
+		tmp->packet->unref ();
 	}
 	m_queue.erase (m_queue.begin (), m_queue.end ());
 	m_size = 0;
