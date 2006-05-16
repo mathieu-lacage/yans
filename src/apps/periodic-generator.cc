@@ -49,7 +49,7 @@ PeriodicGenerator::set_send_callback (GeneratorCallback callback)
 void 
 PeriodicGenerator::set_packet_interval (double interval)
 {
-	m_interval = interval;
+	m_interval_us = (uint64_t)(interval * 1000000);
 }
 void 
 PeriodicGenerator::set_packet_size (uint16_t size)
@@ -63,7 +63,7 @@ PeriodicGenerator::start_now (void)
 	assert (m_current_event == 0);
 
 	m_current_event = make_cancellable_event (&PeriodicGenerator::send_next_packet, this);
-	Simulator::insert_in_s (m_interval, m_current_event);
+	Simulator::insert_in_us (m_interval_us, m_current_event);
 }
 void 
 PeriodicGenerator::stop_now (void)
@@ -101,7 +101,7 @@ PeriodicGenerator::send_next_packet (void)
 	}
 	/* schedule next packet transmission. */
 	m_current_event = make_cancellable_event (&PeriodicGenerator::send_next_packet, this);
-	Simulator::insert_in_s (m_interval, m_current_event);
+	Simulator::insert_in_us (m_interval_us, m_current_event);
 	/* create packet. */
 	Packet *packet = new Packet ();
 	ChunkConstantData data = ChunkConstantData (m_size, m_n);

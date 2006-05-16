@@ -53,7 +53,7 @@ private:
 	void send_next_packet (void);
 
 	GeneratorCallback m_callback;
-	double m_interval;
+	uint64_t m_interval_us;
 	uint16_t m_size;
 	double m_stop_at;
 	uint32_t m_n;
