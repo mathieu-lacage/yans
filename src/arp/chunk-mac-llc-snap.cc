@@ -19,8 +19,6 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include <iostream>
-
 #include "chunk-mac-llc-snap.h"
 #include "buffer.h"
 #include <cassert>

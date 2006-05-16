@@ -22,7 +22,6 @@
 #include "chunk-tcp.h"
 #include "utils.h"
 #include "buffer.h"
-#include "chunk-ipv4.h"
 #include <cassert>
 
 #define TRACE_CHUNK_TCP 1
