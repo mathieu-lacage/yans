@@ -99,7 +99,6 @@ private:
 	static uint32_t m_total_end;
 
 	uint32_t m_size;
-	uint32_t m_current;
 	uint32_t m_start;
 	uint8_t *m_data;
 	uint32_t m_real_size;

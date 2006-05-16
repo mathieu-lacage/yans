@@ -45,7 +45,6 @@ Buffer::Buffer ()
 {
 	m_start = get_prefered_start ();
 	m_size = 0;
-	m_current = 0;
 
 	if (get_prefered_size () > 0) {
 		TRACE ("allocating size="<<get_prefered_size ()<<", at="<<m_start);
@@ -68,7 +67,6 @@ Buffer::~Buffer ()
 	m_real_size = 0xdeadbeaf;
 
 	m_start = 0xdeadbeaf;
-	m_current = 0xdeadbeaf;
 	m_size = 0xdeadbeaf;
 
 	record_buffer_stats (m_total_added_start, m_total_added_end);
@@ -117,7 +115,6 @@ Buffer::add_at_start (uint32_t start)
 	if (m_start >= start) {
 		m_start -= start;
 		m_size += start;
-		m_current = 0;
 		return;
 	}
 	uint32_t new_size = m_size + start;
@@ -125,7 +122,6 @@ Buffer::add_at_start (uint32_t start)
 		memmove (m_data+start, get_start (), m_size);
 		m_start = 0;
 		m_size = new_size;
-		m_current = 0;
 		return;
 	}
 	uint8_t *new_buffer = alloc_and_zero (new_size);
@@ -138,7 +134,6 @@ Buffer::add_at_start (uint32_t start)
 
 	m_start = 0;
 	m_size = new_size;
-	m_current = 0;
 }
 void 
 Buffer::add_at_end (uint32_t end)
@@ -146,7 +141,6 @@ Buffer::add_at_end (uint32_t end)
 	m_total_added_end += end;
 	if (m_start + m_size + end < m_real_size) {
 		m_size += end;
-		m_current = 0;
 		return;
 	}
 	uint32_t new_size = m_size + end;
@@ -155,7 +149,6 @@ Buffer::add_at_end (uint32_t end)
 		memmove (m_data+new_start, m_data+m_start, m_size);
 		m_start = new_start;
 		m_size += end;
-		m_current = 0;
 		return;
 	}
 	uint8_t *new_buffer = alloc_and_zero (new_size);
@@ -168,7 +161,6 @@ Buffer::add_at_end (uint32_t end)
 
 	m_start = 0;
 	m_size = new_size;
-	m_current = 0;
 }
 void 
 Buffer::remove_at_start (uint32_t start)
@@ -176,23 +168,19 @@ Buffer::remove_at_start (uint32_t start)
 	if (m_size <= start) {
 		m_start += m_size;
 		m_size = 0;
-		m_current = 0;
 		return;
 	}
 	m_start += start;
 	m_size -= start;
-	m_current = 0;
 }
 void 
 Buffer::remove_at_end (uint32_t end)
 {
 	if (m_size <= end) {
 		m_size = 0;
-		m_current = 0;
 		return;
 	}
 	m_size -= end;
-	m_current = 0;
 }
 
 uint8_t *
