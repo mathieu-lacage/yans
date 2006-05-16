@@ -55,7 +55,7 @@ private:
 	GeneratorCallback m_callback;
 	uint64_t m_interval_us;
 	uint16_t m_size;
-	double m_stop_at;
+	double m_stop_at_us;
 	uint32_t m_n;
 	CancellableEvent *m_current_event;
 };

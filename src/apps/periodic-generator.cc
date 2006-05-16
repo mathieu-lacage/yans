@@ -32,7 +32,7 @@
 namespace yans {
 
 PeriodicGenerator::PeriodicGenerator ()
-	: m_stop_at (0.0),
+	: m_stop_at_us (0),
 	  m_n (0),
 	  m_current_event (0)
 {}
@@ -86,7 +86,7 @@ PeriodicGenerator::start_at (double start)
 void 
 PeriodicGenerator::stop_at (double end)
 {
-	m_stop_at = end;
+	m_stop_at_us = (uint64_t)(end * 1000000);
 }
 
 
@@ -96,7 +96,7 @@ PeriodicGenerator::send_next_packet (void)
 	assert (m_current_event != 0);
 	m_current_event = 0;
 	/* stop packet transmissions.*/
-	if (m_stop_at > 0.0 && Simulator::now_s () >= m_stop_at) {
+	if (m_stop_at_us > 0 && Simulator::now_us () >= m_stop_at_us) {
 		return;
 	}
 	/* schedule next packet transmission. */
@@ -104,7 +104,7 @@ PeriodicGenerator::send_next_packet (void)
 	Simulator::insert_in_us (m_interval_us, m_current_event);
 	/* create packet. */
 	Packet *packet = new Packet ();
-	ChunkConstantData data = ChunkConstantData (m_size, m_n);
+	ChunkConstantData data (m_size, m_n);
 	packet->add (&data);
 	m_callback (packet);
 	packet->unref ();
