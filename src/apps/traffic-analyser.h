@@ -42,7 +42,7 @@ public:
 private:
 	PopulationAnalysis *m_data;
 	PopulationAnalysis *m_inter_arrival_time;
-	double m_previous_arrival;
+	uint64_t m_previous_arrival;
 };
 
 }; // namespace yans

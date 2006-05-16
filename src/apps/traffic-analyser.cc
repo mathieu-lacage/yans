@@ -30,7 +30,7 @@ namespace yans {
 
 TrafficAnalyser::TrafficAnalyser ()
 {
-	m_previous_arrival = -1.0;
+	m_previous_arrival = 0;
 	m_data = new PopulationAnalysis ();
 	m_inter_arrival_time = new PopulationAnalysis ();
 }
@@ -45,20 +45,23 @@ void
 TrafficAnalyser::receive (Packet *packet)
 {
 	m_data->add_term (packet->get_size ());
-	double now = Simulator::now_s ();
-	if (m_previous_arrival >= 0.0) {
-		m_inter_arrival_time->add_term (now - m_previous_arrival);
+	uint64_t now_us = Simulator::now_us ();
+	if (m_previous_arrival >= 0) {
+		m_inter_arrival_time->add_term (now_us - m_previous_arrival);
 	}
-	m_previous_arrival = now;
+	m_previous_arrival = now_us;
 }
 
 void 
 TrafficAnalyser::print_stats (void)
 {
+	double iat_mean_s = m_inter_arrival_time->get_mean () / 1000000;
+	double iat_dev_s = m_inter_arrival_time->get_standard_deviation () / 1000000;
 	std::cout << "received " << m_data->get_n () << " packets." << std::endl
-		  << " packet size avg: " << m_data->get_mean () << ", std dev: " << m_data->get_standard_deviation () << std::endl
-		  << " packet inter arrival avg: " << m_inter_arrival_time->get_mean ()
-		  << ", std dev: " << m_inter_arrival_time->get_standard_deviation () << std::endl
+		  << " packet size avg: " << m_data->get_mean () 
+		  << ", std dev: " << m_data->get_standard_deviation () << std::endl
+		  << " packet inter arrival avg: " << iat_mean_s
+		  << ", std dev: " << iat_dev_s << std::endl
 		  << "received " << m_data->get_total () << " bytes." << std::endl;
 }
 
