@@ -127,6 +127,7 @@ ChunkArp::remove_from (Buffer *buffer)
 	i = read_from (i, m_ipv4_source);
 	i = read_from (i, m_mac_dest);
 	i = read_from (i, m_ipv4_dest);
+	buffer->remove_at_start (get_size ());
 }
 void 
 ChunkArp::print (std::ostream *os) const
