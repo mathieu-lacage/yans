@@ -588,7 +588,7 @@ endif
 
 
 run-opti-arc-profile-hook:
-	LD_LIBRARY_PATH=bin/opti-arc $(TOP_BUILD_DIR)/opti-arc/samples/main-simple --slow --heap
+	LD_LIBRARY_PATH=$(TOP_BUILD_DIR)/opti-arc/lib $(TOP_BUILD_DIR)/opti-arc/bin/main-80211-adhoc
 
 endif #CONFIGURED
 
