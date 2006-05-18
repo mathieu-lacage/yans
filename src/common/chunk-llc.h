@@ -19,21 +19,26 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#ifndef CHUNK_MAC_LLC_SNAP_H
-#define CHUNK_MAC_LLC_SNAP_H
+#ifndef CHUNK_LLC_H
+#define CHUNK_LLC_H
 
 #include "chunk.h"
 #include <stdint.h>
 
 namespace yans {
 
-class ChunkMacLlcSnap : public Chunk {
+class ChunkLlc : public Chunk {
  public:
-	ChunkMacLlcSnap ();
-	virtual ~ChunkMacLlcSnap ();
+	ChunkLlc ();
+	virtual ~ChunkLlc ();
 
-	void set_ether_type (uint16_t ether_type);
-	uint16_t get_ether_type (void);
+	enum Type {
+		TYPE_IPV4 = 0x0800,
+		TYPE_ARP  = 0x0806
+	};
+
+	void set_type (enum Type type);
+	enum Type get_type (void);
 	
 	virtual void add_to (Buffer *buffer) const;
 	virtual void remove_from (Buffer *buffer);
