@@ -33,6 +33,8 @@
 #include "yans/pcap-writer.h"
 #include "yans/trace-container.h"
 #include "yans/event.tcc"
+#include "yans/mac-address-factory.h"
+#include "yans/static-position.h"
 
 #include <iostream>
 
@@ -48,18 +50,21 @@ public:
 	void total_rx_bytes (uint64_t prev, uint64_t now) {
 		m_current = now;
 	}
-	void start (PeriodicGenerator *generator, Host *a) {
+	void start (PeriodicGenerator *generator, StaticPosition *a) {
 		generator->start_now ();
 		Simulator::insert_in_s (m_period_s, make_event (&MyTrace::advance, this, generator, a));
 	}
-	void advance (PeriodicGenerator *generator, Host *a) {
+	void advance (PeriodicGenerator *generator, StaticPosition *a) {
 		generator->stop_now ();
-		a->set_x (a->get_x () + 5.0);
+		double x,y,z;
+		a->get (x,y,z);
+		x += 5.0;
+		a->set (x,y,z);
 		uint32_t n_bytes = m_current - m_prev;
 		m_prev = m_current;
 		double mbs = ((n_bytes * 8.0) /(1000000.0 *m_period_s));
-		std::cout << "x="<<a->get_x ()<<", throughput="<<mbs<<"Mb/s"<<std::endl;
-		if (a->get_x () >= 250.0) {
+		std::cout << "x="<<x<<", throughput="<<mbs<<"Mb/s"<<std::endl;
+		if (x >= 250.0) {
 			return;
 		}
 		generator->start_now ();
@@ -85,9 +90,13 @@ int main (int argc, char *argv[])
 {
 	Simulator::set_binary_heap ();
 
-	Host *hclient, *hserver;
-	hclient = new Host ("client");
-	hserver = new Host ("server");
+	MacAddressFactory address;
+
+	StaticPosition *pos_client, *pos_server;
+	pos_client = new StaticPosition ();
+	pos_server = new StaticPosition ();
+	pos_client->set (0,0,0);
+	pos_server->set (0,0,0);
 
 	NetworkInterface80211SimpleFactory *wifi_factory;
 	wifi_factory = new NetworkInterface80211SimpleFactory ();
@@ -98,33 +107,31 @@ int main (int argc, char *argv[])
 	wifi_factory->set_aarf ();
 
 	NetworkInterface80211Simple *wifi_client, *wifi_server;
-	wifi_client = wifi_factory->create (hclient);
-	wifi_server = wifi_factory->create (hserver);
-	wifi_client->set_mac_address (MacAddress ("00:00:00:00:00:01"));
-	wifi_server->set_mac_address (MacAddress ("00:00:00:00:00:02"));
+	wifi_client = wifi_factory->create (address.get_next (), pos_client);
+	wifi_server = wifi_factory->create (address.get_next (), pos_server);
 	Channel80211 *channel = new Channel80211 ();
 	wifi_client->connect_to (channel);
 	wifi_server->connect_to (channel);
 
 	MyTrace *trace = setup_rx_trace (wifi_server);
 
-	/* associate ipv4 addresses to the ethernet network elements */
-	wifi_client->set_ipv4_address (Ipv4Address ("192.168.0.3"));
-	wifi_client->set_ipv4_mask (Ipv4Mask ("255.255.255.0"));
-	wifi_server->set_ipv4_address (Ipv4Address ("192.168.0.2"));
-	wifi_server->set_ipv4_mask (Ipv4Mask ("255.255.255.0"));
-	wifi_client->set_up ();
-	wifi_server->set_up ();
-
 	/* create hosts for the network elements*/
-	hclient->add_interface (wifi_client);
-	hserver->add_interface (wifi_server);
+	Host *hclient, *hserver;
+	hclient = new Host ("client");
+	hserver = new Host ("server");
+	Ipv4NetworkInterface *ip_client, *ip_server;
+	ip_client = hclient->add_ipv4_arp_interface (wifi_client, 
+						     Ipv4Address ("192.168.0.3"),
+						     Ipv4Mask ("255.255.255.0"));
+	ip_server = hserver->add_ipv4_arp_interface (wifi_server,
+						     Ipv4Address ("192.168.0.3"),
+						     Ipv4Mask ("255.255.255.0"));
 
 	/* setup the routing tables. */
 	hclient->get_routing_table ()->set_default_route (Ipv4Address ("192.168.0.2"),
-							  wifi_client);
+							  ip_client);
 	hserver->get_routing_table ()->set_default_route (Ipv4Address ("192.168.0.3"),
-							  wifi_server);
+							  ip_server);
 
 	/* create udp source endpoint. */
 	UdpSource *source = new UdpSource (hclient);
@@ -136,11 +143,10 @@ int main (int argc, char *argv[])
 	sink->bind (Ipv4Address ("192.168.0.2"), 1026);
 	sink->unbind_at (10000.0);
 
-
 	PeriodicGenerator *generator = new PeriodicGenerator ();
 	generator->set_packet_interval (0.00001);
 	generator->set_packet_size (2000);
-	trace->start (generator, hserver);
+	trace->start (generator, pos_server);
 	generator->set_send_callback (make_callback (&UdpSource::send, source));
 
 	TrafficAnalyser *analyser = new TrafficAnalyser ();

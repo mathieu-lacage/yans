@@ -32,6 +32,7 @@
 #include "yans/trace-container.h"
 #include "yans/callback.h"
 #include "yans/event.tcc"
+#include "yans/mac-address-factory.h"
 #include <iostream>
 
 using namespace yans;
@@ -78,35 +79,32 @@ public:
 
 int main (int argc, char *argv[])
 {
+	MacAddressFactory address;
 	/* setup the ethernet network itself. */
 	EthernetNetworkInterface *eth_client, *eth_server;
-	eth_client = new EthernetNetworkInterface ("eth0");
-	eth_server = new EthernetNetworkInterface ("eth0");
-	eth_client->set_mac_address (MacAddress ("00:00:00:00:00:01"));
-	eth_server->set_mac_address (MacAddress ("00:00:00:00:00:02"));
+	eth_client = new EthernetNetworkInterface (address.get_next (), "eth0");
+	eth_server = new EthernetNetworkInterface (address.get_next (), "eth0");
 	Cable *cable = new Cable ();
 	cable->connect_to (eth_client, eth_server);
 
-	/* associate ipv4 addresses to the ethernet network elements */
-	eth_client->set_ipv4_address (Ipv4Address ("192.168.0.3"));
-	eth_client->set_ipv4_mask (Ipv4Mask ("255.255.255.0"));
-	eth_server->set_ipv4_address (Ipv4Address ("192.168.0.2"));
-	eth_server->set_ipv4_mask (Ipv4Mask ("255.255.255.0"));
-	eth_client->set_up ();
-	eth_server->set_up ();
 
 	/* create hosts for the network elements*/
 	Host *hclient, *hserver;
 	hclient = new Host ("client");
 	hserver = new Host ("server");
-	hclient->add_interface (eth_client);
-	hserver->add_interface (eth_server);
+	Ipv4NetworkInterface *ni_server, *ni_client;
+	ni_client = hclient->add_ipv4_arp_interface (eth_client, 
+						     Ipv4Address ("192.168.0.3"),
+						     Ipv4Mask ("255.255.255.0"));
+	ni_server = hserver->add_ipv4_arp_interface (eth_server,
+						     Ipv4Address ("192.168.0.2"),
+						     Ipv4Mask ("255.255.255.0"));
 
 	/* setup the routing tables. */
 	hclient->get_routing_table ()->set_default_route (Ipv4Address ("192.168.0.2"),
-							  eth_client);
+							  ni_client);
 	hserver->get_routing_table ()->set_default_route (Ipv4Address ("192.168.0.3"),
-							  eth_server);
+							  ni_server);
 
 	TcpSource *source = new TcpSource (hclient);
 	source->bind (Ipv4Address ("192.168.0.3"), 1025);
