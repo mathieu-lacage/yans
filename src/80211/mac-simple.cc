@@ -74,7 +74,11 @@ MacSimple::get_data_timeout_us (void)
 	return m_data_timeout_us;
 }
 
-
+void
+MacSimple::set_interface (MacNetworkInterface *interface)
+{
+	m_interface = interface;
+}
 void 
 MacSimple::set_phy (Phy80211 *phy)
 {
