@@ -34,6 +34,7 @@ class LlcEncapsulation {
 public:	
 	typedef Callback<void, Packet *> RxCallback;
 
+	uint32_t get_overhead (void) const;
 	void set_ipv4_callback (RxCallback callback);
 	void set_arp_callback (RxCallback callback);
 	void set_mac_interface (MacNetworkInterface *interface);

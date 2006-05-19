@@ -27,6 +27,12 @@
 
 namespace yans {
 
+uint32_t
+LlcEncapsulation::get_overhead (void) const
+{
+	ChunkLlc llc;
+	return llc.get_size ();
+}
 void 
 LlcEncapsulation::set_ipv4_callback (RxCallback callback)
 {
