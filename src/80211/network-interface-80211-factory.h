@@ -24,6 +24,7 @@
 
 #include <stdint.h>
 #include "ssid.h"
+#include "mac-address.h"
 
 namespace yans {
 
@@ -31,8 +32,8 @@ class NetworkInterface80211;
 class NetworkInterface80211Adhoc;
 class NetworkInterface80211Nqsta;
 class NetworkInterface80211Nqap;
-class Host;
 class DcaTxop;
+class Position;
 
 class NetworkInterface80211Factory {
 public:
@@ -66,11 +67,11 @@ public:
 
 	void set_ssid (Ssid ssid);
 
-	NetworkInterface80211Adhoc *create_adhoc (Host *host);
-	NetworkInterface80211Nqsta *create_nqsta (Host *host);
-	NetworkInterface80211Nqap *create_nqap (Host *host);
+	NetworkInterface80211Adhoc *create_adhoc (MacAddress address, Position *position);
+	NetworkInterface80211Nqsta *create_nqsta (MacAddress address, Position *position);
+	NetworkInterface80211Nqap *create_nqap (MacAddress address, Position *position);
 private:
-	void initialize_interface (NetworkInterface80211 *interface, Host *host) const;
+	void initialize_interface (NetworkInterface80211 *interface, Position *position) const;
 	DcaTxop *create_dca (NetworkInterface80211 const*interface) const;
 	enum {
 		RATE_ARF,

@@ -25,10 +25,7 @@
 #include "mac-stations.h"
 #include "mac-station.h"
 #include "packet.h"
-#include "ipv4.h"
 #include "trace-container.h"
-#include "arp.h"
-#include "chunk-mac-llc-snap.h"
 #include "mac-low.h"
 #include "mac-parameters.h"
 #include "mac-rx-middle.h"
@@ -40,19 +37,17 @@
 
 namespace yans {
 
-NetworkInterface80211::NetworkInterface80211 ()
-	: m_name (new std::string ("wlan0")),
+NetworkInterface80211::NetworkInterface80211 (MacAddress address)
+	: MacNetworkInterface (address, 1000),
 	  m_bytes_rx (0)
 {}
 
 NetworkInterface80211::~NetworkInterface80211 ()
 {
-	delete m_name;
 	delete m_propagation;
 	delete m_phy;
 	delete m_stations;
 	delete m_low;
-	delete m_arp;
 	delete m_parameters;
 	delete m_tx_middle;
 	delete m_rx_middle;
@@ -70,120 +65,16 @@ NetworkInterface80211::register_trace (TraceContainer *container)
 {
 	container->register_ui_variable ("80211-bytes-rx", &m_bytes_rx);
 }
-
 void 
-NetworkInterface80211::set_host (Host *host)
-{}
-void 
-NetworkInterface80211::set_mac_address (MacAddress self)
+NetworkInterface80211::forward_up_data (Packet *packet)
 {
-	m_self = self;
-}
-MacAddress
-NetworkInterface80211::get_mac_address (void) const
-{
-	return m_self;
-}
-std::string const *
-NetworkInterface80211::get_name (void)
-{
-	return m_name;
-}
-uint16_t 
-NetworkInterface80211::get_mtu (void)
-{
-	// XXX
-	return 2500;
-}
-void 
-NetworkInterface80211::set_up   (void)
-{}
-void 
-NetworkInterface80211::set_down (void)
-{}
-bool 
-NetworkInterface80211::is_down (void)
-{
-	return false;
-}
-void 
-NetworkInterface80211::set_ipv4_handler (Ipv4 *ipv4)
-{
-	m_ipv4 = ipv4;
-}
-void 
-NetworkInterface80211::set_ipv4_address (Ipv4Address address)
-{
-	m_ipv4_address = address;
-}
-void 
-NetworkInterface80211::set_ipv4_mask    (Ipv4Mask mask)
-{
-	m_ipv4_mask = mask;
-}
-Ipv4Address 
-NetworkInterface80211::get_ipv4_address (void)
-{
-	return m_ipv4_address;
-}
-Ipv4Mask
-NetworkInterface80211::get_ipv4_mask    (void)
-{
-	return m_ipv4_mask;
-}
-Ipv4Address 
-NetworkInterface80211::get_ipv4_broadcast (void)
-{
-	uint32_t mask = m_ipv4_mask.get_host_order ();
-	uint32_t address = m_ipv4_address.get_host_order ();
-	Ipv4Address broadcast = Ipv4Address (address | (~mask));
-	return broadcast;
-}
-void 
-NetworkInterface80211::flush_arp_cache (void)
-{
-	m_arp->flush ();
-}
-void 
-NetworkInterface80211::send (Packet *packet, Ipv4Address dest)
-{
-	m_arp->send_data (packet, dest);
-}
-
-void 
-NetworkInterface80211::forward_up (Packet *packet)
-{
-	ChunkMacLlcSnap llc;
-	packet->remove (&llc);
-	switch (llc.get_ether_type ()) {
-	case ETHER_TYPE_ARP:
-		m_arp->recv_arp (packet);
-		break;
-	case ETHER_TYPE_IPV4:
-		m_bytes_rx += packet->get_size ();
-		m_ipv4->receive (packet, this);
-		break;
-	}
-}
-void 
-NetworkInterface80211::send_arp (Packet *packet, MacAddress to)
-{
-	ChunkMacLlcSnap llc;
-	llc.set_ether_type (ETHER_TYPE_ARP);
-	packet->add (&llc);
-	forward_down (packet, to);
-}
-void 
-NetworkInterface80211::send_data (Packet *packet, MacAddress to)
-{
-	ChunkMacLlcSnap llc;
-	llc.set_ether_type (ETHER_TYPE_IPV4);
-	packet->add (&llc);
-	forward_down (packet, to);
+	m_bytes_rx += packet->get_size ();
+	MacNetworkInterface::forward_up (packet);
 }
 
 
-NetworkInterface80211Adhoc::NetworkInterface80211Adhoc ()
+NetworkInterface80211Adhoc::NetworkInterface80211Adhoc (MacAddress address)
+	: NetworkInterface80211 (address)
 {}
 NetworkInterface80211Adhoc::~NetworkInterface80211Adhoc ()
 {
@@ -207,14 +98,15 @@ NetworkInterface80211Adhoc::set_ssid (Ssid ssid)
 	m_ssid = ssid;
 }
 void 
-NetworkInterface80211Adhoc::forward_down (Packet *packet, MacAddress to)
+NetworkInterface80211Adhoc::real_send (Packet *packet, MacAddress to)
 {
 	m_high->enqueue (packet, to);
 }
 
 
 
-NetworkInterface80211Nqsta::NetworkInterface80211Nqsta ()
+NetworkInterface80211Nqsta::NetworkInterface80211Nqsta (MacAddress address)
+	: NetworkInterface80211 (address)
 {}
 NetworkInterface80211Nqsta::~NetworkInterface80211Nqsta ()
 {
@@ -238,18 +130,19 @@ NetworkInterface80211Nqsta::set_ssid (Ssid ssid)
 	m_ssid = ssid;
 }
 void 
-NetworkInterface80211Nqsta::forward_down (Packet *packet, MacAddress to)
+NetworkInterface80211Nqsta::real_send (Packet *packet, MacAddress to)
 {
 	m_high->queue (packet, to);
 }
 void 
 NetworkInterface80211Nqsta::associated (void)
 {
-	flush_arp_cache ();
+	//XXX should flush the arp cache here.
 }
 
 
-NetworkInterface80211Nqap::NetworkInterface80211Nqap ()
+NetworkInterface80211Nqap::NetworkInterface80211Nqap (MacAddress address)
+	: NetworkInterface80211 (address)
 {}
 NetworkInterface80211Nqap::~NetworkInterface80211Nqap ()
 {
@@ -272,7 +165,7 @@ NetworkInterface80211Nqap::set_ssid (Ssid ssid)
 	m_ssid = ssid;
 }
 void 
-NetworkInterface80211Nqap::forward_down (Packet *packet, MacAddress to)
+NetworkInterface80211Nqap::real_send (Packet *packet, MacAddress to)
 {
 	m_high->queue (packet, to);
 }

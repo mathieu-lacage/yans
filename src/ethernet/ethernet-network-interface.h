@@ -1,6 +1,6 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 /*
- * Copyright (c) 2005 INRIA
+ * Copyright (c) 2005,2006 INRIA
  * All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -22,41 +22,21 @@
 #ifndef ETHERNET_NETWORK_INTERFACE_H
 #define ETHERNET_NETWORK_INTERFACE_H
 
-#include "network-interface.h"
+#include "mac-network-interface.h"
+#include "mac-address.h"
 
 namespace yans {
 
-class Arp;
 class Cable;
 class TraceContainer;
 class PacketLogger;
 
-class EthernetNetworkInterface : public NetworkInterface {
+class EthernetNetworkInterface : public MacNetworkInterface {
 public:
-	EthernetNetworkInterface (char const *name);
+	EthernetNetworkInterface (MacAddress address, 
+				  char const *name);
 	virtual ~EthernetNetworkInterface ();
 
-	void set_mtu (uint16_t mtu);
-
-	virtual void set_host (Host *host);
-
-	virtual void set_mac_address (MacAddress self);
-	virtual MacAddress get_mac_address (void) const;
-	virtual std::string const *get_name (void);
-	virtual uint16_t get_mtu (void);
-
-	virtual void set_up   (void);
-	virtual void set_down (void);
-	virtual bool is_down (void);
-
-	virtual void set_ipv4_handler (Ipv4 *ipv4);
-	virtual void set_ipv4_address (Ipv4Address address);
-	virtual void set_ipv4_mask    (Ipv4Mask mask);
-	virtual Ipv4Address get_ipv4_address (void);
-	virtual Ipv4Mask    get_ipv4_mask    (void);
-	virtual Ipv4Address get_ipv4_broadcast (void);
-
-	virtual void send (Packet *packet, Ipv4Address dest);
 
 	void connect_to (Cable *cable);
 	void recv (Packet *packet);
@@ -64,26 +44,11 @@ public:
 	void register_trace (TraceContainer *container);
 
  private:
-	void send_data (Packet *packet, MacAddress dest);
-	void send_arp (Packet *packet, MacAddress dest);
+	virtual void notify_up (void) = 0;
+	virtual void notify_down (void) = 0;
+	virtual void real_send (Packet *packet, MacAddress to) = 0;
 
-	enum {
-		ETHER_TYPE_IPV4 = 0x0800,
-		ETHER_TYPE_ARP  = 0x0806
-	};
-
-	friend class EthernetArpMacSender;
-
-	Arp *m_arp;
-	MacAddress m_mac_address;
-	Ipv4Address m_ipv4_address;
-	Ipv4Mask m_ipv4_mask;
-	Ipv4 *m_ipv4;
-	std::string *m_name;
-	bool m_up;
 	Cable *m_cable;
-	Host *m_host;
-	uint16_t m_mtu;
 	PacketLogger *m_send_logger;
 	PacketLogger *m_recv_logger;
 };

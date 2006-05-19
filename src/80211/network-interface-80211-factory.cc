@@ -28,7 +28,6 @@
 #include "cr-mac-stations.h"
 #include "ideal-mac-stations.h"
 #include "mac-low.h"
-#include "arp.h"
 #include "mac-parameters.h"
 #include "mac-tx-middle.h"
 #include "mac-rx-middle.h"
@@ -146,14 +145,14 @@ NetworkInterface80211Factory::set_mac_max_slrc (uint32_t slrc)
 }
 
 void
-NetworkInterface80211Factory::initialize_interface (NetworkInterface80211 *interface, Host *host) const
+NetworkInterface80211Factory::initialize_interface (NetworkInterface80211 *interface, Position *position) const
 {
 	PropagationModel *propagation = new PropagationModel ();
 	propagation->set_tx_gain_dbm (m_prop_tx_gain_dbm);
 	propagation->set_rx_gain_dbm (m_prop_rx_gain_dbm);
 	propagation->set_system_loss (m_prop_system_loss);
 	propagation->set_frequency_hz (m_prop_frequency_hz);
-	propagation->set_host (host);
+	propagation->set_position (position);
 	interface->m_propagation = propagation;
 
 
@@ -216,12 +215,6 @@ NetworkInterface80211Factory::initialize_interface (NetworkInterface80211 *inter
 
 	MacTxMiddle *tx_middle = new MacTxMiddle ();
 	interface->m_tx_middle = tx_middle;
-
-	Arp *arp = new Arp (interface);
-	//mac->set_receiver (make_callback (&NetworkInterface80211::forward_data_up, interface));
-	arp->set_sender (make_callback (&NetworkInterface80211::send_data, interface),
-			 make_callback (&NetworkInterface80211::send_arp, interface));
-	interface->m_arp = arp;
 }
 
 DcaTxop *
@@ -247,12 +240,12 @@ NetworkInterface80211Factory::create_dca (NetworkInterface80211 const*interface)
 
 
 NetworkInterface80211Adhoc *
-NetworkInterface80211Factory::create_adhoc (Host *host)
+NetworkInterface80211Factory::create_adhoc (MacAddress address, Position *position)
 {
-	NetworkInterface80211Adhoc *interface = new NetworkInterface80211Adhoc ();
+	NetworkInterface80211Adhoc *interface = new NetworkInterface80211Adhoc (address);
 	interface->m_ssid = m_ssid;
 
-	initialize_interface (interface, host);
+	initialize_interface (interface, position);
 
 	DcaTxop *dca = create_dca (interface);
 	interface->m_dca = dca;
@@ -261,7 +254,7 @@ NetworkInterface80211Factory::create_adhoc (Host *host)
 	MacHighAdhoc *high = new MacHighAdhoc ();
 	high->set_interface (interface);
 	high->set_dca_txop (dca);
-	high->set_forward_callback (make_callback (&NetworkInterface80211::forward_up, 
+	high->set_forward_callback (make_callback (&NetworkInterface80211::forward_up_data, 
 						   static_cast<NetworkInterface80211 *> (interface)));
 	dca->set_ack_received_callback (make_callback (&MacHighAdhoc::ack_received, high));
 	interface->m_rx_middle->set_forward_callback (make_callback (&MacHighAdhoc::receive, high));
@@ -271,12 +264,12 @@ NetworkInterface80211Factory::create_adhoc (Host *host)
 }
 
 NetworkInterface80211Nqsta *
-NetworkInterface80211Factory::create_nqsta (Host *host)
+NetworkInterface80211Factory::create_nqsta (MacAddress address, Position *position)
 {
-	NetworkInterface80211Nqsta *interface = new NetworkInterface80211Nqsta ();
+	NetworkInterface80211Nqsta *interface = new NetworkInterface80211Nqsta (address);
 	interface->m_ssid = m_ssid;
 
-	initialize_interface (interface, host);
+	initialize_interface (interface, position);
 
 	DcaTxop *dca = create_dca (interface);
 	interface->m_dca = dca;
@@ -289,7 +282,7 @@ NetworkInterface80211Factory::create_nqsta (Host *host)
 	MacHighNqsta *high = new MacHighNqsta ();
 	high->set_interface (interface);
 	high->set_dca_txop (dca);
-	high->set_forward_callback (make_callback (&NetworkInterface80211::forward_up, 
+	high->set_forward_callback (make_callback (&NetworkInterface80211::forward_up_data, 
 						   static_cast<NetworkInterface80211 *> (interface)));
 	high->set_associated_callback (make_callback (&NetworkInterface80211Nqsta::associated, interface));
 	high->set_supported_rates (rates);
@@ -301,12 +294,12 @@ NetworkInterface80211Factory::create_nqsta (Host *host)
 }
 
 NetworkInterface80211Nqap *
-NetworkInterface80211Factory::create_nqap (Host *host)
+NetworkInterface80211Factory::create_nqap (MacAddress address, Position *position)
 {
-	NetworkInterface80211Nqap *interface = new NetworkInterface80211Nqap ();
+	NetworkInterface80211Nqap *interface = new NetworkInterface80211Nqap (address);
 	interface->m_ssid = m_ssid;
 
-	initialize_interface (interface, host);
+	initialize_interface (interface, position);
 
 	DcaTxop *dca = create_dca (interface);
 	interface->m_dca = dca;
@@ -319,7 +312,7 @@ NetworkInterface80211Factory::create_nqap (Host *host)
 	MacHighNqap *high = new MacHighNqap ();
 	high->set_interface (interface);
 	high->set_dca_txop (dca);
-	high->set_forward_callback (make_callback (&NetworkInterface80211::forward_up, 
+	high->set_forward_callback (make_callback (&NetworkInterface80211::forward_up_data, 
 						   static_cast<NetworkInterface80211 *> (interface)));
 	high->set_supported_rates (rates);
 	dca->set_ack_received_callback (make_callback (&MacHighNqap::ack_received, high));

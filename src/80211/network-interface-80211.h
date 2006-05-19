@@ -22,7 +22,7 @@
 #ifndef NETWORK_INTERFACE_80211_H
 #define NETWORK_INTERFACE_80211_H
 
-#include "network-interface.h"
+#include "mac-network-interface.h"
 #include "mac-address.h"
 #include "ipv4-address.h"
 #include "ui-traced-variable.tcc"
@@ -31,16 +31,13 @@
 
 namespace yans {
 
-class Host;
 class Packet;
-class Ipv4;
 class Channel80211;
 class Phy80211;
 class PropagationModel;
 class MacStations;
 class TraceContainer;
 class MacLow;
-class Arp;
 class MacRxMiddle;
 class MacTxMiddle;
 class MacHighAdhoc;
@@ -52,7 +49,7 @@ class MacHighAdhoc;
 class MacHighNqsta;
 class MacHighNqap;
 
-class NetworkInterface80211 : public NetworkInterface {
+class NetworkInterface80211 : public MacNetworkInterface {
 public:
 	virtual ~NetworkInterface80211 ();
 
@@ -63,70 +60,39 @@ public:
 	virtual Ssid get_ssid (void) const = 0;
 	virtual void set_ssid (Ssid ssid) = 0;
 
-	virtual void set_host (Host *host);
-	virtual void set_mac_address (MacAddress self);
-	virtual MacAddress get_mac_address (void) const;
-	virtual std::string const *get_name (void);
-	virtual uint16_t get_mtu (void);
-	virtual void set_up   (void);
-	virtual void set_down (void);
-	virtual bool is_down (void);
-	virtual void set_ipv4_handler (Ipv4 *ipv4);
-	virtual void set_ipv4_address (Ipv4Address address);
-	virtual void set_ipv4_mask    (Ipv4Mask mask);
-	virtual Ipv4Address get_ipv4_address (void);
-	virtual Ipv4Mask    get_ipv4_mask    (void);
-	virtual Ipv4Address get_ipv4_broadcast (void);
-
-	virtual void send (Packet *packet, Ipv4Address dest);
 
 protected:
-	NetworkInterface80211 ();
-	void flush_arp_cache (void);
+	NetworkInterface80211 (MacAddress address);
+	void forward_up_data (Packet *packet);
 private:
-	virtual void forward_down (Packet *packet, MacAddress to) = 0;
-	void forward_up (Packet *packet);
+	virtual void notify_up (void);
+	virtual void notify_down (void);
+	virtual void real_send (Packet *packet, MacAddress to) = 0;
 	void associated (void);
-	void send_arp (Packet *packet, MacAddress to);
-	void send_data (Packet *packet, MacAddress to);
+
 	friend class NetworkInterface80211Factory;
-
-	enum {
-		ETHER_TYPE_IPV4 = 0x0800,
-		ETHER_TYPE_ARP  = 0x0806
-	};
-
-
-	Host *m_host;
-	Ipv4 *m_ipv4;
 
 	PropagationModel *m_propagation;
 	Phy80211 *m_phy;
 	MacStations *m_stations;
 	MacLow *m_low;
-	Arp *m_arp;
 	MacRxMiddle *m_rx_middle;
 	MacTxMiddle *m_tx_middle;
 	MacParameters *m_parameters;
-
-	MacAddress m_self;
-	Ipv4Address m_ipv4_address;
-	Ipv4Mask m_ipv4_mask;
-	std::string *m_name;
 
 	UiTracedVariable<uint32_t> m_bytes_rx;
 };
 
 class NetworkInterface80211Adhoc : public NetworkInterface80211 {
 public:
-	NetworkInterface80211Adhoc ();
+	NetworkInterface80211Adhoc (MacAddress address);
 	virtual ~NetworkInterface80211Adhoc ();
 
 	virtual MacAddress get_bssid (void) const;
 	virtual Ssid get_ssid (void) const;
 	virtual void set_ssid (Ssid ssid);
 private:
-	virtual void forward_down (Packet *packet, MacAddress to);
+	virtual void real_send (Packet *packet, MacAddress to);
 	friend class NetworkInterface80211Factory;
 	Ssid m_ssid;
 	DcaTxop *m_dca;
@@ -135,7 +101,7 @@ private:
 
 class NetworkInterface80211Nqsta : public NetworkInterface80211 {
 public:
-	NetworkInterface80211Nqsta ();
+	NetworkInterface80211Nqsta (MacAddress address);
 	virtual ~NetworkInterface80211Nqsta ();
 
 	virtual MacAddress get_bssid (void) const;
@@ -143,7 +109,7 @@ public:
 	virtual void set_ssid (Ssid ssid);
 private:
 	void associated (void);
-	virtual void forward_down (Packet *packet, MacAddress to);
+	virtual void real_send (Packet *packet, MacAddress to);
 	friend class NetworkInterface80211Factory;
 	Ssid m_ssid;
 	DcaTxop *m_dca;
@@ -152,7 +118,7 @@ private:
 
 class NetworkInterface80211Nqap : public NetworkInterface80211 {
 public:
-	NetworkInterface80211Nqap ();
+	NetworkInterface80211Nqap (MacAddress address);
 	virtual ~NetworkInterface80211Nqap ();
 
 	virtual MacAddress get_bssid (void) const;
@@ -160,7 +126,7 @@ public:
 	virtual void set_ssid (Ssid ssid);
 	
 private:
-	virtual void forward_down (Packet *packet, MacAddress to);
+	virtual void real_send (Packet *packet, MacAddress to);
 	friend class NetworkInterface80211Factory;
 	Ssid m_ssid;
 	DcaTxop *m_dca;
