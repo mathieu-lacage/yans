@@ -33,10 +33,11 @@ class MacNetworkInterface {
 public:
 	typedef Callback<void, Packet *, MacNetworkInterface *> RxCallback;
 
-	MacNetworkInterface (MacAddress self, uint16_t mtu);
+	MacNetworkInterface (MacAddress self, uint16_t max_mtu);
 	virtual ~MacNetworkInterface () = 0;
 
 	MacAddress get_mac_address (void) const;
+	void set_mtu (uint16_t mtu);
 	uint16_t get_mtu (void) const;
 	bool is_down (void) const;
 	void set_up   (void);
@@ -53,6 +54,7 @@ private:
 
 	RxCallback m_rx_callback;
 	MacAddress m_self;
+	uint16_t m_max_mtu;
 	uint16_t m_mtu;
 	bool m_is_down;
 };

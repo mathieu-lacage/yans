@@ -22,8 +22,8 @@
 
 namespace yans {
 
-MacNetworkInterface::MacNetworkInterface (MacAddress self, uint16_t mtu)
-	: m_self (self), m_mtu (mtu)
+MacNetworkInterface::MacNetworkInterface (MacAddress self, uint16_t max_mtu)
+	: m_self (self), m_max_mtu (max_mtu), m_mtu (max_mtu)
 {}
 MacNetworkInterface::~MacNetworkInterface ()
 {}
@@ -32,6 +32,15 @@ MacAddress
 MacNetworkInterface::get_mac_address (void) const
 {
 	return m_self;
+}
+void
+MacNetworkInterface::set_mtu (uint16_t mtu)
+{
+	if (mtu > m_max_mtu ) {
+		m_mtu = m_max_mtu;
+	} else {
+		m_mtu = mtu;
+	}
 }
 uint16_t 
 MacNetworkInterface::get_mtu (void) const
