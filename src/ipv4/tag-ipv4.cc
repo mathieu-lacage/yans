@@ -84,7 +84,7 @@ TagOutIpv4::get_tag (void)
 
 
 
-TagInIpv4::TagInIpv4 (NetworkInterface *interface)
+TagInIpv4::TagInIpv4 (Ipv4NetworkInterface *interface)
 	: m_interface (interface)
 {}
 
@@ -130,7 +130,7 @@ TagInIpv4::set_saddress (Ipv4Address saddress)
 {
 	m_saddress = saddress;
 }
-NetworkInterface *
+Ipv4NetworkInterface *
 TagInIpv4::get_interface (void)
 {
 	return m_interface;

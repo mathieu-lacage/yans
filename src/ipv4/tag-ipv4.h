@@ -28,7 +28,7 @@
 
 namespace yans {
 
-class NetworkInterface;
+class Ipv4NetworkInterface;
 
 class TagOutIpv4 : public Tag {
 public:
@@ -57,9 +57,9 @@ public:
 
 class TagInIpv4 : public Tag {
 public:
-	TagInIpv4 (NetworkInterface *interface);
+	TagInIpv4 (Ipv4NetworkInterface *interface);
 
-	NetworkInterface *get_interface (void);
+	Ipv4NetworkInterface *get_interface (void);
 	uint16_t get_dport (void);
 	uint16_t get_sport (void);
 	Ipv4Address get_daddress (void);
@@ -72,7 +72,7 @@ public:
 
 	static uint32_t get_tag (void);
 public:	
-	NetworkInterface *m_interface;
+	Ipv4NetworkInterface *m_interface;
 	Ipv4Address m_daddress;
 	Ipv4Address m_saddress;
 	uint16_t m_sport;
