@@ -23,12 +23,12 @@
 #define NETWORK_INTERFACE_80211_SIMPLE_FACTORY_H
 
 #include <stdint.h>
+#include "mac-address.h"
 
 namespace yans {
 
-
+class Position;
 class NetworkInterface80211Simple;
-class Host;
 
 class NetworkInterface80211SimpleFactory {
 public:
@@ -57,7 +57,7 @@ public:
 
 	void set_rts_cts_threshold (uint32_t size);
 
-	NetworkInterface80211Simple *create (Host *host);
+	NetworkInterface80211Simple *create (MacAddress address, Position *position);
 private:
 	enum {
 		RATE_ARF,

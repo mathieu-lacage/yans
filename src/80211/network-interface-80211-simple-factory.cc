@@ -28,7 +28,6 @@
 #include "cr-mac-stations.h"
 #include "ideal-mac-stations.h"
 #include "mac-simple.h"
-#include "arp.h"
 
 namespace yans {
 
@@ -120,16 +119,16 @@ NetworkInterface80211SimpleFactory::set_rts_cts_threshold (uint32_t size)
 }
 
 NetworkInterface80211Simple *
-NetworkInterface80211SimpleFactory::create (Host *host)
+NetworkInterface80211SimpleFactory::create (MacAddress address, Position *position)
 {
-	NetworkInterface80211Simple *interface = new NetworkInterface80211Simple ();
+	NetworkInterface80211Simple *interface = new NetworkInterface80211Simple (address);
 
 	PropagationModel *propagation = new PropagationModel ();
 	propagation->set_tx_gain_dbm (m_prop_tx_gain_dbm);
 	propagation->set_rx_gain_dbm (m_prop_rx_gain_dbm);
 	propagation->set_system_loss (m_prop_system_loss);
 	propagation->set_frequency_hz (m_prop_frequency_hz);
-	propagation->set_host (host);
+	propagation->set_position (position);
 	interface->m_propagation = propagation;
 
 
@@ -173,15 +172,10 @@ NetworkInterface80211SimpleFactory::create (Host *host)
 	phy->set_receive_error_callback (make_callback (&MacSimple::receive_error, mac));
 	mac->set_phy (phy);
 	mac->set_stations (stations);
-	mac->set_interface (interface);
 	mac->set_rts_cts_threshold (m_rts_cts_threshold);
 	interface->m_mac = mac;
 
-	Arp *arp = new Arp (interface);
 	mac->set_receiver (make_callback (&NetworkInterface80211Simple::forward_data_up, interface));
-	arp->set_sender (make_callback (&NetworkInterface80211Simple::send_data, interface),
-			 make_callback (&NetworkInterface80211Simple::send_arp, interface));
-	interface->m_arp = arp;
 
 
 	return interface;

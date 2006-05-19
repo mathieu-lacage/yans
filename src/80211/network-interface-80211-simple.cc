@@ -33,19 +33,17 @@
 
 namespace yans {
 
-NetworkInterface80211Simple::NetworkInterface80211Simple ()
-	: m_name (new std::string ("wlan0")),
+NetworkInterface80211Simple::NetworkInterface80211Simple (MacAddress address)
+	: MacNetworkInterface (address, 1000),
 	  m_bytes_rx (0)
 {}
 
 NetworkInterface80211Simple::~NetworkInterface80211Simple ()
 {
-	delete m_name;
 	delete m_propagation;
 	delete m_phy;
 	delete m_stations;
 	delete m_mac;
-	delete m_arp;
 }
 
 
@@ -62,112 +60,23 @@ NetworkInterface80211Simple::register_trace (TraceContainer *container)
 }
 
 void 
-NetworkInterface80211Simple::set_host (Host *host)
+NetworkInterface80211Simple::notify_up (void)
 {}
 void 
-NetworkInterface80211Simple::set_mac_address (MacAddress self)
-{
-	m_self = self;
-}
-MacAddress
-NetworkInterface80211Simple::get_mac_address (void) const
-{
-	return m_self;
-}
-std::string const *
-NetworkInterface80211Simple::get_name (void)
-{
-	return m_name;
-}
-uint16_t 
-NetworkInterface80211Simple::get_mtu (void)
-{
-	// XXX
-	return 2500;
-}
-void 
-NetworkInterface80211Simple::set_up   (void)
+NetworkInterface80211Simple::notify_down (void)
 {}
 void 
-NetworkInterface80211Simple::set_down (void)
-{}
-bool 
-NetworkInterface80211Simple::is_down (void)
+NetworkInterface80211Simple::real_send (Packet *packet, MacAddress to)
 {
-	return false;
-}
-void 
-NetworkInterface80211Simple::set_ipv4_handler (Ipv4 *ipv4)
-{
-	m_ipv4 = ipv4;
-}
-void 
-NetworkInterface80211Simple::set_ipv4_address (Ipv4Address address)
-{
-	m_ipv4_address = address;
-}
-void 
-NetworkInterface80211Simple::set_ipv4_mask    (Ipv4Mask mask)
-{
-	m_ipv4_mask = mask;
-}
-Ipv4Address 
-NetworkInterface80211Simple::get_ipv4_address (void)
-{
-	return m_ipv4_address;
-}
-Ipv4Mask
-NetworkInterface80211Simple::get_ipv4_mask    (void)
-{
-	return m_ipv4_mask;
-}
-Ipv4Address 
-NetworkInterface80211Simple::get_ipv4_broadcast (void)
-{
-	uint32_t mask = m_ipv4_mask.get_host_order ();
-	uint32_t address = m_ipv4_address.get_host_order ();
-	Ipv4Address broadcast = Ipv4Address (address | (~mask));
-	return broadcast;
-}
-
-void 
-NetworkInterface80211Simple::send (Packet *packet, Ipv4Address dest)
-{
-	m_arp->send_data (packet, dest);
+	m_mac->send (packet, to);
 }
 
 void 
 NetworkInterface80211Simple::forward_data_up (Packet *packet)
 {
-	ChunkMacLlcSnap llc;
-	packet->remove (&llc);
-	switch (llc.get_ether_type ()) {
-	case ETHER_TYPE_ARP:
-		m_arp->recv_arp (packet);
-		break;
-	case ETHER_TYPE_IPV4:
-		m_bytes_rx += packet->get_size ();
-		m_ipv4->receive (packet, this);
-		break;
-	}
+	m_bytes_rx += packet->get_size ();
+	MacNetworkInterface::forward_up (packet);
 }
-void 
-NetworkInterface80211Simple::send_arp (Packet *packet, MacAddress to)
-{
-	ChunkMacLlcSnap llc;
-	llc.set_ether_type (ETHER_TYPE_ARP);
-	packet->add (&llc);
-	m_mac->send (packet, to);
-}
-void 
-NetworkInterface80211Simple::send_data (Packet *packet, MacAddress to)
-{
-	ChunkMacLlcSnap llc;
-	llc.set_ether_type (ETHER_TYPE_IPV4);
-	packet->add (&llc);
-	m_mac->send (packet, to);
-}
-
 
 }; // namespace yans
 
