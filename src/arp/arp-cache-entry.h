@@ -22,11 +22,16 @@
 #ifndef ARP_CACHE_ENTRY_H
 #define ARP_CACHE_ENTRY_H
 
+#include "mac-address.h"
+
 namespace yans {
+
+class ArpIpv4NetworkInterface;
+class Packet;
 
 class ArpCacheEntry {
 public:
-	ArpCacheEntry (Arp *arp);
+	ArpCacheEntry (ArpIpv4NetworkInterface *arp);
 
 	void mark_dead (void);
 	Packet *mark_alive (MacAddress mac_address);
@@ -48,7 +53,7 @@ private:
 
 	void update_seen (void);
 	ArpCacheEntryState_e get_state (void);
-	Arp *m_arp;
+	ArpIpv4NetworkInterface *m_arp;
 	ArpCacheEntryState_e m_state;
 	uint64_t m_last_seen_time_us;
 	MacAddress m_mac_address;

@@ -178,7 +178,7 @@ YANS_SRC:= \
 	src/ipv4/tcp-connection-listener.cc \
 	src/ipv4/tcp-connection.cc \
 	src/ipv4/tcp-buffer.cc \
-	src/arp/arp.cc \
+	src/arp/arp-ipv4-network-interface.cc \
 	src/arp/chunk-arp.cc \
 	src/arp/arp-cache-entry.cc \
 	src/arp/chunk-mac-llc-snap.cc \
@@ -312,7 +312,7 @@ YANS_HDR := \
 	src/ipv4/tcp-connection.h \
 	src/ipv4/udp.h \
 	src/arp/arp-cache-entry.h \
-	src/arp/arp.h \
+	src/arp/arp-ipv4-network-interface.h \
 	src/arp/chunk-arp.h \
 	src/arp/chunk-mac-llc-snap.h \
 	src/80211/chunk-mac-80211-hdr.h \

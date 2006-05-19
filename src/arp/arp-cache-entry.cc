@@ -20,14 +20,14 @@
  */
 
 #include "simulator.h"
-#include "arp.h"
+#include "arp-ipv4-network-interface.h"
 #include "arp-cache-entry.h"
 #include "packet.h"
 #include <cassert>
 
 namespace yans {
 
-ArpCacheEntry::ArpCacheEntry (Arp *arp)
+ArpCacheEntry::ArpCacheEntry (ArpIpv4NetworkInterface *arp)
 	: m_arp (arp),
 	  m_state (ALIVE),
 	  m_waiting (0)
