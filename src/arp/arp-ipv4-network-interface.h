@@ -61,6 +61,7 @@ private:
 	void receive_arp (Packet *packet);
 
 	virtual void real_send (Packet *packet, Ipv4Address to);
+	virtual uint16_t real_get_mtu (void) const;
 
 	MacNetworkInterface *m_interface;
 	LlcEncapsulation *m_llc;

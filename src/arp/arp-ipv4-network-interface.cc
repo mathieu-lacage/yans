@@ -53,7 +53,8 @@ ArpIpv4NetworkInterface::ArpIpv4NetworkInterface (MacNetworkInterface *interface
 	interface->set_rx_callback (make_callback (&LlcEncapsulation::receive, m_llc));
 
 	m_llc->set_mac_interface (interface);
-	m_llc->set_ipv4_callback (make_callback (&ArpIpv4NetworkInterface::forward_up, static_cast<Ipv4NetworkInterface *> (this)));
+	m_llc->set_ipv4_callback (make_callback (&ArpIpv4NetworkInterface::forward_up, 
+						 static_cast<Ipv4NetworkInterface *> (this)));
 	m_llc->set_arp_callback (make_callback (&ArpIpv4NetworkInterface::receive_arp, this));
 }
 
@@ -221,6 +222,12 @@ ArpIpv4NetworkInterface::real_send (Packet *packet, Ipv4Address to)
 		m_arp_cache[to] = entry;
 		send_arp_request (to);
 	}
+}
+
+uint16_t
+ArpIpv4NetworkInterface::real_get_mtu (void) const
+{
+	return m_interface->get_mtu () - m_llc->get_overhead ();
 }
 
 }; // namespace yans
