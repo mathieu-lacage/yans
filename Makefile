@@ -145,6 +145,7 @@ YANS_SRC:= \
 	src/common/chunk-constant-data.cc \
 	src/common/ipv4-address.cc \
 	src/common/mac-address.cc \
+	src/common/mac-address-factory.cc \
 	src/common/mac-network-interface.cc \
 	src/common/tag-manager.cc \
 	src/common/utils.cc \
@@ -251,6 +252,7 @@ YANS_INST_HDR := \
 	src/common/utils.h \
 	src/common/chunk-constant-data.h \
 	src/common/mac-address.h \
+	src/common/mac-address-factory.h \
 	src/common/mac-network-interface.h \
 	src/common/packet.h \
 	src/common/tag-manager.h \
