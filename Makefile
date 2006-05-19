@@ -163,6 +163,9 @@ YANS_SRC:= \
 	src/common/chunk-llc.cc \
 	src/common/llc-encapsulation.cc \
 	src/common/ipv4-network-interface.cc \
+	src/common/position.cc \
+	src/common/static-position.cc \
+	src/common/static-speed-position.cc \
 	src/ipv4/tag-ipv4.cc \
 	src/ipv4/ipv4-end-point.cc \
 	src/ipv4/ipv4-end-points.cc \
@@ -182,9 +185,9 @@ YANS_SRC:= \
 	src/arp/chunk-arp.cc \
 	src/arp/arp-cache-entry.cc \
 	src/arp/chunk-mac-llc-snap.cc \
+	src/host/loopback-ipv4.cc \
 	src/host/host.cc \
 	src/host/network-interface.cc \
-	src/host/loopback-interface.cc \
 	src/ethernet/cable.cc \
 	src/ethernet/chunk-mac-crc.cc \
 	src/ethernet/chunk-mac-eth.cc \
@@ -266,6 +269,9 @@ YANS_INST_HDR := \
 	src/common/chunk-llc.h \
 	src/common/llc-encapsulation.h \
 	src/common/ipv4-network-interface.h \
+	src/common/position.h \
+	src/common/static-position.h \
+	src/common/static-speed-position.h \
 	src/ipv4/ipv4-route.h \
 	src/apps/periodic-generator.h \
 	src/apps/tcp-source.h \
@@ -343,7 +349,7 @@ YANS_HDR := \
 	src/80211/chunk-mgt.h \
 	src/80211/mac-high-nqsta.h \
 	src/80211/mac-high-nqap.h \
-	src/host/loopback-interface.h \
+	src/host/loopback-ipv4.h \
 	src/ethernet/chunk-mac-crc.h \
 	src/ethernet/chunk-mac-eth.h \
 	src/thread/fiber-context.h \
