@@ -187,7 +187,6 @@ YANS_SRC:= \
 	src/arp/chunk-mac-llc-snap.cc \
 	src/host/loopback-ipv4.cc \
 	src/host/host.cc \
-	src/host/network-interface.cc \
 	src/ethernet/cable.cc \
 	src/ethernet/chunk-mac-crc.cc \
 	src/ethernet/chunk-mac-eth.cc \
@@ -286,7 +285,6 @@ YANS_INST_HDR := \
 	src/80211/channel-80211.h \
 	src/80211/ssid.h \
 	src/host/host.h \
-	src/host/network-interface.h \
 	src/ethernet/cable.h \
 	src/ethernet/ethernet-network-interface.h \
 	src/thread/semaphore.h \

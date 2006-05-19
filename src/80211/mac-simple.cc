@@ -27,7 +27,7 @@
 #include "simulator.h"
 #include "packet.h"
 #include "chunk-mac-80211-hdr.h"
-#include "network-interface.h"
+#include "mac-network-interface.h"
 #include <cassert>
 
 #define noMACSIMPLE_DEBUG 1
@@ -89,11 +89,6 @@ void
 MacSimple::set_receiver (RxCallback data)
 {
 	m_data_rx = data;
-}
-void
-MacSimple::set_interface (NetworkInterface *interface)
-{
-	m_interface = interface;
 }
 void 
 MacSimple::set_rts_cts_threshold (uint32_t size)

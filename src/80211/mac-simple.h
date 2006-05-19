@@ -32,7 +32,7 @@ class Phy80211;
 class MacStations;
 class Packet;
 class MacStation;
-class NetworkInterface;
+class MacNetworkInterface;
 
 class MacSimple {
 public:
@@ -42,7 +42,7 @@ public:
 	~MacSimple ();
 	void set_phy (Phy80211 *phy);
 	void set_stations (MacStations *stations);
-	void set_interface (NetworkInterface *interface);
+	void set_interface (MacNetworkInterface *interface);
 	void set_rts_cts_threshold (uint32_t size);
 	void set_receiver (RxCallback data);
 
@@ -65,7 +65,7 @@ private:
 
 	Phy80211 *m_phy;
 	MacStations *m_stations;
-	NetworkInterface *m_interface;
+	MacNetworkInterface *m_interface;
 	uint32_t m_rts_cts_threshold;
 	uint32_t m_rts_retry;
 	uint32_t m_data_retry;
