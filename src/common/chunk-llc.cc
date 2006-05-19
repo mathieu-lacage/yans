@@ -19,7 +19,7 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "chunk-mac-llc-snap.h"
+#include "chunk-llc.h"
 #include "buffer.h"
 #include <cassert>
 
@@ -37,29 +37,29 @@ std::cout << "CHUNK LLCSNAP TRACE " << Simulator::now_s () << " " << x << std::e
 
 namespace yans {
 
-ChunkMacLlcSnap::ChunkMacLlcSnap ()
+ChunkLlc::ChunkLlc ()
 {}
 
-ChunkMacLlcSnap::~ChunkMacLlcSnap ()
+ChunkLlc::~ChunkLlc ()
 {}
 void 
-ChunkMacLlcSnap::set_ether_type (uint16_t ether_type)
+ChunkLlc::set_type (enum Type type)
 {
-	m_ether_type = ether_type;
+	m_ether_type = type;
 }
-uint16_t 
-ChunkMacLlcSnap::get_ether_type (void)
+enum ChunkLlc::Type
+ChunkLlc::get_type (void)
 {
-	return m_ether_type;
+	return (enum ChunkLlc::Type) m_ether_type;
 }
 
 uint32_t 
-ChunkMacLlcSnap::get_size (void) const
+ChunkLlc::get_size (void) const
 {
 	return 1 + 1 + 1 + 3 + 2;
 }
 void 
-ChunkMacLlcSnap::add_to (Buffer *buffer) const
+ChunkLlc::add_to (Buffer *buffer) const
 {
 	buffer->add_at_start (get_size ());
 	Buffer::Iterator i = buffer->begin ();
@@ -69,7 +69,7 @@ ChunkMacLlcSnap::add_to (Buffer *buffer) const
 	i.write_hton_u16 (m_ether_type);
 }
 void 
-ChunkMacLlcSnap::remove_from (Buffer *buffer)
+ChunkLlc::remove_from (Buffer *buffer)
 {
 	Buffer::Iterator i = buffer->begin ();
 	i.next (5);
@@ -78,7 +78,7 @@ ChunkMacLlcSnap::remove_from (Buffer *buffer)
 }
 
 void 
-ChunkMacLlcSnap::print (std::ostream *os) const
+ChunkLlc::print (std::ostream *os) const
 {
 	*os << "(mac)"
 	    << " EtherType: ";
