@@ -19,7 +19,7 @@
  * Authors: Hossein Manshaei, Mathieu Lacage
  */
 #include "propagation-model.h"
-#include "host.h"
+#include "position.h"
 #include "channel-80211.h"
 #include "simulator.h"
 #include "packet.h"
