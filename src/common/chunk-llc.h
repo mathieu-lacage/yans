@@ -39,12 +39,13 @@ class ChunkLlc : public Chunk {
 
 	void set_type (enum Type type);
 	enum Type get_type (void);
-	
+
+	uint32_t get_size (void) const;
+
 	virtual void add_to (Buffer *buffer) const;
 	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
 private:
-	uint32_t get_size (void) const;
 	uint16_t m_ether_type;
 };
 
