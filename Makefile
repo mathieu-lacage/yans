@@ -162,6 +162,7 @@ YANS_SRC:= \
 	src/common/timeout.cc \
 	src/common/chunk-llc.cc \
 	src/common/llc-encapsulation.cc \
+	src/common/ipv4-network-interface.cc \
 	src/ipv4/tag-ipv4.cc \
 	src/ipv4/ipv4-end-point.cc \
 	src/ipv4/ipv4-end-points.cc \
@@ -264,6 +265,7 @@ YANS_INST_HDR := \
 	src/common/timeout.h \
 	src/common/chunk-llc.h \
 	src/common/llc-encapsulation.h \
+	src/common/ipv4-network-interface.h \
 	src/ipv4/ipv4-route.h \
 	src/apps/periodic-generator.h \
 	src/apps/tcp-source.h \
