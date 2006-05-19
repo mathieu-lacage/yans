@@ -44,9 +44,9 @@ public:
 	void register_trace (TraceContainer *container);
 
  private:
-	virtual void notify_up (void) = 0;
-	virtual void notify_down (void) = 0;
-	virtual void real_send (Packet *packet, MacAddress to) = 0;
+	virtual void notify_up (void);
+	virtual void notify_down (void);
+	virtual void real_send (Packet *packet, MacAddress to);
 
 	Cable *m_cable;
 	PacketLogger *m_send_logger;

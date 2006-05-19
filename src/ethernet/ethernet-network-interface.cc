@@ -91,6 +91,12 @@ EthernetNetworkInterface::register_trace (TraceContainer *container)
 	container->register_packet_logger ("ethernet-send", m_send_logger);
 	container->register_packet_logger ("ethernet-recv", m_recv_logger);
 }
+void 
+EthernetNetworkInterface::notify_up (void)
+{}
+void 
+EthernetNetworkInterface::notify_down (void)
+{}
 
 void 
 EthernetNetworkInterface::real_send (Packet *packet, MacAddress dest)
