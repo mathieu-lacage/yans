@@ -29,14 +29,14 @@ namespace yans {
 
 class Ipv4;
 class Ipv4Route;
-class NetworkInterface;
+class Ipv4NetworkInterface;
 class SocketUdp;
 class Udp;
 class Tcp;
-class LoopbackInterface;
+class LoopbackIpv4;
 
-typedef std::vector<NetworkInterface *> NetworkInterfaces;
-typedef std::vector<NetworkInterface *>::const_iterator NetworkInterfacesCI;
+typedef std::vector<Ipv4NetworkInterface *> Ipv4NetworkInterfaces;
+typedef std::vector<Ipv4NetworkInterface *>::const_iterator Ipv4NetworkInterfacesCI;
 
 class Host {
 public:
@@ -45,9 +45,8 @@ public:
 
 	Ipv4Route *get_routing_table (void);
 
-	NetworkInterfaces const *get_interfaces (void);
-	NetworkInterface *lookup_interface (char const *name);
-	void add_interface (NetworkInterface *interface);
+	Ipv4NetworkInterfaces const *get_interfaces (void);
+	void add_interface (Ipv4NetworkInterface *interface);
 	
 	Udp *get_udp (void);
 	Tcp *get_tcp (void);
@@ -60,14 +59,14 @@ public:
 	void set_z (double z);
 
 private:
-	typedef std::vector<NetworkInterface *>::iterator NetworkInterfacesI;
+	typedef std::vector<Ipv4NetworkInterface *>::iterator Ipv4NetworkInterfacesI;
 
-	NetworkInterfaces m_interfaces;
+	Ipv4NetworkInterfaces m_interfaces;
 	Ipv4Route *m_routing_table;
 	Ipv4 *m_ipv4;
 	Udp *m_udp;
 	Tcp *m_tcp;
-	LoopbackInterface *m_loopback;
+	LoopbackIpv4 *m_loopback;
 	std::string *m_root;
 	double m_x;
 	double m_y;

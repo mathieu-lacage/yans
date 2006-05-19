@@ -23,7 +23,7 @@
 #include "network-interface.h"
 #include "ipv4.h"
 #include "ipv4-route.h"
-#include "loopback-interface.h"
+#include "loopback-ipv4.h"
 #include "udp.h"
 #include "tcp.h"
 
@@ -47,11 +47,11 @@ Host::Host (char const *path)
 	m_tcp->set_ipv4 (m_ipv4);
 
 	m_routing_table = new Ipv4Route ();
-	m_loopback = new LoopbackInterface ();
+	m_loopback = new LoopbackIpv4 ();
 	add_interface (m_loopback);
-	m_loopback->set_ipv4_address (Ipv4Address::get_loopback ());
-	m_loopback->set_ipv4_mask (Ipv4Mask::get_loopback ());
-	m_loopback->set_up ();
+	m_loopback->set_address (Ipv4Address::get_loopback ());
+	m_loopback->set_mask (Ipv4Mask::get_loopback ());
+	m_loopback->set_rx_callback (make_callback (&Ipv4::receive, m_ipv4));
 	m_routing_table->add_host_route_to (Ipv4Address::get_loopback (),
 					    m_loopback);
 	m_root = new std::string (path);
@@ -74,30 +74,17 @@ Host::get_routing_table (void)
 	return m_routing_table;
 }
 
-NetworkInterfaces const *
+Ipv4NetworkInterfaces const *
 Host::get_interfaces (void)
 {
 	return &m_interfaces;
 }
 
-NetworkInterface *
-Host::lookup_interface (char const *name)
-{
-	for (NetworkInterfacesCI i = m_interfaces.begin ();
-	     i != m_interfaces.end ();
-	     i++) {
-		if ((*i)->get_name ()->compare (name) == 0) {
-			return (*i);
-		}
-	}
-	return 0;
-}
 void 
-Host::add_interface (NetworkInterface *interface)
+Host::add_interface (Ipv4NetworkInterface *interface)
 {
 	m_interfaces.push_back (interface);
-	interface->set_ipv4_handler (m_ipv4);
-	interface->set_host (this);
+	interface->set_rx_callback (make_callback (&Ipv4::receive, m_ipv4));
 }
 
 Udp *
