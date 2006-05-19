@@ -22,6 +22,9 @@
 
 namespace yans {
 
+Ipv4NetworkInterface::~Ipv4NetworkInterface ()
+{}
+
 void 
 Ipv4NetworkInterface::set_address (Ipv4Address ad)
 {
@@ -32,7 +35,11 @@ Ipv4NetworkInterface::set_mask (Ipv4Mask mask)
 {
 	m_mask = mask;
 }
-	
+uint16_t
+Ipv4NetworkInterface::get_mtu (void) const
+{
+	return real_get_mtu ();
+}	
 Ipv4Mask 
 Ipv4NetworkInterface::get_mask (void) const
 {

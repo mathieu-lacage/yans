@@ -36,6 +36,7 @@ public:
 	void set_address (Ipv4Address ad);
 	void set_mask (Ipv4Mask mask);
 	
+	uint16_t get_mtu (void) const;
 	Ipv4Mask get_mask (void) const;
 	Ipv4Address get_address (void) const;
 	Ipv4Address get_broadcast (void) const;
@@ -45,6 +46,7 @@ public:
 protected:
 	void forward_up (Packet *packet);
 private:
+	virtual uint16_t real_get_mtu (void) const = 0;
 	virtual void real_send (Packet *packet, Ipv4Address to) = 0;
 	RxCallback m_rx_callback;
 	Ipv4Address m_address;
