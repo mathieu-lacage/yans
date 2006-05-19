@@ -41,7 +41,7 @@ namespace yans {
  * unit conversions.
  */
 
-class Host;
+class Position;
 class Channel80211;
 class Packet;
 
@@ -67,7 +67,7 @@ public:
 	PropagationModel ();
 	~PropagationModel ();
 
-	void set_host (Host *host);
+	void set_position (Position *position);
 	void set_channel (Channel80211 *channel);
 	/* the unit of the power is Watt. */
 	void set_receive_callback (RxCallback callback);
@@ -97,7 +97,7 @@ private:
 	double m_rx_gain_dbm;
 	double m_system_loss;
 	double m_lambda;
-	Host *m_host;
+	Position *m_position;
 	Channel80211 *m_channel;
 	static const double PI;
 	static const double SPEED_OF_LIGHT;

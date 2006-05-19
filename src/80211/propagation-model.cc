@@ -75,9 +75,9 @@ PropagationModel::~PropagationModel ()
 {}
 
 void 
-PropagationModel::set_host (Host *host)
+PropagationModel::set_position (Position *position)
 {
-	m_host = host;
+	m_position = position;
 }
 	
 void 
@@ -95,8 +95,9 @@ void
 PropagationModel::send (Packet const*packet, double tx_power_dbm, 
 			uint8_t tx_mode, uint8_t stuff) const
 {
-	PropagationData data (tx_power_dbm + m_tx_gain_dbm, m_host->get_x (),
-			      m_host->get_y (), m_host->get_z ());
+	double x,y,z;
+	m_position->get (x,y,z);
+	PropagationData data (tx_power_dbm + m_tx_gain_dbm, x,y,z);
 	m_channel->send (packet, &data, tx_mode, stuff, this);
 }
 void 
@@ -121,9 +122,11 @@ PropagationModel::forward_up (CountPtrHolder<Packet const> p, double rx_power, u
 double
 PropagationModel::distance (PropagationData const *from) const
 {
-	double dx = m_host->get_x () - from->get_x ();
-	double dy = m_host->get_y () - from->get_y ();
-	double dz = m_host->get_z () - from->get_z ();
+	double x,y,z;
+	m_position->get (x,y,z);
+	double dx = x - from->get_x ();
+	double dy = y - from->get_y ();
+	double dz = z - from->get_z ();
 	return sqrt (dx*dx+dy*dy+dz*dz);
 }
 
