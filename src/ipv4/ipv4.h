@@ -29,7 +29,7 @@
 
 namespace yans {
 
-class NetworkInterface;
+class Ipv4NetworkInterface;
 class Packet;
 class Ipv4Route;
 class Host;
@@ -58,17 +58,17 @@ public:
 	/* invoked from higher-layers. */
 	void register_transport_protocol (TransportProtocolCallback callback, uint8_t protocol);
 	/* invoked from lower-layers. */
-	void receive (Packet *packet, NetworkInterface *from);
+	void receive (Packet *packet, Ipv4NetworkInterface *from);
 
 private:
-	bool forwarding (Packet *packet, ChunkIpv4 *ip, NetworkInterface *from);
+	bool forwarding (Packet *packet, ChunkIpv4 *ip, Ipv4NetworkInterface *from);
 	Ipv4Route *get_route (void);
 	TransportProtocolCallback lookup_protocol (uint8_t id);
-	void send_icmp_time_exceeded_ttl (Packet *original, ChunkIpv4 *ip, NetworkInterface *interface);
+	void send_icmp_time_exceeded_ttl (Packet *original, ChunkIpv4 *ip, Ipv4NetworkInterface *interface);
 	bool send_out (Packet *packet, ChunkIpv4 *ip, Route const*route);
 	void send_real_out (Packet *packet, ChunkIpv4 *ip, Route const*route);
 	Packet *re_assemble (Packet *fragment, ChunkIpv4 *ip);
-	void receive_packet (Packet *packet, ChunkIpv4 *ip, NetworkInterface *interface);
+	void receive_packet (Packet *packet, ChunkIpv4 *ip, Ipv4NetworkInterface *interface);
 	void receive_icmp (Packet *packet);
 
 	static const uint8_t ICMP_PROTOCOL;

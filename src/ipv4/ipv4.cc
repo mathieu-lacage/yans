@@ -22,7 +22,7 @@
 #include "ipv4.h"
 #include "chunk-ipv4.h"
 #include "packet.h"
-#include "network-interface.h"
+#include "ipv4-network-interface.h"
 #include "ipv4-route.h"
 #include "host.h"
 #include "tag-ipv4.h"
@@ -140,7 +140,7 @@ void
 Ipv4::send_real_out (Packet *packet, ChunkIpv4 *ip, Route const *route)
 {
 	packet->add (ip);
-	NetworkInterface *out_interface = route->get_interface ();
+	Ipv4NetworkInterface *out_interface = route->get_interface ();
 	assert (packet->get_size () <= out_interface->get_mtu ());
 	m_send_logger->log (packet);
 	if (route->is_gateway ()) {
@@ -153,7 +153,7 @@ Ipv4::send_real_out (Packet *packet, ChunkIpv4 *ip, Route const *route)
 bool
 Ipv4::send_out (Packet *packet, ChunkIpv4 *ip, Route const *route)
 {
-	NetworkInterface *out_interface = route->get_interface ();
+	Ipv4NetworkInterface *out_interface = route->get_interface ();
 
 	if (packet->get_size () + ip->get_size () > out_interface->get_mtu ()) {
 		/* we need to fragment. */
@@ -206,7 +206,7 @@ Ipv4::send_out (Packet *packet, ChunkIpv4 *ip, Route const *route)
 }
 
 void
-Ipv4::send_icmp_time_exceeded_ttl (Packet *original, ChunkIpv4 *ip, NetworkInterface *interface)
+Ipv4::send_icmp_time_exceeded_ttl (Packet *original, ChunkIpv4 *ip, Ipv4NetworkInterface *interface)
 {
 	Packet *packet = original->copy ();
 	packet->add (ip);
@@ -219,7 +219,7 @@ Ipv4::send_icmp_time_exceeded_ttl (Packet *original, ChunkIpv4 *ip, NetworkInter
 
 	ChunkIpv4 ip_real;
 	ip_real.set_destination (ip->get_source ());
-	ip_real.set_source (interface->get_ipv4_address ());
+	ip_real.set_source (interface->get_address ());
 	ip_real.set_payload_size (packet->get_size ());
 	ip_real.set_protocol (ICMP_PROTOCOL);
 	ip_real.set_ttl (m_default_ttl);
@@ -239,17 +239,17 @@ Ipv4::send_icmp_time_exceeded_ttl (Packet *original, ChunkIpv4 *ip, NetworkInter
 }
 
 bool
-Ipv4::forwarding (Packet *packet, ChunkIpv4 *ip_header, NetworkInterface *interface)
+Ipv4::forwarding (Packet *packet, ChunkIpv4 *ip_header, Ipv4NetworkInterface *interface)
 {
-	NetworkInterfaces const * interfaces = m_host->get_interfaces ();
-	for (NetworkInterfacesCI i = interfaces->begin ();
+	Ipv4NetworkInterfaces const * interfaces = m_host->get_interfaces ();
+	for (Ipv4NetworkInterfacesCI i = interfaces->begin ();
 	     i != interfaces->end (); i++) {
-		if ((*i)->get_ipv4_address ().is_equal (ip_header->get_destination ())) {
+		if ((*i)->get_address ().is_equal (ip_header->get_destination ())) {
 			TRACE ("for me 1");
 			return false;
 		}
 	}
-	if (ip_header->get_destination ().is_equal (interface->get_ipv4_broadcast ())) {
+	if (ip_header->get_destination ().is_equal (interface->get_broadcast ())) {
 		TRACE ("for me 2");
 		return false;
 	}
@@ -298,7 +298,7 @@ Ipv4::re_assemble (Packet *fragment, ChunkIpv4 *ip)
 }
 
 void
-Ipv4::receive_packet (Packet *packet, ChunkIpv4 *ip, NetworkInterface *interface)
+Ipv4::receive_packet (Packet *packet, ChunkIpv4 *ip, Ipv4NetworkInterface *interface)
 {
 	/* receive the packet. */
 	TagInIpv4 *tag = new TagInIpv4 (interface);
@@ -312,7 +312,7 @@ Ipv4::receive_packet (Packet *packet, ChunkIpv4 *ip, NetworkInterface *interface
 }
 
 void 
-Ipv4::receive (Packet *packet, NetworkInterface *interface)
+Ipv4::receive (Packet *packet, Ipv4NetworkInterface *interface)
 {
 	m_recv_logger->log (packet);
 	ChunkIpv4 ip_header;
