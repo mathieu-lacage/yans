@@ -19,18 +19,18 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#ifndef CHUNK_LLC_H
-#define CHUNK_LLC_H
+#ifndef CHUNK_LLC_SNAP_H
+#define CHUNK_LLC_SNAP_H
 
 #include "chunk.h"
 #include <stdint.h>
 
 namespace yans {
 
-class ChunkLlc : public Chunk {
+class ChunkLlcSnap : public Chunk {
  public:
-	ChunkLlc ();
-	virtual ~ChunkLlc ();
+	ChunkLlcSnap ();
+	virtual ~ChunkLlcSnap ();
 
 	enum Type {
 		TYPE_IPV4 = 0x0800,
@@ -51,4 +51,4 @@ private:
 
 }; // namespace yans
 
-#endif /* CHUNK_MAC_LLC_SNAP_H */
+#endif /* CHUNK_LLC_SNAP_H */
