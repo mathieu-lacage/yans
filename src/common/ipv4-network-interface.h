@@ -22,6 +22,7 @@
 #define IPV4_NETWORK_INTERFACE
 
 #include "ipv4-address.h"
+#include "callback.h"
 
 namespace yans {
 
@@ -29,6 +30,7 @@ class Packet;
 
 class Ipv4NetworkInterface {
 public:
+	typedef Callback<void, Packet *, Ipv4NetworkInterface *>  RxCallback;
 	virtual ~Ipv4NetworkInterface () = 0;
 
 	void set_address (Ipv4Address ad);
@@ -39,8 +41,12 @@ public:
 	Ipv4Address get_broadcast (void) const;
 
 	void send (Packet *packet, Ipv4Address to);
+	void set_rx_callback (RxCallback callback);
+protected:
+	void forward_up (Packet *packet);
 private:
 	virtual void real_send (Packet *packet, Ipv4Address to) = 0;
+	RxCallback m_rx_callback;
 	Ipv4Address m_address;
 	Ipv4Mask m_mask;
 };

@@ -58,5 +58,18 @@ Ipv4NetworkInterface::send (Packet *packet, Ipv4Address to)
 	real_send (packet, to);
 }
 
+void 
+Ipv4NetworkInterface::set_rx_callback (RxCallback callback)
+{
+	m_rx_callback = callback;
+}
+
+void 
+Ipv4NetworkInterface::forward_up (Packet *packet)
+{
+	m_rx_callback (packet, this);
+}
+
+
 
 }; // namespace yans

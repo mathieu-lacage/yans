@@ -41,7 +41,6 @@ void
 LlcEncapsulation::set_mac_interface (MacNetworkInterface *interface)
 {
 	m_interface = interface;
-	interface->set_rx_callback (make_callback (&LlcEncapsulation::receive, this));
 }
 void 
 LlcEncapsulation::send_ipv4 (Packet *packet, MacAddress to)

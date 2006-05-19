@@ -39,8 +39,8 @@ public:
 	void set_mac_interface (MacNetworkInterface *interface);
 	void send_ipv4 (Packet *packet, MacAddress to);
 	void send_arp (Packet *packet, MacAddress to);
-private:
 	void receive (Packet *packet, MacNetworkInterface *interface);
+private:
 	RxCallback m_ipv4_callback;
 	RxCallback m_arp_callback;
 	MacNetworkInterface *m_interface;
