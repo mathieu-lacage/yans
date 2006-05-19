@@ -28,7 +28,7 @@
 
 namespace yans {
 
-class NetworkInterface;
+class Ipv4NetworkInterface;
 
 class Route {
 public:
@@ -46,26 +46,26 @@ public:
 	bool is_gateway (void) const;
 	Ipv4Address get_gateway (void) const;
 
-	NetworkInterface *get_interface (void) const;
+	Ipv4NetworkInterface *get_interface (void) const;
 private:
 	friend class Ipv4Route;
 	Route (Ipv4Address network,
 	       Ipv4Mask mask,
 	       Ipv4Address gateway,
-	       NetworkInterface *interface);
+	       Ipv4NetworkInterface *interface);
 	Route (Ipv4Address dest,
 	       Ipv4Mask mask,
-	       NetworkInterface *interface);
+	       Ipv4NetworkInterface *interface);
 	Route (Ipv4Address dest,
 	       Ipv4Address gateway,
-	       NetworkInterface *interface);
+	       Ipv4NetworkInterface *interface);
 	Route (Ipv4Address dest,
-	       NetworkInterface *interface);
+	       Ipv4NetworkInterface *interface);
 
 	Ipv4Address m_dest;
 	Ipv4Mask m_dest_network_mask;
 	Ipv4Address m_gateway;
-	NetworkInterface *m_interface;
+	Ipv4NetworkInterface *m_interface;
 };
 
 class Ipv4Route {
@@ -78,29 +78,29 @@ public:
 	 */
 	void add_host_route_to (Ipv4Address dest, 
 				Ipv4Address next_hop, 
-				NetworkInterface *interface);
+				Ipv4NetworkInterface *interface);
 	/* add route to host dest on interface.
 	 */
 	void add_host_route_to (Ipv4Address dest, 
-				NetworkInterface *interface);
+				Ipv4NetworkInterface *interface);
 	/* add route to network dest with netmask 
 	 * through host next_hop on interface
 	 */
 	void add_network_route_to (Ipv4Address network, 
 				   Ipv4Mask network_mask, 
 				   Ipv4Address next_hop, 
-				   NetworkInterface *interface);
+				   Ipv4NetworkInterface *interface);
 	/* add route to network dest with netmask 
 	 * on interface
 	 */
 	void add_network_route_to (Ipv4Address network, 
 				   Ipv4Mask network_mask, 
-				   NetworkInterface *interface);
+				   Ipv4NetworkInterface *interface);
 	/* set the default route to host next_hop on
 	 * interface. 
 	 */
 	void set_default_route (Ipv4Address next_hop, 
-				NetworkInterface *interface);
+				Ipv4NetworkInterface *interface);
 
 	Route *lookup (Ipv4Address dest);
 private:
