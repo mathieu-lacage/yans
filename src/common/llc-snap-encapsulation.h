@@ -18,8 +18,8 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef LLC_ENCAPSULATION
-#define LLC_ENCAPSULATION
+#ifndef LLC_SNAP_ENCAPSULATION
+#define LLC_SNAP_ENCAPSULATION
 
 #include <stdint.h>
 #include "callback.h"
@@ -30,7 +30,7 @@ namespace yans {
 class Packet;
 class MacNetworkInterface;
 
-class LlcEncapsulation {
+class LlcSnapEncapsulation {
 public:	
 	typedef Callback<void, Packet *> RxCallback;
 
@@ -49,4 +49,4 @@ private:
 
 }; // namespace yans
 
-#endif /* LLC_ENCAPSULATION */
+#endif /* LLC_SNAP_ENCAPSULATION */

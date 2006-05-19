@@ -33,7 +33,7 @@ class Packet;
 class TraceContainer;
 class MacNetworkInterface;
 class ArpCacheEntry;
-class LlcEncapsulation;
+class LlcSnapEncapsulation;
 class PacketLogger;
 
 class ArpIpv4NetworkInterface : public Ipv4NetworkInterface {
@@ -64,7 +64,7 @@ private:
 	virtual uint16_t real_get_mtu (void) const;
 
 	MacNetworkInterface *m_interface;
-	LlcEncapsulation *m_llc;
+	LlcSnapEncapsulation *m_llc;
 	uint64_t m_alive_timeout_us;
 	uint64_t m_dead_timeout_us;
 	uint64_t m_wait_reply_timeout_us;

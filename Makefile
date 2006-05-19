@@ -162,7 +162,7 @@ YANS_SRC:= \
 	src/common/rng-mrg32k3a.cc \
 	src/common/timeout.cc \
 	src/common/chunk-llc-snap.cc \
-	src/common/llc-encapsulation.cc \
+	src/common/llc-snap-encapsulation.cc \
 	src/common/ipv4-network-interface.cc \
 	src/common/position.cc \
 	src/common/static-position.cc \
@@ -268,7 +268,7 @@ YANS_INST_HDR := \
 	src/common/count-ptr-holder.tcc \
 	src/common/timeout.h \
 	src/common/chunk-llc-snap.h \
-	src/common/llc-encapsulation.h \
+	src/common/llc-snap-encapsulation.h \
 	src/common/ipv4-network-interface.h \
 	src/common/position.h \
 	src/common/static-position.h \

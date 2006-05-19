@@ -26,7 +26,7 @@
 #include "trace-container.h"
 #include "chunk-arp.h"
 #include "packet.h"
-#include "llc-encapsulation.h"
+#include "llc-snap-encapsulation.h"
 #include <cassert>
 
 #ifdef TRACE_ARP
@@ -44,13 +44,13 @@ namespace yans {
 
 ArpIpv4NetworkInterface::ArpIpv4NetworkInterface (MacNetworkInterface *interface)
 	: m_interface (interface),
-	  m_llc (new LlcEncapsulation ()),
+	  m_llc (new LlcSnapEncapsulation ()),
 	  m_alive_timeout_us (1200000000),
 	  m_dead_timeout_us (100000000),
 	  m_wait_reply_timeout_us (1000000),
 	  m_drop (new PacketLogger ())
 {
-	interface->set_rx_callback (make_callback (&LlcEncapsulation::receive, m_llc));
+	interface->set_rx_callback (make_callback (&LlcSnapEncapsulation::receive, m_llc));
 
 	m_llc->set_mac_interface (interface);
 	m_llc->set_ipv4_callback (make_callback (&ArpIpv4NetworkInterface::forward_up, 

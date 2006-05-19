@@ -18,7 +18,7 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#include "llc-encapsulation.h"
+#include "llc-snap-encapsulation.h"
 #include "chunk-llc-snap.h"
 #include "packet.h"
 #include "chunk.h"
@@ -28,28 +28,28 @@
 namespace yans {
 
 uint32_t
-LlcEncapsulation::get_overhead (void) const
+LlcSnapEncapsulation::get_overhead (void) const
 {
 	ChunkLlcSnap llc;
 	return llc.get_size ();
 }
 void 
-LlcEncapsulation::set_ipv4_callback (RxCallback callback)
+LlcSnapEncapsulation::set_ipv4_callback (RxCallback callback)
 {
 	m_ipv4_callback = callback;
 }
 void 
-LlcEncapsulation::set_arp_callback (RxCallback callback)
+LlcSnapEncapsulation::set_arp_callback (RxCallback callback)
 {
 	m_arp_callback = callback;
 }
 void 
-LlcEncapsulation::set_mac_interface (MacNetworkInterface *interface)
+LlcSnapEncapsulation::set_mac_interface (MacNetworkInterface *interface)
 {
 	m_interface = interface;
 }
 void 
-LlcEncapsulation::send_ipv4 (Packet *packet, MacAddress to)
+LlcSnapEncapsulation::send_ipv4 (Packet *packet, MacAddress to)
 {
 	ChunkLlcSnap llc;
 	llc.set_type (ChunkLlcSnap::TYPE_IPV4);
@@ -57,7 +57,7 @@ LlcEncapsulation::send_ipv4 (Packet *packet, MacAddress to)
 	m_interface->send (packet, to);
 }
 void 
-LlcEncapsulation::send_arp (Packet *packet, MacAddress to)
+LlcSnapEncapsulation::send_arp (Packet *packet, MacAddress to)
 {
 	ChunkLlcSnap llc;
 	llc.set_type (ChunkLlcSnap::TYPE_ARP);
@@ -66,7 +66,7 @@ LlcEncapsulation::send_arp (Packet *packet, MacAddress to)
 }
 
 void
-LlcEncapsulation::receive (Packet *packet, MacNetworkInterface *interface)
+LlcSnapEncapsulation::receive (Packet *packet, MacNetworkInterface *interface)
 {
 	assert (interface == m_interface);
 	ChunkLlcSnap llc;
