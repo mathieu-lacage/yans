@@ -53,6 +53,12 @@ NetworkInterface80211::~NetworkInterface80211 ()
 	delete m_rx_middle;
 }
 
+void 
+NetworkInterface80211::notify_up (void)
+{}
+void 
+NetworkInterface80211::notify_down (void)
+{}
 
 void 
 NetworkInterface80211::connect_to (Channel80211 *channel)
