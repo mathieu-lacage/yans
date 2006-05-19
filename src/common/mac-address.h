@@ -32,7 +32,7 @@ public:
 	MacAddress (void);
 	/* low byte should be first.
 	 */
-	MacAddress (uint8_t address[6]);
+	MacAddress (uint8_t const address[6]);
 	/* The string should look like this:
 	 * hh-xx-xx-xx-xx-ll
 	 * where hh is the high byte and ll is

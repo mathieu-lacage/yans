@@ -35,7 +35,7 @@ MacAddress::MacAddress ()
 	m_address[5] = 0;
 }
 
-MacAddress::MacAddress (uint8_t address[6])
+MacAddress::MacAddress (uint8_t const address[6])
 {
 	m_address[0] = address[0];
 	m_address[1] = address[1];
