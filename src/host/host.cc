@@ -20,7 +20,7 @@
  */
 
 #include "host.h"
-#include "network-interface.h"
+#include "arp-ipv4-network-interface.h"
 #include "ipv4.h"
 #include "ipv4-route.h"
 #include "loopback-ipv4.h"
@@ -47,13 +47,14 @@ Host::Host (char const *path)
 	m_tcp->set_ipv4 (m_ipv4);
 
 	m_routing_table = new Ipv4Route ();
-	m_loopback = new LoopbackIpv4 ();
-	add_interface (m_loopback);
-	m_loopback->set_address (Ipv4Address::get_loopback ());
-	m_loopback->set_mask (Ipv4Mask::get_loopback ());
-	m_loopback->set_rx_callback (make_callback (&Ipv4::receive, m_ipv4));
+	LoopbackIpv4 *loopback = new LoopbackIpv4 ();
+	loopback->set_address (Ipv4Address::get_loopback ());
+	loopback->set_mask (Ipv4Mask::get_loopback ());
+	loopback->set_rx_callback (make_callback (&Ipv4::receive, m_ipv4));
+	m_interfaces.push_back (loopback);
+
 	m_routing_table->add_host_route_to (Ipv4Address::get_loopback (),
-					    m_loopback);
+					    loopback);
 	m_root = new std::string (path);
 }
 
@@ -64,7 +65,10 @@ Host::~Host ()
 	delete m_routing_table;
 	delete m_udp;
 	delete m_tcp;
-	delete m_loopback;
+	for (Ipv4NetworkInterfacesI i = m_interfaces.begin ();
+	     i != m_interfaces.end (); i++) {
+		delete (*i);
+	}
 	m_interfaces.erase (m_interfaces.begin (), m_interfaces.end ());
 }
 
@@ -80,11 +84,15 @@ Host::get_interfaces (void)
 	return &m_interfaces;
 }
 
-void 
-Host::add_interface (Ipv4NetworkInterface *interface)
+Ipv4NetworkInterface *
+Host::add_ipv4_arp_interface (MacNetworkInterface *interface, Ipv4Address address, Ipv4Mask mask)
 {
-	m_interfaces.push_back (interface);
-	interface->set_rx_callback (make_callback (&Ipv4::receive, m_ipv4));
+	ArpIpv4NetworkInterface *ipv4 = new ArpIpv4NetworkInterface (interface);
+	ipv4->set_address (address);
+	ipv4->set_mask (mask);
+	ipv4->set_rx_callback (make_callback (&Ipv4::receive, m_ipv4));
+	m_interfaces.push_back (ipv4);
+	return ipv4;
 }
 
 Udp *

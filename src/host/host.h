@@ -1,6 +1,6 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 /*
- * Copyright (c) 2005 INRIA
+ * Copyright (c) 2005,2006 INRIA
  * All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -30,6 +30,7 @@ namespace yans {
 class Ipv4;
 class Ipv4Route;
 class Ipv4NetworkInterface;
+class MacNetworkInterface;
 class SocketUdp;
 class Udp;
 class Tcp;
@@ -45,8 +46,9 @@ public:
 
 	Ipv4Route *get_routing_table (void);
 
-	Ipv4NetworkInterfaces const *get_interfaces (void);
-	void add_interface (Ipv4NetworkInterface *interface);
+	Ipv4NetworkInterfaces const*get_interfaces (void);
+	Ipv4NetworkInterface *add_ipv4_arp_interface (MacNetworkInterface *interface, 
+						      Ipv4Address address, Ipv4Mask mask);
 	
 	Udp *get_udp (void);
 	Tcp *get_tcp (void);
@@ -66,7 +68,6 @@ private:
 	Ipv4 *m_ipv4;
 	Udp *m_udp;
 	Tcp *m_tcp;
-	LoopbackIpv4 *m_loopback;
 	std::string *m_root;
 	double m_x;
 	double m_y;
