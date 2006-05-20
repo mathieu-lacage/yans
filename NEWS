@@ -1,9 +1,18 @@
-Release 0.9.0 (2006--)
+Release 0.9.0 (2006-05-20)
 -------------
 
 This release features:
-   - MAC NQAP/NQSTA support
+   - initial work on MAC NQAP/NQSTA support
    - Callback re-implementation
+   - Buffer API re-organization and optimization
+   - NetworkInterface API split in MacNetworkInterface
+     and Ipv4NetworkInterface
+   - overall code cleanups to decrease coupling between
+     various components.
+   - add a new std::map-based scheduler
+   - rework the schedulers to ensure proper event replay
+     whichever scheduling algorithm is choosen.
+   - add log and replay capability to the schedulers.
 
 Release 0.8.0 (2006-03-24)
 -------------
