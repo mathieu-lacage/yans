@@ -8,7 +8,8 @@ from _yans import Ipv4Address
 from _yans import Ipv4Mask
 from _yans import MacAddress
 from _yans import Host
-from _yans import NetworkInterface
+from _yans import MacNetworkInterface
+from _yans import Ipv4NetworkInterface
 from _yans import EthernetNetworkInterface
 from _yans import Cable
 from _yans import UdpSource
