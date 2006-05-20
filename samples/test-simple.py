@@ -18,39 +18,26 @@ def setup_pcap_trace(interface, name):
     del container
     return writer
 
-client_mac_address = MacAddress ('00:00:00:00:00:01')
-server_mac_address = MacAddress ('00:00:00:00:00:02')
 client_address = Ipv4Address ('192.168.0.3')
 server_address = Ipv4Address ('192.168.0.2')
 netmask = Ipv4Mask ('255.255.255.0')
 
-eth_client = EthernetNetworkInterface ('eth0')
-eth_server = EthernetNetworkInterface ('eth0')
-
-eth_client.set_mac_address (client_mac_address)
-eth_server.set_mac_address (server_mac_address)
+eth_client = EthernetNetworkInterface (MacAddress ('00:00:00:00:00:01'), 'eth0')
+eth_server = EthernetNetworkInterface (MacAddress ('00:00:00:00:00:02'), 'eth0')
 
 cable = Cable ()
 cable.connect_to (eth_client, eth_server)
 
-eth_client.set_ipv4_address (client_address)
-eth_client.set_ipv4_mask (netmask)
-eth_server.set_ipv4_address (server_address)
-eth_server.set_ipv4_mask (netmask)
-eth_client.set_up ()
-eth_server.set_up ()
-
 client_writer = setup_pcap_trace (eth_client, "client-eth0")
 server_writer = setup_pcap_trace (eth_server, "server-eth0")
 
-
 hclient = Host ('client')
 hserver = Host ('server')
-hclient.add_interface (eth_client)
-hserver.add_interface (eth_server)
+ip_client = hclient.add_ipv4_arp_interface (eth_client, client_address, netmask)
+ip_server = hserver.add_ipv4_arp_interface (eth_server, server_address, netmask)
 
-hclient.get_routing_table ().set_default_route (server_address, eth_client);
-hserver.get_routing_table ().set_default_route (client_address, eth_server);
+hclient.get_routing_table ().set_default_route (server_address, ip_client);
+hserver.get_routing_table ().set_default_route (client_address, ip_server);
 
 source = UdpSource (hclient)
 source.bind (client_address, 1025)
@@ -83,8 +70,6 @@ del hclient
 del hserver
 del client_address
 del server_address
-del client_mac_address
-del server_mac_address
 del eth_client
 del eth_server
 del client_writer
