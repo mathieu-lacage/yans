@@ -293,7 +293,6 @@ YANS_INST_HDR := \
 	src/thread/thread.h \
 	$(NULL)
 YANS_HDR := \
-	src/simulator/clock.h \
 	src/simulator/scheduler.h \
 	src/simulator/scheduler-list.h \
 	src/simulator/scheduler-heap.h \
