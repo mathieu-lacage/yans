@@ -513,6 +513,8 @@ YANS_PYTHON_CXX_HDR:= \
 	python/function-holder.h \
 	python/export-callback.tcc \
 	python/export-callback-traits.tcc \
+	python/method-callback.tcc \
+	python/python-callback.tcc \
 	$(NULL)
 YANS_PYTHON_CXX_NAME:=_yans
 YANS_PYTHON_CXX_TYPE:=python-cxx-module
