@@ -46,13 +46,6 @@ int main (int argc, char *argv[])
 	Cable *server_cable = new Cable ();
 	server_cable->connect_to (eth_server, eth_router_server);
 
-	/* associate ipv4 addresses to the ethernet network elements */
-	Ipv4Address client = Ipv4Address ("192.168.0.2");
-	Ipv4Address router_client = Ipv4Address ("192.168.0.1");
-	Ipv4Address router_server = Ipv4Address ("192.168.1.1");
-	Ipv4Address server = Ipv4Address ("192.168.1.2");
-	Ipv4Mask net_mask = Ipv4Mask ("255.255.255.0");
-
 	/* create hosts for the network elements*/
 	Host *hclient, *hserver, *hrouter;
 	hclient = new Host ("client");
@@ -60,37 +53,41 @@ int main (int argc, char *argv[])
 	hrouter = new Host ("router");
 	Ipv4NetworkInterface *ip_client, *ip_server, *ip_router_client, *ip_router_server;
 	ip_client = hclient->add_ipv4_arp_interface (eth_client, 
-						     client, 
-						     net_mask);
-	ip_server = hserver->add_ipv4_arp_interface (eth_server, server, net_mask);
+						     Ipv4Address ("192.168.0.2"), 
+						     Ipv4Mask ("255.255.255.0"));
+	ip_server = hserver->add_ipv4_arp_interface (eth_server, 
+						     Ipv4Address ("192.168.1.2"),
+						     Ipv4Mask ("255.255.255.0"));
 	ip_router_client = hrouter->add_ipv4_arp_interface (eth_router_client, 
-							    router_client, net_mask);
+							    Ipv4Address ("192.168.0.1"),
+							    Ipv4Mask ("255.255.255.0"));
 	ip_router_server = hrouter->add_ipv4_arp_interface (eth_router_server,
-							    router_server, net_mask);
+							    Ipv4Address ("192.168.1.1"),
+							    Ipv4Mask ("255.255.255.0"));
 	eth_client->set_mtu (980);
 	eth_router_server->set_mtu (979);
 
 	/* setup the routing tables. */
-	hclient->get_routing_table ()->set_default_route (client,
+	hclient->get_routing_table ()->set_default_route (Ipv4Address ("192.168.0.1"),
 							  ip_client);
-	hserver->get_routing_table ()->set_default_route (server,
+	hserver->get_routing_table ()->set_default_route (Ipv4Address ("192.168.1.1"),
 							  ip_server);
 	hrouter->get_routing_table ()->add_network_route_to (Ipv4Address ("192.168.0.0"),
-							     net_mask,
+                                                             Ipv4Mask ("255.255.255.0"),
 							     ip_router_client);
 	hrouter->get_routing_table ()->add_network_route_to (Ipv4Address ("192.168.1.0"),
-							     net_mask,
+                                                             Ipv4Mask ("255.255.255.0"),
 							     ip_router_server);
 	
 
 	/* create udp source endpoint. */
 	UdpSource *source = new UdpSource (hclient);
-	source->bind (client, 1025);
-	source->set_peer (server, 1026);
+	source->bind (Ipv4Address ("192.168.0.2"), 1025);
+	source->set_peer (Ipv4Address ("192.168.1.2"), 1026);
 	source->unbind_at (11.0);
 	/* create udp sink endpoint. */
 	UdpSink *sink = new UdpSink (hserver);
-	sink->bind (server, 1026);
+	sink->bind (Ipv4Address ("192.168.1.2"), 1026);
 	sink->unbind_at (11.0);
 
 
