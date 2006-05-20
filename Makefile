@@ -39,7 +39,7 @@ include ./rules-start.mk
 TOP:=.
 NULL:=
 PACKAGE_NAME:=yans
-PACKAGE_VERSION:=0.9.0
+PACKAGE_VERSION:=0.10.0
 TOP_BUILD_DIR:=$(TOP)/build-dir
 TOP_SRC_DIR:=$(TOP)
 
