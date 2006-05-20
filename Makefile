@@ -499,7 +499,8 @@ YANS_PYTHON_CXX_SRC:= \
 	python/export-host.cc \
 	python/export-udp-sink.cc \
 	python/export-udp-source.cc \
-	python/export-network-interface.cc \
+	python/export-mac-network-interface.cc \
+	python/export-ipv4-network-interface.cc \
 	python/export-ethernet-network-interface.cc \
 	python/export-cable.cc \
 	python/export-ipv4-route.cc \

@@ -2,7 +2,7 @@
 
 #include <boost/python.hpp>
 #include "yans/ipv4-route.h"
-#include "yans/network-interface.h"
+#include "yans/ipv4-network-interface.h"
 
 using namespace boost::python;
 using namespace yans;

@@ -10,15 +10,14 @@ using namespace yans;
 void export_ethernet_network_interface (void)
 {
 	class_<EthernetNetworkInterface, 
-		bases<NetworkInterface>, 
+		bases<MacNetworkInterface>, 
 		std::auto_ptr<EthernetNetworkInterface>,
 		boost::noncopyable> 
 		ethernet
 		("EthernetNetworkInterface", 
-		 init<char const *> ());
+		 init<MacAddress, char const *> ());
 	implicitly_convertible<std::auto_ptr<EthernetNetworkInterface>,
-		std::auto_ptr<NetworkInterface> >();
+		std::auto_ptr<MacNetworkInterface> >();
 
 	ethernet.def ("register_trace", &EthernetNetworkInterface::register_trace);
-	ethernet.def ("set_mtu", &EthernetNetworkInterface::set_mtu);
 }
