@@ -23,19 +23,23 @@
 #include <cassert>
 
 namespace {
-void
+yans::Buffer::Iterator
 write_mac (yans::Buffer::Iterator i, yans::MacAddress const mac)
 {
 	uint8_t ad[6];
 	mac.peek (ad);
 	i.write (ad, 6);
+	i.next (6);
+	return i;
 }
-void
+yans::Buffer::Iterator
 read_mac (yans::Buffer::Iterator i, yans::MacAddress &mac)
 {
 	uint8_t ad[6];
 	i.read (ad, 6);
 	mac.set (ad);
+	i.next (6);
+	return i;
 }
 
 }
@@ -745,12 +749,9 @@ ChunkMac80211Hdr::add_to (Buffer *buffer) const
 		i.write_hton_u16 (get_frame_control ());
 		i.next (2);
 		i.write_hton_u16 (m_duration);
-		write_mac (i, m_addr1);
-		i.next (6);
-		write_mac (i, m_addr2);
-		i.next (6);
-		write_mac (i, m_addr3);
-		i.next (6);
+		i = write_mac (i, m_addr1);
+		i = write_mac (i, m_addr2);
+		i = write_mac (i, m_addr3);
 		i.write_hton_u16 (get_sequence_control ());
 		break;
 	case TYPE_CTL:
@@ -762,10 +763,8 @@ ChunkMac80211Hdr::add_to (Buffer *buffer) const
 			i.next (2);
 			i.write_hton_u16 (m_duration);
 			i.next (2);
-			write_mac (i, m_addr1);
-			i.next (2);
-			write_mac (i, m_addr2);
-			i.next (2);
+			i = write_mac (i, m_addr1);
+			i = write_mac (i, m_addr2);
 			break;
 		case SUBTYPE_CTL_CTS:
 		case SUBTYPE_CTL_ACK:
@@ -775,7 +774,7 @@ ChunkMac80211Hdr::add_to (Buffer *buffer) const
 			i.next (2);
 			i.write_hton_u16 (m_duration);
 			i.next (2);
-			write_mac (i, m_addr1);
+			i = write_mac (i, m_addr1);
 			break;
 		case SUBTYPE_CTL_BACKREQ:
 		case SUBTYPE_CTL_BACKRESP:
@@ -798,17 +797,13 @@ ChunkMac80211Hdr::add_to (Buffer *buffer) const
 		i.next (2);
 		i.write_hton_u16 (m_duration);
 		i.next (2);
-		write_mac (i, m_addr1);
-		i.next (6);
-		write_mac (i, m_addr2);
-		i.next (6);
-		write_mac (i, m_addr3);
-		i.next (6);
+		i = write_mac (i, m_addr1);
+		i = write_mac (i, m_addr2);
+		i = write_mac (i, m_addr3);
 		i.write_hton_u16 (get_sequence_control ());
 		i.next (2);
 		if (m_ctrl_to_ds && m_ctrl_from_ds) {
-			write_mac (i, m_addr4);
-			i.next (6);
+			i = write_mac (i, m_addr4);
 		}
 		if (m_ctrl_subtype & 0x08) {
 			i.write_hton_u16 (get_qos_control ());
@@ -826,22 +821,18 @@ ChunkMac80211Hdr::remove_from (Buffer *buffer)
 	set_frame_control (frame_control);
 	m_duration = i.read_ntoh_u16 ();
 	i.next (2);
-	read_mac (i, m_addr1);
-	i.next (6);
+	i = read_mac (i, m_addr1);
 	switch (m_ctrl_type) {
 	case TYPE_MGT:
-		read_mac (i, m_addr2);
-		i.next (6);
-		read_mac (i, m_addr3);
-		i.next (6);
+		i = read_mac (i, m_addr2);
+		i = read_mac (i, m_addr3);
 		set_sequence_control (i.read_ntoh_u16 ());
 		i.next (2);
 		break;
 	case TYPE_CTL:
 		switch (m_ctrl_subtype) {
 		case SUBTYPE_CTL_RTS:
-			read_mac (i, m_addr2);
-			i.next (6);
+			i = read_mac (i, m_addr2);
 			break;
 		case SUBTYPE_CTL_CTS:
 		case SUBTYPE_CTL_ACK:
@@ -861,15 +852,12 @@ ChunkMac80211Hdr::remove_from (Buffer *buffer)
 		if (m_ctrl_subtype & 0x08) {
 			size += 2;
 		}
-		read_mac (i, m_addr2);
-		i.next (6);
-		read_mac (i, m_addr3);
-		i.next (6);
+		i = read_mac (i, m_addr2);
+		i = read_mac (i, m_addr3);
 		set_sequence_control (i.read_ntoh_u16 ());
 		i.next (2);
 		if (m_ctrl_to_ds && m_ctrl_from_ds) {
-			read_mac (i, m_addr4);
-			i.next (6);
+			i = read_mac (i, m_addr4);
 		}
 		if (m_ctrl_subtype & 0x08) {
 			set_qos_control (i.read_ntoh_u16 ());
