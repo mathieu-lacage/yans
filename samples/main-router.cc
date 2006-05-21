@@ -110,6 +110,8 @@ int main (int argc, char *argv[])
 	/* destroy network */
 	delete eth_client;
 	delete eth_server;
+	delete eth_router_client;
+	delete eth_router_server;
 	delete client_cable;
 	delete server_cable;
 	delete source;
