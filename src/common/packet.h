@@ -31,16 +31,22 @@
 
 namespace yans {
 
+class Packet;
 class Chunk;
 class Buffer;
 class Tag;
 
+class PacketFactory {
+public:
+	static Packet *create (void);
+private:
+	friend class Packet;
+	static void recycle (Packet *packet);
+};
 
 class Packet {
 public:
 	typedef Callback<void,uint8_t *,uint32_t> PacketReadWriteCallback;
-	Packet ();
-	~Packet ();
 
 	void ref (void) const;
 	void unref (void) const;
@@ -64,6 +70,11 @@ public:
 	void read (PacketReadWriteCallback callback, uint32_t to_read);
 
  private:
+	friend class PacketFactory;
+	void reset (void);
+	Packet ();
+	~Packet ();
+
 	typedef std::list<std::pair<uint32_t, Tag *> >Tags;
 	typedef std::list<std::pair<uint32_t, Tag *> >::iterator TagsI;
 	Tags m_tags;

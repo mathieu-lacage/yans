@@ -151,7 +151,7 @@ MacHighNqsta::send_probe_request (void)
 	hdr.set_addr3 (get_broadcast_bssid ());
 	hdr.set_ds_not_from ();
 	hdr.set_ds_to ();
-	Packet *packet = new Packet ();
+	Packet *packet = PacketFactory::create ();
 	ChunkMgtProbeRequest probe;
 	probe.set_ssid (m_interface->get_ssid ());
 	SupportedRates rates = get_supported_rates ();
@@ -176,7 +176,7 @@ MacHighNqsta::send_association_request ()
 	hdr.set_addr3 (get_bssid ());
 	hdr.set_ds_not_from ();
 	hdr.set_ds_to ();
-	Packet *packet = new Packet ();
+	Packet *packet = PacketFactory::create ();
 	ChunkMgtAssocRequest assoc;
 	assoc.set_ssid (m_interface->get_ssid ());
 	SupportedRates rates = get_supported_rates ();

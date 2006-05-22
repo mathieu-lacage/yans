@@ -188,7 +188,7 @@ MacSimple::receive_error (Packet const*packet, double snr)
 void
 MacSimple::send_cts (uint8_t tx_mode, MacAddress to, uint8_t rts_snr)
 {
-	Packet *packet = new Packet ();
+	Packet *packet = PacketFactory::create ();
 	ChunkMac80211Hdr cts;
 	cts.set_type (MAC_80211_CTL_CTS);
 	cts.set_addr1 (to);
@@ -200,7 +200,7 @@ MacSimple::send_cts (uint8_t tx_mode, MacAddress to, uint8_t rts_snr)
 void
 MacSimple::send_ack (uint8_t tx_mode, MacAddress to, uint8_t data_snr)
 {
-	Packet *packet = new Packet ();
+	Packet *packet = PacketFactory::create ();
 	ChunkMac80211Hdr ack;
 	ack.set_type (MAC_80211_CTL_ACK);
 	ack.set_addr1 (to);
@@ -214,7 +214,7 @@ void
 MacSimple::send_rts (void)
 {
 	MacStation *station = get_station (m_current_to);
-	Packet *packet = new Packet ();
+	Packet *packet = PacketFactory::create ();
 	ChunkMac80211Hdr rts;
 	rts.set_type (MAC_80211_CTL_RTS);
 	rts.set_addr1 (m_current_to);

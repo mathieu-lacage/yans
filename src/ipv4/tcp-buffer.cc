@@ -177,7 +177,7 @@ TcpBuffer::add_at (Packet const *packet, uint32_t seq_offset)
 	insert_piece_at_back (piece, offset);
  done:
 	if (piece->get_size () == 0) {
-		delete piece;
+		piece->unref ();
 		CHECK_STATE;
 		return 0;
 	}
@@ -206,7 +206,7 @@ Packet *
 TcpBuffer::get_at (uint32_t offset, uint32_t size)
 {
 	assert (size > 0);
-	Packet *packet = new Packet ();
+	Packet *packet = PacketFactory::create ();
 	uint32_t expected_start = 0;
 	uint32_t end = offset + size;
 	bool adding = false;
@@ -355,7 +355,7 @@ private:
 Packet *
 TcpBufferTest::create_one_packet (uint32_t size)
 {
-	Packet *packet = new Packet ();
+	Packet *packet = PacketFactory::create ();
 	ChunkConstantData data (size, 0);
 	packet->add (&data);
 	return packet;

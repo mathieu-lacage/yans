@@ -74,6 +74,33 @@ Buffer::~Buffer ()
 	m_total_added_end = 0xdeadbeaf;
 }
 
+void 
+Buffer::cleanup (void)
+{
+	remove_at_start (get_size ());
+	record_buffer_stats (m_total_added_start, m_total_added_end);
+}
+void 
+Buffer::reset (void)
+{
+	m_start = get_prefered_start ();
+	m_size = 0;
+	if (m_real_size != get_prefered_size ()) {
+		delete [] m_data;
+		if (get_prefered_size () > 0) {
+			TRACE ("allocating size="<<get_prefered_size ()<<", at="<<m_start);
+			m_data = alloc_and_zero (get_prefered_size ());
+			m_real_size = get_prefered_size ();
+		} else {
+			m_data = 0;
+			m_real_size = 0;
+		}
+	}
+	m_total_added_start = 0;
+	m_total_added_end = 0;
+}
+
+
 void
 Buffer::record_buffer_stats (uint32_t start, uint32_t end)
 {

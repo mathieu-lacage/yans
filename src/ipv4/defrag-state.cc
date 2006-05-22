@@ -118,7 +118,7 @@ DefragState::get_complete (void)
 {
 	assert (is_complete ());
 
-	Packet *packet = new Packet ();
+	Packet *packet = PacketFactory::create ();
 	for (FragmentsI i = m_fragments.begin (); i != m_fragments.end (); i++) {
 		packet->add_at_end ((*i).get_fragment ());
 	}

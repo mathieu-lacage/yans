@@ -103,7 +103,7 @@ PeriodicGenerator::send_next_packet (void)
 	m_current_event = make_cancellable_event (&PeriodicGenerator::send_next_packet, this);
 	Simulator::insert_in_us (m_interval_us, m_current_event);
 	/* create packet. */
-	Packet *packet = new Packet ();
+	Packet *packet = PacketFactory::create ();
 	ChunkConstantData data (m_size, m_n);
 	packet->add (&data);
 	m_callback (packet);

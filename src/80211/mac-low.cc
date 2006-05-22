@@ -703,7 +703,7 @@ MacLow::send_rts_for_packet (void)
 	m_cts_timeout_event = make_cancellable_event (&MacLow::cts_timeout, this);
 	Simulator::insert_in_s (timer_delay_us, m_cts_timeout_event);
 
-	Packet *packet = new Packet ();
+	Packet *packet = PacketFactory::create ();
 	packet->add (&rts);
 	ChunkMac80211Fcs fcs;
 	packet->add (&fcs);
@@ -818,7 +818,7 @@ MacLow::send_cts_after_rts (MacAddress source, uint64_t duration_us, uint8_t tx_
 	duration_us -= get_sifs_us ();
 	cts.set_duration_us (duration_us);
 
-	Packet *packet = new Packet ();
+	Packet *packet = PacketFactory::create ();
 	packet->add (&cts);
 	ChunkMac80211Fcs fcs;
 	packet->add (&fcs);
@@ -887,7 +887,7 @@ MacLow::send_ack_after_data (MacAddress source, uint64_t duration_us, uint8_t tx
 	duration_us -= get_sifs_us ();
 	ack.set_duration_us (duration_us);
 
-	Packet *packet = new Packet ();
+	Packet *packet = PacketFactory::create ();
 	packet->add (&ack);
 	ChunkMac80211Fcs fcs;
 	packet->add (&fcs);

@@ -65,7 +65,7 @@ public:
 		packet->ref ();
 		m_fragments.push_back (packet);
 		m_defragmenting = false;
-		Packet *full = new Packet ();
+		Packet *full = PacketFactory::create ();
 		for (FragmentsCI i = m_fragments.begin (); i != m_fragments.end (); i++) {
 			full->add_at_end (*i);
 			(*i)->unref ();

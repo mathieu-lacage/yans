@@ -120,7 +120,7 @@ ArpIpv4NetworkInterface::send_arp_request (Ipv4Address to)
 	arp.set_request (m_interface->get_mac_address (),
 			 get_address (),
 			 to);
-	Packet *packet = new Packet ();
+	Packet *packet = PacketFactory::create ();
 	packet->add (&arp);
 	m_llc->send_arp (packet, MacAddress::get_broadcast ());
 	packet->unref ();
@@ -133,7 +133,7 @@ ArpIpv4NetworkInterface::send_arp_reply (Ipv4Address to_ip, MacAddress to_mac)
 	arp.set_reply (m_interface->get_mac_address (),
 		       get_address (),
 		       to_mac, to_ip);
-	Packet *packet = new Packet ();
+	Packet *packet = PacketFactory::create ();
 	packet->add (&arp);
 	m_llc->send_arp (packet, to_mac);
 	packet->unref ();

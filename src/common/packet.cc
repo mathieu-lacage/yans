@@ -38,6 +38,50 @@ std::cout << "PACKET TRACE " << Simulator::now_s () << " " << x << std::endl;
 
 
 namespace yans {
+#if 1
+typedef std::vector<Packet *> Packets;
+typedef std::vector<Packet *>::iterator PacketsI;
+static Packets g_packets;
+
+
+Packet *
+PacketFactory::create (void)
+{
+	if (g_packets.empty ()) {
+		return new Packet ();
+	} else {
+		Packet *p = g_packets.back ();
+		g_packets.pop_back ();
+		p->reset ();
+		return p;
+	}
+}
+
+void
+PacketFactory::recycle (Packet *packet)
+{
+	if (g_packets.size () < 2000) {
+		// resurect the packet and store it.
+		packet->m_count++;
+		packet->m_buffer->cleanup ();
+		g_packets.push_back (packet);
+	} else {
+		delete packet;
+	}
+}
+#else
+Packet *
+PacketFactory::create (void)
+{
+	return new Packet ();
+}
+
+void
+PacketFactory::recycle (Packet *packet)
+{
+	delete packet;
+}
+#endif
 
 Packet::Packet ()
 	: m_count (1),
@@ -64,8 +108,13 @@ Packet::unref (void) const
 {
 	m_count--;
 	if (m_count == 0) {
-		delete this;
+		PacketFactory::recycle (const_cast<Packet*>(this));
 	}
+}
+void
+Packet::reset (void)
+{
+	m_buffer->reset ();
 }
 
 Packet *
@@ -79,7 +128,7 @@ Packet::copy (uint32_t start_off, uint32_t length) const
 	assert (length <= get_size ());
 	assert (start_off < get_size ());
 	assert (start_off + length <= get_size ());
-	Packet *other = new Packet ();
+	Packet *other = PacketFactory::create ();
 	// XXX copy tags ?? !
 	Buffer *tmp = other->m_buffer;
 	tmp->add_at_start (length);

@@ -75,6 +75,9 @@ public:
 	Buffer ();
 	~Buffer ();
 
+	void cleanup (void);
+	void reset (void);
+
 	uint32_t get_size (void) const;
 
 	/* after a call to any of these methods, 
