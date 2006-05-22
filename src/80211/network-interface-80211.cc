@@ -38,7 +38,7 @@
 namespace yans {
 
 NetworkInterface80211::NetworkInterface80211 (MacAddress address)
-	: MacNetworkInterface (address, 1000),
+	: MacNetworkInterface (address, 2300),
 	  m_bytes_rx (0)
 {}
 
