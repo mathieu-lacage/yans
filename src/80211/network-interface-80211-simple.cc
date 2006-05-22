@@ -28,7 +28,6 @@
 #include "ipv4.h"
 #include "trace-container.h"
 #include "mac-simple.h"
-#include "chunk-mac-llc-snap.h"
 
 namespace yans {
 
