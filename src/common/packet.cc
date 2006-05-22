@@ -23,6 +23,7 @@
 #include "chunk.h"
 #include "buffer.h"
 #include "tag-manager.h"
+#include "tags.h"
 #include <cassert>
 
 #define TRACE_PACKET 1
@@ -85,7 +86,8 @@ PacketFactory::recycle (Packet *packet)
 
 Packet::Packet ()
 	: m_count (1),
-	  m_buffer (new Buffer ())
+	  m_buffer (new Buffer ()),
+	  m_stags (new STags ())
 {}
 
 Packet::~Packet ()
@@ -95,6 +97,7 @@ Packet::~Packet ()
 	}
 	m_tags.erase (m_tags.begin (), m_tags.end ());
 	delete m_buffer;
+	delete m_stags;
 }
 
 void 
@@ -180,6 +183,28 @@ Packet::remove_tag (uint32_t tag_id)
 	}
 	return 0;
 }
+
+void 
+Packet::add_stag (STag const*tag)
+{
+	m_stags->add (tag);
+}
+void 
+Packet::remove_stag (STag *tag)
+{
+	m_stags->remove (tag);
+}
+void 
+Packet::peek_stag (STag *tag)
+{
+	m_stags->peek (tag);
+}
+void 
+Packet::update_stag (STag *tag)
+{
+	m_stags->update (tag);
+}
+
 
 
 void 

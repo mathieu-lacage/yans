@@ -29,6 +29,8 @@ namespace yans {
  *           Network Route
  *****************************************************/
 
+Route::Route ()
+{}
 Route::Route (Route const &route)
 	: m_dest (route.m_dest),
 	  m_dest_network_mask (route.m_dest_network_mask),

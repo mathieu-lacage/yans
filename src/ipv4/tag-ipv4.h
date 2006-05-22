@@ -22,7 +22,7 @@
 #ifndef TAG_IPV4_H
 #define TAG_IPV4_H
 
-#include "tag-manager.h"
+#include "tags.h"
 #include "ipv4-address.h"
 #include "ipv4-route.h"
 
@@ -30,8 +30,9 @@ namespace yans {
 
 class Ipv4NetworkInterface;
 
-class TagOutIpv4 : public Tag {
+class TagOutIpv4 : public STag {
 public:
+	TagOutIpv4 ();
 	TagOutIpv4 (Route const *route);
 
 	uint16_t get_dport (void);
@@ -45,9 +46,11 @@ public:
 	void set_saddress (Ipv4Address saddress);
 
 	Route const *get_route (void);
-
-	static uint32_t get_tag (void);
+	
  private:
+	virtual uint32_t real_get_id (void) const;
+	virtual uint32_t real_get_size (void) const;
+
 	Route m_route;
 	Ipv4Address m_daddress;
 	Ipv4Address m_saddress;
@@ -55,8 +58,9 @@ public:
 	uint16_t m_dport;
 };
 
-class TagInIpv4 : public Tag {
+class TagInIpv4 : public STag {
 public:
+	TagInIpv4 ();
 	TagInIpv4 (Ipv4NetworkInterface *interface);
 
 	Ipv4NetworkInterface *get_interface (void);
@@ -70,8 +74,10 @@ public:
 	void set_daddress (Ipv4Address daddress);
 	void set_saddress (Ipv4Address saddress);
 
-	static uint32_t get_tag (void);
 public:	
+	virtual uint32_t real_get_id (void) const;
+	virtual uint32_t real_get_size (void) const;
+
 	Ipv4NetworkInterface *m_interface;
 	Ipv4Address m_daddress;
 	Ipv4Address m_saddress;

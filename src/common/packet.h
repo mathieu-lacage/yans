@@ -35,6 +35,8 @@ class Packet;
 class Chunk;
 class Buffer;
 class Tag;
+class STags;
+class STag;
 
 class PacketFactory {
 public:
@@ -58,6 +60,11 @@ public:
 	void add_tag (uint32_t tag_id, Tag *tag);
 	Tag *get_tag (uint32_t tag_id);
 	Tag *remove_tag (uint32_t tag_id);
+
+	void add_stag (STag const*tag);
+	void remove_stag (STag *tag);
+	void peek_stag (STag *tag);
+	void update_stag (STag *tag);
 	
 	void add (Chunk *chunk);
 	void add_at_end (Packet const*packet);
@@ -80,6 +87,7 @@ public:
 	Tags m_tags;
 	mutable uint32_t m_count;
 	Buffer *m_buffer;
+	STags *m_stags;
 };
 
 std::ostream& operator<< (std::ostream& os, Packet const& packet);

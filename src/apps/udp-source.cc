@@ -82,12 +82,12 @@ UdpSource::send (Packet *packet)
 		// no route to send packet to. !
 		return;
 	}
-	TagOutIpv4 *tag = new TagOutIpv4 (route);
-	tag->set_sport (m_end_point->get_local_port ());
-	tag->set_dport (m_peer_port);
-	tag->set_daddress (m_peer_address);
-	tag->set_saddress (m_end_point->get_local_address ());
-	packet->add_tag (TagOutIpv4::get_tag (), tag);
+	TagOutIpv4 tag = TagOutIpv4 (route);
+	tag.set_sport (m_end_point->get_local_port ());
+	tag.set_dport (m_peer_port);
+	tag.set_daddress (m_peer_address);
+	tag.set_saddress (m_end_point->get_local_address ());
+	packet->add_stag (&tag);
 	/* send packet. */
 	m_host->get_udp ()->send (packet);
 }

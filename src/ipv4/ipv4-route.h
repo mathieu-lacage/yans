@@ -32,6 +32,7 @@ class Ipv4NetworkInterface;
 
 class Route {
 public:
+	Route ();
 	Route (Route const &route);
 
 	bool is_host (void) const;
