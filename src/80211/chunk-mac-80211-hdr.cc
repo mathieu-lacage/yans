@@ -29,8 +29,9 @@ write_mac (yans::Buffer::Iterator i, yans::MacAddress const mac)
 	uint8_t ad[6];
 	mac.peek (ad);
 	i.write (ad, 6);
-	i.next (6);
-	return i;
+	yans::Buffer::Iterator retval = i;
+	retval.next (6);
+	return retval;
 }
 yans::Buffer::Iterator
 read_mac (yans::Buffer::Iterator i, yans::MacAddress &mac)
@@ -38,8 +39,9 @@ read_mac (yans::Buffer::Iterator i, yans::MacAddress &mac)
 	uint8_t ad[6];
 	i.read (ad, 6);
 	mac.set (ad);
-	i.next (6);
-	return i;
+	yans::Buffer::Iterator retval = i;
+	retval.next (6);
+	return retval;
 }
 
 }
@@ -594,15 +596,15 @@ uint16_t
 ChunkMac80211Hdr::get_frame_control (void) const
 {
 	uint16_t val = 0;
-	val |= (m_ctrl_type << 2) & 0x3;
-	val |= (m_ctrl_subtype << 4) & 0xf;
-	val |= (m_ctrl_to_ds << 8) & 0x1;
-	val |= (m_ctrl_from_ds << 9) & 0x1;
-	val |= (m_ctrl_more_frag << 10) & 0x1;
-	val |= (m_ctrl_retry << 11) & 0x1;
-	val |= (m_ctrl_more_data << 13) & 0x1;
-	val |= (m_ctrl_wep << 14) & 0x1;
-	val |= (m_ctrl_order << 15) & 0x1;
+	val |= (m_ctrl_type << 2) & (0x3<<2);
+	val |= (m_ctrl_subtype << 4) & (0xf<<4);
+	val |= (m_ctrl_to_ds << 8) & (0x1<<8);
+	val |= (m_ctrl_from_ds << 9) & (0x1<<9);
+	val |= (m_ctrl_more_frag << 10) & (0x1<<10);
+	val |= (m_ctrl_retry << 11) & (0x1<<11);
+	val |= (m_ctrl_more_data << 13) & (0x1<<13);
+	val |= (m_ctrl_wep << 14) & (0x1<<14);
+	val |= (m_ctrl_order << 15) & (0x1<<15);
 	return val;
 }
 
@@ -741,15 +743,15 @@ case MAC_80211_ ## x: \
 void 
 ChunkMac80211Hdr::add_to (Buffer *buffer) const
 {
-	Buffer::Iterator i;
+	buffer->add_at_start (get_size ());
+	Buffer::Iterator i = buffer->begin ();
+	i.write_hton_u16 (get_frame_control ());
+	i.next (2);
+	i.write_hton_u16 (m_duration);
+	i.next (2);
+	i = write_mac (i, m_addr1);
 	switch (m_ctrl_type) {
 	case TYPE_MGT:
-		buffer->add_at_start (2+2+6+6+6+2);
-		i = buffer->begin ();
-		i.write_hton_u16 (get_frame_control ());
-		i.next (2);
-		i.write_hton_u16 (m_duration);
-		i = write_mac (i, m_addr1);
 		i = write_mac (i, m_addr2);
 		i = write_mac (i, m_addr3);
 		i.write_hton_u16 (get_sequence_control ());
@@ -757,24 +759,10 @@ ChunkMac80211Hdr::add_to (Buffer *buffer) const
 	case TYPE_CTL:
 		switch (m_ctrl_subtype) {
 		case SUBTYPE_CTL_RTS:
-			buffer->add_at_start (2+2+6+6);
-			i = buffer->begin ();
-			i.write_hton_u16 (get_frame_control ());
-			i.next (2);
-			i.write_hton_u16 (m_duration);
-			i.next (2);
-			i = write_mac (i, m_addr1);
 			i = write_mac (i, m_addr2);
 			break;
 		case SUBTYPE_CTL_CTS:
 		case SUBTYPE_CTL_ACK:
-			buffer->add_at_start (2+2+6);
-			i = buffer->begin ();
-			i.write_hton_u16 (get_frame_control ());
-			i.next (2);
-			i.write_hton_u16 (m_duration);
-			i.next (2);
-			i = write_mac (i, m_addr1);
 			break;
 		case SUBTYPE_CTL_BACKREQ:
 		case SUBTYPE_CTL_BACKRESP:
@@ -788,20 +776,6 @@ ChunkMac80211Hdr::add_to (Buffer *buffer) const
 		}
 		break;
 	case TYPE_DATA: {
-		uint32_t size = 2+2+6+6+6+2;
-		if (m_ctrl_to_ds && m_ctrl_from_ds) {
-			size += 6;
-		}
-		if (m_ctrl_subtype & 0x08) {
-			size += 2;
-		}
-		buffer->add_at_start (size);
-		i = buffer->begin ();
-		i.write_hton_u16 (get_frame_control ());
-		i.next (2);
-		i.write_hton_u16 (m_duration);
-		i.next (2);
-		i = write_mac (i, m_addr1);
 		i = write_mac (i, m_addr2);
 		i = write_mac (i, m_addr3);
 		i.write_hton_u16 (get_sequence_control ());
@@ -853,13 +827,6 @@ ChunkMac80211Hdr::remove_from (Buffer *buffer)
 		}
 		break;
 	case TYPE_DATA:
-		uint32_t size = 2+2+6+6+6+2;
-		if (m_ctrl_to_ds && m_ctrl_from_ds) {
-			size += 6;
-		}
-		if (m_ctrl_subtype & 0x08) {
-			size += 2;
-		}
 		i = read_mac (i, m_addr2);
 		i = read_mac (i, m_addr3);
 		set_sequence_control (i.read_ntoh_u16 ());
