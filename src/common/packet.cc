@@ -115,6 +115,10 @@ void
 Packet::reset (void)
 {
 	m_buffer->reset ();
+	for (TagsI k = m_tags.begin (); k != m_tags.end (); k++) {
+		delete (*k).second;
+	}
+	m_tags.erase (m_tags.begin (), m_tags.end ());
 }
 
 Packet *
