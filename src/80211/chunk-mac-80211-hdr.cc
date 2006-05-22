@@ -594,15 +594,15 @@ uint16_t
 ChunkMac80211Hdr::get_frame_control (void) const
 {
 	uint16_t val = 0;
-	val |= m_ctrl_type << 2;
-	val |= m_ctrl_subtype << 4;
-	val |= m_ctrl_to_ds << 8;
-	val |= m_ctrl_from_ds << 9;
-	val |= m_ctrl_more_frag << 10;
-	val |= m_ctrl_retry << 11;
-	val |= m_ctrl_more_data << 13;
-	val |= m_ctrl_wep << 14;
-	val |= m_ctrl_order << 15;
+	val |= (m_ctrl_type << 2) & 0x3;
+	val |= (m_ctrl_subtype << 4) & 0xf;
+	val |= (m_ctrl_to_ds << 8) & 0x1;
+	val |= (m_ctrl_from_ds << 9) & 0x1;
+	val |= (m_ctrl_more_frag << 10) & 0x1;
+	val |= (m_ctrl_retry << 11) & 0x1;
+	val |= (m_ctrl_more_data << 13) & 0x1;
+	val |= (m_ctrl_wep << 14) & 0x1;
+	val |= (m_ctrl_order << 15) & 0x1;
 	return val;
 }
 
@@ -781,6 +781,10 @@ ChunkMac80211Hdr::add_to (Buffer *buffer) const
 			// NOT IMPLEMENTED
 			assert (false);
 			break;
+		default:
+			//NOTREACHED
+			assert (false);
+			break;
 		}
 		break;
 	case TYPE_DATA: {
@@ -810,13 +814,17 @@ ChunkMac80211Hdr::add_to (Buffer *buffer) const
 			i.next (2);
 		}
 		} break;
+	default:
+		//NOTREACHED
+		assert (false);
+		break;
 	}
 }
 void 
 ChunkMac80211Hdr::remove_from (Buffer *buffer)
 {
 	Buffer::Iterator i = buffer->begin ();
-	uint32_t frame_control = i.read_ntoh_u16 ();
+	uint16_t frame_control = i.read_ntoh_u16 ();
 	i.next (2);
 	set_frame_control (frame_control);
 	m_duration = i.read_ntoh_u16 ();
