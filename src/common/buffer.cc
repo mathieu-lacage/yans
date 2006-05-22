@@ -406,8 +406,9 @@ uint8_t
 Buffer::Iterator::read_u8 (void)
 {
 	assert (m_current + 1 <= m_end);
-	return *m_current;
-	m_current ++;
+	uint8_t data = *m_current;
+	m_current++;
+	return data;
 }
 uint16_t 
 Buffer::Iterator::read_u16 (void)
