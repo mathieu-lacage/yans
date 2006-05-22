@@ -62,7 +62,7 @@ private:
 	struct IndexEntry {
 		uint32_t id;
 		uint32_t size;
-		uint8_t *start;
+		uint32_t start;
 	};
 	typedef std::vector<struct IndexEntry> Index;
 	typedef std::vector<struct IndexEntry>::iterator IndexI;

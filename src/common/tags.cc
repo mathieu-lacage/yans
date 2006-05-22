@@ -56,12 +56,13 @@ STags::STags (STags const &o)
 	  m_size (o.m_size),
 	  m_data (new uint8_t [o.m_real_size])
 {
-	memcpy (m_data, o.m_data, m_size);
+	memcpy (m_data, o.m_data, o.m_size);
 	m_index.insert (m_index.begin (), o.m_index.begin (), o.m_index.end ());
 }
 STags::~STags ()
 {
 	delete m_data;
+	m_index.erase (m_index.begin (), m_index.end ());
 }
 
 STags *
@@ -95,7 +96,7 @@ STags::add (STag const *tag)
 	struct STags::IndexEntry index;
 	index.id = tag->real_get_id ();
 	index.size = tag->real_get_size ();
-	index.start = m_data + m_size;
+	index.start = m_size;
 	m_index.push_back (index);
 	reserve_at_end (tag->real_get_size ());
 	memcpy (m_data+m_size, tag, tag->real_get_size ());
@@ -107,7 +108,8 @@ STags::peek (STag *tag)
 	uint32_t id = tag->real_get_id ();
 	for (IndexI i = m_index.begin (); i != m_index.end (); i++) {
 		if (i->id == id) {
-			memcpy (tag, i->start, i->size);
+			memcpy (tag, m_data + i->start, i->size);
+			assert (tag->real_get_id () == id);
 			return;
 		}
 	}
@@ -120,9 +122,7 @@ STags::remove (STag *tag)
 	uint32_t id = tag->real_get_id ();
 	for (IndexI i = m_index.begin (); i != m_index.end (); i++) {
 		if (i->id == id) {
-			uint8_t *start = i->start;
-			uint32_t size = i->size;
-			memcpy (tag, start, size);
+			memcpy (tag, m_data + i->start, i->size);
 			m_index.erase (i);
 			return;
 		}
@@ -136,7 +136,7 @@ STags::update (STag *tag)
 	uint32_t id = tag->real_get_id ();
 	for (IndexI i = m_index.begin (); i != m_index.end (); i++) {
 		if (i->id == id) {
-			memcpy (i->start, tag, i->size);
+			memcpy (m_data + i->start, tag, i->size);
 			return;
 		}
 	}
