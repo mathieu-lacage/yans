@@ -316,6 +316,7 @@ Buffer::Iterator::write (Iterator start, Iterator end)
 	unsigned long int i_size = i_end - i_start;
 	assert (m_current + i_size <= m_end);
 	memcpy (m_current, start.m_current, i_size);
+	m_current += i_size;
 }
 
 void 
@@ -323,6 +324,7 @@ Buffer::Iterator::write_u8 (uint8_t  data, uint32_t len)
 {
 	assert (m_current + len <= m_end);
 	memset (m_current, data, len);
+	m_current += len;
 }
 
 #ifndef INL_EXPE
@@ -331,6 +333,7 @@ Buffer::Iterator::write_u8  (uint8_t  data)
 {
 	assert (m_current + 1 <= m_end);
 	*m_current = data;
+	m_current++;
 }
 #endif
 void 
@@ -339,6 +342,7 @@ Buffer::Iterator::write_u16 (uint16_t data)
 	assert (m_current + 2 <= m_end);
 	uint16_t *buffer = (uint16_t *)m_current;
 	*buffer = data;
+	m_current += 2;
 }
 void 
 Buffer::Iterator::write_u32 (uint32_t data)
@@ -346,6 +350,7 @@ Buffer::Iterator::write_u32 (uint32_t data)
 	assert (m_current + 4 <= m_end);
 	uint32_t *buffer = (uint32_t *)m_current;
 	*buffer = data;
+	m_current += 4;
 }
 void 
 Buffer::Iterator::write_u64 (uint64_t data)
@@ -353,6 +358,7 @@ Buffer::Iterator::write_u64 (uint64_t data)
 	assert (m_current + 8 <= m_end);
 	uint64_t *buffer = (uint64_t *)m_current;
 	*buffer = data;
+	m_current += 8;
 }
 #ifndef INL_EXPE
 void 
@@ -361,6 +367,7 @@ Buffer::Iterator::write_hton_u16 (uint16_t data)
 	assert (m_current + 2 <= m_end);
 	*(m_current+0) = (data >> 8) & 0xff;
 	*(m_current+1) = (data >> 0) & 0xff;
+	m_current += 2;
 }
 #endif
 void 
@@ -371,6 +378,7 @@ Buffer::Iterator::write_hton_u32 (uint32_t data)
 	*(m_current+1) = (data >> 16) & 0xff;
 	*(m_current+2) = (data >> 8) & 0xff;
 	*(m_current+3) = (data >> 0) & 0xff;
+	m_current += 4;
 }
 void 
 Buffer::Iterator::write_hton_u64 (uint64_t data)
@@ -384,12 +392,14 @@ Buffer::Iterator::write_hton_u64 (uint64_t data)
 	*(m_current+5) = (data >> 16) & 0xff;
 	*(m_current+6) = (data >> 8) & 0xff;
 	*(m_current+7) = (data >> 0) & 0xff;
+	m_current += 8;
 }
 void 
 Buffer::Iterator::write (uint8_t const*buffer, uint16_t size)
 {
 	assert (m_current + size <= m_end);
 	memcpy (m_current, buffer, size);
+	m_current += size;
 }
 
 uint8_t  
@@ -397,12 +407,14 @@ Buffer::Iterator::read_u8 (void)
 {
 	assert (m_current + 1 <= m_end);
 	return *m_current;
+	m_current ++;
 }
 uint16_t 
 Buffer::Iterator::read_u16 (void)
 {
 	assert (m_current + 2 <= m_end);
 	uint16_t *buffer = reinterpret_cast<uint16_t *>(m_current);
+	m_current += 2;
 	return *buffer;
 }
 uint32_t 
@@ -410,6 +422,7 @@ Buffer::Iterator::read_u32 (void)
 {
 	assert (m_current + 4 <= m_end);
 	uint32_t *buffer = reinterpret_cast<uint32_t *>(m_current);
+	m_current += 4;
 	return *buffer;
 }
 uint64_t 
@@ -417,6 +430,7 @@ Buffer::Iterator::read_u64 (void)
 {
 	assert (m_current + 8 <= m_end);
 	uint64_t *buffer = reinterpret_cast<uint64_t *>(m_current);
+	m_current += 8;
 	return *buffer;
 }
 uint16_t 
@@ -426,6 +440,7 @@ Buffer::Iterator::read_ntoh_u16 (void)
 	uint16_t retval = 0;
 	retval |= static_cast<uint16_t> (m_current[0]) << 8;
 	retval |= static_cast<uint16_t> (m_current[1]) << 0;
+	m_current += 2;
 	return retval;
 }
 uint32_t 
@@ -437,6 +452,7 @@ Buffer::Iterator::read_ntoh_u32 (void)
 	retval |= static_cast<uint32_t> (m_current[1]) << 16;
 	retval |= static_cast<uint32_t> (m_current[2]) << 8;
 	retval |= static_cast<uint32_t> (m_current[3]) << 0;
+	m_current += 4;
 	return retval;
 }
 uint64_t 
@@ -452,6 +468,7 @@ Buffer::Iterator::read_ntoh_u64 (void)
 	retval |= static_cast<uint64_t> (m_current[5]) << 16;
 	retval |= static_cast<uint64_t> (m_current[6]) << 8;
 	retval |= static_cast<uint64_t> (m_current[7]) << 0;
+	m_current += 8;
 	return retval;
 }
 void 
@@ -459,6 +476,7 @@ Buffer::Iterator::read (uint8_t *buffer, uint16_t size)
 {
 	assert (m_current + size <= m_end);
 	memcpy (buffer, m_current, size);
+	m_current += size;
 }
 
 }; // namespace yans
@@ -526,17 +544,15 @@ run_tests (void)
 	buffer->add_at_start (6);
 	i = buffer->begin ();
 	i.write_u8 (0x66);
-	ENSURE_WRITTEN_BYTES (i, 1, 0x66);
+	ENSURE_WRITTEN_BYTES (buffer->begin (), 1, 0x66);
 	i = buffer->begin ();
 	i.write_u8 (0x67);
-	ENSURE_WRITTEN_BYTES (i, 1, 0x67);
-	i.next ();
+	ENSURE_WRITTEN_BYTES (buffer->begin (), 1, 0x67);
 	i.write_hton_u16 (0x6568);
 	i = buffer->begin ();
-	ENSURE_WRITTEN_BYTES (i, 3, 0x67, 0x65, 0x68);
+	ENSURE_WRITTEN_BYTES (buffer->begin (), 3, 0x67, 0x65, 0x68);
 	i.write_hton_u16 (0x6369);
-	ENSURE_WRITTEN_BYTES (i, 2, 0x63, 0x69);
-	i.next (2);
+	ENSURE_WRITTEN_BYTES (buffer->begin (), 3, 0x63, 0x69, 0x68);
 	i.write_hton_u32 (0xdeadbeaf);
 	ENSURE_WRITTEN_BYTES (buffer->begin (), 6, 0x63, 0x69, 0xde, 0xad, 0xbe, 0xaf);
 	buffer->add_at_start (2);
@@ -550,24 +566,27 @@ run_tests (void)
 	ENSURE_WRITTEN_BYTES (buffer->begin (), 10, 0, 0, 0x63, 0x69, 0xde, 0xad, 0xbe, 0xaf, 0, 0);
 	buffer->remove_at_start (3);
 	i = buffer->begin ();
-	ENSURE_WRITTEN_BYTES (i, 7, 0x69, 0xde, 0xad, 0xbe, 0xaf, 0, 0);
+	ENSURE_WRITTEN_BYTES (buffer->begin (), 7, 0x69, 0xde, 0xad, 0xbe, 0xaf, 0, 0);
 	buffer->remove_at_end (4);
 	i = buffer->begin ();
-	ENSURE_WRITTEN_BYTES (i, 3, 0x69, 0xde, 0xad);
+	ENSURE_WRITTEN_BYTES (buffer->begin (), 3, 0x69, 0xde, 0xad);
 	buffer->add_at_start (1);
 	i = buffer->begin ();
 	i.write_u8 (0xff);
-	ENSURE_WRITTEN_BYTES (i, 4, 0xff, 0x69, 0xde, 0xad);
+	ENSURE_WRITTEN_BYTES (buffer->begin (), 4, 0xff, 0x69, 0xde, 0xad);
 	buffer->add_at_end (1);
 	i = buffer->begin ();
 	i.next (4);
 	i.write_u8 (0xff);
-	i.prev (1);
+	i.prev (2);
 	uint16_t saved = i.read_u16 ();
+	i.prev (2);
 	i.write_hton_u16 (0xff00);
+	i.prev (2);
 	if (i.read_ntoh_u16 () != 0xff00) {
 		ok = false;
 	}
+	i.prev (2);
 	i.write_u16 (saved);
 	ENSURE_WRITTEN_BYTES (buffer->begin (), 5, 0xff, 0x69, 0xde, 0xad, 0xff);
 	delete buffer;

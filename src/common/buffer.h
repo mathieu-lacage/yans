@@ -120,6 +120,7 @@ Buffer::Iterator::write_u8  (uint8_t  data)
 {
 	assert (m_current + 1 <= m_end);
 	*m_current = data;
+	m_current ++;
 }
 void 
 Buffer::Iterator::write_hton_u16 (uint16_t data)
@@ -127,6 +128,7 @@ Buffer::Iterator::write_hton_u16 (uint16_t data)
 	assert (m_current + 2 <= m_end);
 	*(m_current+0) = (data >> 8) & 0xff;
 	*(m_current+1) = (data >> 0) & 0xff;
+	m_current += 2;
 }
 }
 #endif
