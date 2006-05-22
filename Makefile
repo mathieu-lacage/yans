@@ -185,7 +185,6 @@ YANS_SRC:= \
 	src/arp/arp-ipv4-network-interface.cc \
 	src/arp/chunk-arp.cc \
 	src/arp/arp-cache-entry.cc \
-	src/arp/chunk-mac-llc-snap.cc \
 	src/host/loopback-ipv4.cc \
 	src/host/host.cc \
 	src/ethernet/cable.cc \
@@ -319,7 +318,6 @@ YANS_HDR := \
 	src/arp/arp-cache-entry.h \
 	src/arp/arp-ipv4-network-interface.h \
 	src/arp/chunk-arp.h \
-	src/arp/chunk-mac-llc-snap.h \
 	src/80211/chunk-mac-80211-hdr.h \
 	src/80211/chunk-mac-80211-fcs.h \
 	src/80211/mac-stations.h \
