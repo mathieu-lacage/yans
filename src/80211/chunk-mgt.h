@@ -50,6 +50,7 @@ public:
 	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
 private:
+	uint32_t get_size (void) const;
 	Ssid m_ssid;
 	SupportedRates m_rates;
 	CapabilityInformation m_capability;
@@ -67,6 +68,7 @@ public:
 	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
 private:
+	uint32_t get_size (void) const;
 	SupportedRates m_rates;
 	CapabilityInformation m_capability;
 	StatusCode m_code;
@@ -86,6 +88,7 @@ public:
 	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
 private:
+	uint32_t get_size (void) const;
 	Ssid m_ssid;
 	SupportedRates m_rates;
 };
@@ -107,6 +110,7 @@ public:
 	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
 private:
+	uint32_t get_size (void) const;
 	Ssid m_ssid;
 	uint64_t m_beacon_interval;
 	SupportedRates m_rates;

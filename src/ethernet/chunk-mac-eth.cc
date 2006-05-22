@@ -20,6 +20,7 @@
  */
 
 #include "chunk-mac-eth.h"
+#include "chunk-utils.h"
 #include "buffer.h"
 #include <cassert>
 
@@ -86,14 +87,8 @@ ChunkMacEth::add_to (Buffer *buffer) const
 {
 	buffer->add_at_start (get_size ());
 	Buffer::Iterator i = buffer->begin ();
-	uint8_t src[6];
-	uint8_t dst[6];
-	m_source.peek (src);
-	m_destination.peek (dst);
-	i.write (src, 6);
-	i.next (6);
-	i.write (dst, 6);
-	i.next (6);
+	write_to (i, m_source);
+	write_to (i, m_destination);
 	assert (m_length <= 0x05dc);
 	/* ieee 802.3 says length is msb. */
 	TRACE ("length="<<m_length);
@@ -103,14 +98,8 @@ void
 ChunkMacEth::remove_from (Buffer *buffer)
 {
 	Buffer::Iterator i = buffer->begin ();
-	uint8_t src[6];
-	uint8_t dst[6];
-	i.read (src, 6);
-	i.next (6);
-	i.read (dst, 6);
-	i.next (6);
-	m_source.set (src);
-	m_destination.set (dst);
+	read_from (i, m_source);
+	read_from (i, m_destination);
 	m_length = i.read_ntoh_u16 () - 8;
 	TRACE ("length="<<m_length);
 	buffer->remove_at_start (get_size ());

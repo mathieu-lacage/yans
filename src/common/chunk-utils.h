@@ -27,11 +27,11 @@
 
 namespace yans {
 
-Buffer::Iterator write_to (Buffer::Iterator i, Ipv4Address ad);
-Buffer::Iterator write_to (Buffer::Iterator i, MacAddress ad);
+void write_to (Buffer::Iterator &i, Ipv4Address ad);
+void write_to (Buffer::Iterator &i, MacAddress ad);
 
-Buffer::Iterator read_from (Buffer::Iterator i, Ipv4Address &ad);
-Buffer::Iterator read_from (Buffer::Iterator i, MacAddress &ad);
+void read_from (Buffer::Iterator &i, Ipv4Address &ad);
+void read_from (Buffer::Iterator &i, MacAddress &ad);
 
 };
 

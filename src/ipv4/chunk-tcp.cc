@@ -334,16 +334,11 @@ void ChunkTcp::add_to (Buffer *buffer) const
 	buffer->add_at_start (get_size ());
 	Buffer::Iterator i = buffer->begin ();
 	i.write_hton_u16 (m_source_port);
-	i.next (2);
 	i.write_hton_u16 (m_destination_port);
-	i.next (2);
 	i.write_hton_u32 (m_sequence_number);
-	i.next (4);
 	i.write_hton_u32 (m_ack_number);
-	i.next (4);
 	uint8_t header_length = ((get_size () / 4) & 0x0f) << 4;
 	i.write_u8 (header_length);
-	i.next ();
 	uint8_t flags = 0;
 	if (is_flag_urg ()) {
 		flags |= (1<<5);
@@ -364,48 +359,34 @@ void ChunkTcp::add_to (Buffer *buffer) const
 		flags |= (1<<0);
 	}
 	i.write_u8 (flags);
-	i.next ();
 	i.write_hton_u16 (m_window_size);
-	i.next (2);
 	i.write_hton_u16 (0);
-	i.next (2);
 	i.write_hton_u16 (m_urgent_pointer);
-	i.next (2);
 	if (is_option_mss ()) {
 		i.write_u8 (2);
-		i.next ();
 		i.write_u8 (4);
-		i.next ();
 		i.write_hton_u16 (m_option_mss);
-		i.next (2);
 	}
 	if (is_option_windowscale ()) {
 		i.write_u8 (3);
-		i.next ();
 		i.write_u8 (3);
-		i.next ();
 		i.write_u8 (m_option_windowscale);
-		i.next ();
 	}
 	if (is_option_timestamp ()) {
 		i.write_u8 (8);
-		i.next ();
 		i.write_u8 (10);
-		i.next ();
 		i.write_hton_u32 (m_option_timestamp_value);
-		i.next (4);
 		i.write_hton_u32 (m_option_timestamp_reply);
-		i.next (4);
 	}
 	uint32_t padding = get_padding ();
 	i.write_u8 (0, padding);
-	i.next (padding);
 
 	uint16_t checksum;
 	checksum = utils_checksum_calculate (m_initial_checksum, 
 					     buffer->begin ().peek_data (),
 					     buffer->get_size ());
 	checksum = utils_checksum_complete (checksum);
+	i = buffer->begin ();
 	i.next (16);
 	i.write_u16 (checksum);
 }
@@ -413,17 +394,11 @@ void ChunkTcp::remove_from (Buffer *buffer)
 {
 	Buffer::Iterator i = buffer->begin ();
 	m_source_port = i.read_ntoh_u16 ();
-	i.next (2);
 	m_destination_port = i.read_ntoh_u16 ();
-	i.next (2);
 	m_sequence_number = i.read_ntoh_u32 ();
-	i.next (4);
 	m_ack_number = i.read_ntoh_u32 ();
-	i.next (4);
         uint8_t header_length = i.read_u8 () >> 4;
-	i.next ();
 	uint8_t flags = i.read_u8 ();
-	i.next ();
 	if (flags & (1<<0)) {
 		enable_flag (FIN);
 	}
@@ -443,14 +418,12 @@ void ChunkTcp::remove_from (Buffer *buffer)
 		enable_flag (URG);
 	}
 	m_window_size = i.read_ntoh_u16 ();
-	i.next (2+2);
-	m_urgent_pointer = i.read_ntoh_u16 ();
 	i.next (2);
+	m_urgent_pointer = i.read_ntoh_u16 ();
 	assert (header_length >= 5);
 	int32_t options_length = (header_length - 5) * 4;
 	while (options_length > 0) {
 		uint8_t type = i.read_u8 ();
-		i.next ();
 		options_length--;
 		switch (type) {
 		case 0: // end-of-opt
@@ -461,46 +434,37 @@ void ChunkTcp::remove_from (Buffer *buffer)
 		case 2: {
 			uint8_t length = i.read_u8 ();
 			options_length -= length;
-			i.next ();
 			if (length != 4) {
 				goto out;
 			}
 			uint16_t mss = i.read_ntoh_u16 ();
-			i.next (2);
 			enable_option_mss (mss);
 		} break;
 		case 3: {
 			uint8_t length = i.read_u8 ();
 			options_length -= length;
-			i.next ();
 			if (length != 3) {
 				goto out;
 			}
 			uint8_t scale = i.read_u8 ();
-			i.next ();
 			enable_option_windowscale (scale);
 		} break;
 		case 8: {
 			uint8_t length = i.read_u8 ();
 			options_length -= length;
-			i.next ();
 			if (length != 10) {
 				goto out;
 			}
 			uint32_t value = i.read_ntoh_u32 ();
-			i.next (4);
 			uint32_t reply = i.read_ntoh_u32 ();
-			i.next (4);
 			enable_option_timestamp (value, reply);
 			break;
 		}
 		default:
 			uint8_t length = i.read_u8 ();
 			options_length -= length;
-			i.next ();
 			while (length > 0) {
 				i.read_u8 ();
-				i.next ();
 				length--;
 			}
 			break;

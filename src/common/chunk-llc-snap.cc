@@ -65,7 +65,7 @@ ChunkLlcSnap::add_to (Buffer *buffer) const
 	Buffer::Iterator i = buffer->begin ();
 	uint8_t buf[] = {0xaa, 0x03, 0, 0, 0};
 	i.write (buf, 5);
-	i.next (5+1);
+	i.next (1);
 	i.write_hton_u16 (m_ether_type);
 }
 void 

@@ -194,13 +194,9 @@ ChunkIpv4::add_to (Buffer *buffer) const
 	//TRACE ("init ipv4 current="<<buffer->get_current ());
 	uint8_t ver_ihl = (4 << 4) | (5);
 	i.write_u8 (ver_ihl);
-	i.next ();
 	i.write_u8 (m_tos);
-	i.next ();
 	i.write_hton_u16 (m_payload_size + 5*4);
-	i.next (2);
 	i.write_hton_u16 (m_identification);
-	i.next (2);
 	uint32_t fragment_offset = m_fragment_offset / 8;
 	uint8_t flags_frag = (fragment_offset >> 8) & 0x1f;
 	if (m_flags & DONT_FRAGMENT) {
@@ -210,20 +206,13 @@ ChunkIpv4::add_to (Buffer *buffer) const
 		flags_frag |= (1<<5);
 	}
 	i.write_u8 (flags_frag);
-	i.next ();
 	uint8_t frag = fragment_offset & 0xff;
 	i.write_u8 (frag);
-	i.next ();
 	i.write_u8 (m_ttl);
-	i.next ();
 	i.write_u8 (m_protocol);
-	i.next ();
 	i.write_hton_u16 (0);
-	i.next (2);
 	i.write_hton_u32 (m_source.get_host_order ());
-	i.next (4);
 	i.write_hton_u32 (m_destination.get_host_order ());
-	i.next (4);
 
 	i = buffer->begin ();
 	uint8_t *data = i.peek_data ();
@@ -239,19 +228,14 @@ ChunkIpv4::remove_from (Buffer *buffer)
 {
 	Buffer::Iterator i = buffer->begin ();
 	uint8_t ver_ihl = i.read_u8 ();
-	i.next ();
 	uint8_t ihl = ver_ihl & 0x0f; 
 	uint16_t header_size = ihl * 4;
 	assert ((ver_ihl >> 4) == 4);
 	m_tos = i.read_u8 ();
-	i.next ();
 	uint16_t size = i.read_ntoh_u16 ();
-	i.next (2);
 	m_payload_size = size - header_size;
 	m_identification = i.read_ntoh_u16 ();
-	i.next (2);
 	uint8_t flags = i.read_u8 ();
-	i.next ();
 	m_flags = 0;
 	if (flags & (1<<6)) {
 		m_flags |= DONT_FRAGMENT;
@@ -259,20 +243,15 @@ ChunkIpv4::remove_from (Buffer *buffer)
 	if (flags & (1<<5)) {
 		m_flags |= MORE_FRAGMENTS;
 	}
-	//XXXX ?
+	//XXXX I think we should clear some bits in fragment_offset !
 	i.prev ();
 	m_fragment_offset = i.read_ntoh_u16 ();
 	m_fragment_offset *= 8;
-	i.next (2);
 	m_ttl = i.read_u8 ();
-	i.next ();
 	m_protocol = i.read_u8 ();
-	i.next (1);
 	i.next (2); // checksum
 	m_source.set_host_order (i.read_ntoh_u32 ());
-	i.next (4);
 	m_destination.set_host_order (i.read_ntoh_u32 ());
-	i.next (4);
 
 	i = buffer->begin ();
 	uint8_t *data = i.peek_data ();

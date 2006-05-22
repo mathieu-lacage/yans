@@ -50,7 +50,6 @@ ChunkMacCrc::add_to (Buffer *buffer) const
 	i.next (end);
 	for (uint8_t j = 0; j < m_pad_size; j++) {
 		i.write_u8 (j);
-		i.next ();
 	}
 	i.write_u32 (0);
 }

@@ -84,55 +84,37 @@ ChunkIcmp::add_to (Buffer *buffer) const
 	buffer->add_at_start (get_size ());
 	Buffer::Iterator i = buffer->begin ();
 	i.write_u8 (m_type);
-	i.next ();
 	i.write_u8 (m_code);
-	i.next ();
 	i.write_hton_u16 (0);
-	i.next (2);
 	if (m_type == UNREACH ||
 	    m_type == TIME_EXCEEDED ||
 	    m_type == SOURCE_QUENCH) {
 		/* unused */
 		i.write_hton_u32 (0);
-		i.next (4);
 	} else if (m_type == PARAMETER_PROBLEM) {
 		/* pointer */
 		i.write_u8 (0);
-		i.next ();
 		/* unused */
 		i.write_u8 (0);
-		i.next ();
 		i.write_u8 (0);
-		i.next ();
 		i.write_u8 (0);
-		i.next ();
 	} else if (m_type == REDIRECT) {
 		i.write_hton_u32 (m_gateway.get_host_order ());
-		i.next (4);
 	} else if (m_type == ECHO ||
 		   m_type == ECHO_REPLY) {
 		i.write_hton_u16 (m_identifier);
-		i.next (2);
 		i.write_hton_u16 (m_seq_number);
-		i.next (2);
 	} else if (m_type == TIMESTAMP ||
 		   m_type == TIMESTAMP_REPLY) {
 		i.write_hton_u16 (m_identifier);
-		i.next (2);
 		i.write_hton_u16 (m_seq_number);
-		i.next (2);
 		i.write_hton_u32 (m_org_timestamp);
-		i.next (4);
 		i.write_hton_u32 (m_rx_timestamp);
-		i.next (4);
 		i.write_hton_u32 (m_tx_timestamp);
-		i.next (4);
 	} else if (m_type == INFORMATION_REQUEST ||
 		   m_type == INFORMATION_REPLY) {
 		i.write_hton_u16 (m_identifier);
-		i.next (2);
 		i.write_hton_u16 (m_seq_number);
-		i.next (2);
 	}	
 }
 void 

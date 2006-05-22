@@ -101,20 +101,15 @@ ChunkArp::add_to (Buffer *buffer) const
 
 	/* ethernet */
 	i.write_hton_u16 (0x0001);
-	i.next (2);
 	/* ipv4 */
 	i.write_hton_u16 (0x0800);
-	i.next (2);
 	i.write_u8 (6);
-	i.next ();
 	i.write_u8 (4);
-	i.next ();
 	i.write_hton_u16 (m_type);
-	i.next (2);
-	i = write_to (i, m_mac_source);
-	i = write_to (i, m_ipv4_source);
-	i = write_to (i, m_mac_dest);
-	i = write_to (i, m_ipv4_dest);
+	write_to (i, m_mac_source);
+	write_to (i, m_ipv4_source);
+	write_to (i, m_mac_dest);
+	write_to (i, m_ipv4_dest);
 }
 void 
 ChunkArp::remove_from (Buffer *buffer)
@@ -122,11 +117,10 @@ ChunkArp::remove_from (Buffer *buffer)
 	Buffer::Iterator i = buffer->begin ();
 	i.next (2+2+1+1);
 	m_type = i.read_ntoh_u16 ();
-	i.next (2);
-	i = read_from (i, m_mac_source);
-	i = read_from (i, m_ipv4_source);
-	i = read_from (i, m_mac_dest);
-	i = read_from (i, m_ipv4_dest);
+	read_from (i, m_mac_source);
+	read_from (i, m_ipv4_source);
+	read_from (i, m_mac_dest);
+	read_from (i, m_ipv4_dest);
 	buffer->remove_at_start (get_size ());
 }
 void 

@@ -22,34 +22,26 @@
 
 namespace yans {
 
-Buffer::Iterator write_to (Buffer::Iterator i, Ipv4Address ad)
+void write_to (Buffer::Iterator &i, Ipv4Address ad)
 {
 	i.write_hton_u32 (ad.get_host_order ());
-	i.next (4);
-	return i;
 }
-Buffer::Iterator write_to (Buffer::Iterator i, MacAddress ad)
+void write_to (Buffer::Iterator &i, MacAddress ad)
 {
 	uint8_t mac[6];
 	ad.peek (mac);
 	i.write (mac, 6);
-	i.next (6);
-	return i;
 }
 
-Buffer::Iterator read_from (Buffer::Iterator i, Ipv4Address &ad)
+void read_from (Buffer::Iterator &i, Ipv4Address &ad)
 {
 	ad.set_host_order (i.read_ntoh_u32 ());
-	i.next (4);
-	return i;
 }
-Buffer::Iterator read_from (Buffer::Iterator i, MacAddress &ad)
+void read_from (Buffer::Iterator &i, MacAddress &ad)
 {
 	uint8_t mac[6];
 	i.read (mac, 6);
 	ad.set (mac);
-	i.next (6);
-	return i;
 }
 
 
