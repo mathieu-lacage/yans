@@ -269,6 +269,8 @@ YANS_INST_HDR := \
 	src/common/position.h \
 	src/common/static-position.h \
 	src/common/static-speed-position.h \
+	src/ipv4/chunk-ipv4.h \
+	src/ipv4/chunk-udp.h \
 	src/ipv4/ipv4-route.h \
 	src/apps/periodic-generator.h \
 	src/apps/tcp-source.h \
@@ -282,6 +284,7 @@ YANS_INST_HDR := \
 	src/80211/network-interface-80211-factory.h \
 	src/80211/channel-80211.h \
 	src/80211/ssid.h \
+	src/80211/chunk-mac-80211-hdr.h \
 	src/host/host.h \
 	src/ethernet/cable.h \
 	src/ethernet/ethernet-network-interface.h \
@@ -301,21 +304,18 @@ YANS_HDR := \
 	src/ipv4/chunk-icmp.h \
 	src/ipv4/defrag-state.h \
 	src/ipv4/tcp-connection-listener.h \
-	src/ipv4/chunk-ipv4.h \
 	src/ipv4/ipv4-end-point.h \
 	src/ipv4/tag-ipv4.h \
 	src/ipv4/tcp.h \
 	src/ipv4/chunk-tcp.h \
 	src/ipv4/ipv4-end-points.h \
 	src/ipv4/tcp-buffer.h \
-	src/ipv4/chunk-udp.h \
 	src/ipv4/ipv4.h \
 	src/ipv4/tcp-connection.h \
 	src/ipv4/udp.h \
 	src/arp/arp-cache-entry.h \
 	src/arp/arp-ipv4-network-interface.h \
 	src/arp/chunk-arp.h \
-	src/80211/chunk-mac-80211-hdr.h \
 	src/80211/chunk-mac-80211-fcs.h \
 	src/80211/mac-stations.h \
 	src/80211/mac-station.h \
@@ -384,6 +384,12 @@ BENCH_OUTPUT_DIR:=
 BENCH_TYPE:=executable
 BENCH_CXXFLAGS:=$(CXXFLAGS)
 BENCH_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS)
+
+BENCH_PACKET_SRC:=utils/bench-packets.cc
+BENCH_PACKET_NAME:=bench-packets
+BENCH_PACKET_TYPE:=executable
+BENCH_PACKET_CXXFLAGS:=$(CXXFLAGS)
+BENCH_PACKET_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS)
 
 
 # building of main-test
@@ -571,6 +577,7 @@ ALL:= \
 	YANS \
 	REPLAY_SIMULATION \
 	BENCH \
+	BENCH_PACKET \
 	TEST \
 	SAMPLE_CXX_SIMPLE \
 	SAMPLE_CXX_ROUTER \
