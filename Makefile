@@ -147,7 +147,7 @@ YANS_SRC:= \
 	src/common/mac-address.cc \
 	src/common/mac-address-factory.cc \
 	src/common/mac-network-interface.cc \
-	src/common/tags.cc \
+	src/common/tag.cc \
 	src/common/utils.cc \
 	src/common/population-analysis.cc \
 	src/common/data-writer.cc \
@@ -254,7 +254,7 @@ YANS_INST_HDR := \
 	src/common/mac-address-factory.h \
 	src/common/mac-network-interface.h \
 	src/common/packet.h \
-	src/common/tags.h \
+	src/common/tag.h \
 	src/common/chunk.h \
 	src/common/packet-logger.h \
 	src/common/trace-container.h \

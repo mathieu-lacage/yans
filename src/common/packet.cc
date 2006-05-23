@@ -22,7 +22,7 @@
 #include "packet.h"
 #include "chunk.h"
 #include "buffer.h"
-#include "tags.h"
+#include "tag.h"
 #include <cassert>
 
 #define TRACE_PACKET 1

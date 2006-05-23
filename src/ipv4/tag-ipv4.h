@@ -22,7 +22,7 @@
 #ifndef TAG_IPV4_H
 #define TAG_IPV4_H
 
-#include "tags.h"
+#include "tag.h"
 #include "ipv4-address.h"
 #include "ipv4-route.h"
 

@@ -18,7 +18,7 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#include "tags.h"
+#include "tag.h"
 #include "strings.h"
 #include <cassert>
 
