@@ -52,7 +52,7 @@ public:
 
 	void reset (void);
 
-	Tags *copy (void) const;
+	void copy_from (Tags const &o);
 
 	void add (Tag const *tag);
 	void peek (Tag *tag);

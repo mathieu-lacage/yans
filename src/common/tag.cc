@@ -65,11 +65,13 @@ Tags::~Tags ()
 	m_index.erase (m_index.begin (), m_index.end ());
 }
 
-Tags *
-Tags::copy (void) const
+void
+Tags::copy_from (Tags const &o)
 {
-	Tags *stags = new Tags (*this);
-	return stags;
+	reset ();
+	reserve_at_end (o.m_size);
+	memcpy (m_data, o.m_data, o.m_size);
+	m_index.insert (m_index.begin (), o.m_index.begin (), o.m_index.end ());
 }
 
 void
