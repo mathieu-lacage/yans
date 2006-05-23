@@ -36,7 +36,6 @@ class Ipv4EndPoint;
 class Ipv4EndPoints;
 class TcpConnectionListener;
 class TcpConnection;
-class StaticEvent;
 class ChunkTcp;
 
 
@@ -88,8 +87,6 @@ private:
 	Ipv4 *m_ipv4;
 	Ipv4EndPoints *m_end_p;
 	Connections m_connections;
-	StaticEvent *m_slow_timer;
-	StaticEvent *m_fast_timer;
 	bool m_running;
 	int m_tcp_now;
 	int m_tcp_iss;

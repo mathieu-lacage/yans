@@ -129,7 +129,6 @@ YANS_SRC:= \
 	src/simulator/scheduler-heap.cc \
 	src/simulator/scheduler-map.cc \
 	src/simulator/event.cc \
-	src/simulator/static-event.cc \
 	src/simulator/cancellable-event.cc \
 	src/simulator/simulator.cc \
 	$(FIBER_CONTEXT_PLATFORM) \
@@ -237,8 +236,6 @@ YANS_INST_HDR := \
 	src/test/test.h \
 	src/simulator/event.h \
 	src/simulator/event.tcc \
-	src/simulator/static-event.h \
-	src/simulator/static-event.tcc \
 	src/simulator/cancellable-event.h \
 	src/simulator/cancellable-event.tcc \
 	src/simulator/simulator.h \

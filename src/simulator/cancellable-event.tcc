@@ -35,11 +35,11 @@ public:
 		: m_obj (obj), 
 		  m_function (function)
 	{ }
+	virtual ~CancellableEventCallback0 () {}
 	virtual void notify (void) {
 		if (!CancellableEvent::is_cancelled ()) {
 			(m_obj->*m_function) ();
 		}
-		delete this;
 	}
 private:
 	T* m_obj;
@@ -56,11 +56,11 @@ public:
 		  m_function (function),
 		  m_a1 (a1)
 	{ }
+	virtual ~CancellableEventCallback1 () {}
 	virtual void notify (void) { 
 		if (!CancellableEvent::is_cancelled ()) {
 			(m_obj->*m_function) (m_a1); 
 		}
-		delete this;
 	}
 private:
 	T* m_obj;
@@ -79,11 +79,11 @@ public:
 		  m_a1 (a1),
 		  m_a2 (a2)
 	{ }
+	virtual ~CancellableEventCallback2 () {}
 	virtual void notify (void) { 
 		if (!CancellableEvent::is_cancelled ()) {
 			(m_obj->*m_function) (m_a1, m_a2);
 		}
-		delete this;
 	}
 private:
 	T* m_obj;
@@ -104,11 +104,11 @@ public:
 		  m_a2 (a2),
 		  m_a3 (a3)
 	{ }
+	virtual ~CancellableEventCallback3 () {}
 	virtual void notify (void) { 
 		if (!CancellableEvent::is_cancelled ()) {
 			(m_obj->*m_function) (m_a1, m_a2, m_a3);
 		}
-		delete this;
 	}
 private:
 	T* m_obj;
@@ -131,11 +131,11 @@ public:
 		  m_a3 (a3),
 		  m_a4 (a4)
 	{ }
+	virtual ~CancellableEventCallback4 () {}
 	virtual void notify (void) { 
 		if (!CancellableEvent::is_cancelled ()) {
 			(m_obj->*m_function) (m_a1, m_a2, m_a3, m_a4);
 		}
-		delete this;
 	}
 private:
 	T* m_obj;

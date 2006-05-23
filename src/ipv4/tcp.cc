@@ -28,8 +28,8 @@
 #include "ipv4-end-point.h"
 #include "tcp-connection-listener.h"
 #include "tcp-connection.h"
-#include "static-event.tcc"
 #include "ipv4-end-points.h"
+#include "event.tcc"
 #include <cassert>
 
 #ifdef TCP_USE_BSD
@@ -57,8 +57,6 @@ const uint64_t Tcp::SLOW_TIMER_DELAY_US = 500000; /* 500ms */
 
 Tcp::Tcp ()
 {
-	m_fast_timer = make_static_event (&Tcp::fast_timer, this);
-	m_slow_timer = make_static_event (&Tcp::slow_timer, this);
 	m_running = false;
 	m_tcp_now = 0;
 	m_tcp_iss = 0;
@@ -66,8 +64,6 @@ Tcp::Tcp ()
 }
 Tcp::~Tcp ()
 {
-	m_slow_timer->destroy ();
-	m_fast_timer->destroy ();
 	delete m_end_p;
 }
 
@@ -191,8 +187,8 @@ Tcp::create_connection (Ipv4EndPoint *end_p)
 	connection->set_destroy_handler (make_callback (&Tcp::destroy_connection, this));
 	m_connections.push_back (connection);
 	if (!m_running) {
-		Simulator::insert_in_us (FAST_TIMER_DELAY_US, m_fast_timer);
-		Simulator::insert_in_us (SLOW_TIMER_DELAY_US, m_slow_timer);
+		Simulator::insert_in_us (FAST_TIMER_DELAY_US, make_event (&Tcp::fast_timer, this));
+		Simulator::insert_in_us (SLOW_TIMER_DELAY_US, make_event (&Tcp::slow_timer, this));
 		m_running = true;
 	}
 	return connection;
@@ -244,7 +240,7 @@ Tcp::slow_timer (void)
 		(*i)->slow_timer ();
 	}
 
-	Simulator::insert_in_us (SLOW_TIMER_DELAY_US, m_slow_timer);
+	Simulator::insert_in_us (SLOW_TIMER_DELAY_US, make_event (&Tcp::slow_timer, this));
 
 	m_tcp_iss += SLOW_TIMER_DELAY_US;
 	m_tcp_now++;
@@ -263,7 +259,7 @@ Tcp::fast_timer (void)
 		(*i)->fast_timer ();
 	}
 
-	Simulator::insert_in_us (FAST_TIMER_DELAY_US, m_fast_timer);
+	Simulator::insert_in_us (FAST_TIMER_DELAY_US, make_event (&Tcp::fast_timer, this));
 }
 
 

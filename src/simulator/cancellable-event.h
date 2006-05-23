@@ -29,9 +29,9 @@ namespace yans {
 class CancellableEvent : public Event {
 public:
 	CancellableEvent ();
+	virtual ~CancellableEvent ();
 	void cancel (void);
 protected:
-	virtual ~CancellableEvent ();
 	bool is_cancelled (void);
 private:
 	bool m_is_cancelled;

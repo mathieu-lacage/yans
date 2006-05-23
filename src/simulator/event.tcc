@@ -34,10 +34,10 @@ public:
 	EventMemberImpl0 (T *obj, F function) 
 		: m_obj (obj), 
 		  m_function (function)
-	{ }
+	{}
+	virtual ~EventMemberImpl0 () {}
 	virtual void notify (void) { 
 		(m_obj->*m_function) (); 
-		delete this;
 	}
 private:
 	T* m_obj;
@@ -54,9 +54,9 @@ public:
 		  m_function (function),
 		  m_a1 (a1)
 	{ }
+	virtual ~EventMemberImpl1 () {}
 	virtual void notify (void) { 
 		(m_obj->*m_function) (m_a1);
-		delete this;
 	}
 private:
 	T* m_obj;
@@ -75,9 +75,9 @@ public:
 		  m_a1 (a1),
 		  m_a2 (a2)
 	{ }
+	virtual ~EventMemberImpl2 () {}
 	virtual void notify (void) { 
 		(m_obj->*m_function) (m_a1, m_a2);
-		delete this;
 	}
 private:
 	T* m_obj;
@@ -98,9 +98,9 @@ public:
 		  m_a2 (a2),
 		  m_a3 (a3)
 	{ }
+	virtual ~EventMemberImpl3 () {}
 	virtual void notify (void) { 
 		(m_obj->*m_function) (m_a1, m_a2, m_a3);
-		delete this;
 	}
 private:
 	T* m_obj;
@@ -123,9 +123,9 @@ public:
 		  m_a3 (a3),
 		  m_a4 (a4)
 	{ }
+	virtual ~EventMemberImpl4 () {}
 	virtual void notify (void) { 
 		(m_obj->*m_function) (m_a1, m_a2, m_a3, m_a4);
-		delete this;
 	}
 private:
 	T* m_obj;
@@ -165,9 +165,9 @@ public:
 	EventFunctionImpl0 (F function) 
 		: m_function (function)
 	{ }
+	virtual ~EventFunctionImpl0 () {}
 	virtual void notify (void) { 
 		(*m_function) (); 
-		delete this;
 	}
 private:
 	F m_function;
@@ -182,9 +182,9 @@ public:
 		: m_function (function),
 		  m_a1 (a1)
 	{ }
+	virtual ~EventFunctionImpl1 () {}
 	virtual void notify (void) { 
 		(*m_function) (m_a1);
-		delete this;
 	}
 private:
 	F m_function;
@@ -201,9 +201,9 @@ public:
 		  m_a1 (a1),
 		  m_a2 (a2)
 	{ }
+	virtual ~EventFunctionImpl2 () {}
 	virtual void notify (void) { 
 		(*m_function) (m_a1, m_a2);
-		delete this;
 	}
 private:
 	F m_function;
@@ -222,9 +222,9 @@ public:
 		  m_a2 (a2),
 		  m_a3 (a3)
 	{ }
+	virtual ~EventFunctionImpl3 () {}
 	virtual void notify (void) { 
 		(*m_function) (m_a1, m_a2, m_a3);
-		delete this;
 	}
 private:
 	F m_function;
@@ -245,9 +245,9 @@ public:
 		  m_a3 (a3),
 		  m_a4 (a4)
 	{ }
+	virtual ~EventFunctionImpl4 () {}
 	virtual void notify (void) { 
 		(*m_function) (m_a1, m_a2, m_a3, m_a4);
-		delete this;
 	}
 private:
 	F m_function;

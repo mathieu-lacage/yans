@@ -97,6 +97,7 @@ SimulatorPrivate::~SimulatorPrivate ()
 		m_destroy.pop_front ();
 		TRACE ("handle destroy " << ev);
 		ev->notify ();
+		delete ev;
 	}
 	delete m_events;
 	m_events = (Scheduler *)0xdeadbeaf;
@@ -129,6 +130,7 @@ SimulatorPrivate::handle_immediate (void)
 		}
 		TRACE ("handle imm " << next_ev);
 		next_ev->notify ();
+		delete next_ev;
 	}
 }
 
@@ -150,6 +152,7 @@ SimulatorPrivate::run (void)
 		}
 
 		next_ev->notify ();
+		delete next_ev;
 		handle_immediate ();
 	}
 	m_log.close ();
