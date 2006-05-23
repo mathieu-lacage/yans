@@ -22,7 +22,6 @@
 #include "packet.h"
 #include "chunk.h"
 #include "buffer.h"
-#include "tag-manager.h"
 #include "tags.h"
 #include <cassert>
 
@@ -87,17 +86,13 @@ PacketFactory::recycle (Packet *packet)
 Packet::Packet ()
 	: m_count (1),
 	  m_buffer (new Buffer ()),
-	  m_stags (new STags ())
+	  m_tags (new Tags ())
 {}
 
 Packet::~Packet ()
 {
-	for (TagsI k = m_tags.begin (); k != m_tags.end (); k++) {
-		delete (*k).second;
-	}
-	m_tags.erase (m_tags.begin (), m_tags.end ());
 	delete m_buffer;
-	delete m_stags;
+	delete m_tags;
 }
 
 void 
@@ -118,11 +113,7 @@ void
 Packet::reset (void)
 {
 	m_buffer->reset ();
-	m_stags->reset ();
-	for (TagsI k = m_tags.begin (); k != m_tags.end (); k++) {
-		delete (*k).second;
-	}
-	m_tags.erase (m_tags.begin (), m_tags.end ());
+	m_tags->reset ();
 }
 
 Packet *
@@ -156,54 +147,26 @@ Packet::get_size (void) const
 	return m_buffer->get_size ();
 }
 
-void 
-Packet::add_tag (uint32_t tag_id, Tag *tag)
-{
-	assert (get_tag (tag_id) == 0);
-	m_tags.push_back (std::make_pair (tag_id, tag));
-}
-Tag *
-Packet::get_tag (uint32_t tag_id)
-{
-	for (TagsI i = m_tags.begin (); i != m_tags.end (); i++) {
-		if ((*i).first == tag_id) {
-			return (*i).second;
-		}
-	}
-	return 0;
-}
-Tag *
-Packet::remove_tag (uint32_t tag_id)
-{
-	for (TagsI i = m_tags.begin (); i != m_tags.end (); i++) {
-		if ((*i).first == tag_id) {
-			Tag *tag = (*i).second;
-			m_tags.erase (i);
-			return tag;
-		}
-	}
-	return 0;
-}
 
 void 
-Packet::add_stag (STag const*tag)
+Packet::add_tag (Tag const*tag)
 {
-	m_stags->add (tag);
+	m_tags->add (tag);
 }
 void 
-Packet::remove_stag (STag *tag)
+Packet::remove_tag (Tag *tag)
 {
-	m_stags->remove (tag);
+	m_tags->remove (tag);
 }
 void 
-Packet::peek_stag (STag *tag)
+Packet::peek_tag (Tag *tag)
 {
-	m_stags->peek (tag);
+	m_tags->peek (tag);
 }
 void 
-Packet::update_stag (STag *tag)
+Packet::update_tag (Tag *tag)
 {
-	m_stags->update (tag);
+	m_tags->update (tag);
 }
 
 

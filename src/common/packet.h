@@ -35,8 +35,7 @@ class Packet;
 class Chunk;
 class Buffer;
 class Tag;
-class STags;
-class STag;
+class Tags;
 
 class PacketFactory {
 public:
@@ -57,14 +56,10 @@ public:
 
 	uint32_t get_size (void) const;
 
-	void add_tag (uint32_t tag_id, Tag *tag);
-	Tag *get_tag (uint32_t tag_id);
-	Tag *remove_tag (uint32_t tag_id);
-
-	void add_stag (STag const*tag);
-	void remove_stag (STag *tag);
-	void peek_stag (STag *tag);
-	void update_stag (STag *tag);
+	void add_tag (Tag const*tag);
+	void remove_tag (Tag *tag);
+	void peek_tag (Tag *tag);
+	void update_tag (Tag *tag);
 	
 	void add (Chunk *chunk);
 	void add_at_end (Packet const*packet);
@@ -82,12 +77,9 @@ public:
 	Packet ();
 	~Packet ();
 
-	typedef std::list<std::pair<uint32_t, Tag *> >Tags;
-	typedef std::list<std::pair<uint32_t, Tag *> >::iterator TagsI;
-	Tags m_tags;
 	mutable uint32_t m_count;
 	Buffer *m_buffer;
-	STags *m_stags;
+	Tags *m_tags;
 };
 
 std::ostream& operator<< (std::ostream& os, Packet const& packet);

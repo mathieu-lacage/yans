@@ -41,7 +41,7 @@ void
 TcpConnectionListener::receive (Packet *packet, Chunk *chunk)
 {
 	TagInIpv4 tag;
-	packet->peek_stag (&tag);
+	packet->peek_tag (&tag);
 	ChunkTcp *tcp_chunk = static_cast <ChunkTcp *> (chunk);
 	if (tcp_chunk->is_flag_syn () &&
 	    !tcp_chunk->is_flag_ack ()) {

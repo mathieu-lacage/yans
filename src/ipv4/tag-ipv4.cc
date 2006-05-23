@@ -80,7 +80,7 @@ TagOutIpv4::get_route (void)
 uint32_t 
 TagOutIpv4::real_get_id (void) const
 {
-	static uint32_t tag = STagManager::register_tag ("out-ipv4");
+	static uint32_t tag = TagManager::register_tag ("out-ipv4");
 	return tag;
 }
 uint32_t 
@@ -149,7 +149,7 @@ TagInIpv4::get_interface (void)
 uint32_t 
 TagInIpv4::real_get_id (void) const
 {
-	static uint32_t tag = STagManager::register_tag ("in-ipv4");
+	static uint32_t tag = TagManager::register_tag ("in-ipv4");
 	return tag;
 }
 uint32_t 

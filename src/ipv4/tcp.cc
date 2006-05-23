@@ -113,7 +113,7 @@ void
 Tcp::send_reset (Packet *packet, ChunkTcp *tcp_chunk)
 {
 	TagInIpv4 in_tag;
-	packet->remove_stag (&in_tag);
+	packet->remove_tag (&in_tag);
 	Route *route = m_host->get_routing_table ()->lookup (in_tag.get_saddress ());
 	if (route == 0) {
 		TRACE ("cannot send back RST to " << in_tag.get_saddress ());
@@ -124,7 +124,7 @@ Tcp::send_reset (Packet *packet, ChunkTcp *tcp_chunk)
 	out_tag.set_saddress (in_tag.get_daddress ());
 	out_tag.set_dport (in_tag.get_sport ());
 	out_tag.set_sport (in_tag.get_dport ());
-	packet->add_stag (&out_tag);
+	packet->add_tag (&out_tag);
 
 	tcp_chunk->disable_flag_syn ();
 	tcp_chunk->enable_flag_rst ();
@@ -153,14 +153,14 @@ void
 Tcp::receive (Packet *packet)
 {
 	TagInIpv4 tag;
-	packet->peek_stag (&tag);
+	packet->peek_tag (&tag);
 	ChunkTcp tcp_chunk;
 	packet->remove (&tcp_chunk);
 	tag.set_dport (tcp_chunk.get_destination_port ());
 	tag.set_sport (tcp_chunk.get_source_port ());
 	Ipv4EndPoint *end_p = m_end_p->lookup (tag.get_daddress (), tag.get_dport (), 
 					       tag.get_saddress (), tag.get_sport ());
-	packet->update_stag (&tag);
+	packet->update_tag (&tag);
 	if (end_p == 0) {
 		if (tcp_chunk.is_flag_syn () &&
 		    !tcp_chunk.is_flag_ack ()) {

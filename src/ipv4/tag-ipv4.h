@@ -30,7 +30,7 @@ namespace yans {
 
 class Ipv4NetworkInterface;
 
-class TagOutIpv4 : public STag {
+class TagOutIpv4 : public Tag {
 public:
 	TagOutIpv4 ();
 	TagOutIpv4 (Route const *route);
@@ -58,7 +58,7 @@ public:
 	uint16_t m_dport;
 };
 
-class TagInIpv4 : public STag {
+class TagInIpv4 : public Tag {
 public:
 	TagInIpv4 ();
 	TagInIpv4 (Ipv4NetworkInterface *interface);

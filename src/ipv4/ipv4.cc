@@ -100,7 +100,7 @@ Ipv4::send (Packet *packet)
 	ChunkIpv4 ip_header;
 
 	TagOutIpv4 tag;
-	packet->remove_stag (&tag);
+	packet->remove_tag (&tag);
 	ip_header.set_source (tag.get_saddress ());
 	ip_header.set_destination (tag.get_daddress ());
 	ip_header.set_protocol (m_send_protocol);
@@ -303,7 +303,7 @@ Ipv4::receive_packet (Packet *packet, ChunkIpv4 *ip, Ipv4NetworkInterface *inter
 	TagInIpv4 tag;
 	tag.set_daddress (ip->get_destination ());
 	tag.set_saddress (ip->get_source ());
-	packet->add_stag (&tag);
+	packet->add_tag (&tag);
 	TransportProtocolCallback protocol = lookup_protocol (ip->get_protocol ());
 	if (!protocol.is_null ()) {
 		protocol (packet);

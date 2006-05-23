@@ -18,46 +18,46 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef TAGS_H
-#define TAGS_H
+#ifndef TAG_H
+#define TAG_H
 
 #include <stdint.h>
 #include <vector>
 
 namespace yans {
 
-class STagManager {
+class TagManager {
 public:
 	static uint32_t register_tag (char const *name);
 private:
-	static STagManager *instance (void);
+	static TagManager *instance (void);
 	uint32_t m_tag_id;
-	STagManager ();
+	TagManager ();
 };
 
 
-class STag {
+class Tag {
 public:
-	virtual ~STag () = 0;
+	virtual ~Tag () = 0;
 private:
 	virtual uint32_t real_get_id (void) const = 0;
 	virtual uint32_t real_get_size (void) const = 0;
-	friend class STags;
+	friend class Tags;
 };
 
-class STags {
+class Tags {
 public:
-	STags ();
-	~STags ();
+	Tags ();
+	~Tags ();
 
 	void reset (void);
 
-	STags *copy (void) const;
+	Tags *copy (void) const;
 
-	void add (STag const *tag);
-	void peek (STag *tag);
-	void remove (STag *tag);
-	void update (STag *tag);
+	void add (Tag const *tag);
+	void peek (Tag *tag);
+	void remove (Tag *tag);
+	void update (Tag *tag);
 private:
 	struct IndexEntry {
 		uint32_t id;
@@ -67,7 +67,7 @@ private:
 	typedef std::vector<struct IndexEntry> Index;
 	typedef std::vector<struct IndexEntry>::iterator IndexI;
 
-	STags (STags const&o);
+	Tags (Tags const&o);
 	void reserve_at_end (uint32_t room);
 	uint32_t m_real_size;
 	uint32_t m_size;
@@ -78,4 +78,4 @@ private:
 }; // namespace yans
 
 
-#endif /* TAGS_H */
+#endif /* TAG_H */

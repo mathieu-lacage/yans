@@ -100,12 +100,12 @@ Udp::receive (Packet *packet)
 {
 	m_recv_logger->log (packet);
 	TagInIpv4 tag;
-	packet->peek_stag (&tag);
+	packet->peek_tag (&tag);
 	ChunkUdp udp_chunk;
 	packet->remove (&udp_chunk);
 	tag.set_dport (udp_chunk.get_destination ());
 	tag.set_sport (udp_chunk.get_source ());
-	packet->update_stag (&tag);
+	packet->update_tag (&tag);
 	Ipv4EndPoint *end_point = m_end_points->lookup (tag.get_daddress (), tag.get_dport (),
 							tag.get_saddress (), tag.get_sport ());
 	if (end_point == 0) {
@@ -118,7 +118,7 @@ void
 Udp::send (Packet *packet)
 {
 	TagOutIpv4 tag;
-	packet->peek_stag (&tag);
+	packet->peek_tag (&tag);
 	ChunkUdp udp_chunk;
 	udp_chunk.set_destination (tag.get_dport ());
 	udp_chunk.set_source (tag.get_sport ());

@@ -25,33 +25,33 @@
 namespace yans {
 
 uint32_t 
-STagManager::register_tag (char const *name)
+TagManager::register_tag (char const *name)
 {
-	STagManager *self = STagManager::instance ();
+	TagManager *self = TagManager::instance ();
 	self->m_tag_id++;
 	return self->m_tag_id;
 }
-STagManager::STagManager ()
+TagManager::TagManager ()
 	: m_tag_id (0)
 {}
-STagManager *
-STagManager::instance (void)
+TagManager *
+TagManager::instance (void)
 {
-	static STagManager manager;
+	static TagManager manager;
 	return &manager;
 }
 
 
-STag::~STag ()
+Tag::~Tag ()
 {}
 
 
-STags::STags ()
+Tags::Tags ()
 	: m_real_size (32),
 	  m_size (0),
 	  m_data (new uint8_t [32])
 {}
-STags::STags (STags const &o)
+Tags::Tags (Tags const &o)
 	: m_real_size (o.m_real_size),
 	  m_size (o.m_size),
 	  m_data (new uint8_t [o.m_real_size])
@@ -59,28 +59,28 @@ STags::STags (STags const &o)
 	memcpy (m_data, o.m_data, o.m_size);
 	m_index.insert (m_index.begin (), o.m_index.begin (), o.m_index.end ());
 }
-STags::~STags ()
+Tags::~Tags ()
 {
 	delete m_data;
 	m_index.erase (m_index.begin (), m_index.end ());
 }
 
-STags *
-STags::copy (void) const
+Tags *
+Tags::copy (void) const
 {
-	STags *stags = new STags (*this);
+	Tags *stags = new Tags (*this);
 	return stags;
 }
 
 void
-STags::reset (void)
+Tags::reset (void)
 {
 	m_size = 0;
 	m_index.erase (m_index.begin (), m_index.end ());
 }
 
 void
-STags::reserve_at_end (uint32_t size)
+Tags::reserve_at_end (uint32_t size)
 {
 	while (m_size + size > m_real_size) {
 		m_real_size *= 2;
@@ -91,9 +91,9 @@ STags::reserve_at_end (uint32_t size)
 }
 
 void 
-STags::add (STag const *tag)
+Tags::add (Tag const *tag)
 {
-	struct STags::IndexEntry index;
+	struct Tags::IndexEntry index;
 	index.id = tag->real_get_id ();
 	index.size = tag->real_get_size ();
 	index.start = m_size;
@@ -103,7 +103,7 @@ STags::add (STag const *tag)
 	m_size += tag->real_get_size ();
 }
 void 
-STags::peek (STag *tag)
+Tags::peek (Tag *tag)
 {
 	uint32_t id = tag->real_get_id ();
 	for (IndexI i = m_index.begin (); i != m_index.end (); i++) {
@@ -117,7 +117,7 @@ STags::peek (STag *tag)
 	assert (false);
 }
 void 
-STags::remove (STag *tag)
+Tags::remove (Tag *tag)
 {
 	uint32_t id = tag->real_get_id ();
 	for (IndexI i = m_index.begin (); i != m_index.end (); i++) {
@@ -131,7 +131,7 @@ STags::remove (STag *tag)
 	assert (false);
 }
 void 
-STags::update (STag *tag)
+Tags::update (Tag *tag)
 {
 	uint32_t id = tag->real_get_id ();
 	for (IndexI i = m_index.begin (); i != m_index.end (); i++) {

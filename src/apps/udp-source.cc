@@ -87,7 +87,7 @@ UdpSource::send (Packet *packet)
 	tag.set_dport (m_peer_port);
 	tag.set_daddress (m_peer_address);
 	tag.set_saddress (m_end_point->get_local_address ());
-	packet->add_stag (&tag);
+	packet->add_tag (&tag);
 	/* send packet. */
 	m_host->get_udp ()->send (packet);
 }
