@@ -178,7 +178,7 @@ LogReader::execute_log_commands (uint32_t uid)
 			Event *ev = m_remove_events.front ();
 			m_remove_events.pop_front ();
 			Simulator::remove (ev);
-			// XXX: we should delete the event.
+			delete ev;
 		} break;
 		case Command::INSERT_REMOVE: {
 			//std::cout << "exec insert remove" << std::endl;
