@@ -29,7 +29,31 @@
 using namespace yans;
 
 static void 
-create_packets (uint32_t n)
+bench_tx (uint32_t n)
+{
+	ChunkConstantData data = ChunkConstantData (2000, 1);
+	ChunkUdp udp;
+	ChunkIpv4 ipv4;
+	ChunkMac80211Hdr hdr;
+
+	for (uint32_t i = 0; i < n; i++) {
+		Packet *p = PacketFactory::create ();
+		p->add (&data);
+		p->add (&udp);
+		p->add (&ipv4);
+		p->add (&hdr);
+		Packet *o = p->copy ();
+		p->unref ();
+		o->remove (&hdr);
+		o->remove (&ipv4);
+		o->remove (&udp);
+		o->remove (&data);
+		o->unref ();
+	}
+}
+
+static void 
+bench_creation (uint32_t n)
 {
 	ChunkConstantData data = ChunkConstantData (2000, 1);
 	ChunkUdp udp;
@@ -59,11 +83,19 @@ int main (int argc, char *argv[])
 		argv++;
 	}
 	time.start ();
-	create_packets (n);
+	bench_tx (n);
 	unsigned long long delta_ms = time.end ();
 	double ps = n;
 	ps *= 1000;
 	ps /= delta_ms;
-	std::cout << ps << " packets/s" << std::endl;
+	std::cout << "transmission=" << ps << " packets/s" << std::endl;
+
+	time.start ();
+	bench_creation (n);
+	delta_ms = time.end ();
+	ps = n;
+	ps *= 1000;
+	ps /= delta_ms;
+	std::cout << "creation=" << ps << " packets/s" << std::endl;
 	return 0;
 }
