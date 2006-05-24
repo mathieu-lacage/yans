@@ -23,7 +23,6 @@
 #include "yans/chunk-constant-data.h"
 #include "yans/chunk-udp.h"
 #include "yans/chunk-ipv4.h"
-#include "yans/chunk-mac-80211-hdr.h"
 #include <iostream>
 
 using namespace yans;
@@ -34,17 +33,14 @@ bench_tx (uint32_t n)
 	ChunkConstantData data = ChunkConstantData (2000, 1);
 	ChunkUdp udp;
 	ChunkIpv4 ipv4;
-	ChunkMac80211Hdr hdr;
 
 	for (uint32_t i = 0; i < n; i++) {
 		Packet *p = PacketFactory::create ();
 		p->add (&data);
 		p->add (&udp);
 		p->add (&ipv4);
-		p->add (&hdr);
 		Packet *o = p->copy ();
 		p->unref ();
-		o->remove (&hdr);
 		o->remove (&ipv4);
 		o->remove (&udp);
 		o->remove (&data);
@@ -58,14 +54,12 @@ bench_creation (uint32_t n)
 	ChunkConstantData data = ChunkConstantData (2000, 1);
 	ChunkUdp udp;
 	ChunkIpv4 ipv4;
-	ChunkMac80211Hdr hdr;
 
 	for (uint32_t i = 0; i < n; i++) {
 		Packet *p = PacketFactory::create ();
 		p->add (&data);
 		p->add (&udp);
 		p->add (&ipv4);
-		p->add (&hdr);
 		p->unref ();
 	}
 }
