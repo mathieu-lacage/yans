@@ -136,6 +136,7 @@ YANS_SRC:= \
 	src/thread/fiber.cc \
 	src/thread/fiber-scheduler.cc \
 	src/thread/thread.cc \
+	src/common/unix-exec-commands.cc \
 	src/common/wall-clock-ms-unix.cc \
 	src/common/buffer.cc \
 	src/common/chunk.cc \
