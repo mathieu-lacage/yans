@@ -26,6 +26,9 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include <errno.h>
+#include <string.h>
+#include <iostream>
 
 #define noTRACE_COMMAND 1
 
@@ -221,20 +224,27 @@ CommandSystemThread::real_run (void)
 			dup2 (1, filedes[0]);
 			close (filedes[0]);
 			close (filedes[1]);
-			char ** args = (char **)malloc (sizeof (char *) * (m_command.get_n () - 1));
+			char ** args = (char **)malloc (sizeof (char *) * (m_command.get_n ()+1));
 			char const *file = m_command.get (0);
-			for (uint32_t i = 1; i < (m_command.get_n () - 1); i++) {
-				args[i-1] = strdup (m_command.get (i));
+			args[0] = strdup (m_command.get (0));
+			for (uint32_t i = 1; i < m_command.get_n (); i++) {
+				args[i] = strdup (m_command.get (i));
+				//std::cout << "arg " << args[i-1] << std::endl;
 			}
+			args[m_command.get_n ()] = (char *)NULL;
 			retval = execvp (file, args);
+			if (retval != 0) {
+				std::cout << strerror (errno) << std::endl;
+				exit (1);
+			}
 			// NOTREACHED
 			assert (false);
 		} else {
 			// success, parent.
 			close (filedes[1]);
 			read_data (filedes[0]);
+			m_done (this);
 		}
-		m_done (this);
 	}
 }
 
@@ -397,12 +407,14 @@ bool
 ExecCommandsTest::run_tests (void)
 {
 	bool ok = true;
+#if 0
 	ExecCommands commands = ExecCommands (1);
 	Command command;
 	command.append ("ls");
+	command.append ("-l");
 	commands.add (command, make_callback (&ExecCommandsTest::command_output, this));
 	commands.start_and_wait ();
-	
+#endif
 	return ok;
 }
 
