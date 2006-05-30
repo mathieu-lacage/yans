@@ -13,6 +13,17 @@ using namespace yans;
 
 namespace test {
 
+class ComputingContext {
+public:
+private:
+	ComputingContext ();
+};
+class ComputingContextFactory {
+public:
+	static ComputingContext *create (char const *name);
+private:
+	ComputingContextFactory ();
+};
 class TestEventSource;
 
 class TestConnector {
@@ -29,7 +40,7 @@ private:
 
 class TestEventSource {
 public:
-	TestEventSource ();
+	TestEventSource (ComputingContext *ctx);
 
 	void start (uint64_t delta, uint64_t end);
 	void connect (TestConnector *connector);
@@ -78,7 +89,7 @@ TestConnector::forward_up (Packet *packet, TestEventSource *receiver)
 	packet->unref ();
 }
 
-TestEventSource::TestEventSource ()
+TestEventSource::TestEventSource (ComputingContext *ctx)
 	: m_received (0)
 {}
 
@@ -125,16 +136,54 @@ TestEventSource::get_received (void)
 	return m_received;
 }
 
+}; // namespace test
+
+namespace testcorba {
+
+class TestEventSource;
+
+class TestConnector {
+public:
+	TestConnector (uint64_t delay_us);
+};
+
+class TestEventSource {
+public:
+	TestEventSource ();
+
+	void start (uint64_t delta, uint64_t end);
+	void connect (TestConnector *connector);
+	uint32_t get_received (void);
+};
+
+TestEventSource::TestEventSource ()
+{
+	
+}
+
+void 
+TestEventSource::start (uint64_t delta, uint64_t end)
+{}
+void 
+TestEventSource::connect (TestConnector *connector)
+{}
+uint32_t 
+TestEventSource::get_received (void)
+{}
+
 };
 
 using namespace test;
 
 int main (int argc, char *argv) 
 {
+	ComputingContext *ctx_a, *ctx_b;
 	TestConnector *c;
 	TestEventSource *a, *b;
-	a = new TestEventSource ();
-	b = new TestEventSource ();
+	ctx_a = ComputingContextFactory::create ("a");
+	ctx_b = ComputingContextFactory::create ("b");
+	a = new TestEventSource (a);
+	b = new TestEventSource (b);
 	c = new TestConnector (20);
 	a->connect (c);
 	b->connect (c);
