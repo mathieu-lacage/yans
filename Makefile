@@ -485,6 +485,7 @@ SAMPLE_CXX_80211_ADHOC_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS)
 
 SAMPLE_CORBA_SRC := \
 	src/corba/test-corba.cc \
+	src/corba/local.cc \
 	$(NULL)
 SAMPLE_CORBA_NAME := test-corba
 SAMPLE_CORBA_TYPE := executable
