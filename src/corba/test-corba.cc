@@ -4,17 +4,28 @@
 #include <cassert>
 #include <iostream>
 
+#define USE_CORBA 1
+
 #include "yans/simulator.h"
-#include "local.h"
 
 using namespace yans;
+
+#ifndef USE_CORBA
+#include "local.h"
 using namespace local;
+#else
+#include "local-corba.h"
+using namespace localcorba;
+#endif
 
 int main (int argc, char *argv) 
 {
 	ComputingContext *ctx_a, *ctx_b;
 	TestConnector *c;
 	TestEventSource *a, *b;
+#ifdef USE_CORBA
+	ComputingContextFactory::start_servers ("desc.xml");
+#endif
 	ctx_a = ComputingContextFactory::create ("a");
 	ctx_b = ComputingContextFactory::create ("b");
 	a = new TestEventSource (ctx_a);
