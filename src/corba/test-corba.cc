@@ -4,7 +4,7 @@
 #include <cassert>
 #include <iostream>
 
-#define USE_CORBA 1
+#define noUSE_CORBA 1
 
 #include "yans/simulator.h"
 
@@ -18,33 +18,61 @@ using namespace local;
 using namespace localcorba;
 #endif
 
+struct Topology {
+	ComputingContext *ctx_a;
+	ComputingContext *ctx_b;
+	TestConnector *c;
+	TestEventSource *a;
+	TestEventSource *b;
+};
+
+static struct Topology
+build_topology (void)
+{
+	struct Topology t;
+	t.ctx_a = ComputingContextFactory::create ("a");
+	t.ctx_b = ComputingContextFactory::create ("b");
+	t.a = new TestEventSource (t.ctx_a);
+	t.b = new TestEventSource (t.ctx_b);
+	t.c = new TestConnector (20);
+	t.a->connect (t.c);
+	t.b->connect (t.c);
+
+	t.a->start (5, 10000);
+	t.b->start (11, 10000);
+
+	return t;
+}
+
+static void
+print_info (struct Topology topology)
+{
+	std::cout << "a received " <<topology.a->get_received () << std::endl;
+	std::cout << "b received " <<topology.b->get_received () << std::endl;
+}
+
+static void
+destroy (struct Topology t)
+{
+	delete t.a;
+	delete t.b;
+	delete t.c;
+
+}
+
+
+
 int main (int argc, char *argv) 
 {
-	ComputingContext *ctx_a, *ctx_b;
-	TestConnector *c;
-	TestEventSource *a, *b;
 #ifdef USE_CORBA
 	ComputingContextFactory::start_servers ("desc.xml");
 #endif
-	ctx_a = ComputingContextFactory::create ("a");
-	ctx_b = ComputingContextFactory::create ("b");
-	a = new TestEventSource (ctx_a);
-	b = new TestEventSource (ctx_b);
-	c = new TestConnector (20);
-	a->connect (c);
-	b->connect (c);
-
-	a->start (5, 10000);
-	b->start (11, 10000);
+	struct Topology t;
+	t = build_topology ();
 
 	Simulator::run ();
 
-	std::cout << "a received " <<a->get_received () << std::endl;
-	std::cout << "b received " <<b->get_received () << std::endl;
-
-	delete a;
-	delete b;
-	delete c;
-	
+	print_info (t);
+	destroy (t);
 	return 0;
 }
