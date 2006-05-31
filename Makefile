@@ -501,7 +501,6 @@ SAMPLE_CORBA_SRC := \
 	src/corba/registry_skel.cc \
 	src/corba/registry_impl.cc \
 	src/corba/registry-main.cc \
-	src/corba/main.cc \
 	$(NULL)
 SAMPLE_CORBA_NAME := test-corba
 SAMPLE_CORBA_TYPE := executable
