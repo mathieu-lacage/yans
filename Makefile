@@ -136,6 +136,7 @@ YANS_SRC:= \
 	src/thread/fiber.cc \
 	src/thread/fiber-scheduler.cc \
 	src/thread/thread.cc \
+	src/common/unix-system-thread.cc \
 	src/common/unix-exec-commands.cc \
 	src/common/wall-clock-ms-unix.cc \
 	src/common/buffer.cc \
@@ -252,6 +253,7 @@ YANS_INST_HDR := \
 	src/common/mac-address-factory.h \
 	src/common/mac-network-interface.h \
 	src/common/packet.h \
+	src/common/system-thread.h \
 	src/common/exec-commands.h \
 	src/common/tag.h \
 	src/common/chunk.h \
