@@ -19,12 +19,12 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #include "exec-commands.h"
+#include "system-thread.h"
 #include "callback.h"
 #include <cassert>
 #include <vector>
 
 #include <stdlib.h>
-#include <pthread.h>
 #include <semaphore.h>
 #include <errno.h>
 #include <string.h>
@@ -43,36 +43,6 @@ std::cout << "COMMAND TRACE " << x << std::endl;
 
 namespace yans {
 
-/* A small Os-independent thread class
- */
-class UnixSystemThread {
-public:
-	UnixSystemThread ();
-	virtual ~UnixSystemThread () = 0;
-private:
-	static void *pthread_run (void *thread);
-	virtual void real_run (void) = 0;
-
-	pthread_t m_system_thread;
-};
-
-UnixSystemThread::UnixSystemThread ()
-{
-	int retval = pthread_create (&m_system_thread,
-				     NULL,
-				     UnixSystemThread::pthread_run,
-				     this);
-	assert (retval == 0);
-}
-UnixSystemThread::~UnixSystemThread ()
-{}
-void *
-UnixSystemThread::pthread_run (void *thread)
-{
-	UnixSystemThread *self = reinterpret_cast<UnixSystemThread *> (thread);
-	self->real_run ();
-	return thread;
-}
 
 /* A small Os-independent semaphore class
  */
@@ -153,7 +123,7 @@ UnixSystemMutex::unlock (void)
 
 
 
-class CommandSystemThread : public UnixSystemThread {
+class CommandSystemThread : public SystemThread {
 public:
 	typedef Callback<void, CommandSystemThread *> DoneCallback;
 	CommandSystemThread ();
