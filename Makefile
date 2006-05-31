@@ -490,11 +490,12 @@ MICO_LDFLAGS:=-L/opt/mico/lib -lmico2.3.12 -lssl
 
 
 SAMPLE_CORBA_SRC := \
-	src/corba/test-corba.cc \
-	src/corba/local.cc \
 	src/corba/echo.cc \
+	src/corba/registry.cc \
 	src/corba/registry_skel.cc \
 	src/corba/registry_impl.cc \
+	src/corba/registry-main.cc \
+	src/corba/main.cc \
 	$(NULL)
 SAMPLE_CORBA_NAME := test-corba
 SAMPLE_CORBA_TYPE := executable
@@ -506,8 +507,9 @@ SAMPLE_CORBA_FACTORY_SRC := \
 	src/corba/echo.cc \
 	src/corba/echo_skel.cc \
 	src/corba/echo_impl.cc \
+	src/corba/echo-main.cc \
 	$(NULL)
-SAMPLE_CORBA_FACTORY_NAME := corba-factory
+SAMPLE_CORBA_FACTORY_NAME := echo-server
 SAMPLE_CORBA_FACTORY_TYPE := executable
 SAMPLE_CORBA_FACTORY_CXXFLAGS:=$(CXXFLAGS) -I./src/corba
 SAMPLE_CORBA_FACTORY_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS) $(MICO_LDFLAGS)
@@ -516,9 +518,11 @@ SAMPLE_CORBA_FACTORY_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS) $(MICO_LDFLAGS)
 src/corba/registry.cc_CXXFLAGS:=$(MICO_CXXFLAGS)
 src/corba/registry_skel.cc_CXXFLAGS:=$(MICO_CXXFLAGS)
 src/corba/registry_impl.cc_CXXFLAGS:=$(MICO_CXXFLAGS)
+src/corba/registry-main.cc_CXXFLAGS:=$(MICO_CXXFLAGS)
 src/corba/echo.cc_CXXFLAGS:=$(MICO_CXXFLAGS)
 src/corba/echo_skel.cc_CXXFLAGS:=$(MICO_CXXFLAGS)
 src/corba/echo_impl.cc_CXXFLAGS:=$(MICO_CXXFLAGS)
+src/corba/echo-main.cc_CXXFLAGS:=$(MICO_CXXFLAGS)
 
 src/corba/registry.cc: src/corba/registry.idl
 	cd src/corba && idl --codegen-c++ --c++-skel ./registry.idl && cd -
