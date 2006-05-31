@@ -20,12 +20,13 @@
  */
 #include "exec-commands.h"
 #include "system-thread.h"
+#include "system-semaphore.h"
+#include "system-mutex.h"
 #include "callback.h"
 #include <cassert>
 #include <vector>
 
 #include <stdlib.h>
-#include <semaphore.h>
 #include <errno.h>
 #include <string.h>
 #include <iostream>
@@ -44,84 +45,6 @@ std::cout << "COMMAND TRACE " << x << std::endl;
 namespace yans {
 
 
-/* A small Os-independent semaphore class
- */
-class UnixSystemSemaphore {
-public:
-	UnixSystemSemaphore (uint32_t init);
-	void post (void);
-	void post (uint32_t n);
-	void wait (void);
-	void wait (uint32_t n);
-private:
-	sem_t m_sem;
-};
-
-UnixSystemSemaphore::UnixSystemSemaphore (uint32_t init)
-{
-	sem_init (&m_sem, 0, init);
-}
-void 
-UnixSystemSemaphore::post (void)
-{
-	sem_post (&m_sem);
-}
-void 
-UnixSystemSemaphore::wait (void)
-{
-	sem_wait (&m_sem);
-}
-void 
-UnixSystemSemaphore::post (uint32_t n)
-{
-	for (uint32_t i = 0; i < n; i++) {
-		post ();
-	}
-}
-void 
-UnixSystemSemaphore::wait (uint32_t n)
-{
-	for (uint32_t i = 0; i < n; i++) {
-		wait ();
-	}
-}
-
-class UnixSystemMutex {
-public:
-	UnixSystemMutex ();
-	~UnixSystemMutex ();
-	void lock (void);
-	void unlock (void);
-private:
-	pthread_mutex_t m_mutex;
-};
-
-UnixSystemMutex::UnixSystemMutex ()
-{
-	int retval = pthread_mutex_init (&m_mutex, NULL);
-	assert (retval == 0);
-}
-
-UnixSystemMutex::~UnixSystemMutex ()
-{
-	int retval = pthread_mutex_destroy (&m_mutex);
-	assert (retval == 0);
-}
-
-void
-UnixSystemMutex::lock (void)
-{
-	pthread_mutex_lock (&m_mutex);
-}
-
-void
-UnixSystemMutex::unlock (void)
-{
-	pthread_mutex_unlock (&m_mutex);
-}
-
-
-
 
 class CommandSystemThread : public SystemThread {
 public:
@@ -132,7 +55,7 @@ public:
 private:
 	virtual void real_run (void);
 	void read_data (int fd);
-	UnixSystemSemaphore m_sem;
+	SystemSemaphore m_sem;
 	bool m_stop;
 	Command m_command;
 	ExecCommands::CommandCallback m_callback;
@@ -236,9 +159,9 @@ private:
 	void command_done (CommandSystemThread *thread);
 
 	Requests m_requests;
-	UnixSystemSemaphore m_n_threads;
+	SystemSemaphore m_n_threads;
 	uint32_t m_pool_size;
-	UnixSystemMutex m_threads_mutex;
+	SystemMutex m_threads_mutex;
 	Threads m_threads;
 };
 
