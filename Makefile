@@ -484,15 +484,46 @@ SAMPLE_CXX_80211_ADHOC_TYPE:=executable
 SAMPLE_CXX_80211_ADHOC_CXXFLAGS:=$(CXXFLAGS)
 SAMPLE_CXX_80211_ADHOC_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS)
 
+
+MICO_CXXFLAGS:=-D_REENTRANT -D_GNU_SOURCE -I/opt/mico/include
+MICO_LDFLAGS:=-L/opt/mico/lib -lmico2.3.12 -lssl
+
+
 SAMPLE_CORBA_SRC := \
 	src/corba/test-corba.cc \
-	src/corba/local-corba.cc \
 	src/corba/local.cc \
+	src/corba/echo.cc \
+	src/corba/registry_skel.cc \
+	src/corba/registry_impl.cc \
 	$(NULL)
 SAMPLE_CORBA_NAME := test-corba
 SAMPLE_CORBA_TYPE := executable
-SAMPLE_CORBA_CXXFLAGS:=$(CXXFLAGS)
-SAMPLE_CORBA_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS)
+SAMPLE_CORBA_CXXFLAGS:=$(CXXFLAGS) -I./src/corba
+SAMPLE_CORBA_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS) $(MICO_LDFLAGS)
+
+SAMPLE_CORBA_FACTORY_SRC := \
+	src/corba/registry.cc \
+	src/corba/echo.cc \
+	src/corba/echo_skel.cc \
+	src/corba/echo_impl.cc \
+	$(NULL)
+SAMPLE_CORBA_FACTORY_NAME := corba-factory
+SAMPLE_CORBA_FACTORY_TYPE := executable
+SAMPLE_CORBA_FACTORY_CXXFLAGS:=$(CXXFLAGS) -I./src/corba
+SAMPLE_CORBA_FACTORY_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS) $(MICO_LDFLAGS)
+
+
+src/corba/registry.cc_CXXFLAGS:=$(MICO_CXXFLAGS)
+src/corba/registry_skel.cc_CXXFLAGS:=$(MICO_CXXFLAGS)
+src/corba/registry_impl.cc_CXXFLAGS:=$(MICO_CXXFLAGS)
+src/corba/echo.cc_CXXFLAGS:=$(MICO_CXXFLAGS)
+src/corba/echo_skel.cc_CXXFLAGS:=$(MICO_CXXFLAGS)
+src/corba/echo_impl.cc_CXXFLAGS:=$(MICO_CXXFLAGS)
+
+src/corba/registry.cc: src/corba/registry.idl
+	cd src/corba && idl --codegen-c++ --c++-skel ./registry.idl && cd -
+src/corba/echo.cc: src/corba/echo.idl
+	cd src/corba && idl --codegen-c++ --c++-skel ./echo.idl && cd -
 
 
 
@@ -592,6 +623,7 @@ ALL:= \
 	BENCH_PACKET \
 	TEST \
 	SAMPLE_CORBA \
+	SAMPLE_CORBA_FACTORY \
 	SAMPLE_CXX_SIMPLE \
 	SAMPLE_CXX_ROUTER \
 	SAMPLE_CXX_TCP \

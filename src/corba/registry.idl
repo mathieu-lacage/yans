@@ -1,0 +1,6 @@
+#include "echo.idl"
+interface Registry {
+  void register (in Echo obj, in string name);
+  Echo lookup (in string name);
+};
+
