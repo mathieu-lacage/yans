@@ -22,6 +22,10 @@
 #include "system-semaphore.h"
 
 #include <semaphore.h>
+#include <cassert>
+#include <iostream>
+#include "errno.h"
+#include "string.h"
 
 namespace yans {
 
@@ -38,17 +42,29 @@ private:
 
 SystemSemaphorePrivate::SystemSemaphorePrivate (uint32_t init)
 {
-	sem_init (&m_sem, 0, init);
+	int retval = sem_init (&m_sem, 0, init);
+	if (retval == -1) {
+		std::cout << "sem init " << this << " " << strerror (errno) << std::endl;
+	}
 }
 void 
 SystemSemaphorePrivate::post (void)
 {
-	sem_post (&m_sem);
+	int retval = sem_post (&m_sem);
+	if (retval == -1) {
+		std::cout << "sem post " << this << " " << strerror (errno) << std::endl;
+	}
 }
 void 
 SystemSemaphorePrivate::wait (void)
 {
-	sem_wait (&m_sem);
+	int retval;
+	do {
+		retval = sem_wait (&m_sem);
+	} while (retval == -1 && errno == EINTR);
+	if (retval == -1) {
+		std::cout << "sem wait " << this << " " << strerror (errno) << std::endl;
+	}
 }
 void 
 SystemSemaphorePrivate::post (uint32_t n)
