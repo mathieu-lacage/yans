@@ -16,7 +16,6 @@ public:
   virtual ~StartServers ();
 private:
   virtual void real_run (void);
-  void null_cb (char const *buffer, uint32_t size);
   std::string m_name;
 };
 
@@ -24,10 +23,6 @@ StartServers::StartServers (char const *name)
   : m_name (name)
 {}
 StartServers::~StartServers ()
-{}
-
-void
-StartServers::null_cb (char const *data, uint32_t size)
 {}
 
 void
@@ -41,12 +36,12 @@ StartServers::real_run (void)
 	a.append ("./build-dir/bin/echo-server");
 	a.append ("--name=a");
 	a.append (registry_str);
-	commands.add (a, make_callback (&StartServers::null_cb, this));
+	commands.add (a, "a");
 	b.append ("./build-dir/bin/echo-server");
 	b.append ("--name=b");
 	b.append (registry_str);
-	commands.add (b, make_callback (&StartServers::null_cb, this));
-	commands.start_and_wait ();
+	commands.add (b, "b");
+	commands.start ();
 }
 
 
@@ -64,10 +59,10 @@ main (int argc, char *argv[])
  
   manager->activate ();
 
-  CORBA::String_var ref = PortableServer::ObjectId_to_string (object_id);
+  CORBA::String_var ref = orb->object_to_string (servant->_this ());
   StartServers *servers = new StartServers (ref);
 
-  //std::cout << "servant="<< orb->object_to_string () << std::endl;
+  //std::cout << "servant="<< ref << std::endl;
 
   orb->run ();
 

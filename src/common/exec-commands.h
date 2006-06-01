@@ -32,6 +32,7 @@ class ExecCommandsPrivate;
 
 class Command {
 public:
+	void reset (void);
 	void append (std::string arg);
 	uint32_t get_n (void);
 	char const *get (uint32_t i);
@@ -44,8 +45,9 @@ class ExecCommands {
 public:
 	typedef Callback<void,char const *,uint32_t> CommandCallback;
 	ExecCommands (uint32_t pool_size);
-	void add (Command, CommandCallback callback);
-	void start_and_wait (void);
+	void enable_log (char const *main_log);
+	void add (Command command, char const *id);
+	void start (void);
 private:
 	ExecCommandsPrivate *m_priv;
 };
