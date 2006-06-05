@@ -494,7 +494,6 @@ YANS_PYTHON_CXX_SRC:= \
 	python/export-cpp-callback-factory.cc \
 	python/export-periodic-generator.cc \
 	python/export-traffic-analyser.cc \
-	python/export-packet.cc \
 	python/export-ipv4-address.cc \
 	python/export-mac-address.cc \
 	python/export-host.cc \

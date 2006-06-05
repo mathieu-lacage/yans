@@ -35,7 +35,6 @@ public:
 		object function = m_holder.get_function ();
 		object context = m_holder.get_context ();
 		function (context);
-		delete this;
 	}
 private:
 	FunctionHolder m_holder;
