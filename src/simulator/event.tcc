@@ -136,6 +136,34 @@ private:
 	T4 m_a4;
 };
 
+template<typename T, typename T1, typename T2, typename T3, typename T4, typename T5>
+class EventMemberImpl5 : public Event {
+public:
+	typedef void (T::*F)(T1, T2, T3, T4, T5);
+
+	EventMemberImpl5 (T *obj, F function, T1 a1, T2 a2, T3 a3, T4 a4, T5 a5) 
+		: m_obj (obj), 
+		  m_function (function),
+		  m_a1 (a1),
+		  m_a2 (a2),
+		  m_a3 (a3),
+		  m_a4 (a4),
+		  m_a5 (a5)
+	{ }
+	virtual ~EventMemberImpl5 () {}
+	virtual void notify (void) { 
+		(m_obj->*m_function) (m_a1, m_a2, m_a3, m_a4, m_a5);
+	}
+private:
+	T* m_obj;
+	F m_function;
+	T1 m_a1;
+	T2 m_a2;
+	T3 m_a3;
+	T4 m_a4;
+	T5 m_a5;
+};
+
 
 template<typename T>
 EventMemberImpl0<T> *make_event(void (T::*f) (void), T* t) {
@@ -156,6 +184,10 @@ EventMemberImpl3<T, T1, T2, T3> *make_event(void (T::*f) (T1, T2, T3), T* t, T1 
 template<typename T, typename T1, typename T2, typename T3, typename T4>
 EventMemberImpl4<T, T1, T2, T3, T4> *make_event(void (T::*f) (T1, T2, T3, T4), T* t, T1 a1, T2 a2, T3 a3, T4 a4) {
 	return new EventMemberImpl4<T, T1, T2, T3, T4>(t, f, a1, a2, a3, a4);
+}
+template<typename T, typename T1, typename T2, typename T3, typename T4, typename T5>
+EventMemberImpl5<T, T1, T2, T3, T4, T5> *make_event(void (T::*f) (T1, T2, T3, T4, T5), T* t, T1 a1, T2 a2, T3 a3, T4 a4, T5 a5) {
+	return new EventMemberImpl5<T, T1, T2, T3, T4, T5>(t, f, a1, a2, a3, a4, a5);
 }
 
 class EventFunctionImpl0 : public Event {
@@ -257,6 +289,32 @@ private:
 	T4 m_a4;
 };
 
+template<typename T1, typename T2, typename T3, typename T4, typename T5>
+class EventFunctionImpl5 : public Event {
+public:
+	typedef void (*F)(T1, T2, T3, T4, T5);
+
+	EventFunctionImpl5 (F function, T1 a1, T2 a2, T3 a3, T4 a4, T5 a5) 
+		: m_function (function),
+		  m_a1 (a1),
+		  m_a2 (a2),
+		  m_a3 (a3),
+		  m_a4 (a4),
+		  m_a5 (a5)
+	{ }
+	virtual ~EventFunctionImpl5 () {}
+	virtual void notify (void) { 
+		(*m_function) (m_a1, m_a2, m_a3, m_a4, m_a5);
+	}
+private:
+	F m_function;
+	T1 m_a1;
+	T2 m_a2;
+	T3 m_a3;
+	T4 m_a4;
+	T5 m_a5;
+};
+
 
 template<typename T>
 EventFunctionImpl0 *make_event(void (*f) (void)) {
@@ -277,6 +335,10 @@ EventFunctionImpl3<T1, T2, T3> *make_event(void (*f) (T1, T2, T3), T1 a1, T2 a2,
 template<typename T1, typename T2, typename T3, typename T4>
 EventFunctionImpl4<T1, T2, T3, T4> *make_event(void (*f) (T1, T2, T3, T4), T1 a1, T2 a2, T3 a3, T4 a4) {
 	return new EventFunctionImpl4<T1, T2, T3, T4>(f, a1, a2, a3, a4);
+}
+template<typename T1, typename T2, typename T3, typename T4, typename T5>
+EventFunctionImpl5<T1, T2, T3, T4, T5> *make_event(void (*f) (T1, T2, T3, T4, T5), T1 a1, T2 a2, T3 a3, T4 a4, T5 a5) {
+	return new EventFunctionImpl5<T1, T2, T3, T4, T5>(f, a1, a2, a3, a4, a5);
 }
 
 
