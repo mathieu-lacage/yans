@@ -23,11 +23,13 @@
 #include "scheduler.h"
 #include "event.h"
 #include "event.tcc"
+#include "system-semaphore.h"
+
 #include <math.h>
 #include <cassert>
 #include <fstream>
 #include <list>
-
+#include <vector>
 #include <iostream>
 
 #define noTRACE_SIMU 1
@@ -46,6 +48,20 @@ std::cout << "SIMU TRACE " << x << std::endl;
 
 namespace yans {
 
+class ParallelSimulatorQueuePrivate {
+public:
+	ParallelSimulatorQueuePrivate (SimulatorPrivate *priv);
+	~ParallelSimulatorQueuePrivate ();
+	void set_queue (ParallelSimulatorQueue *queue);
+	void insert_at_us (Event *ev, uint64_t at);
+	void send_null_message (void);
+private:
+	void remove_event (Event *ev);
+	uint32_t m_n;
+	SimulatorPrivate *m_simulator;
+	ParallelSimulatorQueue *m_queue;
+};
+
 class SimulatorPrivate {
 public:
 	SimulatorPrivate (Scheduler *events);
@@ -53,8 +69,16 @@ public:
 
 	void enable_log_to (char const *filename);
 
-	void run (void);
+	void add_queue (ParallelSimulatorQueuePrivate *queue);
+	void notify_queue_not_empty (void);
+	void notify_queue_empty (void);
+	void wait_until_no_queue_empty (void);
+	bool is_parallel (void);
+
+	void run_serial (void);
+	void run_parallel (void);
 	void stop (void);
+	void stop_at_us (Event *event, uint64_t at);
 	Event *insert_in_us (Event *event, uint64_t delta);
 	Event *insert_in_s (Event *event, double delta);
 	Event *insert_at_us (Event *event, uint64_t time);
@@ -66,11 +90,14 @@ public:
 	void insert_at_destroy (Event *event);
 
 private:
-	void handle_immediate (void);
-	void update_current_us (uint64_t us);
+	void process_one_event (void);
+
 	typedef std::list<std::pair<Event *,uint32_t> > Events;
-	Events m_immediate;
+	typedef std::vector<ParallelSimulatorQueuePrivate *> Queues;
+	typedef std::vector<ParallelSimulatorQueuePrivate *>::iterator QueuesI;
 	Events m_destroy;
+	Event *m_stop_event;
+	uint64_t m_stop_at;
 	bool m_stop;
 	Scheduler *m_events;
 	uint32_t m_uid;
@@ -79,7 +106,52 @@ private:
 	std::ofstream m_log;
 	std::ifstream m_input_log;
 	bool m_log_enable;
+	uint32_t m_n_full_queues;
+	uint32_t m_n_queues;
+	SystemSemaphore *m_all_queues;
+	Queues m_queues;
 };
+
+
+ParallelSimulatorQueuePrivate::ParallelSimulatorQueuePrivate (SimulatorPrivate *simulator)
+	: m_simulator (simulator)
+{}
+ParallelSimulatorQueuePrivate::~ParallelSimulatorQueuePrivate ()
+{}
+void 
+ParallelSimulatorQueuePrivate::insert_at_us (Event *ev, uint64_t at)
+{
+	m_n++;
+	if (m_n == 1) {
+		m_simulator->notify_queue_not_empty ();
+	}
+	m_simulator->insert_at_us (make_event (&ParallelSimulatorQueuePrivate::remove_event, this, ev), at);
+}
+void
+ParallelSimulatorQueuePrivate::remove_event (Event *ev)
+{
+	m_n--;
+	if (m_n == 0) {
+		m_simulator->notify_queue_empty ();
+	}
+	ev->notify ();
+	delete ev;
+}
+
+void
+ParallelSimulatorQueuePrivate::set_queue (ParallelSimulatorQueue *queue)
+{
+	m_queue = queue;
+}
+
+void 
+ParallelSimulatorQueuePrivate::send_null_message (void)
+{
+	m_queue->send_null_message ();
+}
+
+
+
 
 SimulatorPrivate::SimulatorPrivate (Scheduler *events)
 {
@@ -88,6 +160,9 @@ SimulatorPrivate::SimulatorPrivate (Scheduler *events)
 	m_uid = 0;	
 	m_log_enable = false;
 	m_current_us = 0;
+	m_all_queues = new SystemSemaphore (0);
+	m_n_queues = 0;
+	m_n_full_queues = 0;
 }
 
 SimulatorPrivate::~SimulatorPrivate ()
@@ -101,14 +176,15 @@ SimulatorPrivate::~SimulatorPrivate ()
 	}
 	delete m_events;
 	m_events = (Scheduler *)0xdeadbeaf;
+	delete m_all_queues;
+	m_queues.erase (m_queues.begin (), m_queues.end ());
 }
 
-void 
-SimulatorPrivate::update_current_us (uint64_t new_time)
+bool 
+SimulatorPrivate::is_parallel (void)
 {
-	m_current_us = new_time;
+	return (m_n_queues > 0);
 }
-
 
 void
 SimulatorPrivate::enable_log_to (char const *filename)
@@ -117,43 +193,70 @@ SimulatorPrivate::enable_log_to (char const *filename)
 	m_log_enable = true;
 }
 
-void
-SimulatorPrivate::handle_immediate (void)
+void 
+SimulatorPrivate::notify_queue_not_empty (void)
 {
-	while (!m_immediate.empty ()) {
-		Event *next_ev = m_immediate.front ().first;
-		uint32_t next_uid = m_immediate.front ().second;
-		m_immediate.pop_front ();
-		if (m_log_enable) {
-			m_log << "el "<<next_uid
-			      << std::endl;
-		}
-		TRACE ("handle imm " << next_ev);
-		next_ev->notify ();
-		delete next_ev;
+	m_n_full_queues++;
+	if (m_n_full_queues == m_n_queues) {
+		m_all_queues->post ();
+	}
+}
+void 
+SimulatorPrivate::notify_queue_empty (void)
+{
+	m_n_full_queues--;
+}
+void
+SimulatorPrivate::wait_until_no_queue_empty (void)
+{
+	while (m_n_full_queues < m_n_queues) {
+		m_all_queues->wait ();
 	}
 }
 
 void
-SimulatorPrivate::run (void)
+SimulatorPrivate::add_queue (ParallelSimulatorQueuePrivate *queue)
 {
-	m_current_uid = 0;
-	update_current_us (0);
-	handle_immediate ();
-	while (!m_events->is_empty () && !m_stop) {
-		Event *next_ev = m_events->peek_next ();
-		Scheduler::EventKey next_key = m_events->peek_next_key ();
-		m_events->remove_next ();
-		TRACE ("handle " << next_ev);
-		update_current_us (next_key.m_time);
-		m_current_uid = next_key.m_uid;
-		if (m_log_enable) {
-			m_log << "e "<<next_key.m_uid << " " << next_key.m_time << std::endl;
-		}
+	m_n_queues++;
+	m_queues.push_back (queue);
+}
 
-		next_ev->notify ();
-		delete next_ev;
-		handle_immediate ();
+void
+SimulatorPrivate::process_one_event (void)
+{
+	Event *next_ev = m_events->peek_next ();
+	Scheduler::EventKey next_key = m_events->peek_next_key ();
+	m_events->remove_next ();
+	TRACE ("handle " << next_ev);
+	m_current_us = next_key.m_time;
+	m_current_uid = next_key.m_uid;
+	if (m_log_enable) {
+		m_log << "e "<<next_key.m_uid << " " << next_key.m_time << std::endl;
+	}
+	next_ev->notify ();
+	delete next_ev;
+}
+
+void
+SimulatorPrivate::run_serial (void)
+{
+	while (!m_events->is_empty () && !m_stop && 
+	       (m_stop_event == 0 || m_stop_at > m_current_us)) {
+		process_one_event ();
+	}
+	m_log.close ();
+}
+
+void
+SimulatorPrivate::run_parallel (void)
+{
+	while (!m_stop && 
+	       (m_stop_event == 0 || m_stop_at > m_current_us)) {
+		for (QueuesI i = m_queues.begin (); i != m_queues.end (); i++) {
+			(*i)->send_null_message ();
+		}
+		wait_until_no_queue_empty ();
+		process_one_event();
 	}
 	m_log.close ();
 }
@@ -162,6 +265,12 @@ void
 SimulatorPrivate::stop (void)
 {
 	m_stop = true;
+}
+void 
+SimulatorPrivate::stop_at_us (Event *event, uint64_t at)
+{
+	m_stop_event = event;
+	m_stop_at = at;
 }
 Event *  
 SimulatorPrivate::insert_in_us (Event *event, uint64_t delta)
@@ -210,12 +319,13 @@ SimulatorPrivate::now_s (void)
 void
 SimulatorPrivate::insert_later (Event *event)
 {
-	m_immediate.push_back (std::make_pair (event, m_uid));
+	Scheduler::EventKey key = {now_us (), m_uid};
 	if (m_log_enable) {
-		m_log << "il " << m_current_uid << " " << now_us () << " "
-		      <<m_uid << " " << now_us () << std::endl;
+		m_log << "i "<<m_current_uid<<" "<<now_us ()<<" "
+		      <<m_uid<<" "<<now_us () << std::endl;
 	}
 	m_uid++;
+	m_events->insert (event, key);
 }
 void
 SimulatorPrivate::insert_at_destroy (Event *event)
@@ -304,16 +414,34 @@ Simulator::destroy (void)
 	m_priv = 0;
 }
 
+void
+Simulator::add_parallel_queue (ParallelSimulatorQueue *queue)
+{
+	ParallelSimulatorQueuePrivate *priv = new ParallelSimulatorQueuePrivate (get_priv ());
+	priv->set_queue (queue);
+	queue->set_priv (priv);
+	return get_priv ()->add_queue (priv);
+}
+
 void 
 Simulator::run (void)
 {
-	get_priv ()->run ();
+	if (get_priv ()->is_parallel ()) {
+		get_priv ()->run_parallel ();
+	} else {
+		get_priv ()->run_serial ();
+	}
 }
 void 
 Simulator::stop (void)
 {
 	TRACE ("stop");
 	get_priv ()->stop ();
+}
+void 
+Simulator::stop_at_us (uint64_t at, Event *event)
+{
+	get_priv ()->stop_at_us (event, at);
 }
 Event *
 Simulator::insert_in_us (uint64_t delta, Event *event)
@@ -369,3 +497,24 @@ Simulator::remove (Event const*ev)
 }
 
 }; // namespace yans
+
+
+namespace yans {
+
+ParallelSimulatorQueue::ParallelSimulatorQueue ()
+{}
+ParallelSimulatorQueue::~ParallelSimulatorQueue ()
+{
+	delete m_priv;
+}
+void 
+ParallelSimulatorQueue::insert_at_us (uint64_t at, Event *ev)
+{
+	m_priv->insert_at_us (ev, at);
+}
+void
+ParallelSimulatorQueue::set_priv (ParallelSimulatorQueuePrivate *priv)
+{
+	m_priv = priv;
+}
+};

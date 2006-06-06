@@ -28,15 +28,21 @@ namespace yans {
 
 class Event;
 class SimulatorPrivate;
+class ParallelSimulatorQueuePrivate;
 
-/* This simple macro is quite useful when 
- * debugging.
- */
-#define STOP_AT(time)              \
-if (Simulator::now_s () >= time) { \
-	bool loop = true;          \
-	while (loop) {}            \
-}
+class ParallelSimulatorQueue {
+public:
+	virtual ~ParallelSimulatorQueue () = 0;
+	void insert_at_us (uint64_t at, Event *ev);
+private:
+	friend class Simulator;
+	friend class ParallelSimulatorQueuePrivate;
+
+	ParallelSimulatorQueue ();
+	void set_priv (ParallelSimulatorQueuePrivate *priv);
+	virtual void send_null_message (void) = 0;
+	ParallelSimulatorQueuePrivate *m_priv;
+};
 
 class Simulator {
 public:
@@ -48,14 +54,32 @@ public:
 
 	static void destroy (void);
 
+	static void add_parallel_queue (ParallelSimulatorQueue *queue);
+
 	/* this is a blocking call which will return
-	 * only when the simulation ends.
+	 * only when the simulation ends or when stop is
+	 * invoked. 
 	 */
 	static void run (void);
 	/* This is a non-blocking call which will 
-	 * unblock the run method.
+	 * unblock the run method. run can be re-invoked
+	 * right after a stop to restart the main loop
+	 * where it was stopped.
 	 */
 	static void stop (void);
+	/* stop only at the scheduled time.
+	 * stop_at_us (at, make_event (foo));
+	 * is subtly different from:
+	 * void function (void) {
+	 *    Simulator::stop ();
+	 *    foo ();
+	 * }
+	 * Simulator::insert_at_us (at, make_event (function));
+	 * because the former will not allow _any_ event
+	 * whose timestamp is equal to at_us to run, even
+	 * any event inserted before the stop event was inserted.
+	 */
+	static void stop_at_us (uint64_t at, Event *event);
 
 	static Event *insert_in_us (uint64_t delta, Event *event);
 	static Event *insert_in_s (double delta, Event *event);
