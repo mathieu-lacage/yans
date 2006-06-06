@@ -45,22 +45,6 @@ class Position;
 class Channel80211;
 class Packet;
 
-class PropagationData {
-public:
-
-	PropagationData (double tx_power_dbm, double x, double y, double z);
-
-	double get_x (void) const;
-	double get_y (void) const;
-	double get_z (void) const;
-	double get_tx_power_dbm (void) const;
-private:
-	double m_tx_power_dbm;
-	double m_x;
-	double m_y;
-	double m_z;
-};
-
 class PropagationModel {
 public:
 	typedef Callback<void,Packet const*, double, uint8_t, uint8_t> RxCallback;
@@ -73,8 +57,10 @@ public:
 	void set_receive_callback (RxCallback callback);
 
 	/* tx power unit: dBm */
-	void send (Packet const*packet, double tx_power, uint8_t tx_mode, uint8_t stuff) const;
-	void receive (Packet const*packet, PropagationData const *data, uint8_t tx_mode, uint8_t stuff);
+	void send (Packet const*packet, double tx_power_dbm, uint8_t tx_mode, uint8_t stuff) const;
+	void receive (Packet const*packet, double tx_power_dbm,
+		      double x, double y, double z, 
+		      uint8_t tx_mode, uint8_t stuff);
 
 	/* unit: dBm */
 	void set_tx_gain_dbm (double tx_gain);
@@ -88,9 +74,9 @@ private:
 	double dbm_to_w (double dbm) const;
 	double db_to_w (double db) const;
 	double get_lambda (void) const;
-	double distance (PropagationData const *from) const;
+	double distance (double from_x, double from_y, double from_z) const;
 	void forward_up (CountPtrHolder<Packet const> packet, double rx_power, uint8_t tx_mode, uint8_t stuff);
-	double get_rx_power (PropagationData const *rx) const;
+	double get_rx_power_w (double tx_power_dbm, double distance) const;
 
 	RxCallback m_rx_callback;
 	double m_tx_gain_dbm;
