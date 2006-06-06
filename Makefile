@@ -131,13 +131,13 @@ YANS_SRC:= \
 	src/simulator/event.cc \
 	src/simulator/cancellable-event.cc \
 	src/simulator/simulator.cc \
+	src/simulator/unix-system-semaphore.cc \
 	$(FIBER_CONTEXT_PLATFORM) \
 	src/thread/semaphore.cc \
 	src/thread/fiber.cc \
 	src/thread/fiber-scheduler.cc \
 	src/thread/thread.cc \
 	src/common/unix-system-thread.cc \
-	src/common/unix-system-semaphore.cc \
 	src/common/unix-system-mutex.cc \
 	src/common/unix-exec-commands.cc \
 	src/common/wall-clock-ms-unix.cc \
@@ -209,6 +209,7 @@ YANS_SRC:= \
 	src/80211/cr-mac-stations.cc \
 	src/80211/ideal-mac-stations.cc \
 	src/80211/propagation-model.cc \
+	src/80211/base-channel-80211.cc \
 	src/80211/channel-80211.cc \
 	src/80211/transmission-mode.cc \
 	src/80211/bpsk-mode.cc \
@@ -243,6 +244,7 @@ YANS_INST_HDR := \
 	src/simulator/cancellable-event.h \
 	src/simulator/cancellable-event.tcc \
 	src/simulator/simulator.h \
+	src/simulator/system-semaphore.h \
 	src/common/wall-clock-ms.h \
 	src/common/buffer.h \
 	src/common/data-writer.h \
@@ -256,7 +258,6 @@ YANS_INST_HDR := \
 	src/common/mac-network-interface.h \
 	src/common/packet.h \
 	src/common/system-thread.h \
-	src/common/system-semaphore.h \
 	src/common/system-mutex.h \
 	src/common/exec-commands.h \
 	src/common/tag.h \
@@ -290,6 +291,7 @@ YANS_INST_HDR := \
 	src/80211/network-interface-80211-simple-factory.h \
 	src/80211/network-interface-80211.h \
 	src/80211/network-interface-80211-factory.h \
+	src/80211/base-channel-80211.h \
 	src/80211/channel-80211.h \
 	src/80211/ssid.h \
 	src/80211/chunk-mac-80211-hdr.h \
@@ -496,7 +498,7 @@ MICO_LDFLAGS:=-L/opt/mico/lib -lmico2.3.12 -lssl
 
 
 SAMPLE_CORBA_SRC := \
-	src/corba/echo.cc \
+	src/corba/context.cc \
 	src/corba/registry.cc \
 	src/corba/registry_skel.cc \
 	src/corba/registry_impl.cc \
@@ -504,35 +506,25 @@ SAMPLE_CORBA_SRC := \
 	$(NULL)
 SAMPLE_CORBA_NAME := test-corba
 SAMPLE_CORBA_TYPE := executable
-SAMPLE_CORBA_CXXFLAGS:=$(CXXFLAGS) -I./src/corba
+SAMPLE_CORBA_CXXFLAGS:=$(CXXFLAGS) -I./src/corba $(MICO_CXXFLAGS)
 SAMPLE_CORBA_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS) $(MICO_LDFLAGS)
 
 SAMPLE_CORBA_FACTORY_SRC := \
 	src/corba/registry.cc \
-	src/corba/echo.cc \
-	src/corba/echo_skel.cc \
-	src/corba/echo_impl.cc \
-	src/corba/echo-main.cc \
+	src/corba/context.cc \
+	src/corba/context_skel.cc \
+	src/corba/context_impl.cc \
+	src/corba/context-main.cc \
 	$(NULL)
 SAMPLE_CORBA_FACTORY_NAME := echo-server
 SAMPLE_CORBA_FACTORY_TYPE := executable
-SAMPLE_CORBA_FACTORY_CXXFLAGS:=$(CXXFLAGS) -I./src/corba
+SAMPLE_CORBA_FACTORY_CXXFLAGS:=$(CXXFLAGS) -I./src/corba $(MICO_CXXFLAGS)
 SAMPLE_CORBA_FACTORY_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS) $(MICO_LDFLAGS)
-
-
-src/corba/registry.cc_CXXFLAGS:=$(MICO_CXXFLAGS)
-src/corba/registry_skel.cc_CXXFLAGS:=$(MICO_CXXFLAGS)
-src/corba/registry_impl.cc_CXXFLAGS:=$(MICO_CXXFLAGS)
-src/corba/registry-main.cc_CXXFLAGS:=$(MICO_CXXFLAGS)
-src/corba/echo.cc_CXXFLAGS:=$(MICO_CXXFLAGS)
-src/corba/echo_skel.cc_CXXFLAGS:=$(MICO_CXXFLAGS)
-src/corba/echo_impl.cc_CXXFLAGS:=$(MICO_CXXFLAGS)
-src/corba/echo-main.cc_CXXFLAGS:=$(MICO_CXXFLAGS)
 
 src/corba/registry.cc: src/corba/registry.idl
 	cd src/corba && idl --codegen-c++ --c++-skel ./registry.idl && cd -
-src/corba/echo.cc: src/corba/echo.idl
-	cd src/corba && idl --codegen-c++ --c++-skel ./echo.idl && cd -
+src/corba/context.cc: src/corba/context.idl
+	cd src/corba && idl --codegen-c++ --c++-skel ./context.idl && cd -
 
 
 
