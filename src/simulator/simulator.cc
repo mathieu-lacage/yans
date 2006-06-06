@@ -319,13 +319,7 @@ SimulatorPrivate::now_s (void)
 void
 SimulatorPrivate::insert_later (Event *event)
 {
-	Scheduler::EventKey key = {now_us (), m_uid};
-	if (m_log_enable) {
-		m_log << "i "<<m_current_uid<<" "<<now_us ()<<" "
-		      <<m_uid<<" "<<now_us () << std::endl;
-	}
-	m_uid++;
-	m_events->insert (event, key);
+	insert_at_us (event, now_us ());
 }
 void
 SimulatorPrivate::insert_at_destroy (Event *event)
