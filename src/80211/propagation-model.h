@@ -56,10 +56,14 @@ public:
 	/* the unit of the power is Watt. */
 	void set_receive_callback (RxCallback callback);
 
+	void get_position (double &x, double &y, double &z) const;
+	uint64_t get_delay_us (double from_x, double from_y, double from_z) const;
+	double get_rx_power_w (double tx_power_dbm, double from_x, double from_y, double from_z) const;
+
+
 	/* tx power unit: dBm */
 	void send (Packet const*packet, double tx_power_dbm, uint8_t tx_mode, uint8_t stuff) const;
-	void receive (Packet const*packet, double tx_power_dbm,
-		      double x, double y, double z, 
+	void receive (Packet const*packet, double rx_power_w,
 		      uint8_t tx_mode, uint8_t stuff);
 
 	/* unit: dBm */

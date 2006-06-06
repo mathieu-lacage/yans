@@ -18,33 +18,32 @@
  *
  * Author: Mathieu Lacage, <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef CHANNEL_80211_H
-#define CHANNEL_80211_H
+#ifndef BASE_CHANNEL_80211_H
+#define BASE_CHANNEL_80211_H
 
 #include <list>
 #include <stdint.h>
-#include "base-channel-80211.h"
 
 namespace yans {
 
 class PropagationModel;
 class Packet;
 
-class Channel80211 : public BaseChannel80211 {
+class BaseChannel80211 {
 public:
-	Channel80211 ();
-	virtual ~Channel80211 ();
+	virtual ~BaseChannel80211 () = 0;
+	void add (PropagationModel *model);
+	void send (Packet const *packet, double tx_power_dbm,
+		   uint8_t tx_mode, uint8_t stuff, 
+		   PropagationModel const*caller) const;
 private:
-	virtual void real_add (PropagationModel *model);
+	virtual void real_add (PropagationModel *model) = 0;
 	virtual void real_send (Packet const *packet, double tx_power_dbm,
 				uint8_t tx_mode, uint8_t stuff, 
-				PropagationModel const*caller) const;
-	typedef std::list<PropagationModel *> Models;
-	typedef std::list<PropagationModel *>::const_iterator ModelsCI;
-	Models m_models;
+				PropagationModel const*caller) const = 0;
 };
 
 }; // namespace yans
 
 
-#endif /* CHANNEL_80211_H */
+#endif /* BASE_CHANNEL_80211_H */

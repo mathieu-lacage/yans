@@ -74,28 +74,33 @@ PropagationModel::send (Packet const*packet, double tx_power_dbm,
 	double x,y,z;
 	m_position->get (x,y,z);
 	m_channel->send (packet, tx_power_dbm + m_tx_gain_dbm, 
-			 x, y, z, tx_mode, stuff, this);
+			 tx_mode, stuff, this);
 }
-void 
-PropagationModel::receive (Packet const*packet, 
-			   double tx_power_dbm,
-			   double from_x, double from_y, double from_z,
-			   uint8_t tx_mode, uint8_t stuff)
+void
+PropagationModel::get_position (double &x, double &y, double &z) const
+{
+	m_position->get (x, y, z);
+}
+uint64_t
+PropagationModel::get_delay_us (double from_x, double from_y, double from_z) const
+{
+	double dist = distance (from_x, from_y, from_z);
+	uint64_t delay_us = (uint64_t) (dist / 300000000 * 1000000);
+	return delay_us;
+}
+double
+PropagationModel::get_rx_power_w (double tx_power_dbm, double from_x, double from_y, double from_z) const
 {
 	double dist = distance (from_x, from_y, from_z);
 	double rx_power_w = get_rx_power_w (tx_power_dbm, dist);
-	uint64_t delay_us = (uint64_t) (dist / 300000000 * 1000000);
-	Simulator::insert_in_us (delay_us, make_event (&PropagationModel::forward_up, 
-						       this, make_count_ptr_holder (packet),
-						       rx_power_w, tx_mode, stuff));
+	return rx_power_w;
 }
-
-void
-PropagationModel::forward_up (CountPtrHolder<Packet const> p, double rx_power, uint8_t tx_mode, uint8_t stuff)
+void 
+PropagationModel::receive (Packet const*packet, 
+			   double rx_power_w,
+			   uint8_t tx_mode, uint8_t stuff)
 {
-	Packet const*packet = p.remove ();
-	m_rx_callback (packet, rx_power, tx_mode, stuff);
-	packet->unref ();
+	m_rx_callback (packet, rx_power_w, tx_mode, stuff);
 }
 
 double
