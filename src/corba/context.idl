@@ -1,0 +1,98 @@
+module Remote {
+
+typedef unsigned long long Timestamp;
+struct MacAddress {
+  octet data[6];
+};
+typedef unsigned long Ipv4Address;
+typedef unsigned long Ipv4Mask;
+typedef sequence<octet> Buffer;
+struct SourcePosition {
+  double x;
+  double y;
+  double z;
+};
+typedef sequence<SourcePosition> SourcePositions;
+
+interface PositionModel {};
+
+interface Channel80211 {
+  // connect to a remote channel
+  void add (in Channel80211 channel);
+  // receive a packet from a remote channel
+  void receive (in SourcePosition source_position,
+		in Timestamp source_time,
+		in Buffer buffer, in double tx_power, 
+		in octet tx_mode, in octet stuff);
+  // receive a null packet from a remote channel
+  void receive_null (in Timestamp ts, in SourcePositions sources);
+};
+
+interface MacNetworkInterface {};
+
+interface NetworkInterface80211 : MacNetworkInterface {
+  // connect to a local channel
+  void connect (in Channel80211 channel);
+};
+
+interface NetworkInterface80211Factory {
+  NetworkInterface80211 create_adhoc (in MacAddress address, in PositionModel position);
+};
+
+interface Ipv4NetworkInterface {};
+
+interface Ipv4RoutingTable {
+  void set_default_route (in Ipv4Address next_hop, 
+			  in Ipv4NetworkInterface i);
+};
+
+interface Node {
+  Ipv4RoutingTable get_routing_table ();
+  Ipv4NetworkInterface add_ipv4_arp_interface (in MacNetworkInterface i, 
+					       in Ipv4Address address, in Ipv4Mask mask);
+};
+
+interface LocalCallbackVoidPacket {};
+
+interface UdpSource {
+  void bind (in Ipv4Address address, in unsigned short port);
+  void set_peer (in Ipv4Address remote, in unsigned short port);
+  void unbind_at_s (in double at_s);
+  LocalCallbackVoidPacket create_send_callback ();
+};
+
+interface UdpSink {
+  void bind (in Ipv4Address address, in unsigned short port);
+  void unbind_at_s (in double at_s);
+  void set_receive_callback (in LocalCallbackVoidPacket callback);
+};
+
+interface PeriodicGenerator {
+  void set_packet_interval_s (in double interval_s);
+  void set_packet_size (in unsigned long size);
+  void set_send_callback (in LocalCallbackVoidPacket callback);
+};
+interface TrafficAnalyser {
+  LocalCallbackVoidPacket create_receive_callback ();
+};
+
+interface CallbackVoid {
+  void invoke ();
+};
+
+interface ComputingContext {
+  Node create_node ();
+  NetworkInterface80211Factory create_network_interface_80211_factory ();
+  Channel80211 create_channel_80211 ();
+  PositionModel create_static_position ();
+  UdpSource create_udp_source ();
+  UdpSink create_udp_sink ();
+
+  // used to implement a synchronization barrier
+  void stop_at_us (in CallbackVoid frozen, in Timestamp at_us);
+  void run (in CallbackVoid done);
+
+  oneway void shutdown ();
+};
+
+};
