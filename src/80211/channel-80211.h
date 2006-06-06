@@ -23,22 +23,23 @@
 
 #include <list>
 #include <stdint.h>
+#include "base-channel-80211.h"
 
 namespace yans {
 
-class PropagationData;
 class PropagationModel;
 class Packet;
 
-class Channel80211 {
+class Channel80211 : public BaseChannel80211 {
 public:
 	Channel80211 ();
-	~Channel80211 ();
-	void add (PropagationModel *model);
-	void send (Packet const *packet, PropagationData const *data, 
-		   uint8_t tx_mode, uint8_t stuff, 
-		   PropagationModel const*caller) const;
+	virtual ~Channel80211 ();
 private:
+	virtual void real_add (PropagationModel *model);
+	virtual void real_send (Packet const *packet, double tx_power_dbm,
+				double from_x, double from_y, double from_z,
+				uint8_t tx_mode, uint8_t stuff, 
+				PropagationModel const*caller) const;
 	typedef std::list<PropagationModel *> Models;
 	typedef std::list<PropagationModel *>::const_iterator ModelsCI;
 	Models m_models;

@@ -29,18 +29,21 @@ Channel80211::Channel80211 ()
 Channel80211::~Channel80211 ()
 {}
 void 
-Channel80211::add (PropagationModel *model)
+Channel80211::real_add (PropagationModel *model)
 {
 	m_models.push_back (model);
 }
 void 
-Channel80211::send (Packet const *packet, PropagationData const *data, 
-		    uint8_t tx_mode, uint8_t stuff,
-		    PropagationModel const *caller) const
+Channel80211::real_send (Packet const *packet, double tx_power_dbm,
+			 double from_x, double from_y, double from_z,
+			 uint8_t tx_mode, uint8_t stuff,
+			 PropagationModel const *caller) const
 {
 	for (ModelsCI i = m_models.begin (); i != m_models.end (); i++) {
 		if (caller != (*i)) {
-			(*i)->receive (packet, data, tx_mode, stuff);
+			(*i)->receive (packet, tx_power_dbm, 
+				       from_x, from_y, from_z, 
+				       tx_mode, stuff);
 		}
 	}
 }
