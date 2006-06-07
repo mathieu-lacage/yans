@@ -3,6 +3,7 @@
 #define __REGISTRY_IMPL_H__
 
 #include "yans/callback.h"
+#include "id-factory.h"
 #include <registry.h>
 #include <list>
 #include <utility>
@@ -24,6 +25,11 @@ class Registry_impl : virtual public POA_Registry
       throw(
         ::CORBA::SystemException)
     ;
+
+  ::Registry::Id get_id(void)
+      throw(
+	    ::CORBA::SystemException)
+      ;
     void shutdown_recorded (void)
       throw(
         ::CORBA::SystemException)
@@ -38,7 +44,7 @@ class Registry_impl : virtual public POA_Registry
     Contexts m_contexts;
     CORBA::ORB_var m_orb;
     yans::Callback<void> m_done;
-    
+    IdFactory m_ids;
 };
 
 
