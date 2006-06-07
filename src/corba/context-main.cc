@@ -18,7 +18,7 @@ int main (int argc, char *argv[])
   PortableServer::POA_var poa = PortableServer::POA::_narrow (poa_obj);
   PortableServer::POAManager_var manager = poa->the_POAManager ();
 
-  ComputingContext_impl *servant = new ComputingContext_impl (orb);
+  ComputingContext_impl *servant = 0;//new ComputingContext_impl (orb);
 
   PortableServer::ObjectId_var object_id = poa->activate_object (servant);
 
