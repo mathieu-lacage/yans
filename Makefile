@@ -501,9 +501,9 @@ MICO_LDFLAGS:=-L/opt/mico/lib -lmico2.3.12 -lssl
 SAMPLE_CORBA_SRC := \
 	src/corba/context.cc \
 	src/corba/registry.cc \
-	src/corba/registry_skel.cc \
 	src/corba/registry_impl.cc \
 	src/corba/registry-main.cc \
+	src/corba/id-factory.cc \
 	$(NULL)
 SAMPLE_CORBA_NAME := test-corba
 SAMPLE_CORBA_TYPE := executable
@@ -513,7 +513,6 @@ SAMPLE_CORBA_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS) $(MICO_LDFLAGS)
 SAMPLE_CORBA_FACTORY_SRC := \
 	src/corba/registry.cc \
 	src/corba/context.cc \
-	src/corba/context_skel.cc \
 	src/corba/context_impl.cc \
 	src/corba/context-main.cc \
 	src/corba/parallel-channel-80211.cc \
@@ -524,9 +523,9 @@ SAMPLE_CORBA_FACTORY_CXXFLAGS:=$(CXXFLAGS) -I./src/corba $(MICO_CXXFLAGS)
 SAMPLE_CORBA_FACTORY_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS) $(MICO_LDFLAGS)
 
 src/corba/registry.cc: src/corba/registry.idl
-	cd src/corba && idl --codegen-c++ --c++-skel ./registry.idl && cd -
+	cd src/corba && idl --codegen-c++ ./registry.idl && cd -
 src/corba/context.cc: src/corba/context.idl
-	cd src/corba && idl --codegen-c++ --c++-skel ./context.idl && cd -
+	cd src/corba && idl --codegen-c++ ./context.idl && cd -
 
 
 
