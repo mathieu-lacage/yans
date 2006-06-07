@@ -516,6 +516,7 @@ SAMPLE_CORBA_FACTORY_SRC := \
 	src/corba/context_impl.cc \
 	src/corba/context-main.cc \
 	src/corba/parallel-channel-80211.cc \
+	src/corba/local-object-registry.cc \
 	$(NULL)
 SAMPLE_CORBA_FACTORY_NAME := context-server
 SAMPLE_CORBA_FACTORY_TYPE := executable
