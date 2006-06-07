@@ -516,7 +516,7 @@ SAMPLE_CORBA_FACTORY_SRC := \
 	src/corba/context_impl.cc \
 	src/corba/context-main.cc \
 	$(NULL)
-SAMPLE_CORBA_FACTORY_NAME := echo-server
+SAMPLE_CORBA_FACTORY_NAME := context-server
 SAMPLE_CORBA_FACTORY_TYPE := executable
 SAMPLE_CORBA_FACTORY_CXXFLAGS:=$(CXXFLAGS) -I./src/corba $(MICO_CXXFLAGS)
 SAMPLE_CORBA_FACTORY_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS) $(MICO_LDFLAGS)
