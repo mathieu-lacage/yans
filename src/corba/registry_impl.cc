@@ -1,36 +1,63 @@
 
 #include <registry_impl.h>
-
+#include <iostream>
 
 // Implementation for interface Registry
 
+Registry_impl::Registry_impl (CORBA::ORB_var orb)
+  : m_orb (orb)
+{}
+
 void
-Registry_impl::_cxx_register( ::Echo_ptr obj, const char* name )
+Registry_impl::set_callback (yans::Callback<void> done)
+{
+  m_done = done;
+}
+
+void
+Registry_impl::record( ::Remote::ComputingContext_ptr obj, const char* name )
   throw(
     ::CORBA::SystemException)
 
 {
-  // add your implementation here
-    // REMOVE  
-    mico_throw(::CORBA::NO_IMPLEMENT());
-    // REMOVE 
-
+  m_contexts.push_back (std::make_pair (name, ::Remote::ComputingContext::_duplicate (obj)));
+  m_done ();
 }
 
 
-::Echo_ptr
+::Remote::ComputingContext_ptr
 Registry_impl::lookup( const char* name )
   throw(
     ::CORBA::SystemException)
 
 {
-  ::Echo_ptr retval;
+  ::Remote::ComputingContext_ptr retval = ::Remote::ComputingContext::_nil ();
 
-  // add your implementation here
-    // REMOVE  
-    mico_throw(::CORBA::NO_IMPLEMENT());
-    // REMOVE 
+  for (ContextsI i = m_contexts.begin (); i != m_contexts.end (); i++) {
+    if (i->first.compare (name)) {
+      std::cout << "lookup ok" << std::endl;
+      retval = ::Remote::ComputingContext::_duplicate (i->second);
+      break;
+    }
+  }
 
-  return retval; 
+  return retval;
 }
 
+void 
+Registry_impl::shutdown_recorded (void)
+      throw(
+        ::CORBA::SystemException)
+
+{
+  for (ContextsI i = m_contexts.begin (); i != m_contexts.end (); i++) {
+    i->second->shutdown ();
+  }
+}
+void 
+Registry_impl::shutdown (void)
+      throw(
+        ::CORBA::SystemException)
+{
+  m_orb->shutdown (false);
+}

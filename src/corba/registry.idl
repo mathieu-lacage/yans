@@ -1,6 +1,9 @@
-#include "echo.idl"
+#include "context.idl"
 interface Registry {
-  void register (in Echo obj, in string name);
-  Echo lookup (in string name);
+  void record (in Remote::ComputingContext obj, in string name);
+  Remote::ComputingContext lookup (in string name);
+
+  void shutdown_recorded ();
+  oneway void shutdown ();
 };
 
