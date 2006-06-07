@@ -38,10 +38,11 @@ private:
 	friend class Simulator;
 	friend class ParallelSimulatorQueuePrivate;
 
-	ParallelSimulatorQueue ();
 	void set_priv (ParallelSimulatorQueuePrivate *priv);
 	virtual void send_null_message (void) = 0;
 	ParallelSimulatorQueuePrivate *m_priv;
+protected:
+	ParallelSimulatorQueue ();
 };
 
 class Simulator {
