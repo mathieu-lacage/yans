@@ -1,5 +1,6 @@
 #include "context_impl.h"
 #include "registry.h"
+#include "local-object-registry.h"
 
 int main (int argc, char *argv[])
 {
@@ -18,17 +19,20 @@ int main (int argc, char *argv[])
   PortableServer::POA_var poa = PortableServer::POA::_narrow (poa_obj);
   PortableServer::POAManager_var manager = poa->the_POAManager ();
 
-  ComputingContext_impl *servant = 0;//new ComputingContext_impl (orb);
-
-  PortableServer::ObjectId_var object_id = poa->activate_object (servant);
-
-  manager->activate ();
 
   CORBA::Object_var registry_obj = orb->string_to_object (registry_str);
   Registry_var registry = Registry::_narrow (registry_obj);
+
+  LocalObjectRegistry::instance ()->set_orb (orb);
+  LocalObjectRegistry::instance ()->set_registry (registry);
+
+
+  ComputingContext_impl *servant = 0;//new ComputingContext_impl (orb);
+  PortableServer::ObjectId_var object_id = poa->activate_object (servant);
+  manager->activate ();
   registry->record (servant->_this (), name);
 
-  std::cout << "servant="<< orb->object_to_string (servant->_this ()) << std::endl;
+  //std::cout << "servant="<< orb->object_to_string (servant->_this ()) << std::endl;
 
   orb->run ();
 
