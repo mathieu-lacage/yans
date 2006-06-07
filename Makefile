@@ -293,6 +293,7 @@ YANS_INST_HDR := \
 	src/80211/network-interface-80211-factory.h \
 	src/80211/base-channel-80211.h \
 	src/80211/channel-80211.h \
+	src/80211/propagation-model.h \
 	src/80211/ssid.h \
 	src/80211/chunk-mac-80211-hdr.h \
 	src/host/host.h \
@@ -515,6 +516,7 @@ SAMPLE_CORBA_FACTORY_SRC := \
 	src/corba/context_skel.cc \
 	src/corba/context_impl.cc \
 	src/corba/context-main.cc \
+	src/corba/parallel-channel-80211.cc \
 	$(NULL)
 SAMPLE_CORBA_FACTORY_NAME := context-server
 SAMPLE_CORBA_FACTORY_TYPE := executable

@@ -23,13 +23,17 @@
 
 #include <list>
 #include <stdint.h>
-#include "base-channel-80211.h"
+#include "yans/base-channel-80211.h"
 #include "context.h"
 
+namespace yans {
 class PropagationModel;
 class Packet;
+};
 
-class ParallelChannel80211 : public yans::BaseChanell80211 {
+class Channel80211Queue;
+
+class ParallelChannel80211 : public yans::BaseChannel80211 {
 public:
 	ParallelChannel80211 ();
 	virtual ~ParallelChannel80211 ();
@@ -41,15 +45,16 @@ public:
 private:
 	virtual void real_add (yans::PropagationModel *model);
 	virtual void real_send (yans::Packet const *packet, double tx_power_dbm,
-				double from_x, double from_y, double from_z,
 				uint8_t tx_mode, uint8_t stuff, 
 				yans::PropagationModel const*caller) const;
-	typedef std::list<PropagationModel *> Models;
-	typedef std::list<PropagationModel *>::const_iterator ModelsCI;
+	typedef std::list<yans::PropagationModel *> Models;
+	typedef std::list<yans::PropagationModel *>::const_iterator ModelsCI;
 	Models m_models;
 	typedef std::list<Remote::Channel80211_var> Channels;
 	typedef std::list<Remote::Channel80211_var>::iterator ChannelsI;
+	typedef std::list<Remote::Channel80211_var>::const_iterator ChannelsCI;
 	Channels m_channels;
+	Channel80211Queue *m_queue;
 };
 
 

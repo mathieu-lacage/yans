@@ -19,6 +19,23 @@
  * Author: Mathieu Lacage, <mathieu.lacage@sophia.inria.fr>
  */
 #include "parallel-channel-80211.h"
+#include "yans/simulator.h"
+#include "yans/propagation-model.h"
+#include "yans/event.tcc"
+#include "yans/packet.h"
+#include "yans/count-ptr-holder.tcc"
+
+namespace {
+void
+forward_up (yans::CountPtrHolder<yans::Packet const> p, double rx_power, uint8_t tx_mode, uint8_t stuff,
+	    yans::PropagationModel *propagation)
+{
+	yans::Packet const*packet = p.remove ();
+	propagation->receive (packet, rx_power, tx_mode, stuff);
+	packet->unref ();
+}
+}
+
 
 class Channel80211Queue : public yans::ParallelSimulatorQueue {
 public:
@@ -79,8 +96,8 @@ ParallelChannel80211::real_send (yans::Packet const *packet, double tx_power_dbm
 				 uint8_t tx_mode, uint8_t stuff, 
 				 yans::PropagationModel const*caller) const
 {
-	double x, y, z;
-	caller->get_position (x,y,z);
+	double from_x, from_y, from_z;
+	caller->get_position (from_x,from_y,from_z);
 	for (ModelsCI i = m_models.begin (); i != m_models.end (); i++) {
 		if (caller != (*i)) {
 			uint64_t delay_us = (*i)->get_delay_us (from_x, from_y, from_z);
@@ -91,18 +108,18 @@ ParallelChannel80211::real_send (yans::Packet const *packet, double tx_power_dbm
 		}
 	}
 	struct Remote::SourcePosition position;
-	position.x = x;
-	position.y = y;
-	position.z = z;
-	uint8_t *data = packet->begin ().peek_data ();
-	Remote::Buffer_var buffer = Remote::Buffer (packet->get_size (),
-						    packet->get_size (),
-						    data, 
-						    0 /* make sure we (the caller) keep ownership
-						       of the data buffer. */);
+	position.x = from_x;
+	position.y = from_y;
+	position.z = from_z;
+	uint8_t *data = packet->peek_data ();
+	Remote::Buffer buffer = Remote::Buffer (packet->get_size (),
+						packet->get_size (),
+						data, 
+						0 /* make sure we (the caller) keep ownership
+						     of the data buffer. */);
 	
-	for (ChannelsI j = m_channels.begin (); j != m_channels.end (); j++) {
-		(*i)->receive (position, Simulator::now_us (), buffer,
+	for (ChannelsCI j = m_channels.begin (); j != m_channels.end (); j++) {
+		(*j)->receive (position, yans::Simulator::now_us (), buffer,
 			       tx_power_dbm, tx_mode, stuff);
 	}
 }
@@ -112,7 +129,6 @@ ParallelChannel80211::send_null_message (void)
 {
 	Remote::SourcePositions_var sources;
 	Remote::SourcePosition position;
-	double x, y, z;
 	uint32_t index = 0;
 	for (ModelsCI i = m_models.begin (); i != m_models.end (); i++) {
 		(*i)->get_position (position.x, position.y, position.z);
@@ -120,6 +136,6 @@ ParallelChannel80211::send_null_message (void)
 		index++;
 	}
 	for (ChannelsI j = m_channels.begin (); j != m_channels.end (); j++) {
-		(*i)->receive_null (Simulator::now_us (), sources);
+		(*j)->receive_null (yans::Simulator::now_us (), sources);
 	}
 }
