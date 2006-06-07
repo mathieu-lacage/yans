@@ -35,12 +35,19 @@ LocalObjectRegistry::get_next_id (void)
 void 
 LocalObjectRegistry::record (Remote::StaticPositionModel_ptr model, yans::StaticPosition *position)
 {
-
+	assert (lookup (model) == 0);
+	m_static_positions.push_back (std::make_pair (model, position));
 }
 
 yans::StaticPosition *
 LocalObjectRegistry::lookup (Remote::StaticPositionModel_ptr model)
 {
+	for (StaticPositionsI i = m_static_positions.begin (); i != m_static_positions.end (); i++) {
+		if (i->first->get_id () == model->get_id ()) {
+			return i->second;
+			break;
+		}
+	}
 	return 0;
 }
 

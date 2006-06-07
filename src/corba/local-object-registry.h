@@ -19,6 +19,10 @@ public:
 	void record (Remote::StaticPositionModel_ptr model, yans::StaticPosition *position);
 	yans::StaticPosition *lookup (Remote::StaticPositionModel_ptr model);
 private:
+	typedef std::list<std::pair<Remote::StaticPositionModel_ptr, yans::StaticPosition *> > StaticPositions;
+	typedef std::list<std::pair<Remote::StaticPositionModel_ptr, yans::StaticPosition *> >::iterator StaticPositionsI;
+
+	StaticPositions m_static_positions;
 	CORBA::ORB_var m_orb;
 	::Registry_var m_registry;
 };
