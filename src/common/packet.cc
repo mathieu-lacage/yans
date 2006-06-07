@@ -147,6 +147,12 @@ Packet::get_size (void) const
 	return m_buffer->get_size ();
 }
 
+uint8_t *
+Packet::peek_data (void) const
+{
+	return m_buffer->begin ().peek_data ();
+}
+
 
 void 
 Packet::add_tag (Tag const*tag)

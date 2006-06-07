@@ -56,6 +56,8 @@ public:
 
 	uint32_t get_size (void) const;
 
+	uint8_t *peek_data (void) const;
+
 	void add_tag (Tag const*tag);
 	void remove_tag (Tag *tag);
 	void peek_tag (Tag *tag);
