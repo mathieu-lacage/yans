@@ -14,9 +14,19 @@ struct SourcePosition {
 };
 typedef sequence<SourcePosition> SourcePositions;
 
-interface PositionModel {};
+interface LocalInstance {
+  typedef unsigned long long Id;
+  Id get_id ();
+};
 
-interface Channel80211 {
+interface PositionModel : LocalInstance {};
+
+interface StaticPositionModel : PositionModel {
+  void get (out double x, out double y, out double z);
+  void set (in double x, in double y, in double z);
+};
+
+interface Channel80211 : LocalInstance {
   // connect to a remote channel
   void add (in Channel80211 channel);
   // receive a packet from a remote channel
@@ -28,7 +38,7 @@ interface Channel80211 {
   void receive_null (in Timestamp ts, in SourcePositions sources);
 };
 
-interface MacNetworkInterface {};
+interface MacNetworkInterface : LocalInstance {};
 
 interface NetworkInterface80211 : MacNetworkInterface {
   // connect to a local channel
@@ -39,41 +49,41 @@ interface NetworkInterface80211Factory {
   NetworkInterface80211 create_adhoc (in MacAddress address, in PositionModel position);
 };
 
-interface Ipv4NetworkInterface {};
+interface Ipv4NetworkInterface : LocalInstance {};
 
 interface Ipv4RoutingTable {
   void set_default_route (in Ipv4Address next_hop, 
 			  in Ipv4NetworkInterface i);
 };
 
-interface Node {
+interface Node : LocalInstance {
   Ipv4RoutingTable get_routing_table ();
   Ipv4NetworkInterface add_ipv4_arp_interface (in MacNetworkInterface i, 
 					       in Ipv4Address address, in Ipv4Mask mask);
 };
 
-interface LocalCallbackVoidPacket {};
+interface CallbackVoidPacket : LocalInstance {};
 
 interface UdpSource {
   void bind (in Ipv4Address address, in unsigned short port);
   void set_peer (in Ipv4Address remote, in unsigned short port);
   void unbind_at_s (in double at_s);
-  LocalCallbackVoidPacket create_send_callback ();
+  CallbackVoidPacket create_send_callback ();
 };
 
 interface UdpSink {
   void bind (in Ipv4Address address, in unsigned short port);
   void unbind_at_s (in double at_s);
-  void set_receive_callback (in LocalCallbackVoidPacket callback);
+  void set_receive_callback (in CallbackVoidPacket callback);
 };
 
 interface PeriodicGenerator {
   void set_packet_interval_s (in double interval_s);
   void set_packet_size (in unsigned long size);
-  void set_send_callback (in LocalCallbackVoidPacket callback);
+  void set_send_callback (in CallbackVoidPacket callback);
 };
 interface TrafficAnalyser {
-  LocalCallbackVoidPacket create_receive_callback ();
+  CallbackVoidPacket create_receive_callback ();
 };
 
 interface CallbackVoid {
@@ -84,9 +94,9 @@ interface ComputingContext {
   Node create_node ();
   NetworkInterface80211Factory create_network_interface_80211_factory ();
   Channel80211 create_channel_80211 ();
-  PositionModel create_static_position ();
-  UdpSource create_udp_source ();
-  UdpSink create_udp_sink ();
+  StaticPositionModel create_static_position ();
+  UdpSource create_udp_source (in Node node);
+  UdpSink create_udp_sink (in Node node);
 
   // used to implement a synchronization barrier
   void stop_at_us (in CallbackVoid frozen, in Timestamp at_us);
