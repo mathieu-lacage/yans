@@ -5,15 +5,50 @@
 #include <context.h>
 
 
+// Implementation for interface LocalInstance
+class LocalInstance_impl : virtual public POA_Remote::LocalInstance
+{
+  public:
+
+    ::Remote::LocalInstance::Id get_id()
+      throw(
+        ::CORBA::SystemException)
+    ;
+};
+
+
 // Implementation for interface PositionModel
-class PositionModel_impl : virtual public POA_Remote::PositionModel
+class PositionModel_impl : 
+  virtual public LocalInstance_impl,
+  virtual public POA_Remote::PositionModel
 {
   public:
 };
 
 
+// Implementation for interface StaticPositionModel
+class StaticPositionModel_impl : 
+  virtual public PositionModel_impl,
+  virtual public POA_Remote::StaticPositionModel
+{
+  public:
+
+    void get( CORBA::Double_out x, CORBA::Double_out y, CORBA::Double_out z )
+      throw(
+        ::CORBA::SystemException)
+    ;
+
+    void set( CORBA::Double x, CORBA::Double y, CORBA::Double z )
+      throw(
+        ::CORBA::SystemException)
+    ;
+};
+
+
 // Implementation for interface Channel80211
-class Channel80211_impl : virtual public POA_Remote::Channel80211
+class Channel80211_impl : 
+  virtual public LocalInstance_impl,
+  virtual public POA_Remote::Channel80211
 {
   public:
 
@@ -35,7 +70,9 @@ class Channel80211_impl : virtual public POA_Remote::Channel80211
 
 
 // Implementation for interface MacNetworkInterface
-class MacNetworkInterface_impl : virtual public POA_Remote::MacNetworkInterface
+class MacNetworkInterface_impl : 
+  virtual public LocalInstance_impl,
+  virtual public POA_Remote::MacNetworkInterface
 {
   public:
 };
@@ -68,7 +105,9 @@ class NetworkInterface80211Factory_impl : virtual public POA_Remote::NetworkInte
 
 
 // Implementation for interface Ipv4NetworkInterface
-class Ipv4NetworkInterface_impl : virtual public POA_Remote::Ipv4NetworkInterface
+class Ipv4NetworkInterface_impl : 
+  virtual public LocalInstance_impl,
+  virtual public POA_Remote::Ipv4NetworkInterface
 {
   public:
 };
@@ -87,7 +126,9 @@ class Ipv4RoutingTable_impl : virtual public POA_Remote::Ipv4RoutingTable
 
 
 // Implementation for interface Node
-class Node_impl : virtual public POA_Remote::Node
+class Node_impl : 
+  virtual public LocalInstance_impl,
+  virtual public POA_Remote::Node
 {
   public:
 
@@ -103,8 +144,10 @@ class Node_impl : virtual public POA_Remote::Node
 };
 
 
-// Implementation for interface LocalCallbackVoidPacket
-class LocalCallbackVoidPacket_impl : virtual public POA_Remote::LocalCallbackVoidPacket
+// Implementation for interface CallbackVoidPacket
+class CallbackVoidPacket_impl : 
+  virtual public LocalInstance_impl,
+  virtual public POA_Remote::CallbackVoidPacket
 {
   public:
 };
@@ -130,7 +173,7 @@ class UdpSource_impl : virtual public POA_Remote::UdpSource
         ::CORBA::SystemException)
     ;
 
-    ::Remote::LocalCallbackVoidPacket_ptr create_send_callback()
+    ::Remote::CallbackVoidPacket_ptr create_send_callback()
       throw(
         ::CORBA::SystemException)
     ;
@@ -152,7 +195,7 @@ class UdpSink_impl : virtual public POA_Remote::UdpSink
         ::CORBA::SystemException)
     ;
 
-    void set_receive_callback( ::Remote::LocalCallbackVoidPacket_ptr callback )
+    void set_receive_callback( ::Remote::CallbackVoidPacket_ptr callback )
       throw(
         ::CORBA::SystemException)
     ;
@@ -174,7 +217,7 @@ class PeriodicGenerator_impl : virtual public POA_Remote::PeriodicGenerator
         ::CORBA::SystemException)
     ;
 
-    void set_send_callback( ::Remote::LocalCallbackVoidPacket_ptr callback )
+    void set_send_callback( ::Remote::CallbackVoidPacket_ptr callback )
       throw(
         ::CORBA::SystemException)
     ;
@@ -186,7 +229,7 @@ class TrafficAnalyser_impl : virtual public POA_Remote::TrafficAnalyser
 {
   public:
 
-    ::Remote::LocalCallbackVoidPacket_ptr create_receive_callback()
+    ::Remote::CallbackVoidPacket_ptr create_receive_callback()
       throw(
         ::CORBA::SystemException)
     ;
@@ -209,7 +252,6 @@ class CallbackVoid_impl : virtual public POA_Remote::CallbackVoid
 class ComputingContext_impl : virtual public POA_Remote::ComputingContext
 {
   public:
-  ComputingContext_impl (CORBA::ORB_var orb);
 
     ::Remote::Node_ptr create_node()
       throw(
@@ -226,17 +268,17 @@ class ComputingContext_impl : virtual public POA_Remote::ComputingContext
         ::CORBA::SystemException)
     ;
 
-    ::Remote::PositionModel_ptr create_static_position()
+    ::Remote::StaticPositionModel_ptr create_static_position()
       throw(
         ::CORBA::SystemException)
     ;
 
-    ::Remote::UdpSource_ptr create_udp_source()
+    ::Remote::UdpSource_ptr create_udp_source( ::Remote::Node_ptr node )
       throw(
         ::CORBA::SystemException)
     ;
 
-    ::Remote::UdpSink_ptr create_udp_sink()
+    ::Remote::UdpSink_ptr create_udp_sink( ::Remote::Node_ptr node )
       throw(
         ::CORBA::SystemException)
     ;
@@ -255,8 +297,6 @@ class ComputingContext_impl : virtual public POA_Remote::ComputingContext
       throw(
         ::CORBA::SystemException)
     ;
- private:
-    CORBA::ORB_var m_orb;
 };
 
 

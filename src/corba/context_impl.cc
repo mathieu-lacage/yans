@@ -2,7 +2,56 @@
 #include <context_impl.h>
 
 
+// Implementation for interface LocalInstance
+
+::Remote::LocalInstance::Id
+LocalInstance_impl::get_id()
+  throw(
+    ::CORBA::SystemException)
+
+{
+  ::Remote::LocalInstance::Id retval;
+
+  // add your implementation here
+    // REMOVE  
+    mico_throw(::CORBA::NO_IMPLEMENT());
+    // REMOVE 
+
+  return retval; 
+}
+
+
 // Implementation for interface PositionModel
+
+// Implementation for interface StaticPositionModel
+
+void
+StaticPositionModel_impl::get( CORBA::Double_out x, CORBA::Double_out y, CORBA::Double_out z )
+  throw(
+    ::CORBA::SystemException)
+
+{
+  // add your implementation here
+    // REMOVE  
+    mico_throw(::CORBA::NO_IMPLEMENT());
+    // REMOVE 
+
+}
+
+
+void
+StaticPositionModel_impl::set( CORBA::Double x, CORBA::Double y, CORBA::Double z )
+  throw(
+    ::CORBA::SystemException)
+
+{
+  // add your implementation here
+    // REMOVE  
+    mico_throw(::CORBA::NO_IMPLEMENT());
+    // REMOVE 
+
+}
+
 
 // Implementation for interface Channel80211
 
@@ -139,7 +188,7 @@ Node_impl::add_ipv4_arp_interface( ::Remote::MacNetworkInterface_ptr i, ::Remote
 }
 
 
-// Implementation for interface LocalCallbackVoidPacket
+// Implementation for interface CallbackVoidPacket
 
 // Implementation for interface UdpSource
 
@@ -185,13 +234,13 @@ UdpSource_impl::unbind_at_s( CORBA::Double at_s )
 }
 
 
-::Remote::LocalCallbackVoidPacket_ptr
+::Remote::CallbackVoidPacket_ptr
 UdpSource_impl::create_send_callback()
   throw(
     ::CORBA::SystemException)
 
 {
-  ::Remote::LocalCallbackVoidPacket_ptr retval;
+  ::Remote::CallbackVoidPacket_ptr retval;
 
   // add your implementation here
     // REMOVE  
@@ -233,7 +282,7 @@ UdpSink_impl::unbind_at_s( CORBA::Double at_s )
 
 
 void
-UdpSink_impl::set_receive_callback( ::Remote::LocalCallbackVoidPacket_ptr callback )
+UdpSink_impl::set_receive_callback( ::Remote::CallbackVoidPacket_ptr callback )
   throw(
     ::CORBA::SystemException)
 
@@ -277,7 +326,7 @@ PeriodicGenerator_impl::set_packet_size( CORBA::ULong size )
 
 
 void
-PeriodicGenerator_impl::set_send_callback( ::Remote::LocalCallbackVoidPacket_ptr callback )
+PeriodicGenerator_impl::set_send_callback( ::Remote::CallbackVoidPacket_ptr callback )
   throw(
     ::CORBA::SystemException)
 
@@ -292,13 +341,13 @@ PeriodicGenerator_impl::set_send_callback( ::Remote::LocalCallbackVoidPacket_ptr
 
 // Implementation for interface TrafficAnalyser
 
-::Remote::LocalCallbackVoidPacket_ptr
+::Remote::CallbackVoidPacket_ptr
 TrafficAnalyser_impl::create_receive_callback()
   throw(
     ::CORBA::SystemException)
 
 {
-  ::Remote::LocalCallbackVoidPacket_ptr retval;
+  ::Remote::CallbackVoidPacket_ptr retval;
 
   // add your implementation here
     // REMOVE  
@@ -326,10 +375,6 @@ CallbackVoid_impl::invoke()
 
 
 // Implementation for interface ComputingContext
-
-ComputingContext_impl::ComputingContext_impl (CORBA::ORB_var orb)
-  : m_orb (orb)
-{}
 
 ::Remote::Node_ptr
 ComputingContext_impl::create_node()
@@ -382,13 +427,13 @@ ComputingContext_impl::create_channel_80211()
 }
 
 
-::Remote::PositionModel_ptr
+::Remote::StaticPositionModel_ptr
 ComputingContext_impl::create_static_position()
   throw(
     ::CORBA::SystemException)
 
 {
-  ::Remote::PositionModel_ptr retval;
+  ::Remote::StaticPositionModel_ptr retval;
 
   // add your implementation here
     // REMOVE  
@@ -400,7 +445,7 @@ ComputingContext_impl::create_static_position()
 
 
 ::Remote::UdpSource_ptr
-ComputingContext_impl::create_udp_source()
+ComputingContext_impl::create_udp_source( ::Remote::Node_ptr node )
   throw(
     ::CORBA::SystemException)
 
@@ -417,7 +462,7 @@ ComputingContext_impl::create_udp_source()
 
 
 ::Remote::UdpSink_ptr
-ComputingContext_impl::create_udp_sink()
+ComputingContext_impl::create_udp_sink( ::Remote::Node_ptr node )
   throw(
     ::CORBA::SystemException)
 
