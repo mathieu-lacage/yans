@@ -23,18 +23,13 @@
 
 #include <stdint.h>
 
-namespace yans {
-class SystemMutex;
-};
-
 class IdFactory {
 public:
-	IdFactory ();
-	~IdFactory ();
+	static IdFactory *instance (void);
 	uint64_t get_next (void);
 private:
+	IdFactory ();
 	uint64_t m_current;
-	yans::SystemMutex *m_mutex;
 };
 
 

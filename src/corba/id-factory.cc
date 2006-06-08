@@ -19,23 +19,21 @@
  * Author: Mathieu Lacage, <mathieu.lacage@sophia.inria.fr>
  */
 #include "id-factory.h"
-#include "yans/system-mutex.h"
 
 uint64_t 
 IdFactory::get_next (void)
 {
-	m_mutex->lock ();
 	uint64_t next = m_current;
 	m_current++;
-	m_mutex->unlock ();
 	return next;
 }
 IdFactory::IdFactory ()
-	: m_current (0),
-	  m_mutex (new yans::SystemMutex ())
+	: m_current (0)
 {}
 
-IdFactory::~IdFactory ()
+IdFactory *
+IdFactory::instance (void)
 {
-	delete m_mutex;
+	static IdFactory *factory = new IdFactory ();
+	return factory;
 }
