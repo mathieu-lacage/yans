@@ -44,14 +44,6 @@ Registry_impl::lookup( const char* name )
   return retval;
 }
 
-::Registry::Id 
-Registry_impl::get_id(void)
-  throw(
-	    ::CORBA::SystemException)
-{
-  return m_ids.get_next ();
-}
-
 
 void 
 Registry_impl::shutdown_recorded (void)

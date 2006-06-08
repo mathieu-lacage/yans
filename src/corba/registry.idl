@@ -3,10 +3,6 @@ interface Registry {
   void record (in Remote::ComputingContext obj, in string name);
   Remote::ComputingContext lookup (in string name);
 
-  typedef unsigned long long Id;
-  Id get_id ();
-
-
   void shutdown_recorded ();
   oneway void shutdown ();
 };
