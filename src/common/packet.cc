@@ -147,10 +147,10 @@ Packet::get_size (void) const
 	return m_buffer->get_size ();
 }
 
-uint8_t *
-Packet::peek_data (void) const
+Buffer *
+Packet::peek_buffer (void) const
 {
-	return m_buffer->begin ().peek_data ();
+	return m_buffer;
 }
 
 

@@ -56,7 +56,10 @@ public:
 
 	uint32_t get_size (void) const;
 
-	uint8_t *peek_data (void) const;
+	/* If you attempt to use this method,
+	 * I swear I will _kill_ you.
+	 */
+	Buffer *peek_buffer (void) const;
 
 	void add_tag (Tag const*tag);
 	void remove_tag (Tag *tag);
