@@ -1,5 +1,6 @@
 module Remote {
 
+typedef unsigned long long InstanceId;
 typedef unsigned long long Timestamp;
 struct MacAddress {
   octet data[6];
@@ -15,8 +16,7 @@ struct SourcePosition {
 typedef sequence<SourcePosition> SourcePositions;
 
 interface LocalInstance {
-  typedef unsigned long long Id;
-  Id get_id ();
+  InstanceId get_id ();
 };
 
 interface PositionModel : LocalInstance {};
@@ -46,7 +46,7 @@ interface NetworkInterface80211 : MacNetworkInterface {
 };
 
 interface NetworkInterface80211Factory {
-  NetworkInterface80211 create_adhoc (in MacAddress address, in PositionModel position);
+  NetworkInterface80211 create_adhoc (in MacAddress address, in PositionModel position, in InstanceId id);
 };
 
 interface Ipv4NetworkInterface : LocalInstance {};
@@ -59,7 +59,9 @@ interface Ipv4RoutingTable {
 interface Node : LocalInstance {
   Ipv4RoutingTable get_routing_table ();
   Ipv4NetworkInterface add_ipv4_arp_interface (in MacNetworkInterface i, 
-					       in Ipv4Address address, in Ipv4Mask mask);
+					       in Ipv4Address address, 
+					       in Ipv4Mask mask,
+					       in InstanceId id);
 };
 
 interface CallbackVoidPacket : LocalInstance {};
@@ -68,7 +70,7 @@ interface UdpSource {
   void bind (in Ipv4Address address, in unsigned short port);
   void set_peer (in Ipv4Address remote, in unsigned short port);
   void unbind_at_s (in double at_s);
-  CallbackVoidPacket create_send_callback ();
+  CallbackVoidPacket create_send_callback (in InstanceId id);
 };
 
 interface UdpSink {
@@ -83,7 +85,7 @@ interface PeriodicGenerator {
   void set_send_callback (in CallbackVoidPacket callback);
 };
 interface TrafficAnalyser {
-  CallbackVoidPacket create_receive_callback ();
+  CallbackVoidPacket create_receive_callback (in InstanceId id);
 };
 
 interface CallbackVoid {
@@ -91,16 +93,16 @@ interface CallbackVoid {
 };
 
 interface ComputingContext {
-  Node create_node ();
+  Node create_node (in InstanceId id, in string name);
   NetworkInterface80211Factory create_network_interface_80211_factory ();
-  Channel80211 create_channel_80211 ();
-  StaticPositionModel create_static_position ();
+  Channel80211 create_channel_80211 (in InstanceId id);
+  StaticPositionModel create_static_position (in InstanceId id);
   UdpSource create_udp_source (in Node node);
   UdpSink create_udp_sink (in Node node);
 
   // used to implement a synchronization barrier
-  void stop_at_us (in CallbackVoid frozen, in Timestamp at_us);
-  void run (in CallbackVoid done);
+  void stop_at_us (in Timestamp at_us);
+  void start (in CallbackVoid done);
 
   oneway void shutdown ();
 };
