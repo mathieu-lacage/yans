@@ -39,9 +39,13 @@ public:
 	virtual ~ParallelChannel80211 ();
 	void add (Remote::Channel80211_var channel);
 	void send_null_message (void);
-	void receive (yans::Packet const *packet, double tx_power_dbm,
-		      double from_x, double from_y, double from_z,
-		      uint8_t tx_mode, uint8_t stuff);
+	void receive (const ::Remote::SourcePosition& source_position, 
+		      ::Remote::Timestamp source_time, 
+		      const ::Remote::Buffer& buffer, 
+		      CORBA::Double tx_power, 
+		      CORBA::Octet tx_mode, 
+		      CORBA::Octet stuff );
+	void receive_null_message (::Remote::Timestamp ts, const ::Remote::SourcePositions& sources);
 private:
 	virtual void real_add (yans::PropagationModel *model);
 	virtual void real_send (yans::Packet const *packet, double tx_power_dbm,

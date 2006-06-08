@@ -34,6 +34,9 @@ forward_up (yans::CountPtrHolder<yans::Packet const> p, double rx_power, uint8_t
 	propagation->receive (packet, rx_power, tx_mode, stuff);
 	packet->unref ();
 }
+void
+null_callback (void)
+{}
 }
 
 
@@ -74,17 +77,27 @@ ParallelChannel80211::add (Remote::Channel80211_var channel)
 	m_channels.push_back (channel);
 }
 void 
-ParallelChannel80211::receive (yans::Packet const *packet, double tx_power_dbm,
-			       double from_x, double from_y, double from_z,
-			       uint8_t tx_mode, uint8_t stuff)
+ParallelChannel80211::receive (const ::Remote::SourcePosition& source_position, 
+			       ::Remote::Timestamp source_time, 
+			       const ::Remote::Buffer& buffer, 
+			       CORBA::Double tx_power, 
+			       CORBA::Octet tx_mode, 
+			       CORBA::Octet stuff)
 {
+	yans::Packet *packet = PacketFactory::create ();
+	char const *data = *(buffer.get_buffer ());
+	uint32_t size = buffer.length ();
+	packet->add_at_start (size);
+	BufferI start = packet->peek_buffer ()->begin ();
+	start.write (data, size);
 	for (ModelsCI i = m_models.begin (); i != m_models.end (); i++) {
 		uint64_t delay_us = (*i)->get_delay_us (from_x, from_y, from_z);
 		double rx_power_w = (*i)->get_rx_power_w (tx_power_dbm, from_x, from_y, from_z);
-		m_queue->insert_at_us (delay_us, yans::make_event (&forward_up, 
-								   yans::make_count_ptr_holder (packet),
-								   rx_power_w, tx_mode, stuff, *i));
+		m_queue->insert_at_us (source_time + delay_us, yans::make_event (&forward_up, 
+										 yans::make_count_ptr_holder (packet),
+										 rx_power_w, tx_mode, stuff, *i));
 	}
+	packet->unref ();
 }
 void 
 ParallelChannel80211::real_add (yans::PropagationModel *model)
@@ -111,7 +124,7 @@ ParallelChannel80211::real_send (yans::Packet const *packet, double tx_power_dbm
 	position.x = from_x;
 	position.y = from_y;
 	position.z = from_z;
-	uint8_t *data = packet->peek_data ();
+	uint8_t *data = packet->peek_buffer ()->begin ().peek_data ();
 	Remote::Buffer buffer = Remote::Buffer (packet->get_size (),
 						packet->get_size (),
 						data, 
@@ -138,4 +151,20 @@ ParallelChannel80211::send_null_message (void)
 	for (ChannelsI j = m_channels.begin (); j != m_channels.end (); j++) {
 		(*j)->receive_null (yans::Simulator::now_us (), sources);
 	}
+}
+
+void 
+ParallelChannel80211::receive_null_message (::Remote::Timestamp ts, const ::Remote::SourcePositions& sources)
+{
+	uint64_t smallest = 0xffffffffffffffffL;
+	for (uint32_t index = 0; index < sources.length (); index++) {
+		Remote::SourcePosition position = sources[index];
+		for (ModelsCI i = m_models.begin (); i != m_models.end (); i++) {
+			uint64_t delay_us = (*i)->get_delay_us (position.x, position.y, position.z);
+			if (delay_us < smallest) {
+				delay_us = smallest;
+			}
+		}
+	}
+	m_queue->insert_at_us (ts+smallest, make_event (&null_callback));
 }
