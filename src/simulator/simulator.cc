@@ -78,7 +78,7 @@ public:
 	void run_serial (void);
 	void run_parallel (void);
 	void stop (void);
-	void stop_at_us (Event *event, uint64_t at);
+	void stop_at_us (uint64_t at);
 	Event *insert_in_us (Event *event, uint64_t delta);
 	Event *insert_in_s (Event *event, double delta);
 	Event *insert_at_us (Event *event, uint64_t time);
@@ -96,7 +96,6 @@ private:
 	typedef std::vector<ParallelSimulatorQueuePrivate *> Queues;
 	typedef std::vector<ParallelSimulatorQueuePrivate *>::iterator QueuesI;
 	Events m_destroy;
-	Event *m_stop_event;
 	uint64_t m_stop_at;
 	bool m_stop;
 	Scheduler *m_events;
@@ -241,7 +240,7 @@ void
 SimulatorPrivate::run_serial (void)
 {
 	while (!m_events->is_empty () && !m_stop && 
-	       (m_stop_event == 0 || m_stop_at > m_current_us)) {
+	       (m_stop_at == 0 || m_stop_at > m_current_us)) {
 		process_one_event ();
 	}
 	m_log.close ();
@@ -251,7 +250,7 @@ void
 SimulatorPrivate::run_parallel (void)
 {
 	while (!m_stop && 
-	       (m_stop_event == 0 || m_stop_at > m_current_us)) {
+	       (m_stop_at == 0 || m_stop_at > m_current_us)) {
 		for (QueuesI i = m_queues.begin (); i != m_queues.end (); i++) {
 			(*i)->send_null_message ();
 		}
@@ -267,9 +266,8 @@ SimulatorPrivate::stop (void)
 	m_stop = true;
 }
 void 
-SimulatorPrivate::stop_at_us (Event *event, uint64_t at)
+SimulatorPrivate::stop_at_us (uint64_t at)
 {
-	m_stop_event = event;
 	m_stop_at = at;
 }
 Event *  
@@ -433,9 +431,9 @@ Simulator::stop (void)
 	get_priv ()->stop ();
 }
 void 
-Simulator::stop_at_us (uint64_t at, Event *event)
+Simulator::stop_at_us (uint64_t at)
 {
-	get_priv ()->stop_at_us (event, at);
+	get_priv ()->stop_at_us (at);
 }
 Event *
 Simulator::insert_in_us (uint64_t delta, Event *event)

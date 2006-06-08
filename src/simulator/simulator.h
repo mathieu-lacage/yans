@@ -80,7 +80,7 @@ public:
 	 * whose timestamp is equal to at_us to run, even
 	 * any event inserted before the stop event was inserted.
 	 */
-	static void stop_at_us (uint64_t at, Event *event);
+	static void stop_at_us (uint64_t at);
 
 	static Event *insert_in_us (uint64_t delta, Event *event);
 	static Event *insert_in_s (double delta, Event *event);
