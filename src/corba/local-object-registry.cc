@@ -9,6 +9,14 @@ LocalObjectRegistry::instance (void)
 	return self;
 }
 
+PortableServer::POA_var
+LocalObjectRegistry::get_root_poa (void)
+{
+  CORBA::Object_var poa_obj = m_orb->resolve_initial_references ("RootPOA");
+  PortableServer::POA_var poa = PortableServer::POA::_narrow (poa_obj);
+  return poa;
+}
+
 
 void 
 LocalObjectRegistry::set_orb (CORBA::ORB_var orb)
@@ -25,25 +33,21 @@ LocalObjectRegistry::get_orb (void)
 {
 	return m_orb;
 }
-uint64_t 
-LocalObjectRegistry::get_next_id (void)
-{
-	return m_registry->get_id ();
-}
-
 
 void 
-LocalObjectRegistry::record (Remote::StaticPositionModel_ptr model, yans::StaticPosition *position)
+LocalObjectRegistry::record (uint64_t id, yans::StaticPosition *position)
 {
-	assert (lookup (model) == 0);
-	m_static_positions.push_back (std::make_pair (model, position));
+	LocalObjectRegistry *self = instance ();
+	assert (lookup (id) == 0);
+	self->m_static_positions.push_back (std::make_pair (id, position));
 }
 
 yans::StaticPosition *
-LocalObjectRegistry::lookup (Remote::StaticPositionModel_ptr model)
+LocalObjectRegistry::lookup_static_position (uint64_t id)
 {
-	for (StaticPositionsI i = m_static_positions.begin (); i != m_static_positions.end (); i++) {
-		if (i->first->get_id () == model->get_id ()) {
+	LocalObjectRegistry *self = instance ();
+	for (StaticPositionsI i = self->m_static_positions.begin (); i != self->m_static_positions.end (); i++) {
+		if (i->first == id) {
 			return i->second;
 			break;
 		}
