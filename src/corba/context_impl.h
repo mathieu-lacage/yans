@@ -4,16 +4,30 @@
 
 #include <context.h>
 
+namespace yans {
+  class UdpSink;
+  class UdpSource;
+  class PeriodicGenerator;
+  class StaticPosition;
+  class TrafficAnalyser;
+  class Host;
+  class NetworkInterface80211;
+  class NetworkInterface80211Factory;
+};
+
 
 // Implementation for interface LocalInstance
 class LocalInstance_impl : virtual public POA_Remote::LocalInstance
 {
   public:
+  LocalInstance_impl (::Remote::InstanceId id);
 
-    ::Remote::LocalInstance::Id get_id()
+    ::Remote::InstanceId get_id()
       throw(
         ::CORBA::SystemException)
     ;
+ private:
+  ::Remote::InstanceId m_id;
 };
 
 
@@ -32,6 +46,8 @@ class StaticPositionModel_impl :
   virtual public POA_Remote::StaticPositionModel
 {
   public:
+  StaticPositionModel_impl (::Remote::InstanceId id);
+  ~StaticPositionModel_impl ();
 
     void get( CORBA::Double_out x, CORBA::Double_out y, CORBA::Double_out z )
       throw(
@@ -42,6 +58,8 @@ class StaticPositionModel_impl :
       throw(
         ::CORBA::SystemException)
     ;
+ private:
+    yans::StaticPosition *m_self;
 };
 
 
@@ -51,7 +69,9 @@ class Channel80211_impl :
   virtual public POA_Remote::Channel80211
 {
   public:
-
+  Channel80211_impl (::Remote::InstanceId id, ParallelChannel80211 *real_channel);
+  ~Channel80211_impl ();
+  
     void add( ::Remote::Channel80211_ptr channel )
       throw(
         ::CORBA::SystemException)
@@ -66,6 +86,8 @@ class Channel80211_impl :
       throw(
         ::CORBA::SystemException)
     ;
+ private:
+    ParallelChannel80211 *m_self;
 };
 
 
@@ -84,11 +106,16 @@ class NetworkInterface80211_impl :
   virtual public POA_Remote::NetworkInterface80211
 {
   public:
+  NetworkInterface80211 (::Remote::Id id);
+  ~NetworkInterface80211 ();
 
     void connect( ::Remote::Channel80211_ptr channel )
       throw(
         ::CORBA::SystemException)
     ;
+
+ private:
+    NetworkInterface80211 *m_self;
 };
 
 
@@ -96,11 +123,15 @@ class NetworkInterface80211_impl :
 class NetworkInterface80211Factory_impl : virtual public POA_Remote::NetworkInterface80211Factory
 {
   public:
+  NetworkInterface80211Factory_impl  (yans::NetworkInterface80211Factory *real_factory);
+  ~NetworkInterface80211Factory_impl ();
 
-    ::Remote::NetworkInterface80211_ptr create_adhoc( const ::Remote::MacAddress& address, ::Remote::PositionModel_ptr position )
+    ::Remote::NetworkInterface80211_ptr create_adhoc( const ::Remote::MacAddress& address, ::Remote::PositionModel_ptr position, ::Remote::InstanceId id )
       throw(
         ::CORBA::SystemException)
     ;
+ private:
+  yans::NetworkInterface80211Factory *m_self;
 };
 
 
@@ -110,6 +141,8 @@ class Ipv4NetworkInterface_impl :
   virtual public POA_Remote::Ipv4NetworkInterface
 {
   public:
+  Ipv4NetworkInterface_impl (::Remote::InstanceId id);
+  ~Ipv4NetworkInterface_impl ();
 };
 
 
@@ -117,11 +150,15 @@ class Ipv4NetworkInterface_impl :
 class Ipv4RoutingTable_impl : virtual public POA_Remote::Ipv4RoutingTable
 {
   public:
+  Ipv4RoutingTable_impl (yans::Ipv4Route *real_routing_table);
+  ~Ipv4RoutingTable_impl ();
 
     void set_default_route( ::Remote::Ipv4Address next_hop, ::Remote::Ipv4NetworkInterface_ptr i )
       throw(
         ::CORBA::SystemException)
     ;
+ private:
+    yans::Ipv4Route *m_self;
 };
 
 
@@ -131,16 +168,23 @@ class Node_impl :
   virtual public POA_Remote::Node
 {
   public:
+  Node_impl (::Remote::InstanceId id, yans::Host *real_node);
+  ~Node_impl ();
 
     ::Remote::Ipv4RoutingTable_ptr get_routing_table()
       throw(
         ::CORBA::SystemException)
     ;
 
-    ::Remote::Ipv4NetworkInterface_ptr add_ipv4_arp_interface( ::Remote::MacNetworkInterface_ptr i, ::Remote::Ipv4Address address, ::Remote::Ipv4Mask mask )
+    ::Remote::Ipv4NetworkInterface_ptr add_ipv4_arp_interface( ::Remote::MacNetworkInterface_ptr i, ::Remote::Ipv4Address address, ::Remote::Ipv4Mask mask, ::Remote::InstanceId id )
       throw(
         ::CORBA::SystemException)
     ;
+ private:
+  yans::Host *m_self;
+  typedef std::vector<Ipv4NetworkInterface_impl *> Ipv4Interfaces;
+  typedef std::vector<Ipv4NetworkInterface_impl *>::iterator Ipv4InterfacesI;
+  Ipv4Interfaces m_interfaces;
 };
 
 
@@ -150,6 +194,7 @@ class CallbackVoidPacket_impl :
   virtual public POA_Remote::CallbackVoidPacket
 {
   public:
+  CallbackVoidPacket (::Remote::InstanceId id);
 };
 
 
@@ -157,6 +202,8 @@ class CallbackVoidPacket_impl :
 class UdpSource_impl : virtual public POA_Remote::UdpSource
 {
   public:
+  UdpSource_impl (yans::UdpSource *real_source);
+  ~UdpSource_impl ();
 
     void bind( ::Remote::Ipv4Address address, CORBA::UShort port )
       throw(
@@ -173,10 +220,12 @@ class UdpSource_impl : virtual public POA_Remote::UdpSource
         ::CORBA::SystemException)
     ;
 
-    ::Remote::CallbackVoidPacket_ptr create_send_callback()
+    ::Remote::CallbackVoidPacket_ptr create_send_callback( ::Remote::InstanceId id )
       throw(
         ::CORBA::SystemException)
     ;
+ private:
+    yans::UdpSource *m_self;
 };
 
 
@@ -184,6 +233,8 @@ class UdpSource_impl : virtual public POA_Remote::UdpSource
 class UdpSink_impl : virtual public POA_Remote::UdpSink
 {
   public:
+  UdpSink_impl (yans::UdpSink *real_sink);
+  ~UdpSink_impl ();
 
     void bind( ::Remote::Ipv4Address address, CORBA::UShort port )
       throw(
@@ -199,6 +250,8 @@ class UdpSink_impl : virtual public POA_Remote::UdpSink
       throw(
         ::CORBA::SystemException)
     ;
+ private:
+    yans::UdpSink *m_self;
 };
 
 
@@ -206,6 +259,8 @@ class UdpSink_impl : virtual public POA_Remote::UdpSink
 class PeriodicGenerator_impl : virtual public POA_Remote::PeriodicGenerator
 {
   public:
+  PeriodicGenerator_impl (yans::PeriodicGenerator *real_generator);
+  ~PeriodicGenerator_impl ();
 
     void set_packet_interval_s( CORBA::Double interval_s )
       throw(
@@ -221,6 +276,8 @@ class PeriodicGenerator_impl : virtual public POA_Remote::PeriodicGenerator
       throw(
         ::CORBA::SystemException)
     ;
+ private:
+    yans::PeriodicGenerator *m_self;
 };
 
 
@@ -228,11 +285,15 @@ class PeriodicGenerator_impl : virtual public POA_Remote::PeriodicGenerator
 class TrafficAnalyser_impl : virtual public POA_Remote::TrafficAnalyser
 {
   public:
+  TrafficAnalyser (yans::TrafficAnalyser *real_analyser);
+  ~TrafficAnalyser ();
 
-    ::Remote::CallbackVoidPacket_ptr create_receive_callback()
+    ::Remote::CallbackVoidPacket_ptr create_receive_callback( ::Remote::InstanceId id )
       throw(
         ::CORBA::SystemException)
     ;
+ private:
+  yans::TrafficAnalyser *m_self;
 };
 
 
@@ -252,8 +313,10 @@ class CallbackVoid_impl : virtual public POA_Remote::CallbackVoid
 class ComputingContext_impl : virtual public POA_Remote::ComputingContext
 {
   public:
+  ComputingContext_impl ();
+  ~ComputingContext_impl ();
 
-    ::Remote::Node_ptr create_node()
+  ::Remote::Node_ptr create_node( ::Remote::InstanceId id, const char *name)
       throw(
         ::CORBA::SystemException)
     ;
@@ -263,12 +326,12 @@ class ComputingContext_impl : virtual public POA_Remote::ComputingContext
         ::CORBA::SystemException)
     ;
 
-    ::Remote::Channel80211_ptr create_channel_80211()
+    ::Remote::Channel80211_ptr create_channel_80211( ::Remote::InstanceId id )
       throw(
         ::CORBA::SystemException)
     ;
 
-    ::Remote::StaticPositionModel_ptr create_static_position()
+    ::Remote::StaticPositionModel_ptr create_static_position( ::Remote::InstanceId id )
       throw(
         ::CORBA::SystemException)
     ;
@@ -283,12 +346,12 @@ class ComputingContext_impl : virtual public POA_Remote::ComputingContext
         ::CORBA::SystemException)
     ;
 
-    void stop_at_us( ::Remote::CallbackVoid_ptr frozen, ::Remote::Timestamp at_us )
+    void stop_at_us( ::Remote::Timestamp at_us )
       throw(
         ::CORBA::SystemException)
     ;
 
-    void run( ::Remote::CallbackVoid_ptr done )
+    void start( ::Remote::CallbackVoid_ptr done )
       throw(
         ::CORBA::SystemException)
     ;
@@ -297,6 +360,10 @@ class ComputingContext_impl : virtual public POA_Remote::ComputingContext
       throw(
         ::CORBA::SystemException)
     ;
+ private:
+    void run_done (void);
+    class ContextSimulator *m_simulator;
+    ::Remote::CallbackVoid_ptr m_run_done;
 };
 
 

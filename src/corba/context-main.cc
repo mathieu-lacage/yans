@@ -27,7 +27,7 @@ int main (int argc, char *argv[])
   LocalObjectRegistry::instance ()->set_registry (registry);
 
 
-  ComputingContext_impl *servant = 0;//new ComputingContext_impl (orb);
+  ComputingContext_impl *servant = new ComputingContext_impl ();
   PortableServer::ObjectId_var object_id = poa->activate_object (servant);
   manager->activate ();
   registry->record (servant->_this (), name);
