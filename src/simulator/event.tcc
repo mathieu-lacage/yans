@@ -190,21 +190,6 @@ EventMemberImpl5<T, T1, T2, T3, T4, T5> *make_event(void (T::*f) (T1, T2, T3, T4
 	return new EventMemberImpl5<T, T1, T2, T3, T4, T5>(t, f, a1, a2, a3, a4, a5);
 }
 
-class EventFunctionImpl0 : public Event {
-public:
-	typedef void (*F)(void);
-
-	EventFunctionImpl0 (F function) 
-		: m_function (function)
-	{ }
-	virtual ~EventFunctionImpl0 () {}
-	virtual void notify (void) { 
-		(*m_function) (); 
-	}
-private:
-	F m_function;
-};
-
 template<typename T1>
 class EventFunctionImpl1 : public Event {
 public:
@@ -316,10 +301,8 @@ private:
 };
 
 
-template<typename T>
-EventFunctionImpl0 *make_event(void (*f) (void)) {
-	return new EventFunctionImpl0 (f);
-}
+Event *make_event(void (*f) (void));
+
 template<typename T1>
 EventFunctionImpl1<T1> *make_event(void (*f) (T1), T1 a1) {
 	return new EventFunctionImpl1<T1>(f, a1);
