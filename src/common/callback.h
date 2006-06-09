@@ -260,6 +260,34 @@ template <typename R, typename T1, typename T2,typename T3,typename T4,typename 
 Callback<R,T1,T2,T3,T4,T5> make_callback (R (*fn_ptr) (T1,T2,T3,T4,T5)) {
 	return Callback<R,T1,T2,T3,T4,T5> (fn_ptr);
 }
+
+
+
+template <typename R>
+Callback<R> make_null_callback (void) {
+	return Callback<R> ();
+}
+template <typename R, typename T1>
+Callback<R,T1> make_null_callback (void) {
+	return Callback<R,T1> ();
+}
+template <typename R, typename T1, typename T2>
+Callback<R,T1,T2> make_null_callback (void) {
+	return Callback<R,T1,T2> ();
+}
+template <typename R, typename T1, typename T2,typename T3>
+Callback<R,T1,T2,T3> make_null_callback (void) {
+	return Callback<R,T1,T2,T3> ();
+}
+template <typename R, typename T1, typename T2,typename T3,typename T4>
+Callback<R,T1,T2,T3,T4> make_null_callback (void) {
+	return Callback<R,T1,T2,T3,T4> ();
+}
+template <typename R, typename T1, typename T2,typename T3,typename T4,typename T5>
+Callback<R,T1,T2,T3,T4,T5> make_null_callback (void) {
+	return Callback<R,T1,T2,T3,T4,T5> ();
+}
+
 }; // namespace yans
 
 
