@@ -19,6 +19,7 @@
  * Author: Mathieu Lacage, <mathieu.lacage@sophia.inria.fr>
  */
 #include "parallel-channel-80211.h"
+#include "chunk-corba.h"
 #include "yans/simulator.h"
 #include "yans/propagation-model.h"
 #include "yans/event.tcc"
@@ -37,7 +38,8 @@ forward_up (yans::CountPtrHolder<yans::Packet const> p, double rx_power, uint8_t
 void
 null_callback (void)
 {}
-}
+void test (yans::CountPtrHolder<yans::Packet const> p, int, int,int,int) {}
+};
 
 
 class Channel80211Queue : public yans::ParallelSimulatorQueue {
@@ -84,18 +86,17 @@ ParallelChannel80211::receive (const ::Remote::SourcePosition& source_position,
 			       CORBA::Octet tx_mode, 
 			       CORBA::Octet stuff)
 {
-	yans::Packet *packet = PacketFactory::create ();
-	char const *data = *(buffer.get_buffer ());
-	uint32_t size = buffer.length ();
-	packet->add_at_start (size);
-	BufferI start = packet->peek_buffer ()->begin ();
-	start.write (data, size);
+	yans::Packet *packet = yans::PacketFactory::create ();
+	ChunkCorba chunk = ChunkCorba (buffer);
+	packet->add (&chunk);
 	for (ModelsCI i = m_models.begin (); i != m_models.end (); i++) {
-		uint64_t delay_us = (*i)->get_delay_us (from_x, from_y, from_z);
-		double rx_power_w = (*i)->get_rx_power_w (tx_power_dbm, from_x, from_y, from_z);
-		m_queue->insert_at_us (source_time + delay_us, yans::make_event (&forward_up, 
-										 yans::make_count_ptr_holder (packet),
-										 rx_power_w, tx_mode, stuff, *i));
+		uint64_t delay_us = (*i)->get_delay_us (source_position.x, source_position.y, source_position.z);
+		double rx_power_w = (*i)->get_rx_power_w (tx_power, source_position.x, 
+							  source_position.y, source_position.z);
+		m_queue->insert_at_us (source_time + delay_us, 
+				       yans::make_event (&forward_up, 
+							 yans::make_const_count_ptr_holder (packet),
+							 rx_power_w, tx_mode, stuff, *i));
 	}
 	packet->unref ();
 }
@@ -124,10 +125,9 @@ ParallelChannel80211::real_send (yans::Packet const *packet, double tx_power_dbm
 	position.x = from_x;
 	position.y = from_y;
 	position.z = from_z;
-	uint8_t *data = packet->peek_buffer ()->begin ().peek_data ();
 	Remote::Buffer buffer = Remote::Buffer (packet->get_size (),
 						packet->get_size (),
-						data, 
+						packet->peek_data (),
 						0 /* make sure we (the caller) keep ownership
 						     of the data buffer. */);
 	
@@ -156,7 +156,7 @@ ParallelChannel80211::send_null_message (void)
 void 
 ParallelChannel80211::receive_null_message (::Remote::Timestamp ts, const ::Remote::SourcePositions& sources)
 {
-	uint64_t smallest = 0xffffffffffffffffL;
+	uint64_t smallest = 0xffffffffffffffffLL;
 	for (uint32_t index = 0; index < sources.length (); index++) {
 		Remote::SourcePosition position = sources[index];
 		for (ModelsCI i = m_models.begin (); i != m_models.end (); i++) {
@@ -166,5 +166,5 @@ ParallelChannel80211::receive_null_message (::Remote::Timestamp ts, const ::Remo
 			}
 		}
 	}
-	m_queue->insert_at_us (ts+smallest, make_event (&null_callback));
+	m_queue->insert_at_us (ts+smallest, yans::make_event (&null_callback));
 }

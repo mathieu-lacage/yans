@@ -2,6 +2,17 @@
 #include <context_impl.h>
 #include "context-simulator.h"
 #include "local-object-registry.h"
+#include "yans/static-position.h"
+#include "yans/base-channel-80211.h"
+#include "yans/host.h"
+#include "yans/ipv4-route.h"
+#include "yans/udp-source.h"
+#include "yans/udp-sink.h"
+#include "yans/traffic-analyser.h"
+#include "yans/periodic-generator.h"
+#include "yans/network-interface-80211.h"
+#include "yans/network-interface-80211-factory.h"
+#include "parallel-channel-80211.h"
 
 namespace {
 
@@ -20,6 +31,13 @@ activate_servant (PortableServer::StaticImplementation *servant)
   get_root_poa ()->activate_object (servant);
 }
 };
+
+void
+impl_set_orb (CORBA::ORB_var orb)
+{
+  g_orb = orb;
+}
+
 
 
 // Implementation for interface LocalInstance
@@ -45,11 +63,15 @@ LocalInstance_impl::get_id()
 
 // Implementation for interface PositionModel
 
+PositionModel_impl::PositionModel_impl (::Remote::InstanceId id)
+  : LocalInstance_impl (id)
+{}
+
 // Implementation for interface StaticPositionModel
 
-StaticPositionModel_impl::StaticPositionModel_impl (::Remote::InstanceId id)
-  : LocalInstance_impl (id),
-    m_self (new yans::StaticPosition ())
+StaticPositionModel_impl::StaticPositionModel_impl (::Remote::InstanceId id, yans::StaticPosition *real_position)
+  : LocalInstance_impl (id), PositionModel_impl (id),
+    m_self (real_position)
 {}
 
 StaticPositionModel_impl::~StaticPositionModel_impl ()
@@ -115,20 +137,25 @@ Channel80211_impl::receive_null( ::Remote::Timestamp ts, const ::Remote::SourceP
     ::CORBA::SystemException)
 
 {
-  m_self->receive_null (ts, sources);
+  m_self->receive_null_message (ts, sources);
 }
 
 
 // Implementation for interface MacNetworkInterface
 
+MacNetworkInterface_impl::MacNetworkInterface_impl (::Remote::InstanceId id)
+  : LocalInstance_impl (id)
+{}
+
 // Implementation for interface NetworkInterface80211
 
-NetworkInterface80211_impl::NetworkInterface80211_impl (::Remote::InstanceId id, NetworkInterface80211 *real_interface)
-  : LocalInstance_impl (id),
+NetworkInterface80211_impl::NetworkInterface80211_impl (::Remote::InstanceId id, yans::NetworkInterface80211 *real_interface)
+  : LocalInstance_impl (id), 
+    MacNetworkInterface_impl (id),
     m_self (real_interface)
 {}
 
-NetworkInterface_impl::~NetworkInterface_impl ()
+NetworkInterface80211_impl::~NetworkInterface80211_impl ()
 {
   delete m_self;
 }
@@ -137,11 +164,10 @@ void
 NetworkInterface80211_impl::connect( ::Remote::Channel80211_ptr channel )
   throw(
     ::CORBA::SystemException)
-
 {
-  yans::BaseChannel80211 *real_channel = LocalObjectRegistry::lookup_channel_80211 (channel);
+  yans::BaseChannel80211 *real_channel = LocalObjectRegistry::lookup_channel_80211 (channel->get_id ());
   assert (real_channel != 0);
-  m_self->connect (real_channel);
+  m_self->connect_to (real_channel);
 }
 
 
@@ -164,8 +190,10 @@ NetworkInterface80211Factory_impl::create_adhoc( const ::Remote::MacAddress& add
 {
   ::Remote::NetworkInterface80211_ptr retval;
 
-  Position *real_position_model = LocalObjectRegistry::lookup_static_position (position->get_id ());
-  NetworkInterface80211 *real_interface = m_self->create_adhoc (address, real_position_model);
+  yans::Position *real_position_model = LocalObjectRegistry::lookup_static_position (position->get_id ());
+  uint8_t const*address_data = address.data;
+  yans::MacAddress real_address = yans::MacAddress (address_data);
+  yans::NetworkInterface80211 *real_interface = m_self->create_adhoc (real_address, real_position_model);
   LocalObjectRegistry::record_mac_interface (id, real_interface);
   NetworkInterface80211_impl *servant = new NetworkInterface80211_impl (id, real_interface);
   activate_servant (servant);
@@ -182,7 +210,7 @@ NetworkInterface80211Factory_impl::create_adhoc( const ::Remote::MacAddress& add
  * which is used later to retrieve the yans::Ipv4NetworkInterface when needed.
  */
 Ipv4NetworkInterface_impl::Ipv4NetworkInterface_impl (::Remote::InstanceId id)
-  : LocalInstance (id)
+  : LocalInstance_impl (id)
 {}
 Ipv4NetworkInterface_impl::~Ipv4NetworkInterface_impl ()
 {}
@@ -208,7 +236,7 @@ Ipv4RoutingTable_impl::set_default_route( ::Remote::Ipv4Address next_hop, ::Remo
 {
   yans::Ipv4NetworkInterface *real_interface = LocalObjectRegistry::lookup_ipv4_interface (i->get_id ());
   yans::Ipv4Address real_next_hop;
-  real_next_hop->set_host_order (next_hop);
+  real_next_hop.set_host_order (next_hop);
   m_self->set_default_route (real_next_hop, real_interface);
 }
 
@@ -217,7 +245,7 @@ Ipv4RoutingTable_impl::set_default_route( ::Remote::Ipv4Address next_hop, ::Remo
 
 Node_impl::Node_impl (::Remote::InstanceId id, yans::Host *real_node)
   : LocalInstance_impl (id),
-    m_self (host)
+    m_self (real_node)
 {
   m_routing_table = new Ipv4RoutingTable_impl (m_self->get_routing_table ());
   activate_servant (m_routing_table);
@@ -230,7 +258,7 @@ Node_impl::~Node_impl ()
   for (Ipv4InterfacesI i = m_interfaces.begin (); i != m_interfaces.end (); i++) {
     delete (*i);
   }
-  m_interfaces.erase (m_interfaces.begin (), m_interface.end ());
+  m_interfaces.erase (m_interfaces.begin (), m_interfaces.end ());
 }
 
 ::Remote::Ipv4RoutingTable_ptr
@@ -259,10 +287,11 @@ Node_impl::add_ipv4_arp_interface( ::Remote::MacNetworkInterface_ptr i, ::Remote
   yans::Ipv4Address real_address;
   yans::Ipv4Mask real_mask;
   real_address.set_host_order (address);
-  real_mark.set_host_order (real_mask);
+  real_mask.set_host_order (mask);
   yans::Ipv4NetworkInterface *real_ipv4_interface = m_self->add_ipv4_arp_interface (real_interface, real_address, real_mask);
-  Ipv4NetworkInterface_impl *servant = new Ipv4NetworkInterface_impl (id, real_ipv4_interface);
-  m_interfaces.add (servant);
+  LocalObjectRegistry::record_ipv4_interface (id, real_ipv4_interface);
+  Ipv4NetworkInterface_impl *servant = new Ipv4NetworkInterface_impl (id);
+  m_interfaces.push_back (servant);
   activate_servant (servant);
   retval = servant->_this ();
 
@@ -277,7 +306,7 @@ Node_impl::add_ipv4_arp_interface( ::Remote::MacNetworkInterface_ptr i, ::Remote
  *  instance id which is used to retrieve the pointer to a
  * yans::Callback<void, Packet*> when needed.
  */
-CallbackVoidPacket_impl (::Remote::InstanceId id)
+CallbackVoidPacket_impl::CallbackVoidPacket_impl (::Remote::InstanceId id)
   : LocalInstance_impl (id)
 {}
 
@@ -322,7 +351,7 @@ UdpSource_impl::unbind_at_s( CORBA::Double at_s )
     ::CORBA::SystemException)
 
 {
-  m_self->unbind_at_s (at_s);
+  m_self->unbind_at (at_s);
 }
 
 
@@ -334,7 +363,7 @@ UdpSource_impl::create_send_callback( ::Remote::InstanceId id )
 {
   ::Remote::CallbackVoidPacket_ptr retval;
 
-  Callback<void,Packet *> real_cb = make_callback (&UdpSource::send, m_self);
+  yans::Callback<void,yans::Packet *> real_cb = yans::make_callback (&yans::UdpSource::send, m_self);
   LocalObjectRegistry::record_callback_void_packet (id, real_cb);
   CallbackVoidPacket_impl *servant = new CallbackVoidPacket_impl (id);
   activate_servant (servant);
@@ -373,7 +402,7 @@ UdpSink_impl::unbind_at_s( CORBA::Double at_s )
     ::CORBA::SystemException)
 
 {
-  m_self->unbind_at_s (at_s);
+  m_self->unbind_at (at_s);
 }
 
 
@@ -383,7 +412,7 @@ UdpSink_impl::set_receive_callback( ::Remote::CallbackVoidPacket_ptr callback )
     ::CORBA::SystemException)
 
 {
-  yans::Callback<void,Packet *> real_cb = LocalObjectRegistry::lookup_callback_void_packet (callback->get_id ());
+  yans::Callback<void,yans::Packet *> real_cb = LocalObjectRegistry::lookup_callback_void_packet (callback->get_id ());
   m_self->set_receive_callback (real_cb);
 }
 
@@ -405,7 +434,7 @@ PeriodicGenerator_impl::set_packet_interval_s( CORBA::Double interval_s )
     ::CORBA::SystemException)
 
 {
-  m_self->set_packet_interval_s (interval_s);
+  m_self->set_packet_interval (interval_s);
 }
 
 
@@ -425,7 +454,7 @@ PeriodicGenerator_impl::set_send_callback( ::Remote::CallbackVoidPacket_ptr call
     ::CORBA::SystemException)
 
 {
-  yans::Callback<void,Packet *> real_cb = LocalObjectRegistry::lookup_callback_void_packet (callback->get_id ());
+  yans::Callback<void,yans::Packet *> real_cb = LocalObjectRegistry::lookup_callback_void_packet (callback->get_id ());
   m_self->set_send_callback (real_cb);  
 }
 
@@ -449,7 +478,7 @@ TrafficAnalyser_impl::create_receive_callback( ::Remote::InstanceId id )
 {
   ::Remote::CallbackVoidPacket_ptr retval;
 
-  yans::Callback<void,Packet *> real_cb = yans::make_callback (&yans::TrafficAnalyser::receive, m_self);
+  yans::Callback<void,yans::Packet *> real_cb = yans::make_callback (&yans::TrafficAnalyser::receive, m_self);
   CallbackVoidPacket_impl *servant = new CallbackVoidPacket_impl (id);
   activate_servant (servant);
   retval = servant->_this ();
@@ -493,7 +522,8 @@ ComputingContext_impl::create_node( ::Remote::InstanceId id, const char *name)
 {
   ::Remote::Node_ptr retval;
 
-  yans::Host *real_node = new Host (name);
+  yans::Host *real_node = new yans::Host (name);
+  LocalObjectRegistry::record_node (id, real_node);
   Node_impl *servant = new Node_impl (id, real_node);
   activate_servant (servant);
   retval = servant->_this ();
@@ -510,7 +540,7 @@ ComputingContext_impl::create_network_interface_80211_factory()
 {
   ::Remote::NetworkInterface80211Factory_ptr retval;
 
-  NetworkInterface80211Factory *real_factory = new NetworkInterface80211Factory ();
+  yans::NetworkInterface80211Factory *real_factory = new yans::NetworkInterface80211Factory ();
   NetworkInterface80211Factory_impl *servant = new NetworkInterface80211Factory_impl (real_factory);
   activate_servant (servant);
   retval = servant->_this ();
@@ -543,11 +573,12 @@ ComputingContext_impl::create_static_position( ::Remote::InstanceId id )
 
 {
   ::Remote::StaticPositionModel_ptr retval;
-
-  StaticPositionModel_impl *servant = new StaticPositionModel_impl ();
-  LocalObjectRegistry::instance ()->get_poa ()->activate_object (servant);
+  
+  yans::StaticPosition *real_position = new yans::StaticPosition ();
+  StaticPositionModel_impl *servant = new StaticPositionModel_impl (id, real_position);
+  LocalObjectRegistry::record_static_position (id, real_position);
+  activate_servant (servant);
   retval = servant->_this ();
-  LocalObjectRegistry->record (retval, servant);
 
   return retval; 
 }
@@ -561,8 +592,10 @@ ComputingContext_impl::create_udp_source( ::Remote::Node_ptr node )
 {
   ::Remote::UdpSource_ptr retval;
 
-  UdpSource_impl *servant = new UdpSource_impl ();
-  LocalObjectRegistry::instance ()->get_poa ()->activate_object (servant);
+  yans::Host *real_node = LocalObjectRegistry::lookup_node (node->get_id ());
+  yans::UdpSource *real_source = new yans::UdpSource (real_node);
+  UdpSource_impl *servant = new UdpSource_impl (real_source);
+  activate_servant (servant);
   retval = servant->_this ();
 
   return retval; 
@@ -577,8 +610,10 @@ ComputingContext_impl::create_udp_sink( ::Remote::Node_ptr node )
 {
   ::Remote::UdpSink_ptr retval;
 
-  UdpSink_impl *servant = new UdpSink_impl ();
-  LocalObjectRegistry::instance ()->get_poa ()->activate_object (servant);
+  yans::Host *real_node = LocalObjectRegistry::lookup_node (node->get_id ());
+  yans::UdpSink *real_sink = new yans::UdpSink (real_node);
+  UdpSink_impl *servant = new UdpSink_impl (real_sink);
+  activate_servant (servant);
   retval = servant->_this ();
   
   return retval; 
@@ -621,6 +656,6 @@ ComputingContext_impl::shutdown()
     ::CORBA::SystemException)
 
 {
-  LocalObjectRegistry::instance ()->get_orb ()->shutdown (0);
+  g_orb->shutdown (0);
 }
 

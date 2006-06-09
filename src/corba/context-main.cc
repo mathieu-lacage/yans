@@ -15,6 +15,7 @@ int main (int argc, char *argv[])
   }
 
   CORBA::ORB_var orb = CORBA::ORB_init (argc, argv, "mico-local-orb");
+  impl_set_orb (orb);
   CORBA::Object_var poa_obj = orb->resolve_initial_references ("RootPOA");
   PortableServer::POA_var poa = PortableServer::POA::_narrow (poa_obj);
   PortableServer::POAManager_var manager = poa->the_POAManager ();
@@ -22,9 +23,6 @@ int main (int argc, char *argv[])
 
   CORBA::Object_var registry_obj = orb->string_to_object (registry_str);
   Registry_var registry = Registry::_narrow (registry_obj);
-
-  LocalObjectRegistry::instance ()->set_orb (orb);
-  LocalObjectRegistry::instance ()->set_registry (registry);
 
 
   ComputingContext_impl *servant = new ComputingContext_impl ();

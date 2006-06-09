@@ -13,7 +13,12 @@ namespace yans {
   class Host;
   class NetworkInterface80211;
   class NetworkInterface80211Factory;
+  class Ipv4Route;
 };
+
+class ParallelChannel80211;
+
+void impl_set_orb (CORBA::ORB_var orb);
 
 
 // Implementation for interface LocalInstance
@@ -27,6 +32,7 @@ class LocalInstance_impl : virtual public POA_Remote::LocalInstance
         ::CORBA::SystemException)
     ;
  private:
+  LocalInstance_impl ();
   ::Remote::InstanceId m_id;
 };
 
@@ -37,6 +43,7 @@ class PositionModel_impl :
   virtual public POA_Remote::PositionModel
 {
   public:
+  PositionModel_impl (::Remote::InstanceId id);
 };
 
 
@@ -46,7 +53,7 @@ class StaticPositionModel_impl :
   virtual public POA_Remote::StaticPositionModel
 {
   public:
-  StaticPositionModel_impl (::Remote::InstanceId id);
+  StaticPositionModel_impl (::Remote::InstanceId id, yans::StaticPosition *real_position);
   ~StaticPositionModel_impl ();
 
     void get( CORBA::Double_out x, CORBA::Double_out y, CORBA::Double_out z )
@@ -97,6 +104,7 @@ class MacNetworkInterface_impl :
   virtual public POA_Remote::MacNetworkInterface
 {
   public:
+  MacNetworkInterface_impl (::Remote::InstanceId id);
 };
 
 
@@ -106,8 +114,8 @@ class NetworkInterface80211_impl :
   virtual public POA_Remote::NetworkInterface80211
 {
   public:
-  NetworkInterface80211 (::Remote::Id id);
-  ~NetworkInterface80211 ();
+  NetworkInterface80211_impl (::Remote::InstanceId id, yans::NetworkInterface80211 *real_interface);
+  ~NetworkInterface80211_impl ();
 
     void connect( ::Remote::Channel80211_ptr channel )
       throw(
@@ -115,7 +123,7 @@ class NetworkInterface80211_impl :
     ;
 
  private:
-    NetworkInterface80211 *m_self;
+    yans::NetworkInterface80211 *m_self;
 };
 
 
@@ -185,6 +193,7 @@ class Node_impl :
   typedef std::vector<Ipv4NetworkInterface_impl *> Ipv4Interfaces;
   typedef std::vector<Ipv4NetworkInterface_impl *>::iterator Ipv4InterfacesI;
   Ipv4Interfaces m_interfaces;
+  Ipv4RoutingTable_impl *m_routing_table;
 };
 
 
@@ -194,7 +203,7 @@ class CallbackVoidPacket_impl :
   virtual public POA_Remote::CallbackVoidPacket
 {
   public:
-  CallbackVoidPacket (::Remote::InstanceId id);
+  CallbackVoidPacket_impl (::Remote::InstanceId id);
 };
 
 
@@ -285,8 +294,8 @@ class PeriodicGenerator_impl : virtual public POA_Remote::PeriodicGenerator
 class TrafficAnalyser_impl : virtual public POA_Remote::TrafficAnalyser
 {
   public:
-  TrafficAnalyser (yans::TrafficAnalyser *real_analyser);
-  ~TrafficAnalyser ();
+  TrafficAnalyser_impl (yans::TrafficAnalyser *real_analyser);
+  ~TrafficAnalyser_impl ();
 
     ::Remote::CallbackVoidPacket_ptr create_receive_callback( ::Remote::InstanceId id )
       throw(
