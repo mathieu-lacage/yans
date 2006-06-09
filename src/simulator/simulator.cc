@@ -133,7 +133,7 @@ ParallelSimulatorQueuePrivate::remove_event (Event *ev)
 	if (m_n == 0) {
 		m_simulator->notify_queue_empty ();
 	}
-	ev->notify ();
+	ev->invoke ();
 	delete ev;
 }
 
@@ -170,7 +170,7 @@ SimulatorPrivate::~SimulatorPrivate ()
 		Event *ev = m_destroy.front ().first;
 		m_destroy.pop_front ();
 		TRACE ("handle destroy " << ev);
-		ev->notify ();
+		ev->invoke ();
 		delete ev;
 	}
 	delete m_events;
@@ -232,7 +232,7 @@ SimulatorPrivate::process_one_event (void)
 	if (m_log_enable) {
 		m_log << "e "<<next_key.m_uid << " " << next_key.m_time << std::endl;
 	}
-	next_ev->notify ();
+	next_ev->invoke ();
 	delete next_ev;
 }
 
