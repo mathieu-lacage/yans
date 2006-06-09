@@ -27,11 +27,10 @@ namespace yans {
 class Event {
 public:
 	virtual ~Event () = 0;
+	void invoke (void);
 private:
 	virtual void notify (void) = 0;
 private:
-	friend class SimulatorPrivate;
-	friend class ParallelSimulatorQueuePrivate;
 	friend class SchedulerHeap;
 	friend class SchedulerList;
 	friend class SchedulerMap;

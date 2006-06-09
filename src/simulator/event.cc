@@ -26,5 +26,11 @@ namespace yans {
 Event::~Event ()
 {}
 
+void 
+Event::invoke (void)
+{
+	notify ();
+}
+
 
 }; // namespace yans
