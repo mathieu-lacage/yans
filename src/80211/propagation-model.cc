@@ -57,7 +57,7 @@ PropagationModel::set_position (Position *position)
 }
 	
 void 
-PropagationModel::set_channel (Channel80211 *channel)
+PropagationModel::set_channel (BaseChannel80211 *channel)
 {
 	m_channel = channel;
 }

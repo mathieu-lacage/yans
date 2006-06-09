@@ -42,7 +42,7 @@ namespace yans {
  */
 
 class Position;
-class Channel80211;
+class BaseChannel80211;
 class Packet;
 
 class PropagationModel {
@@ -52,7 +52,7 @@ public:
 	~PropagationModel ();
 
 	void set_position (Position *position);
-	void set_channel (Channel80211 *channel);
+	void set_channel (BaseChannel80211 *channel);
 	/* the unit of the power is Watt. */
 	void set_receive_callback (RxCallback callback);
 
@@ -88,7 +88,7 @@ private:
 	double m_system_loss;
 	double m_lambda;
 	Position *m_position;
-	Channel80211 *m_channel;
+	BaseChannel80211 *m_channel;
 	static const double PI;
 	static const double SPEED_OF_LIGHT;
 };

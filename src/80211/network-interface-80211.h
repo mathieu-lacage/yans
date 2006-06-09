@@ -32,7 +32,7 @@
 namespace yans {
 
 class Packet;
-class Channel80211;
+class BaseChannel80211;
 class Phy80211;
 class PropagationModel;
 class MacStations;
@@ -53,7 +53,7 @@ class NetworkInterface80211 : public MacNetworkInterface {
 public:
 	virtual ~NetworkInterface80211 ();
 
-	void connect_to (Channel80211 *channel);
+	void connect_to (BaseChannel80211 *channel);
 	void register_trace (TraceContainer *container);
 
 	virtual MacAddress get_bssid (void) const = 0;

@@ -21,7 +21,7 @@
 #include "network-interface-80211.h"
 #include "propagation-model.h"
 #include "phy-80211.h"
-#include "channel-80211.h"
+#include "base-channel-80211.h"
 #include "mac-stations.h"
 #include "mac-station.h"
 #include "packet.h"
@@ -61,7 +61,7 @@ NetworkInterface80211::notify_down (void)
 {}
 
 void 
-NetworkInterface80211::connect_to (Channel80211 *channel)
+NetworkInterface80211::connect_to (BaseChannel80211 *channel)
 {
 	channel->add (m_propagation);
 	m_propagation->set_channel (channel);
