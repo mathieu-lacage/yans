@@ -59,6 +59,12 @@ make_count_ptr_holder (T *t) {
 	return CountPtrHolder<T> (t);
 }
 
+template<typename T>
+CountPtrHolder<T const>
+make_const_count_ptr_holder (T *t) {
+	return CountPtrHolder<T const> (t);
+}
+
 }; // namespace yans
 
 #endif /* REF_HOLDER_TCC */
