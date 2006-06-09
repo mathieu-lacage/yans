@@ -63,6 +63,11 @@ Ipv4Mask::get_host_order (void) const
 {
 	return m_mask;
 }
+void 
+Ipv4Mask::set_host_order (uint32_t value)
+{
+	m_mask = value;
+}
 
 void 
 Ipv4Mask::print (std::ostream *os) const

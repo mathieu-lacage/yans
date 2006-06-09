@@ -81,6 +81,7 @@ public:
 	 * Please, do _not_ use this method.
 	 */
 	uint32_t get_host_order (void) const;
+	void set_host_order (uint32_t value);
 
 	void print (std::ostream *os) const;
 
