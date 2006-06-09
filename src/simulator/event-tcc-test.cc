@@ -19,33 +19,98 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #include "event.tcc"
+#include "test.h"
 
 #ifdef RUN_SELF_TESTS
 
+#define ENSURE(got,expected) \
+if (got != expected) { \
+	g_error = true; \
+}
+
 namespace {
+bool g_error = false;
+
 void null_cb (void)
 {}
-void one_cb (int)
-{}
-void two_cb (int,int)
-{}
-void three_cb (int,int,int)
-{}
-void four_cb (int,int,int,int)
-{}
-void five_cb (int,int,int,int,int)
+void one_cb (int a)
+{
+	ENSURE (a, 1);
+}
+void two_cb (int a,int b)
+{
+	ENSURE (a, 1);
+	ENSURE (b, 2);
+}
+void three_cb (int a,int b,int c)
+{
+	ENSURE (a, 1);
+	ENSURE (b, 2);
+	ENSURE (c, 3);
+}
+void four_cb (int a,int b,int c,int d)
+{
+	ENSURE (a, 1);
+	ENSURE (b, 2);
+	ENSURE (c, 3);
+	ENSURE (d, 4);
+}
+void five_cb (int a,int b,int c,int d,int e)
+{
+	ENSURE (a, 1);
+	ENSURE (b, 2);
+	ENSURE (c, 3);
+	ENSURE (d, 4);
+	ENSURE (e, 5);
+}
+
+};
+
+namespace yans {
+class EventTest : public Test {
+public:
+	EventTest ();
+	virtual bool run_tests (void);
+};
+
+EventTest::EventTest ()
+	: Test ("Event")
 {}
 
-void test (void)
+bool 
+EventTest::run_tests (void)
 {
-  yans::make_event (&null_cb);
-  yans::make_event (&one_cb, 1);
-  yans::make_event (&two_cb, 1, 2);
-  yans::make_event (&three_cb, 1, 2, 3);
-  yans::make_event (&four_cb, 1, 2, 3, 4);
-  yans::make_event (&five_cb, 1, 2, 3, 4, 5);
-  
+	Event *ev;
+
+	ev = yans::make_event (&null_cb);
+	ev->invoke ();
+	delete ev;
+	ev = yans::make_event (&one_cb, 1);
+	ev->invoke ();
+	delete ev;
+	ev = yans::make_event (&two_cb, 1, 2);
+	ev->invoke ();
+	delete ev;
+	ev = yans::make_event (&three_cb, 1, 2, 3);
+	ev->invoke ();
+	delete ev;
+	ev = yans::make_event (&four_cb, 1, 2, 3, 4);
+	ev->invoke ();
+	delete ev;
+	ev = yans::make_event (&five_cb, 1, 2, 3, 4, 5);
+	ev->invoke ();
+	delete ev;
+
+  if (g_error) {
+    return false;
+  }
+  return true;
 }
+
+static EventTest g_test;
+
 };
+
+
 
 #endif /* RUN_SELF_TESTS */
