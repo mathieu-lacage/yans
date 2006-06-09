@@ -129,6 +129,8 @@ YANS_SRC:= \
 	src/simulator/scheduler-heap.cc \
 	src/simulator/scheduler-map.cc \
 	src/simulator/event.cc \
+	src/simulator/event-tcc.cc \
+	src/simulator/event-tcc-test.cc \
 	src/simulator/cancellable-event.cc \
 	src/simulator/simulator.cc \
 	src/simulator/unix-system-semaphore.cc \
@@ -504,6 +506,7 @@ SAMPLE_CORBA_SRC := \
 	src/corba/registry_impl.cc \
 	src/corba/registry-main.cc \
 	src/corba/id-factory.cc \
+	src/corba/callback-run-done_impl.cc \
 	$(NULL)
 SAMPLE_CORBA_NAME := test-corba
 SAMPLE_CORBA_TYPE := executable
@@ -517,6 +520,8 @@ SAMPLE_CORBA_FACTORY_SRC := \
 	src/corba/context-main.cc \
 	src/corba/parallel-channel-80211.cc \
 	src/corba/local-object-registry.cc \
+	src/corba/context-simulator.cc \
+	src/corba/chunk-corba.cc \
 	$(NULL)
 SAMPLE_CORBA_FACTORY_NAME := context-server
 SAMPLE_CORBA_FACTORY_TYPE := executable
