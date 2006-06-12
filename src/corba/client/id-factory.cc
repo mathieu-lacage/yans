@@ -23,8 +23,9 @@
 uint64_t 
 IdFactory::get_next (void)
 {
-	uint64_t next = m_current;
-	m_current++;
+	IdFactory *self = instance ();
+	uint64_t next = self->m_current;
+	self->m_current++;
 	return next;
 }
 IdFactory::IdFactory ()
@@ -34,6 +35,6 @@ IdFactory::IdFactory ()
 IdFactory *
 IdFactory::instance (void)
 {
-	static IdFactory *factory = new IdFactory ();
-	return factory;
+	static IdFactory factory = IdFactory ();
+	return &factory;
 }

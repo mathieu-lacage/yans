@@ -1,7 +1,7 @@
 #ifndef CALLBACK_RUN_DONE_IMPL_H
 #define CALLBACK_RUN_DONE_IMPL_H
 
-#include <context.h>
+#include <remote-context.h>
 
 class CallbackVoid_impl : virtual public POA_Remote::CallbackVoid
 {

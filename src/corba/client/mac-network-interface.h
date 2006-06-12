@@ -4,7 +4,7 @@
  * All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as 
+ * it under the terms of the GNU General Public License version 2 as
  * published by the Free Software Foundation;
  *
  * This program is distributed in the hope that it will be useful,
@@ -16,21 +16,25 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Author: Mathieu Lacage, <mathieu.lacage@sophia.inria.fr>
+ * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef ID_FACTORY_H
-#define ID_FACTORY_H
+#ifndef YAPNS_MAC_NETWORK_INTERFACE_H
+#define YAPNS_MAC_NETWORK_INTERFACE_H
 
-#include <stdint.h>
+#include "remote-context.h"
 
-class IdFactory {
+namespace yapns {
+
+class MacNetworkInterface {
 public:
-	static IdFactory *instance (void);
-	uint64_t get_next (void);
+	MacNetworkInterface (::Remote::MacNetworkInterface_ptr remote);
+	virtual ~MacNetworkInterface ();
+	::Remote::MacNetworkInterface_ptr peek_remote (void);
 private:
-	IdFactory ();
-	uint64_t m_current;
+	::Remote::MacNetworkInterface_ptr m_remote;
 };
 
+}; // namespace yapns
 
-#endif /* ID_FACTORY_H */
+
+#endif /* YAPNS_MAC_NETWORK_INTERFACE_H */

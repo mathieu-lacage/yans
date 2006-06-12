@@ -18,24 +18,38 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
+#ifndef YAPNS_HOST_H
+#define YAPNS_HOST_H
 
-#ifndef CHUNK_CORBA_H
-#define CHUNK_CORBA_H
+#include <vector>
+#include "ipv4-address.h"
+#include "simulation-context.h"
 
-#include "yans/chunk.h"
-#include <ostream>
-#include "remote-context.h"
+namespace yapns {
 
-class ChunkCorba : public yans::Chunk {
+class Ipv4Route;
+class Ipv4NetworkInterface;
+class MacNetworkInterface;
+
+
+class Host {
 public:
-	ChunkCorba (const ::Remote::Buffer& buffer);
-	virtual ~ChunkCorba ();
+	Host (SimulationContext context, char const *name);
+	~Host ();
 
-	virtual void add_to (yans::Buffer *buffer) const;
-	virtual void remove_from (yans::Buffer *buffer);
-	virtual void print (std::ostream *os) const;
-private:
-	const ::Remote::Buffer& m_buffer;
+	Ipv4Route *get_routing_table (void);
+
+	Ipv4NetworkInterface *add_ipv4_arp_interface (MacNetworkInterface *interface, 
+						      Ipv4Address address, Ipv4Mask mask);
+ private:
+	typedef std::vector<Ipv4NetworkInterface *> Ipv4NetworkInterfaces;
+	typedef std::vector<Ipv4NetworkInterface *>::iterator Ipv4NetworkInterfacesI;
+
+	Ipv4Route *m_routing_table;
+	::Remote::Node_ptr m_remote_node;
+	Ipv4NetworkInterfaces m_interfaces;
 };
 
-#endif /* CHUNK_CORBA_H */
+}; // namespace yapns
+
+#endif /* YAPNS_HOST_H */

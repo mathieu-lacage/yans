@@ -18,24 +18,40 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
+#include "simulation-context.h"
 
-#ifndef CHUNK_CORBA_H
-#define CHUNK_CORBA_H
+namespace yapns {
 
-#include "yans/chunk.h"
-#include <ostream>
-#include "remote-context.h"
+SimulationContextFactory::SimulationContextFactory ()
+{}
+void 
+SimulationContextFactory::read_configuration (char const *filename)
+{
+	// XXX
+	// open filename.xml and:
+	//   - read remote and local context definitions.
+	//   - start remote contexts
+	//   - when a remote context is registered
+	//     in the Registry, create its local contexts
+	//   - when all local contexts are created, continue.
+}
+SimulationContext 
+SimulationContextFactory::lookup (std::string name)
+{}
 
-class ChunkCorba : public yans::Chunk {
-public:
-	ChunkCorba (const ::Remote::Buffer& buffer);
-	virtual ~ChunkCorba ();
 
-	virtual void add_to (yans::Buffer *buffer) const;
-	virtual void remove_from (yans::Buffer *buffer);
-	virtual void print (std::ostream *os) const;
-private:
-	const ::Remote::Buffer& m_buffer;
-};
 
-#endif /* CHUNK_CORBA_H */
+SimulationContextImpl::SimulationContextImpl (::Remote::ComputingContext_ptr remote)
+	: m_context (remote)
+{
+	// XXX ref remote.
+}
+
+::Remote::ComputingContext_ptr 
+SimulationContextImpl::get_corba_context (void) const
+{
+	return m_context;
+}
+
+
+}; // namespace yapns

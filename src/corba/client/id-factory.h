@@ -4,7 +4,7 @@
  * All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 2 as
+ * it under the terms of the GNU General Public License version 2 as 
  * published by the Free Software Foundation;
  *
  * This program is distributed in the hope that it will be useful,
@@ -16,26 +16,21 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
+ * Author: Mathieu Lacage, <mathieu.lacage@sophia.inria.fr>
  */
+#ifndef ID_FACTORY_H
+#define ID_FACTORY_H
 
-#ifndef CHUNK_CORBA_H
-#define CHUNK_CORBA_H
+#include <stdint.h>
 
-#include "yans/chunk.h"
-#include <ostream>
-#include "remote-context.h"
-
-class ChunkCorba : public yans::Chunk {
+class IdFactory {
 public:
-	ChunkCorba (const ::Remote::Buffer& buffer);
-	virtual ~ChunkCorba ();
-
-	virtual void add_to (yans::Buffer *buffer) const;
-	virtual void remove_from (yans::Buffer *buffer);
-	virtual void print (std::ostream *os) const;
+	static uint64_t get_next (void);
 private:
-	const ::Remote::Buffer& m_buffer;
+	static IdFactory *instance (void);
+	IdFactory ();
+	uint64_t m_current;
 };
 
-#endif /* CHUNK_CORBA_H */
+
+#endif /* ID_FACTORY_H */

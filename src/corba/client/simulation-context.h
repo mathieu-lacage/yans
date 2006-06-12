@@ -18,24 +18,35 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
+#ifndef YAPNS_SIMULATION_CONTEXT_H
+#define YAPNS_SIMULATION_CONTEXT_H
 
-#ifndef CHUNK_CORBA_H
-#define CHUNK_CORBA_H
-
-#include "yans/chunk.h"
-#include <ostream>
+#include <string>
+#include "yans/reference-list.h"
 #include "remote-context.h"
 
-class ChunkCorba : public yans::Chunk {
-public:
-	ChunkCorba (const ::Remote::Buffer& buffer);
-	virtual ~ChunkCorba ();
+namespace yapns {
 
-	virtual void add_to (yans::Buffer *buffer) const;
-	virtual void remove_from (yans::Buffer *buffer);
-	virtual void print (std::ostream *os) const;
+class SimulationContextImpl;
+
+typedef yans::ReferenceList<SimulationContextImpl *> SimulationContext;
+
+class SimulationContextFactory {
+public:
+	SimulationContextFactory ();
+	void read_configuration (char const *filename);
+	SimulationContext lookup (std::string name);
 private:
-	const ::Remote::Buffer& m_buffer;
 };
 
-#endif /* CHUNK_CORBA_H */
+class SimulationContextImpl {
+public:
+	SimulationContextImpl (::Remote::ComputingContext_ptr);
+	::Remote::ComputingContext_ptr get_corba_context (void) const;
+private:
+	::Remote::ComputingContext_ptr m_context;
+};
+
+}; // namespace yapns
+
+#endif /* YAPNS_SIMULATION_CONTEXT_H */

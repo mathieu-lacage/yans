@@ -489,18 +489,6 @@ TrafficAnalyser_impl::create_receive_callback( ::Remote::InstanceId id )
 
 // Implementation for interface CallbackVoid
 
-void
-CallbackVoid_impl::invoke()
-  throw(
-    ::CORBA::SystemException)
-
-{
-  // add your implementation here
-    // REMOVE  
-    mico_throw(::CORBA::NO_IMPLEMENT());
-    // REMOVE 
-
-}
 
 
 // Implementation for interface ComputingContext
@@ -513,6 +501,15 @@ ComputingContext_impl::~ComputingContext_impl ()
 {
   delete m_simulator;
 }
+
+void
+ComputingContext_impl::run_done (void)
+{
+  if (!CORBA::is_nil (m_run_done)) {
+    m_run_done->invoke ();
+  }
+}
+
 
 ::Remote::Node_ptr
 ComputingContext_impl::create_node( ::Remote::InstanceId id, const char *name)
@@ -627,14 +624,6 @@ ComputingContext_impl::stop_at_us( ::Remote::Timestamp at_us )
 
 {
   m_simulator->stop_at_us (at_us);
-}
-
-void
-ComputingContext_impl::run_done (void)
-{
-  if (!CORBA::is_nil (m_run_done)) {
-    m_run_done->invoke ();
-  }
 }
 
 void

@@ -2,7 +2,7 @@
 #ifndef __CONTEXT_IMPL_H__
 #define __CONTEXT_IMPL_H__
 
-#include <context.h>
+#include <remote-context.h>
 
 namespace yans {
   class UdpSink;
@@ -305,17 +305,6 @@ class TrafficAnalyser_impl : virtual public POA_Remote::TrafficAnalyser
   yans::TrafficAnalyser *m_self;
 };
 
-
-// Implementation for interface CallbackVoid
-class CallbackVoid_impl : virtual public POA_Remote::CallbackVoid
-{
-  public:
-
-    void invoke()
-      throw(
-        ::CORBA::SystemException)
-    ;
-};
 
 
 // Implementation for interface ComputingContext

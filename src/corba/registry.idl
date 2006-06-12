@@ -1,4 +1,4 @@
-#include "context.idl"
+#include "remote-context.idl"
 interface Registry {
   void record (in Remote::ComputingContext obj, in string name);
   Remote::ComputingContext lookup (in string name);

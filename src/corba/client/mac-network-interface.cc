@@ -18,24 +18,22 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
+#include "mac-network-interface.h"
 
-#ifndef CHUNK_CORBA_H
-#define CHUNK_CORBA_H
+namespace yapns {
 
-#include "yans/chunk.h"
-#include <ostream>
-#include "remote-context.h"
+MacNetworkInterface::MacNetworkInterface (::Remote::MacNetworkInterface_ptr remote)
+{
+	m_remote = ::Remote::MacNetworkInterface::_duplicate (remote);
+}
+MacNetworkInterface::~MacNetworkInterface ()
+{
+	CORBA::release (m_remote);
+}
+::Remote::MacNetworkInterface_ptr 
+MacNetworkInterface::peek_remote (void)
+{
+	return m_remote;
+}
 
-class ChunkCorba : public yans::Chunk {
-public:
-	ChunkCorba (const ::Remote::Buffer& buffer);
-	virtual ~ChunkCorba ();
-
-	virtual void add_to (yans::Buffer *buffer) const;
-	virtual void remove_from (yans::Buffer *buffer);
-	virtual void print (std::ostream *os) const;
-private:
-	const ::Remote::Buffer& m_buffer;
-};
-
-#endif /* CHUNK_CORBA_H */
+}; // namespace yapns

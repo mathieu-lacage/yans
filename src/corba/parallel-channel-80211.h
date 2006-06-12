@@ -24,7 +24,7 @@
 #include <list>
 #include <stdint.h>
 #include "yans/base-channel-80211.h"
-#include "context.h"
+#include "remote-context.h"
 
 namespace yans {
 class PropagationModel;

@@ -18,24 +18,16 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
+#ifndef YAPNS_IPV4_ADDRESS_H
+#define YAPNS_IPV4_ADDRESS_H
 
-#ifndef CHUNK_CORBA_H
-#define CHUNK_CORBA_H
+#include "yans/ipv4-address.h"
 
-#include "yans/chunk.h"
-#include <ostream>
-#include "remote-context.h"
+namespace yapns {
 
-class ChunkCorba : public yans::Chunk {
-public:
-	ChunkCorba (const ::Remote::Buffer& buffer);
-	virtual ~ChunkCorba ();
+typedef yans::Ipv4Address Ipv4Address;
+typedef yans::Ipv4Mask Ipv4Mask;
 
-	virtual void add_to (yans::Buffer *buffer) const;
-	virtual void remove_from (yans::Buffer *buffer);
-	virtual void print (std::ostream *os) const;
-private:
-	const ::Remote::Buffer& m_buffer;
-};
+}; // namespace yapns
 
-#endif /* CHUNK_CORBA_H */
+#endif /* YAPNS_IPV4_ADDRESS_H */

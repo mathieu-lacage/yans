@@ -18,24 +18,23 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
+#include "ipv4-network-interface.h"
 
-#ifndef CHUNK_CORBA_H
-#define CHUNK_CORBA_H
+namespace yapns {
 
-#include "yans/chunk.h"
-#include <ostream>
-#include "remote-context.h"
+Ipv4NetworkInterface::Ipv4NetworkInterface (::Remote::Ipv4NetworkInterface_ptr remote)
+{
+	m_remote = ::Remote::Ipv4NetworkInterface::_duplicate (remote);
+}
+Ipv4NetworkInterface::~Ipv4NetworkInterface ()
+{
+	CORBA::release (m_remote);
+}
 
-class ChunkCorba : public yans::Chunk {
-public:
-	ChunkCorba (const ::Remote::Buffer& buffer);
-	virtual ~ChunkCorba ();
+::Remote::Ipv4NetworkInterface_ptr 
+Ipv4NetworkInterface::peek_remote (void)
+{
+	return m_remote;
+}
 
-	virtual void add_to (yans::Buffer *buffer) const;
-	virtual void remove_from (yans::Buffer *buffer);
-	virtual void print (std::ostream *os) const;
-private:
-	const ::Remote::Buffer& m_buffer;
-};
-
-#endif /* CHUNK_CORBA_H */
+}; // namespace yapns
