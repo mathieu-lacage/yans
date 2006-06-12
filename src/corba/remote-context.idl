@@ -45,8 +45,11 @@ interface NetworkInterface80211 : MacNetworkInterface {
   void connect (in Channel80211 channel);
 };
 
+interface NetworkInterface80211Adhoc : NetworkInterface80211 {};
+
+
 interface NetworkInterface80211Factory {
-  NetworkInterface80211 create_adhoc (in MacAddress address, in PositionModel position, in InstanceId id);
+  NetworkInterface80211Adhoc create_adhoc (in MacAddress address, in PositionModel position, in InstanceId id);
 };
 
 interface Ipv4NetworkInterface : LocalInstance {};

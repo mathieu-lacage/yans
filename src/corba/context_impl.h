@@ -12,6 +12,7 @@ namespace yans {
   class TrafficAnalyser;
   class Host;
   class NetworkInterface80211;
+  class NetworkInterface80211Adhoc;
   class NetworkInterface80211Factory;
   class Ipv4Route;
 };
@@ -126,6 +127,16 @@ class NetworkInterface80211_impl :
     yans::NetworkInterface80211 *m_self;
 };
 
+class NetworkInterface80211Adhoc_impl : 
+virtual public NetworkInterface80211_impl,
+  virtual public POA_Remote::NetworkInterface80211Adhoc
+{
+ public:
+  NetworkInterface80211Adhoc_impl (::Remote::InstanceId id, 
+				   yans::NetworkInterface80211Adhoc *real_interface);
+  virtual ~NetworkInterface80211Adhoc_impl ();
+};
+
 
 // Implementation for interface NetworkInterface80211Factory
 class NetworkInterface80211Factory_impl : virtual public POA_Remote::NetworkInterface80211Factory
@@ -134,7 +145,7 @@ class NetworkInterface80211Factory_impl : virtual public POA_Remote::NetworkInte
   NetworkInterface80211Factory_impl  (yans::NetworkInterface80211Factory *real_factory);
   ~NetworkInterface80211Factory_impl ();
 
-    ::Remote::NetworkInterface80211_ptr create_adhoc( const ::Remote::MacAddress& address, ::Remote::PositionModel_ptr position, ::Remote::InstanceId id )
+    ::Remote::NetworkInterface80211Adhoc_ptr create_adhoc( const ::Remote::MacAddress& address, ::Remote::PositionModel_ptr position, ::Remote::InstanceId id )
       throw(
         ::CORBA::SystemException)
     ;

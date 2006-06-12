@@ -170,6 +170,16 @@ NetworkInterface80211_impl::connect( ::Remote::Channel80211_ptr channel )
   m_self->connect_to (real_channel);
 }
 
+NetworkInterface80211Adhoc_impl::NetworkInterface80211Adhoc_impl (::Remote::InstanceId id, 
+								  yans::NetworkInterface80211Adhoc *real_interface)
+  : LocalInstance_impl (id), 
+    MacNetworkInterface_impl (id),
+    NetworkInterface80211_impl (id, real_interface)
+{}
+NetworkInterface80211Adhoc_impl::~NetworkInterface80211Adhoc_impl ()
+{}
+
+
 
 // Implementation for interface NetworkInterface80211Factory
 
@@ -182,20 +192,20 @@ NetworkInterface80211Factory_impl::~NetworkInterface80211Factory_impl ()
   delete m_self;
 }
 
-::Remote::NetworkInterface80211_ptr
+::Remote::NetworkInterface80211Adhoc_ptr
 NetworkInterface80211Factory_impl::create_adhoc( const ::Remote::MacAddress& address, ::Remote::PositionModel_ptr position, ::Remote::InstanceId id )
   throw(
     ::CORBA::SystemException)
 
 {
-  ::Remote::NetworkInterface80211_ptr retval;
+  ::Remote::NetworkInterface80211Adhoc_ptr retval;
 
   yans::Position *real_position_model = LocalObjectRegistry::lookup_static_position (position->get_id ());
   uint8_t const*address_data = address.data;
   yans::MacAddress real_address = yans::MacAddress (address_data);
-  yans::NetworkInterface80211 *real_interface = m_self->create_adhoc (real_address, real_position_model);
+  yans::NetworkInterface80211Adhoc *real_interface = m_self->create_adhoc (real_address, real_position_model);
   LocalObjectRegistry::record_mac_interface (id, real_interface);
-  NetworkInterface80211_impl *servant = new NetworkInterface80211_impl (id, real_interface);
+  NetworkInterface80211Adhoc_impl *servant = new NetworkInterface80211Adhoc_impl (id, real_interface);
   activate_servant (servant);
   retval = servant->_this ();
 
