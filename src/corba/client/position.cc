@@ -18,38 +18,40 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef YAPNS_SIMULATION_CONTEXT_H
-#define YAPNS_SIMULATION_CONTEXT_H
-
-#include <string>
-#include "yans/reference-list.h"
-#include "remote-context.h"
+#include "position.h"
+#include <math.h>
 
 namespace yapns {
 
-class SimulationContextImpl;
+Position::Position ()
+{}
 
-typedef yans::ReferenceList<SimulationContextImpl *> SimulationContext;
+Position::~Position ()
+{}
 
-class SimulationContextFactory {
-public:
-	SimulationContextFactory ();
-	void read_configuration (char const *filename);
-	SimulationContext lookup (std::string name);
-private:
-};
+::Remote::PositionModel_ptr 
+Position::get_remote (void)
+{
+	return real_get_remote ();
+}
 
-class SimulationContextImpl {
-public:
-	SimulationContextImpl (::Remote::ComputingContext_ptr);
-	~SimulationContextImpl ();
-	::Remote::ComputingContext_ptr peek_remote (void) const;
-	::Remote::NetworkInterface80211Factory_ptr peek_80211_factory (void);
-private:
-	::Remote::ComputingContext_ptr m_context;
-	::Remote::NetworkInterface80211Factory_ptr m_80211_factory;
-};
+void
+Position::get (double &x, double &y, double &z) const
+{
+	real_get (x,y,z);
+}
+double 
+Position::get_distance_from (Position const*position) const
+{
+	double ox,oy,oz;
+	double x,y,z;
+	position->real_get (ox,oy,oz);
+	real_get (x,y,z);
+	double dx = ox - x;
+	double dy = oy - y;
+	double dz = oz - z;
+	return sqrt (dx*dx+dy*dy+dz*dz);
+}
+
 
 }; // namespace yapns
-
-#endif /* YAPNS_SIMULATION_CONTEXT_H */

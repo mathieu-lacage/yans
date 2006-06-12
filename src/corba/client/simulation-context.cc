@@ -42,15 +42,30 @@ SimulationContextFactory::lookup (std::string name)
 
 
 SimulationContextImpl::SimulationContextImpl (::Remote::ComputingContext_ptr remote)
-	: m_context (remote)
 {
+	m_context = ::Remote::ComputingContext::_duplicate (remote);
 	// XXX ref remote.
 }
 
+SimulationContextImpl::~SimulationContextImpl ()
+{
+	CORBA::release (m_context);
+	CORBA::release (m_80211_factory);
+}
+
 ::Remote::ComputingContext_ptr 
-SimulationContextImpl::get_corba_context (void) const
+SimulationContextImpl::peek_remote (void) const
 {
 	return m_context;
+}
+
+::Remote::NetworkInterface80211Factory_ptr 
+SimulationContextImpl::peek_80211_factory (void)
+{
+	if (CORBA::is_nil (m_80211_factory)) {
+		m_80211_factory = m_context->create_network_interface_80211_factory ();
+	}
+	return m_80211_factory;
 }
 
 

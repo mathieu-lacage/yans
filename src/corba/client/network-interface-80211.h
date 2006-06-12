@@ -18,38 +18,30 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef YAPNS_SIMULATION_CONTEXT_H
-#define YAPNS_SIMULATION_CONTEXT_H
+#ifndef YAPNS_NETWORK_INTERFACE_80211_H
+#define YAPNS_NETWORK_INTERFACE_80211_H
 
-#include <string>
-#include "yans/reference-list.h"
-#include "remote-context.h"
+#include "mac-network-interface.h"
 
 namespace yapns {
 
-class SimulationContextImpl;
-
-typedef yans::ReferenceList<SimulationContextImpl *> SimulationContext;
-
-class SimulationContextFactory {
+class NetworkInterface80211 : public MacNetworkInterface {
 public:
-	SimulationContextFactory ();
-	void read_configuration (char const *filename);
-	SimulationContext lookup (std::string name);
-private:
+	NetworkInterface80211 (::Remote::NetworkInterface80211_ptr remote);
+	virtual ~NetworkInterface80211 ();
 };
 
-class SimulationContextImpl {
+
+class NetworkInterface80211Adhoc : public NetworkInterface80211 {
 public:
-	SimulationContextImpl (::Remote::ComputingContext_ptr);
-	~SimulationContextImpl ();
-	::Remote::ComputingContext_ptr peek_remote (void) const;
-	::Remote::NetworkInterface80211Factory_ptr peek_80211_factory (void);
+	NetworkInterface80211Adhoc (::Remote::NetworkInterface80211Adhoc_ptr remote);
+	virtual ~NetworkInterface80211Adhoc ();
+
 private:
-	::Remote::ComputingContext_ptr m_context;
-	::Remote::NetworkInterface80211Factory_ptr m_80211_factory;
+	//::Remote::NetworkInterface80211Adhoc_ptr m_remote;
 };
 
 }; // namespace yapns
 
-#endif /* YAPNS_SIMULATION_CONTEXT_H */
+
+#endif /* YAPNS_NETWORK_INTERFACE_80211_H */

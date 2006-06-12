@@ -29,7 +29,7 @@ namespace yapns {
 
 Host::Host (SimulationContext context, char const *name)
 {
-	::Remote::ComputingContext_ptr remote_context = context->get_corba_context ();
+	::Remote::ComputingContext_ptr remote_context = context->peek_remote ();
 	m_remote_node = remote_context->create_node (IdFactory::get_next (), name);
 	m_routing_table = new Ipv4Route (m_remote_node->get_routing_table ());
 }

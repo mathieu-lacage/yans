@@ -18,38 +18,26 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef YAPNS_SIMULATION_CONTEXT_H
-#define YAPNS_SIMULATION_CONTEXT_H
+#ifndef YAPNS_STATIC_POSITION_H
+#define YAPNS_STATIC_POSITION_H
 
-#include <string>
-#include "yans/reference-list.h"
-#include "remote-context.h"
+#include "simulation-context.h"
+#include "position.h"
 
 namespace yapns {
 
-class SimulationContextImpl;
-
-typedef yans::ReferenceList<SimulationContextImpl *> SimulationContext;
-
-class SimulationContextFactory {
+class StaticPosition : public Position {
 public:
-	SimulationContextFactory ();
-	void read_configuration (char const *filename);
-	SimulationContext lookup (std::string name);
-private:
-};
+	StaticPosition (SimulationContext ctx);
+	virtual ~StaticPosition ();
 
-class SimulationContextImpl {
-public:
-	SimulationContextImpl (::Remote::ComputingContext_ptr);
-	~SimulationContextImpl ();
-	::Remote::ComputingContext_ptr peek_remote (void) const;
-	::Remote::NetworkInterface80211Factory_ptr peek_80211_factory (void);
+	void set (double x, double y, double z);
 private:
-	::Remote::ComputingContext_ptr m_context;
-	::Remote::NetworkInterface80211Factory_ptr m_80211_factory;
+	virtual void real_get (double &x, double &y, double &z) const;
+	virtual ::Remote::PositionModel_ptr real_get_remote (void);
+	::Remote::StaticPositionModel_ptr m_remote;
 };
 
 }; // namespace yapns
 
-#endif /* YAPNS_SIMULATION_CONTEXT_H */
+#endif /* YAPNS_STATIC_POSITION_H */

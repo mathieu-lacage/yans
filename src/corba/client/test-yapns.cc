@@ -20,6 +20,11 @@
  */
 #include "yapns/host.h"
 #include "yapns/simulation-context.h"
+#include "yapns/simulator.h"
+#include "yapns/mac-address-factory.h"
+#include "yapns/network-interface-80211-factory.h"
+#include "yapns/network-interface-80211.h"
+#include "yapns/static-position.h"
 
 using namespace yapns;
 
@@ -27,6 +32,26 @@ using namespace yapns;
 int main (int argc, char *argv[])
 {
 	SimulationContextFactory ctx;
-	Host *a = new Host (ctx.lookup ("a"), "a");
+	ctx.read_configuration ("sample.xml");
+	NetworkInterface80211Factory factory;
+	MacAddressFactory address_factory;
+
+	SimulationContext a_context = ctx.lookup ("a");
+	Host *a = new Host (a_context, "a");
+	Position *pos_a = new StaticPosition (a_context);
+	NetworkInterface80211Adhoc *interface_a = factory.create_adhoc (a_context, 
+									address_factory.get_next (), 
+									pos_a);
+	
+
+
+	Host *b = new Host (ctx.lookup ("b"), "b");
+	
+
+	Simulator::run ();
+
+	delete a;
+	Simulator::destroy ();
+
 	return 0;
 }

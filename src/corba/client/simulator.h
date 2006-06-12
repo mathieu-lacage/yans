@@ -18,38 +18,19 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef YAPNS_SIMULATION_CONTEXT_H
-#define YAPNS_SIMULATION_CONTEXT_H
-
-#include <string>
-#include "yans/reference-list.h"
-#include "remote-context.h"
+#ifndef YAPNS_SIMULATOR_H
+#define YAPNS_SIMULATOR_H
 
 namespace yapns {
 
-class SimulationContextImpl;
-
-typedef yans::ReferenceList<SimulationContextImpl *> SimulationContext;
-
-class SimulationContextFactory {
+class Simulator {
 public:
-	SimulationContextFactory ();
-	void read_configuration (char const *filename);
-	SimulationContext lookup (std::string name);
-private:
-};
+	static void run (void);
 
-class SimulationContextImpl {
-public:
-	SimulationContextImpl (::Remote::ComputingContext_ptr);
-	~SimulationContextImpl ();
-	::Remote::ComputingContext_ptr peek_remote (void) const;
-	::Remote::NetworkInterface80211Factory_ptr peek_80211_factory (void);
-private:
-	::Remote::ComputingContext_ptr m_context;
-	::Remote::NetworkInterface80211Factory_ptr m_80211_factory;
+	static void destroy (void);
 };
 
 }; // namespace yapns
 
-#endif /* YAPNS_SIMULATION_CONTEXT_H */
+
+#endif /* YAPNS_SIMULATOR_H */

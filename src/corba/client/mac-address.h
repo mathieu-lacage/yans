@@ -18,38 +18,16 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef YAPNS_SIMULATION_CONTEXT_H
-#define YAPNS_SIMULATION_CONTEXT_H
+#ifndef YAPNS_MAC_ADDRESS_H
+#define YAPNS_MAC_ADDRESS_H
 
-#include <string>
-#include "yans/reference-list.h"
-#include "remote-context.h"
+#include "yans/mac-address.h"
 
 namespace yapns {
 
-class SimulationContextImpl;
-
-typedef yans::ReferenceList<SimulationContextImpl *> SimulationContext;
-
-class SimulationContextFactory {
-public:
-	SimulationContextFactory ();
-	void read_configuration (char const *filename);
-	SimulationContext lookup (std::string name);
-private:
-};
-
-class SimulationContextImpl {
-public:
-	SimulationContextImpl (::Remote::ComputingContext_ptr);
-	~SimulationContextImpl ();
-	::Remote::ComputingContext_ptr peek_remote (void) const;
-	::Remote::NetworkInterface80211Factory_ptr peek_80211_factory (void);
-private:
-	::Remote::ComputingContext_ptr m_context;
-	::Remote::NetworkInterface80211Factory_ptr m_80211_factory;
-};
+typedef yans::MacAddress MacAddress;
 
 }; // namespace yapns
 
-#endif /* YAPNS_SIMULATION_CONTEXT_H */
+
+#endif /* YAPNS_MAC_ADDRESS_H */

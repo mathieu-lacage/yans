@@ -18,38 +18,27 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef YAPNS_SIMULATION_CONTEXT_H
-#define YAPNS_SIMULATION_CONTEXT_H
+#ifndef YAPNS_POSITION_H
+#define YAPNS_POSITION_H
 
-#include <string>
-#include "yans/reference-list.h"
 #include "remote-context.h"
 
 namespace yapns {
 
-class SimulationContextImpl;
-
-typedef yans::ReferenceList<SimulationContextImpl *> SimulationContext;
-
-class SimulationContextFactory {
+class Position {
 public:
-	SimulationContextFactory ();
-	void read_configuration (char const *filename);
-	SimulationContext lookup (std::string name);
-private:
-};
+	Position ();
+	virtual ~Position ();
 
-class SimulationContextImpl {
-public:
-	SimulationContextImpl (::Remote::ComputingContext_ptr);
-	~SimulationContextImpl ();
-	::Remote::ComputingContext_ptr peek_remote (void) const;
-	::Remote::NetworkInterface80211Factory_ptr peek_80211_factory (void);
+	::Remote::PositionModel_ptr get_remote (void);
+
+	void get (double &x, double &y, double &z) const;
+	double get_distance_from (Position const*position) const;
 private:
-	::Remote::ComputingContext_ptr m_context;
-	::Remote::NetworkInterface80211Factory_ptr m_80211_factory;
+	virtual void real_get (double &x, double &y, double &z) const = 0;
+	virtual ::Remote::PositionModel_ptr real_get_remote (void) = 0;
 };
 
 }; // namespace yapns
 
-#endif /* YAPNS_SIMULATION_CONTEXT_H */
+#endif /* YAPNS_POSITION_H */
