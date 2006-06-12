@@ -501,7 +501,7 @@ MICO_LDFLAGS:=-L/opt/mico/lib -lmico2.3.12 -lssl
 
 
 SAMPLE_CORBA_SRC := \
-	src/corba/context.cc \
+	src/corba/remote-context.cc \
 	src/corba/registry.cc \
 	src/corba/registry_impl.cc \
 	src/corba/registry-main.cc \
@@ -514,7 +514,7 @@ SAMPLE_CORBA_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS) $(MICO_LDFLAGS)
 
 SAMPLE_CORBA_FACTORY_SRC := \
 	src/corba/registry.cc \
-	src/corba/context.cc \
+	src/corba/remote-context.cc \
 	src/corba/context_impl.cc \
 	src/corba/context-main.cc \
 	src/corba/parallel-channel-80211.cc \
@@ -528,19 +528,36 @@ SAMPLE_CORBA_FACTORY_CXXFLAGS:=$(CXXFLAGS) -I./src/corba $(MICO_CXXFLAGS)
 SAMPLE_CORBA_FACTORY_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS) $(MICO_LDFLAGS)
 
 YAPNS_SRC := \
+	src/corba/remote-context.cc \
 	src/corba/client/id-factory.cc \
 	src/corba/client/host.cc \
+	src/corba/client/simulator.cc \
 	src/corba/client/simulation-context.cc \
 	src/corba/client/ipv4-network-interface.cc \
 	src/corba/client/mac-network-interface.cc \
+	src/corba/client/network-interface-80211-factory.cc \
+	src/corba/client/network-interface-80211.cc \
+	src/corba/client/position.cc \
+	src/corba/client/static-position.cc \
 	src/corba/client/ipv4-route.cc \
 	$(NULL)
 YAPNS_INST_HDR := \
 	src/corba/remote-context.h \
 	src/corba/client/host.h \
+	src/corba/client/simulator.h \
 	src/corba/client/simulation-context.h \
 	src/corba/client/ipv4-address.h \
 	src/corba/client/ipv4-network-interface.h \
+	src/corba/client/mac-address-factory.h \
+	src/corba/client/mac-address.h \
+	src/corba/client/mac-network-interface.h \
+	src/corba/client/network-interface-80211.h \
+	src/corba/client/network-interface-80211-factory.h \
+	src/corba/client/position.h \
+	src/corba/client/static-position.h \
+	$(NULL)
+YAPNS_HDR := \
+	src/corba/client/position.h \
 	$(NULL)
 YAPNS_NAME := yapns
 YAPNS_TYPE := shared-library
