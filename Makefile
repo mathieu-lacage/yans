@@ -311,9 +311,9 @@ YANS_HDR := \
 	src/simulator/scheduler-map.h \
 	src/common/sgi-hashmap.h \
 	src/common/chunk-utils.h \
-	src/common/ref-count.tcc \
 	src/common/seed-generator.h \
 	src/common/rng-mrg32k3a.h \
+	src/common/ref-count.tcc \
 	src/ipv4/chunk-icmp.h \
 	src/ipv4/defrag-state.h \
 	src/ipv4/tcp-connection-listener.h \
@@ -505,7 +505,6 @@ SAMPLE_CORBA_SRC := \
 	src/corba/registry.cc \
 	src/corba/registry_impl.cc \
 	src/corba/registry-main.cc \
-	src/corba/id-factory.cc \
 	src/corba/callback-run-done_impl.cc \
 	$(NULL)
 SAMPLE_CORBA_NAME := test-corba
@@ -528,10 +527,37 @@ SAMPLE_CORBA_FACTORY_TYPE := executable
 SAMPLE_CORBA_FACTORY_CXXFLAGS:=$(CXXFLAGS) -I./src/corba $(MICO_CXXFLAGS)
 SAMPLE_CORBA_FACTORY_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS) $(MICO_LDFLAGS)
 
+YAPNS_SRC := \
+	src/corba/client/id-factory.cc \
+	src/corba/client/host.cc \
+	src/corba/client/simulation-context.cc \
+	src/corba/client/ipv4-network-interface.cc \
+	src/corba/client/mac-network-interface.cc \
+	src/corba/client/ipv4-route.cc \
+	$(NULL)
+YAPNS_INST_HDR := \
+	src/corba/remote-context.h \
+	src/corba/client/host.h \
+	src/corba/client/simulation-context.h \
+	src/corba/client/ipv4-address.h \
+	src/corba/client/ipv4-network-interface.h \
+	$(NULL)
+YAPNS_NAME := yapns
+YAPNS_TYPE := shared-library
+YAPNS_CXXFLAGS := -I./src/corba $(MICO_CXXFLAGS)
+
+YAPNS_TEST_SRC := \
+	src/corba/client/test-yapns.cc \
+	$(NULL)
+YAPNS_TEST_NAME := test-yapns
+YAPNS_TEST_TYPE := executable
+YAPNS_TEST_CXXFLAGS := $(MICO_CXXFLAGS)
+YAPNS_TEST_LDFLAGS := $(MICO_LDFLAGS) -lpthread -lyapns -lyans
+
 src/corba/registry.cc: src/corba/registry.idl
 	cd src/corba && idl --codegen-c++ ./registry.idl && cd -
-src/corba/context.cc: src/corba/context.idl
-	cd src/corba && idl --codegen-c++ ./context.idl && cd -
+src/corba/remote-context.cc: src/corba/remote-context.idl
+	cd src/corba && idl --codegen-c++ ./remote-context.idl && cd -
 
 
 
@@ -630,6 +656,8 @@ ALL:= \
 	BENCH \
 	BENCH_PACKET \
 	TEST \
+	YAPNS \
+	YAPNS_TEST \
 	SAMPLE_CORBA \
 	SAMPLE_CORBA_FACTORY \
 	SAMPLE_CXX_SIMPLE \
