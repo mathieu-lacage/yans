@@ -2,6 +2,9 @@ Release 0.10.0 (2006-XX-XX)
 -------------
 
 This release features:
+   - optimization work on Packet and Buffer
+     implementation
+   - optimize Tag API.
 
 Release 0.9.0 (2006-05-20)
 -------------
