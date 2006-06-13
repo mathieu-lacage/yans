@@ -52,12 +52,15 @@ Ipv4NetworkInterface *
 Host::add_ipv4_arp_interface (MacNetworkInterface *interface, 
 			      Ipv4Address address, Ipv4Mask mask)
 {
+	::Remote::MacNetworkInterface_ptr remote_mac = interface->get_remote ();
 	::Remote::Ipv4NetworkInterface_ptr remote_ipv4 = 
-		m_remote_node->add_ipv4_arp_interface (interface->peek_remote (),
+		m_remote_node->add_ipv4_arp_interface (remote_mac,
 						       address.get_host_order (),
 						       mask.get_host_order (),
 						       IdFactory::get_next ());
 	Ipv4NetworkInterface *local = new Ipv4NetworkInterface (remote_ipv4);
+	CORBA::release (remote_mac);
+	CORBA::release (remote_ipv4);
 	return local;
 }
 

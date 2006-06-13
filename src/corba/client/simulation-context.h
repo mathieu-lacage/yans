@@ -43,6 +43,7 @@ class SimulationContextImpl {
 public:
 	SimulationContextImpl (::Remote::ComputingContext_ptr);
 	~SimulationContextImpl ();
+	bool is_equal (SimulationContext o);
 	::Remote::ComputingContext_ptr peek_remote (void) const;
 	::Remote::NetworkInterface80211Factory_ptr peek_80211_factory (void);
 private:

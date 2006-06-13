@@ -25,6 +25,8 @@
 #include "yapns/network-interface-80211-factory.h"
 #include "yapns/network-interface-80211.h"
 #include "yapns/static-position.h"
+#include "yapns/channel-80211.h"
+#include "yapns/ipv4-route.h"
 
 using namespace yapns;
 
@@ -35,6 +37,7 @@ int main (int argc, char *argv[])
 	ctx.read_configuration ("sample.xml");
 	NetworkInterface80211Factory factory;
 	MacAddressFactory address_factory;
+	Channel80211 *channel = new Channel80211 ();
 
 	SimulationContext a_context = ctx.lookup ("a");
 	Host *a = new Host (a_context, "a");
@@ -42,10 +45,31 @@ int main (int argc, char *argv[])
 	NetworkInterface80211Adhoc *interface_a = factory.create_adhoc (a_context, 
 									address_factory.get_next (), 
 									pos_a);
+	interface_a->connect_to (channel);
+	Ipv4NetworkInterface *ipv4_interface_a = a->add_ipv4_arp_interface (interface_a,
+									    Ipv4Address ("192.168.0.1"),
+									    Ipv4Mask ("255.255.255.0"));
+	Ipv4Route *routing_table_a = a->get_routing_table ();
+	routing_table_a->set_default_route (Ipv4Address ("192.168.0.2"), ipv4_interface_a);
+
+
+
+	SimulationContext b_context = ctx.lookup ("b");
+	Host *b = new Host (b_context, "b");
+	Position *pos_b = new StaticPosition (b_context);
+	NetworkInterface80211Adhoc *interface_b = factory.create_adhoc (b_context, 
+									address_factory.get_next (), 
+									pos_b);
+	interface_b->connect_to (channel);
+	Ipv4NetworkInterface *ipv4_interface_b = b->add_ipv4_arp_interface (interface_b,
+									    Ipv4Address ("192.168.0.2"),
+									    Ipv4Mask ("255.255.255.0"));
+	Ipv4Route *routing_table_b = b->get_routing_table ();
+	routing_table_b->set_default_route (Ipv4Address ("192.168.0.1"), ipv4_interface_b);
+
+
+
 	
-
-
-	Host *b = new Host (ctx.lookup ("b"), "b");
 	
 
 	Simulator::run ();

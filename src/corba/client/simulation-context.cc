@@ -53,6 +53,12 @@ SimulationContextImpl::~SimulationContextImpl ()
 	CORBA::release (m_80211_factory);
 }
 
+bool 
+SimulationContextImpl::is_equal (SimulationContext o)
+{
+	return (o.get () == this);
+}
+
 ::Remote::ComputingContext_ptr 
 SimulationContextImpl::peek_remote (void) const
 {

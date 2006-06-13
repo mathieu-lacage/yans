@@ -27,11 +27,11 @@ namespace yapns {
 
 class MacNetworkInterface {
 public:
-	MacNetworkInterface (::Remote::MacNetworkInterface_ptr remote);
+	MacNetworkInterface ();
 	virtual ~MacNetworkInterface ();
-	::Remote::MacNetworkInterface_ptr peek_remote (void);
+	::Remote::MacNetworkInterface_ptr get_remote (void);
 private:
-	::Remote::MacNetworkInterface_ptr m_remote;
+	virtual ::Remote::MacNetworkInterface_ptr real_get_remote (void) = 0;
 };
 
 }; // namespace yapns

@@ -18,18 +18,30 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#include "mac-network-interface.h"
+#ifndef YAPNS_CHANNEL_80211_H
+#define YAPNS_CHANNEL_80211_H
+
+#include "simulation-context.h"
+#include "remote-context.h"
+#include <vector>
+#include <utility>
 
 namespace yapns {
 
-MacNetworkInterface::MacNetworkInterface ()
-{}
-MacNetworkInterface::~MacNetworkInterface ()
-{}
-::Remote::MacNetworkInterface_ptr 
-MacNetworkInterface::get_remote (void)
-{
-	return real_get_remote ();
-}
+class NetworkInterface80211;
+
+class Channel80211 {
+public:
+	Channel80211 ();
+	~Channel80211 ();
+	void record_connect (NetworkInterface80211 *interface);
+private:
+	typedef std::vector<std::pair<SimulationContext,::Remote::Channel80211_ptr> > Contexts;
+	typedef std::vector<std::pair<SimulationContext,::Remote::Channel80211_ptr> >::iterator ContextsI;
+
+	Contexts m_contexts;
+};
 
 }; // namespace yapns
+
+#endif /* YAPNS_CHANNEL_80211_H */

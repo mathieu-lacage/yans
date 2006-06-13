@@ -42,7 +42,7 @@ NetworkInterface80211Factory::create_adhoc (SimulationContext ctx,
 		  remote_factory->create_adhoc (corba_address, 
 						remote_position,
 						IdFactory::get_next ());
-	NetworkInterface80211Adhoc *local = new NetworkInterface80211Adhoc (remote);
+	NetworkInterface80211Adhoc *local = new NetworkInterface80211Adhoc (ctx, remote);
 	CORBA::release (remote);
 	CORBA::release (remote_position);
 	return local;

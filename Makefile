@@ -540,6 +540,7 @@ YAPNS_SRC := \
 	src/corba/client/position.cc \
 	src/corba/client/static-position.cc \
 	src/corba/client/ipv4-route.cc \
+	src/corba/client/channel-80211.cc \
 	$(NULL)
 YAPNS_INST_HDR := \
 	src/corba/remote-context.h \
@@ -555,6 +556,8 @@ YAPNS_INST_HDR := \
 	src/corba/client/network-interface-80211-factory.h \
 	src/corba/client/position.h \
 	src/corba/client/static-position.h \
+	src/corba/client/channel-80211.h \
+	src/corba/client/ipv4-route.h \
 	$(NULL)
 YAPNS_HDR := \
 	src/corba/client/position.h \

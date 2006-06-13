@@ -22,23 +22,36 @@
 #define YAPNS_NETWORK_INTERFACE_80211_H
 
 #include "mac-network-interface.h"
+#include "simulation-context.h"
 
 namespace yapns {
 
+class Channel80211;
+
 class NetworkInterface80211 : public MacNetworkInterface {
 public:
-	NetworkInterface80211 (::Remote::NetworkInterface80211_ptr remote);
+	NetworkInterface80211 (SimulationContext ctx);
 	virtual ~NetworkInterface80211 ();
+
+	SimulationContext get_context (void);
+	::Remote::NetworkInterface80211_ptr get_remote_80211 (void);
+
+	void connect_to (Channel80211 *channel);
+private:
+	virtual ::Remote::NetworkInterface80211_ptr real_get_remote_80211 (void) = 0;
+	SimulationContext m_context;
 };
 
 
 class NetworkInterface80211Adhoc : public NetworkInterface80211 {
 public:
-	NetworkInterface80211Adhoc (::Remote::NetworkInterface80211Adhoc_ptr remote);
+	NetworkInterface80211Adhoc (SimulationContext ctx, ::Remote::NetworkInterface80211Adhoc_ptr remote);
 	virtual ~NetworkInterface80211Adhoc ();
 
 private:
-	//::Remote::NetworkInterface80211Adhoc_ptr m_remote;
+	virtual ::Remote::MacNetworkInterface_ptr real_get_remote (void);
+	virtual ::Remote::NetworkInterface80211_ptr real_get_remote_80211 (void);
+	::Remote::NetworkInterface80211Adhoc_ptr m_remote;
 };
 
 }; // namespace yapns
