@@ -18,40 +18,33 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef YAPNS_HOST_H
-#define YAPNS_HOST_H
+#ifndef YAPNS_UDP_SOURCE_H
+#define YAPNS_UDP_SOURCE_H
 
-#include <vector>
-#include "ipv4-address.h"
+#include <stdint.h>
 #include "simulation-context.h"
+#include "ipv4-address.h"
 
 namespace yapns {
 
-class Ipv4Route;
-class Ipv4NetworkInterface;
-class MacNetworkInterface;
+class Host;
+class Packet;
 
-
-class Host {
+class UdpSource {
 public:
-	Host (SimulationContext context, char const *name);
-	~Host ();
+	UdpSource (SimulationContext ctx, Host *host);
+	~UdpSource ();
+	void bind (Ipv4Address address, uint16_t port);
+	void set_peer (Ipv4Address peer, uint16_t port);
+	void unbind_at (double at_s);
+	void send (Packet *packet);
 
-	Ipv4Route *get_routing_table (void);
-
-	Ipv4NetworkInterface *add_ipv4_arp_interface (MacNetworkInterface *interface, 
-						      Ipv4Address address, Ipv4Mask mask);
-
-	::Remote::Node_ptr peek_remote (void);
- private:
-	typedef std::vector<Ipv4NetworkInterface *> Ipv4NetworkInterfaces;
-	typedef std::vector<Ipv4NetworkInterface *>::iterator Ipv4NetworkInterfacesI;
-
-	Ipv4Route *m_routing_table;
-	::Remote::Node_ptr m_remote_node;
-	Ipv4NetworkInterfaces m_interfaces;
+	::Remote::UdpSource_ptr peek_remote (void);
+private:
+	::Remote::UdpSource_ptr m_remote;
 };
+
 
 }; // namespace yapns
 
-#endif /* YAPNS_HOST_H */
+#endif /* YAPNS_UDP_SOURCE_H */

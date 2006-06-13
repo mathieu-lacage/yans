@@ -541,6 +541,11 @@ YAPNS_SRC := \
 	src/corba/client/static-position.cc \
 	src/corba/client/ipv4-route.cc \
 	src/corba/client/channel-80211.cc \
+	src/corba/client/callback.cc \
+	src/corba/client/periodic-generator.cc \
+	src/corba/client/traffic-analyser.cc \
+	src/corba/client/udp-source.cc \
+	src/corba/client/udp-sink.cc \
 	$(NULL)
 YAPNS_INST_HDR := \
 	src/corba/remote-context.h \
@@ -558,6 +563,11 @@ YAPNS_INST_HDR := \
 	src/corba/client/static-position.h \
 	src/corba/client/channel-80211.h \
 	src/corba/client/ipv4-route.h \
+	src/corba/client/udp-source.h \
+	src/corba/client/udp-sink.h \
+	src/corba/client/periodic-generator.h \
+	src/corba/client/traffic-analyser.h \
+	src/corba/client/callback.h \
 	$(NULL)
 YAPNS_HDR := \
 	src/corba/client/position.h \

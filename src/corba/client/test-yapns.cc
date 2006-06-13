@@ -27,6 +27,11 @@
 #include "yapns/static-position.h"
 #include "yapns/channel-80211.h"
 #include "yapns/ipv4-route.h"
+#include "yapns/udp-source.h"
+#include "yapns/udp-sink.h"
+#include "yapns/periodic-generator.h"
+#include "yapns/traffic-analyser.h"
+#include "yapns/callback.h"
 
 using namespace yapns;
 
@@ -51,6 +56,14 @@ int main (int argc, char *argv[])
 									    Ipv4Mask ("255.255.255.0"));
 	Ipv4Route *routing_table_a = a->get_routing_table ();
 	routing_table_a->set_default_route (Ipv4Address ("192.168.0.2"), ipv4_interface_a);
+	UdpSource *source = new UdpSource (a_context, a);
+	source->bind (Ipv4Address ("192.168.0.3"), 1025);
+	source->set_peer (Ipv4Address ("192.168.0.2"), 1026);
+	source->unbind_at (10000.0);
+	PeriodicGenerator *generator = new PeriodicGenerator (a_context);
+	generator->set_packet_interval (0.00001);
+	generator->set_packet_size (2000);
+	generator->set_send_callback (make_callback (&UdpSource::send, source));
 
 
 
@@ -66,6 +79,13 @@ int main (int argc, char *argv[])
 									    Ipv4Mask ("255.255.255.0"));
 	Ipv4Route *routing_table_b = b->get_routing_table ();
 	routing_table_b->set_default_route (Ipv4Address ("192.168.0.1"), ipv4_interface_b);
+	UdpSink *sink = new UdpSink (b_context, b);
+	sink->bind (Ipv4Address ("192.168.0.2"), 1026);
+	sink->unbind_at (10000.0);
+	TrafficAnalyser *analyser = new TrafficAnalyser (b_context);
+	sink->set_receive_callback (make_callback (&TrafficAnalyser::receive, analyser));
+
+
 
 
 
@@ -74,7 +94,18 @@ int main (int argc, char *argv[])
 
 	Simulator::run ();
 
+	delete channel;
+
 	delete a;
+	delete pos_a;
+	delete interface_a;
+	delete source;
+
+	delete b;
+	delete pos_b;
+	delete interface_b;
+	delete sink;
+
 	Simulator::destroy ();
 
 	return 0;

@@ -18,40 +18,31 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef YAPNS_HOST_H
-#define YAPNS_HOST_H
-
-#include <vector>
-#include "ipv4-address.h"
-#include "simulation-context.h"
+#include "traffic-analyser.h"
 
 namespace yapns {
 
-class Ipv4Route;
-class Ipv4NetworkInterface;
-class MacNetworkInterface;
 
+TrafficAnalyser::TrafficAnalyser (SimulationContext ctx)
+{
+	m_remote = ctx->peek_remote ()->create_traffic_analyser ();
+}
 
-class Host {
-public:
-	Host (SimulationContext context, char const *name);
-	~Host ();
+TrafficAnalyser::~TrafficAnalyser ()
+{
+	CORBA::release (m_remote);
+}
+void 
+TrafficAnalyser::receive (Packet *packet)
+{
+	assert (false);
+}
 
-	Ipv4Route *get_routing_table (void);
+::Remote::TrafficAnalyser_ptr 
+TrafficAnalyser::peek_remote (void)
+{
+	return m_remote;
+}
 
-	Ipv4NetworkInterface *add_ipv4_arp_interface (MacNetworkInterface *interface, 
-						      Ipv4Address address, Ipv4Mask mask);
-
-	::Remote::Node_ptr peek_remote (void);
- private:
-	typedef std::vector<Ipv4NetworkInterface *> Ipv4NetworkInterfaces;
-	typedef std::vector<Ipv4NetworkInterface *>::iterator Ipv4NetworkInterfacesI;
-
-	Ipv4Route *m_routing_table;
-	::Remote::Node_ptr m_remote_node;
-	Ipv4NetworkInterfaces m_interfaces;
-};
 
 }; // namespace yapns
-
-#endif /* YAPNS_HOST_H */

@@ -18,40 +18,32 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef YAPNS_HOST_H
-#define YAPNS_HOST_H
-
-#include <vector>
-#include "ipv4-address.h"
-#include "simulation-context.h"
+#include "periodic-generator.h"
 
 namespace yapns {
 
-class Ipv4Route;
-class Ipv4NetworkInterface;
-class MacNetworkInterface;
-
-
-class Host {
-public:
-	Host (SimulationContext context, char const *name);
-	~Host ();
-
-	Ipv4Route *get_routing_table (void);
-
-	Ipv4NetworkInterface *add_ipv4_arp_interface (MacNetworkInterface *interface, 
-						      Ipv4Address address, Ipv4Mask mask);
-
-	::Remote::Node_ptr peek_remote (void);
- private:
-	typedef std::vector<Ipv4NetworkInterface *> Ipv4NetworkInterfaces;
-	typedef std::vector<Ipv4NetworkInterface *>::iterator Ipv4NetworkInterfacesI;
-
-	Ipv4Route *m_routing_table;
-	::Remote::Node_ptr m_remote_node;
-	Ipv4NetworkInterfaces m_interfaces;
-};
+PeriodicGenerator::PeriodicGenerator (SimulationContext ctx)
+{
+	m_remote = ctx->peek_remote ()->create_periodic_generator ();
+}
+PeriodicGenerator::~PeriodicGenerator ()
+{
+	CORBA::release (m_remote);
+}
+void 
+PeriodicGenerator::set_packet_interval (double s)
+{
+	m_remote->set_packet_interval_s (s);
+}
+void 
+PeriodicGenerator::set_packet_size (uint16_t size)
+{
+	m_remote->set_packet_size (size);
+}
+void 
+PeriodicGenerator::set_send_callback (CallbackVoidPacket send_cb)
+{
+	m_remote->set_send_callback (send_cb.peek_remote ());
+}
 
 }; // namespace yapns
-
-#endif /* YAPNS_HOST_H */

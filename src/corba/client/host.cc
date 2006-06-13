@@ -64,4 +64,10 @@ Host::add_ipv4_arp_interface (MacNetworkInterface *interface,
 	return local;
 }
 
+::Remote::Node_ptr 
+Host::peek_remote (void)
+{
+	return m_remote_node;
+}
+
 }; // namespace yapns

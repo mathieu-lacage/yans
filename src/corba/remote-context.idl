@@ -102,6 +102,8 @@ interface ComputingContext {
   StaticPositionModel create_static_position (in InstanceId id);
   UdpSource create_udp_source (in Node node);
   UdpSink create_udp_sink (in Node node);
+  PeriodicGenerator create_periodic_generator ();
+  TrafficAnalyser create_traffic_analyser ();
 
   // used to implement a synchronization barrier
   void stop_at_us (in Timestamp at_us);

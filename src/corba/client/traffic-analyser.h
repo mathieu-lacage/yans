@@ -18,40 +18,27 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef YAPNS_HOST_H
-#define YAPNS_HOST_H
+#ifndef YAPNS_TRAFFIC_ANALYSER_H
+#define YAPNS_TRAFFIC_ANALYSER_H
 
-#include <vector>
-#include "ipv4-address.h"
 #include "simulation-context.h"
 
 namespace yapns {
 
-class Ipv4Route;
-class Ipv4NetworkInterface;
-class MacNetworkInterface;
+class Packet;
 
-
-class Host {
+class TrafficAnalyser {
 public:
-	Host (SimulationContext context, char const *name);
-	~Host ();
+	TrafficAnalyser (SimulationContext ctx);
+	~TrafficAnalyser ();
+	void receive (Packet *packet);
 
-	Ipv4Route *get_routing_table (void);
-
-	Ipv4NetworkInterface *add_ipv4_arp_interface (MacNetworkInterface *interface, 
-						      Ipv4Address address, Ipv4Mask mask);
-
-	::Remote::Node_ptr peek_remote (void);
- private:
-	typedef std::vector<Ipv4NetworkInterface *> Ipv4NetworkInterfaces;
-	typedef std::vector<Ipv4NetworkInterface *>::iterator Ipv4NetworkInterfacesI;
-
-	Ipv4Route *m_routing_table;
-	::Remote::Node_ptr m_remote_node;
-	Ipv4NetworkInterfaces m_interfaces;
+	::Remote::TrafficAnalyser_ptr peek_remote (void);
+private:
+	::Remote::TrafficAnalyser_ptr m_remote;
 };
 
 }; // namespace yapns
 
-#endif /* YAPNS_HOST_H */
+
+#endif /* YAPNS_TRAFFIC_ANALYSER_H */

@@ -18,40 +18,32 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef YAPNS_HOST_H
-#define YAPNS_HOST_H
+#ifndef YAPNS_UDP_SINK_H
+#define YAPNS_UDP_SINK_H
 
-#include <vector>
-#include "ipv4-address.h"
+#include <stdint.h>
 #include "simulation-context.h"
+#include "ipv4-address.h"
+#include "callback.h"
+#include "remote-context.h"
 
 namespace yapns {
 
-class Ipv4Route;
-class Ipv4NetworkInterface;
-class MacNetworkInterface;
+class Host;
 
-
-class Host {
+class UdpSink {
 public:
-	Host (SimulationContext context, char const *name);
-	~Host ();
+	UdpSink (SimulationContext ctx, Host *host);
+	~UdpSink ();
+	void bind (Ipv4Address address, uint16_t port);
+	void unbind_at (double at_s);
+	void set_receive_callback (CallbackVoidPacket cb);
 
-	Ipv4Route *get_routing_table (void);
-
-	Ipv4NetworkInterface *add_ipv4_arp_interface (MacNetworkInterface *interface, 
-						      Ipv4Address address, Ipv4Mask mask);
-
-	::Remote::Node_ptr peek_remote (void);
- private:
-	typedef std::vector<Ipv4NetworkInterface *> Ipv4NetworkInterfaces;
-	typedef std::vector<Ipv4NetworkInterface *>::iterator Ipv4NetworkInterfacesI;
-
-	Ipv4Route *m_routing_table;
-	::Remote::Node_ptr m_remote_node;
-	Ipv4NetworkInterfaces m_interfaces;
+private:
+	::Remote::UdpSink_ptr m_remote;
 };
+
 
 }; // namespace yapns
 
-#endif /* YAPNS_HOST_H */
+#endif /* YAPNS_UDP_SINK_H */

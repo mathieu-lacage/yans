@@ -355,6 +355,16 @@ class ComputingContext_impl : virtual public POA_Remote::ComputingContext
         ::CORBA::SystemException)
     ;
 
+    ::Remote::PeriodicGenerator_ptr create_periodic_generator()
+      throw(
+        ::CORBA::SystemException)
+    ;
+
+    ::Remote::TrafficAnalyser_ptr create_traffic_analyser()
+      throw(
+        ::CORBA::SystemException)
+    ;
+
     void stop_at_us( ::Remote::Timestamp at_us )
       throw(
         ::CORBA::SystemException)

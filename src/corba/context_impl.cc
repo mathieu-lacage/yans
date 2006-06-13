@@ -626,6 +626,37 @@ ComputingContext_impl::create_udp_sink( ::Remote::Node_ptr node )
   return retval; 
 }
 
+::Remote::PeriodicGenerator_ptr 
+ComputingContext_impl::create_periodic_generator()
+  throw(
+        ::CORBA::SystemException)
+{
+  ::Remote::PeriodicGenerator_ptr retval;
+
+  yans::PeriodicGenerator *real_generator = new yans::PeriodicGenerator ();
+  PeriodicGenerator_impl *servant = new PeriodicGenerator_impl (real_generator);
+  activate_servant (servant);
+  retval = servant->_this ();
+  
+  return retval; 
+}
+
+::Remote::TrafficAnalyser_ptr 
+ComputingContext_impl::create_traffic_analyser()
+  throw(
+        ::CORBA::SystemException)
+{
+  ::Remote::TrafficAnalyser_ptr retval;
+
+  yans::TrafficAnalyser *real_analyser = new yans::TrafficAnalyser ();
+  TrafficAnalyser_impl *servant = new TrafficAnalyser_impl (real_analyser);
+  activate_servant (servant);
+  retval = servant->_this ();
+  
+  return retval; 
+}
+
+
 
 void
 ComputingContext_impl::stop_at_us( ::Remote::Timestamp at_us )

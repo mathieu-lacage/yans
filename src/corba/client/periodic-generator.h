@@ -18,40 +18,27 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef YAPNS_HOST_H
-#define YAPNS_HOST_H
+#ifndef YAPNS_PERIODIC_GENERATOR_H
+#define YAPNS_PERIODIC_GENERATOR_H
 
-#include <vector>
-#include "ipv4-address.h"
+#include <stdint.h>
 #include "simulation-context.h"
+#include "callback.h"
+#include "remote-context.h"
 
 namespace yapns {
 
-class Ipv4Route;
-class Ipv4NetworkInterface;
-class MacNetworkInterface;
-
-
-class Host {
+class PeriodicGenerator {
 public:
-	Host (SimulationContext context, char const *name);
-	~Host ();
-
-	Ipv4Route *get_routing_table (void);
-
-	Ipv4NetworkInterface *add_ipv4_arp_interface (MacNetworkInterface *interface, 
-						      Ipv4Address address, Ipv4Mask mask);
-
-	::Remote::Node_ptr peek_remote (void);
- private:
-	typedef std::vector<Ipv4NetworkInterface *> Ipv4NetworkInterfaces;
-	typedef std::vector<Ipv4NetworkInterface *>::iterator Ipv4NetworkInterfacesI;
-
-	Ipv4Route *m_routing_table;
-	::Remote::Node_ptr m_remote_node;
-	Ipv4NetworkInterfaces m_interfaces;
+	PeriodicGenerator (SimulationContext ctx);
+	~PeriodicGenerator ();
+	void set_packet_interval (double s);
+	void set_packet_size (uint16_t size);
+	void set_send_callback (CallbackVoidPacket send_cb);
+private:
+	::Remote::PeriodicGenerator_ptr m_remote;
 };
 
 }; // namespace yapns
 
-#endif /* YAPNS_HOST_H */
+#endif /* YAPNS_PERIODIC_GENERATOR_H */
