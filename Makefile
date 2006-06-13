@@ -546,6 +546,9 @@ YAPNS_SRC := \
 	src/corba/client/traffic-analyser.cc \
 	src/corba/client/udp-source.cc \
 	src/corba/client/udp-sink.cc \
+	src/corba/client/start-remote-contexts.cc \
+	src/corba/registry.cc \
+	src/corba/registry_impl.cc \
 	$(NULL)
 YAPNS_INST_HDR := \
 	src/corba/remote-context.h \
@@ -571,6 +574,7 @@ YAPNS_INST_HDR := \
 	$(NULL)
 YAPNS_HDR := \
 	src/corba/client/position.h \
+	src/corba/client/start-remote-contexts.h \
 	$(NULL)
 YAPNS_NAME := yapns
 YAPNS_TYPE := shared-library

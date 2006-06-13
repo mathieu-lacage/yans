@@ -22,6 +22,7 @@
 #define YAPNS_SIMULATION_CONTEXT_H
 
 #include <string>
+#include <vector>
 #include "yans/reference-list.h"
 #include "remote-context.h"
 
@@ -34,9 +35,15 @@ typedef yans::ReferenceList<SimulationContextImpl *> SimulationContext;
 class SimulationContextFactory {
 public:
 	SimulationContextFactory ();
+	void initialize (int argc, char *argv[]);
 	void read_configuration (char const *filename);
 	SimulationContext lookup (std::string name);
 private:
+	void started_cb (void);
+	CORBA::ORB_var m_orb;
+	bool m_started;
+	SimulationContext m_a;
+	SimulationContext m_b;
 };
 
 class SimulationContextImpl {

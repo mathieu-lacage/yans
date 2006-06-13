@@ -19,25 +19,69 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #include "simulation-context.h"
+#include "start-remote-contexts.h"
+#include "registry.h"
+#include "registry_impl.h"
+#include "yans/callback.h"
 
 namespace yapns {
 
 SimulationContextFactory::SimulationContextFactory ()
+	: m_started (false)
 {}
+void 
+SimulationContextFactory::initialize (int argc, char *argv[])
+{
+	m_orb = CORBA::ORB_init (argc, argv, "mico-local-orb");
+}
+
+void
+SimulationContextFactory::started_cb (void)
+{
+	m_started = true;
+}
+
 void 
 SimulationContextFactory::read_configuration (char const *filename)
 {
-	// XXX
-	// open filename.xml and:
-	//   - read remote and local context definitions.
-	//   - start remote contexts
-	//   - when a remote context is registered
-	//     in the Registry, create its local contexts
-	//   - when all local contexts are created, continue.
+	CORBA::Object_var poa_obj = m_orb->resolve_initial_references ("RootPOA");
+	PortableServer::POA_var poa = PortableServer::POA::_narrow (poa_obj);
+	PortableServer::POAManager_var manager = poa->the_POAManager ();
+
+	Registry_impl *servant = new Registry_impl (m_orb);
+
+	PortableServer::ObjectId_var object_id = poa->activate_object (servant);
+ 
+	manager->activate ();
+
+	Registry_var registry = servant->_this ();
+	CORBA::String_var ref = m_orb->object_to_string (registry);
+	StartRemoteContexts *remote_contexts = new StartRemoteContexts (ref, registry, "filename.xml");
+	servant->set_callback (yans::make_callback (&StartRemoteContexts::registered, remote_contexts));
+
+	remote_contexts->set_started_callback (yans::make_callback (&SimulationContextFactory::started_cb, this));
+
+	while (!m_started) {
+		if (m_orb->work_pending ()) {
+			m_orb->perform_work ();
+		}
+	}
+	// we are done starting the remote contexts !
+	m_a = new SimulationContextImpl (registry->lookup ("a"));
+	m_b = new SimulationContextImpl (registry->lookup ("b"));
 }
 SimulationContext 
 SimulationContextFactory::lookup (std::string name)
-{}
+{
+	if (name.compare ("a") == 0) {
+		return m_a;
+	} else if (name.compare ("b") == 0) {
+		return m_b;
+	} else {
+		assert (false);
+		return 0;
+	}
+}
 
 
 

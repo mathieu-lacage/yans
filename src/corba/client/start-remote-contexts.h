@@ -18,19 +18,27 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#include "simulator.h"
+#ifndef START_REMOTE_CONTEXTS_H
+#define START_REMOTE_CONTEXTS_H
 
-namespace yapns {
+#include "yans/system-thread.h"
+#include "yans/system-semaphore.h"
+#include "yans/callback.h"
+#include "registry.h"
 
-void 
-Simulator::run (void)
-{
-	
-}
+class StartRemoteContexts : public yans::SystemThread {
+public:
+	StartRemoteContexts (char const *registry_ref, Registry_ptr registry, char const *filename);
+	virtual ~StartRemoteContexts ();
+	void registered (void);
+	void set_started_callback (yans::Callback<void> cb);
+private:
+	virtual void real_run (void);
+	std::string m_name;
+	yans::SystemSemaphore m_wait_started;
+	Registry_ptr m_registry;
+	yans::Callback<void> m_started_cb;
+};
 
-void
-Simulator::destroy (void)
-{}
 
-
-}; // namespace yapns
+#endif /* START_REMOTE_CONTEXTS_H */
