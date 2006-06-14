@@ -519,6 +519,7 @@ YAPNS_SRC := \
 	src/corba/remote-context.cc \
 	src/corba/client/id-factory.cc \
 	src/corba/client/host.cc \
+	src/corba/client/event-tcc.cc \
 	src/corba/client/simulator.cc \
 	src/corba/client/stopped-callback-impl.cc \
 	src/corba/client/simulation-context.cc \

@@ -36,6 +36,19 @@
 
 using namespace yapns;
 
+void 
+advance (PeriodicGenerator *generator, StaticPosition *a) 
+{
+	double x,y,z;
+	a->get (x,y,z);
+	x += 5.0;
+	a->set (x,y,z);
+	if (x >= 210.0) {
+		return;
+	}
+	Simulator::insert_in_s (1.0, make_event (&advance, generator, a));
+}
+
 
 int main (int argc, char *argv[])
 {
@@ -47,7 +60,7 @@ int main (int argc, char *argv[])
 
 	SimulationContext a_context = ctx.lookup ("a");
 	Host *a = new Host (a_context, "a");
-	Position *pos_a = new StaticPosition (a_context);
+	StaticPosition *pos_a = new StaticPosition (a_context);
 	NetworkInterface80211Adhoc *interface_a = factory.create_adhoc (a_context, 
 									address_factory.get_next (), 
 									pos_a);
@@ -65,6 +78,14 @@ int main (int argc, char *argv[])
 	generator->set_packet_interval (0.00001);
 	generator->set_packet_size (2000);
 	generator->set_send_callback (make_callback (&UdpSource::send, source));
+	double x, y, z;
+	x = 5.0;
+	y = 0.0;
+	z = 0.0;
+	pos_a->set (x,y,z);
+	generator->start_now ();
+	Simulator::insert_in_s (1.0, make_event (&advance, generator, pos_a));
+	
 
 
 

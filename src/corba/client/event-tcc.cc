@@ -18,28 +18,11 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef YAPNS_PERIODIC_GENERATOR_H
-#define YAPNS_PERIODIC_GENERATOR_H
+#include "event.tcc"
+#include "yans/event.tcc"
 
-#include <stdint.h>
-#include "simulation-context.h"
-#include "callback.h"
-#include "remote-context.h"
-
-namespace yapns {
-
-class PeriodicGenerator {
-public:
-	PeriodicGenerator (SimulationContext ctx);
-	~PeriodicGenerator ();
-	void set_packet_interval (double s);
-	void set_packet_size (uint16_t size);
-	void set_send_callback (CallbackVoidPacket send_cb);
-	void start_now (void);
-private:
-	::Remote::PeriodicGenerator_ptr m_remote;
-};
-
-}; // namespace yapns
-
-#endif /* YAPNS_PERIODIC_GENERATOR_H */
+yapns::Event *
+yapns::make_event (void (*f) (void))
+{
+	return yans::make_event (f);
+}

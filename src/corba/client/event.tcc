@@ -21,6 +21,7 @@
 #ifndef YAPNS_EVENT_TCC
 #define YAPNS_EVENT_TCC
 
+#include "event.h"
 #include "yans/event.tcc"
 
 namespace yapns {
@@ -50,6 +51,28 @@ Event *make_event(void (T::*f) (T1, T2, T3, T4, T5), T* t, T1 a1, T2 a2, T3 a3, 
 	return yans::make_event (f, t, a1, a2, a3, a4, a5);
 }
 
+Event *make_event(void (*f) (void));
+
+template<typename T1>
+Event *make_event(void (*f) (T1), T1 a1) {
+	return yans::make_event (f, a1);
+}
+template<typename T1, typename T2>
+Event *make_event(void (*f) (T1, T2), T1 a1, T2 a2) {
+	return yans::make_event (f, a1, a2);
+}
+template<typename T1, typename T2, typename T3>
+Event *make_event(void (*f) (T1, T2, T3), T1 a1, T2 a2, T3 a3) {
+	return yans::make_event (f, a1, a2, a3);
+}
+template<typename T1, typename T2, typename T3, typename T4>
+Event *make_event(void (*f) (T1, T2, T3, T4), T1 a1, T2 a2, T3 a3, T4 a4) {
+	return yans::make_event (f, a1, a2, a3, a4);
+}
+template<typename T1, typename T2, typename T3, typename T4, typename T5>
+Event *make_event(void (*f) (T1, T2, T3, T4, T5), T1 a1, T2 a2, T3 a3, T4 a4, T5 a5) {
+	return yans::make_event (f, a1, a2, a3, a4, a5);
+}
 
 }; // namespace yapns
 

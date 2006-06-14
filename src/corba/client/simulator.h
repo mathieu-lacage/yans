@@ -36,6 +36,7 @@ class Simulator {
 public:
 	static void run (void);
 
+	static void insert_in_s (double delta, Event *ev);
 	static void insert_in_us (uint64_t delta_us, Event *ev);
 
 	static void destroy (void);

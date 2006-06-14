@@ -296,6 +296,12 @@ class PeriodicGenerator_impl : virtual public POA_Remote::PeriodicGenerator
       throw(
         ::CORBA::SystemException)
     ;
+
+    void start_now ( )
+      throw(
+        ::CORBA::SystemException)
+    ;
+
  private:
     yans::PeriodicGenerator *m_self;
 };

@@ -68,6 +68,12 @@ Simulator::get_priv (void)
 }
 
 void 
+Simulator::insert_in_s (double delta, Event *ev)
+{
+	uint64_t delta_us = (uint64_t) (delta * 1000000);
+	get_priv ()->insert_in_us (delta_us, ev);
+}
+void 
 Simulator::insert_in_us (uint64_t delta_us, Event *ev)
 {
 	get_priv ()->insert_in_us (delta_us, ev);

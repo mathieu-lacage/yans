@@ -46,4 +46,10 @@ PeriodicGenerator::set_send_callback (CallbackVoidPacket send_cb)
 	m_remote->set_send_callback (send_cb.peek_remote ());
 }
 
+void 
+PeriodicGenerator::start_now (void)
+{
+	m_remote->start_now ();
+}
+
 }; // namespace yapns

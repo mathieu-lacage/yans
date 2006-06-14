@@ -469,6 +469,16 @@ PeriodicGenerator_impl::set_send_callback( ::Remote::CallbackVoidPacket_ptr call
   m_self->set_send_callback (real_cb);  
 }
 
+void
+PeriodicGenerator_impl::start_now()
+  throw(
+    ::CORBA::SystemException)
+
+{
+  m_self->start_now ();
+}
+
+
 
 // Implementation for interface TrafficAnalyser
 

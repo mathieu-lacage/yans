@@ -86,6 +86,7 @@ interface PeriodicGenerator {
   void set_packet_interval_s (in double interval_s);
   void set_packet_size (in unsigned long size);
   void set_send_callback (in CallbackVoidPacket callback);
+  void start_now ();
 };
 interface TrafficAnalyser {
   CallbackVoidPacket create_receive_callback (in InstanceId id);
