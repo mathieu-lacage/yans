@@ -57,6 +57,9 @@ public:
 
 	static void add_parallel_queue (ParallelSimulatorQueue *queue);
 
+	static bool is_finished (void);
+	static uint64_t next_us (void);
+
 	/* this is a blocking call which will return
 	 * only when the simulation ends or when stop is
 	 * invoked. 

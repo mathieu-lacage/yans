@@ -91,8 +91,8 @@ interface TrafficAnalyser {
   CallbackVoidPacket create_receive_callback (in InstanceId id);
 };
 
-interface CallbackVoid {
-  void invoke ();
+interface StoppedCallback {
+  void invoke (in boolean finished, in Timestamp time);
 };
 
 interface ComputingContext {
@@ -107,7 +107,7 @@ interface ComputingContext {
 
   // used to implement a synchronization barrier
   void stop_at_us (in Timestamp at_us);
-  void start (in CallbackVoid done);
+  void start (in StoppedCallback done);
 
   oneway void shutdown ();
 };

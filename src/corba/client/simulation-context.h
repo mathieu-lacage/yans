@@ -25,6 +25,14 @@
 #include <vector>
 #include "yans/reference-list.h"
 #include "remote-context.h"
+#include "event.h"
+
+namespace yans {
+class SchedulerList;
+};
+
+class StoppedCallback_impl;
+class Registry_impl;
 
 namespace yapns {
 
@@ -35,15 +43,35 @@ typedef yans::ReferenceList<SimulationContextImpl *> SimulationContext;
 class SimulationContextFactory {
 public:
 	SimulationContextFactory ();
+	~SimulationContextFactory ();
 	void initialize (int argc, char *argv[]);
 	void read_configuration (char const *filename);
 	SimulationContext lookup (std::string name);
+	void run (void);
+	void insert_at_us (uint64_t us, Event *event);
+	uint64_t now_us (void);
 private:
+	void activate_servant (PortableServer::StaticImplementation *);
+	void one_context_stopped (bool finished, uint64_t time);
 	void started_cb (void);
+	typedef std::list<std::pair<std::string, SimulationContext> > Contexts;
+	typedef std::list<std::pair<std::string, SimulationContext> >::iterator ContextsI;
+
+
 	CORBA::ORB_var m_orb;
 	bool m_started;
-	SimulationContext m_a;
-	SimulationContext m_b;
+	bool m_finished;
+	uint32_t m_n_finished;
+	uint32_t m_n_next_stopped;
+	uint32_t m_n_unexpected;
+	uint32_t m_n_stopped;
+	uint64_t m_now_us;
+	uint64_t m_next_us;
+	uint32_t m_uid;
+	yans::SchedulerList *m_scheduler;
+	StoppedCallback_impl *m_stopped_cb_servant;
+	Registry_impl *m_registry_servant;
+	Contexts m_contexts;
 };
 
 class SimulationContextImpl {

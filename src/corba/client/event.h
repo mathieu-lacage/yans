@@ -18,35 +18,16 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef YAPNS_SIMULATOR_H
-#define YAPNS_SIMULATOR_H
+#ifndef YAPNS_EVENT_H
+#define YAPNS_EVENT_H
 
-#include <stdint.h>
-#include "event.h"
-
-namespace {
-class SimulatorPrivate;
-};
+#include "yans/event.h"
 
 namespace yapns {
 
-class SimulationContextFactory;
-
-class Simulator {
-public:
-	static void run (void);
-
-	static void insert_in_us (uint64_t delta_us, Event *ev);
-
-	static void destroy (void);
-
-	static void record_context_factory (SimulationContextFactory *ctx_factory);
-private:
-	static SimulatorPrivate *get_priv (void);
-	static SimulatorPrivate *m_priv;
-};
+typedef yans::Event Event;
 
 }; // namespace yapns
 
 
-#endif /* YAPNS_SIMULATOR_H */
+#endif /* YAPNS_EVENT_H */

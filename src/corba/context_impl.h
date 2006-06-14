@@ -370,7 +370,7 @@ class ComputingContext_impl : virtual public POA_Remote::ComputingContext
         ::CORBA::SystemException)
     ;
 
-    void start( ::Remote::CallbackVoid_ptr done )
+    void start( ::Remote::StoppedCallback_ptr done )
       throw(
         ::CORBA::SystemException)
     ;
@@ -382,7 +382,7 @@ class ComputingContext_impl : virtual public POA_Remote::ComputingContext
  private:
     void run_done (void);
     class ContextSimulator *m_simulator;
-    ::Remote::CallbackVoid_ptr m_run_done;
+    ::Remote::StoppedCallback_ptr m_stopped;
 };
 
 

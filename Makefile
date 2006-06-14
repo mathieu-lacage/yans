@@ -246,6 +246,8 @@ YANS_INST_HDR := \
 	src/simulator/cancellable-event.h \
 	src/simulator/cancellable-event.tcc \
 	src/simulator/simulator.h \
+	src/simulator/scheduler-list.h \
+	src/simulator/scheduler.h \
 	src/simulator/system-semaphore.h \
 	src/common/wall-clock-ms.h \
 	src/common/buffer.h \
@@ -305,8 +307,6 @@ YANS_INST_HDR := \
 	src/thread/thread.h \
 	$(NULL)
 YANS_HDR := \
-	src/simulator/scheduler.h \
-	src/simulator/scheduler-list.h \
 	src/simulator/scheduler-heap.h \
 	src/simulator/scheduler-map.h \
 	src/common/sgi-hashmap.h \
@@ -500,19 +500,7 @@ MICO_CXXFLAGS:=-D_REENTRANT -D_GNU_SOURCE -I/opt/mico/include
 MICO_LDFLAGS:=-L/opt/mico/lib -lmico2.3.12 -lssl
 
 
-SAMPLE_CORBA_SRC := \
-	src/corba/remote-context.cc \
-	src/corba/registry.cc \
-	src/corba/registry_impl.cc \
-	src/corba/registry-main.cc \
-	src/corba/callback-run-done_impl.cc \
-	$(NULL)
-SAMPLE_CORBA_NAME := test-corba
-SAMPLE_CORBA_TYPE := executable
-SAMPLE_CORBA_CXXFLAGS:=$(CXXFLAGS) -I./src/corba $(MICO_CXXFLAGS)
-SAMPLE_CORBA_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS) $(MICO_LDFLAGS)
-
-SAMPLE_CORBA_FACTORY_SRC := \
+REMOTE_CORBA_FACTORY_SRC := \
 	src/corba/registry.cc \
 	src/corba/remote-context.cc \
 	src/corba/context_impl.cc \
@@ -522,16 +510,17 @@ SAMPLE_CORBA_FACTORY_SRC := \
 	src/corba/context-simulator.cc \
 	src/corba/chunk-corba.cc \
 	$(NULL)
-SAMPLE_CORBA_FACTORY_NAME := context-server
-SAMPLE_CORBA_FACTORY_TYPE := executable
-SAMPLE_CORBA_FACTORY_CXXFLAGS:=$(CXXFLAGS) -I./src/corba $(MICO_CXXFLAGS)
-SAMPLE_CORBA_FACTORY_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS) $(MICO_LDFLAGS)
+REMOTE_CORBA_FACTORY_NAME := remote-context
+REMOTE_CORBA_FACTORY_TYPE := executable
+REMOTE_CORBA_FACTORY_CXXFLAGS:=$(CXXFLAGS) -I./src/corba $(MICO_CXXFLAGS)
+REMOTE_CORBA_FACTORY_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS) $(MICO_LDFLAGS)
 
 YAPNS_SRC := \
 	src/corba/remote-context.cc \
 	src/corba/client/id-factory.cc \
 	src/corba/client/host.cc \
 	src/corba/client/simulator.cc \
+	src/corba/client/stopped-callback-impl.cc \
 	src/corba/client/simulation-context.cc \
 	src/corba/client/ipv4-network-interface.cc \
 	src/corba/client/mac-network-interface.cc \
@@ -551,6 +540,8 @@ YAPNS_SRC := \
 	src/corba/registry_impl.cc \
 	$(NULL)
 YAPNS_INST_HDR := \
+	src/corba/client/event.h \
+	src/corba/client/event.tcc \
 	src/corba/remote-context.h \
 	src/corba/client/host.h \
 	src/corba/client/simulator.h \
@@ -573,6 +564,7 @@ YAPNS_INST_HDR := \
 	src/corba/client/callback.h \
 	$(NULL)
 YAPNS_HDR := \
+	src/corba/client/stopped-callback-impl.h \
 	src/corba/client/position.h \
 	src/corba/client/start-remote-contexts.h \
 	$(NULL)
@@ -691,8 +683,7 @@ ALL:= \
 	TEST \
 	YAPNS \
 	YAPNS_TEST \
-	SAMPLE_CORBA \
-	SAMPLE_CORBA_FACTORY \
+	REMOTE_CORBA_FACTORY \
 	SAMPLE_CXX_SIMPLE \
 	SAMPLE_CXX_ROUTER \
 	SAMPLE_CXX_TCP \

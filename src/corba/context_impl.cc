@@ -12,6 +12,7 @@
 #include "yans/periodic-generator.h"
 #include "yans/network-interface-80211.h"
 #include "yans/network-interface-80211-factory.h"
+#include "yans/simulator.h"
 #include "parallel-channel-80211.h"
 
 namespace {
@@ -515,8 +516,9 @@ ComputingContext_impl::~ComputingContext_impl ()
 void
 ComputingContext_impl::run_done (void)
 {
-  if (!CORBA::is_nil (m_run_done)) {
-    m_run_done->invoke ();
+  if (!CORBA::is_nil (m_stopped)) {
+    m_stopped->invoke (yans::Simulator::is_finished (), 
+		       yans::Simulator::next_us ());
   }
 }
 
@@ -668,15 +670,15 @@ ComputingContext_impl::stop_at_us( ::Remote::Timestamp at_us )
 }
 
 void
-ComputingContext_impl::start( ::Remote::CallbackVoid_ptr done )
+ComputingContext_impl::start( ::Remote::StoppedCallback_ptr stopped )
   throw(
     ::CORBA::SystemException)
 
 {
-  if (!CORBA::is_nil (m_run_done)) {
-    CORBA::release (m_run_done);
+  if (!CORBA::is_nil (m_stopped)) {
+    CORBA::release (m_stopped);
   }
-  m_run_done = ::Remote::CallbackVoid::_duplicate (done);
+  m_stopped = ::Remote::StoppedCallback::_duplicate (stopped);
   m_simulator->start (yans::make_callback (&ComputingContext_impl::run_done, this));
 }
 

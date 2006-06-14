@@ -75,6 +75,8 @@ public:
 	void wait_until_no_queue_empty (void);
 	bool is_parallel (void);
 
+	bool is_finished (void) const;
+	uint64_t next_us (void) const;
 	void run_serial (void);
 	void run_parallel (void);
 	void stop (void);
@@ -235,6 +237,20 @@ SimulatorPrivate::process_one_event (void)
 	next_ev->invoke ();
 	delete next_ev;
 }
+
+bool 
+SimulatorPrivate::is_finished (void) const
+{
+	return m_events->is_empty ();
+}
+uint64_t 
+SimulatorPrivate::next_us (void) const
+{
+	assert (!m_events->is_empty ());
+	Scheduler::EventKey next_key = m_events->peek_next_key ();
+	return next_key.m_time;
+}
+
 
 void
 SimulatorPrivate::run_serial (void)
@@ -414,6 +430,18 @@ Simulator::add_parallel_queue (ParallelSimulatorQueue *queue)
 	queue->set_priv (priv);
 	return get_priv ()->add_queue (priv);
 }
+
+bool 
+Simulator::is_finished (void)
+{
+	return get_priv ()->is_finished ();
+}
+uint64_t 
+Simulator::next_us (void)
+{
+	return get_priv ()->next_us ();
+}
+
 
 void 
 Simulator::run (void)

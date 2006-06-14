@@ -19,18 +19,78 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #include "simulator.h"
+#include "simulation-context.h"
+
+namespace {
+class SimulatorPrivate {
+public:
+	SimulatorPrivate ();
+	~SimulatorPrivate ();
+	void run (void);
+	void insert_in_us (uint64_t us, yapns::Event *ev);
+	void record_context_factory (yapns::SimulationContextFactory *ctx_factory);
+private:
+	yapns::SimulationContextFactory *m_ctx_factory;
+};
+
+SimulatorPrivate::SimulatorPrivate ()
+{}
+SimulatorPrivate::~SimulatorPrivate ()
+{}
+void 
+SimulatorPrivate::run (void)
+{
+	m_ctx_factory->run ();
+}
+void 
+SimulatorPrivate::insert_in_us (uint64_t us, yapns::Event *ev)
+{
+	m_ctx_factory->insert_at_us (m_ctx_factory->now_us () + us, ev);
+}
+void 
+SimulatorPrivate::record_context_factory (yapns::SimulationContextFactory *ctx_factory)
+{
+	m_ctx_factory = ctx_factory;
+}
+};
 
 namespace yapns {
+
+SimulatorPrivate *Simulator::m_priv = 0;
+
+SimulatorPrivate *
+Simulator::get_priv (void)
+{
+	if (m_priv == 0) {
+		m_priv = new SimulatorPrivate ();
+	}
+	return m_priv;
+}
+
+void 
+Simulator::insert_in_us (uint64_t delta_us, Event *ev)
+{
+	get_priv ()->insert_in_us (delta_us, ev);
+}
 
 void 
 Simulator::run (void)
 {
-	
+	get_priv ()->run ();
 }
 
 void
 Simulator::destroy (void)
-{}
+{
+	delete m_priv;
+	m_priv = 0;
+}
+
+void 
+Simulator::record_context_factory (SimulationContextFactory *ctx_factory)
+{
+	get_priv ()->record_context_factory (ctx_factory);
+}
 
 
 }; // namespace yapns

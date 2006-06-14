@@ -32,6 +32,7 @@
 #include "yapns/periodic-generator.h"
 #include "yapns/traffic-analyser.h"
 #include "yapns/callback.h"
+#include "yapns/event.tcc"
 
 using namespace yapns;
 
@@ -100,11 +101,13 @@ int main (int argc, char *argv[])
 	delete pos_a;
 	delete interface_a;
 	delete source;
+	delete generator;
 
 	delete b;
 	delete pos_b;
 	delete interface_b;
 	delete sink;
+	delete analyser;
 
 	Simulator::destroy ();
 
