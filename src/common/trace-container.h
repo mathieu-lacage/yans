@@ -33,6 +33,7 @@ namespace yans {
 
 class Packet;
 class PacketLogger;
+class TraceStream;
 
 class TraceContainer {
 public:
@@ -43,11 +44,13 @@ public:
 	void set_si_variable_callback (char const *name, Callback<void,int64_t, int64_t> callback);
 	void set_f_variable_callback (char const *name, Callback<void,double, double> callback);
 	void set_packet_logger_callback (char const *name, Callback<void,Packet const*> callback);
+	void set_stream (char const *name, std::ostream *os);
 
 	void register_ui_variable (char const *name, UiTracedVariableBase *var);
 	void register_si_variable (char const *name, SiTracedVariableBase *var);
 	void register_f_variable (char const *name, FTracedVariableBase *var);
 	void register_packet_logger (char const *name, PacketLogger *logger);
+	void register_stream (char const *name, TraceStream *stream);
 
 	void print_debug (void);
 private:
@@ -59,11 +62,14 @@ private:
 	typedef std::list<std::pair<FTracedVariableBase *, std::string> >::iterator FListI;
 	typedef std::list<std::pair<PacketLogger *, std::string> > PacketLoggerList;
 	typedef std::list<std::pair<PacketLogger *, std::string> >::iterator PacketLoggerListI;
+	typedef std::list<std::pair<TraceStream *, std::string> > TraceStreamList;
+	typedef std::list<std::pair<TraceStream *, std::string> >::iterator TraceStreamListI;
 
 	UiList m_ui_list;
 	SiList m_si_list;
 	FList m_f_list;
 	PacketLoggerList m_packet_logger_list;
+	TraceStreamList m_trace_stream_list;
 };
 
 }; // namespace yans

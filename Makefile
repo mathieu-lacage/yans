@@ -153,6 +153,7 @@ YANS_SRC:= \
 	src/common/callback-test.cc \
 	src/common/reference-list-test.cc \
 	src/common/traced-variable-test.cc \
+	src/common/trace-stream-test.cc \
 	src/common/packet-logger.cc \
 	src/common/trace-container.cc \
 	src/common/pcap-writer.cc \
@@ -260,6 +261,7 @@ YANS_INST_HDR := \
 	src/common/ui-traced-variable.tcc \
 	src/common/si-traced-variable.tcc \
 	src/common/f-traced-variable.tcc \
+	src/common/trace-stream.h \
 	src/common/random-uniform.h \
 	src/common/count-ptr-holder.tcc \
 	src/common/timeout.h \
