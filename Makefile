@@ -501,14 +501,14 @@ MICO_LDFLAGS:=-L/opt/mico/lib -lmico2.3.12 -lssl
 
 
 REMOTE_CORBA_FACTORY_SRC := \
-	src/corba/registry.cc \
 	src/corba/remote-context.cc \
-	src/corba/context_impl.cc \
-	src/corba/context-main.cc \
-	src/corba/parallel-channel-80211.cc \
-	src/corba/local-object-registry.cc \
-	src/corba/context-simulator.cc \
-	src/corba/chunk-corba.cc \
+	src/corba/registry.cc \
+	src/corba/remote/context_impl.cc \
+	src/corba/remote/context-main.cc \
+	src/corba/remote/parallel-channel-80211.cc \
+	src/corba/remote/local-object-registry.cc \
+	src/corba/remote/context-simulator.cc \
+	src/corba/remote/chunk-corba.cc \
 	$(NULL)
 REMOTE_CORBA_FACTORY_NAME := remote-context
 REMOTE_CORBA_FACTORY_TYPE := executable
@@ -517,6 +517,7 @@ REMOTE_CORBA_FACTORY_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS) $(MICO_LDFLAGS)
 
 YAPNS_SRC := \
 	src/corba/remote-context.cc \
+	src/corba/registry.cc \
 	src/corba/client/id-factory.cc \
 	src/corba/client/host.cc \
 	src/corba/client/event-tcc.cc \
@@ -537,8 +538,7 @@ YAPNS_SRC := \
 	src/corba/client/udp-source.cc \
 	src/corba/client/udp-sink.cc \
 	src/corba/client/start-remote-contexts.cc \
-	src/corba/registry.cc \
-	src/corba/registry_impl.cc \
+	src/corba/client/registry_impl.cc \
 	$(NULL)
 YAPNS_INST_HDR := \
 	src/corba/client/event.h \
