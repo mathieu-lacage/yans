@@ -25,7 +25,6 @@
 #include "mac-network-interface.h"
 #include "mac-address.h"
 #include "ipv4-address.h"
-#include "ui-traced-variable.tcc"
 #include "ssid.h"
 #include <string>
 
@@ -81,8 +80,6 @@ private:
 	MacTxMiddle *m_tx_middle;
 	MacParameters *m_parameters;
 	PacketLogger *m_rx_logger;
-
-	UiTracedVariable<uint32_t> m_bytes_rx;
 };
 
 class NetworkInterface80211Adhoc : public NetworkInterface80211 {

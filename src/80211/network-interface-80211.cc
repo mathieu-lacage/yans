@@ -40,8 +40,7 @@ namespace yans {
 
 NetworkInterface80211::NetworkInterface80211 (MacAddress address)
 	: MacNetworkInterface (address, 2300),
-	  m_rx_logger (new PacketLogger ()),
-	  m_bytes_rx (0)
+	  m_rx_logger (new PacketLogger ())
 {}
 
 NetworkInterface80211::~NetworkInterface80211 ()
@@ -72,14 +71,12 @@ NetworkInterface80211::connect_to (BaseChannel80211 *channel)
 void 
 NetworkInterface80211::register_trace (TraceContainer *container)
 {
-	container->register_ui_variable ("80211-bytes-rx", &m_bytes_rx);
 	container->register_packet_logger ("80211-packet-rx", m_rx_logger);
 }
 void 
 NetworkInterface80211::forward_up_data (Packet *packet)
 {
 	m_rx_logger->log (packet);
-	m_bytes_rx += packet->get_size ();
 	MacNetworkInterface::forward_up (packet);
 }
 
