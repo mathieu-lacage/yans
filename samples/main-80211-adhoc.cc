@@ -97,6 +97,7 @@ int main (int argc, char *argv[])
 	generator->set_packet_interval (0.00001);
 	generator->set_packet_size (2000);
 	generator->start_now ();
+	generator->stop_at (9000.0);
 	generator->set_send_callback (make_callback (&UdpSource::send, source));
 
 
@@ -108,7 +109,7 @@ int main (int argc, char *argv[])
 	pos_server->set (0.0, 0.0, 0.0);
 	ThroughputPrinter *printer = new ThroughputPrinter ();
 	TraceContainer container = TraceContainer ();
-	wifi_client->register_trace (&container);
+	wifi_server->register_trace (&container);
 	container.set_packet_logger_callback ("80211-packet-rx", 
 					      make_callback (&ThroughputPrinter::receive, printer));
 	Host *hserver = new Host ("server");
