@@ -37,7 +37,7 @@ ThroughputPrinter::set_print_interval_us (uint64_t us)
 	m_period_us = us;
 }
 void 
-ThroughputPrinter::receive (Packet *packet)
+ThroughputPrinter::receive (Packet const*packet)
 {
 	m_current += packet->get_size ();
 }

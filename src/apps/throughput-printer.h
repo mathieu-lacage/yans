@@ -31,7 +31,7 @@ class ThroughputPrinter {
 public:
 	ThroughputPrinter ();
 	void set_print_interval_us (uint64_t us);
-	void receive (Packet *packet);
+	void receive (Packet const*packet);
 private:
 	void timeout (void);
 	uint32_t m_current;

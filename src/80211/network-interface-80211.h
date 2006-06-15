@@ -48,6 +48,7 @@ class MacQueue80211e;
 class MacHighAdhoc;
 class MacHighNqsta;
 class MacHighNqap;
+class PacketLogger;
 
 class NetworkInterface80211 : public MacNetworkInterface {
 public:
@@ -79,6 +80,7 @@ private:
 	MacRxMiddle *m_rx_middle;
 	MacTxMiddle *m_tx_middle;
 	MacParameters *m_parameters;
+	PacketLogger *m_rx_logger;
 
 	UiTracedVariable<uint32_t> m_bytes_rx;
 };

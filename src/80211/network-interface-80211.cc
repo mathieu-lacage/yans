@@ -34,11 +34,13 @@
 #include "mac-high-nqsta.h"
 #include "mac-high-nqap.h"
 #include "dca-txop.h"
+#include "packet-logger.h"
 
 namespace yans {
 
 NetworkInterface80211::NetworkInterface80211 (MacAddress address)
 	: MacNetworkInterface (address, 2300),
+	  m_rx_logger (new PacketLogger ()),
 	  m_bytes_rx (0)
 {}
 
@@ -51,6 +53,7 @@ NetworkInterface80211::~NetworkInterface80211 ()
 	delete m_parameters;
 	delete m_tx_middle;
 	delete m_rx_middle;
+	delete m_rx_logger;
 }
 
 void 
@@ -70,10 +73,12 @@ void
 NetworkInterface80211::register_trace (TraceContainer *container)
 {
 	container->register_ui_variable ("80211-bytes-rx", &m_bytes_rx);
+	container->register_packet_logger ("80211-packet-rx", m_rx_logger);
 }
 void 
 NetworkInterface80211::forward_up_data (Packet *packet)
 {
+	m_rx_logger->log (packet);
 	m_bytes_rx += packet->get_size ();
 	MacNetworkInterface::forward_up (packet);
 }
