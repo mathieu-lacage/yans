@@ -30,7 +30,9 @@ ThroughputPrinter::ThroughputPrinter ()
 	: m_current (0),
 	  m_prev (0),
 	  m_period_us (1000000)
-{}
+{
+	Simulator::insert_in_us (m_period_us, make_event (&ThroughputPrinter::timeout, this));
+}
 void 
 ThroughputPrinter::set_print_interval_us (uint64_t us)
 {
@@ -39,6 +41,7 @@ ThroughputPrinter::set_print_interval_us (uint64_t us)
 void 
 ThroughputPrinter::receive (Packet const*packet)
 {
+	std::cout << "rx" << std::endl;
 	m_current += packet->get_size ();
 }
 
