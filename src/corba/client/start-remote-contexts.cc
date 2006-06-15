@@ -49,19 +49,23 @@ StartRemoteContexts::real_run (void)
 	std::string registry_str = std::string ("--registry=");
 	registry_str.append (m_name);
 	yans::ExecCommands commands = yans::ExecCommands (1);
+
 	yans::Command a;
-	yans::Command b;
-	a.append ("./build-dir/bin/context-server");
-	a.append ("--name=a");
+	a.append ("./build-dir/bin/remote-context");
+	a.append ("--name=first");
 	a.append (registry_str);
-	commands.add (a, "a");
-	b.append ("./build-dir/bin/context-server");
-	b.append ("--name=b");
+	commands.add (a, "first");
+
+#if 0
+	yans::Command b;
+	b.append ("./build-dir/bin/remote-context");
+	b.append ("--name=second");
 	b.append (registry_str);
-	commands.add (b, "b");
+	commands.add (b, "second");
+#endif
 
 	commands.enable_log ("main.log");
 	commands.start ();
-	m_wait_started.wait (2);
+	m_wait_started.wait (1);
 	m_started_cb ();
 }

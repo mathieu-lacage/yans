@@ -54,6 +54,7 @@ private:
 	void activate_servant (PortableServer::StaticImplementation *);
 	void one_context_stopped (bool finished, uint64_t time);
 	void started_cb (void);
+	std::string lookup_remote_name (std::string const name);
 	typedef std::list<std::pair<std::string, SimulationContext> > Contexts;
 	typedef std::list<std::pair<std::string, SimulationContext> >::iterator ContextsI;
 

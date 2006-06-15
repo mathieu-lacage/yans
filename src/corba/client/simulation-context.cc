@@ -93,18 +93,32 @@ SimulationContextFactory::read_configuration (char const *filename)
 	delete remote_contexts;
 	// we are done starting the remote contexts !
 }
+std::string 
+SimulationContextFactory::lookup_remote_name (std::string const name)
+{
+	if (name.compare ("a") == 0) {
+		return "first";
+	} else if (name.compare ("b") == 0) {
+		return "first";
+	} else {
+		// NOTREACHED
+		assert (false);
+		return "";
+	}
+}
 SimulationContext 
 SimulationContextFactory::lookup (std::string name)
 {
+	std::string remote_name = lookup_remote_name (name);
 	for (ContextsI i = m_contexts.begin (); i != m_contexts.end (); i++) {
-		if (i->first.compare (name) == 0) {
+		if (i->first.compare (remote_name) == 0) {
 			return i->second;
 		}
 	}
-	::Remote::ComputingContext_ptr remote = m_registry_servant->_this ()->lookup (name.c_str ());
+	::Remote::ComputingContext_ptr remote = m_registry_servant->_this ()->lookup (remote_name.c_str ());
 	if (!CORBA::is_nil (remote)) {
 		SimulationContext local = SimulationContext (new SimulationContextImpl (remote));
-		m_contexts.push_back(std::make_pair (name, 
+		m_contexts.push_back(std::make_pair (remote_name, 
 						     local));
 		return local;
 	}
