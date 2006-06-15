@@ -41,7 +41,6 @@ ThroughputPrinter::set_print_interval_us (uint64_t us)
 void 
 ThroughputPrinter::receive (Packet const*packet)
 {
-	std::cout << "rx" << std::endl;
 	m_current += packet->get_size ();
 }
 
@@ -51,7 +50,7 @@ ThroughputPrinter::timeout (void)
 	uint32_t n_bytes = m_current - m_prev;
 	m_prev = m_current;
 	double mbs = ((n_bytes * 8.0) /m_period_us);
-	std::cout << "throughput="<<mbs<<"Mb/s"<<std::endl;
+	std::cout << "time=" << (Simulator::now_us () / 1000000) << ", throughput="<<mbs<<"Mb/s"<<std::endl;
 	Simulator::insert_in_us (m_period_us, make_event (&ThroughputPrinter::timeout, this));
 }
 
