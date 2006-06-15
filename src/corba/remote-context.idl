@@ -91,6 +91,9 @@ interface PeriodicGenerator {
 interface TrafficAnalyser {
   CallbackVoidPacket create_receive_callback (in InstanceId id);
 };
+interface ThroughputPrinter {
+  CallbackVoidPacket create_receive_callback (in InstanceId id);
+};
 
 interface StoppedCallback {
   void invoke (in boolean finished, in Timestamp time);
@@ -105,6 +108,7 @@ interface ComputingContext {
   UdpSink create_udp_sink (in Node node);
   PeriodicGenerator create_periodic_generator ();
   TrafficAnalyser create_traffic_analyser ();
+  ThroughputPrinter create_throughput_printer ();
 
   // used to implement a synchronization barrier
   void stop_at_us (in Timestamp at_us);

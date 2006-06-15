@@ -21,7 +21,9 @@
 #include "callback.h"
 #include "udp-source.h"
 #include "traffic-analyser.h"
+#include "throughput-printer.h"
 #include "id-factory.h"
+
 
 namespace yapns {
 
@@ -60,6 +62,16 @@ make_callback (void (TrafficAnalyser::*) (Packet *), TrafficAnalyser *self)
 	CallbackVoidPacket callback = CallbackVoidPacket (remote);
 	return callback;
 }
+
+CallbackVoidPacket
+make_callback (void (ThroughputPrinter::*ptr) (Packet *), ThroughputPrinter *self)
+{
+	::Remote::CallbackVoidPacket_ptr remote = 
+		self->peek_remote ()->create_receive_callback (IdFactory::get_next ());
+	CallbackVoidPacket callback = CallbackVoidPacket (remote);
+	return callback;
+}
+
 
 
 

@@ -10,6 +10,7 @@
 #include "yans/udp-sink.h"
 #include "yans/traffic-analyser.h"
 #include "yans/periodic-generator.h"
+#include "yans/throughput-printer.h"
 #include "yans/network-interface-80211.h"
 #include "yans/network-interface-80211-factory.h"
 #include "yans/simulator.h"
@@ -507,6 +508,33 @@ TrafficAnalyser_impl::create_receive_callback( ::Remote::InstanceId id )
   return retval; 
 }
 
+// Implementation for interface ThroughputPrinter
+
+ThroughputPrinter_impl::ThroughputPrinter_impl (yans::ThroughputPrinter *analyser)
+  : m_self (analyser)
+{}
+
+ThroughputPrinter_impl::~ThroughputPrinter_impl ()
+{
+  delete m_self;
+}
+
+::Remote::CallbackVoidPacket_ptr
+ThroughputPrinter_impl::create_receive_callback( ::Remote::InstanceId id )
+  throw(
+    ::CORBA::SystemException)
+
+{
+  ::Remote::CallbackVoidPacket_ptr retval;
+
+  yans::Callback<void,yans::Packet *> real_cb = yans::make_callback (&yans::ThroughputPrinter::receive, m_self);
+  CallbackVoidPacket_impl *servant = new CallbackVoidPacket_impl (id);
+  activate_servant (servant);
+  retval = servant->_this ();
+
+  return retval; 
+}
+
 
 // Implementation for interface CallbackVoid
 
@@ -667,6 +695,24 @@ ComputingContext_impl::create_traffic_analyser()
   
   return retval; 
 }
+
+
+::Remote::ThroughputPrinter_ptr 
+ComputingContext_impl::create_throughput_printer ()
+  throw(
+        ::CORBA::SystemException)
+{
+  ::Remote::ThroughputPrinter_ptr retval;
+
+  yans::ThroughputPrinter *real_analyser = new yans::ThroughputPrinter ();
+  ThroughputPrinter_impl *servant = new ThroughputPrinter_impl (real_analyser);
+  activate_servant (servant);
+  retval = servant->_this ();
+  
+  return retval; 
+}
+
+
 
 
 

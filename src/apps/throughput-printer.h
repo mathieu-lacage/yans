@@ -18,37 +18,27 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef YAPNS_CALLBACK_H
-#define YAPNS_CALLBACK_H
+#ifndef THROUGHPUT_PRINTER_H
+#define THROUGHPUT_PRINTER_H
 
-#include "remote-context.h"
+#include <stdint.h>
 
-namespace yapns {
+namespace yans {
 
-class UdpSource;
-class TrafficAnalyser;
-class ThroughputPrinter;
 class Packet;
 
-class CallbackVoidPacket {
+class ThroughputPrinter {
 public:
-	CallbackVoidPacket (::Remote::CallbackVoidPacket_ptr remote);
-	CallbackVoidPacket (CallbackVoidPacket const &o);
-	~CallbackVoidPacket ();
-	::Remote::CallbackVoidPacket_ptr peek_remote (void);
+	ThroughputPrinter ();
+	void set_print_interval_us (uint64_t us);
+	void receive (Packet *packet);
 private:
-	::Remote::CallbackVoidPacket_ptr m_remote;
+	void timeout (void);
+	uint32_t m_current;
+	uint32_t m_prev;
+	uint64_t m_period_us;
 };
 
-CallbackVoidPacket
-make_callback (void (UdpSource::*ptr) (Packet *), UdpSource *self);
+}; // namespace yans
 
-CallbackVoidPacket
-make_callback (void (TrafficAnalyser::*ptr) (Packet *), TrafficAnalyser *self);
-
-CallbackVoidPacket
-make_callback (void (ThroughputPrinter::*ptr) (Packet *), ThroughputPrinter *self);
-
-}; // namespace yapns
-
-#endif /* YAPNS_CALLBACK_H */
+#endif /* THROUGHPUT_PRINTER_H */

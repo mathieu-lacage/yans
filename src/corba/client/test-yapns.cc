@@ -33,6 +33,7 @@
 #include "yapns/traffic-analyser.h"
 #include "yapns/callback.h"
 #include "yapns/event.tcc"
+#include "yapns/throughput-printer.h"
 
 using namespace yapns;
 
@@ -104,8 +105,8 @@ int main (int argc, char *argv[])
 	UdpSink *sink = new UdpSink (b_context, b);
 	sink->bind (Ipv4Address ("192.168.0.2"), 1026);
 	sink->unbind_at (10000.0);
-	TrafficAnalyser *analyser = new TrafficAnalyser (b_context);
-	sink->set_receive_callback (make_callback (&TrafficAnalyser::receive, analyser));
+	ThroughputPrinter *printer = new ThroughputPrinter (b_context);
+	sink->set_receive_callback (make_callback (&ThroughputPrinter::receive, printer));
 
 
 
@@ -128,7 +129,7 @@ int main (int argc, char *argv[])
 	delete pos_b;
 	delete interface_b;
 	delete sink;
-	delete analyser;
+	delete printer;
 
 	Simulator::destroy ();
 

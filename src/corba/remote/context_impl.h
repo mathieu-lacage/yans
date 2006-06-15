@@ -10,6 +10,7 @@ namespace yans {
   class PeriodicGenerator;
   class StaticPosition;
   class TrafficAnalyser;
+  class ThroughputPrinter;
   class Host;
   class NetworkInterface80211;
   class NetworkInterface80211Adhoc;
@@ -322,6 +323,21 @@ class TrafficAnalyser_impl : virtual public POA_Remote::TrafficAnalyser
   yans::TrafficAnalyser *m_self;
 };
 
+// Implementation for interface TrafficAnalyser
+class ThroughputPrinter_impl : virtual public POA_Remote::ThroughputPrinter
+{
+  public:
+  ThroughputPrinter_impl (yans::ThroughputPrinter *real_analyser);
+  ~ThroughputPrinter_impl ();
+
+    ::Remote::CallbackVoidPacket_ptr create_receive_callback( ::Remote::InstanceId id )
+      throw(
+        ::CORBA::SystemException)
+    ;
+ private:
+  yans::ThroughputPrinter *m_self;
+};
+
 
 
 // Implementation for interface ComputingContext
@@ -367,6 +383,10 @@ class ComputingContext_impl : virtual public POA_Remote::ComputingContext
     ;
 
     ::Remote::TrafficAnalyser_ptr create_traffic_analyser()
+      throw(
+        ::CORBA::SystemException)
+    ;
+    ::Remote::ThroughputPrinter_ptr create_throughput_printer()
       throw(
         ::CORBA::SystemException)
     ;

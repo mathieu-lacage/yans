@@ -202,6 +202,7 @@ YANS_SRC:= \
 	src/apps/tcp-sink.cc \
 	src/apps/periodic-generator.cc \
 	src/apps/traffic-analyser.cc \
+	src/apps/throughput-printer.cc \
 	src/80211/chunk-mac-80211-hdr.cc \
 	src/80211/chunk-mac-80211-fcs.cc \
 	src/80211/mac-stations.cc \
@@ -291,6 +292,7 @@ YANS_INST_HDR := \
 	src/apps/tcp-sink.h \
 	src/apps/traffic-analyser.h \
 	src/apps/udp-source.h \
+	src/apps/throughput-printer.h \
 	src/80211/network-interface-80211-simple.h \
 	src/80211/network-interface-80211-simple-factory.h \
 	src/80211/network-interface-80211.h \
@@ -537,6 +539,7 @@ YAPNS_SRC := \
 	src/corba/client/traffic-analyser.cc \
 	src/corba/client/udp-source.cc \
 	src/corba/client/udp-sink.cc \
+	src/corba/client/throughput-printer.cc \
 	src/corba/client/start-remote-contexts.cc \
 	src/corba/client/registry_impl.cc \
 	$(NULL)
@@ -563,6 +566,7 @@ YAPNS_INST_HDR := \
 	src/corba/client/periodic-generator.h \
 	src/corba/client/traffic-analyser.h \
 	src/corba/client/callback.h \
+	src/corba/client/throughput-printer.h \
 	$(NULL)
 YAPNS_HDR := \
 	src/corba/client/stopped-callback-impl.h \

@@ -18,37 +18,39 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef YAPNS_CALLBACK_H
-#define YAPNS_CALLBACK_H
+#include "throughput-printer.h"
+#include "packet.h"
+#include "simulator.h"
+#include "event.tcc"
+#include <iostream>
 
-#include "remote-context.h"
+namespace yans {
 
-namespace yapns {
+ThroughputPrinter::ThroughputPrinter ()
+	: m_current (0),
+	  m_prev (0),
+	  m_period_us (1000000)
+{}
+void 
+ThroughputPrinter::set_print_interval_us (uint64_t us)
+{
+	m_period_us = us;
+}
+void 
+ThroughputPrinter::receive (Packet *packet)
+{
+	m_current += packet->get_size ();
+}
 
-class UdpSource;
-class TrafficAnalyser;
-class ThroughputPrinter;
-class Packet;
+void
+ThroughputPrinter::timeout (void)
+{
+	uint32_t n_bytes = m_current - m_prev;
+	m_prev = m_current;
+	double mbs = ((n_bytes * 8.0) /m_period_us);
+	std::cout << "throughput="<<mbs<<"Mb/s"<<std::endl;
+	Simulator::insert_in_us (m_period_us, make_event (&ThroughputPrinter::timeout, this));
+}
 
-class CallbackVoidPacket {
-public:
-	CallbackVoidPacket (::Remote::CallbackVoidPacket_ptr remote);
-	CallbackVoidPacket (CallbackVoidPacket const &o);
-	~CallbackVoidPacket ();
-	::Remote::CallbackVoidPacket_ptr peek_remote (void);
-private:
-	::Remote::CallbackVoidPacket_ptr m_remote;
-};
 
-CallbackVoidPacket
-make_callback (void (UdpSource::*ptr) (Packet *), UdpSource *self);
-
-CallbackVoidPacket
-make_callback (void (TrafficAnalyser::*ptr) (Packet *), TrafficAnalyser *self);
-
-CallbackVoidPacket
-make_callback (void (ThroughputPrinter::*ptr) (Packet *), ThroughputPrinter *self);
-
-}; // namespace yapns
-
-#endif /* YAPNS_CALLBACK_H */
+}; // namespace yans
