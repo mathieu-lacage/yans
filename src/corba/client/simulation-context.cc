@@ -211,6 +211,7 @@ SimulationContextFactory::run (void)
 			delete ev;
 		}
 	}
+	CORBA::release (stopped_cb);
 }
 
 void 
