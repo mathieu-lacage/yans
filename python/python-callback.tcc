@@ -12,7 +12,7 @@ using namespace yans;
 using namespace boost::python;
 
 template<typename R,typename T1,typename T2>
-class PythonCallbackImpl : public CallbackImpl<R,T1,T2,empty,empty> {
+class PythonCallbackImpl : public CallbackImpl<R,T1,T2,empty,empty,empty> {
 public:
 	PythonCallbackImpl (FunctionHolder holder) 
 		: m_holder (holder)
@@ -42,7 +42,7 @@ private:
 };
 
 template<typename T1,typename T2>
-class PythonCallbackImpl<void,T1,T2> : public CallbackImpl<void,T1,T2,empty,empty> {
+class PythonCallbackImpl<void,T1,T2> : public CallbackImpl<void,T1,T2,empty,empty,empty> {
 public:
 	PythonCallbackImpl (FunctionHolder holder) 
 		: m_holder (holder)
@@ -73,11 +73,11 @@ private:
 
 template <typename R,typename T1>
 Callback<R,T1> make_python_callback (FunctionHolder holder) {
-	return Callback<R,T1> (ReferenceList<CallbackImpl<R,T1,empty,empty,empty>*> (new PythonCallbackImpl<R,T1,empty> (holder)));
+	return Callback<R,T1> (ReferenceList<CallbackImpl<R,T1,empty,empty,empty,empty>*> (new PythonCallbackImpl<R,T1,empty> (holder)));
 }
 template <typename R,typename T1,typename T2>
 Callback<R,T1,T2> make_python_callback (FunctionHolder holder) {
-	return Callback<R,T1,T2> (ReferenceList<CallbackImpl<R,T1,T2,empty,empty>*> (new PythonCallbackImpl<R,T1,T2> (holder)));
+	return Callback<R,T1,T2> (ReferenceList<CallbackImpl<R,T1,T2,empty,empty,empty>*> (new PythonCallbackImpl<R,T1,T2> (holder)));
 }
 
 
