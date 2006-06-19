@@ -65,10 +65,8 @@ Channel80211Queue::send_null_message (void)
 }
 
 ParallelChannel80211::ParallelChannel80211 ()
-{
-	m_queue = new Channel80211Queue (this);
-	yans::Simulator::add_parallel_queue (m_queue);
-}
+	: m_queue (0)
+{}
 ParallelChannel80211::~ParallelChannel80211 ()
 {
 	delete m_queue;
@@ -76,6 +74,10 @@ ParallelChannel80211::~ParallelChannel80211 ()
 void 
 ParallelChannel80211::add (Remote::Channel80211_var channel)
 {
+	if (m_channels.empty ()) {
+		m_queue = new Channel80211Queue (this);
+		yans::Simulator::add_parallel_queue (m_queue);
+	}
 	m_channels.push_back (channel);
 }
 void 
