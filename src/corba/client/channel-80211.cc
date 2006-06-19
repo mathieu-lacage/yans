@@ -39,20 +39,23 @@ void
 Channel80211::record_connect (NetworkInterface80211 *interface)
 {
 	SimulationContext ctx = interface->get_context ();
+	::Remote::NetworkInterface80211_ptr remote_80211 = interface->get_remote_80211 ();
 	for (ContextsI i = m_contexts.begin (); i != m_contexts.end (); i++) {
 		if (i->first->is_equal (ctx)) {
-			::Remote::NetworkInterface80211_ptr remote_80211 = interface->get_remote_80211 ();
 			remote_80211->connect (i->second);
-			CORBA::release (remote_80211);
-			return;
+			goto out;
 		}
 	}
 	::Remote::Channel80211_ptr remote_channel = ctx->peek_remote ()->create_channel_80211 (IdFactory::get_next ());
-	m_contexts.push_back (std::make_pair (ctx, remote_channel));
+	std::cout << "remote=" << remote_channel<<std::endl;
 	for (ContextsI j = m_contexts.begin (); j != m_contexts.end (); j++) {
 		remote_channel->add (j->second);
 		j->second->add (remote_channel);
 	}
+	m_contexts.push_back (std::make_pair (ctx, remote_channel));
+	remote_80211->connect (remote_channel);
+ out:
+	CORBA::release (remote_80211);
 }
 
 }; // namespace yapns
