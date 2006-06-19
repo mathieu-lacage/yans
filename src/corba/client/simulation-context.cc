@@ -22,6 +22,7 @@
 #include "registry.h"
 #include "registry_impl.h"
 #include "stopped-callback-impl.h"
+#include "simulator.h"
 #include "yans/callback.h"
 #include "yans/scheduler-list.h"
 #include "yans/event.h"
@@ -35,7 +36,9 @@ SimulationContextFactory::SimulationContextFactory ()
 	: m_now_us (0),
 	  m_uid (0),
 	  m_scheduler (new yans::SchedulerList ())
-{}
+{
+	yapns::Simulator::record_context_factory (this);
+}
 SimulationContextFactory::~SimulationContextFactory ()
 {
 	delete m_stopped_cb_servant;
