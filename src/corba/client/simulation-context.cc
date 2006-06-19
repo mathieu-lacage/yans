@@ -19,7 +19,6 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #include "simulation-context.h"
-#include "start-remote-contexts.h"
 #include "registry.h"
 #include "registry_impl.h"
 #include "stopped-callback-impl.h"
@@ -55,6 +54,7 @@ SimulationContextFactory::initialize (int argc, char *argv[])
 	m_stopped_cb_servant->set_callback (yans::make_callback (&SimulationContextFactory::one_context_stopped, this));
 	activate_servant (m_stopped_cb_servant);
 	m_registry_servant = new Registry_impl (m_orb);
+	m_registry_servant->set_callback (yans::make_callback (&SimulationContextFactory::registered, this));
 	activate_servant (m_registry_servant);
 
 }
@@ -106,13 +106,16 @@ SimulationContextFactory::read_configuration (char const *filename)
 	CORBA::String_var ref = m_orb->object_to_string (registry);
 
 	yans::ExecCommands commands = yans::ExecCommands (1);
-	uint32_t n_expected = load_commands (&commands, ref, "filename.xml");	
+	load_commands (&commands, ref, "filename.xml");	
+	uint32_t n_expected = commands.get_size ();
+	m_n_registered = 0;
 	commands.start ();
 	while (m_n_registered != n_expected) {
 		if (m_orb->work_pending ()) {
 			m_orb->perform_work ();
 		}
 	}
+	std::cout << "done registering" << std::endl;
 	// we are done starting the remote contexts !
 	for (Registry_impl::ContextsI i = m_registry_servant->begin ();
 	     i != m_registry_servant->end (); 
