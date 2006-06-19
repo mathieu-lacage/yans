@@ -47,7 +47,6 @@ Channel80211::record_connect (NetworkInterface80211 *interface)
 		}
 	}
 	::Remote::Channel80211_ptr remote_channel = ctx->peek_remote ()->create_channel_80211 (IdFactory::get_next ());
-	std::cout << "remote=" << remote_channel<<std::endl;
 	for (ContextsI j = m_contexts.begin (); j != m_contexts.end (); j++) {
 		remote_channel->add (j->second);
 		j->second->add (remote_channel);

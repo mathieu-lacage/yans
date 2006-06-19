@@ -109,6 +109,7 @@ SimulationContextFactory::read_configuration (char const *filename)
 	CORBA::String_var ref = m_orb->object_to_string (registry);
 
 	yans::ExecCommands commands = yans::ExecCommands (1);
+	commands.enable_log ("main.log");
 	load_commands (&commands, ref, "filename.xml");	
 	uint32_t n_expected = commands.get_size ();
 	m_n_registered = 0;
@@ -118,7 +119,6 @@ SimulationContextFactory::read_configuration (char const *filename)
 			m_orb->perform_work ();
 		}
 	}
-	std::cout << "done registering" << std::endl;
 	// we are done starting the remote contexts !
 	for (Registry_impl::ContextsI i = m_registry_servant->begin ();
 	     i != m_registry_servant->end (); 
