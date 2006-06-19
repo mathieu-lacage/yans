@@ -265,15 +265,21 @@ SimulatorPrivate::run_serial (void)
 void
 SimulatorPrivate::run_parallel (void)
 {
+	TRACE ("run parallel");
 	while (!m_stop && 
 	       (m_stop_at == 0 || m_stop_at > m_current_us)) {
+		TRACE ("send null messages");
 		for (QueuesI i = m_queues.begin (); i != m_queues.end (); i++) {
 			(*i)->send_null_message ();
 		}
+		TRACE ("sent null messages");
 		wait_until_no_queue_empty ();
+		TRACE ("no queue empty");
 		process_one_event();
+		TRACE ("processed event");
 	}
 	m_log.close ();
+	TRACE ("done run parallel");
 }
 
 void 
