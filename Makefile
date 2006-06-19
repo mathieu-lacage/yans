@@ -580,7 +580,7 @@ YAPNS_TEST_SRC := \
 	$(NULL)
 YAPNS_TEST_NAME := test-yapns
 YAPNS_TEST_TYPE := executable
-YAPNS_TEST_CXXFLAGS := $(MICO_CXXFLAGS)
+YAPNS_TEST_CXXFLAGS := $(MICO_CXXFLAGS) $(CXXFLAGS)
 YAPNS_TEST_LDFLAGS := $(MICO_LDFLAGS) -lpthread -lyapns -lyans
 
 src/corba/registry.cc: src/corba/registry.idl
