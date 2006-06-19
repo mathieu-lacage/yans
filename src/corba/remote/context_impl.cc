@@ -502,6 +502,7 @@ TrafficAnalyser_impl::create_receive_callback( ::Remote::InstanceId id )
 
   yans::Callback<void,yans::Packet *> real_cb = yans::make_callback (&yans::TrafficAnalyser::receive, m_self);
   CallbackVoidPacket_impl *servant = new CallbackVoidPacket_impl (id);
+  LocalObjectRegistry::record_callback_void_packet (id, real_cb);
   activate_servant (servant);
   retval = servant->_this ();
 
@@ -528,6 +529,7 @@ ThroughputPrinter_impl::create_receive_callback( ::Remote::InstanceId id )
   ::Remote::CallbackVoidPacket_ptr retval;
 
   yans::Callback<void,yans::Packet *> real_cb = yans::make_callback (&yans::ThroughputPrinter::receive, m_self);
+  LocalObjectRegistry::record_callback_void_packet (id, real_cb);
   CallbackVoidPacket_impl *servant = new CallbackVoidPacket_impl (id);
   activate_servant (servant);
   retval = servant->_this ();
@@ -606,6 +608,7 @@ ComputingContext_impl::create_channel_80211( ::Remote::InstanceId id )
 
   ParallelChannel80211 *real_channel = new ParallelChannel80211 ();
   Channel80211_impl *servant = new Channel80211_impl (id, real_channel);
+  LocalObjectRegistry::record_channel_80211 (id, real_channel);
   activate_servant (servant);
   retval = servant->_this ();
 
