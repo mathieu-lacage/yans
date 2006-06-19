@@ -545,12 +545,14 @@ ThroughputPrinter_impl::create_receive_callback( ::Remote::InstanceId id )
 // Implementation for interface ComputingContext
 
 ComputingContext_impl::ComputingContext_impl ()
-  : m_simulator (new ContextSimulator ())
+  : m_simulator (new ContextSimulator ()),
+    m_stopped (::Remote::StoppedCallback::_nil ())
 {}
 
 ComputingContext_impl::~ComputingContext_impl ()
 {
   delete m_simulator;
+  CORBA::release (m_stopped);
 }
 
 void
