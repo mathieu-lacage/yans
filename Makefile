@@ -86,6 +86,10 @@ config.mk:
     else
 	@echo TCP_USE= \# set it to \"y\" to enable the tcp code >>config.mk
     endif
+	@echo MICO_USE=n >>config.mk
+	@echo MICO_CXXFLAGS:=-D_REENTRANT -D_GNU_SOURCE -I/opt/mico/include >>config.mk
+	@echo MICO_LDFLAGS:=-L/opt/mico/lib -lpthread -lmico2.3.12 -lssl  >>config.mk
+
 
 else # PLATFORM
 
@@ -338,7 +342,6 @@ YANS_HDR := \
 	src/80211/aarf-mac-stations.h \
 	src/80211/cr-mac-stations.h \
 	src/80211/ideal-mac-stations.h \
-	src/80211/propagation-model.h \
 	src/80211/transmission-mode.h \
 	src/80211/bpsk-mode.h \
 	src/80211/qam-mode.h \
@@ -498,11 +501,9 @@ SAMPLE_CXX_80211_ADHOC_CXXFLAGS:=$(CXXFLAGS)
 SAMPLE_CXX_80211_ADHOC_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS)
 
 
-MICO_CXXFLAGS:=-D_REENTRANT -D_GNU_SOURCE -I/opt/mico/include
-MICO_LDFLAGS:=-L/opt/mico/lib -lmico2.3.12 -lssl
 
 
-REMOTE_CORBA_FACTORY_SRC := \
+YAPNS_REMOTE_SRC := \
 	src/corba/remote-context.cc \
 	src/corba/registry.cc \
 	src/corba/remote/context_impl.cc \
@@ -512,10 +513,10 @@ REMOTE_CORBA_FACTORY_SRC := \
 	src/corba/remote/context-simulator.cc \
 	src/corba/remote/chunk-corba.cc \
 	$(NULL)
-REMOTE_CORBA_FACTORY_NAME := remote-context
-REMOTE_CORBA_FACTORY_TYPE := executable
-REMOTE_CORBA_FACTORY_CXXFLAGS:=$(CXXFLAGS) -I./src/corba $(MICO_CXXFLAGS)
-REMOTE_CORBA_FACTORY_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS) $(MICO_LDFLAGS)
+YAPNS_REMOTE_NAME := remote-context
+YAPNS_REMOTE_TYPE := executable
+YAPNS_REMOTE_CXXFLAGS:=$(CXXFLAGS) -I./src/corba $(MICO_CXXFLAGS)
+YAPNS_REMOTE_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS) $(MICO_LDFLAGS)
 
 YAPNS_SRC := \
 	src/corba/remote-context.cc \
@@ -684,9 +685,6 @@ ALL:= \
 	BENCH \
 	BENCH_PACKET \
 	TEST \
-	YAPNS \
-	YAPNS_TEST \
-	REMOTE_CORBA_FACTORY \
 	SAMPLE_CXX_SIMPLE \
 	SAMPLE_CXX_ROUTER \
 	SAMPLE_CXX_TCP \
@@ -698,6 +696,14 @@ ALL:= \
 	SAMPLE_CXX_80211_ADHOC \
 	YANS_CPP_TEST_PERIO \
 	$(NULL)
+
+ifeq ($(MICO_USE),y)
+ALL += \
+	YAPNS \
+	YAPNS_TEST \
+	YAPNS_REMOTE \
+	$(NULL)
+endif
 
 ifeq ($(PYTHON_USE),y)
 ALL += \
