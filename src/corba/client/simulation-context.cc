@@ -231,6 +231,7 @@ SimulationContextFactory::now_us (void)
 SimulationContextImpl::SimulationContextImpl (::Remote::ComputingContext_ptr remote)
 {
 	m_context = ::Remote::ComputingContext::_duplicate (remote);
+	m_80211_factory = ::Remote::NetworkInterface80211Factory::_nil ();
 	// XXX ref remote.
 }
 
