@@ -62,3 +62,20 @@ Registry_impl::shutdown (void)
 {
   m_orb->shutdown (false);
 }
+
+
+Registry_impl::ContextsI 
+Registry_impl::begin ()
+{
+  return m_contexts.begin ();
+}
+Registry_impl::ContextsI 
+Registry_impl::end ()
+{
+  return m_contexts.end ();
+}
+uint32_t 
+Registry_impl::size (void)
+{
+  return m_contexts.size ();
+}

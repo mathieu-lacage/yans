@@ -27,13 +27,13 @@
 #include "yans/scheduler-list.h"
 #include "yans/event.h"
 #include "yans/event.tcc"
+#include "yans/exec-commands.h"
 #include "event.h"
 
 namespace yapns {
 
 SimulationContextFactory::SimulationContextFactory ()
-	: m_started (false),
-	  m_now_us (0),
+	: m_now_us (0),
 	  m_uid (0),
 	  m_scheduler (new yans::SchedulerList ())
 {}
@@ -59,11 +59,6 @@ SimulationContextFactory::initialize (int argc, char *argv[])
 
 }
 
-void
-SimulationContextFactory::started_cb (void)
-{
-	m_started = true;
-}
 
 void
 SimulationContextFactory::activate_servant (PortableServer::StaticImplementation *servant)
@@ -73,25 +68,59 @@ SimulationContextFactory::activate_servant (PortableServer::StaticImplementation
 	poa->activate_object (servant);
 }
 
+uint32_t
+SimulationContextFactory::load_commands (yans::ExecCommands *commands, 
+					 char const * registry_iid,
+					 char const *filename)
+{
+	std::string registry_str = std::string ("--registry=");
+	registry_str.append (registry_iid);
+
+	yans::Command a;
+	a.append ("./build-dir/bin/remote-context");
+	a.append ("--name=first");
+	a.append (registry_str);
+	commands->add (a, "first");
+
+#if 0
+	yans::Command b;
+	b.append ("./build-dir/bin/remote-context");
+	b.append ("--name=second");
+	b.append (registry_str);
+	commands.add (b, "second");
+#endif
+	return commands->get_size ();
+}
+
+void
+SimulationContextFactory::registered (void)
+{
+	m_n_registered++;
+}
+
 
 void 
 SimulationContextFactory::read_configuration (char const *filename)
 {
 	Registry_var registry = m_registry_servant->_this ();
 	CORBA::String_var ref = m_orb->object_to_string (registry);
-	StartRemoteContexts *remote_contexts = new StartRemoteContexts (ref, registry, "filename.xml");
-	m_registry_servant->set_callback (yans::make_callback (&StartRemoteContexts::registered, 
-							       remote_contexts));
 
-	remote_contexts->set_started_callback (yans::make_callback (&SimulationContextFactory::started_cb, this));
-
-	while (!m_started) {
+	yans::ExecCommands commands = yans::ExecCommands (1);
+	uint32_t n_expected = load_commands (&commands, ref, "filename.xml");	
+	commands.start ();
+	while (m_n_registered != n_expected) {
 		if (m_orb->work_pending ()) {
 			m_orb->perform_work ();
 		}
 	}
-	delete remote_contexts;
 	// we are done starting the remote contexts !
+	for (Registry_impl::ContextsI i = m_registry_servant->begin ();
+	     i != m_registry_servant->end (); 
+	     i++) {
+		::Remote::ComputingContext_ptr remote = i->second;
+		SimulationContext local = SimulationContext (new SimulationContextImpl (remote));
+		m_contexts.push_back(std::make_pair (i->first, local));
+	}
 }
 std::string 
 SimulationContextFactory::lookup_remote_name (std::string const name)
@@ -114,13 +143,6 @@ SimulationContextFactory::lookup (std::string name)
 		if (i->first.compare (remote_name) == 0) {
 			return i->second;
 		}
-	}
-	::Remote::ComputingContext_ptr remote = m_registry_servant->_this ()->lookup (remote_name.c_str ());
-	if (!CORBA::is_nil (remote)) {
-		SimulationContext local = SimulationContext (new SimulationContextImpl (remote));
-		m_contexts.push_back(std::make_pair (remote_name, 
-						     local));
-		return local;
 	}
 	assert (false);
 	return 0;

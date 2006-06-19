@@ -540,7 +540,6 @@ YAPNS_SRC := \
 	src/corba/client/udp-source.cc \
 	src/corba/client/udp-sink.cc \
 	src/corba/client/throughput-printer.cc \
-	src/corba/client/start-remote-contexts.cc \
 	src/corba/client/registry_impl.cc \
 	$(NULL)
 YAPNS_INST_HDR := \
@@ -571,11 +570,10 @@ YAPNS_INST_HDR := \
 YAPNS_HDR := \
 	src/corba/client/stopped-callback-impl.h \
 	src/corba/client/position.h \
-	src/corba/client/start-remote-contexts.h \
 	$(NULL)
 YAPNS_NAME := yapns
 YAPNS_TYPE := shared-library
-YAPNS_CXXFLAGS := -I./src/corba $(MICO_CXXFLAGS)
+YAPNS_CXXFLAGS := -I./src/corba $(MICO_CXXFLAGS) $(CXXFLAGS)
 
 YAPNS_TEST_SRC := \
 	src/corba/client/test-yapns.cc \

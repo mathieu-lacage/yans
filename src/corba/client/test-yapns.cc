@@ -54,6 +54,7 @@ advance (PeriodicGenerator *generator, StaticPosition *a)
 int main (int argc, char *argv[])
 {
 	SimulationContextFactory ctx;
+	ctx.initialize (argc, argv);
 	ctx.read_configuration ("sample.xml");
 	NetworkInterface80211Factory factory;
 	MacAddressFactory address_factory;

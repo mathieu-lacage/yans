@@ -48,6 +48,7 @@ public:
 	void enable_log (char const *main_log);
 	void add (Command command, char const *id);
 	void start (void);
+	uint32_t get_size (void);
 private:
 	ExecCommandsPrivate *m_priv;
 };

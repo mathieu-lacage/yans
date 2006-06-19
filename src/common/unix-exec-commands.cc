@@ -273,6 +273,7 @@ public:
 	void enable_log (char const *main_log);
 	void add (Command command, std::string id);
 	void start (void);
+	uint32_t get_size (void);
 private:
 	struct CommandRequest {
 		Command m_command;
@@ -385,6 +386,12 @@ ExecCommandsPrivate::command_done_no_log (CommandSystemThread *thread)
 	m_n_threads.post ();
 	TRACE ("notify command done");
 }
+
+uint32_t
+ExecCommandsPrivate::get_size (void)
+{
+	return m_requests.size ();
+}
 				   
 void 
 Command::reset (void)
@@ -431,6 +438,12 @@ void
 ExecCommands::start (void)
 {
 	m_priv->start ();
+}
+
+uint32_t 
+ExecCommands::get_size (void)
+{
+	return m_priv->get_size ();
 }
 
 }; // namespace yans

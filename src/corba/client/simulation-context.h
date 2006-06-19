@@ -29,6 +29,7 @@
 
 namespace yans {
 class SchedulerList;
+class ExecCommands;
 };
 
 class StoppedCallback_impl;
@@ -53,14 +54,17 @@ public:
 private:
 	void activate_servant (PortableServer::StaticImplementation *);
 	void one_context_stopped (bool finished, uint64_t time);
-	void started_cb (void);
+	void registered (void);
+	uint32_t load_commands (yans::ExecCommands *commands, 
+				char const *registry_id,
+				char const *filename);
 	std::string lookup_remote_name (std::string const name);
 	typedef std::list<std::pair<std::string, SimulationContext> > Contexts;
 	typedef std::list<std::pair<std::string, SimulationContext> >::iterator ContextsI;
 
 
 	CORBA::ORB_var m_orb;
-	bool m_started;
+	uint32_t m_n_registered;
 	bool m_finished;
 	uint32_t m_n_finished;
 	uint32_t m_n_next_stopped;

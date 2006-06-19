@@ -8,10 +8,14 @@
 #include <utility>
 
 
+
 // Implementation for interface Registry
 class Registry_impl : virtual public POA_Registry
 {
   public:
+  typedef std::list<std::pair<std::string, ::Remote::ComputingContext_var> > Contexts;
+  typedef std::list<std::pair<std::string, ::Remote::ComputingContext_var> >::iterator ContextsI;
+
   Registry_impl (CORBA::ORB_var orb);
   void set_callback (yans::Callback<void> done);
 
@@ -33,9 +37,12 @@ class Registry_impl : virtual public POA_Registry
       throw(
         ::CORBA::SystemException)
     ;
+
+    Registry_impl::ContextsI begin ();
+    Registry_impl::ContextsI end ();
+    uint32_t size (void);
+
  private:
-    typedef std::list<std::pair<std::string, ::Remote::ComputingContext_var> > Contexts;
-    typedef std::list<std::pair<std::string, ::Remote::ComputingContext_var> >::iterator ContextsI;
     Contexts m_contexts;
     CORBA::ORB_var m_orb;
     yans::Callback<void> m_done;
