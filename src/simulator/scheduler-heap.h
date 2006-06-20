@@ -44,21 +44,21 @@ public:
 	virtual Scheduler::EventKey remove (Event const ev);
 private:
 	typedef std::vector<std::pair<Event, Scheduler::EventKey> > BinaryHeap;
-	void store_in_event (Event ev, uint32_t index) const;
+	inline void store_in_event (Event ev, uint32_t index) const;
 	uint32_t get_from_event (Event const ev) const;
 
-	uint32_t parent (uint32_t id) const;
+	inline uint32_t parent (uint32_t id) const;
 	uint32_t sibling (uint32_t id) const;
-	uint32_t left_child (uint32_t id) const;
-	uint32_t right_child (uint32_t id) const;
-	uint32_t root (void) const;
+	inline uint32_t left_child (uint32_t id) const;
+	inline uint32_t right_child (uint32_t id) const;
+	inline uint32_t root (void) const;
 	uint32_t last (void) const;
-	bool is_root (uint32_t id) const;
-	bool is_bottom (uint32_t id) const;
-	bool is_less (uint32_t a, uint32_t b);
-	uint32_t smallest (uint32_t a, uint32_t b);
+	inline bool is_root (uint32_t id) const;
+	inline bool is_bottom (uint32_t id) const;
+	inline bool is_less (uint32_t a, uint32_t b);
+	inline uint32_t smallest (uint32_t a, uint32_t b);
 
-	void exch (uint32_t a, uint32_t b);
+	inline void exch (uint32_t a, uint32_t b);
 	void bottom_up (void);
 	void top_down (void);
 
