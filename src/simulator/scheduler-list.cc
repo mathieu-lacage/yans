@@ -61,7 +61,7 @@ SchedulerList::insert (Event event, Scheduler::EventKey key)
 {
 	Scheduler::EventKeyCompare compare;
 	for (EventsI i = m_events.begin (); i != m_events.end (); i++) {
-		if (compare (key, (*i).second)) {
+		if (compare (key, i->second)) {
 			m_events.insert (i, std::make_pair (event, key));
 			store_in_event (event, i);
 			return event;
