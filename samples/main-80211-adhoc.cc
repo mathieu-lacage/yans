@@ -51,7 +51,7 @@ advance (StaticPosition *a)
 	if (x >= 210.0) {
 		return;
 	}
-	std::cout << "x="<<x << std::endl;
+	//std::cout << "x="<<x << std::endl;
 	Simulator::insert_in_s (1.0, make_event (&advance, a));
 }
 
