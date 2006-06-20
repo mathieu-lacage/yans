@@ -385,7 +385,7 @@ MacLow::receive_ok (Packet const*p, double rx_snr, uint8_t tx_mode, uint8_t stuf
 		station->report_data_ok (rx_snr, tx_mode, stuff);
 		bool got_ack = false;
 		if (m_tx_params.must_wait_normal_ack () &&
-		    !m_normal_ack_timeout_event.is_running ()) {
+		    m_normal_ack_timeout_event.is_running ()) {
 			m_normal_ack_timeout_event.cancel ();
 			got_ack = true;
 		}
