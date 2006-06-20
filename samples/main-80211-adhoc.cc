@@ -51,6 +51,7 @@ advance (StaticPosition *a)
 	if (x >= 210.0) {
 		return;
 	}
+	std::cout << "x="<<x << std::endl;
 	Simulator::insert_in_s (1.0, make_event (&advance, a));
 }
 
@@ -97,7 +98,7 @@ int main (int argc, char *argv[])
 	generator->set_packet_interval (0.00001);
 	generator->set_packet_size (2000);
 	generator->start_now ();
-	generator->stop_at (9000.0);
+	generator->stop_at (42.0);
 	generator->set_send_callback (make_callback (&UdpSource::send, source));
 
 
@@ -108,6 +109,7 @@ int main (int argc, char *argv[])
 	wifi_server->connect_to (channel);
 	pos_server->set (0.0, 0.0, 0.0);
 	ThroughputPrinter *printer = new ThroughputPrinter ();
+	Simulator::insert_at_s (40, make_event (&ThroughputPrinter::stop, printer));
 	TraceContainer container = TraceContainer ();
 	wifi_server->register_trace (&container);
 	container.set_packet_logger_callback ("80211-packet-rx", 
