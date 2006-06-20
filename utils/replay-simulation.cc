@@ -64,7 +64,7 @@ private:
 
 	typedef std::deque<struct Command> Commands;
 	typedef std::deque<struct Command>::iterator CommandsI;
-	typedef std::deque<Event *> RemoveEvents;
+	typedef std::deque<Event > RemoveEvents;
 	
 
 	Commands m_commands;
@@ -175,14 +175,13 @@ LogReader::execute_log_commands (uint32_t uid)
 			break;
 		case Command::REMOVE: {
 			//std::cout << "exec remove" << std::endl;
-			Event *ev = m_remove_events.front ();
+			Event ev = m_remove_events.front ();
 			m_remove_events.pop_front ();
 			Simulator::remove (ev);
-			delete ev;
 		} break;
 		case Command::INSERT_REMOVE: {
 			//std::cout << "exec insert remove" << std::endl;
-			Event *ev = make_event (&LogReader::execute_log_commands, this, m_uid);
+			Event ev = make_event (&LogReader::execute_log_commands, this, m_uid);
 			Simulator::insert_at_us (cmd.insert_remove.m_ev_us, ev);
 			m_remove_events[cmd.insert_remove.m_ev_loc] = ev;
 			m_uid++;

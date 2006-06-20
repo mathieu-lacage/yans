@@ -25,7 +25,7 @@
 
 #include "dcf.h"
 #include "random-uniform.h"
-#include "cancellable-event.tcc"
+#include "event.tcc"
 #include "simulator.h"
 #include "mac-parameters.h"
 
@@ -55,7 +55,8 @@ DcfAccessListener::~DcfAccessListener ()
 
 
 Dcf::Dcf ()
-	: m_backoff_start (0),
+	: m_access_timer_event (),
+	  m_backoff_start (0),
 	  m_backoff_left (0),
 	  m_last_nav_start (0),
 	  m_last_nav_duration (0),
@@ -70,7 +71,6 @@ Dcf::Dcf ()
 	  m_rxing (false),
 	  m_sleeping (false)
 {
-	m_access_timer_event = 0;
 	reset_cw ();
 	m_random = new RandomUniform ();
 }
@@ -129,16 +129,16 @@ Dcf::request_access (void)
 		 * a timer when the txop notifies us of the end-of-access.
 		 */
 		TRACE ("accessing. will be notified.");
-	} else if (m_access_timer_event != 0) {
+	} else if (m_access_timer_event.is_running ()) {
 		/* we don't need to do anything because we have an access
 		 * timer which will expire soon.
 		 */
 		TRACE ("access timer running. will be notified");
-	} else if (is_backoff_not_completed (now_us ()) && m_access_timer_event == 0) {
+	} else if (is_backoff_not_completed (now_us ()) && !m_access_timer_event.is_running ()) {
 		/* start timer for ongoing backoff.
 		 */
 		TRACE ("request access X delayed for="<<delay_until_access_granted);
-		m_access_timer_event = make_cancellable_event (&Dcf::access_timeout, this);
+		m_access_timer_event = make_event (&Dcf::access_timeout, this);
 		Simulator::insert_in_us (delay_until_access_granted, m_access_timer_event);
 	} else if (is_phy_busy ()) {
 		/* someone else has accessed the medium.
@@ -150,8 +150,8 @@ Dcf::request_access (void)
 		 * need to wait a bit before accessing the medium.
 		 */
 		TRACE ("request access Y delayed for="<< delay_until_access_granted);
-		assert (m_access_timer_event == 0);
-		m_access_timer_event = make_cancellable_event (&Dcf::access_timeout, this);
+		assert (!m_access_timer_event.is_running ());
+		m_access_timer_event = make_event (&Dcf::access_timeout, this);
 		Simulator::insert_in_us (delay_until_access_granted, m_access_timer_event);
 	} else {
 		/* we can access the medium now.
@@ -196,11 +196,10 @@ Dcf::notify_access_ongoing_error_but_ok (void)
 void 
 Dcf::access_timeout ()
 {
-	m_access_timer_event = 0;
 	uint64_t delay_until_access_granted  = get_delay_until_access_granted (now_us ());
 	if (delay_until_access_granted > 0) {
 		TRACE ("timeout access delayed for "<< delay_until_access_granted);
-		m_access_timer_event = make_cancellable_event (&Dcf::access_timeout, this);
+		m_access_timer_event = make_event (&Dcf::access_timeout, this);
 		Simulator::insert_in_us (delay_until_access_granted, m_access_timer_event);
 	} else {
 		TRACE ("timeout access granted");
@@ -306,18 +305,18 @@ Dcf::start_backoff (void)
 	assert (m_backoff_start <= backoff_start);
 	m_backoff_start = backoff_start;
 	m_backoff_left = backoff_duration;
-	if (m_listener->access_needed () && m_access_timer_event == 0) {
+	if (m_listener->access_needed () && !m_access_timer_event.is_running ()) {
 		uint64_t delay_until_access_granted  = get_delay_until_access_granted (now_us ());
 		if (delay_until_access_granted > 0) {
 			TRACE ("start at "<<backoff_start<<", for "<<backoff_duration);
-			m_access_timer_event = make_cancellable_event (&Dcf::access_timeout, this);
+			m_access_timer_event = make_event (&Dcf::access_timeout, this);
 			Simulator::insert_in_us (delay_until_access_granted, m_access_timer_event);
 		} else {
 			TRACE ("access granted now");
 			m_listener->access_granted_now ();
 		}
 	} else {
-		if (m_access_timer_event != 0) {
+		if (m_access_timer_event.is_running ()) {
 			TRACE ("no access needed because timer running.");
 		} 
 		if (!m_listener->access_needed ()) {
@@ -405,10 +404,9 @@ Dcf::notify_nav_reset (uint64_t nav_start, uint64_t duration)
 	 * because this nav reset might have brought the time of
 	 * possible access closer to us than expected.
 	 */
-	if (m_access_timer_event != 0) {
-		m_access_timer_event->cancel ();
-		m_access_timer_event = 0;
-		m_access_timer_event = make_cancellable_event (&Dcf::access_timeout, this);
+	if (m_access_timer_event.is_running ()) {
+		m_access_timer_event.cancel ();
+		m_access_timer_event = make_event (&Dcf::access_timeout, this);
 		Simulator::insert_in_us (new_delay_until_access_granted, m_access_timer_event);
 	}
 }

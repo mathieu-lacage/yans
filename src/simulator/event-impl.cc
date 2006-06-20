@@ -19,78 +19,78 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "event.h"
 #include "event-impl.h"
-#include <cassert>
+
+#define noTRACE_EVENT_IMPL 1
+
+#ifdef TRACE_EVENT_IMPL
+#include <iostream>
+# define TRACE(x) \
+std::cout << "EVENT IMPL TRACE " << x << std::endl;
+#else /* TRACE_EVENT_IMPL */
+# define TRACE(format,...)
+#endif /* TRACE_EVENT_IMPL */
+
 
 namespace yans {
 
-Event::Event ()
-	: m_impl (0)
+EventImpl::EventImpl ()
+	: m_id (0),
+	  m_ref_count (1),
+	  m_cancel (0),
+	  m_running (1)
 {}
-Event::Event (EventImpl *impl)
-	: m_impl (impl)
+
+EventImpl::~EventImpl ()
 {}
-Event::Event (Event const &o)
-	: m_impl (o.m_impl)
+
+void
+EventImpl::ref (void)
 {
-	if (m_impl != 0) {
-		m_impl->ref ();
+	TRACE ("ref p="<<this<<", ref="<<m_ref_count);
+	m_ref_count++;
+}
+
+void
+EventImpl::unref (void)
+{
+	TRACE ("unref p="<<this<<", ref="<<m_ref_count);
+	m_ref_count--;
+	if (m_ref_count == 0) {
+		TRACE ("delete p="<<this);
+		delete this;
 	}
 }
-Event::~Event ()
+
+void 
+EventImpl::invoke (void)
 {
-	if (m_impl != 0) {
-		m_impl->unref ();
+	if (m_cancel == 0) {
+		notify ();
 	}
-	m_impl = 0;
-}
-Event &
-Event::operator = (Event const&o)
-{
-	if (m_impl != 0) {
-		m_impl->unref ();
-	}
-	m_impl = o.m_impl;
-	if (m_impl != 0) {
-		m_impl->ref ();
-	}
-	return *this;
+	m_running = 0;
 }
 void 
-Event::operator () (void)
+EventImpl::set_tag (void *tag)
 {
-	assert (m_impl != 0);
-	m_impl->invoke ();
-}
-void 
-Event::set_tag (void *tag)
-{
-	m_impl->set_tag (tag);
+	m_id = tag;
 }
 void *
-Event::get_tag (void) const
+EventImpl::get_tag (void) const
 {
-	return m_impl->get_tag ();
+	return m_id;
 }
 void
-Event::cancel (void)
+EventImpl::cancel (void)
 {
-	if (m_impl != 0) {
-		m_impl->cancel ();
-	}
+	m_cancel = 1;
+	m_running = 0;
 }
-
 bool 
-Event::is_running (void)
+EventImpl::is_running (void)
 {
-	if (m_impl != 0 && m_impl->is_running ()) {
-		return true;
-	} else {
-		return false;
-	}
+	return (m_running == 1);
 }
-
 
 
 }; // namespace yans

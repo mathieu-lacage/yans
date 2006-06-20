@@ -20,12 +20,11 @@
  */
 
 #include "mac-low.h"
-#include "cancellable-event.h"
 #include "packet.h"
 #include "phy-80211.h"
 #include "simulator.h"
-#include "cancellable-event.tcc"
 #include "chunk-mac-80211-fcs.h"
+#include "event.tcc"
 #include "network-interface-80211.h"
 #include "packet-logger.h"
 #include "mac-stations.h"
@@ -162,16 +161,16 @@ MacLowTransmissionParameters::get_next_packet_size (void) const
 
 
 MacLow::MacLow ()
-	: m_normal_ack_timeout_event (0),
-	  m_fast_ack_timeout_event (0),
-	  m_super_fast_ack_timeout_event (0),
-	  m_fast_ack_failed_timeout_event (0),
-	  m_cts_timeout_event (0),
-	  m_send_cts_event (0),
-	  m_send_ack_event (0),
-	  m_send_data_event (0),
-	  m_wait_sifs_event (0),
-	  m_current_packet (0)
+	: m_normal_ack_timeout_event (),
+	  m_fast_ack_timeout_event (),
+	  m_super_fast_ack_timeout_event (),
+	  m_fast_ack_failed_timeout_event (),
+	  m_cts_timeout_event (),
+	  m_send_cts_event (),
+	  m_send_ack_event (),
+	  m_send_data_event (),
+	  m_wait_sifs_event (),
+	  m_current_packet ()
 {
 	m_last_nav_duration_us = 0;
 	m_last_nav_start_us = 0;
@@ -188,49 +187,40 @@ void
 MacLow::cancel_all_events (void)
 {
 	bool one_running = false;
-	if (m_normal_ack_timeout_event != 0) {
-		m_normal_ack_timeout_event->cancel ();
-		m_normal_ack_timeout_event = 0;
+	if (m_normal_ack_timeout_event.is_running ()) {
+		m_normal_ack_timeout_event.cancel ();
 		one_running = true;
 	}
-	if (m_fast_ack_timeout_event != 0) {
-		m_fast_ack_timeout_event->cancel ();
-		m_fast_ack_timeout_event = 0;
+	if (m_fast_ack_timeout_event.is_running ()) {
+		m_fast_ack_timeout_event.cancel ();
 		one_running = true;
 	}
-	if (m_super_fast_ack_timeout_event != 0) {
-		m_super_fast_ack_timeout_event->cancel ();
-		m_super_fast_ack_timeout_event = 0;
+	if (m_super_fast_ack_timeout_event.is_running ()) {
+		m_super_fast_ack_timeout_event.cancel ();
 		one_running = true;
 	}
-	if (m_fast_ack_failed_timeout_event != 0) {
-		m_fast_ack_failed_timeout_event->cancel ();
-		m_fast_ack_failed_timeout_event = 0;
+	if (m_fast_ack_failed_timeout_event.is_running ()) {
+		m_fast_ack_failed_timeout_event.cancel ();
 		one_running = true;
 	}
-	if (m_cts_timeout_event != 0) {
-		m_cts_timeout_event->cancel ();
-		m_cts_timeout_event= 0;
+	if (m_cts_timeout_event.is_running ()) {
+		m_cts_timeout_event.cancel ();
 		one_running = true;
 	}
-	if (m_send_cts_event != 0) {
-		m_send_cts_event->cancel ();
-		m_send_cts_event= 0;
+	if (m_send_cts_event.is_running ()) {
+		m_send_cts_event.cancel ();
 		one_running = true;
 	}
-	if (m_send_ack_event != 0) {
-		m_send_ack_event->cancel ();
-		m_send_ack_event= 0;
+	if (m_send_ack_event.is_running ()) {
+		m_send_ack_event.cancel ();
 		one_running = true;
 	}
-	if (m_send_data_event != 0) {
-		m_send_data_event->cancel ();
-		m_send_data_event= 0;
+	if (m_send_data_event.is_running ()) {
+		m_send_data_event.cancel ();
 		one_running = true;
 	}
-	if (m_wait_sifs_event != 0) {
-		m_wait_sifs_event->cancel ();
-		m_wait_sifs_event= 0;
+	if (m_wait_sifs_event.is_running ()) {
+		m_wait_sifs_event.cancel ();
 		one_running = true;
 	}
 	if (one_running && m_listener != 0) {
@@ -325,8 +315,8 @@ MacLow::receive_error (Packet const*packet, double rx_snr)
 	TRACE ("rx failed ");
 	m_drop_error->log (packet);
 	if (m_tx_params.must_wait_fast_ack ()) {
-		assert (m_fast_ack_failed_timeout_event == 0);
-		m_fast_ack_failed_timeout_event = make_cancellable_event (&MacLow::fast_ack_failed_timeout, this);
+		assert (!m_fast_ack_failed_timeout_event.is_running ());
+		m_fast_ack_failed_timeout_event = make_event (&MacLow::fast_ack_failed_timeout, this);
 		Simulator::insert_in_us (get_sifs_us (), m_fast_ack_failed_timeout_event);
 	}
 	return;
@@ -354,40 +344,40 @@ MacLow::receive_ok (Packet const*p, double rx_snr, uint8_t tx_mode, uint8_t stuf
 		if (is_prev_nav_zero &&
 		    hdr.get_addr1 () == m_interface->get_mac_address ()) {
 			TRACE ("rx RTS from=" << hdr.get_addr2 () << ", schedule CTS");
-			assert (m_send_cts_event == 0);
+			assert (!m_send_cts_event.is_running ());
 			MacStation *station = m_stations->lookup (hdr.get_addr2 ());
 			station->report_rx_ok (rx_snr, tx_mode);
-			m_send_cts_event = make_cancellable_event (&MacLow::send_cts_after_rts, this,
-								   hdr.get_addr2 (), 
-								   hdr.get_duration_us (),
-								   get_cts_tx_mode_for_rts (hdr.get_addr2 (), tx_mode),
-								   station->snr_to_snr (rx_snr));
+			m_send_cts_event = make_event (&MacLow::send_cts_after_rts, this,
+						       hdr.get_addr2 (), 
+						       hdr.get_duration_us (),
+						       get_cts_tx_mode_for_rts (hdr.get_addr2 (), tx_mode),
+						       station->snr_to_snr (rx_snr));
 			Simulator::insert_in_us (get_sifs_us (), m_send_cts_event);
 		} else {
 			TRACE ("rx RTS from=" << hdr.get_addr2 () << ", cannot schedule CTS");
 		}
 	} else if (hdr.is_cts () &&
 		   hdr.get_addr1 () == m_interface->get_mac_address () &&
-		   m_cts_timeout_event != 0 &&
+		   m_cts_timeout_event.is_running () &&
 		   m_current_packet) {
 		TRACE ("receive cts from="<<m_current_hdr.get_addr1 ());
 		MacStation *station = get_station (m_current_hdr.get_addr1 ());
 		station->report_rx_ok (rx_snr, tx_mode);
 		station->report_rts_ok (rx_snr, tx_mode, stuff);
 
-		m_cts_timeout_event->cancel ();
-		m_cts_timeout_event = 0;
+		m_cts_timeout_event.cancel ();
 		m_listener->got_cts (rx_snr, tx_mode);
-		assert (m_send_data_event == 0);
-		m_send_data_event = make_cancellable_event (&MacLow::send_data_after_cts, this, 
-							    hdr.get_addr1 (),
-							    hdr.get_duration_us (),
-							    tx_mode);
+		assert (!m_send_data_event.is_running ());
+		m_send_data_event = make_event (&MacLow::send_data_after_cts, this, 
+						hdr.get_addr1 (),
+						hdr.get_duration_us (),
+						tx_mode);
 		Simulator::insert_in_us (get_sifs_us (), m_send_data_event);
 	} else if (hdr.is_ack () &&
 		   hdr.get_addr1 () == m_interface->get_mac_address () &&
-		   (m_normal_ack_timeout_event || m_fast_ack_timeout_event ||
-		    m_super_fast_ack_timeout_event) &&
+		   (m_normal_ack_timeout_event.is_running () || 
+		    m_fast_ack_timeout_event.is_running () ||
+		    m_super_fast_ack_timeout_event.is_running ()) &&
 		   m_tx_params.must_wait_ack ()) {
 		MacStation *station = get_station (m_current_hdr.get_addr1 ());
 		TRACE ("receive ack from="<<m_current_hdr.get_addr1 ());
@@ -395,22 +385,20 @@ MacLow::receive_ok (Packet const*p, double rx_snr, uint8_t tx_mode, uint8_t stuf
 		station->report_data_ok (rx_snr, tx_mode, stuff);
 		bool got_ack = false;
 		if (m_tx_params.must_wait_normal_ack () &&
-		    m_normal_ack_timeout_event != 0) {
-			m_normal_ack_timeout_event->cancel ();
-			m_normal_ack_timeout_event = 0;
+		    !m_normal_ack_timeout_event.is_running ()) {
+			m_normal_ack_timeout_event.cancel ();
 			got_ack = true;
 		}
 		if (m_tx_params.must_wait_fast_ack () &&
-		    m_fast_ack_timeout_event != 0) {
-			m_fast_ack_timeout_event->cancel ();
-			m_fast_ack_timeout_event = 0;
+		    m_fast_ack_timeout_event.is_running ()) {
+			m_fast_ack_timeout_event.cancel ();
 			got_ack = true;
 		}
 		if (got_ack) {
 			m_listener->got_ack (rx_snr, tx_mode);
 		}
 		if (m_tx_params.has_next_packet ()) {
-			m_wait_sifs_event = make_cancellable_event (&MacLow::wait_sifs_after_end_tx, this);
+			m_wait_sifs_event = make_event (&MacLow::wait_sifs_after_end_tx, this);
 			Simulator::insert_in_us (get_sifs_us (), m_wait_sifs_event);
 		}
 	} else if (hdr.is_ctl ()) {
@@ -423,12 +411,12 @@ MacLow::receive_ok (Packet const*p, double rx_snr, uint8_t tx_mode, uint8_t stuf
 			TRACE ("rx unicast/no_ack from="<<hdr.get_addr2 ());
 		} else if (hdr.is_data () || hdr.is_mgt ()) {
 			TRACE ("rx unicast/send_ack from=" << hdr.get_addr2 ());
-			assert (m_send_ack_event == 0);
-			m_send_ack_event = make_cancellable_event (&MacLow::send_ack_after_data, this,
-								   hdr.get_addr2 (), 
-								   hdr.get_duration_us (),
-								   get_ack_tx_mode_for_data (hdr.get_addr2 (), tx_mode),
-								   station->snr_to_snr (rx_snr));
+			assert (!m_send_ack_event.is_running ());
+			m_send_ack_event = make_event (&MacLow::send_ack_after_data, this,
+						       hdr.get_addr2 (), 
+						       hdr.get_duration_us (),
+						       get_ack_tx_mode_for_data (hdr.get_addr2 (), tx_mode),
+						       station->snr_to_snr (rx_snr));
 			Simulator::insert_in_us (get_sifs_us (), m_send_ack_event);
 		}
 		m_rx_callback (packet, &hdr);
@@ -623,7 +611,6 @@ MacLow::cts_timeout (void)
 {
 	MacStation *station = get_station (m_current_hdr.get_addr1 ());
 	station->report_rts_failed ();
-	m_cts_timeout_event = 0;
 	m_current_packet->unref ();
 	m_current_packet = 0;
 	m_listener->missed_cts ();
@@ -634,7 +621,6 @@ MacLow::normal_ack_timeout (void)
 {
 	MacStation *station = get_station (m_current_hdr.get_addr1 ());
 	station->report_data_failed ();
-	m_normal_ack_timeout_event = 0;
 	m_listener->missed_ack ();
 	m_listener = 0;
 }
@@ -643,7 +629,6 @@ MacLow::fast_ack_timeout (void)
 {
 	MacStation *station = get_station (m_current_hdr.get_addr1 ());
 	station->report_data_failed ();
-	m_fast_ack_timeout_event = 0;
 	if (m_phy->is_state_idle ()) {
 		TRACE ("fast Ack idle missed");
 		m_listener->missed_ack ();
@@ -655,7 +640,6 @@ MacLow::super_fast_ack_timeout ()
 {
 	MacStation *station = get_station (m_current_hdr.get_addr1 ());
 	station->report_data_failed ();
-	m_super_fast_ack_timeout_event = 0;
 	if (m_phy->is_state_idle ()) {
 		TRACE ("super fast Ack failed");
 		m_listener->missed_ack ();
@@ -699,8 +683,8 @@ MacLow::send_rts_for_packet (void)
 	uint64_t tx_duration_us = m_phy->calculate_tx_duration_us (get_rts_size (), rts_tx_mode);
 	uint64_t timer_delay_us = tx_duration_us + get_cts_timeout_us ();
 
-	assert (m_cts_timeout_event == 0);
-	m_cts_timeout_event = make_cancellable_event (&MacLow::cts_timeout, this);
+	assert (!m_cts_timeout_event.is_running ());
+	m_cts_timeout_event = make_event (&MacLow::cts_timeout, this);
 	Simulator::insert_in_s (timer_delay_us, m_cts_timeout_event);
 
 	Packet *packet = PacketFactory::create ();
@@ -719,23 +703,23 @@ MacLow::start_data_tx_timers (void)
 	uint64_t tx_duration_us = m_phy->calculate_tx_duration_us (get_current_size (), data_tx_mode);
 	if (m_tx_params.must_wait_normal_ack ()) {
 		uint64_t timer_delay_us = tx_duration_us + get_ack_timeout_us ();
-		assert (m_normal_ack_timeout_event == 0);
-		m_normal_ack_timeout_event = make_cancellable_event (&MacLow::normal_ack_timeout, this);
+		assert (!m_normal_ack_timeout_event.is_running ());
+		m_normal_ack_timeout_event = make_event (&MacLow::normal_ack_timeout, this);
 		Simulator::insert_in_us (timer_delay_us, m_normal_ack_timeout_event);
 	} else if (m_tx_params.must_wait_fast_ack ()) {
 		uint64_t timer_delay_us = tx_duration_us + get_pifs_us ();
-		assert (m_fast_ack_timeout_event == 0);
-		m_fast_ack_timeout_event = make_cancellable_event (&MacLow::fast_ack_timeout, this);
+		assert (!m_fast_ack_timeout_event.is_running ());
+		m_fast_ack_timeout_event = make_event (&MacLow::fast_ack_timeout, this);
 		Simulator::insert_in_s (timer_delay_us, m_fast_ack_timeout_event);
 	} else if (m_tx_params.must_wait_super_fast_ack ()) {
 		uint64_t timer_delay_us = tx_duration_us + get_pifs_us ();
-		assert (m_super_fast_ack_timeout_event == 0);
-		m_super_fast_ack_timeout_event = make_cancellable_event (&MacLow::super_fast_ack_timeout, this);
+		assert (!m_super_fast_ack_timeout_event.is_running ());
+		m_super_fast_ack_timeout_event = make_event (&MacLow::super_fast_ack_timeout, this);
 		Simulator::insert_in_s (timer_delay_us, m_super_fast_ack_timeout_event);
 	} else if (m_tx_params.has_next_packet ()) {
 		uint64_t delay_us = tx_duration_us + get_sifs_us ();
-		assert (m_wait_sifs_event == 0);
-		m_wait_sifs_event = make_cancellable_event (&MacLow::wait_sifs_after_end_tx, this);
+		assert (!m_wait_sifs_event.is_running ());
+		m_wait_sifs_event = make_event (&MacLow::wait_sifs_after_end_tx, this);
 		Simulator::insert_in_us (delay_us, m_wait_sifs_event);
 	} else {
 		// since we do not expect any timer to be triggered.
@@ -808,7 +792,6 @@ MacLow::send_cts_after_rts (MacAddress source, uint64_t duration_us, uint8_t tx_
 	 * right after SIFS.
 	 */
 	TRACE ("tx CTS to=" << source << ", mode=" << (uint32_t)tx_mode);
-	m_send_cts_event = 0;
 	ChunkMac80211Hdr cts;
 	cts.set_type (MAC_80211_CTL_CTS);
 	cts.set_ds_not_from ();
@@ -834,7 +817,6 @@ MacLow::send_data_after_cts (MacAddress source, uint64_t duration_us, uint8_t tx
 	 * RTS/CTS/DATA/ACK hanshake 
 	 */
 	assert (m_current_packet != 0);
-	m_send_data_event = 0;
 	uint8_t data_tx_mode = get_data_tx_mode (m_current_hdr.get_addr1 (), get_current_size ());
 
 	TRACE ("tx " << m_current_hdr.get_type_string () << " to=" << m_current_hdr.get_addr2 () <<
@@ -858,14 +840,12 @@ MacLow::send_data_after_cts (MacAddress source, uint64_t duration_us, uint8_t tx
 void 
 MacLow::wait_sifs_after_end_tx (void)
 {
-	m_wait_sifs_event = 0;
 	m_listener->start_next ();
 }
 
 void
 MacLow::fast_ack_failed_timeout (void)
 {
-	m_fast_ack_failed_timeout_event = 0;
 	m_listener->missed_ack ();
 	TRACE ("fast Ack busy but missed");
 }
@@ -877,7 +857,6 @@ MacLow::send_ack_after_data (MacAddress source, uint64_t duration_us, uint8_t tx
 	 * a packet after SIFS. 
 	 */
 	TRACE ("tx ACK to=" << source << ", mode=" << (uint32_t)tx_mode);
-	m_send_ack_event = 0;
 	ChunkMac80211Hdr ack;
 	ack.set_type (MAC_80211_CTL_ACK);
 	ack.set_ds_not_from ();

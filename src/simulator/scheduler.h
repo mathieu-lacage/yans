@@ -23,10 +23,9 @@
 #define SCHEDULER_H
 
 #include <stdint.h>
+#include "event.h"
 
 namespace yans {
-
-class Event;
 
 class Scheduler {
  public:
@@ -40,12 +39,12 @@ class Scheduler {
 	};
 
 	virtual ~Scheduler () = 0;
-	virtual Event *insert (Event *event, EventKey key) = 0;
+	virtual Event insert (Event event, EventKey key) = 0;
 	virtual bool is_empty (void) const = 0;
-	virtual Event *peek_next (void) const = 0;
+	virtual Event peek_next (void) const = 0;
 	virtual EventKey peek_next_key (void) const = 0;
 	virtual void remove_next (void) = 0;
-	virtual EventKey remove (Event const*ev) = 0;
+	virtual EventKey remove (Event const ev) = 0;
 
 };
 

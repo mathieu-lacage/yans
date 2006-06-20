@@ -24,8 +24,7 @@
 #include "packet.h"
 #include "chunk-mgt.h"
 #include "phy-80211.h"
-#include "cancellable-event.h"
-#include "cancellable-event.tcc"
+#include "event.tcc"
 #include "dca-txop.h"
 #include "simulator.h"
 #include "timeout.h"
@@ -65,8 +64,8 @@ MacHighNqsta::MacHighNqsta ()
 	: m_state (BEACON_MISSED),
 	  m_probe_request_timeout_us (500000), // 0.5s
 	  m_assoc_request_timeout_us (500000), // 0.5s
-	  m_probe_request_event (0),
-	  m_assoc_request_event (0),
+	  m_probe_request_event (),
+	  m_assoc_request_event (),
 	  m_timeout (new Timeout (make_callback (&MacHighNqsta::missed_beacons, this)))
 {
 	// this is the default value for the number of beacons missed 
@@ -160,7 +159,7 @@ MacHighNqsta::send_probe_request (void)
 	
 	m_dca->queue (packet, hdr);
 
-	m_probe_request_event = make_cancellable_event (&MacHighNqsta::probe_request_timeout, this);
+	m_probe_request_event = make_event (&MacHighNqsta::probe_request_timeout, this);
 	Simulator::insert_in_us (m_probe_request_timeout_us,
 				 m_probe_request_event);
 }
@@ -185,7 +184,7 @@ MacHighNqsta::send_association_request ()
 	
 	m_dca->queue (packet, hdr);
 
-	m_probe_request_event = make_cancellable_event (&MacHighNqsta::probe_request_timeout, this);
+	m_probe_request_event = make_event (&MacHighNqsta::probe_request_timeout, this);
 	Simulator::insert_in_us (m_probe_request_timeout_us,
 				 m_probe_request_event);
 }
@@ -230,14 +229,12 @@ MacHighNqsta::try_to_ensure_associated (void)
 void
 MacHighNqsta::assoc_request_timeout (void)
 {
-	m_assoc_request_event = 0;
 	m_state = WAIT_ASSOC_RESP;
 	send_association_request ();
 }
 void
 MacHighNqsta::probe_request_timeout (void)
 {
-	m_probe_request_event = 0;
 	m_state = WAIT_PROBE_RESP;
 	send_probe_request ();
 }
@@ -320,9 +317,8 @@ MacHighNqsta::receive (Packet *packet, ChunkMac80211Hdr const *hdr)
 			}
 			set_bssid (hdr->get_addr3 ());
 			m_timeout->set_interval (probe_resp.get_beacon_interval_us ());
-			if (m_probe_request_event != 0) {
-				m_probe_request_event->cancel ();
-				m_probe_request_event = 0;
+			if (m_probe_request_event.is_running ()) {
+				m_probe_request_event.cancel ();
 			}
 			m_state = WAIT_ASSOC_RESP;
 			send_association_request ();
@@ -331,9 +327,8 @@ MacHighNqsta::receive (Packet *packet, ChunkMac80211Hdr const *hdr)
 		if (m_state == WAIT_ASSOC_RESP) {
 			ChunkMgtAssocResponse assoc_resp;
 			packet->remove (&assoc_resp);
-			if (m_assoc_request_event != 0) {
-				m_assoc_request_event->cancel ();
-				m_assoc_request_event = 0;
+			if (m_assoc_request_event.is_running ()) {
+				m_assoc_request_event.cancel ();
 			}
 			if (assoc_resp.is_success ()) {
 				m_state = ASSOCIATED;

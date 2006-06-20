@@ -34,19 +34,19 @@ public:
 	SchedulerMap ();
 	virtual ~SchedulerMap ();
 
-	virtual Event *insert (Event *event, Scheduler::EventKey key);
+	virtual Event insert (Event event, Scheduler::EventKey key);
 	virtual bool is_empty (void) const;
-	virtual Event *peek_next (void) const;
+	virtual Event peek_next (void) const;
 	virtual Scheduler::EventKey peek_next_key (void) const;
 	virtual void remove_next (void);
-	virtual Scheduler::EventKey remove (Event const*ev);
+	virtual Scheduler::EventKey remove (Event const ev);
 private:
-	typedef std::map<Scheduler::EventKey, Event*, Scheduler::EventKeyCompare> EventMap;
-	typedef std::map<Scheduler::EventKey, Event*, Scheduler::EventKeyCompare>::iterator EventMapI;
-	typedef std::map<Scheduler::EventKey, Event*, Scheduler::EventKeyCompare>::const_iterator EventMapCI;
+	typedef std::map<Scheduler::EventKey, Event, Scheduler::EventKeyCompare> EventMap;
+	typedef std::map<Scheduler::EventKey, Event, Scheduler::EventKeyCompare>::iterator EventMapI;
+	typedef std::map<Scheduler::EventKey, Event, Scheduler::EventKeyCompare>::const_iterator EventMapCI;
 
-	void store_in_event (Event *ev, EventMapI i) const;
-	EventMapI get_from_event (Event const *ev) const;
+	void store_in_event (Event ev, EventMapI i) const;
+	EventMapI get_from_event (Event const ev) const;
 
 
 	EventMap m_list;

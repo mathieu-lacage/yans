@@ -27,13 +27,13 @@
 #include "chunk-mac-80211-hdr.h"
 #include "mac-address.h"
 #include "callback.h"
+#include "event.h"
 
 namespace yans {
 
 class Packet;
 class NetworkInterface80211;
 class Phy80211;
-class CancellableEvent;
 class PacketLogger;
 class MacStations;
 class MacStation;
@@ -219,15 +219,15 @@ private:
 	typedef std::vector<MacLowNavListener *> NavListeners;
 	NavListeners m_nav_listeners;
 
-	CancellableEvent *m_normal_ack_timeout_event;
-	CancellableEvent *m_fast_ack_timeout_event;
-	CancellableEvent *m_super_fast_ack_timeout_event;
-	CancellableEvent *m_fast_ack_failed_timeout_event;
-	CancellableEvent *m_cts_timeout_event;
-	CancellableEvent *m_send_cts_event;
-	CancellableEvent *m_send_ack_event;
-	CancellableEvent *m_send_data_event;
-	CancellableEvent *m_wait_sifs_event;
+	Event m_normal_ack_timeout_event;
+	Event m_fast_ack_timeout_event;
+	Event m_super_fast_ack_timeout_event;
+	Event m_fast_ack_failed_timeout_event;
+	Event m_cts_timeout_event;
+	Event m_send_cts_event;
+	Event m_send_ack_event;
+	Event m_send_data_event;
+	Event m_wait_sifs_event;
 
 	Packet *m_current_packet;
 	ChunkMac80211Hdr m_current_hdr;

@@ -36,16 +36,16 @@ public:
 	SchedulerHeap ();
 	virtual ~SchedulerHeap ();
 
-	virtual Event *insert (Event *event, Scheduler::EventKey key);
+	virtual Event insert (Event event, Scheduler::EventKey key);
 	virtual bool is_empty (void) const;
-	virtual Event *peek_next (void) const;
+	virtual Event peek_next (void) const;
 	virtual Scheduler::EventKey peek_next_key (void) const;
 	virtual void remove_next (void);
-	virtual Scheduler::EventKey remove (Event const*ev);
+	virtual Scheduler::EventKey remove (Event const ev);
 private:
-	typedef std::vector<std::pair<Event*, Scheduler::EventKey> > BinaryHeap;
-	void store_in_event (Event *ev, uint32_t index) const;
-	uint32_t get_from_event (Event const *ev) const;
+	typedef std::vector<std::pair<Event, Scheduler::EventKey> > BinaryHeap;
+	void store_in_event (Event ev, uint32_t index) const;
+	uint32_t get_from_event (Event const ev) const;
 
 	uint32_t parent (uint32_t id) const;
 	uint32_t sibling (uint32_t id) const;

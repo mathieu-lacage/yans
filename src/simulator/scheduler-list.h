@@ -36,18 +36,18 @@ class SchedulerList : public Scheduler {
 	SchedulerList ();
 	virtual ~SchedulerList ();
 
-	virtual Event *insert (Event *event, EventKey key);
+	virtual Event insert (Event event, EventKey key);
 	virtual bool is_empty (void) const;
-	virtual Event *peek_next (void) const;
+	virtual Event peek_next (void) const;
 	virtual Scheduler::EventKey peek_next_key (void) const;
 	virtual void remove_next (void);
-	virtual Scheduler::EventKey remove (Event const*ev);
+	virtual Scheduler::EventKey remove (Event const ev);
 
  private:
-	typedef std::list<std::pair<Event *, EventKey> > Events;
-	typedef std::list<std::pair<Event *, EventKey> >::iterator EventsI;
-	void store_in_event (Event *ev, EventsI i);
-	EventsI get_from_event (Event const*ev);
+	typedef std::list<std::pair<Event, EventKey> > Events;
+	typedef std::list<std::pair<Event, EventKey> >::iterator EventsI;
+	void store_in_event (Event ev, EventsI i);
+	EventsI get_from_event (Event const ev);
 	Events m_events;
 };
 

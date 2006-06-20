@@ -23,17 +23,17 @@
 #define SIMULATOR_H
 
 #include <stdint.h>
+#include "event.h"
 
 namespace yans {
 
-class Event;
 class SimulatorPrivate;
 class ParallelSimulatorQueuePrivate;
 
 class ParallelSimulatorQueue {
 public:
 	virtual ~ParallelSimulatorQueue () = 0;
-	void insert_at_us (uint64_t at, Event *ev);
+	void insert_at_us (uint64_t at, Event ev);
 private:
 	friend class Simulator;
 	friend class ParallelSimulatorQueuePrivate;
@@ -85,20 +85,20 @@ public:
 	 */
 	static void stop_at_us (uint64_t at);
 
-	static Event *insert_in_us (uint64_t delta, Event *event);
-	static Event *insert_in_s (double delta, Event *event);
+	static Event insert_in_us (uint64_t delta, Event event);
+	static Event insert_in_s (double delta, Event event);
 
-	static Event *insert_at_us (uint64_t time, Event *event);
-	static Event *insert_at_s (double time, Event *event);
+	static Event insert_at_us (uint64_t time, Event event);
+	static Event insert_at_s (double time, Event event);
 
-	static Event *remove (Event const*id);
+	static Event remove (Event constid);
 
 	static uint64_t now_us (void);
 	static double now_s (void);
 
-	static void insert_later (Event *event);
+	static void insert_later (Event event);
 
-	static void insert_at_destroy (Event *event);
+	static void insert_at_destroy (Event event);
 private:
 	Simulator ();
 	~Simulator ();

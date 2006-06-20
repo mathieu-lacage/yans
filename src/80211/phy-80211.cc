@@ -25,9 +25,9 @@
 #include "propagation-model.h"
 #include "simulator.h"
 #include "packet.h"
-#include "cancellable-event.tcc"
 #include "random-uniform.h"
 #include "count-ptr-holder.tcc"
+#include "event.tcc"
 
 #include <cassert>
 #include <math.h>
@@ -177,7 +177,7 @@ Phy80211::Phy80211 ()
 	  m_rxing (false),
 	  m_end_tx_us (0),
 	  m_previous_state_change_time_us (0),
-	  m_end_rx_event (0),
+	  m_end_rx_event (),
 	  m_random (new RandomUniform ())
 {}
 
@@ -243,11 +243,11 @@ Phy80211::receive_packet (Packet const*packet,
 			// sync to signal
 			notify_rx_start (rx_duration_us);
 			switch_to_sync_from_idle (rx_duration_us);
-			assert (m_end_rx_event == 0);
-			m_end_rx_event = make_cancellable_event (&Phy80211::end_rx, this, 
-								 make_count_ptr_holder (packet), 
-								 make_count_ptr_holder (event), 
-								 stuff);
+			assert (!m_end_rx_event.is_running ());
+			m_end_rx_event = make_event (&Phy80211::end_rx, this, 
+						     make_count_ptr_holder (packet), 
+						     make_count_ptr_holder (event), 
+						     stuff);
 			Simulator::insert_in_us (rx_duration_us, m_end_rx_event);
 		} else {
 			TRACE ("drop packet because signal power too small ("<<
@@ -270,7 +270,7 @@ Phy80211::send_packet (Packet const*packet, uint8_t tx_mode, uint8_t tx_power, u
 	assert (is_state_idle () || is_state_rx ());
 
 	if (is_state_rx ()) {
-		m_end_rx_event->cancel ();
+		m_end_rx_event.cancel ();
 	}
 
 	uint64_t tx_duration_us = calculate_tx_duration_us (packet->get_size (), tx_mode);
@@ -859,8 +859,6 @@ Phy80211::end_rx (CountPtrHolder<Packet const> p, CountPtrHolder<RxEvent> ev, ui
 	RxEvent *event = ev.remove ();
 	assert (is_state_rx ());
 	assert (event->get_end_time_us () == now_us ());
-	assert (m_end_rx_event != 0);
-	m_end_rx_event = 0;
 
 	NiChanges ni;
 	double noise_interference_w = calculate_noise_interference_w (event, &ni);

@@ -53,10 +53,10 @@ public:
 	ParallelSimulatorQueuePrivate (SimulatorPrivate *priv);
 	~ParallelSimulatorQueuePrivate ();
 	void set_queue (ParallelSimulatorQueue *queue);
-	void insert_at_us (Event *ev, uint64_t at);
+	void insert_at_us (Event ev, uint64_t at);
 	void send_null_message (void);
 private:
-	void remove_event (Event *ev);
+	void remove_event (Event ev);
 	uint32_t m_n;
 	SimulatorPrivate *m_simulator;
 	ParallelSimulatorQueue *m_queue;
@@ -81,20 +81,20 @@ public:
 	void run_parallel (void);
 	void stop (void);
 	void stop_at_us (uint64_t at);
-	Event *insert_in_us (Event *event, uint64_t delta);
-	Event *insert_in_s (Event *event, double delta);
-	Event *insert_at_us (Event *event, uint64_t time);
-	Event *insert_at_s (Event *event, double time);
-	Event *remove (Event const*ev);
+	Event insert_in_us (Event event, uint64_t delta);
+	Event insert_in_s (Event event, double delta);
+	Event insert_at_us (Event event, uint64_t time);
+	Event insert_at_s (Event event, double time);
+	Event remove (Event const ev);
 	uint64_t now_us (void);
 	double now_s (void);
-	void insert_later (Event *event);
-	void insert_at_destroy (Event *event);
+	void insert_later (Event event);
+	void insert_at_destroy (Event event);
 
 private:
 	void process_one_event (void);
 
-	typedef std::list<std::pair<Event *,uint32_t> > Events;
+	typedef std::list<std::pair<Event,uint32_t> > Events;
 	typedef std::vector<ParallelSimulatorQueuePrivate *> Queues;
 	typedef std::vector<ParallelSimulatorQueuePrivate *>::iterator QueuesI;
 	Events m_destroy;
@@ -120,7 +120,7 @@ ParallelSimulatorQueuePrivate::ParallelSimulatorQueuePrivate (SimulatorPrivate *
 ParallelSimulatorQueuePrivate::~ParallelSimulatorQueuePrivate ()
 {}
 void 
-ParallelSimulatorQueuePrivate::insert_at_us (Event *ev, uint64_t at)
+ParallelSimulatorQueuePrivate::insert_at_us (Event ev, uint64_t at)
 {
 	m_n++;
 	if (m_n == 1) {
@@ -129,14 +129,13 @@ ParallelSimulatorQueuePrivate::insert_at_us (Event *ev, uint64_t at)
 	m_simulator->insert_at_us (make_event (&ParallelSimulatorQueuePrivate::remove_event, this, ev), at);
 }
 void
-ParallelSimulatorQueuePrivate::remove_event (Event *ev)
+ParallelSimulatorQueuePrivate::remove_event (Event ev)
 {
 	m_n--;
 	if (m_n == 0) {
 		m_simulator->notify_queue_empty ();
 	}
-	ev->invoke ();
-	delete ev;
+	ev ();
 }
 
 void
@@ -169,11 +168,10 @@ SimulatorPrivate::SimulatorPrivate (Scheduler *events)
 SimulatorPrivate::~SimulatorPrivate ()
 {
 	while (!m_destroy.empty ()) {
-		Event *ev = m_destroy.front ().first;
+		Event ev = m_destroy.front ().first;
 		m_destroy.pop_front ();
 		TRACE ("handle destroy " << ev);
-		ev->invoke ();
-		delete ev;
+		ev ();
 	}
 	delete m_events;
 	m_events = (Scheduler *)0xdeadbeaf;
@@ -225,7 +223,7 @@ SimulatorPrivate::add_queue (ParallelSimulatorQueuePrivate *queue)
 void
 SimulatorPrivate::process_one_event (void)
 {
-	Event *next_ev = m_events->peek_next ();
+	Event next_ev = m_events->peek_next ();
 	Scheduler::EventKey next_key = m_events->peek_next_key ();
 	m_events->remove_next ();
 	TRACE ("handle " << next_ev);
@@ -234,8 +232,7 @@ SimulatorPrivate::process_one_event (void)
 	if (m_log_enable) {
 		m_log << "e "<<next_key.m_uid << " " << next_key.m_time << std::endl;
 	}
-	next_ev->invoke ();
-	delete next_ev;
+	next_ev ();
 }
 
 bool 
@@ -292,14 +289,14 @@ SimulatorPrivate::stop_at_us (uint64_t at)
 {
 	m_stop_at = at;
 }
-Event *  
-SimulatorPrivate::insert_in_us (Event *event, uint64_t delta)
+Event   
+SimulatorPrivate::insert_in_us (Event event, uint64_t delta)
 {
 	uint64_t current = now_us ();
 	return insert_at_us (event, current+delta);
 }
-Event * 
-SimulatorPrivate::insert_at_us (Event *event, uint64_t time)
+Event  
+SimulatorPrivate::insert_at_us (Event event, uint64_t time)
 {
 	assert (time >= now_us ());
 	Scheduler::EventKey key = {time, m_uid};
@@ -315,15 +312,15 @@ SimulatorPrivate::now_us (void)
 {
 	return m_current_us;
 }
-Event * 
-SimulatorPrivate::insert_in_s (Event *event, double delta)
+Event  
+SimulatorPrivate::insert_in_s (Event event, double delta)
 {
 	int64_t delta_us = (int64_t)(delta * 1000000.0);
 	uint64_t us = now_us () + delta_us;
 	return insert_at_us (event, us);
 }
-Event * 
-SimulatorPrivate::insert_at_s (Event *event, double time)
+Event  
+SimulatorPrivate::insert_at_s (Event event, double time)
 {
 	int64_t us = (int64_t)(time * 1000000.0);
 	assert (us >= 0);
@@ -337,12 +334,12 @@ SimulatorPrivate::now_s (void)
 	return us;
 }
 void
-SimulatorPrivate::insert_later (Event *event)
+SimulatorPrivate::insert_later (Event event)
 {
 	insert_at_us (event, now_us ());
 }
 void
-SimulatorPrivate::insert_at_destroy (Event *event)
+SimulatorPrivate::insert_at_destroy (Event event)
 {
 	m_destroy.push_back (std::make_pair (event, m_uid));
 	if (m_log_enable) {
@@ -352,15 +349,15 @@ SimulatorPrivate::insert_at_destroy (Event *event)
 	m_uid++;
 }
 
-Event *
-SimulatorPrivate::remove (Event const*ev)
+Event 
+SimulatorPrivate::remove (Event const ev)
 {
 	Scheduler::EventKey key = m_events->remove (ev);
 	if (m_log_enable) {
 		m_log << "r " << m_current_uid << " " << now_us () << " "
 		      << key.m_uid << " " << key.m_time << std::endl;
 	}
-	return const_cast<Event *>(ev);
+	return Event (ev);
 }
 
 
@@ -469,14 +466,14 @@ Simulator::stop_at_us (uint64_t at)
 {
 	get_priv ()->stop_at_us (at);
 }
-Event *
-Simulator::insert_in_us (uint64_t delta, Event *event)
+Event 
+Simulator::insert_in_us (uint64_t delta, Event event)
 {
 	TRACE ("insert " << event << " in " << delta << "us");
 	return get_priv ()->insert_in_us (event, delta);
 }
-Event *
-Simulator::insert_at_us (uint64_t time, Event *event)
+Event 
+Simulator::insert_at_us (uint64_t time, Event event)
 {
 	TRACE ("insert " << event << " at " << time << "us");
 	return get_priv ()->insert_at_us (event, time);
@@ -486,14 +483,14 @@ Simulator::now_us (void)
 {
 	return get_priv ()->now_us ();
 }
-Event * 
-Simulator::insert_in_s (double delta, Event *event)
+Event  
+Simulator::insert_in_s (double delta, Event event)
 {
 	TRACE ("insert " << event << " in " << delta << "s");
 	return get_priv ()->insert_in_s (event, delta);
 }
-Event * 
-Simulator::insert_at_s (double time, Event *event)
+Event  
+Simulator::insert_at_s (double time, Event event)
 {
 	TRACE ("insert " << event << " at " << time << "s");
 	return get_priv ()->insert_at_s (event, time);
@@ -504,20 +501,20 @@ Simulator::now_s (void)
 	return get_priv ()->now_s ();
 }
 void
-Simulator::insert_later (Event *event)
+Simulator::insert_later (Event event)
 {
 	TRACE ("insert later " << event);
 	return get_priv ()->insert_later (event);
 }
 void 
-Simulator::insert_at_destroy (Event *event)
+Simulator::insert_at_destroy (Event event)
 {
 	TRACE ("insert at destroy " << event);
 	return get_priv ()->insert_at_destroy (event);
 }
 
-Event *
-Simulator::remove (Event const*ev)
+Event 
+Simulator::remove (Event const ev)
 {
 	return get_priv ()->remove (ev);
 }
@@ -534,7 +531,7 @@ ParallelSimulatorQueue::~ParallelSimulatorQueue ()
 	delete m_priv;
 }
 void 
-ParallelSimulatorQueue::insert_at_us (uint64_t at, Event *ev)
+ParallelSimulatorQueue::insert_at_us (uint64_t at, Event ev)
 {
 	m_priv->insert_at_us (ev, at);
 }

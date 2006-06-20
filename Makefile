@@ -133,9 +133,9 @@ YANS_SRC:= \
 	src/simulator/scheduler-heap.cc \
 	src/simulator/scheduler-map.cc \
 	src/simulator/event.cc \
+	src/simulator/event-impl.cc \
 	src/simulator/event-tcc.cc \
 	src/simulator/event-tcc-test.cc \
-	src/simulator/cancellable-event.cc \
 	src/simulator/simulator.cc \
 	src/simulator/unix-system-semaphore.cc \
 	$(FIBER_CONTEXT_PLATFORM) \
@@ -249,8 +249,7 @@ YANS_INST_HDR := \
 	src/test/test.h \
 	src/simulator/event.h \
 	src/simulator/event.tcc \
-	src/simulator/cancellable-event.h \
-	src/simulator/cancellable-event.tcc \
+	src/simulator/event-impl.h \
 	src/simulator/simulator.h \
 	src/simulator/scheduler-list.h \
 	src/simulator/scheduler.h \
@@ -420,24 +419,6 @@ TEST_TYPE:=executable
 TEST_CXXFLAGS:=$(CXXFLAGS)
 TEST_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS)
 
-# building of sample applications
-SAMPLE_CXX_SIMU_SRC:= \
-	samples/main-simulator.cc \
-	$(NULL)
-SAMPLE_CXX_SIMU_NAME:=main-simulator
-SAMPLE_CXX_SIMU_OUTPUT_DIR:=
-SAMPLE_CXX_SIMU_TYPE:=executable
-SAMPLE_CXX_SIMU_CXXFLAGS:=$(CXXFLAGS)
-SAMPLE_CXX_SIMU_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS)
-
-SAMPLE_CXX_SIMU_FOR_SRC:= \
-	samples/main-forwarding-simulator.cc \
-	$(NULL)
-SAMPLE_CXX_SIMU_FOR_NAME:=main-forwarding-simulator
-SAMPLE_CXX_SIMU_FOR_OUTPUT_DIR:=
-SAMPLE_CXX_SIMU_FOR_TYPE:=executable
-SAMPLE_CXX_SIMU_FOR_CXXFLAGS:=$(CXXFLAGS)
-SAMPLE_CXX_SIMU_FOR_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS)
 
 SAMPLE_CXX_SIMUTEMP_SRC:= \
 	samples/main-forwarding-simulator-template.cc \
@@ -690,8 +671,6 @@ ALL:= \
 	SAMPLE_CXX_SIMPLE \
 	SAMPLE_CXX_ROUTER \
 	SAMPLE_CXX_TCP \
-	SAMPLE_CXX_SIMU \
-	SAMPLE_CXX_SIMU_FOR \
 	SAMPLE_CXX_SIMUTEMP \
 	SAMPLE_CXX_THREAD \
 	SAMPLE_CXX_80211_SIMPLE \

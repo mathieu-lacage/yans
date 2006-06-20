@@ -23,7 +23,7 @@
 #define DCF_H
 
 #include <stdint.h>
-#include "cancellable-event.h"
+#include "event.h"
 
 namespace yans {
 
@@ -105,7 +105,7 @@ private:
 	uint64_t get_access_granted_start (void) const;
 	void update_backoff (uint64_t time_us);
 
-	CancellableEvent *m_access_timer_event;
+	Event m_access_timer_event;
 
 	RandomUniform *m_random;
 	MacParameters const*m_parameters;

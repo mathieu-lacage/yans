@@ -27,6 +27,7 @@
 #include <stdint.h>
 #include "callback.h"
 #include "count-ptr-holder.tcc"
+#include "event.h"
 
 
 namespace yans {
@@ -34,7 +35,6 @@ namespace yans {
 class TransmissionMode;
 class Packet;
 class PropagationModel;
-class CancellableEvent;
 class RandomUniform;
 class RxEvent;
 
@@ -192,7 +192,7 @@ private:
 	RxErrorCallback m_rx_error_callback;
 	Modes m_modes;
 	Listeners m_listeners;
-	CancellableEvent *m_end_rx_event;
+	Event m_end_rx_event;
 	Events m_events;
 	RandomUniform *m_random;
 };

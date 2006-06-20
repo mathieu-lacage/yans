@@ -24,11 +24,11 @@
 
 #include <stdint.h>
 #include "callback.h"
+#include "event.h"
 
 namespace yans {
 
 class Packet;
-class CancellableEvent;
 
 class PeriodicGenerator {
 public:
@@ -57,7 +57,7 @@ private:
 	uint16_t m_size;
 	double m_stop_at_us;
 	uint32_t m_n;
-	CancellableEvent *m_current_event;
+	Event m_current_event;
 };
 
 }; //namespace yans

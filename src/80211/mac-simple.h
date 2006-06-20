@@ -22,9 +22,9 @@
 #define MAC_SIMPLE_H
 
 #include <stdint.h>
-#include "cancellable-event.tcc"
 #include "mac-address.h"
 #include "callback.h"
+#include "event.h"
 
 namespace yans {
 
@@ -75,9 +75,9 @@ private:
 	uint64_t m_data_timeout_us;
 	Packet *m_current;
 	MacAddress m_current_to;
-	CancellableEvent *m_rts_timeout_event;
-	CancellableEvent *m_data_timeout_event;
-	Event *m_send_later_event;
+	Event m_rts_timeout_event;
+	Event m_data_timeout_event;
+	Event m_send_later_event;
 	RxCallback m_data_rx;
 };
 

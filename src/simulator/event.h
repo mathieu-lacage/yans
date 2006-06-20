@@ -24,17 +24,25 @@
 
 namespace yans {
 
+class EventImpl;
+
 class Event {
 public:
-	virtual ~Event () = 0;
-	void invoke (void);
-private:
-	virtual void notify (void) = 0;
+	Event ();
+	Event (EventImpl *impl);
+	Event (Event const &o);
+	~Event ();
+	Event &operator = (Event const&o);
+	void operator () (void);
+	void cancel (void);
+	bool is_running (void);
 private:
 	friend class SchedulerHeap;
 	friend class SchedulerList;
 	friend class SchedulerMap;
-	void *m_id;
+	void set_tag (void *tag);
+	void *get_tag (void) const;
+	EventImpl *m_impl;
 };
 
 }; // namespace yans

@@ -38,23 +38,26 @@ SchedulerList::~SchedulerList ()
  * member variable, a pointer.
  */
 void 
-SchedulerList::store_in_event (Event *ev, EventsI i)
+SchedulerList::store_in_event (Event ev, EventsI i)
 {
 	assert (sizeof (i) <= sizeof (Event));
-	strncpy ((char *)&(ev->m_id), (char *)&i, sizeof (void *));
+	void *tag;
+	strncpy ((char *)&(tag), (char *)&i, sizeof (void *));
+	ev.set_tag (tag);
 }
 SchedulerList::EventsI 
-SchedulerList::get_from_event (Event const*ev)
+SchedulerList::get_from_event (Event const ev)
 {
 	SchedulerList::EventsI i;
 	assert (sizeof (i) <= sizeof (Event));
-	strncpy ((char *)&i, (char *)&(ev->m_id), sizeof (void *));
+	void *tag = ev.get_tag ();
+	strncpy ((char *)&i, (char *)&(tag), sizeof (void *));
 	return i;
 }
 
 
-Event * 
-SchedulerList::insert (Event *event, Scheduler::EventKey key)
+Event  
+SchedulerList::insert (Event event, Scheduler::EventKey key)
 {
 	Scheduler::EventKeyCompare compare;
 	for (EventsI i = m_events.begin (); i != m_events.end (); i++) {
@@ -73,7 +76,7 @@ SchedulerList::is_empty (void) const
 {
 	return m_events.empty ();
 }
-Event *
+Event 
 SchedulerList::peek_next (void) const
 {
 	assert (!is_empty ());
@@ -93,7 +96,7 @@ SchedulerList::remove_next (void)
 }
 
 Scheduler::EventKey
-SchedulerList::remove (Event const*ev)
+SchedulerList::remove (Event const ev)
 {
 	EventsI i = get_from_event (ev);
 	EventKey key = (*i).second;

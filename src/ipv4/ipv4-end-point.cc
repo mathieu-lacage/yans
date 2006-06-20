@@ -41,7 +41,7 @@ Ipv4EndPoint::Ipv4EndPoint (Ipv4Address address, uint16_t port)
 {}
 Ipv4EndPoint::~Ipv4EndPoint ()
 {
-	Event * ev = make_event (invoke_now, m_destroy, this);
+	Event ev = make_event (invoke_now, m_destroy, this);
 	Simulator::insert_later (ev);
 }
 

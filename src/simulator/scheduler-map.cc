@@ -45,20 +45,23 @@ SchedulerMap::~SchedulerMap ()
 
 
 void 
-SchedulerMap::store_in_event (Event *ev, EventMapI i) const
+SchedulerMap::store_in_event (Event ev, EventMapI i) const
 {
-	memcpy (&(ev->m_id), &i, sizeof (ev->m_id));
+	void *tag;
+	memcpy (&(tag), &i, sizeof (tag));
+	ev.set_tag (tag);
 }
 SchedulerMap::EventMapI
-SchedulerMap::get_from_event (Event const *ev) const
+SchedulerMap::get_from_event (Event const ev) const
 {
 	EventMapI i;
-	memcpy (&i, &(ev->m_id), sizeof (i));
+	void *tag = ev.get_tag ();
+	memcpy (&i, &(tag), sizeof (i));
  	return i;
 }
 
-Event * 
-SchedulerMap::insert (Event *event, Scheduler::EventKey key)
+Event  
+SchedulerMap::insert (Event event, Scheduler::EventKey key)
 {
 	std::pair<EventMapI,bool> result = m_list.insert (std::make_pair (key, event));
 	assert (result.second);
@@ -72,7 +75,7 @@ SchedulerMap::is_empty (void) const
 	return m_list.empty ();
 }
 
-Event *
+Event 
 SchedulerMap::peek_next (void) const
 {
 	assert (!is_empty ());
@@ -96,7 +99,7 @@ SchedulerMap::remove_next (void)
 }
 
 Scheduler::EventKey
-SchedulerMap::remove (Event const*ev)
+SchedulerMap::remove (Event const ev)
 {
 	assert (!is_empty ());
 	EventMapI i = get_from_event (ev);

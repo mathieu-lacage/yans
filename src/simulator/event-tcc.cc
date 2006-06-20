@@ -18,28 +18,30 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
+#include "event-impl.h"
 #include "event.h"
 
 namespace yans {
 
-class EventFunctionImpl0 : public Event {
+class EventFunctionImpl0 : public EventImpl {
 public:
 	typedef void (*F)(void);
 
 	EventFunctionImpl0 (F function) 
 		: m_function (function)
-	{ }
-	virtual ~EventFunctionImpl0 () {}
+	{}
+protected:
 	virtual void notify (void) { 
 		(*m_function) (); 
 	}
 private:
+	virtual ~EventFunctionImpl0 () {}
 	F m_function;
 };
 
-Event *make_event(void (*f) (void)) 
+Event make_event(void (*f) (void)) 
 {
-	return new EventFunctionImpl0 (f);
+	return Event (new EventFunctionImpl0 (f));
 }
 
 }; // namespace yans

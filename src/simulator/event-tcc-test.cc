@@ -80,31 +80,25 @@ EventTest::EventTest ()
 bool 
 EventTest::run_tests (void)
 {
-	Event *ev;
+	Event ev;
 
 	ev = yans::make_event (&null_cb);
-	ev->invoke ();
-	delete ev;
+	ev ();
 	ev = yans::make_event (&one_cb, 1);
-	ev->invoke ();
-	delete ev;
+	ev ();
 	ev = yans::make_event (&two_cb, 1, 2);
-	ev->invoke ();
-	delete ev;
+	ev ();
 	ev = yans::make_event (&three_cb, 1, 2, 3);
-	ev->invoke ();
-	delete ev;
+	ev ();
 	ev = yans::make_event (&four_cb, 1, 2, 3, 4);
-	ev->invoke ();
-	delete ev;
+	ev ();
 	ev = yans::make_event (&five_cb, 1, 2, 3, 4, 5);
-	ev->invoke ();
-	delete ev;
+	ev ();
 
-  if (g_error) {
-    return false;
-  }
-  return true;
+	if (g_error) {
+		return false;
+	}
+	return true;
 }
 
 static EventTest g_test;

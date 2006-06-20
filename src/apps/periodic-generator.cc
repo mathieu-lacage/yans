@@ -25,7 +25,6 @@
 #include "chunk-constant-data.h"
 #include "event.h"
 #include "event.tcc"
-#include "cancellable-event.tcc"
 #include <cassert>
 
 
@@ -34,7 +33,7 @@ namespace yans {
 PeriodicGenerator::PeriodicGenerator ()
 	: m_stop_at_us (0),
 	  m_n (0),
-	  m_current_event (0)
+	  m_current_event ()
 {}
 
 PeriodicGenerator::~PeriodicGenerator ()
@@ -60,27 +59,22 @@ PeriodicGenerator::set_packet_size (uint16_t size)
 void 
 PeriodicGenerator::start_now (void)
 {
-	assert (m_current_event == 0);
-
-	m_current_event = make_cancellable_event (&PeriodicGenerator::send_next_packet, this);
+	assert (!m_current_event.is_running ());
+	m_current_event = make_event (&PeriodicGenerator::send_next_packet, this);
 	Simulator::insert_in_us (m_interval_us, m_current_event);
 }
 void 
 PeriodicGenerator::stop_now (void)
 {
-	if (m_current_event != 0) {
-		m_current_event->cancel ();
-		m_current_event = 0;
-	}
+	m_current_event.cancel ();
 }
 
 
 void 
 PeriodicGenerator::start_at (double start)
 {
-	assert (m_current_event == 0);
-
-	m_current_event = make_cancellable_event (&PeriodicGenerator::send_next_packet, this);
+	assert (!m_current_event.is_running ());
+	m_current_event = make_event (&PeriodicGenerator::send_next_packet, this);
 	Simulator::insert_at_s (start, m_current_event);
 }
 void 
@@ -93,14 +87,12 @@ PeriodicGenerator::stop_at (double end)
 void 
 PeriodicGenerator::send_next_packet (void)
 {
-	assert (m_current_event != 0);
-	m_current_event = 0;
 	/* stop packet transmissions.*/
 	if (m_stop_at_us > 0 && Simulator::now_us () >= m_stop_at_us) {
 		return;
 	}
 	/* schedule next packet transmission. */
-	m_current_event = make_cancellable_event (&PeriodicGenerator::send_next_packet, this);
+	m_current_event = make_event (&PeriodicGenerator::send_next_packet, this);
 	Simulator::insert_in_us (m_interval_us, m_current_event);
 	/* create packet. */
 	Packet *packet = PacketFactory::create ();

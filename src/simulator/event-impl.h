@@ -1,6 +1,6 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
 /*
- * Copyright (c) 2006 INRIA
+ * Copyright (c) 2005,2006 INRIA
  * All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -18,29 +18,34 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
+#ifndef EVENT_IMPL_H
+#define EVENT_IMPL_H
 
-#include "cancellable-event.h"
-#include <cassert>
+#include <stdint.h>
 
 namespace yans {
 
-CancellableEvent::CancellableEvent ()
-	: m_is_cancelled (false)
-{}
-CancellableEvent::~CancellableEvent ()
-{}
-void 
-CancellableEvent::cancel (void)
-{
-	assert (!m_is_cancelled);
-	m_is_cancelled = true;
-}
-
-bool 
-CancellableEvent::is_cancelled (void)
-{
-	return m_is_cancelled;
-}
+class EventImpl {
+public:
+	EventImpl ();
+	void ref (void);
+	void unref (void);
+	void invoke (void);
+	void set_tag (void *tag);
+	void *get_tag (void) const;
+	void cancel (void);
+	bool is_running (void);
+protected:
+	virtual ~EventImpl () = 0;
+private:
+	virtual void notify (void) = 0;
+private:
+	void *m_id;
+	uint32_t m_ref_count : 30;
+	uint32_t m_cancel : 1;
+	uint32_t m_running : 1;
+};
 
 }; // namespace yans
 
+#endif /* EVENT_IMPL_H */

@@ -24,11 +24,11 @@
 #include "mac-address.h"
 #include "callback.h"
 #include "supported-rates.h"
+#include "event.h"
 #include <stdint.h>
 
 namespace yans {
 
-class CancellableEvent;
 class Packet;
 class ChunkMac80211Hdr;
 class NetworkInterface80211;
@@ -79,8 +79,8 @@ private:
 	} m_state;
 	uint64_t m_probe_request_timeout_us;
 	uint64_t m_assoc_request_timeout_us;
-	CancellableEvent *m_probe_request_event;
-	CancellableEvent *m_assoc_request_event;
+	Event m_probe_request_event;
+	Event m_assoc_request_event;
 	NetworkInterface80211 *m_interface;
 	ForwardCallback m_forward;
 	AssociatedCallback m_associated_callback;
