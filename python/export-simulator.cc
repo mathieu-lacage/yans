@@ -23,20 +23,23 @@
 #include "function-holder.h"
 #include "yans/simulator.h"
 #include "yans/event.h"
+#include "yans/event-impl.h"
 
 using namespace yans;
 using namespace boost::python;
 
-class FunctionHolderEvent : public Event {
+class FunctionHolderEvent : public EventImpl {
 public:
 	FunctionHolderEvent (FunctionHolder holder)
 		: m_holder (holder) {} 
+protected:
+	virtual ~FunctionHolderEvent () {}
+private:
 	virtual void notify (void) {
 		object function = m_holder.get_function ();
 		object context = m_holder.get_context ();
 		function (context);
 	}
-private:
 	FunctionHolder m_holder;
 };
 
@@ -44,35 +47,35 @@ private:
 void 
 simu_insert_in_s (double delta, FunctionHolder holder)
 {
-	Event *ev = new FunctionHolderEvent (holder);
+	Event ev = Event (new FunctionHolderEvent (holder));
 	Simulator::insert_in_s (delta, ev);
 }
 
 void 
 simu_insert_in_us (uint64_t delta, FunctionHolder holder)
 {
-	Event *ev = new FunctionHolderEvent (holder);
+	Event ev = Event (new FunctionHolderEvent (holder));
 	Simulator::insert_in_us (delta, ev);
 }
 
 void 
 simu_insert_at_s (double at, FunctionHolder holder)
 {
-	Event *ev = new FunctionHolderEvent (holder);
+	Event ev = Event (new FunctionHolderEvent (holder));
 	Simulator::insert_at_s (at, ev);
 }
 
 void 
 simu_insert_at_us (uint64_t at, FunctionHolder holder)
 {
-	Event *ev = new FunctionHolderEvent (holder);
+	Event ev = Event (new FunctionHolderEvent (holder));
 	Simulator::insert_at_us (at, ev);
 }
 
 void 
 simu_insert_later (FunctionHolder holder)
 {
-	Event *ev = new FunctionHolderEvent (holder);
+	Event ev = Event (new FunctionHolderEvent (holder));
 	Simulator::insert_later (ev);
 }
 
