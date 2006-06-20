@@ -22,6 +22,7 @@
 #define THROUGHPUT_PRINTER_H
 
 #include <stdint.h>
+#include "event.h"
 
 namespace yans {
 
@@ -31,12 +32,14 @@ class ThroughputPrinter {
 public:
 	ThroughputPrinter ();
 	void set_print_interval_us (uint64_t us);
+	void stop (void);
 	void receive (Packet const*packet);
 private:
 	void timeout (void);
 	uint32_t m_current;
 	uint32_t m_prev;
 	uint64_t m_period_us;
+	Event m_timeout_event;
 };
 
 }; // namespace yans
