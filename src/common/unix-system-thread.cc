@@ -39,10 +39,11 @@ private:
 SystemThreadPrivate::SystemThreadPrivate (SystemThread *thread)
 	: m_thread (thread)
 {
-	int retval = pthread_create (&m_system_thread,
-				     NULL,
-				     SystemThreadPrivate::pthread_run,
-				     this);
+	int retval;
+	retval = pthread_create (&m_system_thread,
+				 NULL,
+				 SystemThreadPrivate::pthread_run,
+				 this);
 	assert (retval == 0);
 }
 SystemThreadPrivate::~SystemThreadPrivate ()

@@ -38,12 +38,14 @@ private:
 
 SystemMutexPrivate::SystemMutexPrivate ()
 {
-	int retval = pthread_mutex_init (&m_mutex, NULL);
+	int retval;
+	retval = pthread_mutex_init (&m_mutex, NULL);
 	assert (retval == 0);
 }
 SystemMutexPrivate::~SystemMutexPrivate ()
 {
-	int retval = pthread_mutex_destroy (&m_mutex);
+	int retval;
+	retval = pthread_mutex_destroy (&m_mutex);
 	assert (retval == 0);
 }
 void 
