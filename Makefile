@@ -132,7 +132,6 @@ YANS_SRC:= \
 	src/simulator/scheduler-list.cc \
 	src/simulator/scheduler-heap.cc \
 	src/simulator/scheduler-map.cc \
-	src/simulator/event.cc \
 	src/simulator/event-impl.cc \
 	src/simulator/event-tcc.cc \
 	src/simulator/event-tcc-test.cc \
