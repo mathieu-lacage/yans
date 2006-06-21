@@ -36,7 +36,9 @@ public:
 	RefPtr (T *env) 
 		: m_env (env) 
 	{
-		m_env->ref ();
+		if (m_env != 0) {
+			m_env->ref ();
+		}
 	}
 	~RefPtr () 
 	{
