@@ -44,21 +44,21 @@ typedef std::vector<Packet *>::iterator PacketsI;
 static Packets g_packets;
 
 
-Packet *
-PacketFactory::create (void)
+PacketPtr
+Packet::create (void)
 {
 	if (g_packets.empty ()) {
-		return new Packet ();
+		return PacketPtr (new Packet ());
 	} else {
 		Packet *p = g_packets.back ();
 		g_packets.pop_back ();
 		p->reset ();
-		return p;
+		return PacketPtr (p);
 	}
 }
 
 void
-PacketFactory::recycle (Packet *packet)
+Packet::recycle (Packet *packet)
 {
 	if (g_packets.size () < 2000) {
 		// resurect the packet and store it.
@@ -70,14 +70,14 @@ PacketFactory::recycle (Packet *packet)
 	}
 }
 #else
-Packet *
-PacketFactory::create (void)
+PacketPtr
+Packet::create (void)
 {
-	return new Packet ();
+	return PacketPtr (new Packet ());
 }
 
 void
-PacketFactory::recycle (Packet *packet)
+Packet::recycle (Packet *packet)
 {
 	delete packet;
 }
@@ -106,7 +106,7 @@ Packet::unref (void) const
 {
 	m_count--;
 	if (m_count == 0) {
-		PacketFactory::recycle (const_cast<Packet*>(this));
+		Packet::recycle (const_cast<Packet*>(this));
 	}
 }
 void
@@ -116,18 +116,18 @@ Packet::reset (void)
 	m_tags->reset ();
 }
 
-Packet *
+PacketPtr
 Packet::copy (void) const
 {
 	return copy (0, get_size ());
 }
-Packet *
+PacketPtr
 Packet::copy (uint32_t start_off, uint32_t length) const
 {
 	assert (length <= get_size ());
 	assert (start_off < get_size ());
 	assert (start_off + length <= get_size ());
-	Packet *other = PacketFactory::create ();
+	PacketPtr other = Packet::create ();
 	other->m_tags->copy_from (*(this->m_tags));
 	Buffer *tmp = other->m_buffer;
 	tmp->add_at_start (length);
@@ -182,7 +182,7 @@ Packet::add (Chunk *chunk)
 	chunk->add_to (m_buffer);
 }
 void 
-Packet::add_at_end (Packet const*packet)
+Packet::add_at_end (ConstPacketPtr packet)
 {
 	Buffer *src = packet->m_buffer;
 	m_buffer->add_at_end (src->get_size ());
@@ -191,7 +191,7 @@ Packet::add_at_end (Packet const*packet)
 	dest_start.write (src->begin (), src->end ());
 }
 void 
-Packet::add_at_end (Packet const*packet, uint32_t start, uint32_t size)
+Packet::add_at_end (ConstPacketPtr packet, uint32_t start, uint32_t size)
 {
 	assert (packet->get_size () <= start + size);
 	Buffer *src = packet->m_buffer;

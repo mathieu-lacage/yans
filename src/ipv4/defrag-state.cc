@@ -29,12 +29,12 @@
 namespace yans {
 
 
-DefragFragment::DefragFragment (Packet *fragment, ChunkIpv4 *ip)
+DefragFragment::DefragFragment (PacketPtr fragment, ChunkIpv4 *ip)
 	: m_fragment (fragment),
 	  m_is_last (ip->is_last_fragment ()),
 	  m_offset (ip->get_fragment_offset ())
 {}
-Packet *
+PacketPtr 
 DefragFragment::get_fragment (void)
 {
 	return m_fragment;
@@ -67,13 +67,12 @@ DefragState::DefragState (ChunkIpv4 const *ip)
 DefragState::~DefragState ()
 {
 	for (FragmentsI i = m_fragments.begin (); i != m_fragments.end (); i++) {
-		(*i).get_fragment ()->unref ();
 	}
 	m_fragments.erase (m_fragments.begin (), m_fragments.end ());
 }
 
 void 
-DefragState::add (Packet *fragment, ChunkIpv4 *ip_frag)
+DefragState::add (PacketPtr fragment, ChunkIpv4 *ip_frag)
 {
 	assert (m_identification == ip_frag->get_identification ());
 	assert (m_source == ip_frag->get_source ());
@@ -82,12 +81,10 @@ DefragState::add (Packet *fragment, ChunkIpv4 *ip_frag)
 	
 	for (FragmentsI i = m_fragments.begin (); i != m_fragments.end (); i++) {
 		if ((*i).get_offset () > ip_frag->get_fragment_offset ()) {
-			fragment->ref ();
 			m_fragments.insert (i, DefragFragment (fragment, ip_frag));
 			return;
 		}
 	}
-	fragment->ref ();
 	m_fragments.push_back (DefragFragment (fragment, ip_frag));
 }
 bool 
@@ -113,12 +110,12 @@ DefragState::is_complete (void)
 	}
 	return complete;
 }
-Packet *
+PacketPtr 
 DefragState::get_complete (void)
 {
 	assert (is_complete ());
 
-	Packet *packet = PacketFactory::create ();
+	PacketPtr packet = Packet::create ();
 	for (FragmentsI i = m_fragments.begin (); i != m_fragments.end (); i++) {
 		packet->add_at_end ((*i).get_fragment ());
 	}

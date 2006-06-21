@@ -28,6 +28,7 @@
 #include <utility>
 
 #include "callback.h"
+#include "ref-ptr.h"
 
 namespace yans {
 
@@ -37,22 +38,17 @@ class Buffer;
 class Tag;
 class Tags;
 
-class PacketFactory {
-public:
-	static Packet *create (void);
-private:
-	friend class Packet;
-	static void recycle (Packet *packet);
-};
+typedef RefPtr<Packet> PacketPtr;
+typedef RefPtr<Packet const> ConstPacketPtr;
 
 class Packet {
 public:
 	typedef Callback<void,uint8_t *,uint32_t> PacketReadWriteCallback;
 
-	void ref (void) const;
-	void unref (void) const;
-	Packet *copy (void) const;
-	Packet *copy (uint32_t start, uint32_t length) const;
+	static PacketPtr create (void);
+
+	PacketPtr copy (void) const;
+	PacketPtr copy (uint32_t start, uint32_t length) const;
 
 	uint32_t get_size (void) const;
 
@@ -67,8 +63,8 @@ public:
 	void update_tag (Tag *tag);
 	
 	void add (Chunk *chunk);
-	void add_at_end (Packet const*packet);
-	void add_at_end (Packet const*packet, uint32_t offset, uint32_t size);
+	void add_at_end (ConstPacketPtr packet);
+	void add_at_end (ConstPacketPtr packet, uint32_t offset, uint32_t size);
 	void remove (Chunk *chunk);
 	void remove_at_end (uint32_t size);
 	void remove_at_start (uint32_t size);
@@ -77,8 +73,12 @@ public:
 	void read (PacketReadWriteCallback callback, uint32_t to_read);
 
  private:
-	friend class PacketFactory;
+	friend class RefPtr<Packet>;
+	friend class RefPtr<Packet const>;
+	static void recycle (Packet *packet);
 	void reset (void);
+	void ref (void) const;
+	void unref (void) const;
 	Packet ();
 	~Packet ();
 

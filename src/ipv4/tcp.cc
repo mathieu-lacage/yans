@@ -106,7 +106,7 @@ Tcp::allocate (Ipv4Address local_address, uint16_t local_port,
 
 
 void
-Tcp::send_reset (Packet *packet, ChunkTcp *tcp_chunk)
+Tcp::send_reset (PacketPtr packet, ChunkTcp *tcp_chunk)
 {
 	TagInIpv4 in_tag;
 	packet->remove_tag (&in_tag);
@@ -146,7 +146,7 @@ Tcp::send_reset (Packet *packet, ChunkTcp *tcp_chunk)
 
 
 void
-Tcp::receive (Packet *packet)
+Tcp::receive (PacketPtr packet)
 {
 	TagInIpv4 tag;
 	packet->peek_tag (&tag);

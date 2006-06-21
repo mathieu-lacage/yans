@@ -35,16 +35,14 @@ bench_tx (uint32_t n)
 	ChunkIpv4 ipv4;
 
 	for (uint32_t i = 0; i < n; i++) {
-		Packet *p = PacketFactory::create ();
+		PacketPtr p = Packet::create ();
 		p->add (&data);
 		p->add (&udp);
 		p->add (&ipv4);
-		Packet *o = p->copy ();
-		p->unref ();
+		PacketPtr o = p->copy ();
 		o->remove (&ipv4);
 		o->remove (&udp);
 		o->remove (&data);
-		o->unref ();
 	}
 }
 
@@ -56,11 +54,10 @@ bench_creation (uint32_t n)
 	ChunkIpv4 ipv4;
 
 	for (uint32_t i = 0; i < n; i++) {
-		Packet *p = PacketFactory::create ();
+		PacketPtr p = Packet::create ();
 		p->add (&data);
 		p->add (&udp);
 		p->add (&ipv4);
-		p->unref ();
 	}
 }
 

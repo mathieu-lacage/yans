@@ -25,10 +25,10 @@
 #include <stdint.h>
 #include <list>
 #include <utility>
+#include "packet.h"
 
 namespace yans {
 
-class Packet;
 
 class TcpBuffer {
 public:
@@ -44,13 +44,13 @@ public:
 	 * the copy internally, and return the number of
 	 * bytes copied.
 	 */
-	uint32_t add_at (Packet const *packet, uint32_t offset);
-	uint32_t add_at_back (Packet const *packet);
+	uint32_t add_at (ConstPacketPtr packet, uint32_t offset);
+	uint32_t add_at_back (ConstPacketPtr packet);
 
 	/* Returns 0 if no data could be found at the front
 	 * of the buffer.
 	 */
-	Packet *get_at_front (uint32_t size);
+	PacketPtr get_at_front (uint32_t size);
 
 
 	void remove_at_front (uint32_t size);
@@ -61,14 +61,14 @@ public:
 	bool is_empty (void);
 
 private:
-	typedef std::pair<Packet *, uint32_t> Piece;
+	typedef std::pair<PacketPtr , uint32_t> Piece;
 	typedef std::list<Piece> Pieces;
 	typedef std::list<Piece>::iterator PiecesI;
 
-	Packet *get_at (uint32_t offset, uint32_t size);
+	PacketPtr get_at (uint32_t offset, uint32_t size);
 	int32_t seq_sub (uint32_t a, uint32_t b);
-	void insert_piece_at_back (Packet *piece, uint32_t offset);
-	void insert_piece_at (PiecesI i, Packet *piece, uint32_t offset);
+	void insert_piece_at_back (PacketPtr piece, uint32_t offset);
+	void insert_piece_at (PiecesI i, PacketPtr piece, uint32_t offset);
 	void check_state (void);
 	
 	Pieces m_pieces;

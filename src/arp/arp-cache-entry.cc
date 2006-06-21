@@ -56,11 +56,9 @@ ArpCacheEntry::mark_dead (void)
 {
 	m_state = DEAD;
 	assert (m_waiting != 0);
-	m_waiting->unref ();
-	m_waiting = 0;
 	update_seen ();
 }
-Packet *
+PacketPtr 
 ArpCacheEntry::mark_alive (MacAddress mac_address) 
 {
 	assert (m_state == WAIT_REPLY);
@@ -68,31 +66,29 @@ ArpCacheEntry::mark_alive (MacAddress mac_address)
 	m_mac_address = mac_address;
 	m_state = ALIVE;
 	update_seen ();
-	Packet *waiting = m_waiting;
+	PacketPtr waiting = m_waiting;
 	m_waiting = 0;
 	return waiting;
 }
 
-Packet *
-ArpCacheEntry::update_wait_reply (Packet *waiting)
+PacketPtr 
+ArpCacheEntry::update_wait_reply (PacketPtr waiting)
 {
 	assert (m_state == WAIT_REPLY);
 	/* We are already waiting for an answer so
 	 * we dump the previously waiting packet and
 	 * replace it with this one.
 	 */
-	Packet *old = m_waiting;
-	waiting->ref ();
+	PacketPtr old = m_waiting;
 	m_waiting = waiting;
 	return old;
 }
 void 
-ArpCacheEntry::mark_wait_reply (Packet *waiting)
+ArpCacheEntry::mark_wait_reply (PacketPtr waiting)
 {
 	assert (m_state == ALIVE || m_state == DEAD);
 	assert (m_waiting == 0);
 	m_state = WAIT_REPLY;
-	waiting->ref ();
 	m_waiting = waiting;
 	update_seen ();
 }

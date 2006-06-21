@@ -95,14 +95,13 @@ MacSimple::set_rts_cts_threshold (uint32_t size)
 	m_rts_cts_threshold = size;
 }
 void 
-MacSimple::send (Packet *packet, MacAddress to)
+MacSimple::send (PacketPtr packet, MacAddress to)
 {
 	if (!m_phy->is_state_idle () ||
 	    m_current != 0) {
 		if (m_current == 0) {
 			m_current = packet;
 			m_current_to = to;
-			m_current->ref ();
 			m_rts_retry = 0;
 			m_data_retry = 0;
 			assert (!m_send_later_event.is_running ());
@@ -116,7 +115,6 @@ MacSimple::send (Packet *packet, MacAddress to)
 	}
 	m_current = packet;
 	m_current_to = to;
-	m_current->ref ();
 	m_rts_retry = 0;
 	m_data_retry = 0;
 	if (use_rts ()) {
@@ -128,10 +126,10 @@ MacSimple::send (Packet *packet, MacAddress to)
 	}
 }
 void 
-MacSimple::receive_ok (Packet const* p, double snr, uint8_t tx_mode, uint8_t stuff)
+MacSimple::receive_ok (ConstPacketPtr p, double snr, uint8_t tx_mode, uint8_t stuff)
 {
 	ChunkMac80211Hdr hdr;
-	Packet *packet = p->copy ();
+	PacketPtr packet = p->copy ();
 	packet->remove (&hdr);
 	if (hdr.is_rts () && 
 	    hdr.get_addr1 () == m_interface->get_mac_address ()) {
@@ -167,13 +165,11 @@ MacSimple::receive_ok (Packet const* p, double snr, uint8_t tx_mode, uint8_t stu
 		station->report_data_ok (snr, tx_mode, stuff);
 		assert (m_data_timeout_event.is_running ());
 		m_data_timeout_event.cancel ();
-		m_current->unref ();
 		m_current = 0;
 	}
-	packet->unref ();
 }
 void 
-MacSimple::receive_error (Packet const*packet, double snr)
+MacSimple::receive_error (ConstPacketPtr packet, double snr)
 {
 	TRACE ("error packet snr="<<snr);
 }
@@ -181,25 +177,23 @@ MacSimple::receive_error (Packet const*packet, double snr)
 void
 MacSimple::send_cts (uint8_t tx_mode, MacAddress to, uint8_t rts_snr)
 {
-	Packet *packet = PacketFactory::create ();
+	PacketPtr packet = Packet::create ();
 	ChunkMac80211Hdr cts;
 	cts.set_type (MAC_80211_CTL_CTS);
 	cts.set_addr1 (to);
 	packet->add (&cts);
 	m_phy->send_packet (packet, tx_mode, 0, rts_snr);
-	packet->unref ();
 }
 
 void
 MacSimple::send_ack (uint8_t tx_mode, MacAddress to, uint8_t data_snr)
 {
-	Packet *packet = PacketFactory::create ();
+	PacketPtr packet = Packet::create ();
 	ChunkMac80211Hdr ack;
 	ack.set_type (MAC_80211_CTL_ACK);
 	ack.set_addr1 (to);
 	packet->add (&ack);
 	m_phy->send_packet (packet, tx_mode, 0, data_snr);
-	packet->unref ();
 }
 
 
@@ -207,7 +201,7 @@ void
 MacSimple::send_rts (void)
 {
 	MacStation *station = get_station (m_current_to);
-	Packet *packet = PacketFactory::create ();
+	PacketPtr packet = Packet::create ();
 	ChunkMac80211Hdr rts;
 	rts.set_type (MAC_80211_CTL_RTS);
 	rts.set_addr1 (m_current_to);
@@ -218,21 +212,19 @@ MacSimple::send_rts (void)
 	m_rts_timeout_event = make_event (&MacSimple::retry_rts, this);
 	Simulator::insert_in_us (tx_duration + get_rts_timeout_us (), m_rts_timeout_event);
 	m_phy->send_packet (packet, station->get_rts_mode (), 0, 0);
-	packet->unref ();
 }
 
 void
 MacSimple::send_data (void)
 {
 	MacStation *station = get_station (m_current_to);
-	Packet *packet = m_current->copy ();
+	PacketPtr packet = m_current->copy ();
 	ChunkMac80211Hdr hdr;
 	hdr.set_type (MAC_80211_DATA);
 	hdr.set_addr1 (m_current_to);
 	hdr.set_addr2 (m_interface->get_mac_address ());
 	packet->add (&hdr);
 	if (m_current_to.is_broadcast ()) {
-		m_current->unref ();
 		m_current = 0;
 	} else {
 		uint64_t tx_duration = m_phy->calculate_tx_duration_us (packet->get_size (), 
@@ -242,7 +234,6 @@ MacSimple::send_data (void)
 					 m_data_timeout_event);
 	}
 	m_phy->send_packet (packet, station->get_data_mode (packet->get_size ()), 0, 0);
-	packet->unref ();
 }
 
 MacStation *
@@ -259,7 +250,6 @@ MacSimple::retry_data (void)
 	station->report_data_failed ();
 	if (m_data_retry > m_data_retry_max) {
 		assert (m_current != 0);
-		m_current->unref ();
 		m_current = 0;
 		TRACE ("stop data retry");
 		return;
@@ -276,7 +266,6 @@ MacSimple::retry_rts (void)
 	station->report_rts_failed ();
 	if (m_rts_retry > m_rts_retry_max) {
 		assert (m_current != 0);
-		m_current->unref ();
 		m_current = 0;
 		TRACE ("stop rts retry");
 		return;

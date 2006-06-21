@@ -24,18 +24,6 @@
 #include "simulator.h"
 #include "event.tcc"
 
-namespace {
-void
-forward_up (yans::CountPtrHolder<yans::Packet const> p, double rx_power, uint8_t tx_mode, uint8_t stuff,
-	    yans::PropagationModel *propagation)
-{
-	yans::Packet const*packet = p.remove ();
-	propagation->receive (packet, rx_power, tx_mode, stuff);
-	packet->unref ();
-}
-}
-
-
 namespace yans {
 
 Channel80211::Channel80211 ()
@@ -48,7 +36,7 @@ Channel80211::real_add (PropagationModel *model)
 	m_models.push_back (model);
 }
 void 
-Channel80211::real_send (Packet const *packet, double tx_power_dbm,
+Channel80211::real_send (ConstPacketPtr packet, double tx_power_dbm,
 			 uint8_t tx_mode, uint8_t stuff,
 			 PropagationModel const *caller) const
 {
@@ -58,8 +46,8 @@ Channel80211::real_send (Packet const *packet, double tx_power_dbm,
 		if (caller != (*i)) {
 			uint64_t delay_us = (*i)->get_delay_us (from_x, from_y, from_z);
 			double rx_power_w = (*i)->get_rx_power_w (tx_power_dbm, from_x, from_y, from_z);
-			Simulator::insert_in_us (delay_us, make_event (&forward_up, make_count_ptr_holder (packet),
-								       rx_power_w, tx_mode, stuff, *i));
+			Simulator::insert_in_us (delay_us, make_event (&PropagationModel::receive, *i,
+								       packet, rx_power_w, tx_mode, stuff));
 		}
 	}
 }

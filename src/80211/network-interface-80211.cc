@@ -74,7 +74,7 @@ NetworkInterface80211::register_trace (TraceContainer *container)
 	container->register_packet_logger ("80211-packet-rx", m_rx_logger);
 }
 void 
-NetworkInterface80211::forward_up_data (Packet *packet)
+NetworkInterface80211::forward_up_data (PacketPtr packet)
 {
 	m_rx_logger->log (packet);
 	MacNetworkInterface::forward_up (packet);
@@ -106,7 +106,7 @@ NetworkInterface80211Adhoc::set_ssid (Ssid ssid)
 	m_ssid = ssid;
 }
 void 
-NetworkInterface80211Adhoc::real_send (Packet *packet, MacAddress to)
+NetworkInterface80211Adhoc::real_send (PacketPtr packet, MacAddress to)
 {
 	m_high->enqueue (packet, to);
 }
@@ -138,7 +138,7 @@ NetworkInterface80211Nqsta::set_ssid (Ssid ssid)
 	m_ssid = ssid;
 }
 void 
-NetworkInterface80211Nqsta::real_send (Packet *packet, MacAddress to)
+NetworkInterface80211Nqsta::real_send (PacketPtr packet, MacAddress to)
 {
 	m_high->queue (packet, to);
 }
@@ -173,7 +173,7 @@ NetworkInterface80211Nqap::set_ssid (Ssid ssid)
 	m_ssid = ssid;
 }
 void 
-NetworkInterface80211Nqap::real_send (Packet *packet, MacAddress to)
+NetworkInterface80211Nqap::real_send (PacketPtr packet, MacAddress to)
 {
 	m_high->queue (packet, to);
 }

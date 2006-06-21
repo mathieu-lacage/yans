@@ -24,12 +24,12 @@
 
 #include <stdint.h>
 #include "ipv4-address.h"
+#include "packet.h"
 
 namespace yans {
 
 class Host;
 class Ipv4EndPoint;
-class Packet;
 class Chunk;
 
 class UdpSource  {
@@ -43,9 +43,9 @@ public:
 
 	void set_peer (Ipv4Address address, uint16_t port);
 
-	void send (Packet *packet);
+	void send (PacketPtr packet);
 private:
-	void receive (Packet *packet, Chunk *chunk);
+	void receive (PacketPtr packet, Chunk *chunk);
 	void unbind_now (void);
 	Host *m_host;
 	Ipv4EndPoint *m_end_point;

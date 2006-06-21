@@ -44,11 +44,11 @@
 #include <deque>
 #include <utility>
 #include "chunk-mac-80211-hdr.h"
+#include "packet.h"
 
 namespace yans {
 
 class MacParameters;
-class Packet;
 
 class MacQueue80211e {
 public:
@@ -58,8 +58,8 @@ public:
 	void set_max_size (uint32_t max_size);
 	void set_max_delay_us (uint64_t us);
 
-	void enqueue (Packet *packet, ChunkMac80211Hdr const &hdr);
-	Packet *dequeue (ChunkMac80211Hdr *hdr);
+	void enqueue (PacketPtr packet, ChunkMac80211Hdr const &hdr);
+	PacketPtr dequeue (ChunkMac80211Hdr *hdr);
 
 	void flush (void);
 
@@ -69,10 +69,10 @@ public:
 private:
 	void cleanup (void);
 	struct Item {
-		Item (Packet *packet, 
+		Item (PacketPtr packet, 
 		      ChunkMac80211Hdr const&hdr, 
 		      uint64_t tstamp);
-		Packet *packet;
+		PacketPtr packet;
 		ChunkMac80211Hdr hdr;
 		uint64_t tstamp;
 	};

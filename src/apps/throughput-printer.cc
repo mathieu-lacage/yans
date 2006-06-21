@@ -45,7 +45,7 @@ ThroughputPrinter::stop (void)
 	m_timeout_event.cancel ();
 }
 void 
-ThroughputPrinter::receive (Packet const*packet)
+ThroughputPrinter::receive (ConstPacketPtr packet)
 {
 	m_current += packet->get_size ();
 }

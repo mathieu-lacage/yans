@@ -264,6 +264,7 @@ YANS_INST_HDR := \
 	src/common/mac-address.h \
 	src/common/mac-address-factory.h \
 	src/common/mac-network-interface.h \
+	src/common/ref-ptr.h \
 	src/common/packet.h \
 	src/common/system-thread.h \
 	src/common/system-mutex.h \
@@ -319,7 +320,6 @@ YANS_HDR := \
 	src/common/chunk-utils.h \
 	src/common/seed-generator.h \
 	src/common/rng-mrg32k3a.h \
-	src/common/ref-count.tcc \
 	src/ipv4/chunk-icmp.h \
 	src/ipv4/defrag-state.h \
 	src/ipv4/tcp-connection-listener.h \

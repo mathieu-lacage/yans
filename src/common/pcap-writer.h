@@ -24,11 +24,11 @@
 
 #include "callback.h"
 #include <stdint.h>
+#include "packet.h"
 
 namespace yans {
 
 class DataWriter;
-class Packet;
 
 class PcapWriter {
 public:
@@ -39,7 +39,7 @@ public:
 
 	void write_header_ethernet (void);
 
-	void write_packet (Packet const*packet);
+	void write_packet (ConstPacketPtr packet);
 
 private:
 	void write_data (uint8_t *buffer, uint32_t size);

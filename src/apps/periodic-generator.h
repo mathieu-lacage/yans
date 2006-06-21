@@ -25,14 +25,13 @@
 #include <stdint.h>
 #include "callback.h"
 #include "event.h"
+#include "packet.h"
 
 namespace yans {
 
-class Packet;
-
 class PeriodicGenerator {
 public:
-	typedef Callback<void, Packet *> GeneratorCallback;
+	typedef Callback<void, PacketPtr> GeneratorCallback;
 
 	PeriodicGenerator ();
 	~PeriodicGenerator ();

@@ -38,7 +38,7 @@ TcpConnectionListener::~TcpConnectionListener ()
 {}
 
 void 
-TcpConnectionListener::receive (Packet *packet, Chunk *chunk)
+TcpConnectionListener::receive (PacketPtr packet, Chunk *chunk)
 {
 	TagInIpv4 tag;
 	packet->peek_tag (&tag);

@@ -120,10 +120,9 @@ ArpIpv4NetworkInterface::send_arp_request (Ipv4Address to)
 	arp.set_request (m_interface->get_mac_address (),
 			 get_address (),
 			 to);
-	Packet *packet = PacketFactory::create ();
+	PacketPtr packet = Packet::create ();
 	packet->add (&arp);
 	m_llc->send_arp (packet, MacAddress::get_broadcast ());
-	packet->unref ();
 }
 
 void
@@ -133,15 +132,14 @@ ArpIpv4NetworkInterface::send_arp_reply (Ipv4Address to_ip, MacAddress to_mac)
 	arp.set_reply (m_interface->get_mac_address (),
 		       get_address (),
 		       to_mac, to_ip);
-	Packet *packet = PacketFactory::create ();
+	PacketPtr packet = Packet::create ();
 	packet->add (&arp);
 	m_llc->send_arp (packet, to_mac);
-	packet->unref ();
 }
 
 
 void 
-ArpIpv4NetworkInterface::receive_arp (Packet *packet)
+ArpIpv4NetworkInterface::receive_arp (PacketPtr packet)
 {
 	ChunkArp arp;
 	packet->remove (&arp);
@@ -161,9 +159,8 @@ ArpIpv4NetworkInterface::receive_arp (Packet *packet)
 				TRACE ("got reply from " << arp.get_source_ipv4_address ()
 				       << " for waiting entry -- flush");
 				MacAddress from_mac = arp.get_source_hardware_address ();
-				Packet *waiting = entry->mark_alive (from_mac);
+				PacketPtr waiting = entry->mark_alive (from_mac);
 				m_llc->send_ipv4 (waiting, from_mac);
-				waiting->unref ();
 			} else {
 				// ignore this reply which might well be an attempt 
 				// at poisening my arp cache.
@@ -181,7 +178,7 @@ ArpIpv4NetworkInterface::receive_arp (Packet *packet)
 
 
 void 
-ArpIpv4NetworkInterface::real_send (Packet *packet, Ipv4Address to)
+ArpIpv4NetworkInterface::real_send (PacketPtr packet, Ipv4Address to)
 {
 	if (m_arp_cache.find (to) != m_arp_cache.end ()) {
 		ArpCacheEntry *entry = m_arp_cache[to];
@@ -209,9 +206,8 @@ ArpIpv4NetworkInterface::real_send (Packet *packet, Ipv4Address to)
 				m_llc->send_ipv4 (packet, entry->get_mac_address ());
 			} else if (entry->is_wait_reply ()) {
 				TRACE ("wait reply for " << to << " valid -- drop previous");
-				Packet *old = entry->update_wait_reply (packet);
+				PacketPtr old = entry->update_wait_reply (packet);
 				m_drop->log (old);
-				old->unref ();
 			}
 		}
 	} else {

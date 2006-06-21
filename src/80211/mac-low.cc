@@ -265,7 +265,7 @@ MacLow::register_nav_listener (MacLowNavListener *listener)
 
 
 void 
-MacLow::start_transmission (Packet *packet, 
+MacLow::start_transmission (PacketPtr packet, 
 			    ChunkMac80211Hdr const*hdr, 
 			    MacLowTransmissionParameters parameters,
 			    MacLowTransmissionListener *listener)
@@ -285,11 +285,9 @@ MacLow::start_transmission (Packet *packet,
 	 * one of the Edca of the QAP.
 	 */
 	if (m_current_packet != 0) {
-		m_current_packet->unref ();
 		m_current_packet = 0;
 	}
 	m_current_packet = packet;
-	m_current_packet->ref ();
 	m_current_hdr = *hdr;
 	cancel_all_events ();
 	m_listener = listener;
@@ -310,7 +308,7 @@ MacLow::start_transmission (Packet *packet,
 }
 
 void
-MacLow::receive_error (Packet const*packet, double rx_snr)
+MacLow::receive_error (ConstPacketPtr packet, double rx_snr)
 {
 	TRACE ("rx failed ");
 	m_drop_error->log (packet);
@@ -323,9 +321,9 @@ MacLow::receive_error (Packet const*packet, double rx_snr)
 }
 
 void 
-MacLow::receive_ok (Packet const*p, double rx_snr, uint8_t tx_mode, uint8_t stuff)
+MacLow::receive_ok (ConstPacketPtr p, double rx_snr, uint8_t tx_mode, uint8_t stuff)
 {
-	Packet *packet = p->copy ();
+	PacketPtr packet = p->copy ();
 	/* A packet is received from the PHY.
 	 * When we have handled this packet,
 	 * we handle any packet present in the
@@ -430,7 +428,6 @@ MacLow::receive_ok (Packet const*p, double rx_snr, uint8_t tx_mode, uint8_t stuf
 	} else {
 		//TRACE_VERBOSE ("rx not-for-me from %d", getSource (packet));
 	}
-	packet->unref ();
 	return;
 }
 
@@ -596,7 +593,7 @@ MacLow::notify_nav (uint64_t now_time_us, ChunkMac80211Hdr const *hdr)
 }
 
 void
-MacLow::forward_down (Packet const*packet, ChunkMac80211Hdr const* hdr, uint8_t tx_mode, uint8_t stuff)
+MacLow::forward_down (ConstPacketPtr packet, ChunkMac80211Hdr const* hdr, uint8_t tx_mode, uint8_t stuff)
 {
 	m_phy->send_packet (packet, tx_mode, 0, stuff);
 	/* Note that it is really important to notify the NAV 
@@ -611,7 +608,6 @@ MacLow::cts_timeout (void)
 {
 	MacStation *station = get_station (m_current_hdr.get_addr1 ());
 	station->report_rts_failed ();
-	m_current_packet->unref ();
 	m_current_packet = 0;
 	m_listener->missed_cts ();
 	m_listener = 0;
@@ -687,13 +683,12 @@ MacLow::send_rts_for_packet (void)
 	m_cts_timeout_event = make_event (&MacLow::cts_timeout, this);
 	Simulator::insert_in_s (timer_delay_us, m_cts_timeout_event);
 
-	Packet *packet = PacketFactory::create ();
+	PacketPtr packet = Packet::create ();
 	packet->add (&rts);
 	ChunkMac80211Fcs fcs;
 	packet->add (&fcs);
 
 	forward_down (packet, &rts, rts_tx_mode, 0);
-	packet->unref ();
 }
 
 void
@@ -765,7 +760,6 @@ MacLow::send_data_packet (void)
 	m_current_packet->add (&fcs);
 
 	forward_down (m_current_packet, &m_current_hdr, data_tx_mode, 0);
-	m_current_packet->unref ();
 	m_current_packet = 0;
 }
 
@@ -801,13 +795,12 @@ MacLow::send_cts_after_rts (MacAddress source, uint64_t duration_us, uint8_t tx_
 	duration_us -= get_sifs_us ();
 	cts.set_duration_us (duration_us);
 
-	Packet *packet = PacketFactory::create ();
+	PacketPtr packet = Packet::create ();
 	packet->add (&cts);
 	ChunkMac80211Fcs fcs;
 	packet->add (&fcs);
 
 	forward_down (packet, &cts, tx_mode, stuff);
-	packet->unref ();
 }
 
 void
@@ -833,7 +826,6 @@ MacLow::send_data_after_cts (MacAddress source, uint64_t duration_us, uint8_t tx
 	m_current_packet->add (&fcs);
 
 	forward_down (m_current_packet, &m_current_hdr, data_tx_mode, 0);
-	m_current_packet->unref ();
 	m_current_packet = 0;
 }
 
@@ -866,13 +858,12 @@ MacLow::send_ack_after_data (MacAddress source, uint64_t duration_us, uint8_t tx
 	duration_us -= get_sifs_us ();
 	ack.set_duration_us (duration_us);
 
-	Packet *packet = PacketFactory::create ();
+	PacketPtr packet = Packet::create ();
 	packet->add (&ack);
 	ChunkMac80211Fcs fcs;
 	packet->add (&fcs);
 
 	forward_down (packet, &ack, tx_mode, stuff);
-	packet->unref ();
 }
 
 

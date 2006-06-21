@@ -26,11 +26,11 @@
 #include "mac-address.h"
 #include "ipv4-address.h"
 #include "ssid.h"
+#include "packet.h"
 #include <string>
 
 namespace yans {
 
-class Packet;
 class BaseChannel80211;
 class Phy80211;
 class PropagationModel;
@@ -63,11 +63,11 @@ public:
 
 protected:
 	NetworkInterface80211 (MacAddress address);
-	void forward_up_data (Packet *packet);
+	void forward_up_data (PacketPtr packet);
 private:
 	virtual void notify_up (void);
 	virtual void notify_down (void);
-	virtual void real_send (Packet *packet, MacAddress to) = 0;
+	virtual void real_send (PacketPtr packet, MacAddress to) = 0;
 	void associated (void);
 
 	friend class NetworkInterface80211Factory;
@@ -91,7 +91,7 @@ public:
 	virtual Ssid get_ssid (void) const;
 	virtual void set_ssid (Ssid ssid);
 private:
-	virtual void real_send (Packet *packet, MacAddress to);
+	virtual void real_send (PacketPtr packet, MacAddress to);
 	friend class NetworkInterface80211Factory;
 	Ssid m_ssid;
 	DcaTxop *m_dca;
@@ -108,7 +108,7 @@ public:
 	virtual void set_ssid (Ssid ssid);
 private:
 	void associated (void);
-	virtual void real_send (Packet *packet, MacAddress to);
+	virtual void real_send (PacketPtr packet, MacAddress to);
 	friend class NetworkInterface80211Factory;
 	Ssid m_ssid;
 	DcaTxop *m_dca;
@@ -125,7 +125,7 @@ public:
 	virtual void set_ssid (Ssid ssid);
 	
 private:
-	virtual void real_send (Packet *packet, MacAddress to);
+	virtual void real_send (PacketPtr packet, MacAddress to);
 	friend class NetworkInterface80211Factory;
 	Ssid m_ssid;
 	DcaTxop *m_dca;

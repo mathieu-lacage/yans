@@ -95,7 +95,7 @@ Ipv4::set_protocol (uint8_t protocol)
 }
 
 void 
-Ipv4::send (Packet *packet)
+Ipv4::send (PacketPtr packet)
 {
 	ChunkIpv4 ip_header;
 
@@ -136,7 +136,7 @@ Ipv4::lookup_protocol (uint8_t protocol)
 }
 
 void
-Ipv4::send_real_out (Packet *packet, ChunkIpv4 *ip, Route const *route)
+Ipv4::send_real_out (PacketPtr packet, ChunkIpv4 *ip, Route const *route)
 {
 	packet->add (ip);
 	Ipv4NetworkInterface *out_interface = route->get_interface ();
@@ -150,7 +150,7 @@ Ipv4::send_real_out (Packet *packet, ChunkIpv4 *ip, Route const *route)
 }
 
 bool
-Ipv4::send_out (Packet *packet, ChunkIpv4 *ip, Route const *route)
+Ipv4::send_out (PacketPtr packet, ChunkIpv4 *ip, Route const *route)
 {
 	Ipv4NetworkInterface *out_interface = route->get_interface ();
 
@@ -168,7 +168,7 @@ Ipv4::send_out (Packet *packet, ChunkIpv4 *ip, Route const *route)
 		assert (n_fragments > 1);
 		ChunkIpv4 ip_fragment = *ip;
 		for (uint16_t i = 0; i < n_fragments - 1; i++) {
-			Packet *fragment = packet->copy (current_offset - ip->get_fragment_offset (),
+			PacketPtr fragment = packet->copy (current_offset - ip->get_fragment_offset (),
 							 fragment_length);
 
 			ip_fragment.set_more_fragments ();
@@ -176,12 +176,11 @@ Ipv4::send_out (Packet *packet, ChunkIpv4 *ip, Route const *route)
 			ip_fragment.set_payload_size (fragment_length);
 
 			send_real_out (fragment, &ip_fragment, route);
-			fragment->unref ();
 			current_offset += fragment_length;
 		}
 
 		/* generate the last fragment */
-		Packet *last_fragment = packet->copy (current_offset - ip->get_fragment_offset (),
+		PacketPtr last_fragment = packet->copy (current_offset - ip->get_fragment_offset (),
 						      last_fragment_length);
 		ip_fragment = *ip;
 		if (!ip->is_last_fragment ()) {
@@ -197,7 +196,6 @@ Ipv4::send_out (Packet *packet, ChunkIpv4 *ip, Route const *route)
 		ip_fragment.set_payload_size (last_fragment_length);
 
 		send_real_out (last_fragment, &ip_fragment, route);
-		last_fragment->unref ();
 	} else {
 		send_real_out (packet, ip, route);
 	}
@@ -205,9 +203,9 @@ Ipv4::send_out (Packet *packet, ChunkIpv4 *ip, Route const *route)
 }
 
 void
-Ipv4::send_icmp_time_exceeded_ttl (Packet *original, ChunkIpv4 *ip, Ipv4NetworkInterface *interface)
+Ipv4::send_icmp_time_exceeded_ttl (PacketPtr original, ChunkIpv4 *ip, Ipv4NetworkInterface *interface)
 {
-	Packet *packet = original->copy ();
+	PacketPtr packet = original->copy ();
 	packet->add (ip);
 	packet->remove_at_end (packet->get_size ()- (ip->get_payload_size () + 8));
 	
@@ -227,18 +225,16 @@ Ipv4::send_icmp_time_exceeded_ttl (Packet *original, ChunkIpv4 *ip, Ipv4NetworkI
 	Route *route = m_host->get_routing_table ()->lookup (ip_real.get_destination ());
 	if (route == 0) {
 		TRACE ("cannot send back icmp message to " << ip_real.get_destination ());
-		packet->unref ();
 		return;
 	}
 	TRACE ("send back icmp ttl exceeded to " << ip_real.get_destination ());
 	m_identification ++;
 
 	send_out (packet, &ip_real, route);
-	packet->unref ();
 }
 
 bool
-Ipv4::forwarding (Packet *packet, ChunkIpv4 *ip_header, Ipv4NetworkInterface *interface)
+Ipv4::forwarding (PacketPtr packet, ChunkIpv4 *ip_header, Ipv4NetworkInterface *interface)
 {
 	Ipv4NetworkInterfaces const * interfaces = m_host->get_interfaces ();
 	for (Ipv4NetworkInterfacesCI i = interfaces->begin ();
@@ -276,8 +272,8 @@ Ipv4::forwarding (Packet *packet, ChunkIpv4 *ip_header, Ipv4NetworkInterface *in
 	return true;
 }
 
-Packet *
-Ipv4::re_assemble (Packet *fragment, ChunkIpv4 *ip)
+PacketPtr 
+Ipv4::re_assemble (PacketPtr fragment, ChunkIpv4 *ip)
 {
 	DefragState *state = m_defrag_states->lookup (ip);
 	if (state == 0) {
@@ -288,7 +284,7 @@ Ipv4::re_assemble (Packet *fragment, ChunkIpv4 *ip)
 	}
 	state->add (fragment, ip);
 	if (state->is_complete ()) {
-		Packet *completed = state->get_complete ();
+		PacketPtr completed = state->get_complete ();
 		m_defrag_states->remove (state);
 		delete state;
 		return completed;
@@ -297,7 +293,7 @@ Ipv4::re_assemble (Packet *fragment, ChunkIpv4 *ip)
 }
 
 void
-Ipv4::receive_packet (Packet *packet, ChunkIpv4 *ip, Ipv4NetworkInterface *interface)
+Ipv4::receive_packet (PacketPtr packet, ChunkIpv4 *ip, Ipv4NetworkInterface *interface)
 {
 	/* receive the packet. */
 	TagInIpv4 tag;
@@ -311,7 +307,7 @@ Ipv4::receive_packet (Packet *packet, ChunkIpv4 *ip, Ipv4NetworkInterface *inter
 }
 
 void 
-Ipv4::receive (Packet *packet, Ipv4NetworkInterface *interface)
+Ipv4::receive (PacketPtr packet, Ipv4NetworkInterface *interface)
 {
 	m_recv_logger->log (packet);
 	ChunkIpv4 ip_header;
@@ -326,14 +322,13 @@ Ipv4::receive (Packet *packet, Ipv4NetworkInterface *interface)
 	}
 	if (!ip_header.is_last_fragment () ||
 	    ip_header.get_fragment_offset () != 0) {
-		Packet *new_packet = re_assemble (packet, &ip_header);
+		PacketPtr new_packet = re_assemble (packet, &ip_header);
 		if (new_packet == 0) {
 			TRACE ("reassemble fragment not finished.");
 			return;
 		}
 		TRACE ("reassemble fragment finished.");
 		receive_packet (new_packet, &ip_header, interface);
-		new_packet->unref ();
 		return;
 	}
 
@@ -342,7 +337,7 @@ Ipv4::receive (Packet *packet, Ipv4NetworkInterface *interface)
 
 
 void 
-Ipv4::receive_icmp (Packet *packet)
+Ipv4::receive_icmp (PacketPtr packet)
 {}
 
 }; // namespace yans

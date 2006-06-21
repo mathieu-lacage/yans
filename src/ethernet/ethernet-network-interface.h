@@ -24,6 +24,7 @@
 
 #include "mac-network-interface.h"
 #include "mac-address.h"
+#include "packet.h"
 
 namespace yans {
 
@@ -39,14 +40,14 @@ public:
 
 
 	void connect_to (Cable *cable);
-	void recv (Packet *packet);
+	void recv (PacketPtr packet);
 
 	void register_trace (TraceContainer *container);
 
  private:
 	virtual void notify_up (void);
 	virtual void notify_down (void);
-	virtual void real_send (Packet *packet, MacAddress to);
+	virtual void real_send (PacketPtr packet, MacAddress to);
 
 	Cable *m_cable;
 	PacketLogger *m_send_logger;

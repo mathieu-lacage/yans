@@ -42,7 +42,7 @@ TrafficAnalyser::~TrafficAnalyser ()
 
 
 void 
-TrafficAnalyser::receive (Packet *packet)
+TrafficAnalyser::receive (PacketPtr packet)
 {
 	m_data->add_term (packet->get_size ());
 	uint64_t now_us = Simulator::now_us ();

@@ -225,7 +225,7 @@ DcaTxop::set_max_queue_delay_us (uint64_t us)
 }
 
 void 
-DcaTxop::queue (Packet *packet, ChunkMac80211Hdr const &hdr)
+DcaTxop::queue (PacketPtr packet, ChunkMac80211Hdr const &hdr)
 {
 	m_queue->enqueue (packet, hdr);
 	m_dcf->request_access ();
@@ -315,13 +315,13 @@ DcaTxop::get_next_fragment_size (void)
 	}
 }
 
-Packet *
+PacketPtr 
 DcaTxop::get_fragment_packet (ChunkMac80211Hdr *hdr)
 {
 	*hdr = m_current_hdr;
 	hdr->set_fragment_number (m_fragment_number);
 	uint32_t start_offset = m_fragment_number * get_fragment_size ();
-	Packet *fragment;
+	PacketPtr fragment;
 	if (is_last_fragment ()) {
 		hdr->set_no_more_fragments ();
 		fragment = m_current_packet->copy (start_offset, get_last_fragment_size ());
@@ -386,7 +386,6 @@ DcaTxop::access_granted_now (void)
 					    &m_current_hdr,
 					    params,
 					    m_transmission_listener);
-		m_current_packet->unref ();
 		m_current_packet = 0;
 		m_dcf->notify_access_ongoing_ok ();
 		m_dcf->notify_access_finished ();
@@ -397,7 +396,7 @@ DcaTxop::access_granted_now (void)
 		if (need_fragmentation ()) {
 			params.disable_rts ();
 			ChunkMac80211Hdr hdr;
-			Packet *fragment = get_fragment_packet (&hdr);
+			PacketPtr fragment = get_fragment_packet (&hdr);
 			if (is_last_fragment ()) {
 				TRACE ("fragmenting last fragment size="<<fragment->get_size ());
 				params.disable_next_data ();
@@ -407,7 +406,6 @@ DcaTxop::access_granted_now (void)
 			}
 			low ()->start_transmission (fragment, &hdr, params, 
 						    m_transmission_listener);
-			fragment->unref ();
 		} else {
 			if (need_rts ()) {
 				params.enable_rts ();
@@ -421,10 +419,9 @@ DcaTxop::access_granted_now (void)
 			// retransmit the packet: the MacLow modifies the input
 			// Packet so, we would retransmit a modified packet
 			// if we were not to make a copy.
-			Packet *copy = m_current_packet->copy ();
+			PacketPtr copy = m_current_packet->copy ();
 			low ()->start_transmission (copy, &m_current_hdr,
 						    params, m_transmission_listener);
-			copy->unref ();
 		}
 	}
 }
@@ -445,7 +442,6 @@ DcaTxop::missed_cts (void)
 		// to reset the dcf.
 		m_dcf->notify_access_ongoing_error_but_ok ();
 		m_dcf->notify_access_finished ();
-		m_current_packet->unref ();
 		m_current_packet = 0;
 	} else {
 		m_dcf->notify_access_ongoing_error ();
@@ -464,7 +460,6 @@ DcaTxop::got_ack (double snr, uint8_t txMode)
 		/* we are not fragmenting or we are done fragmenting
 		 * so we can get rid of that packet now.
 		 */
-		m_current_packet->unref ();
 		m_current_packet = 0;
 		m_dcf->notify_access_ongoing_ok ();
 		m_dcf->notify_access_finished ();
@@ -481,7 +476,6 @@ DcaTxop::missed_ack (void)
 		// to reset the dcf.		
 		m_dcf->notify_access_ongoing_error_but_ok ();
 		m_dcf->notify_access_finished ();
-		m_current_packet->unref ();
 		m_current_packet = 0;
 	} else {
 		// XXX
@@ -498,7 +492,7 @@ DcaTxop::start_next (void)
 	/* this callback is used only for fragments. */
 	next_fragment ();
 	ChunkMac80211Hdr hdr;
-	Packet *fragment = get_fragment_packet (&hdr);
+	PacketPtr fragment = get_fragment_packet (&hdr);
 	MacLowTransmissionParameters params;
 	params.enable_ack ();
 	params.disable_rts ();
@@ -509,7 +503,6 @@ DcaTxop::start_next (void)
 		params.enable_next_data (get_next_fragment_size ());
 	}
 	low ()->start_transmission (fragment, &hdr, params, m_transmission_listener);
-	fragment->unref ();
 }
 
 }; // namespace yans

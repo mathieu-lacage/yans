@@ -27,7 +27,7 @@ using namespace std;
 
 namespace yans {
 
-MacQueue80211e::Item::Item (Packet *packet, 
+MacQueue80211e::Item::Item (PacketPtr packet, 
 			    ChunkMac80211Hdr const &hdr, 
 			    uint64_t tstamp)
 	: packet (packet), hdr (hdr), tstamp (tstamp)
@@ -53,14 +53,13 @@ MacQueue80211e::set_max_delay_us (uint64_t us)
 	m_max_delay_us = us;
 }
 void 
-MacQueue80211e::enqueue (Packet *packet, ChunkMac80211Hdr const &hdr)
+MacQueue80211e::enqueue (PacketPtr packet, ChunkMac80211Hdr const &hdr)
 {
 	cleanup ();
 	if (m_size == m_max_size) {
 		return;
 	}
 	uint64_t now = Simulator::now_us ();
-	packet->ref ();
 	m_queue.push_back (Item (packet, hdr, now));
 	m_size++;
 }
@@ -79,14 +78,13 @@ MacQueue80211e::cleanup (void)
 			end = i;
 			break;
 		}
-		i->packet->unref();
 		n++;
 	}
 	m_size -= n;
 	m_queue.erase (m_queue.begin (), end);
 }
 
-Packet *
+PacketPtr 
 MacQueue80211e::dequeue (ChunkMac80211Hdr *hdr)
 {
 	cleanup ();
@@ -118,9 +116,6 @@ MacQueue80211e::get_size (void)
 void
 MacQueue80211e::flush (void)
 {
-	for (PacketQueueI tmp = m_queue.begin (); tmp != m_queue.end (); tmp++) {
-		tmp->packet->unref ();
-	}
 	m_queue.erase (m_queue.begin (), m_queue.end ());
 	m_size = 0;
 }

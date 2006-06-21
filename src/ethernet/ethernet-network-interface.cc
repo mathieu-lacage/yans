@@ -66,7 +66,7 @@ EthernetNetworkInterface::connect_to (Cable *cable)
 	m_cable = cable;
 }
 void 
-EthernetNetworkInterface::recv (Packet *packet)
+EthernetNetworkInterface::recv (PacketPtr packet)
 {
 	TRACE ("rx init size="<<packet->get_size ());
 	m_recv_logger->log (packet);
@@ -99,7 +99,7 @@ EthernetNetworkInterface::notify_down (void)
 {}
 
 void 
-EthernetNetworkInterface::real_send (Packet *packet, MacAddress dest)
+EthernetNetworkInterface::real_send (PacketPtr packet, MacAddress dest)
 {
 	TRACE ("tx init size="<<packet->get_size ());
 	ChunkMacEth eth;

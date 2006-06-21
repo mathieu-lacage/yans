@@ -23,7 +23,7 @@
 
 #include <stdint.h>
 #include "callback.h"
-#include "count-ptr-holder.tcc"
+#include "packet.h"
 
 namespace yans {
 /**
@@ -43,11 +43,10 @@ namespace yans {
 
 class Position;
 class BaseChannel80211;
-class Packet;
 
 class PropagationModel {
 public:
-	typedef Callback<void,Packet const*, double, uint8_t, uint8_t> RxCallback;
+	typedef Callback<void,ConstPacketPtr, double, uint8_t, uint8_t> RxCallback;
 	PropagationModel ();
 	~PropagationModel ();
 
@@ -62,8 +61,8 @@ public:
 
 
 	/* tx power unit: dBm */
-	void send (Packet const*packet, double tx_power_dbm, uint8_t tx_mode, uint8_t stuff) const;
-	void receive (Packet const*packet, double rx_power_w,
+	void send (ConstPacketPtr packet, double tx_power_dbm, uint8_t tx_mode, uint8_t stuff) const;
+	void receive (ConstPacketPtr packet, double rx_power_w,
 		      uint8_t tx_mode, uint8_t stuff);
 
 	/* unit: dBm */
@@ -79,7 +78,6 @@ private:
 	double db_to_w (double db) const;
 	double get_lambda (void) const;
 	double distance (double from_x, double from_y, double from_z) const;
-	void forward_up (CountPtrHolder<Packet const> packet, double rx_power, uint8_t tx_mode, uint8_t stuff);
 	double get_rx_power_w (double tx_power_dbm, double distance) const;
 
 	RxCallback m_rx_callback;

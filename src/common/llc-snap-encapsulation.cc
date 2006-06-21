@@ -49,7 +49,7 @@ LlcSnapEncapsulation::set_mac_interface (MacNetworkInterface *interface)
 	m_interface = interface;
 }
 void 
-LlcSnapEncapsulation::send_ipv4 (Packet *packet, MacAddress to)
+LlcSnapEncapsulation::send_ipv4 (PacketPtr packet, MacAddress to)
 {
 	ChunkLlcSnap llc;
 	llc.set_type (ChunkLlcSnap::TYPE_IPV4);
@@ -57,7 +57,7 @@ LlcSnapEncapsulation::send_ipv4 (Packet *packet, MacAddress to)
 	m_interface->send (packet, to);
 }
 void 
-LlcSnapEncapsulation::send_arp (Packet *packet, MacAddress to)
+LlcSnapEncapsulation::send_arp (PacketPtr packet, MacAddress to)
 {
 	ChunkLlcSnap llc;
 	llc.set_type (ChunkLlcSnap::TYPE_ARP);
@@ -66,7 +66,7 @@ LlcSnapEncapsulation::send_arp (Packet *packet, MacAddress to)
 }
 
 void
-LlcSnapEncapsulation::receive (Packet *packet, MacNetworkInterface *interface)
+LlcSnapEncapsulation::receive (PacketPtr packet, MacNetworkInterface *interface)
 {
 	assert (interface == m_interface);
 	ChunkLlcSnap llc;

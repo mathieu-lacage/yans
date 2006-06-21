@@ -33,7 +33,7 @@ LoopbackIpv4::real_get_mtu (void) const
 	return 16436;
 }
 void 
-LoopbackIpv4::real_send (Packet *packet, Ipv4Address to)
+LoopbackIpv4::real_send (PacketPtr packet, Ipv4Address to)
 {
 	forward_up (packet);
 }

@@ -47,35 +47,30 @@ public:
 	}
 	~OriginatorRxStatus () {
 		for (FragmentsCI i = m_fragments.begin (); i != m_fragments.end (); i++) {
-			(*i)->unref ();
 		}
 		m_fragments.erase (m_fragments.begin (), m_fragments.end ());
 	}
 	bool is_de_fragmenting (void) {
 		return m_defragmenting;
 	}
-	void accumulate_first_fragment (Packet const*packet) {
+	void accumulate_first_fragment (ConstPacketPtr packet) {
 		assert (!m_defragmenting);
 		m_defragmenting = true;
-		packet->ref ();
 		m_fragments.push_back (packet);
 	}
-	Packet *accumulate_last_fragment (Packet const *packet) {
+	PacketPtr accumulate_last_fragment (ConstPacketPtr packet) {
 		assert (m_defragmenting);
-		packet->ref ();
 		m_fragments.push_back (packet);
 		m_defragmenting = false;
-		Packet *full = PacketFactory::create ();
+		PacketPtr full = Packet::create ();
 		for (FragmentsCI i = m_fragments.begin (); i != m_fragments.end (); i++) {
 			full->add_at_end (*i);
-			(*i)->unref ();
 		}
 		m_fragments.erase (m_fragments.begin (), m_fragments.end ());
 		return full;
 	}
-	void accumulate_fragment (Packet const *packet) {
+	void accumulate_fragment (ConstPacketPtr packet) {
 		assert (m_defragmenting);
-		packet->ref ();
 		m_fragments.push_back (packet);
 	}
 	bool is_next_fragment (uint16_t sequence_control) {
@@ -94,8 +89,8 @@ public:
 	}
 
 private:
-	typedef std::list<Packet const*> Fragments;
-	typedef std::list<Packet const*>::const_iterator FragmentsCI;
+	typedef std::list<ConstPacketPtr> Fragments;
+	typedef std::list<ConstPacketPtr>::const_iterator FragmentsCI;
 
 	bool m_defragmenting;
 	uint16_t m_last_sequence_control;
@@ -183,8 +178,8 @@ MacRxMiddle::is_duplicate (ChunkMac80211Hdr const*hdr,
 	return false;
 }
 
-Packet *
-MacRxMiddle::handle_fragments (Packet *packet, ChunkMac80211Hdr const*hdr,
+PacketPtr 
+MacRxMiddle::handle_fragments (PacketPtr packet, ChunkMac80211Hdr const*hdr,
 			       OriginatorRxStatus *originator)
 {
 	if (originator->is_de_fragmenting ()) {
@@ -227,14 +222,13 @@ MacRxMiddle::handle_fragments (Packet *packet, ChunkMac80211Hdr const*hdr,
 			originator->set_sequence_control (hdr->get_sequence_control ());
 			return 0;
 		} else {
-			packet->ref ();
 			return packet;
 		}
 	}
 }
 
 void
-MacRxMiddle::receive (Packet *packet, ChunkMac80211Hdr const *hdr)
+MacRxMiddle::receive (PacketPtr packet, ChunkMac80211Hdr const *hdr)
 {
 	OriginatorRxStatus *originator = lookup (hdr);
 	if (hdr->is_data ()) {
@@ -247,7 +241,7 @@ MacRxMiddle::receive (Packet *packet, ChunkMac80211Hdr const *hdr)
 			       ", frag="<<hdr->get_fragment_number ());
 			return;
 		}
-		Packet *agregate = handle_fragments (packet, hdr, originator);
+		PacketPtr agregate = handle_fragments (packet, hdr, originator);
 		if (agregate == 0) {
 			return;
 		}
@@ -256,7 +250,6 @@ MacRxMiddle::receive (Packet *packet, ChunkMac80211Hdr const *hdr)
 		       ", frag="<<hdr->get_fragment_number ());
 		originator->set_sequence_control (hdr->get_sequence_control ());
 		m_callback (agregate, hdr);
-		agregate->unref ();
 	} else {
 		TRACE ("forwarding "<<hdr->get_type_string ()<<
 		       ", seq="<<hdr->get_sequence_number ()<<

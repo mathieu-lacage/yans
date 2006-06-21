@@ -48,7 +48,7 @@ MacHighNqap::set_supported_rates (SupportedRates rates)
 	m_rates = rates;
 }
 void 
-MacHighNqap::queue (Packet *packet, MacAddress to)
+MacHighNqap::queue (PacketPtr packet, MacAddress to)
 {
 	
 }
@@ -57,7 +57,7 @@ void
 MacHighNqap::ack_received (ChunkMac80211Hdr const &hdr)
 {}
 void 
-MacHighNqap::receive (Packet *packet, ChunkMac80211Hdr const *hdr)
+MacHighNqap::receive (PacketPtr packet, ChunkMac80211Hdr const *hdr)
 {
 	
 }

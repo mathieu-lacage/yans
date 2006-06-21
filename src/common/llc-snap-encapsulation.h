@@ -24,23 +24,23 @@
 #include <stdint.h>
 #include "callback.h"
 #include "mac-address.h"
+#include "packet.h"
 
 namespace yans {
 
-class Packet;
 class MacNetworkInterface;
 
 class LlcSnapEncapsulation {
 public:	
-	typedef Callback<void, Packet *> RxCallback;
+	typedef Callback<void, PacketPtr > RxCallback;
 
 	uint32_t get_overhead (void) const;
 	void set_ipv4_callback (RxCallback callback);
 	void set_arp_callback (RxCallback callback);
 	void set_mac_interface (MacNetworkInterface *interface);
-	void send_ipv4 (Packet *packet, MacAddress to);
-	void send_arp (Packet *packet, MacAddress to);
-	void receive (Packet *packet, MacNetworkInterface *interface);
+	void send_ipv4 (PacketPtr packet, MacAddress to);
+	void send_arp (PacketPtr packet, MacAddress to);
+	void receive (PacketPtr packet, MacNetworkInterface *interface);
 private:
 	RxCallback m_ipv4_callback;
 	RxCallback m_arp_callback;

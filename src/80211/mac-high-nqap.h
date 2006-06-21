@@ -24,18 +24,18 @@
 #include "mac-address.h"
 #include "callback.h"
 #include "supported-rates.h"
+#include "packet.h"
 #include <stdint.h>
 
 namespace yans {
 
-class Packet;
 class ChunkMac80211Hdr;
 class NetworkInterface80211;
 class DcaTxop;
 
 class MacHighNqap {
 public:
-	typedef Callback<void, Packet *> ForwardCallback;
+	typedef Callback<void, PacketPtr > ForwardCallback;
 
 	MacHighNqap ();
 	~MacHighNqap ();
@@ -45,10 +45,10 @@ public:
 	void set_forward_callback (ForwardCallback callback);
 	void set_supported_rates (SupportedRates rates);
 
-	void queue (Packet *packet, MacAddress to);
+	void queue (PacketPtr packet, MacAddress to);
 
 	void ack_received (ChunkMac80211Hdr const &hdr);
-	void receive (Packet *packet, ChunkMac80211Hdr const *hdr);
+	void receive (PacketPtr packet, ChunkMac80211Hdr const *hdr);
 private:
 	DcaTxop *m_dca;
 	NetworkInterface80211 *m_interface;

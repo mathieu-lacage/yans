@@ -25,6 +25,7 @@
 #include <stdint.h>
 
 #include "ipv4-address.h"
+#include "packet.h"
 
 namespace yans {
 
@@ -32,7 +33,6 @@ class Ipv4;
 class Ipv4EndPoints;
 class Ipv4EndPoint;
 class Host;
-class Packet;
 class PacketLogger;
 class TraceContainer;
 
@@ -52,9 +52,9 @@ public:
 	Ipv4EndPoint *allocate (Ipv4Address local_address, uint16_t local_port,
 			       Ipv4Address peer_address, uint16_t peer_port);
 
-	void send (Packet *packet);
+	void send (PacketPtr packet);
  private:
-	void receive (Packet *packet);
+	void receive (PacketPtr packet);
 
 	static const uint8_t UDP_PROTOCOL;
 	Ipv4 *m_ipv4;

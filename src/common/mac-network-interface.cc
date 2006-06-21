@@ -71,12 +71,12 @@ MacNetworkInterface::set_rx_callback (RxCallback callback)
 	m_rx_callback = callback;
 }
 void 
-MacNetworkInterface::send (Packet *packet, MacAddress to)
+MacNetworkInterface::send (PacketPtr packet, MacAddress to)
 {
 	real_send (packet, to);
 }
 void 
-MacNetworkInterface::forward_up (Packet *packet)
+MacNetworkInterface::forward_up (PacketPtr packet)
 {
 	m_rx_callback (packet, this);
 }

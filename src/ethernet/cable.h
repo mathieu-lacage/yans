@@ -23,11 +23,10 @@
 #define CABLE_H
 
 #include <list>
-#include "count-ptr-holder.tcc"
+#include "packet.h"
 
 namespace yans {
 
-class Packet;
 class EthernetNetworkInterface;
 
 class Cable {
@@ -45,10 +44,9 @@ public:
 	void connect_to (EthernetNetworkInterface *a,
 			 EthernetNetworkInterface *b);
 
-	void send (Packet *packet, EthernetNetworkInterface *sender);
+	void send (PacketPtr packet, EthernetNetworkInterface *sender);
 
 private:
-	void recv (CountPtrHolder<Packet> packet, EthernetNetworkInterface *sender);
 	static const double SPEED_OF_LIGHT;
 	EthernetNetworkInterface *m_a;
 	EthernetNetworkInterface *m_b;

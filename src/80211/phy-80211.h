@@ -28,12 +28,12 @@
 #include "callback.h"
 #include "count-ptr-holder.tcc"
 #include "event.h"
+#include "packet.h"
 
 
 namespace yans {
 
 class TransmissionMode;
-class Packet;
 class PropagationModel;
 class RandomUniform;
 class RxEvent;
@@ -67,8 +67,8 @@ public:
 class Phy80211
 {
 public:
-	typedef Callback<void,Packet const*, double, uint8_t, uint8_t> RxOkCallback;
-	typedef Callback<void,Packet const*, double> RxErrorCallback;
+	typedef Callback<void,ConstPacketPtr , double, uint8_t, uint8_t> RxOkCallback;
+	typedef Callback<void,ConstPacketPtr , double> RxErrorCallback;
 
 	Phy80211 ();
 	virtual ~Phy80211 ();
@@ -78,11 +78,11 @@ public:
 	void set_receive_error_callback (RxErrorCallback callback);
 
 	/* rx_power unit is Watt */
-	void receive_packet (Packet const*packet,
+	void receive_packet (ConstPacketPtr packet,
 			     double rx_power_w,
 			     uint8_t tx_mode,
 			     uint8_t stuff);
-	void send_packet (Packet const*packet, uint8_t tx_mode, uint8_t tx_power, uint8_t stuff);
+	void send_packet (ConstPacketPtr packet, uint8_t tx_mode, uint8_t tx_power, uint8_t stuff);
 
 	void sleep (void);
 	void wakeup (void);
@@ -167,7 +167,7 @@ private:
 	double calculate_snr (double signal, double noise_interference, TransmissionMode *mode) const;
 	double calculate_chunk_success_rate (double snir, uint64_t delay, TransmissionMode *mode) const;
 	double calculate_per (RxEvent const*event, NiChanges *ni) const;
-	void end_rx (CountPtrHolder<Packet const> packet, CountPtrHolder<RxEvent> event, uint8_t stuff);
+	void end_rx (ConstPacketPtr packet, CountPtrHolder<RxEvent> event, uint8_t stuff);
 	double get_snr_for_ber (TransmissionMode *mode, double ber) const;
 private:
 	uint64_t     m_plcp_preamble_delay_us;

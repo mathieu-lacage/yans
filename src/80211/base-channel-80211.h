@@ -23,22 +23,22 @@
 
 #include <list>
 #include <stdint.h>
+#include "packet.h"
 
 namespace yans {
 
 class PropagationModel;
-class Packet;
 
 class BaseChannel80211 {
 public:
 	virtual ~BaseChannel80211 () = 0;
 	void add (PropagationModel *model);
-	void send (Packet const *packet, double tx_power_dbm,
+	void send (ConstPacketPtr packet, double tx_power_dbm,
 		   uint8_t tx_mode, uint8_t stuff, 
 		   PropagationModel const*caller) const;
 private:
 	virtual void real_add (PropagationModel *model) = 0;
-	virtual void real_send (Packet const *packet, double tx_power_dbm,
+	virtual void real_send (ConstPacketPtr packet, double tx_power_dbm,
 				uint8_t tx_mode, uint8_t stuff, 
 				PropagationModel const*caller) const = 0;
 };

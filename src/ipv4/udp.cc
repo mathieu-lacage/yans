@@ -96,7 +96,7 @@ Udp::allocate (Ipv4Address local_address, uint16_t local_port,
 
 
 void 
-Udp::receive (Packet *packet)
+Udp::receive (PacketPtr packet)
 {
 	m_recv_logger->log (packet);
 	TagInIpv4 tag;
@@ -115,7 +115,7 @@ Udp::receive (Packet *packet)
 }
 
 void
-Udp::send (Packet *packet)
+Udp::send (PacketPtr packet)
 {
 	TagOutIpv4 tag;
 	packet->peek_tag (&tag);

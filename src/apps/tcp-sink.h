@@ -26,11 +26,11 @@
 #include <stdint.h>
 #include "ipv4-address.h"
 #include "callback.h"
+#include "packet.h"
 
 namespace yans {
 
 class Host;
-class Packet;
 class Ipv4EndPoint;
 class TcpConnection;
 class TcpConnectionListener;
@@ -38,7 +38,7 @@ class TraceContainer;
 
 class TcpSink {
 public:
-	typedef Callback<void, Packet *> TcpSinkCallback;
+	typedef Callback<void, PacketPtr > TcpSinkCallback;
 
 	TcpSink (Host *host);
 	~TcpSink ();
@@ -57,7 +57,7 @@ private:
 	void disconnect_completed (void);
 	void receive (void);
 	void transmitted (void);
-	void got_ack (Packet *packet);
+	void got_ack (PacketPtr packet);
 	void stop_listen_now (void);
 
 	Host *m_host;

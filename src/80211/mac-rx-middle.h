@@ -26,28 +26,28 @@
 #include <utility>
 #include "callback.h"
 #include "mac-address.h"
+#include "packet.h"
 
 namespace yans {
 
-class Packet;
 class ChunkMac80211Hdr;
 class OriginatorRxStatus;
 
 class MacRxMiddle
 {
 public:
-	typedef Callback<void, Packet *, ChunkMac80211Hdr const *> ForwardUpCallback;
+	typedef Callback<void, PacketPtr , ChunkMac80211Hdr const *> ForwardUpCallback;
 
 	MacRxMiddle ();
 	~MacRxMiddle ();
 
 	void set_forward_callback (ForwardUpCallback callback);
 
-	void receive (Packet *packet, ChunkMac80211Hdr const *hdr);
+	void receive (PacketPtr packet, ChunkMac80211Hdr const *hdr);
 private:
 	OriginatorRxStatus *lookup (ChunkMac80211Hdr const*hdr);
 	bool is_duplicate (ChunkMac80211Hdr const *hdr, OriginatorRxStatus *originator) const;
-	Packet *handle_fragments (Packet *packet, ChunkMac80211Hdr const*hdr,
+	PacketPtr handle_fragments (PacketPtr packet, ChunkMac80211Hdr const*hdr,
 				       OriginatorRxStatus *originator);
 	bool sequence_control_smaller (int seqa, int seqb);
 

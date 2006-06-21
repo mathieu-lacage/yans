@@ -72,7 +72,7 @@ UdpSink::unbind_at (double at)
 }
 
 void
-UdpSink::receive (Packet *packet, Chunk *chunk)
+UdpSink::receive (PacketPtr packet, Chunk *chunk)
 {
 	if (!m_callback.is_null ()) {
 		m_callback (packet);

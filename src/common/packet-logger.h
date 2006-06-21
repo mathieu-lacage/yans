@@ -23,16 +23,15 @@
 #define PACKET_LOGGER_H
 
 #include "callback.h"
+#include "packet.h"
 
 namespace yans {
 
-class Packet;
-
 class PacketLogger {
 public:
-	typedef Callback<void,Packet const *> PacketLoggerCallback;
+	typedef Callback<void,ConstPacketPtr> PacketLoggerCallback;
 	PacketLogger ();
-	void log (Packet const*packet);
+	void log (ConstPacketPtr packet);
 	void set_callback (PacketLoggerCallback callback);
 private:
 	PacketLoggerCallback m_callback;

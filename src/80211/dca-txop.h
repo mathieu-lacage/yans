@@ -25,12 +25,12 @@
 #include <stdint.h>
 #include "callback.h"
 #include "chunk-mac-80211-hdr.h"
+#include "packet.h"
 
 namespace yans {
 
 class Dcf;
 class MacQueue80211e;
-class Packet;
 class MacLow;
 class Phy80211;
 class MacParameters;
@@ -56,7 +56,7 @@ public:
 	void set_max_queue_size (uint32_t size);
 	void set_max_queue_delay_us (uint64_t us);
 
-	void queue (Packet *packet, ChunkMac80211Hdr const &hdr);
+	void queue (PacketPtr packet, ChunkMac80211Hdr const &hdr);
 private:
 	class AccessListener;
 	class TransmissionListener;
@@ -86,7 +86,7 @@ private:
 	uint32_t get_fragment_size (void);
 	bool is_last_fragment (void);
 	void next_fragment (void);
-	Packet *get_fragment_packet (ChunkMac80211Hdr *hdr);
+	PacketPtr get_fragment_packet (ChunkMac80211Hdr *hdr);
 
 	Dcf *m_dcf;
 	AckReceived m_ack_received;
@@ -100,7 +100,7 @@ private:
 	PhyListener *m_phy_listener;
 	
 
-	Packet *m_current_packet;
+	PacketPtr m_current_packet;
 	ChunkMac80211Hdr m_current_hdr;
 	uint32_t m_ssrc;
 	uint32_t m_slrc;

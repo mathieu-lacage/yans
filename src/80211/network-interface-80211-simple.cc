@@ -64,13 +64,13 @@ void
 NetworkInterface80211Simple::notify_down (void)
 {}
 void 
-NetworkInterface80211Simple::real_send (Packet *packet, MacAddress to)
+NetworkInterface80211Simple::real_send (PacketPtr packet, MacAddress to)
 {
 	m_mac->send (packet, to);
 }
 
 void 
-NetworkInterface80211Simple::forward_data_up (Packet *packet)
+NetworkInterface80211Simple::forward_data_up (PacketPtr packet)
 {
 	m_bytes_rx += packet->get_size ();
 	MacNetworkInterface::forward_up (packet);

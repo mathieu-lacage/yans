@@ -25,11 +25,11 @@
 #include "callback.h"
 #include "supported-rates.h"
 #include "event.h"
+#include "packet.h"
 #include <stdint.h>
 
 namespace yans {
 
-class Packet;
 class ChunkMac80211Hdr;
 class NetworkInterface80211;
 class DcaTxop;
@@ -37,7 +37,7 @@ class Timeout;
 
 class MacHighNqsta {
 public:
-	typedef Callback<void, Packet *> ForwardCallback;
+	typedef Callback<void, PacketPtr > ForwardCallback;
 	typedef Callback<void> AssociatedCallback;
 
 	MacHighNqsta ();
@@ -55,10 +55,10 @@ public:
 
 	MacAddress get_bssid (void) const;
 
-	void queue (Packet *packet, MacAddress to);
+	void queue (PacketPtr packet, MacAddress to);
 
 	void ack_received (ChunkMac80211Hdr const &hdr);
-	void receive (Packet *packet, ChunkMac80211Hdr const *hdr);
+	void receive (PacketPtr packet, ChunkMac80211Hdr const *hdr);
 private:
 	void set_bssid (MacAddress bssid);
 	MacAddress get_broadcast_bssid (void);

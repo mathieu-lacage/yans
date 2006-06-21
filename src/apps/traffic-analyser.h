@@ -24,10 +24,10 @@
 #define TRAFFIC_ANALYSER_H
 
 #include <stdint.h>
+#include "packet.h"
 
 namespace yans {
 
-class Packet;
 class PopulationAnalysis;
 
 class TrafficAnalyser {
@@ -35,7 +35,7 @@ public:
 	TrafficAnalyser ();
 	~TrafficAnalyser ();
 
-	void receive (Packet *packet);
+	void receive (PacketPtr packet);
 
 	void print_stats (void);
 

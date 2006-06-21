@@ -25,10 +25,10 @@
 #include "ipv4-address.h"
 #include "callback.h"
 #include <stdint.h>
+#include "packet.h"
 
 namespace yans {
 
-class Packet;
 class Ipv4;
 class Host;
 class Ipv4EndPoint;
@@ -43,7 +43,7 @@ public:
 	typedef Callback<void> DisConnectCompletedCallback;
 	typedef Callback<void> DataReceivedCallback;
 	typedef Callback<void> DataTransmittedCallback;
-	typedef Callback<void, Packet *> AckReceivedCallback;
+	typedef Callback<void, PacketPtr > AckReceivedCallback;
 	typedef Callback<void, TcpConnection *> TcpConnectionDestroy;
 
 	virtual ~TcpConnection () = 0;
@@ -67,8 +67,8 @@ public:
 
 	virtual uint32_t get_room_left (void) = 0;
 	virtual uint32_t get_data_ready (void) = 0;
-	virtual uint32_t send (Packet *packet) = 0;
-	virtual Packet *recv (uint32_t size) = 0;
+	virtual uint32_t send (PacketPtr packet) = 0;
+	virtual PacketPtr recv (uint32_t size) = 0;
 
 	virtual void slow_timer (void) = 0;
 	virtual void fast_timer (void) = 0;

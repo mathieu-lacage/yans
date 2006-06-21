@@ -23,17 +23,16 @@
 
 #include <stdint.h>
 #include "event.h"
+#include "packet.h"
 
 namespace yans {
-
-class Packet;
 
 class ThroughputPrinter {
 public:
 	ThroughputPrinter ();
 	void set_print_interval_us (uint64_t us);
 	void stop (void);
-	void receive (Packet const*packet);
+	void receive (ConstPacketPtr packet);
 private:
 	void timeout (void);
 	uint32_t m_current;

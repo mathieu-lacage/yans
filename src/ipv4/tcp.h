@@ -25,13 +25,13 @@
 
 #include "ipv4-address.h"
 #include "callback.h"
+#include "packet.h"
 #include <list>
 
 namespace yans {
 
 class Ipv4;
 class Host;
-class Packet;
 class Ipv4EndPoint;
 class Ipv4EndPoints;
 class TcpConnectionListener;
@@ -79,8 +79,8 @@ private:
 
 	void slow_timer (void);
 	void fast_timer (void);
-	void receive (Packet *packet);
-	void send_reset (Packet *packet, ChunkTcp *tcp_chunk);
+	void receive (PacketPtr packet);
+	void send_reset (PacketPtr packet, ChunkTcp *tcp_chunk);
 	void destroy_connection (TcpConnection *listener);
 
 	Host *m_host;

@@ -26,10 +26,10 @@
 #include "ipv4-address.h"
 #include "mac-address.h"
 #include "sgi-hashmap.h"
+#include "packet.h"
 
 namespace yans {
 
-class Packet;
 class TraceContainer;
 class MacNetworkInterface;
 class ArpCacheEntry;
@@ -57,10 +57,10 @@ private:
 
 	void send_arp_reply (Ipv4Address to_ip, MacAddress to_mac);
 	void send_arp_request (Ipv4Address to);
-	void drop_dead_packet (Packet *packet);
-	void receive_arp (Packet *packet);
+	void drop_dead_packet (PacketPtr packet);
+	void receive_arp (PacketPtr packet);
 
-	virtual void real_send (Packet *packet, Ipv4Address to);
+	virtual void real_send (PacketPtr packet, Ipv4Address to);
 	virtual uint16_t real_get_mtu (void) const;
 
 	MacNetworkInterface *m_interface;

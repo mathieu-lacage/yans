@@ -70,14 +70,13 @@ TcpSink::~TcpSink ()
 void
 TcpSink::receive (void)
 {	
-	Packet *packet = m_connection->recv (m_connection->get_data_ready ());
+	PacketPtr packet = m_connection->recv (m_connection->get_data_ready ());
 	if (packet == 0) {
 		return;
 	}
 	if (!m_callback.is_null ()) {
 		m_callback (packet);
 	}
-	packet->unref ();
 }
 
 void 
@@ -108,7 +107,7 @@ TcpSink::transmitted (void)
 {}
 
 void
-TcpSink::got_ack (Packet *packet)
+TcpSink::got_ack (PacketPtr packet)
 {}
 
 void

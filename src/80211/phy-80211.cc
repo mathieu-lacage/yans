@@ -213,7 +213,7 @@ Phy80211::set_receive_error_callback (RxErrorCallback callback)
 	m_rx_error_callback = callback;
 }
 void 
-Phy80211::receive_packet (Packet const*packet, 
+Phy80211::receive_packet (ConstPacketPtr packet, 
 			  double rx_power_w,
 			  uint8_t tx_mode,
 			  uint8_t stuff)
@@ -245,7 +245,7 @@ Phy80211::receive_packet (Packet const*packet,
 			switch_to_sync_from_idle (rx_duration_us);
 			assert (!m_end_rx_event.is_running ());
 			m_end_rx_event = make_event (&Phy80211::end_rx, this, 
-						     make_count_ptr_holder (packet), 
+						     packet,
 						     make_count_ptr_holder (event), 
 						     stuff);
 			Simulator::insert_in_us (rx_duration_us, m_end_rx_event);
@@ -259,7 +259,7 @@ Phy80211::receive_packet (Packet const*packet,
 	event->unref ();
 }
 void 
-Phy80211::send_packet (Packet const*packet, uint8_t tx_mode, uint8_t tx_power, uint8_t stuff)
+Phy80211::send_packet (ConstPacketPtr packet, uint8_t tx_mode, uint8_t tx_power, uint8_t stuff)
 {
 	/* Transmission can happen if:
 	 *  - we are syncing on a packet. It is the responsability of the
@@ -853,9 +853,8 @@ Phy80211::calculate_per (RxEvent const *event, NiChanges *ni) const
 
 
 void
-Phy80211::end_rx (CountPtrHolder<Packet const> p, CountPtrHolder<RxEvent> ev, uint8_t stuff)
+Phy80211::end_rx (ConstPacketPtr packet, CountPtrHolder<RxEvent> ev, uint8_t stuff)
 {
-	Packet const*packet = p.remove ();
 	RxEvent *event = ev.remove ();
 	assert (is_state_rx ());
 	assert (event->get_end_time_us () == now_us ());
@@ -884,7 +883,6 @@ Phy80211::end_rx (CountPtrHolder<Packet const> p, CountPtrHolder<RxEvent> ev, ui
 		switch_to_idle_from_sync ();
 		m_rx_error_callback (packet, snr);
 	}
-	packet->unref ();
 	event->unref ();
 }
 

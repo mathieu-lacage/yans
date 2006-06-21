@@ -24,11 +24,11 @@
 #include <list>
 #include <stdint.h>
 #include "base-channel-80211.h"
+#include "packet.h"
 
 namespace yans {
 
 class PropagationModel;
-class Packet;
 
 class Channel80211 : public BaseChannel80211 {
 public:
@@ -36,7 +36,7 @@ public:
 	virtual ~Channel80211 ();
 private:
 	virtual void real_add (PropagationModel *model);
-	virtual void real_send (Packet const *packet, double tx_power_dbm,
+	virtual void real_send (ConstPacketPtr packet, double tx_power_dbm,
 				uint8_t tx_mode, uint8_t stuff, 
 				PropagationModel const*caller) const;
 	typedef std::list<PropagationModel *> Models;

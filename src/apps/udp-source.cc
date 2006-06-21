@@ -69,7 +69,7 @@ UdpSource::set_peer (Ipv4Address address, uint16_t port)
 }
 
 void
-UdpSource::send (Packet *packet)
+UdpSource::send (PacketPtr packet)
 {
 	if (m_end_point == 0) {
 		// not bound.
@@ -93,7 +93,7 @@ UdpSource::send (Packet *packet)
 }
 
 void 
-UdpSource::receive (Packet *packet, Chunk *chunk)
+UdpSource::receive (PacketPtr packet, Chunk *chunk)
 {}
 
 void

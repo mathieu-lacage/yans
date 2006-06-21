@@ -26,11 +26,11 @@
 
 #include "ipv4-address.h"
 #include "callback.h"
+#include "packet.h"
 
 namespace yans {
 
 class Ipv4NetworkInterface;
-class Packet;
 class Ipv4Route;
 class Host;
 class IcmpTransportProtocol;
@@ -43,7 +43,7 @@ class TraceContainer;
 
 class Ipv4 {
 public:
-	typedef Callback<void,Packet *> TransportProtocolCallback;
+	typedef Callback<void,PacketPtr> TransportProtocolCallback;
 
 	Ipv4 ();
 	~Ipv4 ();
@@ -51,25 +51,25 @@ public:
 	void set_host (Host *host);
 
 	void set_protocol (uint8_t protocol);
-	void send (Packet *packet);
+	void send (PacketPtr packet);
 
 	void register_trace (TraceContainer *container);
 
 	/* invoked from higher-layers. */
 	void register_transport_protocol (TransportProtocolCallback callback, uint8_t protocol);
 	/* invoked from lower-layers. */
-	void receive (Packet *packet, Ipv4NetworkInterface *from);
+	void receive (PacketPtr packet, Ipv4NetworkInterface *from);
 
 private:
-	bool forwarding (Packet *packet, ChunkIpv4 *ip, Ipv4NetworkInterface *from);
+	bool forwarding (PacketPtr packet, ChunkIpv4 *ip, Ipv4NetworkInterface *from);
 	Ipv4Route *get_route (void);
 	TransportProtocolCallback lookup_protocol (uint8_t id);
-	void send_icmp_time_exceeded_ttl (Packet *original, ChunkIpv4 *ip, Ipv4NetworkInterface *interface);
-	bool send_out (Packet *packet, ChunkIpv4 *ip, Route const*route);
-	void send_real_out (Packet *packet, ChunkIpv4 *ip, Route const*route);
-	Packet *re_assemble (Packet *fragment, ChunkIpv4 *ip);
-	void receive_packet (Packet *packet, ChunkIpv4 *ip, Ipv4NetworkInterface *interface);
-	void receive_icmp (Packet *packet);
+	void send_icmp_time_exceeded_ttl (PacketPtr original, ChunkIpv4 *ip, Ipv4NetworkInterface *interface);
+	bool send_out (PacketPtr packet, ChunkIpv4 *ip, Route const*route);
+	void send_real_out (PacketPtr packet, ChunkIpv4 *ip, Route const*route);
+	PacketPtr re_assemble (PacketPtr fragment, ChunkIpv4 *ip);
+	void receive_packet (PacketPtr packet, ChunkIpv4 *ip, Ipv4NetworkInterface *interface);
+	void receive_icmp (PacketPtr packet);
 
 	static const uint8_t ICMP_PROTOCOL;
 

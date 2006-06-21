@@ -24,14 +24,13 @@
 #include <stdint.h>
 #include "callback.h"
 #include "mac-address.h"
+#include "packet.h"
 
 namespace yans {
 
-class Packet;
-
 class MacNetworkInterface {
 public:
-	typedef Callback<void, Packet *, MacNetworkInterface *> RxCallback;
+	typedef Callback<void, PacketPtr , MacNetworkInterface *> RxCallback;
 
 	MacNetworkInterface (MacAddress self, uint16_t max_mtu);
 	virtual ~MacNetworkInterface () = 0;
@@ -44,13 +43,13 @@ public:
 	void set_down (void);
 
 	void set_rx_callback (RxCallback callback);
-	void send (Packet *packet, MacAddress to);
+	void send (PacketPtr packet, MacAddress to);
 protected:
-	void forward_up (Packet *packet);
+	void forward_up (PacketPtr packet);
 private:
 	virtual void notify_up (void) = 0;
 	virtual void notify_down (void) = 0;
-	virtual void real_send (Packet *packet, MacAddress to) = 0;
+	virtual void real_send (PacketPtr packet, MacAddress to) = 0;
 
 	RxCallback m_rx_callback;
 	MacAddress m_self;

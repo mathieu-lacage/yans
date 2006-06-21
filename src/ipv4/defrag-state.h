@@ -24,21 +24,21 @@
 
 #include <list>
 #include "ipv4-address.h"
+#include "packet.h"
 
 namespace yans {
 
-class Packet;
 class ChunkIpv4;
 
 class DefragFragment {
 public:
-	DefragFragment (Packet *fragment, ChunkIpv4 *ip);
-	Packet *get_fragment (void);
+	DefragFragment (PacketPtr fragment, ChunkIpv4 *ip);
+	PacketPtr get_fragment (void);
 	bool is_last (void);
 	uint16_t get_offset (void);
 	uint32_t get_size (void);
 private:
-	Packet *m_fragment;
+	PacketPtr m_fragment;
 	bool m_is_last;
 	uint16_t m_offset;
 };
@@ -48,9 +48,9 @@ public:
 	DefragState (ChunkIpv4 const *ip);
 	~DefragState ();
 
-	void add (Packet *fragment, ChunkIpv4 *ip);
+	void add (PacketPtr fragment, ChunkIpv4 *ip);
 	bool is_complete (void);
-	Packet *get_complete (void);
+	PacketPtr get_complete (void);
 
 	bool is_too_old (void);
 	bool matches (ChunkIpv4 const *ip);

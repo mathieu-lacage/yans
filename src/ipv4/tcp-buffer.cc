@@ -94,7 +94,7 @@ TcpBuffer::get_current (void)
 	return m_start;
 }
 void
-TcpBuffer::insert_piece_at (PiecesI i, Packet *piece, uint32_t offset)
+TcpBuffer::insert_piece_at (PiecesI i, PacketPtr piece, uint32_t offset)
 {
 	if (piece->get_size () > 0) {
 		m_pieces.insert (i, std::make_pair (piece, offset));
@@ -102,7 +102,7 @@ TcpBuffer::insert_piece_at (PiecesI i, Packet *piece, uint32_t offset)
 }
 
 void
-TcpBuffer::insert_piece_at_back (Packet *piece, uint32_t offset)
+TcpBuffer::insert_piece_at_back (PacketPtr piece, uint32_t offset)
 {
 	if (offset + piece->get_size () > m_size) {
 		/* we have to trim the input piece if it is bigger
@@ -125,7 +125,7 @@ TcpBuffer::seq_sub (uint32_t a, uint32_t b)
 }
 
 uint32_t 
-TcpBuffer::add_at (Packet const *packet, uint32_t seq_offset)
+TcpBuffer::add_at (ConstPacketPtr packet, uint32_t seq_offset)
 {
 	assert (packet != 0);
 
@@ -133,7 +133,7 @@ TcpBuffer::add_at (Packet const *packet, uint32_t seq_offset)
 		return 0;
 	}
 
-	Packet *piece = packet->copy ();
+	PacketPtr piece = packet->copy ();
 	int delta = seq_sub (seq_offset, m_start);
 	uint32_t offset;
 
@@ -177,7 +177,6 @@ TcpBuffer::add_at (Packet const *packet, uint32_t seq_offset)
 	insert_piece_at_back (piece, offset);
  done:
 	if (piece->get_size () == 0) {
-		piece->unref ();
 		CHECK_STATE;
 		return 0;
 	}
@@ -185,7 +184,7 @@ TcpBuffer::add_at (Packet const *packet, uint32_t seq_offset)
 	return piece->get_size ();
 }
 uint32_t 
-TcpBuffer::add_at_back (Packet const *packet)
+TcpBuffer::add_at_back (ConstPacketPtr packet)
 {
 	uint32_t stored = 0;
 	if (m_pieces.empty ()) {
@@ -197,16 +196,16 @@ TcpBuffer::add_at_back (Packet const *packet)
 	return stored;
 }
 
-Packet *
+PacketPtr 
 TcpBuffer::get_at_front (uint32_t size)
 {
 	return get_at (0, size);
 }
-Packet *
+PacketPtr 
 TcpBuffer::get_at (uint32_t offset, uint32_t size)
 {
 	assert (size > 0);
-	Packet *packet = PacketFactory::create ();
+	PacketPtr packet = Packet::create ();
 	uint32_t expected_start = 0;
 	uint32_t end = offset + size;
 	bool adding = false;
@@ -243,7 +242,6 @@ TcpBuffer::get_at (uint32_t offset, uint32_t size)
 		expected_start = cur_end;
 	}
 	if (packet->get_size () == 0) {
-		packet->unref ();
 		TRACE ("foo");
 		return 0;
 	}
@@ -270,14 +268,13 @@ TcpBuffer::remove_at_front (uint32_t size)
 		if (cur_start >= size) {
 			break;
 		}
-		Packet *packet = (*i).first;
+		PacketPtr packet = (*i).first;
 		if (cur_end > size) {
 			assert (cur_start < size);
 			packet->remove_at_start (cur_size - (cur_end - size));
 			break;
 		}
 		expected_start = cur_end;
-		packet->unref ();
 		last = i;
 		last++;
 	}
@@ -347,15 +344,15 @@ class TcpBufferTest : public Test {
 public:
 	TcpBufferTest ();
 private:
-	Packet *create_one_packet (uint32_t size);
+	PacketPtr create_one_packet (uint32_t size);
 	bool check_front_data (TcpBuffer *buffer, uint32_t expected_data, int line);
 	bool test_buffer (uint32_t start);
 	virtual bool run_tests (void);
 };
-Packet *
+PacketPtr 
 TcpBufferTest::create_one_packet (uint32_t size)
 {
-	Packet *packet = PacketFactory::create ();
+	PacketPtr packet = Packet::create ();
 	ChunkConstantData data (size, 0);
 	packet->add (&data);
 	return packet;
@@ -383,51 +380,42 @@ TcpBufferTest::test_buffer (uint32_t start)
 	TcpBuffer *buffer = new TcpBuffer ();
 	buffer->set_start (start);
 	buffer->set_size (100);
-	Packet *piece;
+	PacketPtr piece;
 	CHECK_FRONT_DATA (buffer, 0);
 	piece = create_one_packet (1);
 	buffer->add_at (piece, start+0);
-	piece->unref ();
 	CHECK_FRONT_DATA (buffer, 1);
 
 	piece = create_one_packet (1);
 	buffer->add_at (piece, start+0);
-	piece->unref ();
 	CHECK_FRONT_DATA (buffer, 1);
 
 	piece = create_one_packet (1);
 	buffer->add_at (piece, start+1);
-	piece->unref ();
 	CHECK_FRONT_DATA (buffer, 2);
 
 	piece = create_one_packet (1);
 	buffer->add_at (piece, start+0);
-	piece->unref ();
 	CHECK_FRONT_DATA (buffer, 2);
 
 	piece = create_one_packet (6);
 	buffer->add_at (piece, start+2);
-	piece->unref ();
 	CHECK_FRONT_DATA (buffer, 8);
 
 	piece = create_one_packet (3);
 	buffer->add_at (piece, start+3);
-	piece->unref ();
 	CHECK_FRONT_DATA (buffer, 8);
 
 	piece = create_one_packet (3);
 	buffer->add_at (piece, start+15);
-	piece->unref ();
 	CHECK_FRONT_DATA (buffer, 8);
 
 	piece = create_one_packet (6);
 	buffer->add_at (piece, start+8);
-	piece->unref ();
 	CHECK_FRONT_DATA (buffer, 14);
 
 	piece = create_one_packet (1);
 	buffer->add_at (piece, start+14);
-	piece->unref ();
 	CHECK_FRONT_DATA (buffer, 18);
 
 	buffer->remove_at_front (17);
@@ -435,29 +423,24 @@ TcpBufferTest::test_buffer (uint32_t start)
 
 	piece = create_one_packet (99);
 	buffer->add_at (piece, start+17); // 18/17
-	piece->unref ();
 	CHECK_FRONT_DATA (buffer, 99);
 
 	/* here, we hit the buffer size limit. */
 	piece = create_one_packet (2);
 	buffer->add_at (piece, start+116);
-	piece->unref ();
 	CHECK_FRONT_DATA (buffer, 100);
 
 	buffer->set_size (102);
 	piece = create_one_packet (1);
 	buffer->add_at (piece, start+117);
-	piece->unref ();
 	CHECK_FRONT_DATA (buffer, 101);
 
 	piece = create_one_packet (99);
 	buffer->add_at (piece, start+117);
-	piece->unref ();
 	CHECK_FRONT_DATA (buffer, 102);
 
 	piece = create_one_packet (1);
 	buffer->add_at (piece, start+17);
-	piece->unref ();
 	CHECK_FRONT_DATA (buffer, 102);
 	return ok;
 }

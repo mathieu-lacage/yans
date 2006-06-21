@@ -23,10 +23,10 @@
 
 #include "mac-address.h"
 #include "callback.h"
+#include "packet.h"
 
 namespace yans {
 
-class Packet;
 class DcaTxop;
 class Packet;
 class NetworkInterface80211;
@@ -34,7 +34,7 @@ class ChunkMac80211Hdr;
 
 class MacHighAdhoc {
 public:
-	typedef Callback<void, Packet *> ForwardCallback;
+	typedef Callback<void, PacketPtr > ForwardCallback;
 
 	MacHighAdhoc ();
 	~MacHighAdhoc ();
@@ -45,11 +45,11 @@ public:
 
 	MacAddress get_bssid (void) const;
 
-	void enqueue (Packet *packet, MacAddress to);
+	void enqueue (PacketPtr packet, MacAddress to);
 
 	/* invoked by the MacLows. */
 	void ack_received (ChunkMac80211Hdr const &hdr);
-	void receive (Packet *packet, ChunkMac80211Hdr const*hdr);
+	void receive (PacketPtr packet, ChunkMac80211Hdr const*hdr);
 private:
 	DcaTxop *m_dca;
 	NetworkInterface80211 *m_interface;
