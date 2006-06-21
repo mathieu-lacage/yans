@@ -156,6 +156,7 @@ ParallelSimulatorQueuePrivate::send_null_message (void)
 SimulatorPrivate::SimulatorPrivate (Scheduler *events)
 {
 	m_stop = false;
+	m_stop_at = 0;
 	m_events = events;
 	m_uid = 0;	
 	m_log_enable = false;
