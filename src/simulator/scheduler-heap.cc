@@ -125,9 +125,14 @@ SchedulerHeap::exch (uint32_t a, uint32_t b)
 {
 	assert (b < m_heap.size () && a < m_heap.size ());
 	TRACE ("exch " << a << ", " << b);
+#if 1
+	std::swap (m_heap[a].second, m_heap[b].second);
+	swap (m_heap[a].first, m_heap[b].first);
+#else
 	std::pair<Event , Scheduler::EventKey> tmp (m_heap[a]);
 	m_heap[a] = m_heap[b];
 	m_heap[b] = tmp;
+#endif
 	store_in_event (m_heap[a].first, a);
 	store_in_event (m_heap[b].first, b);
 }
