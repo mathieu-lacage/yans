@@ -22,29 +22,116 @@
 #ifndef EVENT_H
 #define EVENT_H
 
+#include <algorithm>
+
 namespace yans {
 
 class EventImpl;
 
 class Event {
 public:
-	Event ();
-	Event (EventImpl *impl);
-	Event (Event const &o);
-	~Event ();
-	Event &operator = (Event const&o);
-	void operator () (void);
-	void cancel (void);
-	bool is_running (void);
+	INL_EXPE Event ();
+	INL_EXPE Event (EventImpl *impl);
+	INL_EXPE Event (Event const &o);
+	INL_EXPE ~Event ();
+	INL_EXPE Event &operator = (Event const&o);
+	INL_EXPE void operator () (void);
+	INL_EXPE void cancel (void);
+	INL_EXPE bool is_running (void);
 private:
 	friend class SchedulerHeap;
 	friend class SchedulerList;
 	friend class SchedulerMap;
-	void set_tag (void *tag);
-	void *get_tag (void) const;
+	friend INL_EXPE void swap (Event &a, Event &b);
+	INL_EXPE void set_tag (void *tag);
+	INL_EXPE void *get_tag (void) const;
 	EventImpl *m_impl;
 };
 
+INL_EXPE void swap (Event &a, Event &b);
+
+
 }; // namespace yans
 
+#ifdef INL_EXPE
+#include "event-impl.h"
+#include <cassert>
+
+namespace yans {
+
+Event::Event ()
+	: m_impl (0)
+{}
+Event::Event (EventImpl *impl)
+	: m_impl (impl)
+{}
+Event::Event (Event const &o)
+	: m_impl (o.m_impl)
+{
+	if (m_impl != 0) {
+		m_impl->ref ();
+	}
+}
+Event::~Event ()
+{
+	if (m_impl != 0) {
+		m_impl->unref ();
+	}
+	m_impl = 0;
+}
+Event &
+Event::operator = (Event const&o)
+{
+	if (m_impl != 0) {
+		m_impl->unref ();
+	}
+	m_impl = o.m_impl;
+	if (m_impl != 0) {
+		m_impl->ref ();
+	}
+	return *this;
+}
+void 
+Event::operator () (void)
+{
+	assert (m_impl != 0);
+	m_impl->invoke ();
+}
+void 
+Event::set_tag (void *tag)
+{
+	m_impl->set_tag (tag);
+}
+void *
+Event::get_tag (void) const
+{
+	return m_impl->get_tag ();
+}
+void
+Event::cancel (void)
+{
+	if (m_impl != 0) {
+		m_impl->cancel ();
+	}
+}
+
+bool 
+Event::is_running (void)
+{
+	if (m_impl != 0 && m_impl->is_running ()) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+
+
+INL_EXPE void swap (Event &a, Event &b)
+{
+	std::swap (a.m_impl, b.m_impl);
+}
+
+}; // namespace yans
+#endif
 #endif /* EVENT_H */

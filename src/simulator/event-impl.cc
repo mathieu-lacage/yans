@@ -21,76 +21,13 @@
 
 #include "event-impl.h"
 
-#define noTRACE_EVENT_IMPL 1
-
-#ifdef TRACE_EVENT_IMPL
-#include <iostream>
-# define TRACE(x) \
-std::cout << "EVENT IMPL TRACE " << x << std::endl;
-#else /* TRACE_EVENT_IMPL */
-# define TRACE(format,...)
-#endif /* TRACE_EVENT_IMPL */
-
 
 namespace yans {
 
-EventImpl::EventImpl ()
-	: m_id (0),
-	  m_ref_count (1),
-	  m_cancel (0),
-	  m_running (1)
-{}
 
 EventImpl::~EventImpl ()
 {}
 
-void
-EventImpl::ref (void)
-{
-	TRACE ("ref p="<<this<<", ref="<<m_ref_count);
-	m_ref_count++;
-}
-
-void
-EventImpl::unref (void)
-{
-	TRACE ("unref p="<<this<<", ref="<<m_ref_count);
-	m_ref_count--;
-	if (m_ref_count == 0) {
-		TRACE ("delete p="<<this);
-		delete this;
-	}
-}
-
-void 
-EventImpl::invoke (void)
-{
-	if (m_cancel == 0) {
-		notify ();
-	}
-	m_running = 0;
-}
-void 
-EventImpl::set_tag (void *tag)
-{
-	m_id = tag;
-}
-void *
-EventImpl::get_tag (void) const
-{
-	return m_id;
-}
-void
-EventImpl::cancel (void)
-{
-	m_cancel = 1;
-	m_running = 0;
-}
-bool 
-EventImpl::is_running (void)
-{
-	return (m_running == 1);
-}
 
 
 }; // namespace yans
