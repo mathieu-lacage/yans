@@ -60,24 +60,13 @@ public:
 	}
 	RefPtr &operator = (RefPtr const& o) 
 	{
+		if (o.m_env != 0) {
+			o.m_env->ref ();
+		}
 		if (m_env != 0) {
 			m_env->unref ();
 		}
 		m_env = o.m_env;
-		if (m_env != 0) {
-			m_env->ref ();
-		}
-		return *this;
-	}
-	RefPtr &operator = (T *o) 
-	{
-		if (m_env != 0) {
-			m_env->unref ();
-		}
-		m_env = o;
-		if (m_env != 0) {
-			m_env->ref ();
-		}
 		return *this;
 	}
 	T *operator -> () 
