@@ -249,3 +249,62 @@ std::ostream& operator<< (std::ostream& os, Packet const& packet)
 }
 
 }; // namespace yans
+
+#ifdef RUN_SELF_TESTS
+
+#include "test.h"
+using namespace yans;
+
+namespace {
+class PacketTest : public Test {
+public:
+	PacketTest ();
+	virtual ~PacketTest ();
+	virtual bool run_tests (void);
+};
+
+PacketTest::PacketTest ()
+	: Test ("Packet")
+{}
+PacketTest::~PacketTest ()
+{}
+bool 
+PacketTest::run_tests (void)
+{
+	bool ok = true;
+	{
+		PacketPtr p = Packet::create ();
+	}
+	{
+		PacketPtr p = Packet::create ();
+		ConstPacketPtr p1 = p;
+		ConstPacketPtr p2;
+		p2 = p;
+		//PacketPtr p3 = p1; // invalid !
+	}
+	{
+		PacketPtr p = Packet::create ();
+		p = 0;
+		if (p) {}
+		if (!p) {}
+		if (!!p) {}
+		if (p == 0) {}
+		if (0 == p) {}
+		if (p != 0) {}
+		if (0 != p) {}
+	}
+	{
+		PacketPtr p = 0;
+		ConstPacketPtr p1 = 0;
+		p = 0;
+		p1 = 0;
+	}
+
+
+	return ok;
+}
+
+
+static PacketTest g_packet_test;
+};
+#endif /* RUN_SELF_TESTS */
