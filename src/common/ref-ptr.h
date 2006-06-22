@@ -35,6 +35,18 @@ public:
 
 	RefPtr (T *env) 
 		: m_env (env) 
+	{}
+	RefPtr (RefPtr const&o) 
+		: m_env (o.m_env)
+	{
+		if (m_env != 0) {
+			m_env->ref ();
+		}
+	}
+	// allow conversions from T to T const.
+	template <typename U>
+	RefPtr (RefPtr<U> const &o)
+		: m_env (o.peek ())
 	{
 		if (m_env != 0) {
 			m_env->ref ();
@@ -46,28 +58,23 @@ public:
 			m_env->unref ();
 		}
 	}
-	RefPtr (RefPtr const&o) 
-		: m_env (o.m_env)
-	{
-		if (m_env != 0) {
-			m_env->ref ();
-		}
-	}
-	// used to allow conversions from T to T const.
-	template <typename U>
-	RefPtr (RefPtr<U> const &o)
-		: m_env (o.peek ())
-	{
-		if (m_env != 0) {
-			m_env->ref ();
-		}
-	}
 	RefPtr &operator = (RefPtr const& o) 
 	{
 		if (m_env != 0) {
 			m_env->unref ();
 		}
 		m_env = o.m_env;
+		if (m_env != 0) {
+			m_env->ref ();
+		}
+		return *this;
+	}
+	RefPtr &operator = (T *o) 
+	{
+		if (m_env != 0) {
+			m_env->unref ();
+		}
+		m_env = o;
 		if (m_env != 0) {
 			m_env->ref ();
 		}
