@@ -124,7 +124,7 @@ int main (int argc, char *argv[])
 						     Ipv4Address ("192.168.0.3"),
 						     Ipv4Mask ("255.255.255.0"));
 	ip_server = hserver->add_ipv4_arp_interface (wifi_server,
-						     Ipv4Address ("192.168.0.3"),
+						     Ipv4Address ("192.168.0.2"),
 						     Ipv4Mask ("255.255.255.0"));
 
 	/* setup the routing tables. */
