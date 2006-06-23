@@ -315,7 +315,7 @@ MacLow::receive_error (ConstPacketPtr packet, double rx_snr)
 	if (m_tx_params.must_wait_fast_ack ()) {
 		assert (!m_fast_ack_failed_timeout_event.is_running ());
 		m_fast_ack_failed_timeout_event = make_event (&MacLow::fast_ack_failed_timeout, this);
-		Simulator::insert_in_us (get_sifs_us (), m_fast_ack_failed_timeout_event);
+		Simulator::schedule_rel_us (get_sifs_us (), m_fast_ack_failed_timeout_event);
 	}
 	return;
 }
@@ -350,7 +350,7 @@ MacLow::receive_ok (ConstPacketPtr p, double rx_snr, uint8_t tx_mode, uint8_t st
 						       hdr.get_duration_us (),
 						       get_cts_tx_mode_for_rts (hdr.get_addr2 (), tx_mode),
 						       station->snr_to_snr (rx_snr));
-			Simulator::insert_in_us (get_sifs_us (), m_send_cts_event);
+			Simulator::schedule_rel_us (get_sifs_us (), m_send_cts_event);
 		} else {
 			TRACE ("rx RTS from=" << hdr.get_addr2 () << ", cannot schedule CTS");
 		}
@@ -370,7 +370,7 @@ MacLow::receive_ok (ConstPacketPtr p, double rx_snr, uint8_t tx_mode, uint8_t st
 						hdr.get_addr1 (),
 						hdr.get_duration_us (),
 						tx_mode);
-		Simulator::insert_in_us (get_sifs_us (), m_send_data_event);
+		Simulator::schedule_rel_us (get_sifs_us (), m_send_data_event);
 	} else if (hdr.is_ack () &&
 		   hdr.get_addr1 () == m_interface->get_mac_address () &&
 		   (m_normal_ack_timeout_event.is_running () || 
@@ -397,7 +397,7 @@ MacLow::receive_ok (ConstPacketPtr p, double rx_snr, uint8_t tx_mode, uint8_t st
 		}
 		if (m_tx_params.has_next_packet ()) {
 			m_wait_sifs_event = make_event (&MacLow::wait_sifs_after_end_tx, this);
-			Simulator::insert_in_us (get_sifs_us (), m_wait_sifs_event);
+			Simulator::schedule_rel_us (get_sifs_us (), m_wait_sifs_event);
 		}
 	} else if (hdr.is_ctl ()) {
 		TRACE ("rx drop " << hdr.get_type_string ());
@@ -415,7 +415,7 @@ MacLow::receive_ok (ConstPacketPtr p, double rx_snr, uint8_t tx_mode, uint8_t st
 						       hdr.get_duration_us (),
 						       get_ack_tx_mode_for_data (hdr.get_addr2 (), tx_mode),
 						       station->snr_to_snr (rx_snr));
-			Simulator::insert_in_us (get_sifs_us (), m_send_ack_event);
+			Simulator::schedule_rel_us (get_sifs_us (), m_send_ack_event);
 		}
 		m_rx_callback (packet, &hdr);
 	} else if (hdr.get_addr1 ().is_broadcast ()) {
@@ -681,7 +681,7 @@ MacLow::send_rts_for_packet (void)
 
 	assert (!m_cts_timeout_event.is_running ());
 	m_cts_timeout_event = make_event (&MacLow::cts_timeout, this);
-	Simulator::insert_in_s (timer_delay_us, m_cts_timeout_event);
+	Simulator::schedule_rel_s (timer_delay_us, m_cts_timeout_event);
 
 	PacketPtr packet = Packet::create ();
 	packet->add (&rts);
@@ -700,22 +700,22 @@ MacLow::start_data_tx_timers (void)
 		uint64_t timer_delay_us = tx_duration_us + get_ack_timeout_us ();
 		assert (!m_normal_ack_timeout_event.is_running ());
 		m_normal_ack_timeout_event = make_event (&MacLow::normal_ack_timeout, this);
-		Simulator::insert_in_us (timer_delay_us, m_normal_ack_timeout_event);
+		Simulator::schedule_rel_us (timer_delay_us, m_normal_ack_timeout_event);
 	} else if (m_tx_params.must_wait_fast_ack ()) {
 		uint64_t timer_delay_us = tx_duration_us + get_pifs_us ();
 		assert (!m_fast_ack_timeout_event.is_running ());
 		m_fast_ack_timeout_event = make_event (&MacLow::fast_ack_timeout, this);
-		Simulator::insert_in_s (timer_delay_us, m_fast_ack_timeout_event);
+		Simulator::schedule_rel_s (timer_delay_us, m_fast_ack_timeout_event);
 	} else if (m_tx_params.must_wait_super_fast_ack ()) {
 		uint64_t timer_delay_us = tx_duration_us + get_pifs_us ();
 		assert (!m_super_fast_ack_timeout_event.is_running ());
 		m_super_fast_ack_timeout_event = make_event (&MacLow::super_fast_ack_timeout, this);
-		Simulator::insert_in_s (timer_delay_us, m_super_fast_ack_timeout_event);
+		Simulator::schedule_rel_s (timer_delay_us, m_super_fast_ack_timeout_event);
 	} else if (m_tx_params.has_next_packet ()) {
 		uint64_t delay_us = tx_duration_us + get_sifs_us ();
 		assert (!m_wait_sifs_event.is_running ());
 		m_wait_sifs_event = make_event (&MacLow::wait_sifs_after_end_tx, this);
-		Simulator::insert_in_us (delay_us, m_wait_sifs_event);
+		Simulator::schedule_rel_us (delay_us, m_wait_sifs_event);
 	} else {
 		// since we do not expect any timer to be triggered.
 		m_listener = 0;

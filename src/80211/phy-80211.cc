@@ -248,7 +248,7 @@ Phy80211::receive_packet (ConstPacketPtr packet,
 						     packet,
 						     make_count_ptr_holder (event), 
 						     stuff);
-			Simulator::insert_in_us (rx_duration_us, m_end_rx_event);
+			Simulator::schedule_rel_us (rx_duration_us, m_end_rx_event);
 		} else {
 			TRACE ("drop packet because signal power too small ("<<
 			       rx_power_w<<"<"<<m_ed_threshold_w<<")");

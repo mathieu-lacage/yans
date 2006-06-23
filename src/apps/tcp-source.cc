@@ -61,13 +61,13 @@ TcpSource::~TcpSource ()
 void 
 TcpSource::start_connect_at (Ipv4Address address, uint16_t port, double at)
 {
-	Simulator::insert_at_s (at, make_event (&TcpSource::start_connect_now, this, 
+	Simulator::schedule_abs_s (at, make_event (&TcpSource::start_connect_now, this, 
 						address, port));
 }
 void 
 TcpSource::start_disconnect_at (double at)
 {
-	Simulator::insert_at_s (at, make_event (&TcpSource::start_disconnect_now, this));
+	Simulator::schedule_abs_s (at, make_event (&TcpSource::start_disconnect_now, this));
 }
 
 void 

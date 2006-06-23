@@ -61,7 +61,7 @@ PeriodicGenerator::start_now (void)
 {
 	assert (!m_current_event.is_running ());
 	m_current_event = make_event (&PeriodicGenerator::send_next_packet, this);
-	Simulator::insert_in_us (m_interval_us, m_current_event);
+	Simulator::schedule_rel_us (m_interval_us, m_current_event);
 }
 void 
 PeriodicGenerator::stop_now (void)
@@ -75,7 +75,7 @@ PeriodicGenerator::start_at (double start)
 {
 	assert (!m_current_event.is_running ());
 	m_current_event = make_event (&PeriodicGenerator::send_next_packet, this);
-	Simulator::insert_at_s (start, m_current_event);
+	Simulator::schedule_abs_s (start, m_current_event);
 }
 void 
 PeriodicGenerator::stop_at (double end)
@@ -93,7 +93,7 @@ PeriodicGenerator::send_next_packet (void)
 	}
 	/* schedule next packet transmission. */
 	m_current_event = make_event (&PeriodicGenerator::send_next_packet, this);
-	Simulator::insert_in_us (m_interval_us, m_current_event);
+	Simulator::schedule_rel_us (m_interval_us, m_current_event);
 	/* create packet. */
 	PacketPtr packet = Packet::create ();
 	ChunkConstantData data (m_size, m_n);

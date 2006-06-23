@@ -71,7 +71,7 @@ FiberScheduler::FiberScheduler ()
 	: m_current (0)
 {
 	m_context = fiber_context_new_blank ();
-	Simulator::insert_later (make_event (&FiberScheduler::schedule, this));
+	Simulator::schedule_now (make_event (&FiberScheduler::schedule, this));
 }
 
 FiberScheduler::~FiberScheduler ()
@@ -102,7 +102,7 @@ FiberScheduler::schedule (void)
 
 		next = peek_next_fiber ();
 		if (next != 0) {
-			Simulator::insert_in_s (40e-3, make_event (&FiberScheduler::schedule, this));
+			Simulator::schedule_rel_s (40e-3, make_event (&FiberScheduler::schedule, this));
 		}
 		TRACE_ENTER_MAIN ();
 		prev->switch_to (m_context);

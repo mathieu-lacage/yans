@@ -82,7 +82,7 @@ TcpSink::receive (void)
 void 
 TcpSink::stop_listen_at (double at)
 {
-	Simulator::insert_at_s (at, make_event (&TcpSink::stop_listen_now, this));
+	Simulator::schedule_abs_s (at, make_event (&TcpSink::stop_listen_now, this));
 }
 
 void

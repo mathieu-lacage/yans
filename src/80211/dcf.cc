@@ -139,7 +139,7 @@ Dcf::request_access (void)
 		 */
 		TRACE ("request access X delayed for="<<delay_until_access_granted);
 		m_access_timer_event = make_event (&Dcf::access_timeout, this);
-		Simulator::insert_in_us (delay_until_access_granted, m_access_timer_event);
+		Simulator::schedule_rel_us (delay_until_access_granted, m_access_timer_event);
 	} else if (is_phy_busy ()) {
 		/* someone else has accessed the medium.
 		 * generate a backoff, start timer.
@@ -152,7 +152,7 @@ Dcf::request_access (void)
 		TRACE ("request access Y delayed for="<< delay_until_access_granted);
 		assert (!m_access_timer_event.is_running ());
 		m_access_timer_event = make_event (&Dcf::access_timeout, this);
-		Simulator::insert_in_us (delay_until_access_granted, m_access_timer_event);
+		Simulator::schedule_rel_us (delay_until_access_granted, m_access_timer_event);
 	} else {
 		/* we can access the medium now.
 		 */
@@ -200,7 +200,7 @@ Dcf::access_timeout ()
 	if (delay_until_access_granted > 0) {
 		TRACE ("timeout access delayed for "<< delay_until_access_granted);
 		m_access_timer_event = make_event (&Dcf::access_timeout, this);
-		Simulator::insert_in_us (delay_until_access_granted, m_access_timer_event);
+		Simulator::schedule_rel_us (delay_until_access_granted, m_access_timer_event);
 	} else {
 		TRACE ("timeout access granted");
 		m_listener->access_granted_now ();
@@ -310,7 +310,7 @@ Dcf::start_backoff (void)
 		if (delay_until_access_granted > 0) {
 			TRACE ("start at "<<backoff_start<<", for "<<backoff_duration);
 			m_access_timer_event = make_event (&Dcf::access_timeout, this);
-			Simulator::insert_in_us (delay_until_access_granted, m_access_timer_event);
+			Simulator::schedule_rel_us (delay_until_access_granted, m_access_timer_event);
 		} else {
 			TRACE ("access granted now");
 			m_listener->access_granted_now ();
@@ -407,7 +407,7 @@ Dcf::notify_nav_reset (uint64_t nav_start, uint64_t duration)
 	if (m_access_timer_event.is_running ()) {
 		m_access_timer_event.cancel ();
 		m_access_timer_event = make_event (&Dcf::access_timeout, this);
-		Simulator::insert_in_us (new_delay_until_access_granted, m_access_timer_event);
+		Simulator::schedule_rel_us (new_delay_until_access_granted, m_access_timer_event);
 	}
 }
 void
@@ -585,54 +585,54 @@ DcfTest::accessing_and_will_notify (void)
 void 
 DcfTest::add_rx_ok_evt (uint64_t at, uint64_t duration)
 {
-	Simulator::insert_at_us (at, make_event (&Dcf::notify_rx_start_now, m_dcf, duration));
-	Simulator::insert_at_us (at+duration, make_event (&Dcf::notify_rx_end_ok_now, m_dcf));
+	Simulator::schedule_abs_us (at, make_event (&Dcf::notify_rx_start_now, m_dcf, duration));
+	Simulator::schedule_abs_us (at+duration, make_event (&Dcf::notify_rx_end_ok_now, m_dcf));
 }
 void 
 DcfTest::add_rx_error_evt (uint64_t at, uint64_t duration)
 {
-	Simulator::insert_at_us (at, make_event (&Dcf::notify_rx_start_now, m_dcf, duration));
-	Simulator::insert_at_us (at+duration, make_event (&Dcf::notify_rx_end_error_now, m_dcf));
+	Simulator::schedule_abs_us (at, make_event (&Dcf::notify_rx_start_now, m_dcf, duration));
+	Simulator::schedule_abs_us (at+duration, make_event (&Dcf::notify_rx_end_error_now, m_dcf));
 }
 void 
 DcfTest::add_tx_evt (uint64_t at, uint64_t duration)
 {
-	Simulator::insert_at_us (at, make_event (&Dcf::notify_tx_start_now, m_dcf, duration));
+	Simulator::schedule_abs_us (at, make_event (&Dcf::notify_tx_start_now, m_dcf, duration));
 }
 void 
 DcfTest::add_nav_reset (uint64_t at, uint64_t start, uint64_t duration)
 {
-	Simulator::insert_at_us (at, make_event (&Dcf::notify_nav_reset, m_dcf, start, duration));
+	Simulator::schedule_abs_us (at, make_event (&Dcf::notify_nav_reset, m_dcf, start, duration));
 }
 void 
 DcfTest::add_nav_start (uint64_t at, uint64_t start, uint64_t duration)
 {
-	Simulator::insert_at_us (at, make_event (&Dcf::notify_nav_start, m_dcf, start, duration));
+	Simulator::schedule_abs_us (at, make_event (&Dcf::notify_nav_start, m_dcf, start, duration));
 }
 void 
 DcfTest::add_nav_continue (uint64_t at, uint64_t start, uint64_t duration)
 {
-	Simulator::insert_at_us (at, make_event (&Dcf::notify_nav_continue, m_dcf, start, duration));
+	Simulator::schedule_abs_us (at, make_event (&Dcf::notify_nav_continue, m_dcf, start, duration));
 }
 void 
 DcfTest::add_access_request (uint64_t time)
 {
-	Simulator::insert_at_us (time, make_event (&Dcf::request_access, m_dcf));
+	Simulator::schedule_abs_us (time, make_event (&Dcf::request_access, m_dcf));
 }
 void 
 DcfTest::add_access_error (uint64_t time)
 {
-	Simulator::insert_at_us (time, make_event (&DcfTest::access_error, this, time));
+	Simulator::schedule_abs_us (time, make_event (&DcfTest::access_error, this, time));
 }
 void 
 DcfTest::add_access_error_but_ok (uint64_t time)
 {
-	Simulator::insert_at_us (time, make_event (&DcfTest::access_error_but_ok, this, time));
+	Simulator::schedule_abs_us (time, make_event (&DcfTest::access_error_but_ok, this, time));
 }
 void 
 DcfTest::add_access_ok (uint64_t time)
 {
-	Simulator::insert_at_us (time, make_event (&DcfTest::access_ok, this, time));
+	Simulator::schedule_abs_us (time, make_event (&DcfTest::access_ok, this, time));
 }
 
 void 

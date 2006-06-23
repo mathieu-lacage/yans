@@ -52,7 +52,7 @@ public:
 	}
 	void start (PeriodicGenerator *generator, StaticPosition *a) {
 		generator->start_now ();
-		Simulator::insert_in_s (m_period_s, make_event (&MyTrace::advance, this, generator, a));
+		Simulator::schedule_rel_s (m_period_s, make_event (&MyTrace::advance, this, generator, a));
 	}
 	void advance (PeriodicGenerator *generator, StaticPosition *a) {
 		generator->stop_now ();
@@ -68,7 +68,7 @@ public:
 			return;
 		}
 		generator->start_now ();
-		Simulator::insert_in_s (m_period_s, make_event (&MyTrace::advance, this, generator, a));
+		Simulator::schedule_rel_s (m_period_s, make_event (&MyTrace::advance, this, generator, a));
 	}
 private:
 	uint32_t m_current;

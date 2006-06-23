@@ -52,7 +52,7 @@ advance (StaticPosition *a)
 		return;
 	}
 	//std::cout << "x="<<x << std::endl;
-	Simulator::insert_in_s (1.0, make_event (&advance, a));
+	Simulator::schedule_rel_s (1.0, make_event (&advance, a));
 }
 
 
@@ -82,7 +82,7 @@ int main (int argc, char *argv[])
 	wifi_client = wifi_factory->create_adhoc (address.get_next (), pos_client);
 	wifi_client->connect_to (channel);
 	pos_client->set (5.0, 0.0, 0.0);
-	Simulator::insert_in_s (1.0, make_event (&advance, pos_client));
+	Simulator::schedule_rel_s (1.0, make_event (&advance, pos_client));
 	Host *hclient = new Host ("client");
 	Ipv4NetworkInterface *ni_client =
 		hclient->add_ipv4_arp_interface (wifi_client, 
@@ -109,7 +109,7 @@ int main (int argc, char *argv[])
 	wifi_server->connect_to (channel);
 	pos_server->set (0.0, 0.0, 0.0);
 	ThroughputPrinter *printer = new ThroughputPrinter ();
-	Simulator::insert_at_s (40, make_event (&ThroughputPrinter::stop, printer));
+	Simulator::schedule_abs_s (40, make_event (&ThroughputPrinter::stop, printer));
 	TraceContainer container = TraceContainer ();
 	wifi_server->register_trace (&container);
 	container.set_packet_logger_callback ("80211-packet-rx", 

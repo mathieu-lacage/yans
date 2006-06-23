@@ -68,7 +68,7 @@ UdpSink::bind (Ipv4Address address, uint16_t port)
 void
 UdpSink::unbind_at (double at)
 {
-	Simulator::insert_at_s (at, make_event (&UdpSink::unbind_now, this));
+	Simulator::schedule_abs_s (at, make_event (&UdpSink::unbind_now, this));
 }
 
 void

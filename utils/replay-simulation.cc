@@ -164,13 +164,13 @@ LogReader::execute_log_commands (uint32_t uid)
 		case Command::INSERT:
 			//std::cout << "exec insert now=" << Simulator::now_us ()
 			//<< ", time=" << cmd.insert.m_ev_us << std::endl;
-			Simulator::insert_at_us (cmd.insert.m_ev_us, 
+			Simulator::schedule_abs_us (cmd.insert.m_ev_us, 
 						 make_event (&LogReader::execute_log_commands, this, m_uid));
 			m_uid++;
 			break;
 		case Command::INSERT_LATER:
 			//std::cout << "exec insert later" << std::endl;
-			Simulator::insert_later (make_event (&LogReader::execute_log_commands, this, m_uid));
+			Simulator::schedule_now (make_event (&LogReader::execute_log_commands, this, m_uid));
 			m_uid++;
 			break;
 		case Command::REMOVE: {
@@ -182,7 +182,7 @@ LogReader::execute_log_commands (uint32_t uid)
 		case Command::INSERT_REMOVE: {
 			//std::cout << "exec insert remove" << std::endl;
 			Event ev = make_event (&LogReader::execute_log_commands, this, m_uid);
-			Simulator::insert_at_us (cmd.insert_remove.m_ev_us, ev);
+			Simulator::schedule_abs_us (cmd.insert_remove.m_ev_us, ev);
 			m_remove_events[cmd.insert_remove.m_ev_loc] = ev;
 			m_uid++;
 		} break;

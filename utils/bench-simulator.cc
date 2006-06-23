@@ -99,7 +99,7 @@ Bench::bench (void)
 	time.start ();
 	for (std::vector<uint64_t>::const_iterator i = m_distribution.begin ();
 	     i != m_distribution.end (); i++) {
-		Simulator::insert_in_us (*i, make_event (&Bench::cb, this));
+		Simulator::schedule_rel_us (*i, make_event (&Bench::cb, this));
 	}
 	init = time.end ();
 
@@ -131,7 +131,7 @@ Bench::cb (void)
 	if (g_debug) {
 		std::cerr << "event at " << Simulator::now_s () << std::endl;
 	}
-	Simulator::insert_in_us (*m_current, make_event (&Bench::cb, this));
+	Simulator::schedule_rel_us (*m_current, make_event (&Bench::cb, this));
 	m_current++;
 	m_n++;
 }

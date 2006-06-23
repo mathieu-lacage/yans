@@ -46,7 +46,7 @@ Channel80211::real_send (ConstPacketPtr packet, double tx_power_dbm,
 		if (caller != (*i)) {
 			uint64_t delay_us = (*i)->get_delay_us (from_x, from_y, from_z);
 			double rx_power_w = (*i)->get_rx_power_w (tx_power_dbm, from_x, from_y, from_z);
-			Simulator::insert_in_us (delay_us, make_event (&PropagationModel::receive, *i,
+			Simulator::schedule_rel_us (delay_us, make_event (&PropagationModel::receive, *i,
 								       packet, rx_power_w, tx_mode, stuff));
 		}
 	}

@@ -59,7 +59,7 @@ UdpSource::bind (Ipv4Address address, uint16_t port)
 void 
 UdpSource::unbind_at (double at)
 {
-	Simulator::insert_at_s (at, make_event (&UdpSource::unbind_now, this));
+	Simulator::schedule_abs_s (at, make_event (&UdpSource::unbind_now, this));
 }
 void 
 UdpSource::set_peer (Ipv4Address address, uint16_t port)

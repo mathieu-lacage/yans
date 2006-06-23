@@ -53,7 +53,7 @@ public:
 	ParallelSimulatorQueuePrivate (SimulatorPrivate *priv);
 	~ParallelSimulatorQueuePrivate ();
 	void set_queue (ParallelSimulatorQueue *queue);
-	void insert_at_us (Event ev, uint64_t at);
+	void schedule_abs_us (Event ev, uint64_t at);
 	void send_null_message (void);
 private:
 	void remove_event (Event ev);
@@ -81,15 +81,15 @@ public:
 	void run_parallel (void);
 	void stop (void);
 	void stop_at_us (uint64_t at);
-	Event insert_in_us (Event event, uint64_t delta);
-	Event insert_in_s (Event event, double delta);
-	Event insert_at_us (Event event, uint64_t time);
-	Event insert_at_s (Event event, double time);
+	Event schedule_rel_us (Event event, uint64_t delta);
+	Event schedule_rel_s (Event event, double delta);
+	Event schedule_abs_us (Event event, uint64_t time);
+	Event schedule_abs_s (Event event, double time);
 	Event remove (Event const ev);
 	uint64_t now_us (void);
 	double now_s (void);
-	void insert_later (Event event);
-	void insert_at_destroy (Event event);
+	void schedule_now (Event event);
+	void schedule_destroy (Event event);
 
 private:
 	void process_one_event (void);
@@ -120,13 +120,13 @@ ParallelSimulatorQueuePrivate::ParallelSimulatorQueuePrivate (SimulatorPrivate *
 ParallelSimulatorQueuePrivate::~ParallelSimulatorQueuePrivate ()
 {}
 void 
-ParallelSimulatorQueuePrivate::insert_at_us (Event ev, uint64_t at)
+ParallelSimulatorQueuePrivate::schedule_abs_us (Event ev, uint64_t at)
 {
 	m_n++;
 	if (m_n == 1) {
 		m_simulator->notify_queue_not_empty ();
 	}
-	m_simulator->insert_at_us (make_event (&ParallelSimulatorQueuePrivate::remove_event, this, ev), at);
+	m_simulator->schedule_abs_us (make_event (&ParallelSimulatorQueuePrivate::remove_event, this, ev), at);
 }
 void
 ParallelSimulatorQueuePrivate::remove_event (Event ev)
@@ -254,7 +254,7 @@ void
 SimulatorPrivate::run_serial (void)
 {
 	while (!m_events->is_empty () && !m_stop && 
-	       (m_stop_at == 0 || m_stop_at > m_current_us)) {
+	       (m_stop_at == 0 || m_stop_at > next_us ())) {
 		process_one_event ();
 	}
 	m_log.close ();
@@ -265,7 +265,7 @@ SimulatorPrivate::run_parallel (void)
 {
 	TRACE ("run parallel");
 	while (!m_stop && 
-	       (m_stop_at == 0 || m_stop_at > m_current_us)) {
+	       (m_stop_at == 0 || m_stop_at >= next_us ())) {
 		TRACE ("send null messages");
 		for (QueuesI i = m_queues.begin (); i != m_queues.end (); i++) {
 			(*i)->send_null_message ();
@@ -291,13 +291,13 @@ SimulatorPrivate::stop_at_us (uint64_t at)
 	m_stop_at = at;
 }
 Event   
-SimulatorPrivate::insert_in_us (Event event, uint64_t delta)
+SimulatorPrivate::schedule_rel_us (Event event, uint64_t delta)
 {
 	uint64_t current = now_us ();
-	return insert_at_us (event, current+delta);
+	return schedule_abs_us (event, current+delta);
 }
 Event  
-SimulatorPrivate::insert_at_us (Event event, uint64_t time)
+SimulatorPrivate::schedule_abs_us (Event event, uint64_t time)
 {
 	assert (time >= now_us ());
 	Scheduler::EventKey key = {time, m_uid};
@@ -314,18 +314,18 @@ SimulatorPrivate::now_us (void)
 	return m_current_us;
 }
 Event  
-SimulatorPrivate::insert_in_s (Event event, double delta)
+SimulatorPrivate::schedule_rel_s (Event event, double delta)
 {
 	int64_t delta_us = (int64_t)(delta * 1000000.0);
 	uint64_t us = now_us () + delta_us;
-	return insert_at_us (event, us);
+	return schedule_abs_us (event, us);
 }
 Event  
-SimulatorPrivate::insert_at_s (Event event, double time)
+SimulatorPrivate::schedule_abs_s (Event event, double time)
 {
 	int64_t us = (int64_t)(time * 1000000.0);
 	assert (us >= 0);
-	return insert_at_us (event, (uint64_t)us);
+	return schedule_abs_us (event, (uint64_t)us);
 }
 double 
 SimulatorPrivate::now_s (void)
@@ -335,12 +335,12 @@ SimulatorPrivate::now_s (void)
 	return us;
 }
 void
-SimulatorPrivate::insert_later (Event event)
+SimulatorPrivate::schedule_now (Event event)
 {
-	insert_at_us (event, now_us ());
+	schedule_abs_us (event, now_us ());
 }
 void
-SimulatorPrivate::insert_at_destroy (Event event)
+SimulatorPrivate::schedule_destroy (Event event)
 {
 	m_destroy.push_back (std::make_pair (event, m_uid));
 	if (m_log_enable) {
@@ -468,16 +468,16 @@ Simulator::stop_at_us (uint64_t at)
 	get_priv ()->stop_at_us (at);
 }
 Event 
-Simulator::insert_in_us (uint64_t delta, Event event)
+Simulator::schedule_rel_us (uint64_t delta, Event event)
 {
 	TRACE ("insert " << event << " in " << delta << "us");
-	return get_priv ()->insert_in_us (event, delta);
+	return get_priv ()->schedule_rel_us (event, delta);
 }
 Event 
-Simulator::insert_at_us (uint64_t time, Event event)
+Simulator::schedule_abs_us (uint64_t time, Event event)
 {
 	TRACE ("insert " << event << " at " << time << "us");
-	return get_priv ()->insert_at_us (event, time);
+	return get_priv ()->schedule_abs_us (event, time);
 }
 uint64_t 
 Simulator::now_us (void)
@@ -485,16 +485,16 @@ Simulator::now_us (void)
 	return get_priv ()->now_us ();
 }
 Event  
-Simulator::insert_in_s (double delta, Event event)
+Simulator::schedule_rel_s (double delta, Event event)
 {
 	TRACE ("insert " << event << " in " << delta << "s");
-	return get_priv ()->insert_in_s (event, delta);
+	return get_priv ()->schedule_rel_s (event, delta);
 }
 Event  
-Simulator::insert_at_s (double time, Event event)
+Simulator::schedule_abs_s (double time, Event event)
 {
 	TRACE ("insert " << event << " at " << time << "s");
-	return get_priv ()->insert_at_s (event, time);
+	return get_priv ()->schedule_abs_s (event, time);
 }
 double 
 Simulator::now_s (void)
@@ -502,16 +502,16 @@ Simulator::now_s (void)
 	return get_priv ()->now_s ();
 }
 void
-Simulator::insert_later (Event event)
+Simulator::schedule_now (Event event)
 {
 	TRACE ("insert later " << event);
-	return get_priv ()->insert_later (event);
+	return get_priv ()->schedule_now (event);
 }
 void 
-Simulator::insert_at_destroy (Event event)
+Simulator::schedule_destroy (Event event)
 {
 	TRACE ("insert at destroy " << event);
-	return get_priv ()->insert_at_destroy (event);
+	return get_priv ()->schedule_destroy (event);
 }
 
 Event 
@@ -532,9 +532,9 @@ ParallelSimulatorQueue::~ParallelSimulatorQueue ()
 	delete m_priv;
 }
 void 
-ParallelSimulatorQueue::insert_at_us (uint64_t at, Event ev)
+ParallelSimulatorQueue::schedule_abs_us (uint64_t at, Event ev)
 {
-	m_priv->insert_at_us (ev, at);
+	m_priv->schedule_abs_us (ev, at);
 }
 void
 ParallelSimulatorQueue::set_priv (ParallelSimulatorQueuePrivate *priv)

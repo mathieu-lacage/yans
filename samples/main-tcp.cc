@@ -116,7 +116,7 @@ int main (int argc, char *argv[])
 	 * object which we want to trace does not exist before.
 	 */
 	MyTcpTrace *tcp_trace = new MyTcpTrace ();
-	Simulator::insert_at_s (1.0, make_event (&MyTcpTrace::start_connect, tcp_trace, 
+	Simulator::schedule_abs_s (1.0, make_event (&MyTcpTrace::start_connect, tcp_trace, 
 						 source, Ipv4Address ("192.168.0.2"), (uint16_t)1026));
 
 	TcpSink *sink = new TcpSink (hserver);

@@ -16,7 +16,7 @@ private:
 void 
 MyModel::start (void)
 {
-	Simulator::insert_at_s (10.0, make_event (&MyModel::deal_with_event, 
+	Simulator::schedule_abs_s (10.0, make_event (&MyModel::deal_with_event, 
 						  this, Simulator::now_s ()));
 }
 void

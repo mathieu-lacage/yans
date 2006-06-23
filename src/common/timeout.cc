@@ -47,7 +47,7 @@ Timeout::set_count (uint32_t count)
 
 void Timeout::start (void)
 {
-	Simulator::insert_in_us (m_interval_us,
+	Simulator::schedule_rel_us (m_interval_us,
 				 make_event (&Timeout::expire, this));
 }
 void Timeout::stop (void)
@@ -69,7 +69,7 @@ Timeout::expire (void)
 		m_callback ();
 		return;
 	}
-	Simulator::insert_in_us (m_interval_us,
+	Simulator::schedule_rel_us (m_interval_us,
 				 make_event (&Timeout::expire, this));
 }
 

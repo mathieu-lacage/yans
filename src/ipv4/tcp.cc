@@ -187,8 +187,8 @@ Tcp::create_connection (Ipv4EndPoint *end_p)
 	connection->set_destroy_handler (make_callback (&Tcp::destroy_connection, this));
 	m_connections.push_back (connection);
 	if (!m_running) {
-		Simulator::insert_in_us (FAST_TIMER_DELAY_US, make_event (&Tcp::fast_timer, this));
-		Simulator::insert_in_us (SLOW_TIMER_DELAY_US, make_event (&Tcp::slow_timer, this));
+		Simulator::schedule_rel_us (FAST_TIMER_DELAY_US, make_event (&Tcp::fast_timer, this));
+		Simulator::schedule_rel_us (SLOW_TIMER_DELAY_US, make_event (&Tcp::slow_timer, this));
 		m_running = true;
 	}
 	return connection;
@@ -240,7 +240,7 @@ Tcp::slow_timer (void)
 		(*i)->slow_timer ();
 	}
 
-	Simulator::insert_in_us (SLOW_TIMER_DELAY_US, make_event (&Tcp::slow_timer, this));
+	Simulator::schedule_rel_us (SLOW_TIMER_DELAY_US, make_event (&Tcp::slow_timer, this));
 
 	m_tcp_iss += SLOW_TIMER_DELAY_US;
 	m_tcp_now++;
@@ -259,7 +259,7 @@ Tcp::fast_timer (void)
 		(*i)->fast_timer ();
 	}
 
-	Simulator::insert_in_us (FAST_TIMER_DELAY_US, make_event (&Tcp::fast_timer, this));
+	Simulator::schedule_rel_us (FAST_TIMER_DELAY_US, make_event (&Tcp::fast_timer, this));
 }
 
 

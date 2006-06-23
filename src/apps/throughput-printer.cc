@@ -32,7 +32,7 @@ ThroughputPrinter::ThroughputPrinter ()
 	  m_period_us (1000000)
 {
 	m_timeout_event = make_event (&ThroughputPrinter::timeout, this);
-	Simulator::insert_in_us (m_period_us, m_timeout_event);
+	Simulator::schedule_rel_us (m_period_us, m_timeout_event);
 }
 void 
 ThroughputPrinter::set_print_interval_us (uint64_t us)
@@ -58,7 +58,7 @@ ThroughputPrinter::timeout (void)
 	double mbs = ((n_bytes * 8.0) /m_period_us);
 	std::cout << "time=" << (Simulator::now_us () / 1000000) << ", throughput="<<mbs<<"Mb/s"<<std::endl;
 	m_timeout_event = make_event (&ThroughputPrinter::timeout, this);
-	Simulator::insert_in_us (m_period_us, m_timeout_event);
+	Simulator::schedule_rel_us (m_period_us, m_timeout_event);
 }
 
 

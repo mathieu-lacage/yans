@@ -106,7 +106,7 @@ MacSimple::send (PacketPtr packet, MacAddress to)
 			m_data_retry = 0;
 			assert (!m_send_later_event.is_running ());
 			m_send_later_event = make_event (&MacSimple::send_later, this);
-			Simulator::insert_in_us (m_phy->get_delay_until_idle_us (),
+			Simulator::schedule_rel_us (m_phy->get_delay_until_idle_us (),
 						 m_send_later_event);
 		}
 		// busy sending something.
@@ -210,7 +210,7 @@ MacSimple::send_rts (void)
 	uint64_t tx_duration = m_phy->calculate_tx_duration_us (packet->get_size (), station->get_rts_mode ());
 	assert (!m_rts_timeout_event.is_running ());
 	m_rts_timeout_event = make_event (&MacSimple::retry_rts, this);
-	Simulator::insert_in_us (tx_duration + get_rts_timeout_us (), m_rts_timeout_event);
+	Simulator::schedule_rel_us (tx_duration + get_rts_timeout_us (), m_rts_timeout_event);
 	m_phy->send_packet (packet, station->get_rts_mode (), 0, 0);
 }
 
@@ -230,7 +230,7 @@ MacSimple::send_data (void)
 		uint64_t tx_duration = m_phy->calculate_tx_duration_us (packet->get_size (), 
 									station->get_data_mode (packet->get_size ()));
 		m_data_timeout_event = make_event (&MacSimple::retry_data, this);
-		Simulator::insert_in_us (tx_duration + get_data_timeout_us (), 
+		Simulator::schedule_rel_us (tx_duration + get_data_timeout_us (), 
 					 m_data_timeout_event);
 	}
 	m_phy->send_packet (packet, station->get_data_mode (packet->get_size ()), 0, 0);
@@ -299,7 +299,7 @@ MacSimple::send_if_we_can (void)
 		assert (m_current != 0);
 		if (!m_send_later_event.is_running ()) {
 			m_send_later_event = make_event (&MacSimple::send_later, this);
-			Simulator::insert_in_us (m_phy->get_delay_until_idle_us (),
+			Simulator::schedule_rel_us (m_phy->get_delay_until_idle_us (),
 						 m_send_later_event);
 		}
 		return;

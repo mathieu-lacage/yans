@@ -63,7 +63,7 @@ Cable::send (PacketPtr packet, EthernetNetworkInterface *sender)
 		assert (sender == m_b);
 		rx = m_a;
 	}
-	Simulator::insert_in_s (delay, make_event (&EthernetNetworkInterface::recv, rx, packet));
+	Simulator::schedule_rel_s (delay, make_event (&EthernetNetworkInterface::recv, rx, packet));
 }
 
 }; // namespace yans

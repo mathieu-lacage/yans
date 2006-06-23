@@ -160,7 +160,7 @@ MacHighNqsta::send_probe_request (void)
 	m_dca->queue (packet, hdr);
 
 	m_probe_request_event = make_event (&MacHighNqsta::probe_request_timeout, this);
-	Simulator::insert_in_us (m_probe_request_timeout_us,
+	Simulator::schedule_rel_us (m_probe_request_timeout_us,
 				 m_probe_request_event);
 }
 
@@ -185,7 +185,7 @@ MacHighNqsta::send_association_request ()
 	m_dca->queue (packet, hdr);
 
 	m_probe_request_event = make_event (&MacHighNqsta::probe_request_timeout, this);
-	Simulator::insert_in_us (m_probe_request_timeout_us,
+	Simulator::schedule_rel_us (m_probe_request_timeout_us,
 				 m_probe_request_event);
 }
 void
