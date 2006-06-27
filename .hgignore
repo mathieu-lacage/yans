@@ -9,3 +9,5 @@ output
 config.mk
 .*.heap$
 yans-.*
+doc/html/.*
+doc/latex/.*
