@@ -16,13 +16,20 @@ private:
 void 
 MyModel::start (void)
 {
-	Simulator::schedule_abs_s (10.0, make_event (&MyModel::deal_with_event, 
+	Simulator::schedule_rel_s (10.0, make_event (&MyModel::deal_with_event, 
 						  this, Simulator::now_s ()));
 }
 void
 MyModel::deal_with_event (double value)
 {
-	std::cout << "Received event at " << Simulator::now_s () << " started at " << value << std::endl;
+	std::cout << "Member method received event at " << Simulator::now_s () << " started at " << value << std::endl;
+}
+
+static void 
+random_function (MyModel *model)
+{
+	std::cout << "random function received event at " << Simulator::now_s () << std::endl;
+	model->start ();
 }
 
 
@@ -30,7 +37,8 @@ int main (int argc, char *argv[])
 {
 	MyModel model;
 
-	model.start ();
+	Simulator::schedule_rel_s (10.0, make_event (&random_function, 
+						     &model));
 
 	Simulator::run ();
 
