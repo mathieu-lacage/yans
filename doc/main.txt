@@ -1,0 +1,10 @@
+/**
+ * \mainpage An Introduction to Yans
+ *
+ * The yans (Yet Another Network Simulator) library provides:
+ */
+/**
+ * \namespace yans
+ * \brief Every class exported by the yans library is enclosed in the
+ * yans namespace.
+ */
