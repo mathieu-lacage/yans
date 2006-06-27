@@ -420,9 +420,9 @@ TEST_LDFLAGS:=$(LDFLAGS) -lyans $(TC_LDFLAGS)
 
 
 SAMPLE_CXX_SIMUTEMP_SRC:= \
-	samples/main-forwarding-simulator-template.cc \
+	samples/main-simulator.cc \
 	$(NULL)
-SAMPLE_CXX_SIMUTEMP_NAME:=main-forwarding-simulator-template
+SAMPLE_CXX_SIMUTEMP_NAME:=main-simulator
 SAMPLE_CXX_SIMUTEMP_OUTPUT_DIR:=
 SAMPLE_CXX_SIMUTEMP_TYPE:=executable
 SAMPLE_CXX_SIMUTEMP_CXXFLAGS:=$(CXXFLAGS)
