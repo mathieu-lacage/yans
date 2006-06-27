@@ -33,7 +33,7 @@ class EventImpl;
  *
  * The Event class has POD semantics: it can and should
  * be passed around by value. The Event class is a mere
- * wrapper around the EventImpl class which performs
+ * wrapper around the EventImpl class and performs
  * memory management of EventImpl object instances.
  *
  * While users could create Events by instanciating 
