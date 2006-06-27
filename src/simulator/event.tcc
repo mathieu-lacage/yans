@@ -25,7 +25,23 @@
 #include "event.h"
 #include "event-impl.h"
 
+/**
+ * yans namespace
+ */
 namespace yans {
+
+/**
+ * \defgroup make_event make_event
+ *
+ * Every make_event template function returns a newly-created Event
+ * which holds a pointer to a special subclass of the EventImpl 
+ * base class. Each of these subclasses holds information about which
+ * function or method to call and which parameters must be forwarded
+ * to this function or method.
+ *
+ * Sample code is shown below:
+ * \include samples/main-event.cc
+ */
 
 template<typename T>
 class EventMemberImpl0 : public EventImpl {
@@ -171,27 +187,83 @@ private:
 	T5 m_a5;
 };
 
-
+/**
+ * \ingroup make_event
+ * \param f class method member pointer
+ * \param t class instance
+ * \return a wrapper Event
+ * Build Events for class method members which take no arguments.
+ */
 template<typename T>
 Event make_event(void (T::*f) (void), T* t) {
 	return Event (new EventMemberImpl0<T>(t, f));
 }
+/**
+ * \ingroup make_event
+ * \param f class method member pointer
+ * \param t class instance
+ * \param a1 first argument to pass to the target method when the event expires
+ * \return a wrapper Event
+ * Build Events for class method members which take only one argument
+ */
 template<typename T, typename T1>
 Event make_event(void (T::*f) (T1), T* t, T1 a1) {
 	return Event (new EventMemberImpl1<T, T1>(t, f, a1));
 }
+/**
+ * \ingroup make_event
+ * \param f class method member pointer
+ * \param t class instance
+ * \param a1 first argument to pass to the target method when the event expires
+ * \param a2 second argument to pass to the target method when the event expires
+ * \return a wrapper Event
+ * Build Events for class method members which take two arguments
+ */
 template<typename T, typename T1, typename T2>
 Event make_event(void (T::*f) (T1, T2), T* t, T1 a1, T2 a2) {
 	return Event (new EventMemberImpl2<T, T1, T2>(t, f, a1, a2));
 }
+/**
+ * \ingroup make_event
+ * \param f class method member pointer
+ * \param t class instance
+ * \param a1 first argument to pass to the target method when the event expires
+ * \param a2 second argument to pass to the target method when the event expires
+ * \param a3 third argument to pass to the target method when the event expires
+ * \return a wrapper Event
+ * Build Events for class method members which take three arguments
+ */
 template<typename T, typename T1, typename T2, typename T3>
 Event make_event(void (T::*f) (T1, T2, T3), T* t, T1 a1, T2 a2, T3 a3) {
 	return Event (new EventMemberImpl3<T, T1, T2, T3>(t, f, a1, a2, a3));
 }
+/**
+ * \ingroup make_event
+ * \param f class method member pointer
+ * \param t class instance
+ * \param a1 first argument to pass to the target method when the event expires
+ * \param a2 second argument to pass to the target method when the event expires
+ * \param a3 third argument to pass to the target method when the event expires
+ * \param a4 fourth argument to pass to the target method when the event expires
+ * \return a wrapper Event
+ * Build Events for class method members which take four arguments
+ */
 template<typename T, typename T1, typename T2, typename T3, typename T4>
 Event make_event(void (T::*f) (T1, T2, T3, T4), T* t, T1 a1, T2 a2, T3 a3, T4 a4) {
 	return Event (new EventMemberImpl4<T, T1, T2, T3, T4>(t, f, a1, a2, a3, a4));
 }
+/**
+ * \ingroup make_event
+ * \param f class method member pointer
+ * \param t class instance
+ * \param a1 first argument to pass to the target method when the event expires
+ * \param a2 second argument to pass to the target method when the event expires
+ * \param a3 third argument to pass to the target method when the event expires
+ * \param a4 fourth argument to pass to the target method when the event expires
+ * \param a5 fifth argument to pass to the target method when the event expires
+ * \return a wrapper Event
+ * Build Events for class method members which take five arguments.
+ */
 template<typename T, typename T1, typename T2, typename T3, typename T4, typename T5>
 Event make_event(void (T::*f) (T1, T2, T3, T4, T5), T* t, T1 a1, T2 a2, T3 a3, T4 a4, T5 a5) {
 	return Event (new EventMemberImpl5<T, T1, T2, T3, T4, T5>(t, f, a1, a2, a3, a4, a5));
@@ -313,24 +385,75 @@ private:
 };
 
 
+/**
+ * \ingroup make_event
+ * \param f function pointer
+ * \return a wrapper Event
+ * Build Events for function pointers which take no arguments
+ */
 Event make_event(void (*f) (void));
 
+/**
+ * \ingroup make_event
+ * \param f function pointer
+ * \param a1 first argument to pass to the target function when the event expires
+ * \return a wrapper Event
+ * Build Events for function pointers which take one argument
+ */
 template<typename T1>
 Event make_event(void (*f) (T1), T1 a1) {
 	return Event (new EventFunctionImpl1<T1>(f, a1));
 }
+/**
+ * \ingroup make_event
+ * \param f function pointer
+ * \param a1 first argument to pass to the target function when the event expires
+ * \param a2 second argument to pass to the target function when the event expires
+ * \return a wrapper Event
+ * Build Events for function pointers which take two argument
+ */
 template<typename T1, typename T2>
 Event make_event(void (*f) (T1, T2), T1 a1, T2 a2) {
 	return Event (new EventFunctionImpl2<T1, T2>(f, a1, a2));
 }
+/**
+ * \ingroup make_event
+ * \param f function pointer
+ * \param a1 first argument to pass to the target function when the event expires
+ * \param a2 second argument to pass to the target function when the event expires
+ * \param a3 third argument to pass to the target function when the event expires
+ * \return a wrapper Event
+ * Build Events for function pointers which take three argument
+ */
 template<typename T1, typename T2, typename T3>
 Event make_event(void (*f) (T1, T2, T3), T1 a1, T2 a2, T3 a3) {
 	return Event (new EventFunctionImpl3<T1, T2, T3>(f, a1, a2, a3));
 }
+/**
+ * \ingroup make_event
+ * \param f function pointer
+ * \param a1 first argument to pass to the target function when the event expires
+ * \param a2 second argument to pass to the target function when the event expires
+ * \param a3 third argument to pass to the target function when the event expires
+ * \param a4 fourth argument to pass to the target function when the event expires
+ * \return a wrapper Event
+ * Build Events for function pointers which take four argument
+ */
 template<typename T1, typename T2, typename T3, typename T4>
 Event make_event(void (*f) (T1, T2, T3, T4), T1 a1, T2 a2, T3 a3, T4 a4) {
 	return Event (new EventFunctionImpl4<T1, T2, T3, T4>(f, a1, a2, a3, a4));
 }
+/**
+ * \ingroup make_event
+ * \param f function pointer
+ * \param a1 first argument to pass to the target function when the event expires
+ * \param a2 second argument to pass to the target function when the event expires
+ * \param a3 third argument to pass to the target function when the event expires
+ * \param a4 fourth argument to pass to the target function when the event expires
+ * \param a5 fifth argument to pass to the target function when the event expires
+ * \return a wrapper Event
+ * Build Events for function pointers which take five argument
+ */
 template<typename T1, typename T2, typename T3, typename T4, typename T5>
 Event make_event(void (*f) (T1, T2, T3, T4, T5), T1 a1, T2 a2, T3 a3, T4 a4, T5 a5) {
 	return Event (new EventFunctionImpl5<T1, T2, T3, T4, T5>(f, a1, a2, a3, a4, a5));

@@ -26,8 +26,21 @@
 
 namespace yans {
 
-class EventImpl;
 
+class EventImpl;
+/**
+ * \brief Simulation events.
+ *
+ * The Event class has POD semantics: it can and should
+ * be passed around by value. The Event class is a mere
+ * wrapper around the EventImpl class which performs
+ * memory management of EventImpl object instances.
+ *
+ * While users could create Events by instanciating 
+ * subclasses of the EventImpl class and storing them
+ * in an Event instance, they are advised to use the 
+ * template functions \ref make_event instead.
+ */
 class Event {
 public:
 	INL_EXPE Event ();
@@ -36,7 +49,26 @@ public:
 	INL_EXPE ~Event ();
 	INL_EXPE Event &operator = (Event const&o);
 	INL_EXPE void operator () (void);
+	/**
+	 * Cancel an event. This operation has O(1) 
+	 * complexity since it merely sets a "cancel" bit
+	 * to on and does not remove the Event from the 
+	 * scheduler's event list. When the event expires, 
+	 * the scheduler checks this cancel bit and, if set,
+	 * does not execute the event.
+	 */
 	INL_EXPE void cancel (void);
+	/**
+	 * Return true if the event is in RUNNING state.
+	 * Return false otherwise.
+	 *
+	 * An Event is created in RUNNING state and switches
+	 * to NON_RUNNING state upon one of:
+	 *    - cancel bit is set to on
+	 *    - Event execution is completed.
+	 * It is important to note that an event is in RUNNING
+	 * state while being executed.
+	 */
 	INL_EXPE bool is_running (void);
 private:
 	friend class SchedulerHeap;
