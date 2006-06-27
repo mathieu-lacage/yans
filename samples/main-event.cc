@@ -26,9 +26,17 @@ random_function (void)
 int main (int argc, char *argv[])
 {
 	Event ev;
+	// create event to forward to random_function
 	ev = make_event (&random_function);
+	// set cancel bit to on
+	ev.cancel ();
+	// try to invoke the random_function through the event.
+	// This does nothing since cancel bit is on.
 	ev ();
 	MyModel model;
+	// create event to forward to MyModel::deal_with_event
+	// on the class instance "model".
 	ev = make_event (&MyModel::deal_with_event, &model, 10.0);
+	// invoke member method through the event.
 	ev ();
 }
