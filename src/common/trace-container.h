@@ -42,6 +42,20 @@ class TraceStream;
  * their trace event sources. Model users use the TraceContainer
  * class to connect their trace event listeners to the
  * model trace event sources.
+ *
+ * TraceContainer can be used to register the following event sources:
+ *   - yans::PacketLogger : can be connected to yans::PcapWriter
+ *   - yans::TraceStream : can be connected to any std::ostream
+ *   - yans::UiTracedVariable
+ *   - yans::SiTracedVariable
+ *   - yans::FTracedVariable
+ *
+ * The following sample code shows how you can:
+ *   - create trace event sources
+ *   - register the trace event sources in a trace container
+ *   - set event sinks to each event source
+ *  
+ * \include samples/main-trace.cc
  */
 class TraceContainer {
 public:
