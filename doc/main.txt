@@ -2,12 +2,12 @@
  * \mainpage An Introduction to Yans
  *
  * The yans (Yet Another Network Simulator) library provides:
- *    - a Callback (Functor) class
- *    - Trace facilities: TraceContainer, TraceStream, PacketLogger, UiTracedVariable,
- *      SiTracedVariable, FTracedVariable, PcapWriter
- *    - a simulation core with multiple event schedulers: Simulator
- *    - event generation facilities: make_event
- *    - a network Packet class
+ *    - a Callback (Functor) class: yans::Callback
+ *    - Trace facilities: yans::TraceContainer, yans::TraceStream, yans::PacketLogger, 
+ *      yans::UiTracedVariable, yans::SiTracedVariable, yans::FTracedVariable, yans::PcapWriter
+ *    - a simulation core with multiple event schedulers: yans::Simulator
+ *    - event generation facilities: yans::make_event
+ *    - a network Packet class: yans::Packet
  */
 /**
  * \namespace yans
