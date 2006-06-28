@@ -55,6 +55,30 @@ template <typename T>
 class UiTracedVariable;
 
 
+/**
+ * \brief trace variables of type "signed integer"
+ *
+ * This template class implements a POD type: it
+ * behaves like any other variable of type "signed integer"
+ * except that it also reports any changes to its
+ * value with its internal callback.
+ *
+ * To instantiate a 32-bit signed variable (to store
+ * a TCP counter for example), you would create a variable of type
+ * yans::UiTracedVariable<int32_t> :
+ \code
+ #include <stdint.h>
+ #include "yans/si-traced-variable.tcc"
+
+ yans::SiTracedVariable<uint16_t> var;
+ \endcode
+ * and you would use it like any other variable of type int32_t:
+ \code
+ var += 12;
+ var = 10;
+ var = -10;
+ \endcode
+ */
 template <typename T>
 class SiTracedVariable : public SiTracedVariableBase {
 public:

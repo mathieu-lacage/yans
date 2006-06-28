@@ -26,8 +26,20 @@
 
 namespace yans {
 
+/**
+ * \brief allocate Tag ids
+ *
+ * This is a helper class used to implement
+ * every subclass of the Tag class.
+ */
 class TagManager {
 public:
+	/**
+	 * \param name a string to identify the tag being registered
+	 * \return a unique id.
+	 *
+	 * Every call to this method returns a different unique id.
+	 */
 	static uint32_t register_tag (char const *name);
 private:
 	static TagManager *instance (void);
@@ -36,11 +48,35 @@ private:
 };
 
 
+/**
+ * \brief per-packet Tags
+ *
+ * Every user tag should derive from this abstract base class
+ * to be able to be added to a Packet. This base class provides
+ * functionality to allow the Packet class to uniquely identify
+ * the type of each Tag instance.
+ * A subclass 
+ */
 class Tag {
 public:
+	/**
+	 * Derived classes must provide a virtual destructor
+	 */
 	virtual ~Tag () = 0;
 private:
+	/**
+	 * \return an identifier specific to the Tag type.
+	 *
+	 * This method is typically implemented by returning
+	 * an id allocated with TagManager::register_tag.
+	 */
 	virtual uint32_t real_get_id (void) const = 0;
+	/**
+	 * \return the size of the subclass.
+	 *
+	 * This method is typically implemented by returning
+	 * sizeof (*this).
+	 */
 	virtual uint32_t real_get_size (void) const = 0;
 	friend class Tags;
 };

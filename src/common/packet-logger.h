@@ -27,11 +27,22 @@
 
 namespace yans {
 
+/**
+ * \brief log packets
+ */
 class PacketLogger {
 public:
 	typedef Callback<void,ConstPacketPtr> PacketLoggerCallback;
 	PacketLogger ();
+	/**
+	 * \param packet to log
+	 * If a non-null callback was set, the packet
+	 * is forwarded to that callback.
+	 */
 	void log (ConstPacketPtr packet);
+	/**
+	 * \param callback callback to store
+	 */
 	void set_callback (PacketLoggerCallback callback);
 private:
 	PacketLoggerCallback m_callback;

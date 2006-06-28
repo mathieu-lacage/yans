@@ -311,6 +311,10 @@ Buffer::Iterator::write (Iterator start, Iterator end)
 	assert (start.m_current <= end.m_current);
 	assert (start.m_start == end.m_start);
 	assert (start.m_end == end.m_end);
+	assert (start.m_start != m_start);
+	assert (start.m_end != m_end);
+	assert (end.m_start != m_start);
+	assert (end.m_end != m_end);
 	unsigned long int i_end = reinterpret_cast<unsigned long int> (end.m_current);
 	unsigned long int i_start = reinterpret_cast<unsigned long int> (start.m_current);
 	unsigned long int i_size = i_end - i_start;

@@ -25,6 +25,13 @@
 
 namespace yans {
 
+/**
+ * \brief log arbitrary data to std::ostreams
+ * 
+ * Whenever operator << is invoked on this class,
+ * it is forwarded to the stored std::ostream output
+ * stream (if there is one).
+ */
 class TraceStream {
 public:
 	TraceStream ()
@@ -50,6 +57,9 @@ public:
 		return *this;
 	}
 
+	/**
+	 * \param os the output stream to store
+	 */
 	void set_stream (std::ostream * os) {
 		m_os = os;
 	}

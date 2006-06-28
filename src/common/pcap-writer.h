@@ -30,15 +30,34 @@ namespace yans {
 
 class DataWriter;
 
+/**
+ * \brief Pcap output for Packet logger
+ *
+ * Log Packets to a file in pcap format which can be
+ * read by pcap readers.
+ */
 class PcapWriter {
 public:
 	PcapWriter ();
 	~PcapWriter ();
 
+	/**
+	 * \param name the name of the file to store packet log into.
+	 * This method creates the file if it does not exist. If it
+	 * exists, the file is emptied.
+	 */
 	void open (char const *name);
 
+	/**
+	 * Write a pcap header in the output file which specifies
+	 * that the content of the file will Packets with
+	 * Ethernet/LLC/SNAP encapsulation.
+	 */
 	void write_header_ethernet (void);
 
+	/**
+	 * \param packet packet to write to output file
+	 */
 	void write_packet (ConstPacketPtr packet);
 
 private:

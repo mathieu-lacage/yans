@@ -35,23 +35,87 @@ namespace yans {
 class PacketLogger;
 class TraceStream;
 
+/**
+ * \brief register every source of trace events
+ *
+ * Model authors use the TraceContainer class to register
+ * their trace event sources. Model users use the TraceContainer
+ * class to connect their trace event listeners to the
+ * model trace event sources.
+ */
 class TraceContainer {
 public:
 	TraceContainer ();
 	~TraceContainer ();
 
-	void set_ui_variable_callback (char const *name, Callback<void,uint64_t, uint64_t> callback);
+	/**
+	 * \param name the name of the target event source
+	 * \param callback the callback being connected to the target event source
+	 * This method targets only event sources which are variables of any unsigned
+	 * integer type.
+	 */
+	void set_ui_variable_callback (char const *name, 
+				       Callback<void,uint64_t, uint64_t> callback);
+	/**
+	 * \param name the name of the target event source
+	 * \param callback the callback being connected to the target event source
+	 * This method targets only event sources which are variables of any signed
+	 * integer type.
+	 */
 	void set_si_variable_callback (char const *name, Callback<void,int64_t, int64_t> callback);
+	/**
+	 * \param name the name of the target event source
+	 * \param callback the callback being connected to the target event source
+	 * This method targets only event sources which are variables of any double type.
+	 */
 	void set_f_variable_callback (char const *name, Callback<void,double, double> callback);
+	/**
+	 * \param name the name of the target event source
+	 * \param callback the callback being connected to the target event source
+	 * This method targets only event sources which are of type PacketLogger.
+	 */
 	void set_packet_logger_callback (char const *name, Callback<void,ConstPacketPtr> callback);
+	/**
+	 * \param name the name of the target event source
+	 * \param callback the output stream being connected to the source trace stream
+	 * This method targets only event sources which are of type TraceStream.
+	 */
 	void set_stream (char const *name, std::ostream *os);
 
+	/**
+	 * \param name the name of the registered event source
+	 * \param var the event source being registered
+	 * This method registers only event sources of type "unsigned integer".
+	 */
 	void register_ui_variable (char const *name, UiTracedVariableBase *var);
+	/**
+	 * \param name the name of the registered event source
+	 * \param var the event source being registered
+	 * This method registers only event sources of type "signed integer".
+	 */
 	void register_si_variable (char const *name, SiTracedVariableBase *var);
+	/**
+	 * \param name the name of the registered event source
+	 * \param var the event source being registered
+	 * This method registers only event sources of type "double".
+	 */
 	void register_f_variable (char const *name, FTracedVariableBase *var);
+	/**
+	 * \param name the name of the registered event source
+	 * \param var the event source being registered
+	 * This method registers only event sources of type PacketLogger.
+	 */
 	void register_packet_logger (char const *name, PacketLogger *logger);
+	/**
+	 * \param name the name of the registered event source
+	 * \param var the event source being registered
+	 * This method registers only event sources of type TraceStream.
+	 */
 	void register_stream (char const *name, TraceStream *stream);
 
+	/**
+	 * Print the list of registered event sources.
+	 */
 	void print_debug (void);
 private:
 	typedef std::list<std::pair<UiTracedVariableBase *, std::string> > UiList;

@@ -29,12 +29,34 @@ namespace yans {
 
 class Buffer;
 
+/**
+ * \brief Protocol header serialization and deserialization.
+ *
+ * Every Protocol header which needs to be inserted and removed
+ * from a Packet instance must derive from this abstract base class
+ * and implement the pure virtual methods defined here.
+ */
 class Chunk {
 public:
+	/**
+	 * Derived classes must provided an explicit virtual destructor
+	 */
 	virtual ~Chunk () = 0;
 
+	/**
+	 * \param buffer the buffer in which the protocol header
+	 *        must serialize itself.
+	 */
 	virtual void add_to (Buffer *buffer) const = 0;
+	/**
+	 * \param buffer the buffer from which the protocol header
+	 *        must deserialize itself.
+	 */
 	virtual void remove_from (Buffer *buffer) = 0;
+	/**
+	 * \param os the std output stream in which this 
+	 *           protocol header must print itself.
+	 */
 	virtual void print (std::ostream *os) const = 0;
 };
 

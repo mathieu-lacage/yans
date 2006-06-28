@@ -38,28 +38,106 @@ class Buffer;
 class Tag;
 class Tags;
 
+/**
+ * \brief smart-pointer for Packet
+ *
+ * PacketPtr objects are pointers to Packet instances. They
+ * behave like any normal pointer: you can assign 0 to them,
+ * compare them against 0 and pass them around by value.
+ * They manage the ressources of the Packet they point to
+ * automatically.
+ */
 typedef RefPtr<Packet> PacketPtr;
+/**
+ * \brief smart-pointer for const Packet
+ *
+ * ConstPacketPtr objects are pointers to Packet instances,
+ * just like PacketPtr, except that they point to instances
+ * of _const_ Packets which means you cannot invoke any 
+ * non-const method on the underlying Packet.
+ */
 typedef RefPtr<Packet const> ConstPacketPtr;
 
+/**
+ * \brief network Packet
+ *
+ * Network Packets are represented by an array of bytes. The interpretation
+ * of the content of that array of bytes is entirely up to the user since
+ * the Packet data structure has no knowledge of what data was stored in it.
+ * 
+ * This design was inpired by the need to make our packets look like and 
+ * behave as close as possible to real-world packets. The best way to achieve
+ * this is to make our Packets be just real-world packets and this is exactly
+ * what this class does. It behaves very similarly to the linux skbuf and the
+ * bsd mbuf data structures.
+ *
+ * It is also possible to attach a single instance of any number of Tag types
+ * to each Packet: this makes it easy to attach per-packet data to exchange 
+ * information across multiple network layers. 
+ */
 class Packet {
 public:
 	typedef Callback<void,uint8_t *,uint32_t> PacketReadWriteCallback;
 
+	/**
+	 * Create an empty Packet.
+	 */
 	static PacketPtr create (void);
 
+	/**
+	 * Create a copy of this Packet together with its tags.
+	 */
 	PacketPtr copy (void) const;
+	/**
+	 * \param start offset from start of packet
+	 * \param length of new fragment
+	 * \return the fragment
+	 *
+	 * Create a copy of a fragment of this Packet. The tags are
+	 * entirely copied to the new fragment. 
+	 */
 	PacketPtr copy (uint32_t start, uint32_t length) const;
 
+	/**
+	 * \return the size of the Packet.
+	 */
 	uint32_t get_size (void) const;
 
-	/* If you attempt to use this method,
-	 * I swear I will _kill_ you.
+	/**
+	 * \return a pointer to the internal byte buffer stored
+	 *         in this Packet.
+	 *
+	 * We strongly advise you against the use of this 
+	 * method. It is currently used in only a few very rare
+	 * places and the number of uses should not grow.
 	 */
 	uint8_t *peek_data (void) const;
 
+	/**
+	 * \param tag tag to add to packet.
+	 *
+	 * Make a copy of the input tag and store it in the Packet.
+	 */
 	void add_tag (Tag const*tag);
+	/**
+	 * \param tag tag to remove from packet.
+	 *
+	 * Copy and remove the tag stored in this Packet identified
+	 * by the input tag type.
+	 */
 	void remove_tag (Tag *tag);
+	/**
+	 * \param tag tag to copy
+	 *
+	 * Copy the tag stored in this Packet identified by the
+	 * input tag type.
+	 */
 	void peek_tag (Tag *tag);
+	/**
+	 * \param tag tag to update
+	 *
+	 * Copy this tag into the Packet.
+	 */
 	void update_tag (Tag *tag);
 	
 	void add (Chunk *chunk);
