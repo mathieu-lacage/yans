@@ -46,11 +46,19 @@ public:
 	/**
 	 * \param buffer the buffer in which the protocol header
 	 *        must serialize itself.
+	 *
+	 * This method must:
+	 *   - reserve room for its serialized representation in the input buffer
+	 *   - serialize itself in this reserved room
 	 */
 	virtual void add_to (Buffer *buffer) const = 0;
 	/**
 	 * \param buffer the buffer from which the protocol header
 	 *        must deserialize itself.
+	 *
+	 * This method must:
+	 *   - deserialize itself
+	 *   - remove its serialized representation from the input buffer
 	 */
 	virtual void remove_from (Buffer *buffer) = 0;
 	/**

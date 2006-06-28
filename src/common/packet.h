@@ -61,19 +61,59 @@ typedef RefPtr<Packet const> ConstPacketPtr;
 /**
  * \brief network Packet
  *
- * Network Packets are represented by an array of bytes. The interpretation
- * of the content of that array of bytes is entirely up to the user since
- * the Packet data structure has no knowledge of what data was stored in it.
+ * Network Packets are represented by an array of bytes. Each simulation
+ * byte is expected have a one-to-one correspondance to a simulated byte.
+ * Packets are always accessed though the PacketPtr or ConstPacketPtr classes
+ * which are pointers to Packets. 
+ * It is also possible to attach a single instance of any number of Tag types
+ * to each Packet: this makes it easy to attach per-packet data to exchange 
+ * information across multiple network layers. 
+ *
+ *  - Packets are created with the Packet::create method.
+ *  - Packets are fragmented with the Packet::copy methods
+ *  - Packets are re-assembled with the Packet::add_at_end methods
+ *  - protocol headers (or trailers) are prepended (or appended) 
+ *    to Packets with the Packet::add method
+ *  - protocol headers (or trailers) are removed from Packets with
+ *    the Packet::remove method
+ *  - Data can be trimmed from a Packet with the Packet::remove_at_start
+ *    and Packet::remove_at_end methods
+ *  - Tags can be attached and dettached from a Packet with the
+ *    Packet::add_tag and Packet::remove_tag methods
+ *
+ * Each protocol header must be represented by a class which derives from
+ * the abstract base class Chunk. It must implement the Chunk::add_to and
+ * Chunk::remove_from methods and these methods are responsible for serializing
+ * and deserializing the protocol header data to and from a byte stream.
+ * The serialized representation should be:
+ *   - portable
+ *   - as close as possible to the serialized version of real network packets.
+ *
+ * Experiments show that generating the _exact_ bit-by-bit layout
+ * of a TCP or IPv4 header is at most 10% slower than doing a quick and dirty 
+ * dump of the data through a memcpy which means that there is no real performance
+ * penalty to make the serialized representation of the protocol header close
+ * to that of a real packet.
+ *
+ * Each tag must be represented by a class which derives from the abstract
+ * base class Tag. It must implement the Tag::real_get_id and Tag::real_get_size
+ * methods to allow the Packet class to track the type of each tag and 
+ * perform tag copies.
  * 
+ * The following sample code shows how you can:
+ *  - create a packet and pass it around,
+ *  - add and remove arbitrary protocol headers to a packet,
+ *  - add and remove arbitrary tags to a packet, and,
+ *  - create custom tags and protocol headers.
+ *
+ * \include samples/main-packet.cc
+ * 
+ * Rationale:
  * This design was inpired by the need to make our packets look like and 
  * behave as close as possible to real-world packets. The best way to achieve
  * this is to make our Packets be just real-world packets and this is exactly
  * what this class does. It behaves very similarly to the linux skbuf and the
  * bsd mbuf data structures.
- *
- * It is also possible to attach a single instance of any number of Tag types
- * to each Packet: this makes it easy to attach per-packet data to exchange 
- * information across multiple network layers. 
  */
 class Packet {
 public:
