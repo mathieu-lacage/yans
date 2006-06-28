@@ -139,12 +139,51 @@ public:
 	 * Copy this tag into the Packet.
 	 */
 	void update_tag (Tag *tag);
-	
+
+	/**
+	 * \param chunk chunk to add to Packet
+	 *
+	 * The Chunk::add method will be invoked. It is responsible for:
+	 *   - reserving room for the data to serialize
+	 *   - serialize its data in the reserved room
+	 */
 	void add (Chunk *chunk);
+	/**
+	 * \param packet input packet to append to this packet
+	 *
+	 * Append the content of the input packet to this packet.
+	 */
 	void add_at_end (ConstPacketPtr packet);
+	/**
+	 * \param packet input packet to append to this packet
+	 * \param offset offset from start of input packet to start copying from
+	 * \param size number of bytes to append to this packet
+	 *
+	 * Append a slice of the content of the input packet to this packet.
+	 * This method is more efficient than creating a fragment of the input
+	 * packet first and then invoke add_at_end on the fragment.
+	 */
 	void add_at_end (ConstPacketPtr packet, uint32_t offset, uint32_t size);
+	/**
+	 * \param chunk chunk to remove from packet
+	 *
+	 * The Chunk::add method will be invoked. It is responsible for:
+	 *   - deserializing the corresponding protocol header into
+	 *     the input chunk
+	 *   - remove the data deserialized from the Packet.
+	 */
 	void remove (Chunk *chunk);
+	/**
+	 * \param size number of bytes to remove
+	 * 
+	 * Remove size bytes from the end of the Packet.
+	 */
 	void remove_at_end (uint32_t size);
+	/**
+	 * \param size number of bytes to remove
+	 *
+	 * Remove size bytes from the start of the Packet.
+	 */
 	void remove_at_start (uint32_t size);
 
 	void write (PacketReadWriteCallback callback) const;

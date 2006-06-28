@@ -51,11 +51,13 @@ private:
 /**
  * \brief per-packet Tags
  *
- * Every user tag should derive from this abstract base class
- * to be able to be added to a Packet. This base class provides
+ * Every user-defined information which needs to be added 
+ * and remove to the side of a Packet must derive from this 
+ * abstract base class
+ * and implement the pure virtual methods defined here.
+ * This base class provides
  * functionality to allow the Packet class to uniquely identify
  * the type of each Tag instance.
- * A subclass 
  */
 class Tag {
 public:
