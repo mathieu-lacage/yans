@@ -260,7 +260,7 @@ MacHighNqsta::queue (PacketPtr packet, MacAddress to)
 	}
 	TRACE ("enqueue size="<<packet->get_size ()<<", to="<<to);
 	ChunkMac80211Hdr hdr;
-	hdr.set_type (MAC_80211_DATA);
+	hdr.set_type_data ();
 	hdr.set_addr1 (get_bssid ());
 	hdr.set_addr2 (m_interface->get_mac_address ());
 	hdr.set_addr3 (to);
