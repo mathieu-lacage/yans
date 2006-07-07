@@ -460,7 +460,9 @@ DcaTxop::got_ack (double snr, uint8_t txMode)
 	if (!need_fragmentation () ||
 	    is_last_fragment ()) {
 		TRACE ("got ack. tx done.");
-		m_tx_ok_callback (m_current_hdr);
+		if (!m_tx_ok_callback.is_null ()) {
+			m_tx_ok_callback (m_current_hdr);
+		}
 
 		/* we are not fragmenting or we are done fragmenting
 		 * so we can get rid of that packet now.
@@ -485,7 +487,9 @@ DcaTxop::missed_ack (void)
 	} else {
 		// XXX
 		//setRetry (m_currentTxPacket); 
-		m_tx_failed_callback (m_current_hdr);
+		if (!m_tx_failed_callback.is_null ()) {
+			m_tx_failed_callback (m_current_hdr);
+		}
 		m_dcf->notify_access_ongoing_error ();
 		m_dcf->notify_access_finished ();
 	}
