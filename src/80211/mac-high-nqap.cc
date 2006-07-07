@@ -19,6 +19,23 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #include "mac-high-nqap.h"
+#include "mac-stations.h"
+#include "mac-station.h"
+#include "dca-txop.h"
+#include "network-interface-80211.h"
+#include "chunk-mac-80211-hdr.h"
+#include <cassert>
+
+#define NQAP_DEBUG 1
+
+#ifdef NQAP_DEBUG
+#include <iostream>
+#  define TRACE(x) \
+std::cout << "NQAP now=" << Simulator::now_us () << "us " << x << std::endl;
+#else
+#  define TRACE(x)
+#endif
+
 
 namespace yans {
 
@@ -31,11 +48,18 @@ void
 MacHighNqap::set_dca_txop (DcaTxop *dca)
 {
 	m_dca = dca;
+	m_dca->set_tx_ok_callback (make_callback (&MacHighNqap::tx_ok, this));
+	m_dca->set_tx_failed_callback (make_callback (&MacHighNqap::tx_failed, this));
 }
 void 
 MacHighNqap::set_interface (NetworkInterface80211 *interface)
 {
 	m_interface = interface;
+}
+void 
+MacHighNqap::set_stations (MacStations *stations)
+{
+	m_stations = stations;
 }
 void 
 MacHighNqap::set_forward_callback (ForwardCallback callback)
@@ -52,14 +76,78 @@ MacHighNqap::queue (PacketPtr packet, MacAddress to)
 {
 	
 }
-
+void
+MacHighNqap::send_probe_resp (MacAddress to)
+{
+}
+void
+MacHighNqap::send_assoc_resp (MacAddress to)
+{
+}
 void 
-MacHighNqap::ack_received (ChunkMac80211Hdr const &hdr)
-{}
+MacHighNqap::tx_ok (ChunkMac80211Hdr const &hdr)
+{
+	MacStation *station = m_stations->lookup (hdr.get_addr2 ());
+	if (hdr.is_assoc_resp () && 
+	    station->is_wait_assoc_tx_ok ()) {
+		station->record_got_assoc_tx_ok ();
+	}
+}
+void 
+MacHighNqap::tx_failed (ChunkMac80211Hdr const &hdr)
+{
+	MacStation *station = m_stations->lookup (hdr.get_addr2 ());
+	if (hdr.is_assoc_resp () && 
+	    station->is_wait_assoc_tx_ok ()) {
+		station->record_got_assoc_tx_failed ();
+	}
+}
 void 
 MacHighNqap::receive (PacketPtr packet, ChunkMac80211Hdr const *hdr)
 {
-	
+	MacStation *station = m_stations->lookup (hdr->get_addr2 ());
+
+	if (hdr->is_data ()) {
+		if (!hdr->is_from_ds () && 
+		    hdr->is_to_ds ()) {
+			if (station->is_associated ()) {
+				queue (packet, hdr->get_addr3 ());
+			}
+		} else if (hdr->is_from_ds () &&
+			   hdr->is_to_ds ()) {
+			// this is an AP-to-AP frame
+			// we ignore for now.
+		} else {
+			// we can ignore these frames since 
+			// they are not targeted at the AP
+		}
+	} else if (hdr->is_mgt ()) {
+		if (hdr->is_probe_req ()) {
+			assert (hdr->get_addr1 ().is_broadcast ());
+			send_probe_resp (hdr->get_addr2 ());
+		} else if (hdr->get_addr1 () == m_interface->get_mac_address ()) {
+			if (hdr->is_assoc_req ()) {
+				send_assoc_resp (hdr->get_addr2 ());
+			} else if (hdr->is_disassociation ()) {
+				station->record_disassociated ();
+			} else if (hdr->is_reassoc_req ()) {
+				/* we don't support reassoc frames for now */
+			} else if (hdr->is_authentication () ||
+				   hdr->is_deauthentication ()) {
+				/*
+				 */
+			} else {
+				/* unknown mgt frame
+				 */
+			}
+		}
+	} else {
+		/* damn, what could this be ? a control frame ?
+		 * control frames should never reach the MacHigh so,
+		 * this is likely to be a bug. Assert.
+		 */
+		assert (false);
+	}	
 }
 
 

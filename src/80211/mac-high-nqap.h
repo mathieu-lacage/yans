@@ -32,6 +32,7 @@ namespace yans {
 class ChunkMac80211Hdr;
 class NetworkInterface80211;
 class DcaTxop;
+class MacStations;
 
 class MacHighNqap {
 public:
@@ -42,16 +43,22 @@ public:
 
 	void set_dca_txop (DcaTxop *dca);
 	void set_interface (NetworkInterface80211 *interface);
+	void set_stations (MacStations *stations);
 	void set_forward_callback (ForwardCallback callback);
 	void set_supported_rates (SupportedRates rates);
 
 	void queue (PacketPtr packet, MacAddress to);
 
-	void ack_received (ChunkMac80211Hdr const &hdr);
 	void receive (PacketPtr packet, ChunkMac80211Hdr const *hdr);
 private:
+	void tx_ok (ChunkMac80211Hdr const &hdr);
+	void tx_failed (ChunkMac80211Hdr const &hdr);
+	void send_probe_resp (MacAddress to);
+	void send_assoc_resp (MacAddress to);
+
 	DcaTxop *m_dca;
 	NetworkInterface80211 *m_interface;
+	MacStations *m_stations;
 	ForwardCallback m_forward;
 	SupportedRates m_rates;
 };
