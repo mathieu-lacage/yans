@@ -149,7 +149,7 @@ MacHighNqsta::send_probe_request (void)
 	hdr.set_addr2 (m_interface->get_mac_address ());
 	hdr.set_addr3 (get_broadcast_bssid ());
 	hdr.set_ds_not_from ();
-	hdr.set_ds_to ();
+	hdr.set_ds_not_to ();
 	PacketPtr packet = Packet::create ();
 	ChunkMgtProbeRequest probe;
 	probe.set_ssid (m_interface->get_ssid ());
@@ -174,7 +174,7 @@ MacHighNqsta::send_association_request ()
 	hdr.set_addr2 (m_interface->get_mac_address ());
 	hdr.set_addr3 (get_bssid ());
 	hdr.set_ds_not_from ();
-	hdr.set_ds_to ();
+	hdr.set_ds_not_to ();
 	PacketPtr packet = Packet::create ();
 	ChunkMgtAssocRequest assoc;
 	assoc.set_ssid (m_interface->get_ssid ());
@@ -273,15 +273,16 @@ void
 MacHighNqsta::receive (PacketPtr packet, ChunkMac80211Hdr const *hdr)
 {
 	assert (!hdr->is_ctl ());
-	if (hdr->get_addr1 () != m_interface->get_mac_address () ||
-	    hdr->get_addr1 ().is_broadcast ()) {
+	if (hdr->get_addr1 () != m_interface->get_mac_address () &&
+	    !hdr->get_addr1 ().is_broadcast ()) {
 		// packet is not for us
 	} else if (hdr->is_data ()) {
 		m_forward (packet);
 	} else if (hdr->is_probe_req () ||
 		   hdr->is_assoc_req ()) {
-		// we cannot deal with requests.
-		assert (false);
+		/* this is a frame aimed at an AP.
+		 * so we can safely ignore it.
+		 */
 	} else if (hdr->is_beacon ()) {
 		ChunkMgtBeacon beacon;
 		packet->remove (&beacon);
