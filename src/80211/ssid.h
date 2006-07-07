@@ -35,13 +35,13 @@ public:
 	bool is_equal (Ssid const &o) const;
 	bool is_broadcast (void) const;
 
-	uint32_t get_size (void) const;
+	uint32_t get_length (void) const;
 	void peek (uint8_t[32]) const;
-	void set (uint8_t[32]);
+	void set (uint8_t[32], uint32_t len);
 
 	static Ssid get_broadcast (void);
 private:
-	char m_ssid[32];
+	char m_ssid[33];
 };
 
 }; // namespace yans

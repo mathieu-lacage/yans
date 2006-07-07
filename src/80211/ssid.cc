@@ -25,11 +25,10 @@ namespace yans {
 
 Ssid::Ssid ()
 {
-	for (uint8_t i = 0; i < 32; i++) {
+	for (uint8_t i = 0; i < 33; i++) {
 		m_ssid[i] = 0;
 	}
 }
-
 Ssid::Ssid (char const *ssid)
 {
 	uint8_t len = 0;
@@ -38,7 +37,7 @@ Ssid::Ssid (char const *ssid)
 		ssid++;
 		len++;
 	}
-	while (len < 32) {
+	while (len < 33) {
 		m_ssid[len] = 0;
 		len++;
 	}
@@ -51,7 +50,7 @@ Ssid::Ssid (char const ssid[32], uint8_t length)
 		m_ssid[len] = ssid[len];
 		len++;
 	}
-	while (len < 32) {
+	while (len < 33) {
 		m_ssid[len] = 0;
 		len++;
 	}
@@ -79,7 +78,7 @@ Ssid::is_broadcast (void) const
 	return false;
 }
 uint32_t 
-Ssid::get_size (void) const
+Ssid::get_length (void) const
 {
 	uint8_t size = 0;
 	while (m_ssid[size] != 0 && size < 32) {
@@ -97,9 +96,10 @@ Ssid::peek (uint8_t ssid[32]) const
 	}
 }
 void 
-Ssid::set (uint8_t ssid[32])
+Ssid::set (uint8_t ssid[32], uint32_t len)
 {
-	for (uint8_t i = 0; i < 32; i++) {
+	assert (len < 32);
+	for (uint8_t i = 0; i < len; i++) {
 		m_ssid[i] = ssid[i];
 	}	
 }
