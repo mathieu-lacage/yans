@@ -33,12 +33,12 @@ public:
 
 	virtual ~MacStation ();
 
-	/* All stations are assumed to be 
-	 * Authenticated so this method always
-	 * returns true.
-	 */
 	bool is_associated (void) const;
-	void record_associated (void);	
+	bool is_wait_assoc_tx_ok (void) const;
+	void record_wait_assoc_tx_ok (void);
+	void record_got_assoc_tx_ok (void);
+	void record_got_assoc_tx_failed (void);
+	void record_disassociated (void);
 
 	// reception-related method
 	virtual void report_rx_ok (double rx_snr, uint8_t tx_mode) = 0;
@@ -53,7 +53,11 @@ public:
 	virtual uint8_t snr_to_snr (double snr) = 0;
 
 private:
-	bool m_is_associated;
+	enum {
+		DISASSOC,
+		WAIT_ASSOC_TX_OK,
+		GOT_ASSOC_TX_OK
+	} m_state;
 };
 
 }; // namespace yans

@@ -25,7 +25,7 @@
 namespace yans {
 
 MacStation::MacStation ()
-	: m_is_associated (false)
+	: m_state (DISASSOC)
 {}
 
 
@@ -35,12 +35,32 @@ MacStation::~MacStation ()
 bool 
 MacStation::is_associated (void) const
 {
-	return m_is_associated;
+	return m_state == GOT_ASSOC_TX_OK;
+}
+bool 
+MacStation::is_wait_assoc_tx_ok (void) const
+{
+	return m_state == WAIT_ASSOC_TX_OK;
 }
 void 
-MacStation::record_associated (void)
+MacStation::record_wait_assoc_tx_ok (void)
 {
-	m_is_associated = true;
+	m_state = WAIT_ASSOC_TX_OK;
+}
+void 
+MacStation::record_got_assoc_tx_ok (void)
+{
+	m_state = GOT_ASSOC_TX_OK;
+}
+void 
+MacStation::record_got_assoc_tx_failed (void)
+{
+	m_state = DISASSOC;
+}
+void 
+MacStation::record_disassociated (void)
+{
+	m_state = DISASSOC;
 }
 
 }; // namespace yans
