@@ -82,10 +82,6 @@ MacHighAdhoc::enqueue (PacketPtr packet, MacAddress to)
 }
 
 void 
-MacHighAdhoc::ack_received (ChunkMac80211Hdr const &hdr)
-{}
-
-void 
 MacHighAdhoc::receive (PacketPtr packet, ChunkMac80211Hdr const *hdr)
 {
 	TRACE ("received size="<<packet->get_size ()<<", from="<<hdr->get_addr2 ());

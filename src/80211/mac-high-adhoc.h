@@ -48,7 +48,6 @@ public:
 	void enqueue (PacketPtr packet, MacAddress to);
 
 	/* invoked by the MacLows. */
-	void ack_received (ChunkMac80211Hdr const &hdr);
 	void receive (PacketPtr packet, ChunkMac80211Hdr const*hdr);
 private:
 	DcaTxop *m_dca;
