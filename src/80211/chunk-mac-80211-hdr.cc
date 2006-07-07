@@ -23,6 +23,16 @@
 #include "buffer.h"
 #include <cassert>
 
+#define CHUNK80211_DEBUG 1
+
+#ifdef CHUNK80211_DEBUG
+#include <iostream>
+#  define TRACE(x) \
+std::cout << "CHUNK80211 " << x << std::endl;
+#else
+#  define TRACE(x)
+#endif
+
 namespace yans {
 
 enum {
