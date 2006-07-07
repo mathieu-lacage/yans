@@ -163,6 +163,11 @@ ChunkMgtProbeResponse::get_beacon_interval_us (void) const
 {
 	return m_beacon_interval;
 }
+SupportedRates 
+ChunkMgtProbeResponse::get_supported_rates (void) const
+{
+	return m_rates;
+}
 
 void 
 ChunkMgtProbeResponse::set_ssid (Ssid ssid)
@@ -173,6 +178,11 @@ void
 ChunkMgtProbeResponse::set_beacon_interval_us (uint64_t us)
 {
 	m_beacon_interval = us;
+}
+void
+ChunkMgtProbeResponse::set_supported_rates (SupportedRates rates)
+{
+	m_rates = rates;
 }
 uint32_t
 ChunkMgtProbeResponse::get_size (void) const
