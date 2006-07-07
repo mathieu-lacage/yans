@@ -331,8 +331,10 @@ MacHighNqsta::receive (PacketPtr packet, ChunkMac80211Hdr const *hdr)
 			}
 			if (assoc_resp.get_status_code ().is_success ()) {
 				m_state = ASSOCIATED;
+				TRACE ("assoc completed"); 
 				m_associated_callback ();
 			} else {
+				TRACE ("assoc refused");
 				m_state = REFUSED;
 			}
 		}
