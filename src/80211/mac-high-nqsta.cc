@@ -144,7 +144,7 @@ MacHighNqsta::send_probe_request (void)
 {
 	TRACE ("send probe request");
 	ChunkMac80211Hdr hdr;
-	hdr.set_type (MAC_80211_DATA);
+	hdr.set_probe_req ();
 	hdr.set_addr1 (get_broadcast_bssid ());
 	hdr.set_addr2 (m_interface->get_mac_address ());
 	hdr.set_addr3 (get_broadcast_bssid ());
@@ -169,7 +169,7 @@ MacHighNqsta::send_association_request ()
 {
 	TRACE ("send assoc request");
 	ChunkMac80211Hdr hdr;
-	hdr.set_type (MAC_80211_DATA);
+	hdr.set_assoc_req ();
 	hdr.set_addr1 (get_bssid ());
 	hdr.set_addr2 (m_interface->get_mac_address ());
 	hdr.set_addr3 (get_bssid ());
