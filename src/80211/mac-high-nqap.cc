@@ -114,6 +114,21 @@ void
 MacHighNqap::send_assoc_resp (MacAddress to)
 {
 	TRACE ("send assoc response to="<<to);
+	ChunkMac80211Hdr hdr;
+	hdr.set_assoc_resp ();
+	hdr.set_addr1 (to);
+	hdr.set_addr2 (m_interface->get_mac_address ());
+	hdr.set_addr3 (m_interface->get_mac_address ());
+	hdr.set_ds_not_from ();
+	hdr.set_ds_not_to ();
+	PacketPtr packet = Packet::create ();
+	ChunkMgtAssocResponse assoc;
+	StatusCode code;
+	code.set_success ();
+	assoc.set_status_code (code);
+	packet->add (&assoc);
+	
+	m_dca->queue (packet, hdr);
 }
 void 
 MacHighNqap::tx_ok (ChunkMac80211Hdr const &hdr)
