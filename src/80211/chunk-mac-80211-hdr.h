@@ -70,6 +70,7 @@ public:
 	void set_assoc_resp (void);
 	void set_probe_req (void);
 	void set_probe_resp (void);
+	void set_type_data (void);
 	void set_ds_from (void);
 	void set_ds_not_from (void);
 	void set_ds_to (void);

@@ -121,6 +121,12 @@ ChunkMac80211Hdr::set_probe_resp (void)
 	m_ctrl_subtype = 5;
 }
 void 
+ChunkMac80211Hdr::set_type_data (void)
+{
+	m_ctrl_type = TYPE_DATA;
+	m_ctrl_subtype = 0;
+}
+void 
 ChunkMac80211Hdr::set_type (enum Mac80211Type_e type)
 {
 	switch (type) {
