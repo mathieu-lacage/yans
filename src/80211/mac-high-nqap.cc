@@ -30,6 +30,7 @@
 
 #ifdef NQAP_DEBUG
 #include <iostream>
+#include "simulator.h"
 #  define TRACE(x) \
 std::cout << "NQAP now=" << Simulator::now_us () << "us " << x << std::endl;
 #else
@@ -79,10 +80,12 @@ MacHighNqap::queue (PacketPtr packet, MacAddress to)
 void
 MacHighNqap::send_probe_resp (MacAddress to)
 {
+	TRACE ("send probe response to="<<to);
 }
 void
 MacHighNqap::send_assoc_resp (MacAddress to)
 {
+	TRACE ("send assoc response to="<<to);
 }
 void 
 MacHighNqap::tx_ok (ChunkMac80211Hdr const &hdr)
