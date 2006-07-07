@@ -329,7 +329,7 @@ MacHighNqsta::receive (PacketPtr packet, ChunkMac80211Hdr const *hdr)
 			if (m_assoc_request_event.is_running ()) {
 				m_assoc_request_event.cancel ();
 			}
-			if (assoc_resp.is_success ()) {
+			if (assoc_resp.get_status_code ().is_success ()) {
 				m_state = ASSOCIATED;
 				m_associated_callback ();
 			} else {
