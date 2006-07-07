@@ -67,7 +67,7 @@ MacHighNqap::set_stations (MacStations *stations)
 void 
 MacHighNqap::set_forward_callback (ForwardCallback callback)
 {
-	m_forward = callback;
+	m_forward_up = callback;
 }
 void 
 MacHighNqap::set_supported_rates (SupportedRates rates)
@@ -80,9 +80,21 @@ MacHighNqap::set_beacon_interval_us (uint64_t us)
 	m_beacon_interval_us = us;
 }
 void 
+MacHighNqap::forward_down (PacketPtr packet, MacAddress from, MacAddress to)
+{
+	ChunkMac80211Hdr hdr;
+	hdr.set_type_data ();
+	hdr.set_addr1 (to);
+	hdr.set_addr2 (m_interface->get_mac_address ());
+	hdr.set_addr3 (from);
+	hdr.set_ds_from ();
+	hdr.set_ds_not_to ();
+	m_dca->queue (packet, hdr);	
+}
+void 
 MacHighNqap::queue (PacketPtr packet, MacAddress to)
 {
-	
+	forward_down (packet, m_interface->get_mac_address (), to);
 }
 SupportedRates
 MacHighNqap::get_supported_rates (void)
@@ -155,9 +167,13 @@ MacHighNqap::receive (PacketPtr packet, ChunkMac80211Hdr const *hdr)
 
 	if (hdr->is_data ()) {
 		if (!hdr->is_from_ds () && 
-		    hdr->is_to_ds ()) {
-			if (station->is_associated ()) {
-				queue (packet, hdr->get_addr3 ());
+		    hdr->is_to_ds () &&
+		    hdr->get_addr1 () == m_interface->get_mac_address () &&
+		    station->is_associated ()) {
+			if (hdr->get_addr3 () == m_interface->get_mac_address ()) {
+				m_forward_up (packet);
+			} else {
+				forward_down (packet, hdr->get_addr2 (), hdr->get_addr3 ());
 			}
 		} else if (hdr->is_from_ds () &&
 			   hdr->is_to_ds ()) {

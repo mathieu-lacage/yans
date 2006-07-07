@@ -52,6 +52,7 @@ public:
 
 	void receive (PacketPtr packet, ChunkMac80211Hdr const *hdr);
 private:
+	void forward_down (PacketPtr packet, MacAddress from, MacAddress to);
 	void tx_ok (ChunkMac80211Hdr const &hdr);
 	void tx_failed (ChunkMac80211Hdr const &hdr);
 	void send_probe_resp (MacAddress to);
@@ -61,7 +62,7 @@ private:
 	DcaTxop *m_dca;
 	NetworkInterface80211 *m_interface;
 	MacStations *m_stations;
-	ForwardCallback m_forward;
+	ForwardCallback m_forward_up;
 	SupportedRates m_rates;
 	uint64_t m_beacon_interval_us;
 };
