@@ -256,7 +256,6 @@ NetworkInterface80211Factory::create_adhoc (MacAddress address, Position *positi
 	high->set_dca_txop (dca);
 	high->set_forward_callback (make_callback (&NetworkInterface80211::forward_up_data, 
 						   static_cast<NetworkInterface80211 *> (interface)));
-	dca->set_ack_received_callback (make_callback (&MacHighAdhoc::ack_received, high));
 	interface->m_rx_middle->set_forward_callback (make_callback (&MacHighAdhoc::receive, high));
 	interface->m_high = high;
 
@@ -286,7 +285,6 @@ NetworkInterface80211Factory::create_nqsta (MacAddress address, Position *positi
 						   static_cast<NetworkInterface80211 *> (interface)));
 	high->set_associated_callback (make_callback (&NetworkInterface80211Nqsta::associated, interface));
 	high->set_supported_rates (rates);
-	dca->set_ack_received_callback (make_callback (&MacHighNqsta::ack_received, high));
 	interface->m_rx_middle->set_forward_callback (make_callback (&MacHighNqsta::receive, high));
 	interface->m_high = high;
 
@@ -312,10 +310,10 @@ NetworkInterface80211Factory::create_nqap (MacAddress address, Position *positio
 	MacHighNqap *high = new MacHighNqap ();
 	high->set_interface (interface);
 	high->set_dca_txop (dca);
+	high->set_stations (interface->m_stations);
 	high->set_forward_callback (make_callback (&NetworkInterface80211::forward_up_data, 
 						   static_cast<NetworkInterface80211 *> (interface)));
 	high->set_supported_rates (rates);
-	dca->set_ack_received_callback (make_callback (&MacHighNqap::ack_received, high));
 	interface->m_rx_middle->set_forward_callback (make_callback (&MacHighNqap::receive, high));
 	interface->m_high = high;
 
