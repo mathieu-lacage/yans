@@ -68,10 +68,4 @@ SupportedRates::set_rates (uint8_t rates[8], uint8_t n_rates)
 	m_n_rates = n_rates;
 }
 
-uint32_t 
-SupportedRates::get_size (void) const
-{
-	return 1 + 1 + m_n_rates;
-}
-
 }; // namespace yans

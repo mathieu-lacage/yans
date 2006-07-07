@@ -29,7 +29,6 @@ class CapabilityInformation {
 public:
 	CapabilityInformation ();
 
-	uint32_t get_size (void) const;
 };
 
 }; // namespace yans

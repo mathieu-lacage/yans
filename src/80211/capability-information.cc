@@ -25,10 +25,5 @@ namespace yans {
 CapabilityInformation::CapabilityInformation ()
 {}
 
-uint32_t 
-CapabilityInformation::get_size (void) const
-{
-	return 2;
-}
 
 }; // namespace yans

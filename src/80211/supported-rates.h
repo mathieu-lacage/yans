@@ -34,8 +34,6 @@ public:
 	uint8_t get_n_rates (void) const;
 	void peek_rates (uint8_t[8]) const;
 	void set_rates (uint8_t [8], uint8_t);
-
-	uint32_t get_size (void) const;
 private:
 	uint8_t m_n_rates;
 	uint8_t m_rates[8];
