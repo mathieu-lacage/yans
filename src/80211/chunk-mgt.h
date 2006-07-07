@@ -62,7 +62,8 @@ public:
 	ChunkMgtAssocResponse ();
 	virtual ~ChunkMgtAssocResponse ();
 
-	bool is_success (void);
+	StatusCode get_status_code (void);
+	void set_status_code (StatusCode code);
 
 	virtual void add_to (Buffer *buffer) const;
 	virtual void remove_from (Buffer *buffer);

@@ -354,10 +354,15 @@ ChunkMgtAssocResponse::ChunkMgtAssocResponse ()
 ChunkMgtAssocResponse::~ChunkMgtAssocResponse ()
 {}
 
-bool 
-ChunkMgtAssocResponse::is_success (void)
+StatusCode 
+ChunkMgtAssocResponse::get_status_code (void)
 {
-	return m_code.is_success ();
+	return m_code;
+}
+void 
+ChunkMgtAssocResponse::set_status_code (StatusCode code)
+{
+	m_code = code;
 }
 
 uint32_t
