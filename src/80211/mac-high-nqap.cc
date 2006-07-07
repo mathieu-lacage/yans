@@ -24,6 +24,7 @@
 #include "dca-txop.h"
 #include "network-interface-80211.h"
 #include "chunk-mac-80211-hdr.h"
+#include "chunk-mgt.h"
 #include <cassert>
 
 #define NQAP_DEBUG 1
@@ -41,6 +42,7 @@ std::cout << "NQAP now=" << Simulator::now_us () << "us " << x << std::endl;
 namespace yans {
 
 MacHighNqap::MacHighNqap ()
+	: m_beacon_interval_us (500000)
 {}
 MacHighNqap::~MacHighNqap ()
 {}
@@ -73,14 +75,40 @@ MacHighNqap::set_supported_rates (SupportedRates rates)
 	m_rates = rates;
 }
 void 
+MacHighNqap::set_beacon_interval_us (uint64_t us)
+{
+	m_beacon_interval_us = us;
+}
+void 
 MacHighNqap::queue (PacketPtr packet, MacAddress to)
 {
 	
+}
+SupportedRates
+MacHighNqap::get_supported_rates (void)
+{
+	return m_rates;
 }
 void
 MacHighNqap::send_probe_resp (MacAddress to)
 {
 	TRACE ("send probe response to="<<to);
+	ChunkMac80211Hdr hdr;
+	hdr.set_probe_resp ();
+	hdr.set_addr1 (to);
+	hdr.set_addr2 (m_interface->get_mac_address ());
+	hdr.set_addr3 (m_interface->get_mac_address ());
+	hdr.set_ds_not_from ();
+	hdr.set_ds_not_to ();
+	PacketPtr packet = Packet::create ();
+	ChunkMgtProbeResponse probe;
+	probe.set_ssid (m_interface->get_ssid ());
+	SupportedRates rates = get_supported_rates ();
+	probe.set_supported_rates (rates);
+	probe.set_beacon_interval_us (m_beacon_interval_us);
+	packet->add (&probe);
+	
+	m_dca->queue (packet, hdr);
 }
 void
 MacHighNqap::send_assoc_resp (MacAddress to)

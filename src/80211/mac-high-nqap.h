@@ -46,6 +46,7 @@ public:
 	void set_stations (MacStations *stations);
 	void set_forward_callback (ForwardCallback callback);
 	void set_supported_rates (SupportedRates rates);
+	void set_beacon_interval_us (uint64_t us);
 
 	void queue (PacketPtr packet, MacAddress to);
 
@@ -55,12 +56,14 @@ private:
 	void tx_failed (ChunkMac80211Hdr const &hdr);
 	void send_probe_resp (MacAddress to);
 	void send_assoc_resp (MacAddress to);
+	SupportedRates get_supported_rates (void);
 
 	DcaTxop *m_dca;
 	NetworkInterface80211 *m_interface;
 	MacStations *m_stations;
 	ForwardCallback m_forward;
 	SupportedRates m_rates;
+	uint64_t m_beacon_interval_us;
 };
 
 }; // namespace yans
