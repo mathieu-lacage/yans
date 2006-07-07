@@ -193,9 +193,14 @@ DcaTxop::set_tx_middle (MacTxMiddle *tx_middle)
 	m_tx_middle = tx_middle;
 }
 void 
-DcaTxop::set_ack_received_callback (AckReceived callback)
+DcaTxop::set_tx_ok_callback (TxOk callback)
 {
-	m_ack_received = callback;
+	m_tx_ok_callback = callback;
+}
+void 
+DcaTxop::set_tx_failed_callback (TxFailed callback)
+{
+	m_tx_failed_callback = callback;
 }
 
 void 
@@ -455,7 +460,7 @@ DcaTxop::got_ack (double snr, uint8_t txMode)
 	if (!need_fragmentation () ||
 	    is_last_fragment ()) {
 		TRACE ("got ack. tx done.");
-		m_ack_received (m_current_hdr);
+		m_tx_ok_callback (m_current_hdr);
 
 		/* we are not fragmenting or we are done fragmenting
 		 * so we can get rid of that packet now.
@@ -480,6 +485,7 @@ DcaTxop::missed_ack (void)
 	} else {
 		// XXX
 		//setRetry (m_currentTxPacket); 
+		m_tx_failed_callback (m_current_hdr);
 		m_dcf->notify_access_ongoing_error ();
 		m_dcf->notify_access_finished ();
 	}

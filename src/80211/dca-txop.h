@@ -39,7 +39,8 @@ class MacTxMiddle;
 class DcaTxop 
 {
 public:
-	typedef Callback <void, ChunkMac80211Hdr const&> AckReceived;
+	typedef Callback <void, ChunkMac80211Hdr const&> TxOk;
+	typedef Callback <void, ChunkMac80211Hdr const&> TxFailed;
 
 	DcaTxop ();
 	~DcaTxop ();
@@ -48,7 +49,8 @@ public:
 	void set_phy (Phy80211 *phy);
 	void set_parameters (MacParameters *parameters);
 	void set_tx_middle (MacTxMiddle *tx_middle);
-	void set_ack_received_callback (AckReceived callback);
+	void set_tx_ok_callback (TxOk callback);
+	void set_tx_failed_callback (TxFailed callback);
 
 	void set_difs_us (uint64_t difs_us);
 	void set_eifs_us (uint64_t eifs_us);
@@ -89,7 +91,8 @@ private:
 	PacketPtr get_fragment_packet (ChunkMac80211Hdr *hdr);
 
 	Dcf *m_dcf;
-	AckReceived m_ack_received;
+	TxOk m_tx_ok_callback;
+	TxFailed m_tx_failed_callback;
 	MacQueue80211e *m_queue;
 	MacTxMiddle *m_tx_middle;
 	MacLow *m_low;
