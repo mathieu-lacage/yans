@@ -87,6 +87,30 @@ ChunkMac80211Hdr::set_addr4 (MacAddress address)
 	m_addr4 = address;
 }
 void 
+ChunkMac80211Hdr::set_assoc_req (void)
+{
+	m_ctrl_type = TYPE_MGT;
+	m_ctrl_subtype = 0;
+}
+void 
+ChunkMac80211Hdr::set_assoc_resp (void)
+{
+	m_ctrl_type = TYPE_MGT;
+	m_ctrl_subtype = 1;
+}
+void 
+ChunkMac80211Hdr::set_probe_req (void)
+{
+	m_ctrl_type = TYPE_MGT;
+	m_ctrl_subtype = 4;
+}
+void 
+ChunkMac80211Hdr::set_probe_resp (void)
+{
+	m_ctrl_type = TYPE_MGT;
+	m_ctrl_subtype = 5;
+}
+void 
 ChunkMac80211Hdr::set_type (enum Mac80211Type_e type)
 {
 	switch (type) {

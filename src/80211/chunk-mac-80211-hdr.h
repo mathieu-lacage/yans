@@ -66,6 +66,10 @@ class ChunkMac80211Hdr : public Chunk {
 public:
 	ChunkMac80211Hdr ();
 
+	void set_assoc_req (void);
+	void set_assoc_resp (void);
+	void set_probe_req (void);
+	void set_probe_resp (void);
 	void set_ds_from (void);
 	void set_ds_not_from (void);
 	void set_ds_to (void);
