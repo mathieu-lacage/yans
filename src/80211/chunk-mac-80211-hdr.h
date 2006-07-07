@@ -92,6 +92,8 @@ public:
 	MacAddress get_addr3 (void) const;
 	MacAddress get_addr4 (void) const;
 	enum Mac80211Type_e get_type (void) const;
+	bool is_from_ds (void) const;
+	bool is_to_ds (void) const;
 	bool is_data (void) const;
 	bool is_qos_data (void) const;
 	bool is_ctl (void) const;

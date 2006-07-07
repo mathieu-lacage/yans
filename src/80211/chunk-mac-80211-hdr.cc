@@ -398,6 +398,17 @@ ChunkMac80211Hdr::get_type (void) const
 	return (enum Mac80211Type_e)-1;
 }
 bool 
+ChunkMac80211Hdr::is_from_ds (void) const
+{
+	return m_ctrl_from_ds == 1;
+}
+bool 
+ChunkMac80211Hdr::is_to_ds (void) const
+{
+	return m_ctrl_to_ds == 1;
+}
+
+bool 
 ChunkMac80211Hdr::is_data (void) const
 {
 	return (m_ctrl_type == TYPE_DATA)?true:false;
