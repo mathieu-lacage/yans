@@ -26,28 +26,43 @@
 namespace {
 using namespace yans;
 
-void
+uint32_t
+get_size (CapabilityInformation const &self)
+{
+	return 2;
+}
+Buffer::Iterator
 write_to (Buffer::Iterator i, CapabilityInformation const&self)
 {
 	//XXX
+	i.next (get_size (self));
+	return i;
 }
-void
+Buffer::Iterator
 read_from (Buffer::Iterator i, CapabilityInformation &self)
 {
 	//XXX
+	i.next (get_size (self));
+	return i;
 }
- 
-void
+
+uint32_t 
+get_size (Ssid const&ssid)
+{
+	return ssid.get_length () + 1 + 1;
+}
+Buffer::Iterator
 write_to (Buffer::Iterator i, Ssid const &self)
 {
 	i.write_u8 (0); // ssid element id
-	uint32_t size = self.get_size ();
+	uint32_t size = self.get_length ();
 	i.write_u8 (size);
 	uint8_t ssid[32];
 	self.peek (ssid);
 	i.write (ssid, size);
+	return i;
 }
-void
+Buffer::Iterator
 read_from (Buffer::Iterator i, Ssid &self)
 {
 	//uint8_t element_id = buffer->read_u8 ();
@@ -57,19 +72,36 @@ read_from (Buffer::Iterator i, Ssid &self)
 	assert (size <= 32);
 	uint8_t ssid[32];
 	i.read (ssid, size);
-	self.set (ssid);
+	self.set (ssid, size);
+	return i;
 }
-void
+
+
+uint32_t
+get_size (StatusCode const&self)
+{
+	return 2;
+}
+Buffer::Iterator
 write_to (Buffer::Iterator i, StatusCode const&self)
 {
 	i.write_hton_u16 (self.peek_code ());
+	return i;
 }
-void
+Buffer::Iterator
 read_from (Buffer::Iterator i, StatusCode &self)
 {
 	self.set_code (i.read_ntoh_u16 ());
+	return i;
 }
-void
+
+
+uint32_t
+get_size (SupportedRates const&rates)
+{
+	return rates.get_n_rates () + 1 + 1;
+}
+Buffer::Iterator
 write_to (Buffer::Iterator i, SupportedRates const &self)
 {
 	i.write_u8 (1); // supported rates element id
@@ -77,8 +109,9 @@ write_to (Buffer::Iterator i, SupportedRates const &self)
 	uint8_t rates[8];
 	self.peek_rates (rates);
 	i.write (rates, self.get_n_rates ());
+	return i;
 }
-void
+Buffer::Iterator
 read_from (Buffer::Iterator i, SupportedRates &self)
 {
 	//uint8_t rates_id = buffer->read_u8 ();
@@ -89,6 +122,7 @@ read_from (Buffer::Iterator i, SupportedRates &self)
 	uint8_t rates[8];
 	i.read (rates, n_rates);
 	self.set_rates (rates, n_rates);
+	return i;
 }
 
 };
@@ -120,24 +154,28 @@ ChunkMgtProbeRequest::get_supported_rates (void) const
 {
 	return m_rates;
 }
-void 
-ChunkMgtProbeRequest::add_to (Buffer *buffer) const
+uint32_t
+ChunkMgtProbeRequest::get_size (void) const
 {
 	uint32_t size = 0;
-	size += m_ssid.get_size ();
-	size += m_rates.get_size ();
-	
-	buffer->add_at_start (size);
+	size += ::get_size (m_ssid);
+	size += ::get_size (m_rates);
+	return size;
+}
+void 
+ChunkMgtProbeRequest::add_to (Buffer *buffer) const
+{	
+	buffer->add_at_start (get_size ());
 	Buffer::Iterator i = buffer->begin ();
-	write_to (i, m_ssid);
-	write_to (i, m_rates);
+	i = write_to (i, m_ssid);
+	i = write_to (i, m_rates);
 }
 void 
 ChunkMgtProbeRequest::remove_from (Buffer *buffer)
 {
 	Buffer::Iterator i = buffer->begin ();
-	read_from (i, m_ssid);
-	read_from (i, m_rates);
+	i = read_from (i, m_ssid);
+	i = read_from (i, m_rates);
 	uint32_t size = buffer->begin ().get_distance_from (i);
 	buffer->remove_at_start (size);
 
@@ -190,9 +228,9 @@ ChunkMgtProbeResponse::get_size (void) const
 	uint32_t size = 0;
 	size += 8; // timestamp
 	size += 2; // beacon interval
-	size += m_capability.get_size (); // capability information
-	size += m_ssid.get_size ();
-	size += m_rates.get_size ();
+	size += ::get_size (m_capability); // capability information
+	size += ::get_size (m_ssid);
+	size += ::get_size (m_rates);
 	size += 3; // ds parameter set
 	return size;
 }
@@ -212,20 +250,22 @@ ChunkMgtProbeResponse::add_to (Buffer *buffer) const
 	buffer->add_at_start (get_size ());
 	Buffer::Iterator i = buffer->begin ();
 	i.write_u64 (Simulator::now_us ());
-	i.write_u16 (m_beacon_interval / 1024);
-	write_to (i, m_capability);
-	write_to (i, m_ssid);
-	write_to (i, m_rates);
+	i.write_hton_u16 (m_beacon_interval / 1024);
+	i = write_to (i, m_capability);
+	i = write_to (i, m_ssid);
+	i = write_to (i, m_rates);
 	i.next (3); // ds parameter set.
 }
 void 
 ChunkMgtProbeResponse::remove_from (Buffer *buffer)
 {
 	Buffer::Iterator i = buffer->begin ();
-	i.next (8+2); // timestamp + beacon interval
-	read_from (i, m_capability);
-	read_from (i, m_ssid);
-	read_from (i, m_rates);
+	i.next (8); // timestamp
+	m_beacon_interval = i.read_ntoh_u16 ();
+	m_beacon_interval *= 1024;
+	i = read_from (i, m_capability);
+	i = read_from (i, m_ssid);
+	i = read_from (i, m_rates);
 	i.next (3); // ds parameter set
 	uint32_t size = buffer->begin ().get_distance_from (i);
 	buffer->remove_at_start (size);
@@ -276,10 +316,10 @@ uint32_t
 ChunkMgtAssocRequest::get_size (void) const
 {
 	uint32_t size = 0;
-	size += m_capability.get_size ();
+	size += ::get_size (m_capability);
 	size += 2;
-	size += m_ssid.get_size ();
-	size += m_rates.get_size ();
+	size += ::get_size (m_ssid);
+	size += ::get_size (m_rates);
 	return size;
 }
 void 
@@ -287,19 +327,19 @@ ChunkMgtAssocRequest::add_to (Buffer *buffer) const
 {
 	buffer->add_at_start (get_size ());
 	Buffer::Iterator i = buffer->begin ();
-	write_to (i, m_capability);
+	i = write_to (i, m_capability);
 	i.write_hton_u16 (m_listen_interval);
-	write_to (i, m_ssid);
-	write_to (i, m_rates);
+	i = write_to (i, m_ssid);
+	i = write_to (i, m_rates);
 }
 void 
 ChunkMgtAssocRequest::remove_from (Buffer *buffer)
 {
 	Buffer::Iterator i = buffer->begin ();
-	read_from (i, m_capability);
+	i = read_from (i, m_capability);
 	m_listen_interval = i.read_ntoh_u16 ();
-	read_from (i, m_ssid);
-	read_from (i, m_rates);
+	i = read_from (i, m_ssid);
+	i = read_from (i, m_rates);
 	uint32_t size = buffer->begin ().get_distance_from (i);
 	buffer->remove_at_start (size);
 }
@@ -324,10 +364,10 @@ uint32_t
 ChunkMgtAssocResponse::get_size (void) const
 {
 	uint32_t size = 0;
-	size += m_capability.get_size ();
-	size += m_code.get_size ();
+	size += ::get_size (m_capability);
+	size += ::get_size (m_code);
 	size += 2; // aid
-	size += m_rates.get_size ();
+	size += ::get_size (m_rates);
 	return size;
 }
 
@@ -336,19 +376,19 @@ ChunkMgtAssocResponse::add_to (Buffer *buffer) const
 {
 	buffer->add_at_start (get_size ());
 	Buffer::Iterator i = buffer->begin ();
-	write_to (i, m_capability);
-	write_to (i, m_code);
+	i = write_to (i, m_capability);
+	i = write_to (i, m_code);
 	i.next (2);
-	write_to (i, m_rates);
+	i = write_to (i, m_rates);
 }
 void 
 ChunkMgtAssocResponse::remove_from (Buffer *buffer)
 {
 	Buffer::Iterator i = buffer->begin ();
-	read_from (i, m_capability);
-	read_from (i, m_code);
+	i = read_from (i, m_capability);
+	i = read_from (i, m_code);
 	m_aid = i.read_ntoh_u16 ();
-	read_from (i, m_rates);
+	i = read_from (i, m_rates);
 
 	uint32_t size = buffer->begin ().get_distance_from (i);
 	buffer->remove_at_start (size);
