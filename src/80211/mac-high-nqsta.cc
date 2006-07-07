@@ -31,12 +31,12 @@
 
 #include <cassert>
 
-#define noNQSTA_DEBUG 1
+#define NQSTA_DEBUG 1
 
 #ifdef NQSTA_DEBUG
 #include <iostream>
 #  define TRACE(x) \
-std::cout << "NQSTA " << Simulator::now_us () << "us " << x << std::endl;
+std::cout << "NQSTA now=" << Simulator::now_us () << "us " << x << std::endl;
 #else
 #  define TRACE(x)
 #endif
@@ -161,7 +161,7 @@ MacHighNqsta::send_probe_request (void)
 
 	m_probe_request_event = make_event (&MacHighNqsta::probe_request_timeout, this);
 	Simulator::schedule_rel_us (m_probe_request_timeout_us,
-				 m_probe_request_event);
+				    m_probe_request_event);
 }
 
 void
@@ -184,9 +184,9 @@ MacHighNqsta::send_association_request ()
 	
 	m_dca->queue (packet, hdr);
 
-	m_probe_request_event = make_event (&MacHighNqsta::probe_request_timeout, this);
-	Simulator::schedule_rel_us (m_probe_request_timeout_us,
-				 m_probe_request_event);
+	m_assoc_request_event = make_event (&MacHighNqsta::assoc_request_timeout, this);
+	Simulator::schedule_rel_us (m_assoc_request_timeout_us,
+				    m_assoc_request_event);
 }
 void
 MacHighNqsta::try_to_ensure_associated (void)
@@ -229,12 +229,14 @@ MacHighNqsta::try_to_ensure_associated (void)
 void
 MacHighNqsta::assoc_request_timeout (void)
 {
+	TRACE ("assoc request timeout");
 	m_state = WAIT_ASSOC_RESP;
 	send_association_request ();
 }
 void
 MacHighNqsta::probe_request_timeout (void)
 {
+	TRACE ("probe request timeout");
 	m_state = WAIT_PROBE_RESP;
 	send_probe_request ();
 }
@@ -256,8 +258,7 @@ MacHighNqsta::queue (PacketPtr packet, MacAddress to)
 		try_to_ensure_associated ();
 		return;
 	}
-	TRACE ("enqueue size="<<packet->get_size ()<<", to="<<to<<
-	       ", queue_size="<<m_queue->get_size ());
+	TRACE ("enqueue size="<<packet->get_size ()<<", to="<<to);
 	ChunkMac80211Hdr hdr;
 	hdr.set_type (MAC_80211_DATA);
 	hdr.set_addr1 (get_bssid ());
@@ -268,9 +269,6 @@ MacHighNqsta::queue (PacketPtr packet, MacAddress to)
 	m_dca->queue (packet, hdr);
 }
 
-void 
-MacHighNqsta::ack_received (ChunkMac80211Hdr const &hdr)
-{}
 void 
 MacHighNqsta::receive (PacketPtr packet, ChunkMac80211Hdr const *hdr)
 {

@@ -57,7 +57,6 @@ public:
 
 	void queue (PacketPtr packet, MacAddress to);
 
-	void ack_received (ChunkMac80211Hdr const &hdr);
 	void receive (PacketPtr packet, ChunkMac80211Hdr const *hdr);
 private:
 	void set_bssid (MacAddress bssid);
