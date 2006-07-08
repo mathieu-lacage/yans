@@ -145,18 +145,20 @@ MacHighNqap::send_assoc_resp (MacAddress to)
 void 
 MacHighNqap::tx_ok (ChunkMac80211Hdr const &hdr)
 {
-	MacStation *station = m_stations->lookup (hdr.get_addr2 ());
+	MacStation *station = m_stations->lookup (hdr.get_addr1 ());
 	if (hdr.is_assoc_resp () && 
 	    station->is_wait_assoc_tx_ok ()) {
+		TRACE ("associated with sta="<<hdr.get_addr1 ());
 		station->record_got_assoc_tx_ok ();
 	}
 }
 void 
 MacHighNqap::tx_failed (ChunkMac80211Hdr const &hdr)
 {
-	MacStation *station = m_stations->lookup (hdr.get_addr2 ());
+	MacStation *station = m_stations->lookup (hdr.get_addr1 ());
 	if (hdr.is_assoc_resp () && 
 	    station->is_wait_assoc_tx_ok ()) {
+		TRACE ("assoc failed with sta="<<hdr.get_addr1 ());
 		station->record_got_assoc_tx_failed ();
 	}
 }
@@ -189,6 +191,7 @@ MacHighNqap::receive (PacketPtr packet, ChunkMac80211Hdr const *hdr)
 			send_probe_resp (hdr->get_addr2 ());
 		} else if (hdr->get_addr1 () == m_interface->get_mac_address ()) {
 			if (hdr->is_assoc_req ()) {
+				station->record_wait_assoc_tx_ok ();
 				send_assoc_resp (hdr->get_addr2 ());
 			} else if (hdr->is_disassociation ()) {
 				station->record_disassociated ();
