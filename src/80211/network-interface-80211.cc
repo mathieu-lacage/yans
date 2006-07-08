@@ -145,7 +145,7 @@ NetworkInterface80211Nqsta::real_send (PacketPtr packet, MacAddress to)
 void 
 NetworkInterface80211Nqsta::associated (void)
 {
-	//XXX should flush the arp cache here.
+	notify_status_change ();
 }
 
 

@@ -59,6 +59,7 @@ private:
 	void send_arp_request (Ipv4Address to);
 	void drop_dead_packet (PacketPtr packet);
 	void receive_arp (PacketPtr packet);
+	void flush_cache (MacNetworkInterface *self);
 
 	virtual void real_send (PacketPtr packet, Ipv4Address to);
 	virtual uint16_t real_get_mtu (void) const;

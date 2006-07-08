@@ -66,6 +66,12 @@ MacNetworkInterface::set_down (void)
 }
 
 void 
+MacNetworkInterface::set_status_change_callback (StatusChangeCallback callback)
+{
+	m_status_change_callback = callback;
+}
+
+void 
 MacNetworkInterface::set_rx_callback (RxCallback callback)
 {
 	m_rx_callback = callback;
@@ -79,6 +85,12 @@ void
 MacNetworkInterface::forward_up (PacketPtr packet)
 {
 	m_rx_callback (packet, this);
+}
+
+void 
+MacNetworkInterface::notify_status_change (void)
+{
+	m_status_change_callback (this);
 }
 
 }; // namespace yans

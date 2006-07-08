@@ -51,6 +51,7 @@ ArpIpv4NetworkInterface::ArpIpv4NetworkInterface (MacNetworkInterface *interface
 	  m_drop (new PacketLogger ())
 {
 	interface->set_rx_callback (make_callback (&LlcSnapEncapsulation::receive, m_llc));
+	interface->set_status_change_callback (make_callback (&ArpIpv4NetworkInterface::flush_cache, this));
 
 	m_llc->set_mac_interface (interface);
 	m_llc->set_ipv4_callback (make_callback (&ArpIpv4NetworkInterface::forward_up, 
@@ -137,6 +138,11 @@ ArpIpv4NetworkInterface::send_arp_reply (Ipv4Address to_ip, MacAddress to_mac)
 	m_llc->send_arp (packet, to_mac);
 }
 
+void 
+ArpIpv4NetworkInterface::flush_cache (MacNetworkInterface *self)
+{
+	m_arp_cache.erase (m_arp_cache.begin (), m_arp_cache.end ());
+}
 
 void 
 ArpIpv4NetworkInterface::receive_arp (PacketPtr packet)
