@@ -175,7 +175,10 @@ MacHighNqap::receive (PacketPtr packet, ChunkMac80211Hdr const *hdr)
 			if (hdr->get_addr3 () == m_interface->get_mac_address ()) {
 				m_forward_up (packet);
 			} else {
-				forward_down (packet, hdr->get_addr2 (), hdr->get_addr3 ());
+				forward_down (packet->copy (), 
+					      hdr->get_addr2 (), 
+					      hdr->get_addr3 ());
+				m_forward_up (packet);
 			}
 		} else if (hdr->is_from_ds () &&
 			   hdr->is_to_ds ()) {
