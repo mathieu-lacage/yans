@@ -31,7 +31,7 @@
 
 #include <cassert>
 
-#define NQSTA_DEBUG 1
+#define noNQSTA_DEBUG 1
 
 #ifdef NQSTA_DEBUG
 #include <iostream>
@@ -126,6 +126,12 @@ void
 MacHighNqsta::set_bssid (MacAddress bssid)
 {
 	m_bssid = bssid;
+
+}
+void 
+MacHighNqsta::start_active_association (void)
+{
+	try_to_ensure_associated ();
 }
 
 MacAddress
@@ -258,7 +264,7 @@ MacHighNqsta::queue (PacketPtr packet, MacAddress to)
 		try_to_ensure_associated ();
 		return;
 	}
-	TRACE ("enqueue size="<<packet->get_size ()<<", to="<<to);
+	//TRACE ("enqueue size="<<packet->get_size ()<<", to="<<to);
 	ChunkMac80211Hdr hdr;
 	hdr.set_type_data ();
 	hdr.set_addr1 (get_bssid ());

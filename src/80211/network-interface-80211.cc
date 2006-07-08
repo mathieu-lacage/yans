@@ -132,10 +132,10 @@ NetworkInterface80211Nqsta::get_ssid (void) const
 	return m_ssid;
 }
 void 
-NetworkInterface80211Nqsta::set_ssid (Ssid ssid)
+NetworkInterface80211Nqsta::start_active_association (Ssid ssid)
 {
-	// XXX restart ap scan
 	m_ssid = ssid;
+	m_high->start_active_association ();
 }
 void 
 NetworkInterface80211Nqsta::real_send (PacketPtr packet, MacAddress to)

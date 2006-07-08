@@ -99,7 +99,7 @@ int main (int argc, char *argv[])
 	pos_client = new StaticPosition ();
 	wifi_client = wifi_factory->create_nqsta (address.get_next (), pos_client);
 	wifi_client->connect_to (channel);
-	wifi_client->set_ssid("Hi");
+	wifi_client->start_active_association ("Hi");
 	pos_client->set (5.0, 0.0, 0.0);
 	Simulator::schedule_rel_s (1.0, make_event (&advance, pos_client));
 	Host *hclient = new Host ("client");
@@ -117,7 +117,8 @@ int main (int argc, char *argv[])
 	PeriodicGenerator *generator = new PeriodicGenerator ();
 	generator->set_packet_interval (0.00001);
 	generator->set_packet_size (2000);
-	generator->start_now ();
+	Simulator::schedule_rel_us (1000000,
+				    make_event (&PeriodicGenerator::start_now, generator));
 	generator->stop_at (42.0);
 	generator->set_send_callback (make_callback (&UdpSource::send, source));
 
@@ -127,7 +128,7 @@ int main (int argc, char *argv[])
 	StaticPosition *pos_server = new StaticPosition ();
 	wifi_server = wifi_factory->create_nqsta (address.get_next (), pos_server);
 	wifi_server->connect_to (channel);
-	wifi_server->set_ssid("Hi");
+	wifi_server->start_active_association ("Hi");
 	pos_server->set (10.0,10.0, 10.0);
 	ThroughputPrinter *printer = new ThroughputPrinter ();
 	Simulator::schedule_abs_s (40, make_event (&ThroughputPrinter::stop, printer));

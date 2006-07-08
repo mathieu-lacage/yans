@@ -58,7 +58,6 @@ public:
 
 	virtual MacAddress get_bssid (void) const = 0;
 	virtual Ssid get_ssid (void) const = 0;
-	virtual void set_ssid (Ssid ssid) = 0;
 
 
 protected:
@@ -89,7 +88,7 @@ public:
 
 	virtual MacAddress get_bssid (void) const;
 	virtual Ssid get_ssid (void) const;
-	virtual void set_ssid (Ssid ssid);
+	void set_ssid (Ssid ssid);
 private:
 	virtual void real_send (PacketPtr packet, MacAddress to);
 	friend class NetworkInterface80211Factory;
@@ -105,7 +104,7 @@ public:
 
 	virtual MacAddress get_bssid (void) const;
 	virtual Ssid get_ssid (void) const;
-	virtual void set_ssid (Ssid ssid);
+	void start_active_association (Ssid ssid);
 private:
 	void associated (void);
 	virtual void real_send (PacketPtr packet, MacAddress to);
@@ -122,7 +121,7 @@ public:
 
 	virtual MacAddress get_bssid (void) const;
 	virtual Ssid get_ssid (void) const;
-	virtual void set_ssid (Ssid ssid);
+	void set_ssid (Ssid ssid);
 	
 private:
 	virtual void real_send (PacketPtr packet, MacAddress to);

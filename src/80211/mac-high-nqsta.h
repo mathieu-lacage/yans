@@ -55,6 +55,8 @@ public:
 
 	MacAddress get_bssid (void) const;
 
+	void start_active_association (void);
+
 	void queue (PacketPtr packet, MacAddress to);
 
 	void receive (PacketPtr packet, ChunkMac80211Hdr const *hdr);
