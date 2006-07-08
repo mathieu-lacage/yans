@@ -34,17 +34,17 @@
 
 
 #define nopePHY80211_DEBUG 1
-#define nopePHY80211_STATE_DEBUG 1
+#define PHY80211_STATE_DEBUG 1
 
 /* All the state transitions are marked by these macros. */
 #ifdef PHY80211_STATE_DEBUG
 #include <iostream>
 #  define STATE_FROM(from) \
-std::cout << "PHY TRACE " << get_self_address () << " from " << state_to_string (from);
+std::cout << "PHY TRACE self=" << this << " old=" << state_to_string (from);
 #  define STATE_TO(to) \
-std::cout << " to " << stateToString (to);
+std::cout << " new=" << state_to_string (to);
 #  define STATE_AT(at) \
-std::cout << " at " << at << std::endl;
+std::cout << " at=" << at << std::endl;
 #else
 #  define STATE_FROM(from)
 #  define STATE_TO(from)
@@ -458,7 +458,27 @@ Phy80211::calculate_tx_duration_s (uint32_t size, uint8_t payload_mode) const
 }
 
 
-
+char const *
+Phy80211::state_to_string (enum Phy80211State state)
+{
+	switch (state) {
+	case SLEEP:
+		return "SLEEP";
+		break;
+	case TX:
+		return "TX";
+		break;
+	case IDLE:
+		return "IDLE";
+		break;
+	case SYNC:
+		return "SYNC";
+		break;
+	default:
+		return "XXX";
+		break;
+	}
+}
 enum Phy80211::Phy80211State 
 Phy80211::get_state (void)
 {

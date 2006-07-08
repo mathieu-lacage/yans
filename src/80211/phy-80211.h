@@ -141,6 +141,7 @@ private:
 	typedef std::vector <NiChange>::iterator NiChangesI;
 
 private:	
+	char const *state_to_string (enum Phy80211State state);
 	enum Phy80211State get_state (void);
 	double get_ed_threshold_w (void) const;
 	double dbm_to_w (double dbm) const;
