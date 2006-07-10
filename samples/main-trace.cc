@@ -27,7 +27,7 @@ generate_trace_events (void)
 	b = 10;
 	b += 100;
 	b += 50;
-	b = -20;
+	b = (unsigned short) -20;
 	c << "this is a simple test b=" << b << std::endl;
 }
 
