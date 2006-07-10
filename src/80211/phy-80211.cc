@@ -238,7 +238,7 @@ Phy80211::receive_packet (ConstPacketPtr packet,
 	case Phy80211::SLEEP:
 		TRACE ("drop packet because sleeping");
 		break;
-	case Phy80211::IDLE: {
+	case Phy80211::IDLE:
 		if (rx_power_w > m_ed_threshold_w) {
 			// sync to signal
 			notify_rx_start (rx_duration_us);
@@ -253,7 +253,7 @@ Phy80211::receive_packet (ConstPacketPtr packet,
 			TRACE ("drop packet because signal power too small ("<<
 			       rx_power_w<<"<"<<m_ed_threshold_w<<")");
 		}
-	} break;
+	break;
 	}
 
 	event->unref ();
