@@ -606,7 +606,6 @@ Phy80211::notify_wakeup (void)
 void
 Phy80211::switch_to_tx (uint64_t tx_duration_us)
 {
-	bool alive = true;
 	assert (m_end_tx_us == 0);
 	switch (get_state ()) {
 	case Phy80211::SYNC:
@@ -614,7 +613,6 @@ Phy80211::switch_to_tx (uint64_t tx_duration_us)
 		 * started, we drop it now. It will be discarded 
 		 * later in endRx.
 		 */
-		alive = !m_rxing;
 		m_rxing = false;
 		STATE_FROM (Phy80211::SYNC);
 		break;
@@ -629,7 +627,6 @@ Phy80211::switch_to_tx (uint64_t tx_duration_us)
 	m_end_tx_us = now_us () + tx_duration_us;
 	STATE_TO (Phy80211::TX);
 	STATE_AT (now_us ());
-	//assert (alive);
 }
 void
 Phy80211::switch_to_sync_from_idle (uint64_t rx_duration_us)
