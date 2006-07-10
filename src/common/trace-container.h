@@ -205,6 +205,9 @@ TraceContainer::set_callback (char const *name, Callback<void,T1> callback)
 			static_cast<CallbackLogger<T1> *> (i->first)->set_callback (callback);
 		}
 	}
+#ifndef NDEBUG
+	assert (false);
+#endif
 }
 template <typename T1, typename T2>
 void 
@@ -215,6 +218,9 @@ TraceContainer::set_callback (char const *name, Callback<void,T1,T2> callback)
 			static_cast<CallbackLogger<T1,T2> *> (i->first)->set_callback (callback);
 		}
 	}
+#ifndef NDEBUG
+	assert (false);
+#endif
 }
 template <typename T1, typename T2, typename T3>
 void 
@@ -225,6 +231,9 @@ TraceContainer::set_callback (char const *name, Callback<void,T1,T2,T3> callback
 			static_cast<CallbackLogger<T1,T2,T3> *> (i->first)->set_callback (callback);
 		}
 	}
+#ifndef NDEBUG
+	assert (false);
+#endif
 }
 template <typename T1, typename T2, typename T3, typename T4>
 void 
@@ -235,6 +244,9 @@ TraceContainer::set_callback (char const *name, Callback<void,T1,T2,T3,T4> callb
 			static_cast<CallbackLogger<T1,T2,T3,T4> *> (i->first)->set_callback (callback);
 		}
 	}
+#ifndef NDEBUG
+	assert (false);
+#endif
 }
 template <typename T1, typename T2, typename T3, typename T4, typename T5>
 void 
@@ -245,6 +257,9 @@ TraceContainer::set_callback (char const *name, Callback<void,T1,T2,T3,T4,T5> ca
 			static_cast<CallbackLogger<T1,T2,T3,T4,T5> *> (i->first)->set_callback (callback);
 		}
 	}
+#ifndef NDEBUG
+	assert (false);
+#endif
 }
 
 
