@@ -131,6 +131,8 @@ TraceContainer::register_stream (char const *name, TraceStream *stream)
 
 }
 
+
+
 }; // namespace yans
 
 #include <iostream>

@@ -274,6 +274,7 @@ YANS_INST_HDR := \
 	src/common/packet-logger.h \
 	src/common/trace-container.h \
 	src/common/callback.h \
+	src/common/callback-logger.h \
 	src/common/reference-list.h \
 	src/common/ui-traced-variable.tcc \
 	src/common/si-traced-variable.tcc \

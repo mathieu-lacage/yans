@@ -25,6 +25,7 @@
 #include "ui-traced-variable.tcc"
 #include "si-traced-variable.tcc"
 #include "f-traced-variable.tcc"
+#include "callback-logger.h"
 #include "callback.h"
 #include "packet.h"
 #include <list>
@@ -96,6 +97,17 @@ public:
 	 */
 	void set_stream (char const *name, std::ostream *os);
 
+	template <typename T1>
+	void set_callback (char const *name, Callback<void,T1> callback);
+	template <typename T1, typename T2>
+	void set_callback (char const *name, Callback<void,T1,T2> callback);
+	template <typename T1, typename T2, typename T3>
+	void set_callback (char const *name, Callback<void,T1,T2,T3> callback);
+	template <typename T1, typename T2, typename T3, typename T4>
+	void set_callback (char const *name, Callback<void,T1,T2,T3,T4> callback);
+	template <typename T1, typename T2, typename T3, typename T4, typename T5>
+	void set_callback (char const *name, Callback<void,T1,T2,T3,T4,T5> callback);
+
 	/**
 	 * \param name the name of the registered event source
 	 * \param var the event source being registered
@@ -127,6 +139,17 @@ public:
 	 */
 	void register_stream (char const *name, TraceStream *stream);
 
+	template <typename T1>
+	void register_callback (char const *name, CallbackLogger<T1> *logger);
+	template <typename T1, typename T2>
+	void register_callback (char const *name, CallbackLogger<T1,T2> *logger);
+	template <typename T1, typename T2, typename T3>
+	void register_callback (char const *name, CallbackLogger<T1,T2,T3> *logger);
+	template <typename T1, typename T2, typename T3, typename T4>
+	void register_callback (char const *name, CallbackLogger<T1,T2,T3,T4> *logger);
+	template <typename T1, typename T2,typename T3, typename T4, typename T5>
+	void register_callback (char const *name, CallbackLogger<T1,T2,T3,T4,T5> *logger);
+
 	/**
 	 * Print the list of registered event sources.
 	 */
@@ -142,13 +165,145 @@ private:
 	typedef std::list<std::pair<PacketLogger *, std::string> >::iterator PacketLoggerListI;
 	typedef std::list<std::pair<TraceStream *, std::string> > TraceStreamList;
 	typedef std::list<std::pair<TraceStream *, std::string> >::iterator TraceStreamListI;
+	typedef std::list<std::pair<CallbackLoggerBase *, std::string> > Callback1List;
+	typedef std::list<std::pair<CallbackLoggerBase *, std::string> >::iterator Callback1ListI;
+	typedef std::list<std::pair<CallbackLoggerBase *, std::string> > Callback2List;
+	typedef std::list<std::pair<CallbackLoggerBase *, std::string> >::iterator Callback2ListI;
+	typedef std::list<std::pair<CallbackLoggerBase *, std::string> > Callback3List;
+	typedef std::list<std::pair<CallbackLoggerBase *, std::string> >::iterator Callback3ListI;
+	typedef std::list<std::pair<CallbackLoggerBase *, std::string> > Callback4List;
+	typedef std::list<std::pair<CallbackLoggerBase *, std::string> >::iterator Callback4ListI;
+	typedef std::list<std::pair<CallbackLoggerBase *, std::string> > Callback5List;
+	typedef std::list<std::pair<CallbackLoggerBase *, std::string> >::iterator Callback5ListI;
 
 	UiList m_ui_list;
 	SiList m_si_list;
 	FList m_f_list;
 	PacketLoggerList m_packet_logger_list;
 	TraceStreamList m_trace_stream_list;
+	Callback1List m_callback1_list;
+	Callback2List m_callback2_list;
+	Callback3List m_callback3_list;
+	Callback4List m_callback4_list;
+	Callback5List m_callback5_list;
 };
+
+}; // namespace yans
+
+#ifndef NDEBUG
+#include <cassert>
+#endif
+
+namespace yans {
+
+template <typename T1>
+void 
+TraceContainer::set_callback (char const *name, Callback<void,T1> callback)
+{
+	for (Callback1ListI i = m_callback1_list.begin (); i != m_callback1_list.end (); i++) {
+		if (i->second == name) {
+			static_cast<CallbackLogger<T1> *> (i->first)->set_callback (callback);
+		}
+	}
+}
+template <typename T1, typename T2>
+void 
+TraceContainer::set_callback (char const *name, Callback<void,T1,T2> callback)
+{
+	for (Callback2ListI i = m_callback2_list.begin (); i != m_callback2_list.end (); i++) {
+		if (i->second == name) {
+			static_cast<CallbackLogger<T1,T2> *> (i->first)->set_callback (callback);
+		}
+	}
+}
+template <typename T1, typename T2, typename T3>
+void 
+TraceContainer::set_callback (char const *name, Callback<void,T1,T2,T3> callback)
+{
+	for (Callback3ListI i = m_callback3_list.begin (); i != m_callback3_list.end (); i++) {
+		if (i->second == name) {
+			static_cast<CallbackLogger<T1,T2,T3> *> (i->first)->set_callback (callback);
+		}
+	}
+}
+template <typename T1, typename T2, typename T3, typename T4>
+void 
+TraceContainer::set_callback (char const *name, Callback<void,T1,T2,T3,T4> callback)
+{
+	for (Callback4ListI i = m_callback4_list.begin (); i != m_callback4_list.end (); i++) {
+		if (i->second == name) {
+			static_cast<CallbackLogger<T1,T2,T3,T4> *> (i->first)->set_callback (callback);
+		}
+	}
+}
+template <typename T1, typename T2, typename T3, typename T4, typename T5>
+void 
+TraceContainer::set_callback (char const *name, Callback<void,T1,T2,T3,T4,T5> callback)
+{
+	for (Callback5ListI i = m_callback5_list.begin (); i != m_callback5_list.end (); i++) {
+		if (i->second == name) {
+			static_cast<CallbackLogger<T1,T2,T3,T4,T5> *> (i->first)->set_callback (callback);
+		}
+	}
+}
+
+
+template <typename T1>
+void 
+TraceContainer::register_callback (char const *name, CallbackLogger<T1> *logger)
+{
+#ifndef NDEBUG
+	for (Callback1ListI i = m_callback1_list.begin (); i != m_callback1_list.end (); i++) {
+		assert (i->second != name);
+	}
+#endif
+	m_callback1_list.push_back (std::make_pair (logger, name));
+}
+template <typename T1, typename T2>
+void 
+TraceContainer::register_callback (char const *name, CallbackLogger<T1,T2> *logger)
+{
+#ifndef NDEBUG
+	for (Callback2ListI i = m_callback2_list.begin (); i != m_callback2_list.end (); i++) {
+		assert (i->second != name);
+	}
+#endif
+	m_callback2_list.push_back (std::make_pair (logger, name));
+}
+template <typename T1, typename T2, typename T3>
+void 
+TraceContainer::register_callback (char const *name, CallbackLogger<T1,T2,T3> *logger)
+{
+#ifndef NDEBUG
+	for (Callback3ListI i = m_callback3_list.begin (); i != m_callback3_list.end (); i++) {
+		assert (i->second != name);
+	}
+#endif
+	m_callback3_list.push_back (std::make_pair (logger, name));
+}
+template <typename T1, typename T2, typename T3, typename T4>
+void 
+TraceContainer::register_callback (char const *name, CallbackLogger<T1,T2,T3,T4> *logger)
+{
+#ifndef NDEBUG
+	for (Callback4ListI i = m_callback4_list.begin (); i != m_callback4_list.end (); i++) {
+		assert (i->second != name);
+	}
+#endif
+	m_callback4_list.push_back (std::make_pair (logger, name));
+}
+template <typename T1, typename T2,typename T3, typename T4, typename T5>
+void 
+TraceContainer::register_callback (char const *name, CallbackLogger<T1,T2,T3,T4,T5> *logger)
+{
+#ifndef NDEBUG
+	for (Callback5ListI i = m_callback5_list.begin (); i != m_callback5_list.end (); i++) {
+		assert (i->second != name);
+	}
+#endif
+	m_callback5_list.push_back (std::make_pair (logger, name));
+}
+
 
 }; // namespace yans
 
