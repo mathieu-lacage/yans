@@ -66,10 +66,7 @@ Dcf::Dcf ()
 	  m_last_rx_end (0),
 	  m_last_tx_start (0),
 	  m_last_tx_duration (0),
-	  m_last_sleep_start (0),
-	  m_last_wakeup_start (0),
-	  m_rxing (false),
-	  m_sleeping (false)
+	  m_rxing (false)
 {
 	reset_cw ();
 	m_random = new RandomUniform ();
@@ -287,7 +284,7 @@ Dcf::get_cw_max (void) const
 bool 
 Dcf::is_phy_busy (void)
 {
-	if (m_rxing || m_sleeping) {
+	if (m_rxing) {
 		return true;
 	}
 	uint64_t last_tx_end = m_last_tx_start + m_last_tx_duration;
@@ -372,7 +369,7 @@ Dcf::get_delay_until_access_granted (uint64_t now)
 void
 Dcf::update_backoff (uint64_t time_us)
 {
-	if (m_sleeping || m_backoff_left == 0) {
+	if (m_backoff_left == 0) {
 		return;
 	}
 	
@@ -461,22 +458,6 @@ Dcf::notify_tx_start_now (uint64_t duration)
 	update_backoff (now);
 	m_last_tx_start = now;
 	m_last_tx_duration = duration;
-}
-void 
-Dcf::notify_sleep_now (void)
-{
-	uint64_t now = now_us ();
-	TRACE ("sleep");
-	m_last_sleep_start = now;
-	m_sleeping = true;
-}
-void 
-Dcf::notify_wakeup_now (void)
-{
-	uint64_t now = now_us ();
-	TRACE ("wakeup");
-	m_last_wakeup_start = now;
-	m_sleeping = false;
 }
 
 }; // namespace yans

@@ -79,10 +79,8 @@ public:
 		m_dcf->notify_tx_start_now (duration_us);
 	}
 	virtual void notify_sleep (void) {
-		m_dcf->notify_sleep_now ();
 	}
 	virtual void notify_wakeup () {
-		m_dcf->notify_wakeup_now ();
 	}
 private:
 	yans::Dcf *m_dcf;

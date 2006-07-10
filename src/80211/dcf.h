@@ -77,8 +77,6 @@ public:
 	void notify_rx_end_ok_now (void);
 	void notify_rx_end_error_now (void);
 	void notify_tx_start_now (uint64_t duration);
-	void notify_sleep_now (void);
-	void notify_wakeup_now (void);
 	void notify_nav_reset (uint64_t now, uint64_t duration);
 	void notify_nav_start (uint64_t now, uint64_t duration);
 	void notify_nav_continue (uint64_t now, uint64_t duration);
@@ -126,8 +124,6 @@ private:
 	uint64_t m_last_rx_end;
 	uint64_t m_last_tx_start;
 	uint64_t m_last_tx_duration;
-	uint64_t m_last_sleep_start;
-	uint64_t m_last_wakeup_start;
 	bool m_rxing;
 	bool m_sleeping;
 };
