@@ -66,6 +66,8 @@ Dcf::Dcf ()
 	  m_last_rx_end (0),
 	  m_last_tx_start (0),
 	  m_last_tx_duration (0),
+	  m_last_busy_start (0),
+	  m_last_busy_duration (0),
 	  m_rxing (false)
 {
 	reset_cw ();
@@ -255,6 +257,14 @@ Dcf::most_recent (uint64_t a, uint64_t b, uint64_t c) const
 	retval = most_recent (retval, c);
 	return retval;
 }
+uint64_t
+Dcf::most_recent (uint64_t a, uint64_t b, uint64_t c, uint64_t d) const
+{
+	uint64_t e = max (a, b);
+	uint64_t f = max (c, d);
+	uint64_t retval = max (e, f);
+	return retval;
+}
 
 uint64_t 
 Dcf::get_difs_us (void) const
@@ -339,9 +349,13 @@ Dcf::get_access_granted_start (void) const
 	} else {
 		rx_access_start = m_last_rx_start + m_last_rx_duration + get_difs_us ();
 	}
+	uint64_t busy_access_start = m_last_busy_start + m_last_busy_duration + get_difs_us ();
 	uint64_t tx_access_start = m_last_tx_start + m_last_tx_duration + get_difs_us ();
 	uint64_t nav_access_start = m_last_nav_start + m_last_nav_duration + get_difs_us ();
-	uint64_t access_granted_start = most_recent (rx_access_start, tx_access_start, nav_access_start);
+	uint64_t access_granted_start = most_recent (rx_access_start, 
+						     busy_access_start,
+						     tx_access_start, 
+						     nav_access_start);
 	return access_granted_start;
 }
 
@@ -458,6 +472,16 @@ Dcf::notify_tx_start_now (uint64_t duration)
 	update_backoff (now);
 	m_last_tx_start = now;
 	m_last_tx_duration = duration;
+}
+
+void 
+Dcf::notify_cca_busy_start_now (uint64_t duration)
+{
+	uint64_t now = now_us ();
+	TRACE ("busy start at="<<now<<" for "<<duration);
+	update_backoff (now);
+	m_last_busy_start = now;
+	m_last_busy_duration = duration;
 }
 
 }; // namespace yans

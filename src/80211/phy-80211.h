@@ -29,6 +29,7 @@
 #include "count-ptr-holder.tcc"
 #include "event.h"
 #include "packet.h"
+#include "callback-logger.h"
 
 
 namespace yans {
@@ -37,6 +38,7 @@ class TransmissionMode;
 class PropagationModel;
 class RandomUniform;
 class RxEvent;
+class TraceContainer;
 
 class Phy80211Listener {
 public:
@@ -58,8 +60,7 @@ public:
 	/* we start the transmission of a packet.
 	 */
 	virtual void notify_tx_start (uint64_t duration_us) = 0;
-	virtual void notify_sleep (void) = 0;
-	virtual void notify_wakeup () = 0;
+	virtual void notify_cca_busy_start (uint64_t duration_us) = 0;
 };
 
 
@@ -67,15 +68,17 @@ public:
 class Phy80211
 {
 public:
-	typedef Callback<void,ConstPacketPtr , double, uint8_t, uint8_t> RxOkCallback;
-	typedef Callback<void,ConstPacketPtr , double> RxErrorCallback;
+	typedef Callback<void,ConstPacketPtr , double, uint8_t, uint8_t> SyncOkCallback;
+	typedef Callback<void,ConstPacketPtr , double> SyncErrorCallback;
 
 	Phy80211 ();
 	virtual ~Phy80211 ();
 
+	void register_traces (TraceContainer *container);
+
 	void set_propagation_model (PropagationModel *propagation);
-	void set_receive_ok_callback (RxOkCallback callback);
-	void set_receive_error_callback (RxErrorCallback callback);
+	void set_receive_ok_callback (SyncOkCallback callback);
+	void set_receive_error_callback (SyncErrorCallback callback);
 
 	/* rx_power unit is Watt */
 	void receive_packet (ConstPacketPtr packet,
@@ -84,16 +87,13 @@ public:
 			     uint8_t stuff);
 	void send_packet (ConstPacketPtr packet, uint8_t tx_mode, uint8_t tx_power, uint8_t stuff);
 
-	void sleep (void);
-	void wakeup (void);
-	
 	void register_listener (Phy80211Listener *listener);
 
+	bool is_state_cca_busy (void);
 	bool is_state_idle (void);
 	bool is_state_busy (void);
-	bool is_state_rx (void);
+	bool is_state_sync (void);
 	bool is_state_tx (void);
-	bool is_state_sleep (void);
 	uint64_t get_state_duration_us (void);
 	uint64_t get_delay_until_idle_us (void);
 
@@ -117,8 +117,8 @@ private:
 	enum Phy80211State {
 		SYNC,
 		TX,
-		IDLE,
-		SLEEP
+		CCA_BUSY,
+		IDLE
 	};
 	class NiChange {
 	public:
@@ -153,22 +153,21 @@ private:
 	TransmissionMode *get_mode (uint8_t tx_mode) const;
 	double get_power_dbm (uint8_t power) const;
 	void notify_tx_start (uint64_t duration_us);
-	void notify_sleep (void);
 	void notify_wakeup (void);
-	void notify_rx_start (uint64_t duration_us);
-	void notify_rx_end_ok (void);
-	void notify_rx_end_error (void);
+	void notify_sync_start (uint64_t duration_us);
+	void notify_sync_end_ok (void);
+	void notify_sync_end_error (void);
+	void notify_cca_busy_start (uint64_t duration_us);
 	void switch_to_tx (uint64_t tx_duration_us);
-	void switch_to_sleep (void);
-	void switch_to_idle_from_sleep (void);
-	void switch_to_sync_from_idle (uint64_t tx_duration_us);
-	void switch_to_idle_from_sync (void);
+	void switch_to_sync (uint64_t sync_duration_us);
+	void switch_from_sync (void);
+	void switch_to_cca_busy (uint64_t duration_us);
 	void append_event (RxEvent *event);
 	double calculate_noise_interference_w (RxEvent *event, NiChanges *ni) const;
 	double calculate_snr (double signal, double noise_interference, TransmissionMode *mode) const;
 	double calculate_chunk_success_rate (double snir, uint64_t delay, TransmissionMode *mode) const;
 	double calculate_per (RxEvent const*event, NiChanges *ni) const;
-	void end_rx (ConstPacketPtr packet, CountPtrHolder<RxEvent> event, uint8_t stuff);
+	void end_sync (ConstPacketPtr packet, CountPtrHolder<RxEvent> event, uint8_t stuff);
 	double get_snr_for_ber (TransmissionMode *mode, double ber) const;
 private:
 	uint64_t     m_plcp_preamble_delay_us;
@@ -182,20 +181,47 @@ private:
 	uint32_t     m_n_tx_power;
 
 	
-	bool m_sleeping;
-	bool m_rxing;
+	bool m_syncing;
 	uint64_t m_end_tx_us;
-	uint64_t m_end_rx_us;
+	uint64_t m_end_sync_us;
+	uint64_t m_end_cca_busy_us;
 	uint64_t m_previous_state_change_time_us;
 
 	PropagationModel *m_propagation;
-	RxOkCallback m_rx_ok_callback;
-	RxErrorCallback m_rx_error_callback;
+	SyncOkCallback m_sync_ok_callback;
+	SyncErrorCallback m_sync_error_callback;
 	Modes m_modes;
 	Listeners m_listeners;
-	Event m_end_rx_event;
+	Event m_end_sync_event;
 	Events m_events;
 	RandomUniform *m_random;
+	/* param1: - true: sync completed ok
+	 *         - false: sync completed with failure
+	 * Invoked when the last bit of a signal (which was
+	 * synchronized upon) is received.
+	 * Reports whether or not the signal was received
+	 * successfully.
+	 */
+	CallbackLogger<bool> m_end_sync_logger;
+	/* param1: duration (us)
+	 * param2: signal energy (w)
+	 * Invoked whenever the first bit of a signal is received.
+	 */
+	CallbackLogger<uint64_t,double> m_start_rx_logger;
+	/* param1: duration (us)
+	 * param2: signal energy (w)
+	 * Invoked whenever the first bit of a signal is 
+	 * synchronized upon.
+	 */
+	CallbackLogger<uint64_t,double> m_start_sync_logger;
+	/* param1: duration (us)
+	 * Invoked whenever we are idle but CCA says we are busy.
+	 */
+	CallbackLogger<uint64_t> m_start_cca_busy_logger;
+	/* param1: duration (us)
+	 * Invoked whenever we send the first bit of a signal.
+	 */
+	CallbackLogger<uint64_t> m_start_tx_logger;
 };
 
 }; // namespace yans

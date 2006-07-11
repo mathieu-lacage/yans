@@ -78,9 +78,8 @@ public:
 	virtual void notify_tx_start (uint64_t duration_us) {
 		m_dcf->notify_tx_start_now (duration_us);
 	}
-	virtual void notify_sleep (void) {
-	}
-	virtual void notify_wakeup () {
+	virtual void notify_cca_busy_start (uint64_t duration_us) {
+		m_dcf->notify_cca_busy_start_now (duration_us);
 	}
 private:
 	yans::Dcf *m_dcf;

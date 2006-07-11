@@ -28,6 +28,7 @@
 #include "random-uniform.h"
 #include "count-ptr-holder.tcc"
 #include "event.tcc"
+#include "trace-container.h"
 
 #include <cassert>
 #include <math.h>
@@ -173,11 +174,10 @@ Phy80211::NiChange::operator < (Phy80211::NiChange const &o) const
  ****************************************************************/
 
 Phy80211::Phy80211 ()
-	: m_sleeping (false),
-	  m_rxing (false),
+	: m_syncing (false),
 	  m_end_tx_us (0),
 	  m_previous_state_change_time_us (0),
-	  m_end_rx_event (),
+	  m_end_sync_event (),
 	  m_random (new RandomUniform ())
 {}
 
@@ -197,20 +197,30 @@ Phy80211::~Phy80211 ()
 }
 
 void 
+Phy80211::register_traces (TraceContainer *container)
+{
+	container->register_callback ("80211-rx-start", &m_start_rx_logger);
+	container->register_callback ("80211-sync-start", &m_start_sync_logger);
+	container->register_callback ("80211-sync-end", &m_end_sync_logger);
+	container->register_callback ("80211-cca-busy-start", &m_start_cca_busy_logger);
+	container->register_callback ("80211-tx-start", &m_start_tx_logger);
+}
+
+void 
 Phy80211::set_propagation_model (PropagationModel *propagation)
 {
 	m_propagation = propagation;
 }
 
 void 
-Phy80211::set_receive_ok_callback (RxOkCallback callback)
+Phy80211::set_receive_ok_callback (SyncOkCallback callback)
 {
-	m_rx_ok_callback = callback;
+	m_sync_ok_callback = callback;
 }
 void 
-Phy80211::set_receive_error_callback (RxErrorCallback callback)
+Phy80211::set_receive_error_callback (SyncErrorCallback callback)
 {
-	m_rx_error_callback = callback;
+	m_sync_error_callback = callback;
 }
 void 
 Phy80211::receive_packet (ConstPacketPtr packet, 
@@ -219,6 +229,7 @@ Phy80211::receive_packet (ConstPacketPtr packet,
 			  uint8_t stuff)
 {
 	uint64_t rx_duration_us = calculate_tx_duration_us (packet->get_size (), tx_mode);
+	m_start_rx_logger (rx_duration_us, rx_power_w);
 
 	RxEvent *event = new RxEvent (packet->get_size (), 
 				      tx_mode,
@@ -230,30 +241,65 @@ Phy80211::receive_packet (ConstPacketPtr packet,
 	case Phy80211::SYNC:
 		TRACE ("drop packet because already in sync (power="<<
 		       rx_power_w<<"W)");
+		if (rx_duration_us > m_end_sync_us) {
+			goto maybe_cca_busy;
+		}
 		break;
 	case Phy80211::TX:
 		TRACE ("drop packet because already in tx (power="<<
 		       rx_power_w<<"W)");
+		if (rx_duration_us > m_end_tx_us) {
+			goto maybe_cca_busy;
+		}
 		break;
-	case Phy80211::SLEEP:
-		TRACE ("drop packet because sleeping");
-		break;
+	case Phy80211::CCA_BUSY:
 	case Phy80211::IDLE:
 		if (rx_power_w > m_ed_threshold_w) {
 			// sync to signal
-			notify_rx_start (rx_duration_us);
-			switch_to_sync_from_idle (rx_duration_us);
-			assert (!m_end_rx_event.is_running ());
-			m_end_rx_event = make_event (&Phy80211::end_rx, this, 
+			notify_sync_start (rx_duration_us);
+			switch_to_sync (rx_duration_us);
+			m_start_sync_logger (rx_duration_us, rx_power_w);
+			assert (!m_end_sync_event.is_running ());
+			m_end_sync_event = make_event (&Phy80211::end_sync, this, 
 						     packet,
 						     make_count_ptr_holder (event), 
 						     stuff);
-			Simulator::schedule_rel_us (rx_duration_us, m_end_rx_event);
+			Simulator::schedule_rel_us (rx_duration_us, m_end_sync_event);
 		} else {
 			TRACE ("drop packet because signal power too small ("<<
 			       rx_power_w<<"<"<<m_ed_threshold_w<<")");
+			goto maybe_cca_busy;
 		}
 	break;
+	}
+
+	event->unref ();
+	return;
+
+ maybe_cca_busy:
+
+	if (rx_power_w > m_ed_threshold_w) {
+		m_start_cca_busy_logger (rx_duration_us);
+		switch_to_cca_busy (rx_duration_us);
+		notify_cca_busy_start (rx_duration_us);
+	} else {
+		double threshold = m_ed_threshold_w - rx_power_w;
+		NiChanges ni;
+		calculate_noise_interference_w (event, &ni);
+		double noise_interference_w = 0.0;
+		uint64_t end = now_us ();
+		for (NiChangesI i = ni.begin (); i != ni.end (); i++) {
+			noise_interference_w += i->get_delta ();
+			if (noise_interference_w < threshold) {
+				break;
+			}
+			end = i->get_time_us ();
+		}
+		if (end > now_us ()) {
+			m_start_cca_busy_logger (end - now_us ());
+			switch_to_cca_busy (end - now_us ());
+			notify_cca_busy_start (end - now_us ());
+		}
 	}
 
 	event->unref ();
@@ -267,13 +313,14 @@ Phy80211::send_packet (ConstPacketPtr packet, uint8_t tx_mode, uint8_t tx_power,
 	 *    prevent it.
 	 *  - we are idle
 	 */
-	assert (is_state_idle () || is_state_rx ());
+	assert (is_state_idle () || is_state_sync ());
 
-	if (is_state_rx ()) {
-		m_end_rx_event.cancel ();
+	if (is_state_sync ()) {
+		m_end_sync_event.cancel ();
 	}
 
 	uint64_t tx_duration_us = calculate_tx_duration_us (packet->get_size (), tx_mode);
+	m_start_tx_logger (tx_duration_us);
 	notify_tx_start (tx_duration_us);
 	switch_to_tx (tx_duration_us);
 	m_propagation->send (packet, get_power_dbm (tx_power), tx_mode, stuff);
@@ -376,6 +423,12 @@ Phy80211::register_listener (Phy80211Listener *listener)
 }
 
 bool 
+Phy80211::is_state_cca_busy (void)
+{
+	return get_state () == CCA_BUSY;
+}
+
+bool 
 Phy80211::is_state_idle (void)
 {
 	return (get_state () == IDLE)?true:false;
@@ -386,7 +439,7 @@ Phy80211::is_state_busy (void)
 	return (get_state () != IDLE)?true:false;
 }
 bool 
-Phy80211::is_state_rx (void)
+Phy80211::is_state_sync (void)
 {
 	return (get_state () == SYNC)?true:false;
 }
@@ -394,11 +447,6 @@ bool
 Phy80211::is_state_tx (void)
 {
 	return (get_state () == TX)?true:false;
-}
-bool 
-Phy80211::is_state_sleep (void)
-{
-	return (get_state () == SLEEP)?true:false;
 }
 
 uint64_t
@@ -413,17 +461,15 @@ Phy80211::get_delay_until_idle_us (void)
 
 	switch (get_state ()) {
 	case SYNC:
-		retval_us = m_end_rx_us - now_us ();
+		retval_us = m_end_sync_us - now_us ();
 		break;
 	case TX:
 		retval_us = m_end_tx_us - now_us ();
 		break;
-	case IDLE:
-		retval_us = 0;
+	case CCA_BUSY:
+		retval_us = m_end_cca_busy_us - now_us ();
 		break;
-	case SLEEP:
-		assert (false);
-		// quiet compiler.
+	case IDLE:
 		retval_us = 0;
 		break;
 	default:
@@ -462,11 +508,11 @@ char const *
 Phy80211::state_to_string (enum Phy80211State state)
 {
 	switch (state) {
-	case SLEEP:
-		return "SLEEP";
-		break;
 	case TX:
 		return "TX";
+		break;
+	case CCA_BUSY:
+		return "CCA_BUSY";
 		break;
 	case IDLE:
 		return "IDLE";
@@ -482,29 +528,21 @@ Phy80211::state_to_string (enum Phy80211State state)
 enum Phy80211::Phy80211State 
 Phy80211::get_state (void)
 {
-	if (m_sleeping) {
-		assert (m_end_tx_us == 0);
-		assert (!m_rxing);
-		return Phy80211::SLEEP;
+	if (m_end_tx_us != 0 && m_end_tx_us > now_us ()) {
+		return Phy80211::TX;
+	} else if (m_end_tx_us != 0) {
+		/* At one point in the past, we completed
+		 * transmission of this packet.
+		 */
+		m_previous_state_change_time_us = m_end_tx_us;
+		m_end_tx_us = 0;
+	}
+	if (m_syncing) {
+		return Phy80211::SYNC;
+	} else if (m_end_cca_busy_us > now_us ()) {
+		return Phy80211::CCA_BUSY;
 	} else {
-		if (m_end_tx_us != 0 && m_end_tx_us > now_us ()) {
-			return Phy80211::TX;
-		} else if (m_end_tx_us != 0) {
-			/* At one point in the past, we completed
-			 * transmission of this packet.
-			 */
-			STATE_FROM (Phy80211::TX);
-			STATE_TO (Phy80211::IDLE);
-			STATE_AT (m_end_tx_us);
-			
-			m_previous_state_change_time_us = m_end_tx_us;
-			m_end_tx_us = 0;
-		}
-		if (m_rxing) {
-			return Phy80211::SYNC;
-		} else {
-			return Phy80211::IDLE;
-		}
+		return Phy80211::IDLE;
 	}
 }
 
@@ -568,38 +606,31 @@ Phy80211::notify_tx_start (uint64_t duration_us)
 	}
 }
 void 
-Phy80211::notify_rx_start (uint64_t duration_us)
+Phy80211::notify_sync_start (uint64_t duration_us)
 {
 	for (ListenersCI i = m_listeners.begin (); i != m_listeners.end (); i++) {
 		(*i)->notify_rx_start (duration_us);
 	}
 }
 void 
-Phy80211::notify_rx_end_ok (void)
+Phy80211::notify_sync_end_ok (void)
 {
 	for (ListenersCI i = m_listeners.begin (); i != m_listeners.end (); i++) {
 		(*i)->notify_rx_end_ok ();
 	}
 }
 void 
-Phy80211::notify_rx_end_error (void)
+Phy80211::notify_sync_end_error (void)
 {
 	for (ListenersCI i = m_listeners.begin (); i != m_listeners.end (); i++) {
 		(*i)->notify_rx_end_error ();
 	}
 }
 void 
-Phy80211::notify_sleep (void)
+Phy80211::notify_cca_busy_start (uint64_t duration_us)
 {
 	for (ListenersCI i = m_listeners.begin (); i != m_listeners.end (); i++) {
-		(*i)->notify_sleep ();
-	}
-}
-void 
-Phy80211::notify_wakeup (void)
-{
-	for (ListenersCI i = m_listeners.begin (); i != m_listeners.end (); i++) {
-		(*i)->notify_wakeup ();
+		(*i)->notify_cca_busy_start (duration_us);
 	}
 }
 
@@ -609,15 +640,14 @@ Phy80211::switch_to_tx (uint64_t tx_duration_us)
 	assert (m_end_tx_us == 0);
 	switch (get_state ()) {
 	case Phy80211::SYNC:
-		/* If we were receiving a packet when this tx
-		 * started, we drop it now. It will be discarded 
-		 * later in endRx.
+		/* The packet which is being received as well
+		 * as its end_sync event are cancelled by the caller.
 		 */
-		m_rxing = false;
-		STATE_FROM (Phy80211::SYNC);
+		m_syncing = false;
+		break;
+	case Phy80211::CCA_BUSY:
 		break;
 	case Phy80211::IDLE:
-		STATE_FROM (Phy80211::IDLE);
 		break;
 	default:
 		assert (false);
@@ -625,91 +655,33 @@ Phy80211::switch_to_tx (uint64_t tx_duration_us)
 	}
 	m_previous_state_change_time_us = now_us ();
 	m_end_tx_us = now_us () + tx_duration_us;
-	STATE_TO (Phy80211::TX);
-	STATE_AT (now_us ());
 }
 void
-Phy80211::switch_to_sync_from_idle (uint64_t rx_duration_us)
+Phy80211::switch_to_sync (uint64_t rx_duration_us)
 {
-	assert (is_state_idle ());
-	assert (!m_rxing);
+	assert (is_state_idle () || is_state_cca_busy ());
+	assert (!m_syncing);
 	m_previous_state_change_time_us = now_us ();
-	m_rxing = true;
-	m_end_rx_us = now_us () + rx_duration_us;
-	assert (get_state () == Phy80211::SYNC);
-	STATE_FROM (Phy80211::IDLE);
-	STATE_TO (Phy80211::SYNC);
-	STATE_AT (now_us ());
+	m_syncing = true;
+	m_end_sync_us = now_us () + rx_duration_us;
+	assert (is_state_sync ());
 }
 void
-Phy80211::switch_to_sleep (void)
+Phy80211::switch_from_sync (void)
 {
-	assert (!m_sleeping);
-	switch (get_state ()) {
-	case Phy80211::SYNC:
-		/* If we were receiving a packet when this sleep is
-		 * started, we drop it now. It will be discarded 
-		 * later in endRx.
-		 */
-		assert (m_rxing);
-		m_rxing = false;
-		STATE_FROM (Phy80211::SYNC);
-		break;
-	case Phy80211::IDLE:
-		/* */
-		STATE_FROM (Phy80211::IDLE);
-		break;
-	case Phy80211::TX:
-		/* If we were transmitting a packet when this sleep
-		 * started, we cannot drop it as we should (obviously,
-		 * the transmission will not be able to complete)
-		 * because the packet has already been put in the 
-		 * reception queue of all the target nodes. To be
-		 * able to drop it, we would need to remove it from
-		 * each target queue or notify each target to remove 
-		 * it.
-		 * I know, this sucks and it is a bug but there is no
-		 * reasonable fix to it.
-		 */
-		assert (false);
-		break;
-	default:
-		assert (false);
-	}
+	assert (is_state_sync ());
+	assert (m_syncing);
+
 	m_previous_state_change_time_us = now_us ();
-	m_sleeping = true;
-	STATE_FROM (Phy80211::SLEEP);
-	STATE_AT (now_us ());
+	m_syncing = false;
+
+	assert (is_state_idle () || is_state_cca_busy ());
 }
 void
-Phy80211::switch_to_idle_from_sleep (void)
+Phy80211::switch_to_cca_busy (uint64_t duration_us)
 {
-	assert (is_state_sleep ());
-	assert (!m_sleeping);
-
 	m_previous_state_change_time_us = now_us ();
-	m_sleeping = false;
-
-	assert (is_state_idle ());
-
-	STATE_FROM (Phy80211::SLEEP);
-	STATE_TO (Phy80211::IDLE);
-	STATE_AT (now_us ());
-}
-void
-Phy80211::switch_to_idle_from_sync (void)
-{
-	assert (is_state_rx ());
-	assert (m_rxing);
-
-	m_previous_state_change_time_us = now_us ();
-	m_rxing = false;
-
-	assert (is_state_idle ());
-
-	STATE_FROM (Phy80211::SYNC);
-	STATE_TO (Phy80211::IDLE);
-	STATE_AT (now_us ());
+	m_end_cca_busy_us = duration_us;
 }
 
 void 
@@ -872,10 +844,10 @@ Phy80211::calculate_per (RxEvent const *event, NiChanges *ni) const
 
 
 void
-Phy80211::end_rx (ConstPacketPtr packet, CountPtrHolder<RxEvent> ev, uint8_t stuff)
+Phy80211::end_sync (ConstPacketPtr packet, CountPtrHolder<RxEvent> ev, uint8_t stuff)
 {
 	RxEvent *event = ev.remove ();
-	assert (is_state_rx ());
+	assert (is_state_sync ());
 	assert (event->get_end_time_us () == now_us ());
 
 	NiChanges ni;
@@ -893,14 +865,16 @@ Phy80211::end_rx (ConstPacketPtr packet, CountPtrHolder<RxEvent> ev, uint8_t stu
 	       ", snr="<<snr<<", per="<<per<<", size="<<packet->get_size ());
 	
 	if (m_random->get_double () > per) {
-		notify_rx_end_ok ();
-		switch_to_idle_from_sync ();
-		m_rx_ok_callback (packet, snr, event->get_payload_mode (), stuff);
+		m_end_sync_logger (true);
+		notify_sync_end_ok ();
+		switch_from_sync ();
+		m_sync_ok_callback (packet, snr, event->get_payload_mode (), stuff);
 	} else {
 		/* failure. */
-		notify_rx_end_error ();
-		switch_to_idle_from_sync ();
-		m_rx_error_callback (packet, snr);
+		m_end_sync_logger (false);
+		notify_sync_end_error ();
+		switch_from_sync ();
+		m_sync_error_callback (packet, snr);
 	}
 	event->unref ();
 }

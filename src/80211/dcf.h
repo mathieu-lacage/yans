@@ -77,6 +77,7 @@ public:
 	void notify_rx_end_ok_now (void);
 	void notify_rx_end_error_now (void);
 	void notify_tx_start_now (uint64_t duration);
+	void notify_cca_busy_start_now (uint64_t duration);
 	void notify_nav_reset (uint64_t now, uint64_t duration);
 	void notify_nav_start (uint64_t now, uint64_t duration);
 	void notify_nav_continue (uint64_t now, uint64_t duration);
@@ -90,6 +91,7 @@ private:
 	uint64_t now_us (void) const;
 	uint64_t most_recent (uint64_t a, uint64_t b) const;
 	uint64_t most_recent (uint64_t a, uint64_t b, uint64_t c) const;
+	uint64_t most_recent (uint64_t a, uint64_t b, uint64_t c, uint64_t d) const;
 	uint64_t get_difs_us (void) const;
 	uint64_t get_eifs_us (void) const;
 	uint32_t get_cw_min (void) const;
@@ -124,6 +126,8 @@ private:
 	uint64_t m_last_rx_end;
 	uint64_t m_last_tx_start;
 	uint64_t m_last_tx_duration;
+	uint64_t m_last_busy_start;
+	uint64_t m_last_busy_duration;
 	bool m_rxing;
 	bool m_sleeping;
 };
