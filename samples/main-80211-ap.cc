@@ -102,10 +102,10 @@ Phy80211StateLogger::notify_start_sync (uint64_t duration_us, double energy_w)
 {
 	uint64_t now = Simulator::now_us ();
 	if (m_last_idle_start != -1 && m_last_idle_start < (int64_t)now) {
-		std::cout << "range ap idle "<<m_last_idle_start<<now<<std::endl;
+		std::cout << "range ap idle "<<m_last_idle_start<<" "<<now<<std::endl;
 		m_last_idle_start = -1;
 	}
-	std::cout << "range ap sync "<<now<<now+duration_us<<std::endl;
+	std::cout << "range ap sync "<<now<<" "<<now+duration_us<<std::endl;
 	if (m_last_idle_start < (int64_t)(now+duration_us)) {
 		m_last_idle_start = now+duration_us;
 	}
@@ -115,10 +115,10 @@ Phy80211StateLogger::notify_start_cca_busy (uint64_t duration_us)
 {
 	uint64_t now = Simulator::now_us ();
 	if (m_last_idle_start != -1 && m_last_idle_start < (int64_t)now) {
-		std::cout << "range ap idle "<<m_last_idle_start<<now<<std::endl;
+		std::cout << "range ap idle "<<m_last_idle_start<<" "<<now<<std::endl;
 		m_last_idle_start = -1;
 	}
-	std::cout << "range ap cca-busy "<<now<<now+duration_us<<std::endl;
+	std::cout << "range ap cca-busy "<<now<<" "<<now+duration_us<<std::endl;
 	if (m_last_idle_start < (int64_t)(now+duration_us)) {
 		m_last_idle_start = now+duration_us;
 	}
@@ -128,10 +128,10 @@ Phy80211StateLogger::notify_start_tx (uint64_t duration_us)
 {
 	uint64_t now = Simulator::now_us ();
 	if (m_last_idle_start != -1 && m_last_idle_start < (int64_t)now) {
-		std::cout << "range ap idle "<<m_last_idle_start<<now<<std::endl;
+		std::cout << "range ap idle "<<m_last_idle_start<<" "<<now<<std::endl;
 		m_last_idle_start = -1;
 	}
-	std::cout << "range ap tx "<<now<<now+duration_us<<std::endl;
+	std::cout << "range ap tx "<<now<<" "<<now+duration_us<<std::endl;
 	if (m_last_idle_start < (int64_t)(now+duration_us)) {
 		m_last_idle_start = now+duration_us;
 	}
@@ -215,6 +215,7 @@ int main (int argc, char *argv[])
 	pos_server->set (10.0,10.0, 10.0);
 	ThroughputPrinter *printer = new ThroughputPrinter ();
 	Simulator::schedule_abs_s (40, make_event (&ThroughputPrinter::stop, printer));
+	printer->stop ();
 	TraceContainer container = TraceContainer ();
 	wifi_server->register_traces (&container);
 	container.set_packet_logger_callback ("80211-packet-rx", 
@@ -235,6 +236,7 @@ int main (int argc, char *argv[])
 
 	TraceContainer tracer;
 	wifi_ap->register_traces (&tracer);
+	//tracer.print_debug ();
 	Phy80211StateLogger logger;
 	logger.register_traces (&tracer);
 
