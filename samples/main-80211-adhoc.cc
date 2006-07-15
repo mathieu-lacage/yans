@@ -111,7 +111,7 @@ int main (int argc, char *argv[])
 	ThroughputPrinter *printer = new ThroughputPrinter ();
 	Simulator::schedule_abs_s (40, make_event (&ThroughputPrinter::stop, printer));
 	TraceContainer container = TraceContainer ();
-	wifi_server->register_trace (&container);
+	wifi_server->register_traces (&container);
 	container.set_packet_logger_callback ("80211-packet-rx", 
 					      make_callback (&ThroughputPrinter::receive, printer));
 	Host *hserver = new Host ("server");
