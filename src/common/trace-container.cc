@@ -131,6 +131,16 @@ TraceContainer::register_stream (char const *name, TraceStream *stream)
 
 }
 
+void 
+TraceContainer::register_callback (char const *name, CallbackLoggerBase *logger)
+{
+	for (CallbackListI i = m_callback_list.begin (); i != m_callback_list.end (); i++) {
+		assert (i->second != name);
+	}
+	m_callback_list.push_back (std::make_pair (logger, name));
+}
+
+
 
 
 }; // namespace yans
@@ -161,6 +171,12 @@ yans::TraceContainer::print_debug (void)
 		std::cout << "packet logger: " << std::endl;
 		for (PacketLoggerListI i = m_packet_logger_list.begin (); i != m_packet_logger_list.end (); i++) {
 			std::cout << "    " << (*i).second << std::endl;
+		}
+	}
+	if (!m_callback_list.empty ()) {
+		std::cout << "callback list: "<<std::endl;
+		for (CallbackListI i = m_callback_list.begin (); i != m_callback_list.end (); i++) {
+			std::cout << "    " << i->second << std::endl;
 		}
 	}
 }
