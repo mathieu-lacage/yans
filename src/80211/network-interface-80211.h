@@ -54,7 +54,7 @@ public:
 	virtual ~NetworkInterface80211 ();
 
 	void connect_to (BaseChannel80211 *channel);
-	void register_trace (TraceContainer *container);
+	void register_traces (TraceContainer *container);
 
 	virtual MacAddress get_bssid (void) const = 0;
 	virtual Ssid get_ssid (void) const = 0;

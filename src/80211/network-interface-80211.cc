@@ -69,9 +69,10 @@ NetworkInterface80211::connect_to (BaseChannel80211 *channel)
 	m_propagation->set_channel (channel);
 }
 void 
-NetworkInterface80211::register_trace (TraceContainer *container)
+NetworkInterface80211::register_traces (TraceContainer *container)
 {
 	container->register_packet_logger ("80211-packet-rx", m_rx_logger);
+	m_phy->register_traces (container);
 }
 void 
 NetworkInterface80211::forward_up_data (PacketPtr packet)
