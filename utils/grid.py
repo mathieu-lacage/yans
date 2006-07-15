@@ -341,6 +341,10 @@ class GraphicRenderer:
         self.__bot_scale.set_bot ()
         self.__width = 1
         self.__height = 1
+    def get_width (self):
+        return self.__width
+    def get_height (self):
+        return self.__height
     # return x, y, width, height
     def get_selection_rectangle (self):
         y_start = self.__top_legend.get_height () + self.__data.get_height () + self.__mid_scale.get_height () + 20
@@ -470,20 +474,7 @@ class GraphicRenderer:
                        self.__width - unused_end,
                        unused_height)
         ctx.set_source_rgb (0.9,0.9,0.9)
-        ctx.fill ()
-
-        # unused area dot borders
-        ctx.save ()
-        ctx.move_to (unused_start, height_used)
-        ctx.line_to (unused_start, height_used + unused_height)
-        ctx.move_to (unused_end, height_used)
-        ctx.line_to (unused_end, height_used + unused_height)
-        ctx.set_dash ([5], 0)
-        ctx.set_source_rgb (0,0,0)
-        ctx.set_line_width (1)
-        ctx.stroke ()
-        ctx.restore ()
-        
+        ctx.fill ()        
 
         # border line around bottom scale
         ctx.move_to (unused_end, height_used)
@@ -503,6 +494,17 @@ class GraphicRenderer:
         ctx.set_source_rgb (0.9,0.9,0.9)
         ctx.stroke ()
 
+        # unused area dot borders
+        ctx.save ()
+        ctx.move_to (max (unused_start, 2), height_used)
+        ctx.rel_line_to (0,unused_height)
+        ctx.move_to (min (unused_end, self.__width-2), height_used)
+        ctx.rel_line_to (0, unused_height)
+        ctx.set_dash ([5], 0)
+        ctx.set_source_rgb (0,0,0)
+        ctx.set_line_width (1)
+        ctx.stroke ()
+        ctx.restore ()
 
         # bottom scale
         ctx.save ()
@@ -543,59 +545,104 @@ class GtkGraphicRenderer (gtk.DrawingArea):
     def button_release (self, widget, event):
         if self.__moving_left:
             self.__moving_left = False
+            left = self.__data.scale_selection (self.__moving_left_cur)
+            right = self.__data.get_range ()[1]
+            self.__data.set_range (left, right)
+            self.__force_full_redraw ()
             return True
         if self.__moving_right:
             self.__moving_right = False
+            right = self.__data.scale_selection (self.__moving_right_cur)
+            left = self.__data.get_range ()[0]
+            self.__data.set_range (left, right)
+            self.__force_full_redraw ()
             return True
         if self.__moving_both:
             self.__moving_both = False
+            delta = self.__data.scale_selection (self.__moving_both_cur - self.__moving_both_start)
+            (left, right) = self.__data.get_range ()
+            self.__data.set_range (left+delta, right+delta)
+            self.__force_full_redraw ()
             return True
         return False
     def motion_notify (self, widget, event):
+        (x, y, width, height) = self.__data.get_selection_rectangle ()
         if self.__moving_left:
-            left = self.__data.scale_selection (event.x)
-            right = self.__data.get_range ()[1]
-            self.__data.set_range (left, right)
+            if event.x <= 0:
+                self.__moving_left_cur = 0
+            elif event.x >= x+width:
+                self.__moving_left_cur = x+width
+            else:
+                self.__moving_left_cur = event.x
             self.queue_draw ()
             return True
         if self.__moving_right:
-            right = self.__data.scale_selection (event.x)
-            left = self.__data.get_range ()[0]
-            self.__data.set_range (left, right)
+            if event.x >= self.__width:
+                self.__moving_right = self.__width
+            elif event.x < x:
+                self.__moving_right_cur = x
+            else:
+                self.__moving_right_cur = event.x
             self.queue_draw ()
             return True
         if self.__moving_both:
-            delta = self.__data.scale_selection (event.x - self.__moving_both_start)
-            (left, right) = self.__data.get_range ()
-            self.__data.set_range (left+delta, right+delta)
-            self.__moving_both_start = event.x
+            cur_e = self.__width - (x + width - self.__moving_both_start)
+            cur_s = (self.__moving_both_start - x)
+            if event.x < cur_s:
+                self.__moving_both_cur = cur_s
+            elif event.x > cur_e:
+                self.__moving_both_cur = cur_e
+            else:
+                self.__moving_both_cur = event.x
             self.queue_draw ()
             return True
         return False
     def size_allocate (self, widget, allocation):
+        self.__width = allocation.width
+        self.__height = allocation.height
         self.__data.layout (allocation.width, allocation.height)
+        self.__force_full_redraw ()
+    def __force_full_redraw (self):
+        self.__buffer_surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
+                                                   self.__data.get_width (),
+                                                   self.__data.get_height ())
+        ctx = cairo.Context(self.__buffer_surface)
+        self.__data.draw (ctx)
+        self.queue_draw ()
     def expose (self, widget, event):
         ctx = widget.window.cairo_create()
         ctx.rectangle(event.area.x, event.area.y,
-                          event.area.width, event.area.height)
+                      event.area.width, event.area.height)
         ctx.clip()
-        self.__data.draw (ctx)
-
+        ctx.set_source_surface (self.__buffer_surface)
+        ctx.paint ()
         (x, y, width, height) = self.__data.get_selection_rectangle ()
-        ctx.move_to (x, y+height/3*2 - 5)
-        ctx.rel_line_to (2, 0)
-        ctx.rel_line_to (0, 10)
-        ctx.rel_line_to (-4, 0)
-        ctx.rel_line_to (0,-10)
-        ctx.rel_line_to (2, 0)
-        ctx.set_source_rgb (1,1,1)
-        ctx.fill_preserve ()
-        ctx.rel_move_to (0, 2)
-        ctx.rel_line_to (0, 6)
-        ctx.close_path
-        ctx.set_source_rgb (0,0,0)
-        ctx.set_line_width (1)
-        ctx.stroke ()
+        if self.__moving_left:
+            ctx.move_to (max (self.__moving_left_cur, 2), y)
+            ctx.rel_line_to (0, height)
+            ctx.close_path ()
+            ctx.set_line_width (1)
+            ctx.set_source_rgb (0,0,0)
+            ctx.stroke ()
+        if self.__moving_right:
+            ctx.move_to (min (self.__moving_right_cur, self.__width-2), y)
+            ctx.rel_line_to (0, height)
+            ctx.close_path ()
+            ctx.set_line_width (1)
+            ctx.set_source_rgb (0,0,0)
+            ctx.stroke ()
+        if self.__moving_both:
+            delta_x = self.__moving_both_cur - self.__moving_both_start
+            left_x = x + delta_x
+            ctx.move_to (x+delta_x, y)
+            ctx.rel_line_to (0, height)
+            ctx.close_path ()
+            ctx.move_to (x+width+delta_x, y)
+            ctx.rel_line_to (0, height)
+            ctx.close_path ()
+            ctx.set_source_rgb (0,0,0)
+            ctx.set_line_width (1)
+            ctx.stroke ()
         return False
     
 
