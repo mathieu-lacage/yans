@@ -55,6 +55,89 @@ advance (StaticPosition *a)
 	Simulator::schedule_rel_s (1.0, make_event (&advance, a));
 }
 
+class Phy80211StateLogger {
+public:
+	Phy80211StateLogger ();
+	void register_traces (TraceContainer *container);
+private:
+	void notify_end_sync (bool rx_status);
+	void notify_start_rx (uint64_t duration_us, double energy_w);
+	void notify_start_sync (uint64_t duration_us, double energy_w);
+	void notify_start_cca_busy (uint64_t duration_us);
+	void notify_start_tx (uint64_t duration_us);
+private:
+	int64_t m_last_idle_start;
+};
+
+Phy80211StateLogger::Phy80211StateLogger ()
+	: m_last_idle_start (-1)
+{}
+
+void 
+Phy80211StateLogger::register_traces (TraceContainer *container)
+{
+	container->set_callback ("80211-sync-end",
+				 make_callback (&Phy80211StateLogger::notify_end_sync, this));
+	container->set_callback ("80211-rx-start",
+				 make_callback (&Phy80211StateLogger::notify_start_rx, this));
+	container->set_callback ("80211-sync-start",
+				 make_callback (&Phy80211StateLogger::notify_start_sync, this));
+	container->set_callback ("80211-cca-busy-start",
+				 make_callback (&Phy80211StateLogger::notify_start_cca_busy, this));
+	container->set_callback ("80211-tx-start",
+				 make_callback (&Phy80211StateLogger::notify_start_tx, this));
+}
+void 
+Phy80211StateLogger::notify_end_sync (bool rx_status)
+{
+	// XXX record event
+}
+void 
+Phy80211StateLogger::notify_start_rx (uint64_t duration_us, double energy_w)
+{
+	// record event
+}
+void 
+Phy80211StateLogger::notify_start_sync (uint64_t duration_us, double energy_w)
+{
+	uint64_t now = Simulator::now_us ();
+	if (m_last_idle_start != -1 && m_last_idle_start < (int64_t)now) {
+		std::cout << "range ap idle "<<m_last_idle_start<<now<<std::endl;
+		m_last_idle_start = -1;
+	}
+	std::cout << "range ap sync "<<now<<now+duration_us<<std::endl;
+	if (m_last_idle_start < (int64_t)(now+duration_us)) {
+		m_last_idle_start = now+duration_us;
+	}
+}
+void 
+Phy80211StateLogger::notify_start_cca_busy (uint64_t duration_us)
+{
+	uint64_t now = Simulator::now_us ();
+	if (m_last_idle_start != -1 && m_last_idle_start < (int64_t)now) {
+		std::cout << "range ap idle "<<m_last_idle_start<<now<<std::endl;
+		m_last_idle_start = -1;
+	}
+	std::cout << "range ap cca-busy "<<now<<now+duration_us<<std::endl;
+	if (m_last_idle_start < (int64_t)(now+duration_us)) {
+		m_last_idle_start = now+duration_us;
+	}
+}
+void 
+Phy80211StateLogger::notify_start_tx (uint64_t duration_us)
+{
+	uint64_t now = Simulator::now_us ();
+	if (m_last_idle_start != -1 && m_last_idle_start < (int64_t)now) {
+		std::cout << "range ap idle "<<m_last_idle_start<<now<<std::endl;
+		m_last_idle_start = -1;
+	}
+	std::cout << "range ap tx "<<now<<now+duration_us<<std::endl;
+	if (m_last_idle_start < (int64_t)(now+duration_us)) {
+		m_last_idle_start = now+duration_us;
+	}
+}
+
+
 
 int main (int argc, char *argv[])
 {
@@ -133,7 +216,7 @@ int main (int argc, char *argv[])
 	ThroughputPrinter *printer = new ThroughputPrinter ();
 	Simulator::schedule_abs_s (40, make_event (&ThroughputPrinter::stop, printer));
 	TraceContainer container = TraceContainer ();
-	wifi_server->register_trace (&container);
+	wifi_server->register_traces (&container);
 	container.set_packet_logger_callback ("80211-packet-rx", 
 					      make_callback (&ThroughputPrinter::receive, 
 							     printer));
@@ -148,6 +231,12 @@ int main (int argc, char *argv[])
 	UdpSink *sink = new UdpSink (hserver);
 	sink->bind (Ipv4Address ("192.168.0.2"), 1026);
 	sink->unbind_at (10000.0);
+
+
+	TraceContainer tracer;
+	wifi_ap->register_traces (&tracer);
+	Phy80211StateLogger logger;
+	logger.register_traces (&tracer);
 
 
 	/* run simulation */
