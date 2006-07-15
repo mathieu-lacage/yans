@@ -57,7 +57,7 @@ advance (StaticPosition *a)
 
 class Phy80211StateLogger {
 public:
-	Phy80211StateLogger ();
+	Phy80211StateLogger (std::ostream *os);
 	void register_traces (TraceContainer *container);
 private:
 	void notify_end_sync (bool rx_status);
@@ -67,10 +67,12 @@ private:
 	void notify_start_tx (uint64_t duration_us);
 private:
 	int64_t m_last_idle_start;
+	std::ostream *m_os;
 };
 
-Phy80211StateLogger::Phy80211StateLogger ()
-	: m_last_idle_start (-1)
+Phy80211StateLogger::Phy80211StateLogger (std::ostream *os)
+	: m_last_idle_start (-1),
+	  m_os (os)
 {}
 
 void 
@@ -102,10 +104,10 @@ Phy80211StateLogger::notify_start_sync (uint64_t duration_us, double energy_w)
 {
 	uint64_t now = Simulator::now_us ();
 	if (m_last_idle_start != -1 && m_last_idle_start < (int64_t)now) {
-		std::cout << "range ap idle "<<m_last_idle_start<<" "<<now<<std::endl;
+		(*m_os) << "range ap idle "<<m_last_idle_start<<" "<<now<<std::endl;
 		m_last_idle_start = -1;
 	}
-	std::cout << "range ap sync "<<now<<" "<<now+duration_us<<std::endl;
+	(*m_os) << "range ap sync "<<now<<" "<<now+duration_us<<std::endl;
 	if (m_last_idle_start < (int64_t)(now+duration_us)) {
 		m_last_idle_start = now+duration_us;
 	}
@@ -115,10 +117,10 @@ Phy80211StateLogger::notify_start_cca_busy (uint64_t duration_us)
 {
 	uint64_t now = Simulator::now_us ();
 	if (m_last_idle_start != -1 && m_last_idle_start < (int64_t)now) {
-		std::cout << "range ap idle "<<m_last_idle_start<<" "<<now<<std::endl;
+		(*m_os) << "range ap idle "<<m_last_idle_start<<" "<<now<<std::endl;
 		m_last_idle_start = -1;
 	}
-	std::cout << "range ap cca-busy "<<now<<" "<<now+duration_us<<std::endl;
+	(*m_os) << "range ap cca-busy "<<now<<" "<<now+duration_us<<std::endl;
 	if (m_last_idle_start < (int64_t)(now+duration_us)) {
 		m_last_idle_start = now+duration_us;
 	}
@@ -128,10 +130,10 @@ Phy80211StateLogger::notify_start_tx (uint64_t duration_us)
 {
 	uint64_t now = Simulator::now_us ();
 	if (m_last_idle_start != -1 && m_last_idle_start < (int64_t)now) {
-		std::cout << "range ap idle "<<m_last_idle_start<<" "<<now<<std::endl;
+		(*m_os) << "range ap idle "<<m_last_idle_start<<" "<<now<<std::endl;
 		m_last_idle_start = -1;
 	}
-	std::cout << "range ap tx "<<now<<" "<<now+duration_us<<std::endl;
+	(*m_os) << "range ap tx "<<now<<" "<<now+duration_us<<std::endl;
 	if (m_last_idle_start < (int64_t)(now+duration_us)) {
 		m_last_idle_start = now+duration_us;
 	}
@@ -233,13 +235,11 @@ int main (int argc, char *argv[])
 	sink->bind (Ipv4Address ("192.168.0.2"), 1026);
 	sink->unbind_at (10000.0);
 
-
 	TraceContainer tracer;
 	wifi_ap->register_traces (&tracer);
 	//tracer.print_debug ();
-	Phy80211StateLogger logger;
+	Phy80211StateLogger logger = Phy80211StateLogger (&std::cout);
 	logger.register_traces (&tracer);
-
 
 	/* run simulation */
 	Simulator::run ();
