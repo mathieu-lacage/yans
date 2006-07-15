@@ -27,7 +27,7 @@
 #include "chunk-mgt.h"
 #include <cassert>
 
-#define NQAP_DEBUG 1
+#define noNQAP_DEBUG 1
 
 #ifdef NQAP_DEBUG
 #include <iostream>
