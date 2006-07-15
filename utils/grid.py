@@ -268,7 +268,9 @@ class ScaleRenderer:
         closest = 1
         while (closest*10) < data_delta:
             closest *= 10
-        if (data_delta / closest) <= 1:
+        if (data_delta / closest) == 0:
+            delta = closest
+        elif (data_delta / closest) == 1:
             delta = closest / 10
         else:
             delta = closest
@@ -319,14 +321,15 @@ class ScaleRenderer:
             ctx.show_text (str (x))
         # draw subticks
         delta /= 10
-        start = self.__lo - (self.__lo % delta) + delta
-        end = self.__hi - (self.__hi % delta)
-        for x in range (int (start), int (end + delta), int (delta)):
-            real_x = (x - self.__lo ) * self.__width / (self.__hi - self.__lo)
-            ctx.move_to (real_x, 0)
-            ctx.line_to (real_x, 3*s)
-            ctx.close_path ()
-            ctx.stroke ()
+        if delta > 0:
+            start = self.__lo - (self.__lo % delta) + delta
+            end = self.__hi - (self.__hi % delta)
+            for x in range (int (start), int (end + delta), int (delta)):
+                real_x = (x - self.__lo ) * self.__width / (self.__hi - self.__lo)
+                ctx.move_to (real_x, 0)
+                ctx.line_to (real_x, 3*s)
+                ctx.close_path ()
+                ctx.stroke ()
         
         
 
@@ -356,6 +359,10 @@ class GraphicRenderer:
         x_scaled = x / self.__width * (self.__end - self.__start)
         return x_scaled
     def set_range (self,start, end):
+        s = min (start, end)
+        e = max (start, end)
+        start = max (self.__start, s)
+        end = min (self.__end, e)
         self.__r_start = start
         self.__r_end = end
         self.__data.set_range (start, end)
@@ -527,6 +534,21 @@ class GtkGraphicRenderer (gtk.DrawingArea):
         self.connect ('motion-notify-event', self.motion_notify)
         self.connect ('button-press-event', self.button_press)
         self.connect ('button-release-event', self.button_release)
+    def set_smaller_zoom (self):
+        (start, end) = self.__data.get_range ()
+        self.__data.set_range (start, (end-start)*10)
+        self.__force_full_redraw ()
+    def set_bigger_zoom (self):
+        (start, end) = self.__data.get_range ()
+        self.__data.set_range (start, (end-start)/10)
+        self.__force_full_redraw ()
+    def set_biggest_zoom (self):
+        (start, end) = self.__data.get_range ()
+        self.__data.set_range (start, min (start+10, end))
+        self.__force_full_redraw ()
+    def output_png (self, filename):
+        self.__force_full_redraw ()
+        self.__data_buffer.write_to_png(filename)
     def button_press (self, widget, event):
         (x, y, width, height) = self.__data.get_selection_rectangle ()
         if event.y < y or event.y > y+height:
@@ -644,7 +666,45 @@ class GtkGraphicRenderer (gtk.DrawingArea):
             ctx.set_line_width (1)
             ctx.stroke ()
         return False
-    
+
+class MainWindow:
+    def __init__ (self):
+        return
+    def run (self, graphic):
+        window = gtk.Window()
+        window.set_default_size (200, 200)
+        vbox = gtk.VBox ()
+        window.add (vbox)
+        render = GtkGraphicRenderer(graphic)
+        self.__render = render
+        vbox.pack_end (render, True, True, 0)
+        hbox = gtk.HBox ()
+        vbox.pack_start (hbox, False, False, 0)
+        smaller_zoom = gtk.Button ("Smaller Zoom")
+        smaller_zoom.connect ("clicked", self.__set_smaller_cb)
+        hbox.pack_start (smaller_zoom)
+        bigger_zoom = gtk.Button ("Bigger Zoom")
+        bigger_zoom.connect ("clicked", self.__set_bigger_cb)
+        hbox.pack_start (bigger_zoom)
+        biggest_zoom = gtk.Button ("Biggest Zoom")
+        biggest_zoom.connect ("clicked", self.__set_biggest_cb)
+        hbox.pack_start (biggest_zoom)
+        output_png = gtk.Button ("Output Png")
+        output_png.connect ("clicked", self.__output_png_cb)
+        hbox.pack_start (output_png)
+        window.connect('destroy', gtk.main_quit)
+        window.show_all()
+        #gtk.bindings_activate (gtk.main_quit, 'q', 0)
+        gtk.main()
+    def __set_smaller_cb (self, widget):
+        self.__render.set_smaller_zoom ()
+    def __set_bigger_cb (self, widget):
+        self.__render.set_bigger_zoom ()
+    def __set_biggest_cb (self, widget):
+        self.__render.set_biggest_zoom ()
+    def __output_png_cb (self, widget):
+        # XXX
+        return
 
 
 
@@ -729,13 +789,9 @@ def main():
     range_hi = range_mid + range_width / 2
     graphic.set_range (range_lo, range_hi)
 
-    window = gtk.Window()
-    render = GtkGraphicRenderer(graphic)
-    window.add(render)
-    window.connect('destroy', gtk.main_quit)
-    window.show_all()
-    #gtk.bindings_activate (gtk.main_quit, 'q', 0)
-    gtk.main()
+    main_window = MainWindow ()
+    main_window.run (graphic)
+
 
 main ()
 
