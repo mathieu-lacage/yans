@@ -349,6 +349,15 @@ class GraphicRenderer:
     def get_height (self):
         return self.__height
     # return x, y, width, height
+    def get_data_rectangle (self):
+        y_start = self.__top_legend.get_height ()
+        x_start = self.__data.get_left_width ()
+        return (x_start, y_start, self.__width - x_start, self.__data.get_height ())
+    def scale_data (self, x):
+        x_start = self.__data.get_left_width ()
+        x_scaled = x / (self.__width - x_start) * (self.__r_end - self.__r_start)
+        return x_scaled
+    # return x, y, width, height
     def get_selection_rectangle (self):
         y_start = self.__top_legend.get_height () + self.__data.get_height () + self.__mid_scale.get_height () + 20
         y_height = self.__bot_scale.get_height () + 20
@@ -526,6 +535,7 @@ class GtkGraphicRenderer (gtk.DrawingArea):
         self.__moving_left = False
         self.__moving_right = False
         self.__moving_both = False
+        self.__moving_top = False
         self.add_events (gtk.gdk.POINTER_MOTION_MASK)
         self.add_events (gtk.gdk.BUTTON_PRESS_MASK)
         self.add_events (gtk.gdk.BUTTON_RELEASE_MASK) 
@@ -536,33 +546,40 @@ class GtkGraphicRenderer (gtk.DrawingArea):
         self.connect ('button-release-event', self.button_release)
     def set_smaller_zoom (self):
         (start, end) = self.__data.get_range ()
-        self.__data.set_range (start, (end-start)*10)
+        self.__data.set_range (start, start+(end-start)*10)
         self.__force_full_redraw ()
     def set_bigger_zoom (self):
         (start, end) = self.__data.get_range ()
-        self.__data.set_range (start, (end-start)/10)
+        self.__data.set_range (start, start+(end-start)/10)
         self.__force_full_redraw ()
     def set_biggest_zoom (self):
         (start, end) = self.__data.get_range ()
-        self.__data.set_range (start, min (start+10, end))
+        self.__data.set_range (start, start+min (start+10, end))
         self.__force_full_redraw ()
     def output_png (self, filename):
         self.__force_full_redraw ()
         self.__data_buffer.write_to_png(filename)
     def button_press (self, widget, event):
         (x, y, width, height) = self.__data.get_selection_rectangle ()
-        if event.y < y or event.y > y+height:
-            return False
-        if abs (event.x - x) < 5:
-            self.__moving_left = True
-            return True
-        if abs (event.x - (x+width)) < 5:
-            self.__moving_right = True
-            return True
-        if event.x > x and event.x < x+width:
-            self.__moving_both = True
-            self.__moving_both_start = event.x
-            return True
+        (d_x, d_y, d_width, d_height) = self.__data.get_data_rectangle ()
+        if event.y > y and event.y < y+height:
+            if abs (event.x - x) < 5:
+                self.__moving_left = True
+                return True
+            if abs (event.x - (x+width)) < 5:
+                self.__moving_right = True
+                return True
+            if event.x > x and event.x < x+width:
+                self.__moving_both = True
+                self.__moving_both_start = event.x
+                self.__moving_both_cur = event.x
+                return True
+        if event.y > d_y and event.y < (d_y + d_height):
+            if event.x > d_x and event.x < (d_x + d_width):
+                self.__moving_top = True
+                self.__moving_top_start = event.x
+                self.__moving_top_cur = event.x
+                return True
         return False
     def button_release (self, widget, event):
         if self.__moving_left:
@@ -586,6 +603,12 @@ class GtkGraphicRenderer (gtk.DrawingArea):
             self.__data.set_range (left+delta, right+delta)
             self.__force_full_redraw ()
             return True
+        if self.__moving_top:
+            self.__moving_top = False
+            delta = self.__data.scale_data (self.__moving_top_cur - self.__moving_top_start)
+            (left, right) = self.__data.get_range ()
+            self.__data.set_range (left+delta, right+delta)
+            self.__force_full_redraw ()
         return False
     def motion_notify (self, widget, event):
         (x, y, width, height) = self.__data.get_selection_rectangle ()
@@ -618,6 +641,9 @@ class GtkGraphicRenderer (gtk.DrawingArea):
                 self.__moving_both_cur = event.x
             self.queue_draw ()
             return True
+        if self.__moving_top:
+            self.__moving_top_cur = event.x
+            self.queue_draw ()
         return False
     def size_allocate (self, widget, allocation):
         self.__width = allocation.width
@@ -664,6 +690,15 @@ class GtkGraphicRenderer (gtk.DrawingArea):
             ctx.close_path ()
             ctx.set_source_rgb (0,0,0)
             ctx.set_line_width (1)
+            ctx.stroke ()
+        if self.__moving_top:
+            (d_x, d_y, d_width, d_height) = self.__data.get_data_rectangle ()
+            delta_x = self.__moving_top_cur-self.__moving_top_start
+            ctx.move_to (d_x+d_width/2,d_y+d_height/2)
+            ctx.rel_line_to (delta_x, 0)
+            ctx.close_path ()
+            ctx.set_line_width (1)
+            ctx.set_source_rgb (0,0,0)
             ctx.stroke ()
         return False
 
