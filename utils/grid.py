@@ -5,14 +5,48 @@ import sys
 import re
 import gtk
 
+
 class DataRange:
     def __init__ (self):
         self.start = 0
         self.end = 0
         self.name = ''
 
-def range_cmp (a, b):
-    return a.start < b.start
+class BinaryHeap:
+    def __init__ (self):
+        data_range = DataRange ()
+        data_range.name = 'empty'
+        self.data = [data_range]
+    def add (self, range):
+        print "add s="+str (range.start)+", e="+str (range.end)
+        self.data.append (range)
+        index = len (self.data) - 1
+        while index != 1 and self.data[index].start < self.data[index / 2].start:
+            tmp = self.data[index]
+            self.data[index] = self.data[index/2]
+            self.data[index/2] = tmp
+            index = index / 2
+    def search (self, key):
+        index = 1
+        while index < len (self.data)-1:
+            if key < self.data[index].start:
+                index = index * 2
+            elif key > self.data[index].end:
+                index = index * 2 + 1
+            else:
+                break
+        return index
+    def get_range (self, start, end):
+        i_s = self.search (start)
+        i_e = self.search (end)
+        print "rs="+str(i_s)+", re="+str(i_e)+", s="+str (start)+", e="+str (end)
+        return (i_s, i_e)
+    def first (self):
+        return 1
+    def last (self):
+        return len (self.data) - 1
+    def len (self):
+        return len (self.data) - 1
 
 class Event:
     def __init (self, name = '', at = 0):
@@ -21,30 +55,36 @@ class Event:
 
 class Line:
     def __init__(self, name):
-        self.ranges = []
+        self.ranges = BinaryHeap ()
         self.events = []
         self.name = name
+    def get_range (self, start, end):
+        (s, e) = self.ranges.get_range (start, end)
+        return self.ranges.data[s:e+1]
     def add_range (self, range):
-        self.ranges.append (range)
+        self.ranges.add (range)
     def add_event (self, event):
         self.events.append (event)
     def sort (self):
-        self.ranges.sort ()
         self.events.sort ()
     def get_bounds (self):
         if len (self.events) > 0:
             ev_lo = self.events[0].at
             ev_hi = self.events[-1].at
-            if len (self.ranges) > 0:
-                ran_lo = self.ranges[0].start
-                ran_hi = self.ranges[-1].end
+            if self.ranges.len () > 0:
+                f = self.ranges.first ()
+                l = self.ranges.last ()
+                ran_lo = self.ranges.data[f].start
+                ran_hi = self.ranges.data[l].end
                 return (min (ev_lo, ran_lo), max (ev_hi, ran_hi))
             else:
                 return (ev_lo, ev_hi)
         else:
-            if len (self.ranges) > 0:
-                lo = self.ranges[0].start
-                hi = self.ranges[-1].end
+            if self.ranges.len () > 0:
+                f = self.ranges.first ()
+                l = self.ranges.last ()
+                lo = self.ranges.data[f].start
+                hi = self.ranges.data[l].end
                 return (lo, hi)
             else:
                 return (0,0)
@@ -66,19 +106,11 @@ class Colors:
     default_colors = [Color (1,0,0), Color (0,1,0), Color (0,0,1),Color (1,1,0), Color(1,0,1), Color (0,1,1)]
     def __init__ (self):
         self.__colors = {}
-    def alloc_and_add (self, name):
-        if len (self.default_colors) == 0:
-            color = Color ()
-        else:
-            color = self.default_colors.pop ()
-        self.add (name, color)
     def add (self, name, color):
         self.__colors[name] = color
-    def has_key (self, name):
-        return self.__colors.has_key (name)
-    def __getitem__(self, name):
-        return self.__colors.get(name)
     def lookup (self, name):
+        if not self.__colors.has_key (name):
+            self.add (name, self.default_colors.pop ())
         return self.__colors.get(name)
 
 
@@ -197,11 +229,8 @@ class DataRenderer:
             ctx.move_to (self.__left_width - self.__side_border - t_width, y-t_y_advance)
             ctx.set_source_rgb (0,0,0)
             ctx.show_text (line.name)
-            for data_range in line.ranges:
-                if data_range.start > self.__end:
-                    break
-                if data_range.end < self.__start:
-                    continue
+            for data_range in line.get_range (self.__start, self.__end):
+                print "draw s="+str (data_range.start)+", e="+str (data_range.end)
                 current_start = max (data_range.start, self.__start)
                 current_end = min (data_range.end, self.__end)
                 x_start = self.__left_width + (current_start - self.__start) * graph_width/ (self.__end - self.__start)
@@ -727,7 +756,8 @@ class MainWindow:
 def lines_get_range_names (lines):
     names = {}
     for line in lines:
-        for range in line.ranges:
+        (first, last) = line.get_bounds ()
+        for range in line.get_range (first, last):
             names[range.name] = 1
     return names.keys ()
 def lines_sort (lines):
@@ -768,6 +798,7 @@ def main():
             if not found:
                 line = Line (line_name)
                 lines.append (line)
+                line.add_range (data_range)
             continue
         m = m2.match (line)
         if m:
@@ -787,15 +818,18 @@ def main():
             colors.add (m.group (1), color)
             continue
 
+    for line in lines:
+        (first, last) = line.get_bounds ()
+        print "f="+str (first)+", l="+str (last)
+        for range in line.get_range (first, last):
+            print "r.s="+str (range.start)+", r.e="+str (range.end)
+
     (lower_bound, upper_bound) = lines_get_bounds (lines)
     graphic = GraphicRenderer (lower_bound, upper_bound)
     top_legend = TopLegendRenderer ()
     range_names = lines_get_range_names (lines)
     range_colors = []
     for range_name in range_names:
-        if not colors.has_key (range_name):
-            colors.alloc_and_add (range_name)
-        col = colors.lookup (range_name)
         range_colors.append (colors.lookup (range_name))
     top_legend.set_legends (range_names,
                             range_colors)
@@ -816,15 +850,3 @@ def main():
 
 
 main ()
-
-
-
-#graphic.set_range (int (sys.argv[2]), int (sys.argv[3]))
-#width = 400
-#height = 300
-#surface = cairo.ImageSurface(cairo.FORMAT_ARGB32, width, height)
-#ctx = cairo.Context(surface)
-#graphic.layout (width, height)
-#graphic.draw (ctx)
-#surface.write_to_png('test.png')
-
