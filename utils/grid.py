@@ -21,56 +21,35 @@ class Event:
 
 class Line:
     def __init__(self, name):
-        self.__ranges = []
-        self.__events = []
-        self.__name = name
-    def get_name (self):
-        return self.__name
+        self.ranges = []
+        self.events = []
+        self.name = name
     def add_range (self, range):
-        self.__ranges.append (range)
+        self.ranges.append (range)
     def add_event (self, event):
-        self.__events.append (event)
+        self.events.append (event)
     def sort (self):
-        self.__ranges.sort ()
-        self.__events.sort ()
+        self.ranges.sort ()
+        self.events.sort ()
     def get_bounds (self):
-        if len (self.__events) > 0:
-            ev_lo = self.__events[0].at
-            ev_hi = self.__events[-1].at
-            if len (self.__ranges) > 0:
-                ran_lo = self.__ranges[0].start
-                ran_hi = self.__ranges[-1].end
+        if len (self.events) > 0:
+            ev_lo = self.events[0].at
+            ev_hi = self.events[-1].at
+            if len (self.ranges) > 0:
+                ran_lo = self.ranges[0].start
+                ran_hi = self.ranges[-1].end
                 return (min (ev_lo, ran_lo), max (ev_hi, ran_hi))
             else:
                 return (ev_lo, ev_hi)
         else:
-            if len (self.__ranges) > 0:
-                lo = self.__ranges[0].start
-                hi = self.__ranges[-1].end
+            if len (self.ranges) > 0:
+                lo = self.ranges[0].start
+                hi = self.ranges[-1].end
                 return (lo, hi)
             else:
                 return (0,0)
-    def get_ranges (self):
-        return self.__ranges
-    def get_n_ranges (self):
-        return len (self.__ranges)
-    def get_events (self):
-        return self.__events
-    def get_n_events (self):
-        return len (self.__events)
 
 
-class Lines:
-    def __init__ (self):
-        self.__lines = {}
-    def values (self):
-        return self.__lines.values ()
-    def get_names (self):
-        return self.__lines.keys ()
-    def lookup (self,name):
-        if not self.__lines.has_key (name):
-            self.__lines[name] = Line (name)
-        return self.__lines[name]
 
 class Color:
     def __init__ (self, r = 0.0, g = 0.0, b = 0.0):
@@ -199,8 +178,8 @@ class DataRenderer:
         max_width = 0
         total_height =  0
         names = {}
-        for line in self.__lines.values ():
-            (width, height) = ctx.text_extents (line.get_name ())[2:4]
+        for line in self.__lines:
+            (width, height) = ctx.text_extents (line.name)[2:4]
             if width > max_width:
                 max_width = width
             total_height += height
@@ -213,12 +192,12 @@ class DataRenderer:
         ctx.save ()
         y = self.__top_border
         graph_width = self.__width - self.__left_width
-        for line in self.__lines.values ():
-            (t_y_advance, t_width, t_height) = ctx.text_extents (line.get_name ())[1:4]
+        for line in self.__lines:
+            (t_y_advance, t_width, t_height) = ctx.text_extents (line.name)[1:4]
             ctx.move_to (self.__left_width - self.__side_border - t_width, y-t_y_advance)
             ctx.set_source_rgb (0,0,0)
-            ctx.show_text (line.get_name ())
-            for data_range in line.get_ranges ():
+            ctx.show_text (line.name)
+            for data_range in line.ranges:
                 if data_range.start > self.__end:
                     break
                 if data_range.end < self.__start:
@@ -227,13 +206,14 @@ class DataRenderer:
                 current_end = min (data_range.end, self.__end)
                 x_start = self.__left_width + (current_start - self.__start) * graph_width/ (self.__end - self.__start)
                 x_end = self.__left_width + (current_end - self.__start) * graph_width / (self.__end - self.__start)
-                ctx.rectangle (x_start, y, x_end - x_start, self.__data_height)
-                ctx.set_line_width (1)
-                ctx.set_source_rgb (0,0,0)
-                ctx.stroke_preserve ()
-                color = self.__colors.lookup (data_range.name)
-                ctx.set_source_rgb (color.r, color.g, color.b)
-                ctx.fill ()
+                if (x_end - x_start) > 1:
+                    ctx.rectangle (x_start, y, x_end - x_start, self.__data_height)
+                    ctx.set_line_width (1)
+                    ctx.set_source_rgb (0,0,0)
+                    ctx.stroke_preserve ()
+                    color = self.__colors.lookup (data_range.name)
+                    ctx.set_source_rgb (color.r, color.g, color.b)
+                    ctx.fill ()
             y += self.__padding
             y += max (t_height, self.__data_height)
         ctx.move_to (self.__left_width, 0)
@@ -746,16 +726,16 @@ class MainWindow:
 
 def lines_get_range_names (lines):
     names = {}
-    for line in lines.values ():
-        for range in line.get_ranges ():
+    for line in lines:
+        for range in line.ranges:
             names[range.name] = 1
     return names.keys ()
 def lines_sort (lines):
-    for line in lines.values ():
+    for line in lines:
         line.sort ()
 def lines_get_bounds (lines):
-    (lower_bound, upper_bound) = lines.values ()[0].get_bounds ()
-    for line in lines.values ():
+    (lower_bound, upper_bound) = lines[0].get_bounds ()
+    for line in lines:
         (first, last) = line.get_bounds ()
         if last > upper_bound:
             upper_bound = last
@@ -765,8 +745,7 @@ def lines_get_bounds (lines):
 
 
 def main():
-    
-    lines = Lines ()
+    lines = []
     colors = Colors ()
     fh = open(sys.argv[1])
     m1 = re.compile ('range ([^ ]+) ([^ ]+) ([0-9]+) ([0-9]+)')
@@ -779,8 +758,16 @@ def main():
             data_range.name = m.group (2)
             data_range.start = int (m.group (3))
             data_range.end = int (m.group (4))
-            line = lines.lookup (m.group (1))
-            line.add_range (data_range)
+            line_name = m.group (1)
+            found = False
+            for line in lines:
+                if line.name == line_name:
+                    line.add_range (data_range)
+                    found = True
+                    break
+            if not found:
+                line = Line (line_name)
+                lines.append (line)
             continue
         m = m2.match (line)
         if m:
