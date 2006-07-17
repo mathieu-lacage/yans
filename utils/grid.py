@@ -206,12 +206,12 @@ class DataRenderer:
         ctx.save ()
         y = self.__top_border
         graph_width = self.__width - self.__left_width
-        last_x_draw = int (self.__left_width)
         for line in self.__lines:
             (t_y_advance, t_width, t_height) = ctx.text_extents (line.name)[1:4]
             ctx.move_to (self.__left_width - self.__side_border - t_width, y-t_y_advance)
             ctx.set_source_rgb (0,0,0)
             ctx.show_text (line.name)
+            last_x_draw = int (self.__left_width)
             for data_range in line.get_range (self.__start, self.__end):
                 #print "draw s="+str (data_range.start)+", e="+str (data_range.end)
                 current_start = max (data_range.start, self.__start)
