@@ -529,7 +529,7 @@ class GtkGraphicRenderer (gtk.DrawingArea):
         self.__moving_top = False
         self.add_events (gtk.gdk.POINTER_MOTION_MASK)
         self.add_events (gtk.gdk.BUTTON_PRESS_MASK)
-        self.add_events (gtk.gdk.BUTTON_RELEASE_MASK) 
+        self.add_events (gtk.gdk.BUTTON_RELEASE_MASK)
         self.connect ("expose_event", self.expose)
         self.connect ('size-allocate', self.size_allocate)
         self.connect ('motion-notify-event', self.motion_notify)
@@ -635,6 +635,20 @@ class GtkGraphicRenderer (gtk.DrawingArea):
         if self.__moving_top:
             self.__moving_top_cur = event.x
             self.queue_draw ()
+            return True
+        (d_x, d_y, d_width, d_height) = self.__data.get_data_rectangle ()
+        if event.y > y and event.y < y+height:
+            if abs (event.x - x) < 5 or abs (event.x - (x+width)) < 5:
+                widget.window.set_cursor (gtk.gdk.Cursor (gtk.gdk.SB_H_DOUBLE_ARROW))
+                return True
+            if event.x > x and event.x < x+width:
+                widget.window.set_cursor (gtk.gdk.Cursor (gtk.gdk.FLEUR))
+                return True
+        if event.y > d_y and event.y < (d_y + d_height):
+            if event.x > d_x and event.x < (d_x + d_width):
+                widget.window.set_cursor (gtk.gdk.Cursor (gtk.gdk.FLEUR))
+                return True
+        widget.window.set_cursor (None)
         return False
     def size_allocate (self, widget, allocation):
         self.__width = allocation.width
@@ -712,9 +726,6 @@ class MainWindow:
         bigger_zoom = gtk.Button ("Bigger Zoom")
         bigger_zoom.connect ("clicked", self.__set_bigger_cb)
         hbox.pack_start (bigger_zoom)
-        biggest_zoom = gtk.Button ("Biggest Zoom")
-        biggest_zoom.connect ("clicked", self.__set_biggest_cb)
-        hbox.pack_start (biggest_zoom)
         output_png = gtk.Button ("Output Png")
         output_png.connect ("clicked", self.__output_png_cb)
         hbox.pack_start (output_png)
