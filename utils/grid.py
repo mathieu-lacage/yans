@@ -737,8 +737,6 @@ class MainWindow:
         self.__render.set_smaller_zoom ()
     def __set_bigger_cb (self, widget):
         self.__render.set_bigger_zoom ()
-    def __set_biggest_cb (self, widget):
-        self.__render.set_biggest_zoom ()
     def __output_png_cb (self, widget):
         # XXX
         return
