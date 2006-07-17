@@ -58,8 +58,8 @@ class Line:
             ev_lo = self.events[0].at
             ev_hi = self.events[-1].at
             if len (self.ranges) > 0:
-                ran_lo = self.ranges.data[0].start
-                ran_hi = self.ranges.data[len (self.ranges)-1].end
+                ran_lo = self.ranges[0].start
+                ran_hi = self.ranges[len (self.ranges)-1].end
                 return (min (ev_lo, ran_lo), max (ev_hi, ran_hi))
             else:
                 return (ev_lo, ev_hi)
@@ -796,20 +796,27 @@ def main():
             found = False
             for line in lines:
                 if line.name == line_name:
-                    line.add_range (data_range)
                     found = True
                     break
             if not found:
                 line = Line (line_name)
                 lines.append (line)
-                line.add_range (data_range)
+            line.add_range (data_range)
             continue
         m = m2.match (line)
         if m:
             event = Event ()
             event.name = m.group (2)
             event.at = int (m.group (3))
-            line = lines.lookup (m.group (1))
+            line_name = m.group (1)
+            found = False
+            for line in lines:
+                if line.name == line_name:
+                    found = True
+                    break
+            if not found:
+                line = Line (line_name)
+                lines.append (line)
             line.add_event (event)
             continue
         
