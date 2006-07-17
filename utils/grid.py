@@ -206,6 +206,7 @@ class DataRenderer:
         ctx.save ()
         y = self.__top_border
         graph_width = self.__width - self.__left_width
+        last_x_draw = int (self.__left_width)
         for line in self.__lines:
             (t_y_advance, t_width, t_height) = ctx.text_extents (line.name)[1:4]
             ctx.move_to (self.__left_width - self.__side_border - t_width, y-t_y_advance)
@@ -215,9 +216,9 @@ class DataRenderer:
                 #print "draw s="+str (data_range.start)+", e="+str (data_range.end)
                 current_start = max (data_range.start, self.__start)
                 current_end = min (data_range.end, self.__end)
-                x_start = self.__left_width + (current_start - self.__start) * graph_width/ (self.__end - self.__start)
-                x_end = self.__left_width + (current_end - self.__start) * graph_width / (self.__end - self.__start)
-                if (x_end - x_start) > 1:
+                x_start = int (self.__left_width + (current_start - self.__start) * graph_width/ (self.__end - self.__start))
+                x_end = int (self.__left_width + (current_end - self.__start) * graph_width / (self.__end - self.__start))
+                if (x_end - last_x_draw) > 0:
                     ctx.rectangle (x_start, y, x_end - x_start, self.__data_height)
                     ctx.set_line_width (1)
                     ctx.set_source_rgb (0,0,0)
@@ -225,6 +226,7 @@ class DataRenderer:
                     color = self.__colors.lookup (data_range.name)
                     ctx.set_source_rgb (color.r, color.g, color.b)
                     ctx.fill ()
+                    last_x_draw = x_end
             y += self.__padding
             y += max (t_height, self.__data_height)
         ctx.move_to (self.__left_width, 0)
