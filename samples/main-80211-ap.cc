@@ -95,7 +95,14 @@ Phy80211StateLogger::register_traces (TraceContainer *container)
 void 
 Phy80211StateLogger::notify_end_sync (bool rx_status)
 {
-	// XXX record event
+	uint64_t now = Simulator::now_us ();
+	std::string status;
+	if (rx_status) {
+		status = "ok";
+	} else {
+		status = "fail";
+	}
+	(*m_os) << "event "<<m_line<<" rx-" << status <<" "<<now<<std::endl;
 }
 void 
 Phy80211StateLogger::notify_start_rx (uint64_t duration_us, double energy_w)
@@ -132,8 +139,8 @@ void
 Phy80211StateLogger::notify_start_tx (uint64_t duration_us, uint32_t tx_mode, double tx_power)
 {
 	uint64_t now = Simulator::now_us ();
-	(*m_os) << "event "<<m_line<<" tx-mode " << tx_mode<<std::endl;
-	(*m_os) << "event "<<m_line<<" tx-power " << tx_power<<std::endl;
+	(*m_os) << "event "<<m_line<<" tx-" << (tx_mode/1000000)<<" "<<now<<std::endl;
+	//(*m_os) << "event "<<m_line<<" tx-power " << tx_power<<std::endl;
 	if (m_last_idle_start != -1 && m_last_idle_start < (int64_t)now) {
 		(*m_os) << "range "<<m_line<<" idle "<<m_last_idle_start<<" "<<now<<std::endl;
 		m_last_idle_start = -1;
