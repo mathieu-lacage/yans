@@ -70,8 +70,6 @@ void
 PropagationModel::send (ConstPacketPtr packet, double tx_power_dbm, 
 			uint8_t tx_mode, uint8_t stuff) const
 {
-	double x,y,z;
-	m_position->get (x,y,z);
 	m_channel->send (packet, tx_power_dbm + m_tx_gain_dbm, 
 			 tx_mode, stuff, this);
 }
