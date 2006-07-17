@@ -22,7 +22,7 @@ class Line:
         self.ranges = []
         self.events = []
         self.name = name
-    def __search (self, key):
+    def __search_range (self, key):
         l = 0
         u = len (self.ranges)-1
         while l <= u:
@@ -35,9 +35,23 @@ class Line:
                 # key > self.ranges[i].end
                 l = i + 1
         return -1
+    def __search_event (self, key):
+        l = 0
+        u = len (self.events)-1
+        while l <= u:
+            i = int ((l+u)/2)
+            if key == self.events[i].at:
+                return i
+            elif key < self.events[i].at:
+                u = i - 1
+            else:
+                # key > self.events[i].at
+                l = i + 1
+        return l
+
     def get_range (self, start, end):
-        s = self.__search (start)
-        e = self.__search (end)
+        s = self.__search_range (start)
+        e = self.__search_range (end)
         if s == -1 and e == -1:
             return []
         elif s == -1:
@@ -46,6 +60,10 @@ class Line:
             return self.ranges[s:len (self.ranges)]
         else:
             return self.ranges[s:e+1]
+    def get_events (self, start, end):
+        s = self.__search_event (start)
+        e = self.__search_event (end)
+        return self.events[s:e+1]
     def add_range (self, range):
         self.ranges.append (range)
     def add_event (self, event):
@@ -163,7 +181,7 @@ class TopLegendRenderer:
 class DataRenderer:
     def __init__ (self):
         self.__top_border = 10
-        self.__bot_border = 0
+        self.__bot_border = 10
         self.__side_border = 10
         self.__padding = 10
         self.__data_height = 10
@@ -196,7 +214,7 @@ class DataRenderer:
             (width, height) = ctx.text_extents (line.name)[2:4]
             if width > max_width:
                 max_width = width
-            total_height += height
+            total_height += height + height + self.__padding
             total_height += self.__padding
         self.__left_width = max_width + self.__side_border * 2
         self.__height = total_height + self.__top_border + self.__bot_border
@@ -206,11 +224,26 @@ class DataRenderer:
         ctx.save ()
         y = self.__top_border
         graph_width = self.__width - self.__left_width
+        ctx.set_line_width (1)
         for line in self.__lines:
             (t_y_advance, t_width, t_height) = ctx.text_extents (line.name)[1:4]
             ctx.move_to (self.__left_width - self.__side_border - t_width, y-t_y_advance)
             ctx.set_source_rgb (0,0,0)
             ctx.show_text (line.name)
+            last_x_draw = int (self.__left_width)
+            for event in line.get_events (self.__start, self.__end):
+                current = event.at
+                x = int (self.__left_width + (current - self.__start) * graph_width / (self.__end - self.__start))
+                if x > last_x_draw:
+                    ctx.rectangle (x, y+t_height+3, 1, 1)
+                    ctx.set_source_rgb (1,0,0)
+                    ctx.stroke ()
+                    (ev_width) = ctx.text_extents (event.name)[2]
+                    ctx.move_to (x-ev_width/2, y+t_height)
+                    ctx.set_source_rgb (0,0,0)
+                    ctx.show_text (event.name)
+                    last_x_draw = x
+            y += t_height + self.__padding
             last_x_draw = int (self.__left_width)
             for data_range in line.get_range (self.__start, self.__end):
                 #print "draw s="+str (data_range.start)+", e="+str (data_range.end)
@@ -220,7 +253,6 @@ class DataRenderer:
                 x_end = int (self.__left_width + (current_end - self.__start) * graph_width / (self.__end - self.__start))
                 if (x_end - last_x_draw) > 0:
                     ctx.rectangle (x_start, y, x_end - x_start, self.__data_height)
-                    ctx.set_line_width (1)
                     ctx.set_source_rgb (0,0,0)
                     ctx.stroke_preserve ()
                     color = self.__colors.lookup (data_range.name)
