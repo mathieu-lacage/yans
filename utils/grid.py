@@ -527,6 +527,7 @@ class GtkGraphicRenderer (gtk.DrawingArea):
         self.__moving_right = False
         self.__moving_both = False
         self.__moving_top = False
+        self.__force_full_redraw = True
         self.add_events (gtk.gdk.POINTER_MOTION_MASK)
         self.add_events (gtk.gdk.BUTTON_PRESS_MASK)
         self.add_events (gtk.gdk.BUTTON_RELEASE_MASK)
@@ -538,18 +539,20 @@ class GtkGraphicRenderer (gtk.DrawingArea):
     def set_smaller_zoom (self):
         (start, end) = self.__data.get_range ()
         self.__data.set_range (start, start+(end-start)*10)
-        self.__force_full_redraw ()
+        self.__force_full_redraw = True
+        self.queue_draw ()
     def set_bigger_zoom (self):
         (start, end) = self.__data.get_range ()
         self.__data.set_range (start, start+(end-start)/10)
-        self.__force_full_redraw ()
-    def set_biggest_zoom (self):
-        (start, end) = self.__data.get_range ()
-        self.__data.set_range (start, start+min (start+10, end))
-        self.__force_full_redraw ()
+        self.__force_full_redraw = True
+        self.queue_draw ()
     def output_png (self, filename):
-        self.__force_full_redraw ()
-        self.__buffer_surface.write_to_png(filename)
+        surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
+                                     self.__data.get_width (),
+                                     self.__data.get_height ())
+        ctx = cairo.Context (self.__buffer_surface)
+        self.__data.draw (ctx)
+        surface.write_to_png (filename)
     def button_press (self, widget, event):
         (x, y, width, height) = self.__data.get_selection_rectangle ()
         (d_x, d_y, d_width, d_height) = self.__data.get_data_rectangle ()
@@ -578,28 +581,27 @@ class GtkGraphicRenderer (gtk.DrawingArea):
             left = self.__data.scale_selection (self.__moving_left_cur)
             right = self.__data.get_range ()[1]
             self.__data.set_range (left, right)
-            self.__force_full_redraw ()
+            self.__force_full_redraw = True
+            self.queue_draw ()
             return True
         if self.__moving_right:
             self.__moving_right = False
             right = self.__data.scale_selection (self.__moving_right_cur)
             left = self.__data.get_range ()[0]
             self.__data.set_range (left, right)
-            self.__force_full_redraw ()
+            self.__force_full_redraw = True
+            self.queue_draw ()
             return True
         if self.__moving_both:
             self.__moving_both = False
             delta = self.__data.scale_selection (self.__moving_both_cur - self.__moving_both_start)
             (left, right) = self.__data.get_range ()
             self.__data.set_range (left+delta, right+delta)
-            self.__force_full_redraw ()
+            self.__force_full_redraw = True
+            self.queue_draw ()
             return True
         if self.__moving_top:
             self.__moving_top = False
-            delta = self.__data.scale_data (self.__moving_top_cur - self.__moving_top_start)
-            (left, right) = self.__data.get_range ()
-            self.__data.set_range (left+delta, right+delta)
-            self.__force_full_redraw ()
         return False
     def motion_notify (self, widget, event):
         (x, y, width, height) = self.__data.get_selection_rectangle ()
@@ -634,6 +636,11 @@ class GtkGraphicRenderer (gtk.DrawingArea):
             return True
         if self.__moving_top:
             self.__moving_top_cur = event.x
+            delta = self.__data.scale_data (self.__moving_top_start-self.__moving_top_cur)
+            (left, right) = self.__data.get_range ()
+            self.__data.set_range (left+delta, right+delta)
+            self.__force_full_redraw = True
+            self.__moving_top_start = event.x
             self.queue_draw ()
             return True
         (d_x, d_y, d_width, d_height) = self.__data.get_data_rectangle ()
@@ -654,15 +661,15 @@ class GtkGraphicRenderer (gtk.DrawingArea):
         self.__width = allocation.width
         self.__height = allocation.height
         self.__data.layout (allocation.width, allocation.height)
-        self.__force_full_redraw ()
-    def __force_full_redraw (self):
-        self.__buffer_surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
-                                                   self.__data.get_width (),
-                                                   self.__data.get_height ())
-        ctx = cairo.Context(self.__buffer_surface)
-        self.__data.draw (ctx)
+        self.__force_full_redraw = True
         self.queue_draw ()
     def expose (self, widget, event):
+        if self.__force_full_redraw:
+            self.__buffer_surface = cairo.ImageSurface(cairo.FORMAT_ARGB32,
+                                                       self.__data.get_width (),
+                                                       self.__data.get_height ())
+            ctx = cairo.Context(self.__buffer_surface)
+            self.__data.draw (ctx)
         ctx = widget.window.cairo_create()
         ctx.rectangle(event.area.x, event.area.y,
                       event.area.width, event.area.height)
@@ -695,15 +702,6 @@ class GtkGraphicRenderer (gtk.DrawingArea):
             ctx.close_path ()
             ctx.set_source_rgb (0,0,0)
             ctx.set_line_width (1)
-            ctx.stroke ()
-        if self.__moving_top:
-            (d_x, d_y, d_width, d_height) = self.__data.get_data_rectangle ()
-            delta_x = self.__moving_top_cur-self.__moving_top_start
-            ctx.move_to (d_x+d_width/2,d_y+d_height/2)
-            ctx.rel_line_to (delta_x, 0)
-            ctx.close_path ()
-            ctx.set_line_width (1)
-            ctx.set_source_rgb (0,0,0)
             ctx.stroke ()
         return False
 
