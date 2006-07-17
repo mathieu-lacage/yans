@@ -572,12 +572,12 @@ class GtkGraphicRenderer (gtk.DrawingArea):
         self.connect ('button-release-event', self.button_release)
     def set_smaller_zoom (self):
         (start, end) = self.__data.get_range ()
-        self.__data.set_range (start, start+(end-start)*10)
+        self.__data.set_range (start, start+(end-start)*2)
         self.__force_full_redraw = True
         self.queue_draw ()
     def set_bigger_zoom (self):
         (start, end) = self.__data.get_range ()
-        self.__data.set_range (start, start+(end-start)/10)
+        self.__data.set_range (start, start+(end-start)/2)
         self.__force_full_redraw = True
         self.queue_draw ()
     def output_png (self, filename):
