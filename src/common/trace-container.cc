@@ -91,7 +91,10 @@ TraceContainer::register_ui_variable (char const *name, UiTracedVariableBase *va
 {
 	// ensure unicity
 	for (UiListI i = m_ui_list.begin (); i != m_ui_list.end (); i++) {
-		assert ((*i).second != name);
+		if (i->second == name) {
+			m_ui_list.erase (i);
+			break;
+		}
 	}
 	m_ui_list.push_back (std::make_pair (var, name));
 }
@@ -100,7 +103,10 @@ TraceContainer::register_si_variable (char const *name, SiTracedVariableBase *va
 {
 	// ensure unicity
 	for (SiListI i = m_si_list.begin (); i != m_si_list.end (); i++) {
-		assert ((*i).second != name);
+		if (i->second == name) {
+			m_si_list.erase (i);
+			break;
+		}
 	}
 	m_si_list.push_back (std::make_pair (var, name));
 }
@@ -115,7 +121,10 @@ TraceContainer::register_packet_logger (char const *name, PacketLogger *logger)
 {
 	// ensure unicity
 	for (PacketLoggerListI i = m_packet_logger_list.begin (); i != m_packet_logger_list.end (); i++) {
-		assert ((*i).second != name);
+		if (i->second == name) {
+			m_packet_logger_list.erase (i);
+			break;
+		}
 	}
 	m_packet_logger_list.push_back (std::make_pair (logger, name));
 }
@@ -125,7 +134,10 @@ TraceContainer::register_stream (char const *name, TraceStream *stream)
 {
 	// ensure unicity
 	for (TraceStreamListI i = m_trace_stream_list.begin (); i != m_trace_stream_list.end (); i++) {
-		assert ((*i).second != name);
+		if (i->second == name) {
+			m_trace_stream_list.erase (i);
+			break;
+		}
 	}
 	m_trace_stream_list.push_back (std::make_pair (stream,name));
 
@@ -135,7 +147,10 @@ void
 TraceContainer::register_callback (char const *name, CallbackLoggerBase *logger)
 {
 	for (CallbackListI i = m_callback_list.begin (); i != m_callback_list.end (); i++) {
-		assert (i->second != name);
+		if (i->second == name) {
+			m_callback_list.erase (i);
+			break;
+		}
 	}
 	m_callback_list.push_back (std::make_pair (logger, name));
 }
