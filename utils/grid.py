@@ -549,7 +549,7 @@ class GtkGraphicRenderer (gtk.DrawingArea):
         self.__force_full_redraw ()
     def output_png (self, filename):
         self.__force_full_redraw ()
-        self.__data_buffer.write_to_png(filename)
+        self.__buffer_surface.write_to_png(filename)
     def button_press (self, widget, event):
         (x, y, width, height) = self.__data.get_selection_rectangle ()
         (d_x, d_y, d_width, d_height) = self.__data.get_data_rectangle ()
@@ -712,6 +712,7 @@ class MainWindow:
         return
     def run (self, graphic):
         window = gtk.Window()
+        self.__window = window
         window.set_default_size (200, 200)
         vbox = gtk.VBox ()
         window.add (vbox)
@@ -738,7 +739,18 @@ class MainWindow:
     def __set_bigger_cb (self, widget):
         self.__render.set_bigger_zoom ()
     def __output_png_cb (self, widget):
-        # XXX
+        dialog = gtk.FileChooserDialog ("Output Png", self.__window,
+                                        gtk.FILE_CHOOSER_ACTION_SAVE, ("Save",1))
+        self.__dialog = dialog
+        dialog.set_default_response (1)
+        dialog.connect ("response", self.__dialog_response_cb)
+        dialog.show ()
+        return
+    def __dialog_response_cb (self, widget, response):
+        if response == 1:
+            filename = self.__dialog.get_filename ()
+            self.__render.output_png (filename)
+            widget.hide ()
         return
 
 
