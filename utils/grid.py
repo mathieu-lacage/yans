@@ -12,42 +12,6 @@ class DataRange:
         self.end = 0
         self.name = ''
 
-class BinaryHeap:
-    def __init__ (self):
-        data_range = DataRange ()
-        data_range.name = 'empty'
-        self.data = [data_range]
-    def add (self, range):
-        print "add s="+str (range.start)+", e="+str (range.end)
-        self.data.append (range)
-        index = len (self.data) - 1
-        while index != 1 and self.data[index].start < self.data[index / 2].start:
-            tmp = self.data[index]
-            self.data[index] = self.data[index/2]
-            self.data[index/2] = tmp
-            index = index / 2
-    def search (self, key):
-        index = 1
-        while index < len (self.data)-1:
-            if key < self.data[index].start:
-                index = index * 2
-            elif key > self.data[index].end:
-                index = index * 2 + 1
-            else:
-                break
-        return index
-    def get_range (self, start, end):
-        i_s = self.search (start)
-        i_e = self.search (end)
-        print "rs="+str(i_s)+", re="+str(i_e)+", s="+str (start)+", e="+str (end)
-        return (i_s, i_e)
-    def first (self):
-        return 1
-    def last (self):
-        return len (self.data) - 1
-    def len (self):
-        return len (self.data) - 1
-
 class Event:
     def __init (self, name = '', at = 0):
         self.name = name
@@ -55,36 +19,54 @@ class Event:
 
 class Line:
     def __init__(self, name):
-        self.ranges = BinaryHeap ()
+        self.ranges = []
         self.events = []
         self.name = name
+    def __search (self, key):
+        l = 0
+        u = len (self.ranges)-1
+        while l <= u:
+            i = int ((l+u)/2)
+            if key >= self.ranges[i].start and key <= self.ranges[i].end:
+                return i
+            elif key < self.ranges[i].start:
+                u = i - 1
+            else:
+                # key > self.ranges[i].end
+                l = i + 1
+        return -1
     def get_range (self, start, end):
-        (s, e) = self.ranges.get_range (start, end)
-        return self.ranges.data[s:e+1]
+        s = self.__search (start)
+        e = self.__search (end)
+        if s == -1 and e == -1:
+            return []
+        elif s == -1:
+            return self.ranges[0:e+1]
+        elif e == -1:
+            return self.ranges[s:len (self.ranges)]
+        else:
+            return self.ranges[s:e+1]
     def add_range (self, range):
-        self.ranges.add (range)
+        self.ranges.append (range)
     def add_event (self, event):
         self.events.append (event)
     def sort (self):
         self.events.sort ()
+        self.ranges.sort ()
     def get_bounds (self):
         if len (self.events) > 0:
             ev_lo = self.events[0].at
             ev_hi = self.events[-1].at
-            if self.ranges.len () > 0:
-                f = self.ranges.first ()
-                l = self.ranges.last ()
-                ran_lo = self.ranges.data[f].start
-                ran_hi = self.ranges.data[l].end
+            if len (self.ranges) > 0:
+                ran_lo = self.ranges.data[0].start
+                ran_hi = self.ranges.data[len (self.ranges)-1].end
                 return (min (ev_lo, ran_lo), max (ev_hi, ran_hi))
             else:
                 return (ev_lo, ev_hi)
         else:
-            if self.ranges.len () > 0:
-                f = self.ranges.first ()
-                l = self.ranges.last ()
-                lo = self.ranges.data[f].start
-                hi = self.ranges.data[l].end
+            if len (self.ranges) > 0:
+                lo = self.ranges[0].start
+                hi = self.ranges[len (self.ranges)-1].end
                 return (lo, hi)
             else:
                 return (0,0)
@@ -230,7 +212,7 @@ class DataRenderer:
             ctx.set_source_rgb (0,0,0)
             ctx.show_text (line.name)
             for data_range in line.get_range (self.__start, self.__end):
-                print "draw s="+str (data_range.start)+", e="+str (data_range.end)
+                #print "draw s="+str (data_range.start)+", e="+str (data_range.end)
                 current_start = max (data_range.start, self.__start)
                 current_end = min (data_range.end, self.__end)
                 x_start = self.__left_width + (current_start - self.__start) * graph_width/ (self.__end - self.__start)
@@ -817,12 +799,6 @@ def main():
             color = Color (r/255, g/255, b/255)
             colors.add (m.group (1), color)
             continue
-
-    for line in lines:
-        (first, last) = line.get_bounds ()
-        print "f="+str (first)+", l="+str (last)
-        for range in line.get_range (first, last):
-            print "r.s="+str (range.start)+", r.e="+str (range.end)
 
     (lower_bound, upper_bound) = lines_get_bounds (lines)
     graphic = GraphicRenderer (lower_bound, upper_bound)
