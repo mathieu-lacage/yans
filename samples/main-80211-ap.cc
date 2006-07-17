@@ -65,7 +65,7 @@ private:
 	void notify_start_rx (uint64_t duration_us, double energy_w);
 	void notify_start_sync (uint64_t duration_us, double energy_w);
 	void notify_start_cca_busy (uint64_t duration_us);
-	void notify_start_tx (uint64_t duration_us);
+	void notify_start_tx (uint64_t duration_us, uint32_t tx_mode, double tx_power);
 private:
 	int64_t m_last_idle_start;
 	std::ostream *m_os;
@@ -129,9 +129,11 @@ Phy80211StateLogger::notify_start_cca_busy (uint64_t duration_us)
 	}
 }
 void 
-Phy80211StateLogger::notify_start_tx (uint64_t duration_us)
+Phy80211StateLogger::notify_start_tx (uint64_t duration_us, uint32_t tx_mode, double tx_power)
 {
 	uint64_t now = Simulator::now_us ();
+	(*m_os) << "event "<<m_line<<" tx-mode " << tx_mode<<std::endl;
+	(*m_os) << "event "<<m_line<<" tx-power " << tx_power<<std::endl;
 	if (m_last_idle_start != -1 && m_last_idle_start < (int64_t)now) {
 		(*m_os) << "range "<<m_line<<" idle "<<m_last_idle_start<<" "<<now<<std::endl;
 		m_last_idle_start = -1;

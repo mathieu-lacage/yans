@@ -320,7 +320,7 @@ Phy80211::send_packet (ConstPacketPtr packet, uint8_t tx_mode, uint8_t tx_power,
 	}
 
 	uint64_t tx_duration_us = calculate_tx_duration_us (packet->get_size (), tx_mode);
-	m_start_tx_logger (tx_duration_us);
+	m_start_tx_logger (tx_duration_us, get_mode_bit_rate (tx_mode), get_power_dbm (tx_power));
 	notify_tx_start (tx_duration_us);
 	switch_to_tx (tx_duration_us);
 	m_propagation->send (packet, get_power_dbm (tx_power), tx_mode, stuff);

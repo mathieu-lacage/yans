@@ -219,9 +219,11 @@ private:
 	 */
 	CallbackLogger<uint64_t> m_start_cca_busy_logger;
 	/* param1: duration (us)
+	 * param2: tx mode (bit rate: bit/s)
+	 * param3: tx power (dbm)
 	 * Invoked whenever we send the first bit of a signal.
 	 */
-	CallbackLogger<uint64_t> m_start_tx_logger;
+	CallbackLogger<uint64_t, uint32_t, double> m_start_tx_logger;
 };
 
 }; // namespace yans
