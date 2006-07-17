@@ -672,6 +672,7 @@ class GtkGraphicRenderer (gtk.DrawingArea):
                                                        self.__data.get_height ())
             ctx = cairo.Context(self.__buffer_surface)
             self.__data.draw (ctx)
+            self.__force_full_redraw = False
         ctx = widget.window.cairo_create()
         ctx.rectangle(event.area.x, event.area.y,
                       event.area.width, event.area.height)
