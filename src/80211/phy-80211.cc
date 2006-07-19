@@ -229,6 +229,7 @@ Phy80211::receive_packet (ConstPacketPtr packet,
 			  uint8_t stuff)
 {
 	uint64_t rx_duration_us = calculate_tx_duration_us (packet->get_size (), tx_mode);
+	rx_duration_us -= m_propagation->get_rx_delay ();
 	m_start_rx_logger (rx_duration_us, rx_power_w);
 
 	RxEvent *event = new RxEvent (packet->get_size (), 
@@ -320,6 +321,7 @@ Phy80211::send_packet (ConstPacketPtr packet, uint8_t tx_mode, uint8_t tx_power,
 	}
 
 	uint64_t tx_duration_us = calculate_tx_duration_us (packet->get_size (), tx_mode);
+	tx_duration_us += m_propagation->get_tx_delay ();
 	m_start_tx_logger (tx_duration_us, get_mode_bit_rate (tx_mode), get_power_dbm (tx_power));
 	notify_tx_start (tx_duration_us);
 	switch_to_tx (tx_duration_us);
@@ -389,8 +391,8 @@ Phy80211::get_snr_for_ber (TransmissionMode *mode, double ber) const
 void
 Phy80211::configure_80211a (void)
 {
-	m_plcp_header_length = 4 + 1 + 12 + 1 + 6 + 16 + 6;
 	m_plcp_preamble_delay_us = 20;
+	m_plcp_header_length = 4 + 1 + 12 + 1 + 6 + 16 + 6;
 	/* 4095 bytes at a 6Mb/s rate with a 1/2 coding rate. */
 	m_max_packet_duration_us = (uint64_t)(1000000 * 4095.0*8.0/6000000.0*(1.0/2.0));
 
@@ -493,16 +495,6 @@ Phy80211::calculate_tx_duration_us (uint32_t size, uint8_t payload_mode) const
 	delay +=  tmp / get_mode (payload_mode)->get_data_rate ();
 	return delay;
 }
-
-double 
-Phy80211::calculate_tx_duration_s (uint32_t size, uint8_t payload_mode) const
-{
-	double delay = 	m_plcp_preamble_delay_us * 1e-6;
-	delay += m_plcp_header_length / get_mode (0)->get_data_rate ();
-	delay += (size * 8) / get_mode (payload_mode)->get_data_rate ();
-	return delay;
-}
-
 
 char const *
 Phy80211::state_to_string (enum Phy80211State state)
@@ -774,7 +766,7 @@ Phy80211::calculate_per (RxEvent const *event, NiChanges *ni) const
 	double psr = 1.0; /* Packet Success Rate */
 	NiChangesI j = ni->begin ();
 	uint64_t previous_us = (*j).get_time_us ();
-	uint64_t plcp_header_start_us = (*j).get_time_us () + m_plcp_preamble_delay_us;
+	uint64_t plcp_header_start_us = (*j).get_time_us () + m_plcp_preamble_delay_us - m_propagation->get_rx_delay ();
 	uint64_t plcp_payload_start_us = plcp_header_start_us + 
 		m_plcp_header_length * get_mode (event->get_header_mode ())->get_data_rate () / 1000000;
 	double noise_interference_w = (*j).get_delta ();

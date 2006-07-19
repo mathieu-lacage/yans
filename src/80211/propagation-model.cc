@@ -73,13 +73,23 @@ PropagationModel::send (ConstPacketPtr packet, double tx_power_dbm,
 	m_channel->send (packet, tx_power_dbm + m_tx_gain_dbm, 
 			 tx_mode, stuff, this);
 }
+uint64_t 
+PropagationModel::get_tx_delay (void) const
+{
+	return m_tx_delay;
+}
+uint64_t 
+PropagationModel::get_rx_delay (void) const
+{
+	return m_rx_delay;
+}
 void
 PropagationModel::get_position (double &x, double &y, double &z) const
 {
 	m_position->get (x, y, z);
 }
 uint64_t
-PropagationModel::get_delay_us (double from_x, double from_y, double from_z) const
+PropagationModel::get_prop_delay_us (double from_x, double from_y, double from_z) const
 {
 	double dist = distance (from_x, from_y, from_z);
 	uint64_t delay_us = (uint64_t) (dist / 300000000 * 1000000);
@@ -143,6 +153,17 @@ PropagationModel::get_rx_power_w (double tx_power_dbm, double dist) const
 	double n = 3.0; /* path loss exponent */
 	double pr = 10*log10(prd0) - n * 10.0 * log10(dist);
 	return db_to_w (pr);
+}
+
+void 
+PropagationModel::set_tx_delay (uint64_t tx_delay)
+{
+	m_tx_delay  = tx_delay;
+}
+void 
+PropagationModel::set_rx_delay (uint64_t rx_delay)
+{
+	m_rx_delay = rx_delay;
 }
 
 void 

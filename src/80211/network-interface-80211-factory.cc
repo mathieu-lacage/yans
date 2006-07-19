@@ -46,6 +46,8 @@ NetworkInterface80211Factory::NetworkInterface80211Factory ()
 	  m_phy_tx_power_base_dbm (16.0206),
 	  m_phy_tx_power_end_dbm (16.0206),
 	  m_phy_n_tx_power (1),
+	  m_prop_tx_delay_us (0),
+	  m_prop_rx_delay_us (10),
 	  m_prop_system_loss (1.0),
 	  m_prop_tx_gain_dbm (1.0),
 	  m_prop_rx_gain_dbm (1.0),
@@ -148,6 +150,8 @@ void
 NetworkInterface80211Factory::initialize_interface (NetworkInterface80211 *interface, Position *position) const
 {
 	PropagationModel *propagation = new PropagationModel ();
+	propagation->set_tx_delay (m_prop_tx_delay_us);
+	propagation->set_rx_delay (m_prop_rx_delay_us);
 	propagation->set_tx_gain_dbm (m_prop_tx_gain_dbm);
 	propagation->set_rx_gain_dbm (m_prop_rx_gain_dbm);
 	propagation->set_system_loss (m_prop_system_loss);

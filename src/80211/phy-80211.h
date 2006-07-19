@@ -97,9 +97,7 @@ public:
 	uint64_t get_state_duration_us (void);
 	uint64_t get_delay_until_idle_us (void);
 
-	double calculate_tx_duration_s (uint32_t size, uint8_t payload_mode) const;
 	uint64_t calculate_tx_duration_us (uint32_t size, uint8_t payload_mode) const;
-
 
 	void configure_80211a (void);
 	void set_ed_threshold_dbm (double rx_threshold);
@@ -170,15 +168,16 @@ private:
 	void end_sync (ConstPacketPtr packet, CountPtrHolder<RxEvent> event, uint8_t stuff);
 	double get_snr_for_ber (TransmissionMode *mode, double ber) const;
 private:
-	uint64_t     m_plcp_preamble_delay_us;
-	uint32_t     m_plcp_header_length;
-	uint64_t     m_max_packet_duration_us;
+	uint64_t m_tx_prepare_delay_us;
+	uint64_t m_plcp_preamble_delay_us;
+	uint32_t m_plcp_header_length;
+	uint64_t m_max_packet_duration_us;
 
-	double       m_ed_threshold_w; /* unit: W */
-	double       m_rx_noise_ratio;
-	double       m_tx_power_base_dbm;
-	double       m_tx_power_end_dbm;
-	uint32_t     m_n_tx_power;
+	double   m_ed_threshold_w; /* unit: W */
+	double   m_rx_noise_ratio;
+	double   m_tx_power_base_dbm;
+	double   m_tx_power_end_dbm;
+	uint32_t m_n_tx_power;
 
 	
 	bool m_syncing;

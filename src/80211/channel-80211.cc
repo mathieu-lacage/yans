@@ -42,9 +42,12 @@ Channel80211::real_send (ConstPacketPtr packet, double tx_power_dbm,
 {
 	double from_x, from_y, from_z;
 	caller->get_position (from_x, from_y, from_z);
+	uint64_t tx_delay = caller->get_tx_delay ();
 	for (ModelsCI i = m_models.begin (); i != m_models.end (); i++) {
 		if (caller != (*i)) {
-			uint64_t delay_us = (*i)->get_delay_us (from_x, from_y, from_z);
+			uint64_t delay_us = (*i)->get_prop_delay_us (from_x, from_y, from_z);
+			delay_us += tx_delay;
+			delay_us += (*i)->get_rx_delay ();
 			double rx_power_w = (*i)->get_rx_power_w (tx_power_dbm, from_x, from_y, from_z);
 			Simulator::schedule_rel_us (delay_us, make_event (&PropagationModel::receive, *i,
 								       packet, rx_power_w, tx_mode, stuff));
