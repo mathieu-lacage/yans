@@ -35,6 +35,7 @@ class MacLow;
 class Phy80211;
 class MacParameters;
 class MacTxMiddle;
+class TraceContainer;
 
 class DcaTxop 
 {
@@ -57,6 +58,8 @@ public:
 	void set_cw_bounds (uint32_t min, uint32_t max);
 	void set_max_queue_size (uint32_t size);
 	void set_max_queue_delay_us (uint64_t us);
+
+	void register_traces (TraceContainer *container);
 
 	void queue (PacketPtr packet, ChunkMac80211Hdr const &hdr);
 private:

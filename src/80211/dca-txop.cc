@@ -227,6 +227,12 @@ DcaTxop::set_max_queue_delay_us (uint64_t us)
 }
 
 void 
+DcaTxop::register_traces (TraceContainer *container)
+{
+	m_dcf->register_traces (container);
+}
+
+void 
 DcaTxop::queue (PacketPtr packet, ChunkMac80211Hdr const &hdr)
 {
 	m_queue->enqueue (packet, hdr);
