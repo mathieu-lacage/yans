@@ -67,10 +67,9 @@ public:
 
 	void request_access (void);
 
-	void notify_access_finished (void);
-	void notify_access_ongoing_error (void);
-	void notify_access_ongoing_error_but_ok (void);
-	void notify_access_ongoing_ok (void);
+	void reset_cw (void);
+	void updated_failed_cw (void);
+	void start_backoff (void);
 
 	/* notification methods. */
 	void notify_rx_start_now (uint64_t duration);

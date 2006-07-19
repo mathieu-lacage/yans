@@ -160,33 +160,6 @@ Dcf::request_access (void)
 	}
 }
 
-void
-Dcf::notify_access_finished (void)
-{
-	TRACE ("access finished");
-	start_backoff ();
-}
-
-void 
-Dcf::notify_access_ongoing_ok (void)
-{
-	TRACE ("access ok");
-	reset_cw ();
-}
-
-void
-Dcf::notify_access_ongoing_error (void)
-{
-	TRACE ("access failed");
-	update_failed_cw ();
-}
-void
-Dcf::notify_access_ongoing_error_but_ok (void)
-{
-	TRACE ("access failed but ok");
-	reset_cw ();
-}
-
 /***************************************************************
  *     Timeout method. Notifies when Access is Granted.
  ***************************************************************/ 

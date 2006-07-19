@@ -389,8 +389,8 @@ DcaTxop::access_granted_now (void)
 					    params,
 					    m_transmission_listener);
 		m_current_packet = 0;
-		m_dcf->notify_access_ongoing_ok ();
-		m_dcf->notify_access_finished ();
+		m_dcf->reset_cw ();
+		m_dcf->start_backoff ();
 		TRACE ("tx broadcast");
 	} else {
 		params.enable_ack ();
@@ -442,12 +442,12 @@ DcaTxop::missed_cts (void)
 	m_ssrc++;
 	if (m_ssrc > parameters ()->get_max_ssrc ()) {
 		// to reset the dcf.
-		m_dcf->notify_access_ongoing_error_but_ok ();
-		m_dcf->notify_access_finished ();
+		m_dcf->reset_cw ();
+		m_dcf->start_backoff ();
 		m_current_packet = 0;
 	} else {
-		m_dcf->notify_access_ongoing_error ();
-		m_dcf->notify_access_finished ();
+		m_dcf->update_failed_cw ();
+		m_dcf->start_backoff ();
 	}
 }
 void 
@@ -465,8 +465,8 @@ DcaTxop::got_ack (double snr, uint8_t txMode)
 		 * so we can get rid of that packet now.
 		 */
 		m_current_packet = 0;
-		m_dcf->notify_access_ongoing_ok ();
-		m_dcf->notify_access_finished ();
+		m_dcf->reset_cw ();
+		m_dcf->start_backoff ();
 	} else {
 		TRACE ("got ack. tx not done, size="<<m_current_packet->get_size ());
 	}
@@ -478,8 +478,8 @@ DcaTxop::missed_ack (void)
 	m_slrc++;
 	if (m_slrc > parameters ()->get_max_slrc ()) {
 		// to reset the dcf.		
-		m_dcf->notify_access_ongoing_error_but_ok ();
-		m_dcf->notify_access_finished ();
+		m_dcf->reset_cw ();
+		m_dcf->start_backoff ();
 		m_current_packet = 0;
 	} else {
 		// XXX
@@ -487,8 +487,8 @@ DcaTxop::missed_ack (void)
 		if (!m_tx_failed_callback.is_null ()) {
 			m_tx_failed_callback (m_current_hdr);
 		}
-		m_dcf->notify_access_ongoing_error ();
-		m_dcf->notify_access_finished ();
+		m_dcf->updated_failed_cw ();
+		m_dcf->start_backoff ();
 	}
 	
 }
