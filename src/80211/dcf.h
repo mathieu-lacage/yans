@@ -68,7 +68,7 @@ public:
 	void request_access (void);
 
 	void reset_cw (void);
-	void updated_failed_cw (void);
+	void update_failed_cw (void);
 	void start_backoff (void);
 
 	/* notification methods. */
@@ -84,8 +84,6 @@ private:
 	void access_timeout (void);
 
 	/* trivial helpers */
-	void reset_cw (void);
-	void update_failed_cw (void);
 	uint64_t pick_backoff_delay (void);
 	uint64_t now_us (void) const;
 	uint64_t most_recent (uint64_t a, uint64_t b) const;
@@ -99,7 +97,6 @@ private:
 	/* time calculation helpers */
 	bool is_phy_busy (void);
 	bool is_backoff_not_completed (uint64_t now);
-	void start_backoff (void);
 	uint64_t get_delay_until_access_granted (uint64_t now);
 	uint64_t get_access_granted_start (void) const;
 	void update_backoff (uint64_t time_us);

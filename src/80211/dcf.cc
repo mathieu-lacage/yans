@@ -616,20 +616,20 @@ DcfTest::add_access_ok (uint64_t time)
 void 
 DcfTest::access_error (uint64_t time)
 {
-	m_dcf->notify_access_ongoing_error ();
-	m_dcf->notify_access_finished ();
+	m_dcf->update_failed_cw ();
+	m_dcf->start_backoff ();
 }
 void 
 DcfTest::access_error_but_ok (uint64_t time)
 {
-	m_dcf->notify_access_ongoing_error_but_ok ();
-	m_dcf->notify_access_finished ();
+	m_dcf->reset_cw ();
+	m_dcf->start_backoff ();
 }
 void 
 DcfTest::access_ok (uint64_t time)
 {
-	m_dcf->notify_access_ongoing_ok ();
-	m_dcf->notify_access_finished ();
+	m_dcf->reset_cw ();
+	m_dcf->start_backoff ();
 }
 
 void 

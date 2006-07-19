@@ -487,7 +487,7 @@ DcaTxop::missed_ack (void)
 		if (!m_tx_failed_callback.is_null ()) {
 			m_tx_failed_callback (m_current_hdr);
 		}
-		m_dcf->updated_failed_cw ();
+		m_dcf->update_failed_cw ();
 		m_dcf->start_backoff ();
 	}
 	
