@@ -28,6 +28,7 @@
 #include "event.tcc"
 #include "simulator.h"
 #include "mac-parameters.h"
+#include "trace-container.h"
 
 #ifndef max
 #define max(a,b) (((a)>=(b))?(a):(b))
@@ -106,6 +107,12 @@ Dcf::set_cw_bounds (uint32_t min, uint32_t max)
 	m_cw_min = min;
 	m_cw_max = max;
 	m_cw = min;
+}
+void 
+Dcf::register_traces (TraceContainer *container)
+{
+	container->register_ui_variable ("80211-dcf-cw", &m_cw);
+	container->register_callback ("80211-dcf-backoff", &m_backoff_trace);
 }
 
 void 
@@ -282,6 +289,7 @@ Dcf::start_backoff (void)
 {
 	uint64_t backoff_start = now_us ();
 	uint64_t backoff_duration = pick_backoff_delay ();
+	m_backoff_trace (backoff_duration);
 	assert (m_backoff_start <= backoff_start);
 	m_backoff_start = backoff_start;
 	m_backoff_left = backoff_duration;

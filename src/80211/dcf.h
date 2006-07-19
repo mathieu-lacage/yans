@@ -24,11 +24,14 @@
 
 #include <stdint.h>
 #include "event.h"
+#include "ui-traced-variable.tcc"
+#include "callback-logger.h"
 
 namespace yans {
 
 class RandomUniform;
 class MacParameters;
+class TraceContainer;
 
 class DcfAccessListener {
 public:
@@ -63,6 +66,7 @@ public:
 	void set_difs_us (uint64_t difs_us);
 	void set_eifs_us (uint64_t eifs_us);
 	void set_cw_bounds (uint32_t min, uint32_t max);
+	void register_traces (TraceContainer *container);
 	void register_access_listener (DcfAccessListener *listener);
 
 	void request_access (void);
@@ -111,7 +115,7 @@ private:
 	uint32_t m_cw_min;
 	uint32_t m_cw_max;
 
-	uint32_t m_cw;
+	UiTracedVariable<uint32_t> m_cw;
 	uint64_t m_backoff_start;
 	uint64_t m_backoff_left;
 	uint64_t m_last_nav_start;
@@ -126,6 +130,10 @@ private:
 	uint64_t m_last_busy_duration;
 	bool m_rxing;
 	bool m_sleeping;
+	/* param1: backoff duration (us)
+	 * reports the start of a backoff
+	 */
+	CallbackLogger<uint64_t> m_backoff_trace;
 };
 
 }; // namespace yans
