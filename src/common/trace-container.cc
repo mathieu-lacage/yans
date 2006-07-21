@@ -167,31 +167,31 @@ yans::TraceContainer::print_debug (void)
 	if (!m_ui_list.empty ()) {
 		std::cout << "ui var: " << std::endl;
 		for (UiListI i = m_ui_list.begin (); i != m_ui_list.end (); i++) {
-			std::cout << "    " << (*i).second << std::endl;
+			std::cout << "    \"" << (*i).second << "\""<<std::endl;
 		}
 	}
 	if (!m_si_list.empty ()) {
 		std::cout << "si var: " << std::endl;
 		for (SiListI i = m_si_list.begin (); i != m_si_list.end (); i++) {
-			std::cout << "    " << (*i).second << std::endl;
+			std::cout << "    \"" << (*i).second << "\""<<std::endl;
 		}
 	}
 	if (!m_f_list.empty ()) {
 		std::cout << "f var: " << std::endl;
 		for (FListI i = m_f_list.begin (); i != m_f_list.end (); i++) {
-			std::cout << "    " << (*i).second << std::endl;
+			std::cout << "    \"" << (*i).second << "\""<<std::endl;
 		}
 	}
 	if (!m_packet_logger_list.empty ()) {		
 		std::cout << "packet logger: " << std::endl;
 		for (PacketLoggerListI i = m_packet_logger_list.begin (); i != m_packet_logger_list.end (); i++) {
-			std::cout << "    " << (*i).second << std::endl;
+			std::cout << "    \"" << (*i).second << "\""<<std::endl;
 		}
 	}
 	if (!m_callback_list.empty ()) {
 		std::cout << "callback list: "<<std::endl;
 		for (CallbackListI i = m_callback_list.begin (); i != m_callback_list.end (); i++) {
-			std::cout << "    " << i->second << std::endl;
+			std::cout << "    \"" << i->second << "\""<<std::endl;
 		}
 	}
 }
