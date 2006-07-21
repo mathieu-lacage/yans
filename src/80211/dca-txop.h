@@ -26,6 +26,7 @@
 #include "callback.h"
 #include "chunk-mac-80211-hdr.h"
 #include "packet.h"
+#include "callback-logger.h"
 
 namespace yans {
 
@@ -111,6 +112,15 @@ private:
 	uint32_t m_ssrc;
 	uint32_t m_slrc;
 	uint8_t m_fragment_number;
+
+	/* 80211-dca-acktimeout
+	 * param1: slrc
+	 */
+	CallbackLogger<uint32_t> m_acktimeout_trace;
+	/* 80211-dca-ctstimeout
+	 * param1: ssrc
+	 */
+	CallbackLogger<uint32_t> m_ctstimeout_trace;
 };
 
 }; //namespace yans

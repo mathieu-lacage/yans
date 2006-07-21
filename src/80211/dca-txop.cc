@@ -27,6 +27,7 @@
 #include "mac-tx-middle.h"
 #include "packet.h"
 #include "phy-80211.h"
+#include "trace-container.h"
 
 #include <cassert>
 
@@ -230,6 +231,8 @@ void
 DcaTxop::register_traces (TraceContainer *container)
 {
 	m_dcf->register_traces (container);
+	container->register_callback ("80211-dca-acktimeout", &m_acktimeout_trace);
+	container->register_callback ("80211-dca-ctstimeout", &m_ctstimeout_trace);
 }
 
 void 
@@ -446,6 +449,7 @@ DcaTxop::missed_cts (void)
 {
 	TRACE ("missed cts");
 	m_ssrc++;
+	m_ctstimeout_trace (m_ssrc);
 	if (m_ssrc > parameters ()->get_max_ssrc ()) {
 		// to reset the dcf.
 		m_dcf->reset_cw ();
@@ -482,6 +486,7 @@ DcaTxop::missed_ack (void)
 {
 	TRACE ("missed ack");
 	m_slrc++;
+	m_acktimeout_trace (m_slrc);
 	if (m_slrc > parameters ()->get_max_slrc ()) {
 		// to reset the dcf.		
 		m_dcf->reset_cw ();

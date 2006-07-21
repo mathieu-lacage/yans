@@ -56,18 +56,22 @@ advance (StaticPosition *a)
 	Simulator::schedule_rel_s (1.0, make_event (&advance, a));
 }
 
+
 class Interface80211Logger {
 public:
 	Interface80211Logger (std::ostream *os, std::string line);
 	void register_traces (TraceContainer *container);
-	void register_dca_traces (std::string dca, TraceContainer *container);
+	void register_dca_traces (TraceContainer *container);
 private:
 	void notify_end_sync (bool rx_status);
 	void notify_start_rx (uint64_t duration_us, double energy_w);
 	void notify_start_sync (uint64_t duration_us, double energy_w);
 	void notify_start_cca_busy (uint64_t duration_us);
 	void notify_start_tx (uint64_t duration_us, uint32_t tx_mode, double tx_power);
-	
+	void notify_cw (uint64_t ov, uint64_t nv);
+	void notify_backoff (uint64_t duration_us);
+	void notify_acktimeout (uint32_t slrc);
+	void notify_ctstimeout (uint32_t ssrc);
 private:
 	int64_t m_last_idle_start;
 	std::ostream *m_os;
@@ -94,16 +98,37 @@ Interface80211Logger::register_traces (TraceContainer *container)
 	container->set_callback ("80211-tx-start",
 				 make_callback (&Interface80211Logger::notify_start_tx, this));
 }
-static void
-notify_cw (std::string line, uint64_t old_cw, uint64_t new_cw)
+void
+Interface80211Logger::notify_cw (uint64_t old_cw, uint64_t new_cw)
 {
-	std::cout << "event "<<line<<" ap-cw "<<new_cw<<std::endl;
+	(*m_os) << "event "<<m_line<<" cw-"<<new_cw<<" "<<Simulator::now_us ()<<std::endl;
+}
+void
+Interface80211Logger::notify_backoff (uint64_t duration_us)
+{
+	(*m_os) << "event "<<m_line<<" bk-"<<duration_us<<" "<<Simulator::now_us ()<<std::endl;
 }
 void 
-Interface80211Logger::register_dca_traces (std::string dca, TraceContainer *container)
+Interface80211Logger::notify_acktimeout (uint32_t slrc)
+{
+	(*m_os) << "event "<<m_line<<" acktimeout-"<<slrc<< " "<<Simulator::now_us ()<<std::endl;
+}
+void 
+Interface80211Logger::notify_ctstimeout (uint32_t ssrc)
+{
+	(*m_os) << "event "<<m_line<<" ctstimeout-"<<ssrc<< " "<<Simulator::now_us ()<<std::endl;
+}
+void 
+Interface80211Logger::register_dca_traces (TraceContainer *container)
 {
 	container->set_ui_variable_callback ("80211-dcf-cw", 
-					     make_bound_callback (&notify_cw, m_line));
+					     make_callback (&Interface80211Logger::notify_cw, this));
+	container->set_callback ("80211-dcf-backoff",
+				 make_callback (&Interface80211Logger::notify_backoff, this));
+	container->set_callback ("80211-dca-acktimeout",
+				 make_callback (&Interface80211Logger::notify_acktimeout, this));
+	container->set_callback ("80211-dca-ctstimeout",
+				 make_callback (&Interface80211Logger::notify_ctstimeout, this));
 }
 void 
 Interface80211Logger::notify_end_sync (bool rx_status)
@@ -263,18 +288,24 @@ int main (int argc, char *argv[])
 	std::ofstream my_output;
 	my_output.open ("ap-phy.trace");
 	TraceContainer tracer;
-	wifi_ap->register_traces (&tracer);
 	//tracer.print_debug ();
 	Interface80211Logger logger_ap = Interface80211Logger (&my_output, "ap");
+	wifi_ap->register_traces (&tracer);
 	logger_ap.register_traces (&tracer);
 	wifi_ap->register_dca_traces (&tracer);
-	logger_ap.register_dca_traces ("ap", &tracer);
-	wifi_client->register_traces (&tracer);
+	logger_ap.register_dca_traces (&tracer);
+
 	Interface80211Logger logger_sta1 = Interface80211Logger (&my_output, "sta1");
+	wifi_client->register_traces (&tracer);
 	logger_sta1.register_traces (&tracer);
-	wifi_server->register_traces (&tracer);
+	wifi_client->register_dca_traces (&tracer);
+	logger_sta1.register_dca_traces (&tracer);
+
 	Interface80211Logger logger_sta2 = Interface80211Logger (&my_output, "sta2");
+	wifi_server->register_traces (&tracer);
 	logger_sta2.register_traces (&tracer);
+	wifi_server->register_dca_traces (&tracer);
+	logger_sta2.register_dca_traces (&tracer);
 
 
 	/* run simulation */

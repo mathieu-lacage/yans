@@ -130,7 +130,8 @@ private:
 	uint64_t m_last_busy_duration;
 	bool m_rxing;
 	bool m_sleeping;
-	/* param1: backoff duration (us)
+	/* "80211-dcf-backoff"
+	 * param1: backoff duration (us)
 	 * reports the start of a backoff
 	 */
 	CallbackLogger<uint64_t> m_backoff_trace;
