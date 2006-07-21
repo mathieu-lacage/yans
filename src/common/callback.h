@@ -133,6 +133,37 @@ private:
 	T m_functor;
 };
 
+// an impl for Bound Functors:
+template <typename T, typename R, typename TX, typename T1, typename T2, typename T3, typename T4,typename T5>
+class BoundFunctorCallbackImpl : public CallbackImpl<R,T1,T2,T3,T4,T5> {
+public:
+	BoundFunctorCallbackImpl (T const &functor, TX a)
+		: m_functor (functor), m_a (a) {}
+	virtual ~BoundFunctorCallbackImpl () {}
+	R operator() (void) {
+		return m_functor (m_a);
+	}
+	R operator() (T1 a1) {
+		return m_functor (m_a,a1);
+	}
+	R operator() (T1 a1,T2 a2) {
+		return m_functor (m_a,a1,a2);
+	}
+	R operator() (T1 a1,T2 a2,T3 a3) {
+		return m_functor (m_a,a1,a2,a3);
+	}
+	R operator() (T1 a1,T2 a2,T3 a3,T4 a4) {
+		return m_functor (m_a,a1,a2,a3,a4);
+	}
+	R operator() (T1 a1,T2 a2,T3 a3,T4 a4,T5 a5) {
+		return m_functor (m_a,a1,a2,a3,a4,a5);
+	}
+private:
+	T m_functor;
+	TX m_a;
+};
+
+
 // an impl for pointer to member functions
 template <typename OBJ_PTR, typename MEM_PTR, typename R, typename T1, typename T2, typename T3, typename T4, typename T5>
 class MemPtrCallbackImpl : public CallbackImpl<R,T1,T2,T3,T4,T5> {
@@ -162,7 +193,6 @@ private:
 	OBJ_PTR const m_obj_ptr;
 	MEM_PTR m_mem_ptr;
 };
-
 
 /**
  * \brief Callback template class
@@ -208,7 +238,7 @@ public:
 		: m_impl (new MemPtrCallbackImpl<OBJ_PTR,MEM_PTR,R,T1,T2,T3,T4,T5> (obj_ptr, mem_ptr))
 	{}
 
-	Callback (ReferenceList<CallbackImpl<R,T1,T2,T3,T4,T5> *> const &impl) 
+	Callback (ReferenceList<CallbackImpl<R,T1,T2,T3,T4,T5> *> const &impl)
 		: m_impl (impl)
 	{}
 
@@ -446,6 +476,41 @@ template <typename R, typename T1, typename T2,typename T3,typename T4,typename 
 Callback<R,T1,T2,T3,T4,T5> make_null_callback (void) {
 	return Callback<R,T1,T2,T3,T4,T5> ();
 }
+
+template <typename R, typename TX, typename T1>
+Callback<R,T1> make_bound_callback (R (*fn_ptr) (TX,T1), TX a) {
+	ReferenceList<CallbackImpl<R,T1,empty,empty,empty,empty>*> impl =
+	ReferenceList<CallbackImpl<R,T1,empty,empty,empty,empty>*> (
+	new BoundFunctorCallbackImpl<R (*) (TX,T1),R,TX,T1,empty,empty,empty,empty> (fn_ptr, a)
+	);
+	return Callback<R,T1> (impl);
+}
+template <typename R, typename TX, typename T1, typename T2>
+Callback<R,T1,T2> make_bound_callback (R (*fn_ptr) (TX,T1,T2), TX a) {
+	ReferenceList<CallbackImpl<R,T1,T2,empty,empty,empty>*> impl =
+	ReferenceList<CallbackImpl<R,T1,T2,empty,empty,empty>*> (
+	new BoundFunctorCallbackImpl<R (*) (TX,T1,T2),R,TX,T1,T2,empty,empty,empty> (fn_ptr, a)
+	);
+	return Callback<R,T1,T2> (impl);
+}
+template <typename R, typename TX, typename T1, typename T2,typename T3,typename T4>
+Callback<R,T1,T2,T3,T4> make_bound_callback (R (*fn_ptr) (TX,T1,T2,T3,T4), TX a) {
+	ReferenceList<CallbackImpl<R,T1,T2,T3,T4,empty>*> impl =
+	ReferenceList<CallbackImpl<R,T1,T2,T3,T4,empty>*> (
+	new BoundFunctorCallbackImpl<R (*) (TX,T1,T2,T3,T4),R,TX,T1,T2,T3,T4,empty> (fn_ptr, a)
+	);
+	return Callback<R,T1,T2,T3,T4> (impl);
+}
+
+template <typename R, typename TX, typename T1, typename T2,typename T3,typename T4,typename T5>
+Callback<R,T1,T2,T3,T4,T5> make_bound_callback (R (*fn_ptr) (TX,T1,T2,T3,T4,T5), TX a) {
+	ReferenceList<CallbackImpl<R,T1,T2,T3,T4,T5>*> impl =
+	ReferenceList<CallbackImpl<R,T1,T2,T3,T4,T5>*> (
+	new BoundFunctorCallbackImpl<R (*) (TX,T1,T2,T3,T4,T5),R,TX,T1,T2,T3,T4,T5> (fn_ptr, a)
+	);
+	return Callback<R,T1,T2,T3,T4,T5> (impl);
+}
+
 
 }; // namespace yans
 
