@@ -89,6 +89,8 @@ public:
 	virtual MacAddress get_bssid (void) const;
 	virtual Ssid get_ssid (void) const;
 	void set_ssid (Ssid ssid);
+
+	void register_dca_traces (TraceContainer *container);
 private:
 	virtual void real_send (PacketPtr packet, MacAddress to);
 	friend class NetworkInterface80211Factory;
@@ -105,6 +107,7 @@ public:
 	virtual MacAddress get_bssid (void) const;
 	virtual Ssid get_ssid (void) const;
 	void start_active_association (Ssid ssid);
+	void register_dca_traces (TraceContainer *container);
 private:
 	void associated (void);
 	virtual void real_send (PacketPtr packet, MacAddress to);
@@ -122,7 +125,8 @@ public:
 	virtual MacAddress get_bssid (void) const;
 	virtual Ssid get_ssid (void) const;
 	void set_ssid (Ssid ssid);
-	
+	void register_dca_traces (TraceContainer *container);
+
 private:
 	virtual void real_send (PacketPtr packet, MacAddress to);
 	friend class NetworkInterface80211Factory;
