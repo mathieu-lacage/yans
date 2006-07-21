@@ -101,22 +101,22 @@ Interface80211Logger::register_traces (TraceContainer *container)
 void
 Interface80211Logger::notify_cw (uint64_t old_cw, uint64_t new_cw)
 {
-	(*m_os) << "event "<<m_line<<" cw-"<<new_cw<<" "<<Simulator::now_us ()<<std::endl;
+	(*m_os) << "event-int "<<m_line<<" cw "<<new_cw<<" "<<Simulator::now_us ()<<std::endl;
 }
 void
 Interface80211Logger::notify_backoff (uint64_t duration_us)
 {
-	(*m_os) << "event "<<m_line<<" bk-"<<duration_us<<" "<<Simulator::now_us ()<<std::endl;
+	(*m_os) << "event-int "<<m_line<<" bk "<<duration_us<<" "<<Simulator::now_us ()<<std::endl;
 }
 void 
 Interface80211Logger::notify_acktimeout (uint32_t slrc)
 {
-	(*m_os) << "event "<<m_line<<" acktimeout-"<<slrc<< " "<<Simulator::now_us ()<<std::endl;
+	(*m_os) << "event-int "<<m_line<<" acktimeout "<<slrc<< " "<<Simulator::now_us ()<<std::endl;
 }
 void 
 Interface80211Logger::notify_ctstimeout (uint32_t ssrc)
 {
-	(*m_os) << "event "<<m_line<<" ctstimeout-"<<ssrc<< " "<<Simulator::now_us ()<<std::endl;
+	(*m_os) << "event-int "<<m_line<<" ctstimeout "<<ssrc<< " "<<Simulator::now_us ()<<std::endl;
 }
 void 
 Interface80211Logger::register_dca_traces (TraceContainer *container)
@@ -140,7 +140,7 @@ Interface80211Logger::notify_end_sync (bool rx_status)
 	} else {
 		status = "fail";
 	}
-	(*m_os) << "event "<<m_line<<" rx-" << status <<" "<<now<<std::endl;
+	(*m_os) << "event-str "<<m_line<<" phy-rx " << status <<" "<<now<<std::endl;
 }
 void 
 Interface80211Logger::notify_start_rx (uint64_t duration_us, double energy_w)
@@ -152,10 +152,10 @@ Interface80211Logger::notify_start_sync (uint64_t duration_us, double energy_w)
 {
 	uint64_t now = Simulator::now_us ();
 	if (m_last_idle_start != -1 && m_last_idle_start < (int64_t)now) {
-		(*m_os) << "range "<<m_line<<" idle "<<m_last_idle_start<<" "<<now<<std::endl;
+		(*m_os) << "range "<<m_line<<" phy-state idle "<<m_last_idle_start<<" "<<now<<std::endl;
 		m_last_idle_start = -1;
 	}
-	(*m_os) << "range "<<m_line<<" sync "<<now<<" "<<now+duration_us<<std::endl;
+	(*m_os) << "range "<<m_line<<" phy-state sync "<<now<<" "<<now+duration_us<<std::endl;
 	if (m_last_idle_start < (int64_t)(now+duration_us)) {
 		m_last_idle_start = now+duration_us;
 	}
@@ -165,10 +165,10 @@ Interface80211Logger::notify_start_cca_busy (uint64_t duration_us)
 {
 	uint64_t now = Simulator::now_us ();
 	if (m_last_idle_start != -1 && m_last_idle_start < (int64_t)now) {
-		(*m_os) << "range "<<m_line<<" idle "<<m_last_idle_start<<" "<<now<<std::endl;
+		(*m_os) << "range "<<m_line<<" phy-state idle "<<m_last_idle_start<<" "<<now<<std::endl;
 		m_last_idle_start = -1;
 	}
-	(*m_os) << "range "<<m_line<<" cca-busy "<<now<<" "<<now+duration_us<<std::endl;
+	(*m_os) << "range "<<m_line<<" phy-state cca-busy "<<now<<" "<<now+duration_us<<std::endl;
 	if (m_last_idle_start < (int64_t)(now+duration_us)) {
 		m_last_idle_start = now+duration_us;
 	}
@@ -177,13 +177,13 @@ void
 Interface80211Logger::notify_start_tx (uint64_t duration_us, uint32_t tx_mode, double tx_power)
 {
 	uint64_t now = Simulator::now_us ();
-	(*m_os) << "event "<<m_line<<" tx-" << (tx_mode/1000000)<<" "<<now<<std::endl;
+	(*m_os) << "event-int "<<m_line<<" tx " << (tx_mode/1000000)<<" "<<now<<std::endl;
 	//(*m_os) << "event "<<m_line<<" tx-power " << tx_power<<std::endl;
 	if (m_last_idle_start != -1 && m_last_idle_start < (int64_t)now) {
-		(*m_os) << "range "<<m_line<<" idle "<<m_last_idle_start<<" "<<now<<std::endl;
+		(*m_os) << "range "<<m_line<<" phy-state idle "<<m_last_idle_start<<" "<<now<<std::endl;
 		m_last_idle_start = -1;
 	}
-	(*m_os) << "range "<<m_line<<" tx "<<now<<" "<<now+duration_us<<std::endl;
+	(*m_os) << "range "<<m_line<<" phy-state tx "<<now<<" "<<now+duration_us<<std::endl;
 	if (m_last_idle_start < (int64_t)(now+duration_us)) {
 		m_last_idle_start = now+duration_us;
 	}
