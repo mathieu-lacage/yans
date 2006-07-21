@@ -107,6 +107,11 @@ NetworkInterface80211Adhoc::set_ssid (Ssid ssid)
 	m_ssid = ssid;
 }
 void 
+NetworkInterface80211Adhoc::register_dca_traces (TraceContainer *container)
+{
+	m_dca->register_traces (container);
+}
+void 
 NetworkInterface80211Adhoc::real_send (PacketPtr packet, MacAddress to)
 {
 	m_high->enqueue (packet, to);
@@ -137,6 +142,11 @@ NetworkInterface80211Nqsta::start_active_association (Ssid ssid)
 {
 	m_ssid = ssid;
 	m_high->start_active_association ();
+}
+void 
+NetworkInterface80211Nqsta::register_dca_traces (TraceContainer *container)
+{
+	m_dca->register_traces (container);
 }
 void 
 NetworkInterface80211Nqsta::real_send (PacketPtr packet, MacAddress to)
@@ -172,6 +182,11 @@ void
 NetworkInterface80211Nqap::set_ssid (Ssid ssid)
 {
 	m_ssid = ssid;
+}
+void 
+NetworkInterface80211Nqap::register_dca_traces (TraceContainer *container)
+{
+	m_dca->register_traces (container);
 }
 void 
 NetworkInterface80211Nqap::real_send (PacketPtr packet, MacAddress to)
