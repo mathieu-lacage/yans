@@ -809,7 +809,7 @@ class GtkGraphicRenderer (gtk.DrawingArea):
                 self.__moving_left_cur = x+width
             else:
                 self.__moving_left_cur = event.x
-            self.queue_draw ()
+            self.queue_draw_area (0, int(y), int(self.__width), int(height))
             return True
         if self.__moving_right:
             if event.x >= self.__width:
@@ -818,7 +818,7 @@ class GtkGraphicRenderer (gtk.DrawingArea):
                 self.__moving_right_cur = x
             else:
                 self.__moving_right_cur = event.x
-            self.queue_draw ()
+            self.queue_draw_area (0, int(y), int(self.__width), int(height))
             return True
         if self.__moving_both:
             cur_e = self.__width - (x + width - self.__moving_both_start)
@@ -829,7 +829,7 @@ class GtkGraphicRenderer (gtk.DrawingArea):
                 self.__moving_both_cur = cur_e
             else:
                 self.__moving_both_cur = event.x
-            self.queue_draw ()
+            self.queue_draw_area (0, int(y), int(self.__width), int(height))
             return True
         if self.__moving_top:
             self.__moving_top_cur = event.x
