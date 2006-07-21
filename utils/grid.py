@@ -24,6 +24,10 @@ class EventInt:
     def __init__ (self, at = 0, value = 0.0):
         self.at = at
         self.value = value
+def ranges_cmp (a, b):
+    return a.start - b.start
+def events_cmp (a,b):
+    return a.at - b.at
 class TimelineDataRange:
     def __init__ (self, name = ''):
         self.name = name
@@ -58,7 +62,7 @@ class TimelineDataRange:
         else:
             return self.ranges[s:e+1]
     def sort (self):
-        self.ranges.sort ()
+        self.ranges.sort (ranges_cmp)
     def get_bounds (self):
         if len (self.ranges) > 0:
             lo = self.ranges[0].start
@@ -90,7 +94,7 @@ class TimelineEvent:
         e = self.__search (end)
         return self.events[s:e+1]
     def sort (self):
-        self.events.sort ()
+        self.events.sort (events_cmp)
     def get_bounds (self):
         if len (self.events) > 0:
             lo = self.events[0].at
@@ -366,11 +370,13 @@ class TimelinesRenderer:
                            width, height+self.padding)
             ctx.set_source_rgb (0.9,0.9,0.9)
             ctx.fill ()
-        last_x_drawn = int (x)
+        last_x_drawn = int (x-1)
         for data_range in ranges.get_ranges (self.start, self.end):
-            x_start = int (x + (data_range.start - self.start) * width / (self.end - self.start))
-            x_end = int (x + (data_range.end - self.start) * width / (self.end - self.start))
-            if x_start > last_x_drawn:
+            s = max (data_range.start, self.start)
+            e = min (data_range.end, self.end)
+            x_start = int (x + (s - self.start) * width / (self.end - self.start))
+            x_end = int (x + (e - self.start) * width / (self.end - self.start))
+            if x_end > last_x_drawn:
                 ctx.rectangle (x_start, y, x_end - x_start, 10)
                 ctx.set_source_rgb (0,0,0)
                 ctx.stroke_preserve ()
