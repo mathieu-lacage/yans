@@ -56,44 +56,57 @@ advance (StaticPosition *a)
 	Simulator::schedule_rel_s (1.0, make_event (&advance, a));
 }
 
-class Phy80211StateLogger {
+class Interface80211Logger {
 public:
-	Phy80211StateLogger (std::ostream *os, std::string line);
+	Interface80211Logger (std::ostream *os, std::string line);
 	void register_traces (TraceContainer *container);
+	void register_dca_traces (std::string dca, TraceContainer *container);
 private:
 	void notify_end_sync (bool rx_status);
 	void notify_start_rx (uint64_t duration_us, double energy_w);
 	void notify_start_sync (uint64_t duration_us, double energy_w);
 	void notify_start_cca_busy (uint64_t duration_us);
 	void notify_start_tx (uint64_t duration_us, uint32_t tx_mode, double tx_power);
+	
 private:
 	int64_t m_last_idle_start;
 	std::ostream *m_os;
 	std::string m_line;
 };
 
-Phy80211StateLogger::Phy80211StateLogger (std::ostream *os, std::string line)
+Interface80211Logger::Interface80211Logger (std::ostream *os, std::string line)
 	: m_last_idle_start (-1),
 	  m_os (os),
 	  m_line (line)
 {}
 
 void 
-Phy80211StateLogger::register_traces (TraceContainer *container)
+Interface80211Logger::register_traces (TraceContainer *container)
 {
 	container->set_callback ("80211-sync-end",
-				 make_callback (&Phy80211StateLogger::notify_end_sync, this));
+				 make_callback (&Interface80211Logger::notify_end_sync, this));
 	container->set_callback ("80211-rx-start",
-				 make_callback (&Phy80211StateLogger::notify_start_rx, this));
+				 make_callback (&Interface80211Logger::notify_start_rx, this));
 	container->set_callback ("80211-sync-start",
-				 make_callback (&Phy80211StateLogger::notify_start_sync, this));
+				 make_callback (&Interface80211Logger::notify_start_sync, this));
 	container->set_callback ("80211-cca-busy-start",
-				 make_callback (&Phy80211StateLogger::notify_start_cca_busy, this));
+				 make_callback (&Interface80211Logger::notify_start_cca_busy, this));
 	container->set_callback ("80211-tx-start",
-				 make_callback (&Phy80211StateLogger::notify_start_tx, this));
+				 make_callback (&Interface80211Logger::notify_start_tx, this));
+}
+static void
+notify_cw (std::string line, uint64_t old_cw, uint64_t new_cw)
+{
+	std::cout << "event "<<line<<" ap-cw "<<new_cw<<std::endl;
 }
 void 
-Phy80211StateLogger::notify_end_sync (bool rx_status)
+Interface80211Logger::register_dca_traces (std::string dca, TraceContainer *container)
+{
+	container->set_ui_variable_callback ("80211-dcf-cw", 
+					     make_bound_callback (&notify_cw, m_line));
+}
+void 
+Interface80211Logger::notify_end_sync (bool rx_status)
 {
 	uint64_t now = Simulator::now_us ();
 	std::string status;
@@ -105,12 +118,12 @@ Phy80211StateLogger::notify_end_sync (bool rx_status)
 	(*m_os) << "event "<<m_line<<" rx-" << status <<" "<<now<<std::endl;
 }
 void 
-Phy80211StateLogger::notify_start_rx (uint64_t duration_us, double energy_w)
+Interface80211Logger::notify_start_rx (uint64_t duration_us, double energy_w)
 {
 	// record event
 }
 void 
-Phy80211StateLogger::notify_start_sync (uint64_t duration_us, double energy_w)
+Interface80211Logger::notify_start_sync (uint64_t duration_us, double energy_w)
 {
 	uint64_t now = Simulator::now_us ();
 	if (m_last_idle_start != -1 && m_last_idle_start < (int64_t)now) {
@@ -123,7 +136,7 @@ Phy80211StateLogger::notify_start_sync (uint64_t duration_us, double energy_w)
 	}
 }
 void 
-Phy80211StateLogger::notify_start_cca_busy (uint64_t duration_us)
+Interface80211Logger::notify_start_cca_busy (uint64_t duration_us)
 {
 	uint64_t now = Simulator::now_us ();
 	if (m_last_idle_start != -1 && m_last_idle_start < (int64_t)now) {
@@ -136,7 +149,7 @@ Phy80211StateLogger::notify_start_cca_busy (uint64_t duration_us)
 	}
 }
 void 
-Phy80211StateLogger::notify_start_tx (uint64_t duration_us, uint32_t tx_mode, double tx_power)
+Interface80211Logger::notify_start_tx (uint64_t duration_us, uint32_t tx_mode, double tx_power)
 {
 	uint64_t now = Simulator::now_us ();
 	(*m_os) << "event "<<m_line<<" tx-" << (tx_mode/1000000)<<" "<<now<<std::endl;
@@ -252,13 +265,15 @@ int main (int argc, char *argv[])
 	TraceContainer tracer;
 	wifi_ap->register_traces (&tracer);
 	//tracer.print_debug ();
-	Phy80211StateLogger logger_ap = Phy80211StateLogger (&my_output, "ap");
+	Interface80211Logger logger_ap = Interface80211Logger (&my_output, "ap");
 	logger_ap.register_traces (&tracer);
+	wifi_ap->register_dca_traces (&tracer);
+	logger_ap.register_dca_traces ("ap", &tracer);
 	wifi_client->register_traces (&tracer);
-	Phy80211StateLogger logger_sta1 = Phy80211StateLogger (&my_output, "sta1");
+	Interface80211Logger logger_sta1 = Interface80211Logger (&my_output, "sta1");
 	logger_sta1.register_traces (&tracer);
 	wifi_server->register_traces (&tracer);
-	Phy80211StateLogger logger_sta2 = Phy80211StateLogger (&my_output, "sta2");
+	Interface80211Logger logger_sta2 = Interface80211Logger (&my_output, "sta2");
 	logger_sta2.register_traces (&tracer);
 
 
