@@ -32,6 +32,7 @@ public:
 	typedef Callback<void,double, double> ChangeNotifyCallback;
 
 	FTracedVariableBase () {}
+	FTracedVariableBase (FTracedVariableBase const &o) {}
 	FTracedVariableBase &operator = (FTracedVariableBase const &o) {
 		return *this;
 	}

@@ -31,12 +31,15 @@ class UiTracedVariableBase {
 public:
 	typedef Callback<void, uint64_t, uint64_t> ChangeNotifyCallback;
 
-	UiTracedVariableBase () {}
+	UiTracedVariableBase ()
+		: m_callback () {}
+	/* We don't want to copy the base callback. Only set_callback on
+	 * a specific instance will do something to it. */
+	UiTracedVariableBase (UiTracedVariableBase const &o) 
+		: m_callback () {}
 	UiTracedVariableBase &operator = (UiTracedVariableBase const &o) {
 		return *this;
 	}
-
-
 	~UiTracedVariableBase () {}
 
 	void set_callback(ChangeNotifyCallback callback) {
@@ -89,6 +92,10 @@ public:
 		: m_var (var)
 	{}
 
+	UiTracedVariable &operator = (UiTracedVariable const &o) {
+		assign (o.get ());
+		return *this;
+	}
 	template <typename TT>
 	UiTracedVariable &operator = (UiTracedVariable<TT> const &o) {
 		assign (o.get ());

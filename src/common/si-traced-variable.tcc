@@ -32,6 +32,7 @@ public:
 	typedef Callback<void,int64_t, int64_t> ChangeNotifyCallback;
 
 	SiTracedVariableBase () {}
+	SiTracedVariableBase (SiTracedVariableBase const &o) {}
 	SiTracedVariableBase &operator = (SiTracedVariableBase const &o) {
 		return *this;
 	}
@@ -89,7 +90,10 @@ public:
 		: m_var (var)
 	{}
 
-
+	SiTracedVariable &operator = (SiTracedVariable const &o) {
+		assign (o.get ());
+		return *this;
+	}
 	template <typename TT>
 	SiTracedVariable &operator = (SiTracedVariable<TT> const &o) {
 		assign (o.get ());
