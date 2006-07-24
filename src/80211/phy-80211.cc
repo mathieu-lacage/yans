@@ -202,8 +202,8 @@ Phy80211::register_traces (TraceContainer *container)
 	container->register_callback ("80211-rx-start", &m_start_rx_logger);
 	container->register_callback ("80211-sync-start", &m_start_sync_logger);
 	container->register_callback ("80211-sync-end", &m_end_sync_logger);
-	container->register_callback ("80211-cca-busy-start", &m_start_cca_busy_logger);
 	container->register_callback ("80211-tx-start", &m_start_tx_logger);
+	container->register_callback ("80211-phy-state", &m_state_logger);
 }
 
 void 
@@ -281,7 +281,6 @@ Phy80211::receive_packet (ConstPacketPtr packet,
  maybe_cca_busy:
 
 	if (rx_power_w > m_ed_threshold_w) {
-		m_start_cca_busy_logger (rx_duration_us);
 		switch_to_cca_busy (rx_duration_us);
 		notify_cca_busy_start (rx_duration_us);
 	} else {
@@ -298,7 +297,6 @@ Phy80211::receive_packet (ConstPacketPtr packet,
 			end = i->get_time_us ();
 		}
 		if (end > now_us ()) {
-			m_start_cca_busy_logger (end - now_us ());
 			switch_to_cca_busy (end - now_us ());
 			notify_cca_busy_start (end - now_us ());
 		}

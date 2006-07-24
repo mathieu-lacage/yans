@@ -214,15 +214,17 @@ private:
 	 */
 	CallbackLogger<uint64_t,double> m_start_sync_logger;
 	/* param1: duration (us)
-	 * Invoked whenever we are idle but CCA says we are busy.
-	 */
-	CallbackLogger<uint64_t> m_start_cca_busy_logger;
-	/* param1: duration (us)
 	 * param2: tx mode (bit rate: bit/s)
 	 * param3: tx power (dbm)
 	 * Invoked whenever we send the first bit of a signal.
 	 */
 	CallbackLogger<uint64_t, uint32_t, double> m_start_tx_logger;
+	/* 80211-phy-state
+	 * param1: start (us)
+	 * param2: duration (us)
+	 * param3: state: 0 -> TX, 1 -> SYNC, 2 -> CCA, 3 -> IDLE
+	 */
+	CallbackLogger<uint64_t,uint64_t,uint8_t> m_state_logger;
 };
 
 }; // namespace yans
