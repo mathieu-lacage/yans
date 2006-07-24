@@ -156,10 +156,11 @@ private:
 	void notify_sync_end_ok (void);
 	void notify_sync_end_error (void);
 	void notify_cca_busy_start (uint64_t duration_us);
+	void log_previous_idle_and_cca_busy_states (void);
 	void switch_to_tx (uint64_t tx_duration_us);
 	void switch_to_sync (uint64_t sync_duration_us);
 	void switch_from_sync (void);
-	void switch_to_cca_busy (uint64_t duration_us);
+	void switch_maybe_to_cca_busy (uint64_t duration_us);
 	void append_event (RxEvent *event);
 	double calculate_noise_interference_w (RxEvent *event, NiChanges *ni) const;
 	double calculate_snr (double signal, double noise_interference, TransmissionMode *mode) const;
@@ -184,6 +185,9 @@ private:
 	uint64_t m_end_tx_us;
 	uint64_t m_end_sync_us;
 	uint64_t m_end_cca_busy_us;
+	uint64_t m_start_tx_us;
+	uint64_t m_start_sync_us;
+	uint64_t m_start_cca_busy_us;
 	uint64_t m_previous_state_change_time_us;
 
 	PropagationModel *m_propagation;

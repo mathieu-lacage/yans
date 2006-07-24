@@ -67,7 +67,6 @@ private:
 	void notify_end_sync (bool rx_status);
 	void notify_start_rx (uint64_t duration_us, double energy_w);
 	void notify_start_sync (uint64_t duration_us, double energy_w);
-	void notify_start_cca_busy (uint64_t duration_us);
 	void notify_start_tx (uint64_t duration_us, uint32_t tx_mode, double tx_power);
 	void notify_cw (uint64_t ov, uint64_t nv);
 	void notify_backoff (uint64_t duration_us);
@@ -92,10 +91,10 @@ Interface80211Logger::register_traces (TraceContainer *container)
 				 make_callback (&Interface80211Logger::notify_start_rx, this));
 	container->set_callback ("80211-sync-start",
 				 make_callback (&Interface80211Logger::notify_start_sync, this));
-	container->set_callback ("80211-cca-busy-start",
-				 make_callback (&Interface80211Logger::notify_start_cca_busy, this));
 	container->set_callback ("80211-tx-start",
 				 make_callback (&Interface80211Logger::notify_start_tx, this));
+	container->set_callback ("80211-phy-state",
+				 make_callback (&Interface80211Logger::notify_state, this));
 }
 void
 Interface80211Logger::notify_cw (uint64_t old_cw, uint64_t new_cw)
@@ -140,7 +139,7 @@ Interface80211Logger::notify_state (uint64_t start, uint64_t duration, uint8_t s
 		(*m_os) << "range "<<m_line<<" phy-state sync "<<start<<" "<<start+duration<<std::endl;
 		break;
 	case 2:
-		(*m_os) << "range "<<m_line<<" phy-state cca-busy"<<start<<" "<<start+duration<<std::endl;
+		(*m_os) << "range "<<m_line<<" phy-state cca-busy "<<start<<" "<<start+duration<<std::endl;
 		break;
 	case 3:
 		(*m_os) << "range "<<m_line<<" phy-state idle "<<start<<" "<<start+duration<<std::endl;
@@ -166,9 +165,6 @@ Interface80211Logger::notify_start_rx (uint64_t duration_us, double energy_w)
 }
 void 
 Interface80211Logger::notify_start_sync (uint64_t duration_us, double energy_w)
-{}
-void 
-Interface80211Logger::notify_start_cca_busy (uint64_t duration_us)
 {}
 void 
 Interface80211Logger::notify_start_tx (uint64_t duration_us, uint32_t tx_mode, double tx_power)
