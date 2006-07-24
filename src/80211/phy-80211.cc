@@ -229,6 +229,7 @@ Phy80211::receive_packet (ConstPacketPtr packet,
 			  uint8_t stuff)
 {
 	uint64_t rx_duration_us = calculate_tx_duration_us (packet->get_size (), tx_mode);
+	uint64_t end_rx = now_us () + rx_duration_us;
 	rx_duration_us -= m_propagation->get_rx_delay ();
 	m_start_rx_logger (rx_duration_us, rx_power_w);
 
@@ -242,14 +243,14 @@ Phy80211::receive_packet (ConstPacketPtr packet,
 	case Phy80211::SYNC:
 		TRACE ("drop packet because already in sync (power="<<
 		       rx_power_w<<"W)");
-		if (rx_duration_us > m_end_sync_us) {
+		if (end_rx > m_end_sync_us) {
 			goto maybe_cca_busy;
 		}
 		break;
 	case Phy80211::TX:
 		TRACE ("drop packet because already in tx (power="<<
 		       rx_power_w<<"W)");
-		if (rx_duration_us > m_end_tx_us) {
+		if (end_rx > m_end_tx_us) {
 			goto maybe_cca_busy;
 		}
 		break;
