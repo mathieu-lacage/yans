@@ -379,6 +379,7 @@ class TimelinesRenderer:
                 ctx.move_to (real_x, y+self.max_text_height)
                 ctx.set_source_rgb (0,0,0)
                 ctx.show_text (str (event.value))
+                last_x_drawn = real_x
         self.grey_background += 1
     def draw_ranges (self, ctx, ranges, x, y, width, height):
         if (self.grey_background % 2) == 0:
