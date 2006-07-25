@@ -176,6 +176,11 @@ Phy80211::NiChange::operator < (Phy80211::NiChange const &o) const
 Phy80211::Phy80211 ()
 	: m_syncing (false),
 	  m_end_tx_us (0),
+	  m_end_sync_us (0),
+	  m_end_cca_busy_us (0),
+	  m_start_tx_us (0),
+	  m_start_sync_us (0),
+	  m_start_cca_busy_us (0),
 	  m_previous_state_change_time_us (0),
 	  m_end_sync_event (),
 	  m_random (new RandomUniform ())
@@ -202,8 +207,8 @@ Phy80211::register_traces (TraceContainer *container)
 	container->register_callback ("80211-rx-start", &m_start_rx_logger);
 	container->register_callback ("80211-sync-start", &m_start_sync_logger);
 	container->register_callback ("80211-sync-end", &m_end_sync_logger);
-	container->register_callback ("80211-cca-busy-start", &m_start_cca_busy_logger);
 	container->register_callback ("80211-tx-start", &m_start_tx_logger);
+	container->register_callback ("80211-phy-state", &m_state_logger);
 }
 
 void 
@@ -229,6 +234,7 @@ Phy80211::receive_packet (ConstPacketPtr packet,
 			  uint8_t stuff)
 {
 	uint64_t rx_duration_us = calculate_tx_duration_us (packet->get_size (), tx_mode);
+	uint64_t end_rx = now_us () + rx_duration_us;
 	rx_duration_us -= m_propagation->get_rx_delay ();
 	m_start_rx_logger (rx_duration_us, rx_power_w);
 
@@ -242,14 +248,14 @@ Phy80211::receive_packet (ConstPacketPtr packet,
 	case Phy80211::SYNC:
 		TRACE ("drop packet because already in sync (power="<<
 		       rx_power_w<<"W)");
-		if (rx_duration_us > m_end_sync_us) {
+		if (end_rx > m_end_sync_us) {
 			goto maybe_cca_busy;
 		}
 		break;
 	case Phy80211::TX:
 		TRACE ("drop packet because already in tx (power="<<
 		       rx_power_w<<"W)");
-		if (rx_duration_us > m_end_tx_us) {
+		if (end_rx > m_end_tx_us) {
 			goto maybe_cca_busy;
 		}
 		break;
@@ -280,8 +286,7 @@ Phy80211::receive_packet (ConstPacketPtr packet,
  maybe_cca_busy:
 
 	if (rx_power_w > m_ed_threshold_w) {
-		m_start_cca_busy_logger (rx_duration_us);
-		switch_to_cca_busy (rx_duration_us);
+		switch_maybe_to_cca_busy (rx_duration_us);
 		notify_cca_busy_start (rx_duration_us);
 	} else {
 		double threshold = m_ed_threshold_w - rx_power_w;
@@ -297,8 +302,7 @@ Phy80211::receive_packet (ConstPacketPtr packet,
 			end = i->get_time_us ();
 		}
 		if (end > now_us ()) {
-			m_start_cca_busy_logger (end - now_us ());
-			switch_to_cca_busy (end - now_us ());
+			switch_maybe_to_cca_busy (end - now_us ());
 			notify_cca_busy_start (end - now_us ());
 		}
 	}
@@ -314,7 +318,7 @@ Phy80211::send_packet (ConstPacketPtr packet, uint8_t tx_mode, uint8_t tx_power,
 	 *    prevent it.
 	 *  - we are idle
 	 */
-	assert (is_state_idle () || is_state_sync ());
+	assert (!is_state_tx ());
 
 	if (is_state_sync ()) {
 		m_end_sync_event.cancel ();
@@ -520,16 +524,9 @@ Phy80211::state_to_string (enum Phy80211State state)
 enum Phy80211::Phy80211State 
 Phy80211::get_state (void)
 {
-	if (m_end_tx_us != 0 && m_end_tx_us > now_us ()) {
+	if (m_end_tx_us > now_us ()) {
 		return Phy80211::TX;
-	} else if (m_end_tx_us != 0) {
-		/* At one point in the past, we completed
-		 * transmission of this packet.
-		 */
-		m_previous_state_change_time_us = m_end_tx_us;
-		m_end_tx_us = 0;
-	}
-	if (m_syncing) {
+	} else if (m_syncing) {
 		return Phy80211::SYNC;
 	} else if (m_end_cca_busy_us > now_us ()) {
 		return Phy80211::CCA_BUSY;
@@ -627,35 +624,74 @@ Phy80211::notify_cca_busy_start (uint64_t duration_us)
 }
 
 void
+Phy80211::log_previous_idle_and_cca_busy_states (void)
+{
+	uint64_t now = now_us ();
+	uint64_t idle_start = max (m_end_cca_busy_us, m_end_sync_us);
+	idle_start = max (idle_start, m_end_tx_us);
+	assert (idle_start <= now);
+	if (m_end_cca_busy_us > m_end_sync_us && 
+	    m_end_cca_busy_us > m_end_tx_us) {
+		uint64_t cca_busy_start = max (m_end_tx_us, m_end_sync_us);
+		cca_busy_start = max (cca_busy_start, m_start_cca_busy_us);
+			m_state_logger (cca_busy_start, idle_start - cca_busy_start, 2);
+	}
+	m_state_logger (idle_start, now - idle_start, 3);
+}
+
+void
 Phy80211::switch_to_tx (uint64_t tx_duration_us)
 {
-	assert (m_end_tx_us == 0);
+	uint64_t now = now_us ();
 	switch (get_state ()) {
 	case Phy80211::SYNC:
 		/* The packet which is being received as well
 		 * as its end_sync event are cancelled by the caller.
 		 */
 		m_syncing = false;
+		m_state_logger (m_start_sync_us, now - m_start_sync_us, 1);
 		break;
-	case Phy80211::CCA_BUSY:
-		break;
+	case Phy80211::CCA_BUSY: {
+		uint64_t cca_start = max (m_end_sync_us, m_end_tx_us);
+		cca_start = max (cca_start, m_start_cca_busy_us);
+		m_state_logger (cca_start, now - cca_start, 2);
+	} break;
 	case Phy80211::IDLE:
+		log_previous_idle_and_cca_busy_states ();
 		break;
 	default:
 		assert (false);
 		break;
 	}
-	m_previous_state_change_time_us = now_us ();
-	m_end_tx_us = now_us () + tx_duration_us;
+	m_state_logger (now, tx_duration_us, 0);
+	m_previous_state_change_time_us = now;
+	m_end_tx_us = now + tx_duration_us;
+	m_start_tx_us = now;
 }
 void
 Phy80211::switch_to_sync (uint64_t rx_duration_us)
 {
 	assert (is_state_idle () || is_state_cca_busy ());
 	assert (!m_syncing);
-	m_previous_state_change_time_us = now_us ();
+	uint64_t now = now_us ();
+	switch (get_state ()) {
+	case Phy80211::IDLE:
+		log_previous_idle_and_cca_busy_states ();
+		break;
+	case Phy80211::CCA_BUSY: {
+		uint64_t cca_start = max (m_end_sync_us, m_end_tx_us);
+		cca_start = max (cca_start, m_start_cca_busy_us);
+		m_state_logger (cca_start, now - cca_start, 2);
+	} break;
+	case Phy80211::SYNC:
+	case Phy80211::TX:
+		assert (false);
+		break;
+	}
+	m_previous_state_change_time_us = now;
 	m_syncing = true;
-	m_end_sync_us = now_us () + rx_duration_us;
+	m_start_sync_us = now;
+	m_end_sync_us = now + rx_duration_us;
 	assert (is_state_sync ());
 }
 void
@@ -664,16 +700,30 @@ Phy80211::switch_from_sync (void)
 	assert (is_state_sync ());
 	assert (m_syncing);
 
-	m_previous_state_change_time_us = now_us ();
+	uint64_t now = now_us ();
+	m_state_logger (m_start_sync_us, now - m_start_sync_us, 1);
+	m_previous_state_change_time_us = now;
 	m_syncing = false;
 
 	assert (is_state_idle () || is_state_cca_busy ());
 }
 void
-Phy80211::switch_to_cca_busy (uint64_t duration_us)
+Phy80211::switch_maybe_to_cca_busy (uint64_t duration_us)
 {
-	m_previous_state_change_time_us = now_us ();
-	m_end_cca_busy_us = duration_us;
+	uint64_t now = now_us ();
+	switch (get_state ()) {
+	case Phy80211::IDLE:
+		log_previous_idle_and_cca_busy_states ();
+	break;
+	case Phy80211::CCA_BUSY:
+		break;
+	case Phy80211::SYNC:
+		break;
+	case Phy80211::TX:
+		break;
+	}
+	m_start_cca_busy_us = now;
+	m_end_cca_busy_us = max (m_end_cca_busy_us, now + duration_us);
 }
 
 void 

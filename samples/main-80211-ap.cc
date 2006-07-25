@@ -63,24 +63,22 @@ public:
 	void register_traces (TraceContainer *container);
 	void register_dca_traces (TraceContainer *container);
 private:
+	void notify_state (uint64_t start, uint64_t duration, uint8_t state);
 	void notify_end_sync (bool rx_status);
 	void notify_start_rx (uint64_t duration_us, double energy_w);
 	void notify_start_sync (uint64_t duration_us, double energy_w);
-	void notify_start_cca_busy (uint64_t duration_us);
 	void notify_start_tx (uint64_t duration_us, uint32_t tx_mode, double tx_power);
 	void notify_cw (uint64_t ov, uint64_t nv);
 	void notify_backoff (uint64_t duration_us);
 	void notify_acktimeout (uint32_t slrc);
 	void notify_ctstimeout (uint32_t ssrc);
 private:
-	int64_t m_last_idle_start;
 	std::ostream *m_os;
 	std::string m_line;
 };
 
 Interface80211Logger::Interface80211Logger (std::ostream *os, std::string line)
-	: m_last_idle_start (-1),
-	  m_os (os),
+	: m_os (os),
 	  m_line (line)
 {}
 
@@ -93,10 +91,10 @@ Interface80211Logger::register_traces (TraceContainer *container)
 				 make_callback (&Interface80211Logger::notify_start_rx, this));
 	container->set_callback ("80211-sync-start",
 				 make_callback (&Interface80211Logger::notify_start_sync, this));
-	container->set_callback ("80211-cca-busy-start",
-				 make_callback (&Interface80211Logger::notify_start_cca_busy, this));
 	container->set_callback ("80211-tx-start",
 				 make_callback (&Interface80211Logger::notify_start_tx, this));
+	container->set_callback ("80211-phy-state",
+				 make_callback (&Interface80211Logger::notify_state, this));
 }
 void
 Interface80211Logger::notify_cw (uint64_t old_cw, uint64_t new_cw)
@@ -131,6 +129,24 @@ Interface80211Logger::register_dca_traces (TraceContainer *container)
 				 make_callback (&Interface80211Logger::notify_ctstimeout, this));
 }
 void 
+Interface80211Logger::notify_state (uint64_t start, uint64_t duration, uint8_t state)
+{
+	switch (state) {
+	case 0:
+		(*m_os) << "range "<<m_line<<" phy-state tx "<<start<<" "<<start+duration<<std::endl;
+		break;
+	case 1:
+		(*m_os) << "range "<<m_line<<" phy-state sync "<<start<<" "<<start+duration<<std::endl;
+		break;
+	case 2:
+		(*m_os) << "range "<<m_line<<" phy-state cca-busy "<<start<<" "<<start+duration<<std::endl;
+		break;
+	case 3:
+		(*m_os) << "range "<<m_line<<" phy-state idle "<<start<<" "<<start+duration<<std::endl;
+		break;
+	}
+}
+void 
 Interface80211Logger::notify_end_sync (bool rx_status)
 {
 	uint64_t now = Simulator::now_us ();
@@ -149,44 +165,13 @@ Interface80211Logger::notify_start_rx (uint64_t duration_us, double energy_w)
 }
 void 
 Interface80211Logger::notify_start_sync (uint64_t duration_us, double energy_w)
-{
-	uint64_t now = Simulator::now_us ();
-	if (m_last_idle_start != -1 && m_last_idle_start < (int64_t)now) {
-		(*m_os) << "range "<<m_line<<" phy-state idle "<<m_last_idle_start<<" "<<now<<std::endl;
-		m_last_idle_start = -1;
-	}
-	(*m_os) << "range "<<m_line<<" phy-state sync "<<now<<" "<<now+duration_us<<std::endl;
-	if (m_last_idle_start < (int64_t)(now+duration_us)) {
-		m_last_idle_start = now+duration_us;
-	}
-}
-void 
-Interface80211Logger::notify_start_cca_busy (uint64_t duration_us)
-{
-	uint64_t now = Simulator::now_us ();
-	if (m_last_idle_start != -1 && m_last_idle_start < (int64_t)now) {
-		(*m_os) << "range "<<m_line<<" phy-state idle "<<m_last_idle_start<<" "<<now<<std::endl;
-		m_last_idle_start = -1;
-	}
-	(*m_os) << "range "<<m_line<<" phy-state cca-busy "<<now<<" "<<now+duration_us<<std::endl;
-	if (m_last_idle_start < (int64_t)(now+duration_us)) {
-		m_last_idle_start = now+duration_us;
-	}
-}
+{}
 void 
 Interface80211Logger::notify_start_tx (uint64_t duration_us, uint32_t tx_mode, double tx_power)
 {
 	uint64_t now = Simulator::now_us ();
 	(*m_os) << "event-int "<<m_line<<" tx " << (tx_mode/1000000)<<" "<<now<<std::endl;
 	//(*m_os) << "event "<<m_line<<" tx-power " << tx_power<<std::endl;
-	if (m_last_idle_start != -1 && m_last_idle_start < (int64_t)now) {
-		(*m_os) << "range "<<m_line<<" phy-state idle "<<m_last_idle_start<<" "<<now<<std::endl;
-		m_last_idle_start = -1;
-	}
-	(*m_os) << "range "<<m_line<<" phy-state tx "<<now<<" "<<now+duration_us<<std::endl;
-	if (m_last_idle_start < (int64_t)(now+duration_us)) {
-		m_last_idle_start = now+duration_us;
-	}
 }
 
 
