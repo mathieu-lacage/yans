@@ -175,14 +175,15 @@ Dcf::request_access (void)
 void 
 Dcf::access_timeout ()
 {
-	uint64_t delay_until_access_granted  = get_delay_until_access_granted (now_us ());
-	if (delay_until_access_granted > 0) {
+	update_backoff (now_us ());
+	if (m_backoff_left == 0) {
+		TRACE ("timeout access granted");
+		m_listener->access_granted_now ();
+	} else {
+		uint64_t delay_until_access_granted  = get_delay_until_access_granted (now_us ());
 		TRACE ("timeout access delayed for "<< delay_until_access_granted);
 		m_access_timer_event = make_event (&Dcf::access_timeout, this);
 		Simulator::schedule_rel_us (delay_until_access_granted, m_access_timer_event);
-	} else {
-		TRACE ("timeout access granted");
-		m_listener->access_granted_now ();
 	}
 }
 
