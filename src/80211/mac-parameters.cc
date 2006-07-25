@@ -69,8 +69,6 @@ MacParameters::initialize_80211a (Phy80211 const*phy)
 	m_ack_timeout_us += phy->calculate_tx_duration_us (hdr.get_size (), 0);
 	m_ack_timeout_us += m_max_propagation_delay_us * 2;
 	m_ack_timeout_us += m_slot_us;
-
-	m_rx_tx_turnaround = 1; // must be < 2
 }
 
 void 
@@ -114,11 +112,6 @@ uint64_t
 MacParameters::get_slot_time_us (void) const
 {
 	return m_slot_us;
-}
-uint64_t 
-MacParameters::get_rx_tx_turnaround (void) const
-{
-	return m_rx_tx_turnaround;
 }
 uint64_t 
 MacParameters::get_cts_timeout_us (void) const

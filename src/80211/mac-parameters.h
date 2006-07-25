@@ -44,7 +44,6 @@ public:
 	uint64_t get_pifs_us (void) const;
 	uint64_t get_sifs_us (void) const;
 	uint64_t get_slot_time_us (void) const;
-	uint64_t get_rx_tx_turnaround (void) const;
 
 	uint32_t get_max_ssrc (void) const;
 	uint32_t get_max_slrc (void) const;
@@ -65,7 +64,6 @@ private:
 	uint64_t m_sifs_us;
 	uint64_t m_pifs_us;
 	uint64_t m_slot_us;
-	uint64_t m_rx_tx_turnaround;
 	uint32_t m_max_ssrc;
 	uint32_t m_max_slrc;
 	uint32_t m_rts_cts_threshold;
