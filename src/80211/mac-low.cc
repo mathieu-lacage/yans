@@ -293,7 +293,7 @@ MacLow::start_transmission (PacketPtr packet,
 	m_listener = listener;
 	m_tx_params = parameters;
 
-	assert (m_phy->is_state_idle ());
+	//assert (m_phy->is_state_idle ());
 
 	TRACE ("startTx size="<< get_current_size () << ", to=" << m_current_hdr.get_addr1());
 
