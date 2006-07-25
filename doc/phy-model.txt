@@ -1,0 +1,25 @@
+Things we want to modelize:
+  - capture:  successful reception of the stronger frame in a collision 
+    (if stronger frame arrives within the preamble of the first frame)
+
+  - collision model:
+1) both frames are lost 
+2) the stronger frame is received correctly provided it is sufficiently 
+   stronger and it is the first to arrive
+3) the stronger frame is received correctly provided it is sufficiently
+   stronger, regardless of whether it arrives before or after the weaker
+   frame
+4) SNIR over the signal reception is calculated.
+
+[2] says that 3) is the right model.
+
+  - clock synchronization
+  - rxtx turnaround: 
+
+802.11a: 
+  * CCATime = 3us
+  * RxTxTurnaround = 1us
+
+
+[1] "A General Model and Analysis of Physical Layer Capture in 802.11 Networks"
+[2] "Snifﬁng out the correct Physical Layer Capture model in 802.11b"
