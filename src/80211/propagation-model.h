@@ -56,8 +56,6 @@ public:
 	void set_receive_callback (RxCallback callback);
 
 	void get_position (double &x, double &y, double &z) const;
-	uint64_t get_tx_delay (void) const;
-	uint64_t get_rx_delay (void) const;
 	uint64_t get_prop_delay_us (double from_x, double from_y, double from_z) const;
 	double get_rx_power_w (double tx_power_dbm, double from_x, double from_y, double from_z) const;
 
@@ -67,8 +65,6 @@ public:
 	void receive (ConstPacketPtr packet, double rx_power_w,
 		      uint8_t tx_mode, uint8_t stuff);
 
-	void set_tx_delay (uint64_t tx_delay);
-	void set_rx_delay (uint64_t rx_delay);
 	/* unit: dBm */
 	void set_tx_gain_dbm (double tx_gain);
 	/* unit: dBm */
@@ -89,8 +85,6 @@ private:
 	double m_rx_gain_dbm;
 	double m_system_loss;
 	double m_lambda;
-	uint64_t m_tx_delay;
-	uint64_t m_rx_delay;
 	Position *m_position;
 	BaseChannel80211 *m_channel;
 	static const double PI;

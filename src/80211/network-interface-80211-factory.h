@@ -91,8 +91,6 @@ private:
 	double m_phy_tx_power_end_dbm;
 	uint8_t m_phy_n_tx_power;
 
-	uint64_t m_prop_tx_delay_us;
-	uint64_t m_prop_rx_delay_us;
 	double m_prop_system_loss;
 	double m_prop_tx_gain_dbm;
 	double m_prop_rx_gain_dbm;

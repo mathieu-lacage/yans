@@ -235,7 +235,6 @@ Phy80211::receive_packet (ConstPacketPtr packet,
 {
 	uint64_t rx_duration_us = calculate_tx_duration_us (packet->get_size (), tx_mode);
 	uint64_t end_rx = now_us () + rx_duration_us;
-	rx_duration_us -= m_propagation->get_rx_delay ();
 	m_start_rx_logger (rx_duration_us, rx_power_w);
 
 	RxEvent *event = new RxEvent (packet->get_size (), 
@@ -325,7 +324,6 @@ Phy80211::send_packet (ConstPacketPtr packet, uint8_t tx_mode, uint8_t tx_power,
 	}
 
 	uint64_t tx_duration_us = calculate_tx_duration_us (packet->get_size (), tx_mode);
-	tx_duration_us += m_propagation->get_tx_delay ();
 	m_start_tx_logger (tx_duration_us, get_mode_bit_rate (tx_mode), get_power_dbm (tx_power));
 	notify_tx_start (tx_duration_us);
 	switch_to_tx (tx_duration_us);
@@ -816,7 +814,7 @@ Phy80211::calculate_per (RxEvent const *event, NiChanges *ni) const
 	double psr = 1.0; /* Packet Success Rate */
 	NiChangesI j = ni->begin ();
 	uint64_t previous_us = (*j).get_time_us ();
-	uint64_t plcp_header_start_us = (*j).get_time_us () + m_plcp_preamble_delay_us - m_propagation->get_rx_delay ();
+	uint64_t plcp_header_start_us = (*j).get_time_us () + m_plcp_preamble_delay_us;
 	uint64_t plcp_payload_start_us = plcp_header_start_us + 
 		m_plcp_header_length * get_mode (event->get_header_mode ())->get_data_rate () / 1000000;
 	double noise_interference_w = (*j).get_delta ();
