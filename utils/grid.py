@@ -61,6 +61,17 @@ class TimelineDataRange:
             return self.ranges[s:len (self.ranges)]
         else:
             return self.ranges[s:e+1]
+    def get_ranges_bounds (self, start, end):
+        s = self.__search (start)
+        e = self.__search (end)
+        if s == -1 and e == -1:
+            return (0,0)
+        elif s == -1:
+            return (0,e+1)
+        elif e == -1:
+            return (s, len (self.ranges))
+        else:
+            return (s,e+1)
     def sort (self):
         self.ranges.sort (ranges_cmp)
     def get_bounds (self):
@@ -93,6 +104,10 @@ class TimelineEvent:
         s = self.__search (start)
         e = self.__search (end)
         return self.events[s:e+1]
+    def get_events_bounds (self, start, end):
+        s = self.__search (start)
+        e = self.__search (end)
+        return (s, e+1)
     def sort (self):
         self.events.sort (events_cmp)
     def get_bounds (self):
@@ -354,9 +369,10 @@ class TimelinesRenderer:
             ctx.set_source_rgb (0.9,0.9,0.9)
             ctx.fill ()
         last_x_drawn = int (x)
-        for event in events.get_events (self.start, self.end):
+        (lo, hi) = events.get_events_bounds (self.start, self.end)
+        for event in events.events[lo:hi]:
             real_x = int (x + (event.at - self.start) * width / (self.end - self.start))
-            if real_x > last_x_drawn:
+            if real_x > last_x_drawn+2:
                 ctx.rectangle (real_x, y, 1, 1)
                 ctx.set_source_rgb (1,0,0)
                 ctx.stroke ()
@@ -371,7 +387,8 @@ class TimelinesRenderer:
             ctx.set_source_rgb (0.9,0.9,0.9)
             ctx.fill ()
         last_x_drawn = int (x-1)
-        for data_range in ranges.get_ranges (self.start, self.end):
+        (lo, hi) = ranges.get_ranges_bounds (self.start, self.end)
+        for data_range in ranges.ranges[lo:hi]:
             s = max (data_range.start, self.start)
             e = min (data_range.end, self.end)
             x_start = int (x + (s - self.start) * width / (self.end - self.start))
