@@ -11,15 +11,30 @@ Things we want to modelize:
    frame
 4) SNIR over the signal reception is calculated.
 
-[2] says that 3) is the right model.
-
   - clock synchronization
   - rxtx turnaround: 
+  - reception decision: 
+     - SNR Threshold: SNR of signal must be higher than threshold during
+       all reception for correct reception.
+     - PER model: length + BER(SNR) + modulation
 
 802.11a: 
   * CCATime = 3us
   * RxTxTurnaround = 1us
 
+backoff slot = propagation + time to detect signal + rxtxturnaround
+
+Parallelization: on the need to maximize lookahead
+  - we could use the fact that we are rx or tx to improve the reported lookahead. i.e.: we
+    cannot trigger new events before the end of rx or end of tx
+  - we could use routing protocol information on packet forwarding to infer
+    higher bounds on the lookahead for a packet which needs to go through
+    multiple hops.
+
+[3] -> describes reception decision models
+[2] -> describes collision models
 
 [1] "A General Model and Analysis of Physical Layer Capture in 802.11 Networks"
 [2] "Snifﬁng out the correct Physical Layer Capture model in 802.11b"
+[3] "Effects of Wireless Physical Layer Modeling in Mobile Ad Hoc Networks"
+
