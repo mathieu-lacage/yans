@@ -28,6 +28,12 @@ namespace yans {
 
 class CallbackLoggerBase {};
 
+/**
+ * \brief log arbitrary number of parameters to a matching yans:Callback
+ *
+ * Whenever operator () is invoked on this class, the call and its arguments
+ * are forwarded to the internal matching yans::Callback.
+ */
 template<typename T1 = empty, typename T2 = empty, 
 	 typename T3 = empty, typename T4 = empty,
 	 typename T5 = empty>
