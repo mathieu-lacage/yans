@@ -23,6 +23,10 @@
 #include <cassert>
 
 namespace yans {
+#if 0
+GPacket::GPacket (Packet *p)
+	: m_packet (p)
+{}
 GPacket::GPacket ()
 	: m_packet (Packet::create ())
 {}
@@ -31,9 +35,6 @@ GPacket::GPacket (GPacket const &o)
 	o.m_packet->m_count++;
 	m_packet = o.m_packet;
 }
-GPacket::GPacket (Packet *p)
-	: m_packet (p)
-{}
 GPacket::~GPacket ()
 {
 	m_packet->m_count--;
@@ -117,5 +118,5 @@ GPacket::remove (Chunk *chunk)
 	}
 	m_packet->remove (chunk);
 }
-
+#endif
 }; // namespace yans

@@ -22,6 +22,7 @@
 #define GPACKET_H
 
 #include <stdint.h>
+#include "packet.h"
 
 namespace yans {
 
@@ -31,23 +32,94 @@ class Chunk;
 
 class GPacket {
 public:
-	GPacket ();
-	GPacket (GPacket const &o);
-	~GPacket ();
-	GPacket &operator = (GPacket const &o);
+	GPacket ()
+		: m_packet (Packet::create ()) {}
+	GPacket (GPacket const &o) 
+	{
+		o.m_packet->m_count++;
+		m_packet = o.m_packet;
+	}
 
-	GPacket create_fragment (uint32_t start, uint32_t length) const;
-	uint32_t get_size (void) const;
-	void add_tag (Tag const*tag);
-	void remove_tag (Tag *tag);
-	void peek_tag (Tag *tag) const;
-	void update_tag (Tag *tag);
-	void add (Chunk *chunk);
-	void peek (Chunk *chunk) const;
-	void remove (Chunk *chunk);
+	~GPacket ()
+	{
+		m_packet->m_count--;
+		if (m_packet->m_count == 0) {
+			m_packet->destroy ();
+		}
+	}
+
+	GPacket &operator = (GPacket const &o)
+	{
+		m_packet->m_count--;
+		if (m_packet->m_count == 0) {
+			m_packet->destroy ();
+		}
+		o.m_packet->m_count++;
+		m_packet = o.m_packet;
+		return *this;
+	}
+
+
+	GPacket create_fragment (uint32_t start, uint32_t length) const
+	{
+		return GPacket (m_packet->copy (start, length));
+	}
+	uint32_t get_size (void) const
+	{
+		return m_packet->get_size ();
+	}
+	void add_tag (Tag const*tag)
+	{
+		if (m_packet->m_count > 1) {
+			m_packet->m_count--;
+			m_packet = m_packet->copy ();
+		}
+		m_packet->add_tag (tag);
+	}
+	void remove_tag (Tag *tag)
+	{
+		if (m_packet->m_count > 1) {
+			m_packet->m_count--;
+			m_packet = m_packet->copy ();
+		}
+		m_packet->remove_tag (tag);
+	}
+	void peek_tag (Tag *tag) const
+	{
+		m_packet->peek_tag (tag);
+	}
+	void update_tag (Tag *tag)
+	{
+		if (m_packet->m_count > 1) {
+			m_packet->m_count--;
+			m_packet = m_packet->copy ();
+		}
+		m_packet->update_tag (tag);
+	}
+	void add (Chunk *chunk)
+	{
+		if (m_packet->m_count > 1) {
+			m_packet->m_count--;
+			m_packet = m_packet->copy ();
+		}
+		m_packet->add (chunk);
+	}
+	void peek (Chunk *chunk) const
+	{
+		m_packet->peek (chunk);
+	}
+	void remove (Chunk *chunk)
+	{
+		if (m_packet->m_count > 1) {
+			m_packet->m_count--;
+			m_packet = m_packet->copy ();
+		}
+		m_packet->remove (chunk);
+	}
 
 private:
-	GPacket (Packet *p);
+	GPacket (Packet *p)
+		: m_packet (p) {}
 	Packet *m_packet;
 };
 
