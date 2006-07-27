@@ -91,9 +91,7 @@ typedef RefPtr<Packet const> ConstPacketPtr;
  *
  * Experiments show that generating the _exact_ bit-by-bit layout
  * of a TCP or IPv4 header is at most 10% slower than doing a quick and dirty 
- * dump of the data through a memcpy which means that there is no real performance
- * penalty to make the serialized representation of the protocol header close
- * to that of a real packet.
+ * dump of the data through a memcpy.
  *
  * Each tag must be represented by a class which derives from the abstract
  * base class Tag. It must implement the Tag::real_get_id and Tag::real_get_size
