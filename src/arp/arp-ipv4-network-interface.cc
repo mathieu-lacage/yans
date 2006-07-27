@@ -148,6 +148,7 @@ void
 ArpIpv4NetworkInterface::receive_arp (PacketPtr packet)
 {
 	ChunkArp arp;
+	packet->peek (&arp);
 	packet->remove (&arp);
 	if (arp.is_request () && 
 	    arp.get_destination_ipv4_address () == get_address ()) {

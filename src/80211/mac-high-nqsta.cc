@@ -291,6 +291,7 @@ MacHighNqsta::receive (PacketPtr packet, ChunkMac80211Hdr const *hdr)
 		 */
 	} else if (hdr->is_beacon ()) {
 		ChunkMgtBeacon beacon;
+		packet->peek (&beacon);
 		packet->remove (&beacon);
 		bool good_beacon = false;
 		if (m_interface->get_ssid ().is_broadcast ()) {
@@ -315,6 +316,7 @@ MacHighNqsta::receive (PacketPtr packet, ChunkMac80211Hdr const *hdr)
 	} else if (hdr->is_probe_resp ()) {
 		if (m_state == WAIT_PROBE_RESP) {
 			ChunkMgtProbeResponse probe_resp;
+			packet->peek (&probe_resp);
 			packet->remove (&probe_resp);
 			if (!probe_resp.get_ssid ().is_equal (m_interface->get_ssid ())) {
 				//not a probe resp for our ssid.
@@ -331,6 +333,7 @@ MacHighNqsta::receive (PacketPtr packet, ChunkMac80211Hdr const *hdr)
 	} else if (hdr->is_assoc_resp ()) {
 		if (m_state == WAIT_ASSOC_RESP) {
 			ChunkMgtAssocResponse assoc_resp;
+			packet->peek (&assoc_resp);
 			packet->remove (&assoc_resp);
 			if (m_assoc_request_event.is_running ()) {
 				m_assoc_request_event.cancel ();

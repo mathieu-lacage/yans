@@ -72,6 +72,7 @@ EthernetNetworkInterface::recv (PacketPtr packet)
 	m_recv_logger->log (packet);
 	ChunkMacEth eth;
 	ChunkMacCrc trailer;
+	packet->peek (&eth);
 	packet->remove (&eth);
 	TRACE ("rx no header size="<<packet->get_size ());
 	if (eth.get_length () < packet->get_size () - 4) {
@@ -81,6 +82,7 @@ EthernetNetworkInterface::recv (PacketPtr packet)
 	} else {
 		TRACE ("rx no padding, length="<<eth.get_length ()<<", packet="<<packet->get_size ());
 	}
+	packet->peek (&trailer);
 	packet->remove (&trailer);
 	forward_up (packet);
 }

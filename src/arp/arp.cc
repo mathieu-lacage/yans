@@ -186,6 +186,7 @@ void
 Arp::recv_arp (Packet *packet)
 {
 	ChunkArp arp;
+	packet->peek (&arp);
 	packet->remove (&arp);
 	if (arp.is_request () && 
 	    arp.get_destination_ipv4_address () == m_interface->get_ipv4_address ()) {

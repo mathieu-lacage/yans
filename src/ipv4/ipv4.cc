@@ -311,6 +311,7 @@ Ipv4::receive (PacketPtr packet, Ipv4NetworkInterface *interface)
 {
 	m_recv_logger->log (packet);
 	ChunkIpv4 ip_header;
+	packet->peek (&ip_header);
 	packet->remove (&ip_header);
 
 	if (!ip_header.is_checksum_ok ()) {

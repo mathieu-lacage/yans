@@ -70,6 +70,7 @@ LlcSnapEncapsulation::receive (PacketPtr packet, MacNetworkInterface *interface)
 {
 	assert (interface == m_interface);
 	ChunkLlcSnap llc;
+	packet->peek (&llc);
 	packet->remove (&llc);
 	switch (llc.get_type ()) {
 	case ChunkLlcSnap::TYPE_IPV4:

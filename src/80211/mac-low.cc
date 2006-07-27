@@ -323,16 +323,13 @@ MacLow::receive_error (ConstPacketPtr packet, double rx_snr)
 void 
 MacLow::receive_ok (ConstPacketPtr p, double rx_snr, uint8_t tx_mode, uint8_t stuff)
 {
-	PacketPtr packet = p->copy ();
 	/* A packet is received from the PHY.
 	 * When we have handled this packet,
 	 * we handle any packet present in the
 	 * packet queue.
 	 */
 	ChunkMac80211Hdr hdr;
-	packet->remove (&hdr);
-	ChunkMac80211Fcs fcs;
-	packet->remove (&fcs);
+	p->peek (&hdr);
 	
 	bool is_prev_nav_zero = is_nav_zero (now_us ());
 	TRACE ("duration/id=" << hdr.get_duration ());
@@ -417,17 +414,25 @@ MacLow::receive_ok (ConstPacketPtr p, double rx_snr, uint8_t tx_mode, uint8_t st
 						       station->snr_to_snr (rx_snr));
 			Simulator::schedule_rel_us (get_sifs_us (), m_send_ack_event);
 		}
-		m_rx_callback (packet, &hdr);
+		goto rx_packet;
 	} else if (hdr.get_addr1 ().is_broadcast ()) {
 		if (hdr.is_data () || hdr.is_mgt ()) {
 			TRACE ("rx broadcast from=" << hdr.get_addr2 ());
-			m_rx_callback (packet, &hdr);
+			goto rx_packet;
 		} else {
 			// DROP.
 		}
 	} else {
 		//TRACE_VERBOSE ("rx not-for-me from %d", getSource (packet));
 	}
+	return;
+ rx_packet:
+	PacketPtr packet = p->copy ();
+	packet->remove (&hdr);
+	ChunkMac80211Fcs fcs;
+	packet->peek (&fcs);
+	packet->remove (&fcs);
+	m_rx_callback (packet, &hdr);
 	return;
 }
 

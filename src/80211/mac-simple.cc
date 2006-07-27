@@ -129,8 +129,7 @@ void
 MacSimple::receive_ok (ConstPacketPtr p, double snr, uint8_t tx_mode, uint8_t stuff)
 {
 	ChunkMac80211Hdr hdr;
-	PacketPtr packet = p->copy ();
-	packet->remove (&hdr);
+	p->peek (&hdr);
 	if (hdr.is_rts () && 
 	    hdr.get_addr1 () == m_interface->get_mac_address ()) {
 		MacStation *station = get_station (hdr.get_addr2 ());
@@ -151,11 +150,11 @@ MacSimple::receive_ok (ConstPacketPtr p, double snr, uint8_t tx_mode, uint8_t st
 		station->report_rx_ok (snr, tx_mode);
 		if (hdr.get_addr1 ().is_broadcast ()) {
 			TRACE ("receive broadcast data from " <<hdr.get_addr2 ());
-			m_data_rx (packet);
+			goto rx_packet;
 		} else if (hdr.get_addr1 () == m_interface->get_mac_address ()) {
 			TRACE ("receive unicast data from " <<hdr.get_addr2 ());
 			send_ack (tx_mode, hdr.get_addr2 (), station->snr_to_snr (snr));
-			m_data_rx (packet);
+			goto rx_packet;
 		}
 	} else if (hdr.is_ack () &&
 		   hdr.get_addr1 () == m_interface->get_mac_address ()) {
@@ -167,6 +166,12 @@ MacSimple::receive_ok (ConstPacketPtr p, double snr, uint8_t tx_mode, uint8_t st
 		m_data_timeout_event.cancel ();
 		m_current = 0;
 	}
+	return;
+ rx_packet:
+	PacketPtr packet = p->copy ();
+	packet->remove (&hdr);
+	m_data_rx (packet);
+	return;
 }
 void 
 MacSimple::receive_error (ConstPacketPtr packet, double snr)

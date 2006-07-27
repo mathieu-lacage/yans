@@ -102,6 +102,7 @@ Udp::receive (PacketPtr packet)
 	TagInIpv4 tag;
 	packet->peek_tag (&tag);
 	ChunkUdp udp_chunk;
+	packet->peek (&udp_chunk);
 	packet->remove (&udp_chunk);
 	tag.set_dport (udp_chunk.get_destination ());
 	tag.set_sport (udp_chunk.get_source ());

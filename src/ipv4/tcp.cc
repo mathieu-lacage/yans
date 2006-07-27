@@ -151,6 +151,7 @@ Tcp::receive (PacketPtr packet)
 	TagInIpv4 tag;
 	packet->peek_tag (&tag);
 	ChunkTcp tcp_chunk;
+	packet->peek (&tcp_chunk);
 	packet->remove (&tcp_chunk);
 	tag.set_dport (tcp_chunk.get_destination_port ());
 	tag.set_sport (tcp_chunk.get_source_port ());
