@@ -302,7 +302,7 @@ public:
 	 */
 	void remove_at_start (uint32_t start);
 	/**
-	 * \param start size to remove
+	 * \param end size to remove
 	 * Remove bytes at the end of the Buffer.
 	 * Any call to this method invalidates any Iterator
 	 * pointing to this Buffer.

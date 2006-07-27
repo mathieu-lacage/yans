@@ -47,6 +47,7 @@ class TraceStream;
  * TraceContainer can be used to register the following event sources:
  *   - yans::PacketLogger : can be connected to yans::PcapWriter
  *   - yans::TraceStream : can be connected to any std::ostream
+ *   - yans::CallbackLogger: can be connected to yans::Callback
  *   - yans::UiTracedVariable
  *   - yans::SiTracedVariable
  *   - yans::FTracedVariable
@@ -92,19 +93,44 @@ public:
 	void set_packet_logger_callback (char const *name, Callback<void,ConstPacketPtr> callback);
 	/**
 	 * \param name the name of the target event source
-	 * \param callback the output stream being connected to the source trace stream
+	 * \param os the output stream being connected to the source trace stream
 	 * This method targets only event sources which are of type TraceStream.
 	 */
 	void set_stream (char const *name, std::ostream *os);
 
+	/**
+	 * \param name the name of the target event source
+	 * \param callback the callback being connected to the target event source.
+	 * This method targets only event sources which are of type CallbackLogger<T1>
+	 */
 	template <typename T1>
 	void set_callback (char const *name, Callback<void,T1> callback);
+	/**
+	 * \param name the name of the target event source
+	 * \param callback the callback being connected to the target event source.
+	 * This method targets only event sources which are of type CallbackLogger<T1,T2>
+	 */
 	template <typename T1, typename T2>
 	void set_callback (char const *name, Callback<void,T1,T2> callback);
+	/**
+	 * \param name the name of the target event source
+	 * \param callback the callback being connected to the target event source.
+	 * This method targets only event sources which are of type CallbackLogger<T1,T2,T3>
+	 */
 	template <typename T1, typename T2, typename T3>
 	void set_callback (char const *name, Callback<void,T1,T2,T3> callback);
+	/**
+	 * \param name the name of the target event source
+	 * \param callback the callback being connected to the target event source.
+	 * This method targets only event sources which are of type CallbackLogger<T1,T2,T3,T4>
+	 */
 	template <typename T1, typename T2, typename T3, typename T4>
 	void set_callback (char const *name, Callback<void,T1,T2,T3,T4> callback);
+	/**
+	 * \param name the name of the target event source
+	 * \param callback the callback being connected to the target event source.
+	 * This method targets only event sources which are of type CallbackLogger<T1,T2,T3,T4,T5>
+	 */
 	template <typename T1, typename T2, typename T3, typename T4, typename T5>
 	void set_callback (char const *name, Callback<void,T1,T2,T3,T4,T5> callback);
 
@@ -128,21 +154,26 @@ public:
 	void register_f_variable (char const *name, FTracedVariableBase *var);
 	/**
 	 * \param name the name of the registered event source
-	 * \param var the event source being registered
+	 * \param logger the event source being registered
 	 * This method registers only event sources of type PacketLogger.
 	 */
 	void register_packet_logger (char const *name, PacketLogger *logger);
 	/**
 	 * \param name the name of the registered event source
-	 * \param var the event source being registered
+	 * \param stream the event source being registered
 	 * This method registers only event sources of type TraceStream.
 	 */
 	void register_stream (char const *name, TraceStream *stream);
 
+	/**
+	 * \param name the name of the registeref event source
+	 * \param logger the callback logger being registered.
+	 * This method registers only event sources of type CallbackLogger
+	 */
 	void register_callback (char const *name, CallbackLoggerBase*logger);
 
 	/**
-	 * Print the list of registered event sources.
+	 * Print the list of registered event sources in this container only.
 	 */
 	void print_debug (void);
 private:
