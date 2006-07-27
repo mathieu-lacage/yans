@@ -47,6 +47,7 @@ public:
 	void remove (Chunk *chunk);
 
 private:
+	GPacket (Packet *p);
 	Packet *m_packet;
 };
 

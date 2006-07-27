@@ -31,6 +31,9 @@ GPacket::GPacket (GPacket const &o)
 	o.m_packet->m_count++;
 	m_packet = o.m_packet;
 }
+GPacket::GPacket (Packet *p)
+	: m_packet (p)
+{}
 GPacket::~GPacket ()
 {
 	m_packet->m_count--;
@@ -47,6 +50,7 @@ GPacket::operator = (GPacket const &o)
 	}
 	o.m_packet->m_count++;
 	m_packet = o.m_packet;
+	return *this;
 }
 GPacket 
 GPacket::create_fragment (uint32_t start, uint32_t length) const
