@@ -67,6 +67,7 @@ public:
 	/**
 	 * \param name the name of the target event source
 	 * \param callback the callback being connected to the target event source
+	 *
 	 * This method targets only event sources which are variables of any unsigned
 	 * integer type.
 	 */
@@ -75,6 +76,7 @@ public:
 	/**
 	 * \param name the name of the target event source
 	 * \param callback the callback being connected to the target event source
+	 *
 	 * This method targets only event sources which are variables of any signed
 	 * integer type.
 	 */
@@ -82,18 +84,21 @@ public:
 	/**
 	 * \param name the name of the target event source
 	 * \param callback the callback being connected to the target event source
+	 *
 	 * This method targets only event sources which are variables of any double type.
 	 */
 	void set_f_variable_callback (char const *name, Callback<void,double, double> callback);
 	/**
 	 * \param name the name of the target event source
 	 * \param callback the callback being connected to the target event source
+	 *
 	 * This method targets only event sources which are of type PacketLogger.
 	 */
 	void set_packet_logger_callback (char const *name, Callback<void,ConstPacketPtr> callback);
 	/**
 	 * \param name the name of the target event source
 	 * \param os the output stream being connected to the source trace stream
+	 *
 	 * This method targets only event sources which are of type TraceStream.
 	 */
 	void set_stream (char const *name, std::ostream *os);
@@ -101,6 +106,7 @@ public:
 	/**
 	 * \param name the name of the target event source
 	 * \param callback the callback being connected to the target event source.
+	 *
 	 * This method targets only event sources which are of type CallbackLogger<T1>
 	 */
 	template <typename T1>
@@ -108,6 +114,7 @@ public:
 	/**
 	 * \param name the name of the target event source
 	 * \param callback the callback being connected to the target event source.
+	 *
 	 * This method targets only event sources which are of type CallbackLogger<T1,T2>
 	 */
 	template <typename T1, typename T2>
@@ -115,6 +122,7 @@ public:
 	/**
 	 * \param name the name of the target event source
 	 * \param callback the callback being connected to the target event source.
+	 *
 	 * This method targets only event sources which are of type CallbackLogger<T1,T2,T3>
 	 */
 	template <typename T1, typename T2, typename T3>
@@ -122,6 +130,7 @@ public:
 	/**
 	 * \param name the name of the target event source
 	 * \param callback the callback being connected to the target event source.
+	 *
 	 * This method targets only event sources which are of type CallbackLogger<T1,T2,T3,T4>
 	 */
 	template <typename T1, typename T2, typename T3, typename T4>
@@ -129,6 +138,7 @@ public:
 	/**
 	 * \param name the name of the target event source
 	 * \param callback the callback being connected to the target event source.
+	 *
 	 * This method targets only event sources which are of type CallbackLogger<T1,T2,T3,T4,T5>
 	 */
 	template <typename T1, typename T2, typename T3, typename T4, typename T5>
@@ -137,30 +147,35 @@ public:
 	/**
 	 * \param name the name of the registered event source
 	 * \param var the event source being registered
+	 *
 	 * This method registers only event sources of type "unsigned integer".
 	 */
 	void register_ui_variable (char const *name, UiTracedVariableBase *var);
 	/**
 	 * \param name the name of the registered event source
 	 * \param var the event source being registered
+	 *
 	 * This method registers only event sources of type "signed integer".
 	 */
 	void register_si_variable (char const *name, SiTracedVariableBase *var);
 	/**
 	 * \param name the name of the registered event source
 	 * \param var the event source being registered
+	 *
 	 * This method registers only event sources of type "double".
 	 */
 	void register_f_variable (char const *name, FTracedVariableBase *var);
 	/**
 	 * \param name the name of the registered event source
 	 * \param logger the event source being registered
+	 *
 	 * This method registers only event sources of type PacketLogger.
 	 */
 	void register_packet_logger (char const *name, PacketLogger *logger);
 	/**
 	 * \param name the name of the registered event source
 	 * \param stream the event source being registered
+	 *
 	 * This method registers only event sources of type TraceStream.
 	 */
 	void register_stream (char const *name, TraceStream *stream);
@@ -168,6 +183,7 @@ public:
 	/**
 	 * \param name the name of the registeref event source
 	 * \param logger the callback logger being registered.
+	 *
 	 * This method registers only event sources of type CallbackLogger
 	 */
 	void register_callback (char const *name, CallbackLoggerBase*logger);
