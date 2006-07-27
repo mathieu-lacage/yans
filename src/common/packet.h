@@ -236,6 +236,7 @@ public:
  private:
 	friend class RefPtr<Packet>;
 	friend class RefPtr<Packet const>;
+	friend class GPacket;
 	void destroy (void) const; // called by RefPtr
 	void reset (void);
 	Packet ();
