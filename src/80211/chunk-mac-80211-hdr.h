@@ -137,11 +137,11 @@ public:
 
 	virtual ~ChunkMac80211Hdr ();
 
+private:
 	virtual void add_to (Buffer *buffer) const;
 	virtual void peek_from (Buffer const*buffer);
 	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
-private:
 	uint16_t get_frame_control (void) const;
 	uint16_t get_qos_control (void) const;
 	void set_frame_control (uint16_t control);

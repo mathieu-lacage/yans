@@ -60,11 +60,11 @@ public:
 	bool is_checksum_ok (void) const;
 	uint32_t get_size (void) const;
 
+private:
 	virtual void add_to (Buffer *buffer) const;
 	virtual void peek_from (Buffer const*buffer);
 	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
-private:
 
 	enum Flags_e {
 		DONT_FRAGMENT = (1<<0),

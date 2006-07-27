@@ -88,11 +88,11 @@ public:
 
 	uint32_t get_size (void) const;
 
+private:
 	virtual void add_to (Buffer *buffer) const;
 	virtual void peek_from (Buffer const*buffer);
 	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
-private:
 	enum {
 		URG = 5,
 		ACK = 4,

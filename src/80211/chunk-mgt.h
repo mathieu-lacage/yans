@@ -46,11 +46,11 @@ public:
 	SupportedRates get_supported_rates (void) const;
 	uint16_t get_listen_interval (void) const;
 
+private:
 	virtual void add_to (Buffer *buffer) const;
 	virtual void peek_from (Buffer const*buffer);
 	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
-private:
 	uint32_t get_size (void) const;
 	Ssid m_ssid;
 	SupportedRates m_rates;
@@ -67,11 +67,11 @@ public:
 	StatusCode get_status_code (void);
 	void set_status_code (StatusCode code);
 
+private:
 	virtual void add_to (Buffer *buffer) const;
 	virtual void peek_from (Buffer const*buffer);
 	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
-private:
 	uint32_t get_size (void) const;
 	SupportedRates m_rates;
 	CapabilityInformation m_capability;
@@ -89,11 +89,11 @@ public:
 	Ssid get_ssid (void) const;
 	SupportedRates get_supported_rates (void) const;
 
+private:
 	virtual void add_to (Buffer *buffer) const;
 	virtual void peek_from (Buffer const*buffer);
 	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
-private:
 	uint32_t get_size (void) const;
 	Ssid m_ssid;
 	SupportedRates m_rates;
@@ -113,11 +113,11 @@ public:
 	void set_beacon_interval_us (uint64_t us);
 	void set_supported_rates (SupportedRates rates);
 
+private:
 	virtual void add_to (Buffer *buffer) const;
 	virtual void peek_from (Buffer const*buffer);
 	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
-private:
 	uint32_t get_size (void) const;
 	Ssid m_ssid;
 	uint64_t m_beacon_interval;

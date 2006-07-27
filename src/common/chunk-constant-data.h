@@ -36,11 +36,11 @@ public:
 	ChunkConstantData (uint32_t len, uint8_t data);
 	~ChunkConstantData ();
 
+private:
 	virtual void add_to (Buffer *buffer) const;
 	virtual void peek_from (Buffer const*buffer);
 	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
-private:
 	uint32_t m_len;
 	uint8_t m_data;
 };

@@ -44,11 +44,11 @@ public:
 				  Ipv4Address destination,
 				  uint8_t protocol);
 
+private:
 	virtual void add_to (Buffer *buffer) const;
 	virtual void peek_from (Buffer const*buffer);
 	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
-private:
 	uint32_t get_size (void) const;
 
 	uint16_t m_source_port;

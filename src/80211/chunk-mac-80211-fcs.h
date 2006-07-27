@@ -35,6 +35,7 @@ public:
 
 	uint32_t get_size (void) const;
 
+private:
 	virtual void add_to (Buffer *buffer) const;
 	virtual void peek_from (Buffer const*buffer);
 	virtual void remove_from (Buffer *buffer);

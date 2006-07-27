@@ -34,12 +34,11 @@ class ChunkMacCrc : public Chunk {
 	virtual ~ChunkMacCrc ();
 
 	void set_pad (uint8_t pad_size);
-
+private:
 	virtual void add_to (Buffer *buffer) const;
 	virtual void peek_from (Buffer const*buffer);
 	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
-private:
 	uint32_t get_size (void) const;
 	uint8_t m_pad_size;
 };

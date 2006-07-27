@@ -38,10 +38,6 @@ public:
 
 	void set_time_exceeded (void);
 
-	virtual void add_to (Buffer *buffer) const;
-	virtual void peek_from (Buffer const*buffer);
-	virtual void remove_from (Buffer *buffer);
-	virtual void print (std::ostream *os) const;
 
 	enum {
 		ECHO_REPLY    = 0,
@@ -58,6 +54,10 @@ public:
 	};
 
 private:
+	virtual void add_to (Buffer *buffer) const;
+	virtual void peek_from (Buffer const*buffer);
+	virtual void remove_from (Buffer *buffer);
+	virtual void print (std::ostream *os) const;
 	/* unimplemented for now. */
 	void set_identifier_and_sequence (uint16_t identifier, uint16_t sequence_number);
 	void set_redirect (uint8_t code, Ipv4Address gateway);
