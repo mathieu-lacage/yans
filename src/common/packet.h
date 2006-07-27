@@ -236,10 +236,8 @@ public:
  private:
 	friend class RefPtr<Packet>;
 	friend class RefPtr<Packet const>;
-	static void recycle (Packet *packet);
+	void destroy (void) const; // called by RefPtr
 	void reset (void);
-	void ref (void) const;
-	void unref (void) const;
 	Packet ();
 	~Packet ();
 

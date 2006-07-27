@@ -40,7 +40,7 @@ public:
 		: m_env (o.m_env)
 	{
 		if (m_env != 0) {
-			m_env->ref ();
+			m_env->m_count++;
 		}
 	}
 	// allow conversions from T to T const.
@@ -49,22 +49,28 @@ public:
 		: m_env (o.peek ())
 	{
 		if (m_env != 0) {
-			m_env->ref ();
+			m_env->m_count++;
 		}
 	}
 	~RefPtr () 
 	{
 		if (m_env != 0) {
-			m_env->unref ();
+			m_env->m_count--;
+			if (m_env->m_count == 0) {
+				m_env->destroy ();
+			}
 		}
 	}
 	RefPtr &operator = (RefPtr const& o) 
 	{
 		if (o.m_env != 0) {
-			o.m_env->ref ();
+			o.m_env->m_count++;
 		}
 		if (m_env != 0) {
-			m_env->unref ();
+			m_env->m_count--;
+			if (m_env->m_count == 0) {
+				m_env->destroy ();
+			}
 		}
 		m_env = o.m_env;
 		return *this;

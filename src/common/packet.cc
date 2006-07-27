@@ -58,15 +58,15 @@ Packet::create (void)
 }
 
 void
-Packet::recycle (Packet *packet)
+Packet::destroy (void) const
 {
 	if (g_packets.size () < 2000) {
 		// resurect the packet and store it.
-		packet->m_count++;
-		packet->m_buffer->cleanup ();
-		g_packets.push_back (packet);
+		m_count++;
+		m_buffer->cleanup ();
+		g_packets.push_back (const_cast<Packet *>(this));
 	} else {
-		delete packet;
+		delete this;
 	}
 }
 #else
@@ -77,9 +77,9 @@ Packet::create (void)
 }
 
 void
-Packet::recycle (Packet *packet)
+Packet::destroy (void)
 {
-	delete packet;
+	delete this;
 }
 #endif
 
@@ -95,20 +95,6 @@ Packet::~Packet ()
 	delete m_tags;
 }
 
-void 
-Packet::ref (void) const
-{
-	m_count++;
-}
-
-void 
-Packet::unref (void) const
-{
-	m_count--;
-	if (m_count == 0) {
-		Packet::recycle (const_cast<Packet*>(this));
-	}
-}
 void
 Packet::reset (void)
 {
