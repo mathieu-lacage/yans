@@ -278,6 +278,7 @@ public:
 
 	/**
 	 * \param start size to reserve
+	 *
 	 * Add bytes at the start of the Buffer. The
 	 * content of these bytes is undefined but debugging
 	 * builds initialize them to 0x33.
@@ -287,6 +288,7 @@ public:
 	void add_at_start (uint32_t start);
 	/**
 	 * \param end size to reserve
+	 *
 	 * Add bytes at the end of the Buffer. The
 	 * content of these bytes is undefined but debugging
 	 * builds initialize them to 0x33.
@@ -296,6 +298,7 @@ public:
 	void add_at_end (uint32_t end);
 	/**
 	 * \param start size to remove
+	 *
 	 * Remove bytes at the start of the Buffer.
 	 * Any call to this method invalidates any Iterator
 	 * pointing to this Buffer.
@@ -303,6 +306,7 @@ public:
 	void remove_at_start (uint32_t start);
 	/**
 	 * \param end size to remove
+	 *
 	 * Remove bytes at the end of the Buffer.
 	 * Any call to this method invalidates any Iterator
 	 * pointing to this Buffer.
