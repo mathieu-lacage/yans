@@ -44,16 +44,16 @@ typedef std::vector<Packet *>::iterator PacketsI;
 static Packets g_packets;
 
 
-PacketPtr
+Packet *
 Packet::create (void)
 {
 	if (g_packets.empty ()) {
-		return PacketPtr (new Packet ());
+		return new Packet ();
 	} else {
 		Packet *p = g_packets.back ();
 		g_packets.pop_back ();
 		p->reset ();
-		return PacketPtr (p);
+		return p;
 	}
 }
 
@@ -70,10 +70,10 @@ Packet::destroy (void) const
 	}
 }
 #else
-PacketPtr
+Packet *
 Packet::create (void)
 {
-	return PacketPtr (new Packet ());
+	return new Packet ();
 }
 
 void
@@ -102,18 +102,18 @@ Packet::reset (void)
 	m_tags->reset ();
 }
 
-PacketPtr
+Packet *
 Packet::copy (void) const
 {
 	return copy (0, get_size ());
 }
-PacketPtr
+Packet *
 Packet::copy (uint32_t start_off, uint32_t length) const
 {
 	assert (length <= get_size ());
 	assert (start_off < get_size ());
 	assert (start_off + length <= get_size ());
-	PacketPtr other = Packet::create ();
+	Packet *other = Packet::create ();
 	other->m_tags->copy_from (*(this->m_tags));
 	Buffer *tmp = other->m_buffer;
 	tmp->add_at_start (length);
@@ -150,7 +150,7 @@ Packet::remove_tag (Tag *tag)
 	m_tags->remove (tag);
 }
 void 
-Packet::peek_tag (Tag *tag)
+Packet::peek_tag (Tag *tag) const
 {
 	m_tags->peek (tag);
 }

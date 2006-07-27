@@ -120,12 +120,12 @@ public:
 	/**
 	 * Create an empty Packet.
 	 */
-	static PacketPtr create (void);
+	static Packet *create (void);
 
 	/**
 	 * Create a copy of this Packet together with its tags.
 	 */
-	PacketPtr copy (void) const;
+	Packet *copy (void) const;
 	/**
 	 * \param start offset from start of packet
 	 * \param length of new fragment
@@ -134,7 +134,7 @@ public:
 	 * Create a copy of a fragment of this Packet. The tags are
 	 * entirely copied to the new fragment. 
 	 */
-	PacketPtr copy (uint32_t start, uint32_t length) const;
+	Packet *copy (uint32_t start, uint32_t length) const;
 
 	/**
 	 * \return the size of the Packet.
@@ -170,7 +170,7 @@ public:
 	 * Copy the tag stored in this Packet identified by the
 	 * input tag type.
 	 */
-	void peek_tag (Tag *tag);
+	void peek_tag (Tag *tag) const;
 	/**
 	 * \param tag tag to update
 	 *
