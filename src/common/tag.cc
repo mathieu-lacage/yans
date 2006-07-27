@@ -105,10 +105,10 @@ Tags::add (Tag const *tag)
 	m_size += tag->real_get_size ();
 }
 void 
-Tags::peek (Tag *tag)
+Tags::peek (Tag *tag) const
 {
 	uint32_t id = tag->real_get_id ();
-	for (IndexI i = m_index.begin (); i != m_index.end (); i++) {
+	for (IndexCI i = m_index.begin (); i != m_index.end (); i++) {
 		if (i->id == id) {
 			memcpy (tag, m_data + i->start, i->size);
 			assert (tag->real_get_id () == id);

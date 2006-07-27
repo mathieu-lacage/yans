@@ -93,7 +93,7 @@ public:
 	void copy_from (Tags const &o);
 
 	void add (Tag const *tag);
-	void peek (Tag *tag);
+	void peek (Tag *tag) const;
 	void remove (Tag *tag);
 	void update (Tag *tag);
 private:
@@ -104,6 +104,7 @@ private:
 	};
 	typedef std::vector<struct IndexEntry> Index;
 	typedef std::vector<struct IndexEntry>::iterator IndexI;
+	typedef std::vector<struct IndexEntry>::const_iterator IndexCI;
 
 	Tags (Tags const&o);
 	void reserve_at_end (uint32_t room);
