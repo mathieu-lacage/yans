@@ -69,11 +69,15 @@ ChunkLlcSnap::add_to (Buffer *buffer) const
 	i.write_hton_u16 (m_ether_type);
 }
 void 
-ChunkLlcSnap::remove_from (Buffer *buffer)
+ChunkLlcSnap::peek_from (Buffer const*buffer)
 {
 	Buffer::Iterator i = buffer->begin ();
 	i.next (5+1);
 	m_ether_type = i.read_ntoh_u16 ();
+}
+void 
+ChunkLlcSnap::remove_from (Buffer *buffer)
+{
 	buffer->remove_at_start (get_size ());
 }
 

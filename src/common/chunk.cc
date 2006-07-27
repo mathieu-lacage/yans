@@ -20,15 +20,44 @@
  */
 
 #include "chunk.h"
+#include <cassert>
 
 namespace yans {
+
+Chunk::Chunk ()
+	: m_must_peek_before_remove (false) {}
+
+void 
+Chunk::add (Buffer *buffer) const
+{
+	add_to (buffer);
+}
+void 
+Chunk::peek (Buffer const*buffer)
+{
+	peek_from (buffer);
+	m_must_peek_before_remove = true;
+}
+void 
+Chunk::remove (Buffer *buffer)
+{
+	assert (m_must_peek_before_remove);
+	remove_from (buffer);
+	m_must_peek_before_remove = false;
+}
+void 
+Chunk::print (std::ostream &os) const
+{
+	print (&os);
+}
+
 
 Chunk::~Chunk ()
 {}
 
 std::ostream& operator<< (std::ostream& os, Chunk const& chunk)
 {
-	chunk.print (&os);
+	chunk.print (os);
 	return os;
 }
 

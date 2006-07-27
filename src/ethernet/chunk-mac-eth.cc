@@ -95,13 +95,18 @@ ChunkMacEth::add_to (Buffer *buffer) const
 	i.write_hton_u16 (m_length + 8);
 }
 void 
-ChunkMacEth::remove_from (Buffer *buffer)
+ChunkMacEth::peek_from (Buffer const*buffer)
 {
 	Buffer::Iterator i = buffer->begin ();
 	read_from (i, m_source);
 	read_from (i, m_destination);
 	m_length = i.read_ntoh_u16 () - 8;
 	TRACE ("length="<<m_length);
+}
+
+void 
+ChunkMacEth::remove_from (Buffer *buffer)
+{
 	buffer->remove_at_start (get_size ());
 }
 

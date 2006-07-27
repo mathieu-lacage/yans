@@ -112,7 +112,7 @@ ChunkArp::add_to (Buffer *buffer) const
 	write_to (i, m_ipv4_dest);
 }
 void 
-ChunkArp::remove_from (Buffer *buffer)
+ChunkArp::peek_from (Buffer const*buffer)
 {
 	Buffer::Iterator i = buffer->begin ();
 	i.next (2+2+1+1);
@@ -121,6 +121,10 @@ ChunkArp::remove_from (Buffer *buffer)
 	read_from (i, m_ipv4_source);
 	read_from (i, m_mac_dest);
 	read_from (i, m_ipv4_dest);
+}
+void 
+ChunkArp::remove_from (Buffer *buffer)
+{
 	buffer->remove_at_start (get_size ());
 }
 void 

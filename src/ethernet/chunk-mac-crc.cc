@@ -54,6 +54,9 @@ ChunkMacCrc::add_to (Buffer *buffer) const
 	i.write_u32 (0);
 }
 void 
+ChunkMacCrc::peek_from (Buffer const*buffer)
+{}
+void 
 ChunkMacCrc::remove_from (Buffer *buffer)
 {
 	buffer->remove_at_end (get_size ());

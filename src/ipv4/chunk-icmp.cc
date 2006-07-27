@@ -118,12 +118,17 @@ ChunkIcmp::add_to (Buffer *buffer) const
 	}	
 }
 void 
-ChunkIcmp::remove_from (Buffer *buffer)
+ChunkIcmp::peek_from (Buffer const*buffer)
 {
 	Buffer::Iterator i = buffer->begin ();
 	m_type = i.read_u8 ();
+}
+void 
+ChunkIcmp::remove_from (Buffer *buffer)
+{
 	buffer->remove_at_start (get_size ());
 }
+
 void 
 ChunkIcmp::print (std::ostream *os) const
 {

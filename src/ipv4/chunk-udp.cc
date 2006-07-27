@@ -111,14 +111,18 @@ ChunkUdp::add_to (Buffer *buffer) const
 	i.write_u16 (checksum);
 }
 void 
-ChunkUdp::remove_from (Buffer *buffer)
+ChunkUdp::peek_from (Buffer const*buffer)
 {
 	Buffer::Iterator i = buffer->begin ();
 	m_source_port = i.read_ntoh_u16 ();
 	m_destination_port = i.read_ntoh_u16 ();
 	m_payload_size = i.read_ntoh_u16 () - get_size ();
-	buffer->remove_at_start (get_size ());
 	// XXX verify checksum.
+}
+void 
+ChunkUdp::remove_from (Buffer *buffer)
+{
+	buffer->remove_at_start (get_size ());
 }
 
 void 

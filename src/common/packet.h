@@ -205,12 +205,18 @@ public:
 	 */
 	void add_at_end (ConstPacketPtr packet, uint32_t offset, uint32_t size);
 	/**
+	 * \param chunk to read from packet
+	 * 
+	 * The Chunk::peek_from method will be invoked. Its job is to
+	 * deserialize the Chunk from the internal byte buffer.
+	 */
+	void peek (Chunk *chunk) const;
+	/**
 	 * \param chunk chunk to remove from packet
 	 *
-	 * The Chunk::add method will be invoked. It is responsible for:
-	 *   - deserializing the corresponding protocol header into
-	 *     the input chunk
-	 *   - remove the data deserialized from the Packet.
+	 * The Chunk::remove_from method will be invoked. Its job is to
+	 * remove the serialized representation of the Chunk from the
+	 * internal byte buffer.
 	 */
 	void remove (Chunk *chunk);
 	/**

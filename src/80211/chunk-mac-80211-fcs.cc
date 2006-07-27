@@ -45,15 +45,20 @@ ChunkMac80211Fcs::add_to (Buffer *buffer) const
 	i.write_u32 (0);
 }
 void 
-ChunkMac80211Fcs::remove_from (Buffer *buffer)
+ChunkMac80211Fcs::peek_from (Buffer const*buffer)
 {
 	Buffer::Iterator i = buffer->end ();
 	i.prev (4);
 	// unused var: quiet compiler
 	//uint32_t fcs = i.read_u32 ();
 	//assert (fcs == 0);
+}
+void 
+ChunkMac80211Fcs::remove_from (Buffer *buffer)
+{
 	buffer->remove_at_end (4);
 }
+
 void 
 ChunkMac80211Fcs::print (std::ostream *os) const
 {}

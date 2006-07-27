@@ -42,6 +42,7 @@ public:
 	static Ssid get_broadcast (void);
 private:
 	char m_ssid[33];
+	uint8_t m_length;
 };
 
 }; // namespace yans

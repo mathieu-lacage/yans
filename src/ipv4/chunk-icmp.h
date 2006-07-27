@@ -39,6 +39,7 @@ public:
 	void set_time_exceeded (void);
 
 	virtual void add_to (Buffer *buffer) const;
+	virtual void peek_from (Buffer const*buffer);
 	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
 

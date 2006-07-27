@@ -179,7 +179,7 @@ Packet::update_tag (Tag *tag)
 void 
 Packet::add (Chunk *chunk)
 {
-	chunk->add_to (m_buffer);
+	chunk->add (m_buffer);
 }
 void 
 Packet::add_at_end (ConstPacketPtr packet)
@@ -205,10 +205,16 @@ Packet::add_at_end (ConstPacketPtr packet, uint32_t start, uint32_t size)
 	dest_start.write (src_start, src_end);
 }
 
+void
+Packet::peek (Chunk *chunk) const
+{
+	chunk->peek (m_buffer);
+}
+
 void 
 Packet::remove (Chunk *chunk)
 {
-	chunk->remove_from (m_buffer);
+	chunk->remove (m_buffer);
 }
 void 
 Packet::remove_at_end (uint32_t size)

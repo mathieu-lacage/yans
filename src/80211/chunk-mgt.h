@@ -47,6 +47,7 @@ public:
 	uint16_t get_listen_interval (void) const;
 
 	virtual void add_to (Buffer *buffer) const;
+	virtual void peek_from (Buffer const*buffer);
 	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
 private:
@@ -55,6 +56,7 @@ private:
 	SupportedRates m_rates;
 	CapabilityInformation m_capability;
 	uint16_t m_listen_interval;
+	uint8_t m_read_size;
 };
 
 class ChunkMgtAssocResponse : public Chunk {
@@ -66,6 +68,7 @@ public:
 	void set_status_code (StatusCode code);
 
 	virtual void add_to (Buffer *buffer) const;
+	virtual void peek_from (Buffer const*buffer);
 	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
 private:
@@ -74,6 +77,7 @@ private:
 	CapabilityInformation m_capability;
 	StatusCode m_code;
 	uint16_t m_aid;
+	uint8_t m_read_size;
 };
 
 class ChunkMgtProbeRequest : public Chunk {
@@ -86,12 +90,14 @@ public:
 	SupportedRates get_supported_rates (void) const;
 
 	virtual void add_to (Buffer *buffer) const;
+	virtual void peek_from (Buffer const*buffer);
 	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
 private:
 	uint32_t get_size (void) const;
 	Ssid m_ssid;
 	SupportedRates m_rates;
+	uint8_t m_read_size;
 };
 
 class ChunkMgtProbeResponse : public Chunk {
@@ -108,6 +114,7 @@ public:
 	void set_supported_rates (SupportedRates rates);
 
 	virtual void add_to (Buffer *buffer) const;
+	virtual void peek_from (Buffer const*buffer);
 	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
 private:
@@ -116,6 +123,7 @@ private:
 	uint64_t m_beacon_interval;
 	SupportedRates m_rates;
 	CapabilityInformation m_capability;
+	uint8_t m_read_size;
 };
 
 class ChunkMgtBeacon : public ChunkMgtProbeResponse {};

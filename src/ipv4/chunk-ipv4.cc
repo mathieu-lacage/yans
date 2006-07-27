@@ -224,7 +224,7 @@ ChunkIpv4::add_to (Buffer *buffer) const
 	i.write_u16 (checksum);
 }
 void 
-ChunkIpv4::remove_from (Buffer *buffer)
+ChunkIpv4::peek_from (Buffer const*buffer)
 {
 	Buffer::Iterator i = buffer->begin ();
 	uint8_t ver_ihl = i.read_u8 ();
@@ -262,7 +262,14 @@ ChunkIpv4::remove_from (Buffer *buffer)
 	} else {
 		m_good_checksum = false;
 	}
-
+}
+void 
+ChunkIpv4::remove_from (Buffer *buffer)
+{
+	Buffer::Iterator i = buffer->begin ();
+	uint8_t ver_ihl = i.read_u8 ();
+	uint8_t ihl = ver_ihl & 0x0f; 
+	uint16_t header_size = ihl * 4;
 	buffer->remove_at_start (header_size);
 }
 void 

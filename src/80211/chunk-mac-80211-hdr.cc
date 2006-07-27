@@ -820,7 +820,7 @@ ChunkMac80211Hdr::add_to (Buffer *buffer) const
 	}
 }
 void 
-ChunkMac80211Hdr::remove_from (Buffer *buffer)
+ChunkMac80211Hdr::peek_from (Buffer const*buffer)
 {
 	Buffer::Iterator i = buffer->begin ();
 	uint16_t frame_control = i.read_ntoh_u16 ();
@@ -860,6 +860,10 @@ ChunkMac80211Hdr::remove_from (Buffer *buffer)
 		}
 		break;
 	}
+}
+void 
+ChunkMac80211Hdr::remove_from (Buffer *buffer)
+{
 	buffer->remove_at_start (get_size ());
 }
 void 

@@ -390,7 +390,7 @@ void ChunkTcp::add_to (Buffer *buffer) const
 	i.next (16);
 	i.write_u16 (checksum);
 }
-void ChunkTcp::remove_from (Buffer *buffer)
+void ChunkTcp::peek_from (Buffer const*buffer)
 {
 	Buffer::Iterator i = buffer->begin ();
 	m_source_port = i.read_ntoh_u16 ();
@@ -483,6 +483,10 @@ void ChunkTcp::remove_from (Buffer *buffer)
 	}
 	
  out:
+	return;
+}
+void ChunkTcp::remove_from (Buffer *buffer)
+{
 	buffer->remove_at_start (get_size ());
 }
 

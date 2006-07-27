@@ -13,13 +13,15 @@ class MyChunk : public Chunk {
 public:
 	MyChunk ();
 	virtual ~MyChunk ();
-	virtual void add_to (Buffer *buffer) const;
-	virtual void remove_from (Buffer *buffer);
-	virtual void print (std::ostream *os) const;
 
 	void set_data (uint16_t data);
 	uint16_t get_data (void) const;
 private:
+	virtual void add_to (Buffer *buffer) const;
+	virtual void peek_from (Buffer const*buffer);
+	virtual void remove_from (Buffer *buffer);
+	virtual void print (std::ostream *os) const;
+
 	uint16_t m_data;
 };
 
@@ -37,11 +39,15 @@ MyChunk::add_to (Buffer *buffer) const
 	i.write_hton_u16 (m_data);
 }
 void 
-MyChunk::remove_from (Buffer *buffer)
+MyChunk::peek_from (Buffer const*buffer)
 {
 	Buffer::Iterator i = buffer->begin ();
 	// deserialize from head of buffer
 	m_data = i.read_ntoh_u16 ();
+}
+void 
+MyChunk::remove_from (Buffer *buffer)
+{
 	// remove deserialized data
 	buffer->remove_at_start (2);
 }

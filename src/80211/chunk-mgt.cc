@@ -171,14 +171,17 @@ ChunkMgtProbeRequest::add_to (Buffer *buffer) const
 	i = write_to (i, m_rates);
 }
 void 
-ChunkMgtProbeRequest::remove_from (Buffer *buffer)
+ChunkMgtProbeRequest::peek_from (Buffer const*buffer)
 {
 	Buffer::Iterator i = buffer->begin ();
 	i = read_from (i, m_ssid);
 	i = read_from (i, m_rates);
-	uint32_t size = buffer->begin ().get_distance_from (i);
-	buffer->remove_at_start (size);
-
+	m_read_size = buffer->begin ().get_distance_from (i);
+}
+void 
+ChunkMgtProbeRequest::remove_from (Buffer *buffer)
+{
+	buffer->remove_at_start (m_read_size);
 }
 void 
 ChunkMgtProbeRequest::print (std::ostream *os) const
@@ -257,7 +260,7 @@ ChunkMgtProbeResponse::add_to (Buffer *buffer) const
 	i.next (3); // ds parameter set.
 }
 void 
-ChunkMgtProbeResponse::remove_from (Buffer *buffer)
+ChunkMgtProbeResponse::peek_from (Buffer const*buffer)
 {
 	Buffer::Iterator i = buffer->begin ();
 	i.next (8); // timestamp
@@ -267,8 +270,12 @@ ChunkMgtProbeResponse::remove_from (Buffer *buffer)
 	i = read_from (i, m_ssid);
 	i = read_from (i, m_rates);
 	i.next (3); // ds parameter set
-	uint32_t size = buffer->begin ().get_distance_from (i);
-	buffer->remove_at_start (size);
+	m_read_size = buffer->begin ().get_distance_from (i);
+}
+void 
+ChunkMgtProbeResponse::remove_from (Buffer *buffer)
+{
+	buffer->remove_at_start (m_read_size);
 }
 void 
 ChunkMgtProbeResponse::print (std::ostream *os) const
@@ -333,15 +340,19 @@ ChunkMgtAssocRequest::add_to (Buffer *buffer) const
 	i = write_to (i, m_rates);
 }
 void 
-ChunkMgtAssocRequest::remove_from (Buffer *buffer)
+ChunkMgtAssocRequest::peek_from (Buffer const*buffer)
 {
 	Buffer::Iterator i = buffer->begin ();
 	i = read_from (i, m_capability);
 	m_listen_interval = i.read_ntoh_u16 ();
 	i = read_from (i, m_ssid);
 	i = read_from (i, m_rates);
-	uint32_t size = buffer->begin ().get_distance_from (i);
-	buffer->remove_at_start (size);
+	m_read_size = buffer->begin ().get_distance_from (i);
+}
+void 
+ChunkMgtAssocRequest::remove_from (Buffer *buffer)
+{
+	buffer->remove_at_start (m_read_size);
 }
 void 
 ChunkMgtAssocRequest::print (std::ostream *os) const
@@ -387,7 +398,7 @@ ChunkMgtAssocResponse::add_to (Buffer *buffer) const
 	i = write_to (i, m_rates);
 }
 void 
-ChunkMgtAssocResponse::remove_from (Buffer *buffer)
+ChunkMgtAssocResponse::peek_from (Buffer const*buffer)
 {
 	Buffer::Iterator i = buffer->begin ();
 	i = read_from (i, m_capability);
@@ -395,8 +406,12 @@ ChunkMgtAssocResponse::remove_from (Buffer *buffer)
 	m_aid = i.read_ntoh_u16 ();
 	i = read_from (i, m_rates);
 
-	uint32_t size = buffer->begin ().get_distance_from (i);
-	buffer->remove_at_start (size);
+	m_read_size = buffer->begin ().get_distance_from (i);
+}
+void 
+ChunkMgtAssocResponse::remove_from (Buffer *buffer)
+{
+	buffer->remove_at_start (m_read_size);
 }
 void 
 ChunkMgtAssocResponse::print (std::ostream *os) const
