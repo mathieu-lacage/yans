@@ -27,6 +27,21 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#define ERROR_REPORT
+
+#ifdef ERROR_REPORT
+  #include <iostream>
+  #define REPORT(data) \
+    std::cout << "DEBUG "<<__FILE__<<":"<<__LINE__<<" "<<data<<std::endl;
+#else
+  #define REPORT(data)
+#endif
+
+#define ASCII_E 0x45
+#define ASCII_L 0x4C
+#define ASCII_F 0x46
+
+
 
 namespace yans {
 
@@ -44,7 +59,30 @@ ElfModule::run (void)
 	int fd = ::open (m_filename.c_str (), O_RDONLY);
 	ReaderBuffer buffer = ReaderBuffer (fd);
 	Reader reader = Reader (&buffer);
-	
+	reader.seek (0);
+	uint8_t b = reader.read_u8 ();
+	if (b != 0x7f) {
+                REPORT ("invalid ELF magic number");
+                goto error;		
+	}
+        b = reader.read_u8 ();
+        if (b != ASCII_E) {
+                REPORT ("invalid ELF E");
+                goto error;
+        }
+        b = reader.read_u8 ();
+        if (b != ASCII_L) {
+                REPORT ("invalid ELF L");
+                goto error;
+        }
+        b = reader.read_u8 ();
+        if (b != ASCII_F) {
+                REPORT ("invalid ELF F");
+                goto error;
+        }
+
+ error:
+	return;
 }
 
 }; // namespace yans
