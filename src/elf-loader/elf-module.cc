@@ -179,14 +179,14 @@ ElfModule::p_type_to_str (uint32_t type) const
 void
 ElfModule::print_program_header (struct elf32_program_header header) const
 {
-	std::cout << "type="<<p_type_to_str (header.p_type)<<", ";
-	std::cout << "offset=0x"<<std::hex<<header.p_offset<<std::dec<<", ";
-	std::cout << "vaddr=0x"<<std::hex<<header.p_vaddr<<std::dec<<", ";
-	std::cout << "paddr=0x"<<std::hex<<header.p_paddr<<std::dec<<", ";
-	std::cout << "filesz=0x"<<std::hex<<header.p_filesz<<std::dec<<", ";
-	std::cout << "memsz=0x"<<std::hex<<header.p_memsz<<std::dec<<", ";
-	std::cout << "flags=0x"<<std::hex<<header.p_flags<<std::dec<<", ";
-	std::cout << "align=0x"<<std::hex<<header.p_align<<std::dec<<std::endl;
+	std::cout <<p_type_to_str (header.p_type)<<"\t";
+	std::cout << "0x"<<std::hex<<header.p_offset<<std::dec<<"\t";
+	std::cout << "0x"<<std::hex<<header.p_vaddr<<std::dec<<"\t";
+	std::cout << "0x"<<std::hex<<header.p_paddr<<std::dec<<"\t";
+	std::cout << "0x"<<std::hex<<header.p_filesz<<std::dec<<"\t";
+	std::cout << "0x"<<std::hex<<header.p_memsz<<std::dec<<"\t";
+	std::cout << "0x"<<std::hex<<header.p_flags<<std::dec<<"\t";
+	std::cout << "0x"<<std::hex<<header.p_align<<std::dec<<std::endl;
 }
 
 void
@@ -201,9 +201,10 @@ ElfModule::run (void)
 		REPORT ("no program header table");
 		goto error;
 	}
-	reader.seek (header.e_phoff);
 	struct elf32_program_header p_header;
+	std::cout <<"type\toffset\tvaddr\tpaddr\tfilesz\tmemsz\tflags\talign"<<std::endl;
 	for (uint16_t i = 0; i < header.e_phnum; i++) {
+		reader.seek (header.e_phoff+i*header.e_phentsize);
 		p_header.p_type = reader.read_u32 ();
 		p_header.p_offset = reader.read_u32 ();
 		p_header.p_vaddr = reader.read_u32 ();
@@ -213,8 +214,8 @@ ElfModule::run (void)
 		p_header.p_flags = reader.read_u32 ();
 		p_header.p_align = reader.read_u32 ();
 		print_program_header (p_header);
-		reader.seek (header.e_phoff+i*header.e_phentsize);
 	}
+	std::cout << std::endl;
  error:
 	return;
 }
