@@ -62,6 +62,13 @@ enum {
 	PT_NOTE     = 4,
 	PT_SHLIB    = 5,
 	PT_PHDR     = 6,
+	PT_TLS      = 7,
+	PT_NUM      = 8,
+	PT_LOOS    = 0x60000000,
+	PT_GNU_EH_FRAME = 0x6474e550,
+	PT_GNU_STACK    = 0x6474e551,
+	PT_GNU_REL0     = 0x6474e552,
+	PT_HIOS    = 0x6fffffff,
 	PT_LOPROC  = 0x70000000,
 	PT_HIPROC  = 0x7fffffff
 };
@@ -71,6 +78,7 @@ enum {
 	PF_X        = 0x1,
 	PF_W        = 0x2,
 	PF_R        = 0x4,
+	PF_MASKOS   = 0x0ff00000,
 	PF_MASKPROC = 0xf0000000
 };
 

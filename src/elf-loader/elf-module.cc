@@ -166,8 +166,27 @@ ElfModule::p_type_to_str (uint32_t type) const
 	case PT_PHDR:
 		return "phdr";
 		break;
+	case PT_TLS:
+		return "tls";
+		break;
+	case PT_NUM:
+		return "num";
+		break;
+
+	case PT_GNU_EH_FRAME:
+		return "gnuehframe";
+		break;
+	case PT_GNU_STACK:
+		return "gnustack";
+		break;
+	case PT_GNU_REL0:
+		return "gnurel0";
+		break;
 	default:
-		if (type >= PT_LOPROC &&
+		if (type >= PT_LOOS &&
+		    type <= PT_HIOS) {
+			return "os-specific";
+		} else if (type >= PT_LOPROC &&
 		    type <= PT_HIPROC) {
 			return "processor-specific";
 		} else {
