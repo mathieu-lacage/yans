@@ -36,6 +36,10 @@ class ReaderBuffer {
         void read (uint8_t *buffer, uint32_t size);
         void clear_errors (void);
         bool is_error (void);
+        uint32_t get_offset   (void) const;
+        void     seek         (uint32_t offset);
+        void     skip         (uint32_t offset);
+        void     skip64       (uint64_t offset);
  private:
         int m_fd;
         bool m_is_error;

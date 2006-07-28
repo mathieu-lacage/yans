@@ -27,6 +27,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
+#include <sys/types.h>
+
 
 namespace yans {
 
@@ -58,6 +60,29 @@ ReaderBuffer::is_error (void)
 {
         return m_is_error;
 }
+
+uint32_t 
+ReaderBuffer::get_offset (void) const
+{
+        off_t offset = ::lseek (m_fd, 0, SEEK_SET);
+        return offset;
+}
+void
+ReaderBuffer::seek (uint32_t offset)
+{
+        ::lseek (m_fd, offset, SEEK_SET);
+}
+void     
+ReaderBuffer::skip (uint32_t offset)
+{
+        ::lseek (m_fd, offset, SEEK_CUR);
+}
+void     
+ReaderBuffer::skip64 (uint64_t offset)
+{
+        ::lseek (m_fd, offset, SEEK_CUR);
+}
+
 
 
 Reader::Reader (ReaderBuffer *buffer)
@@ -279,6 +304,26 @@ Reader::read_u16bcd (void)
         return retval;
 }
 
+uint32_t 
+Reader::get_offset (void) const
+{
+        return m_buffer->get_offset ();
+}
+void
+Reader::seek (uint32_t offset)
+{
+        m_buffer->seek (offset);
+}
+void     
+Reader::skip (uint32_t offset)
+{
+        m_buffer->skip (offset);
+}
+void     
+Reader::skip64 (uint64_t offset)
+{
+        m_buffer->skip64 (offset);
+}
 
 
 }; // namespace yans
