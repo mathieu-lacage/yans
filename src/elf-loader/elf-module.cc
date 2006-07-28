@@ -141,6 +141,54 @@ ElfModule::read_header (Reader *reader) const
 	return header;
 }
 
+char const *
+ElfModule::p_type_to_str (uint32_t type) const
+{
+	switch (type) {
+	case PT_NULL:
+		return "null";
+		break;
+	case PT_LOAD:
+		return "load";
+		break;
+	case PT_DYNAMIC:
+		return "dynamic";
+		break;
+	case PT_INTERP:
+		return "interp";
+		break;
+	case PT_NOTE:
+		return "note";
+		break;
+	case PT_SHLIB:
+		return "shlib";
+		break;
+	case PT_PHDR:
+		return "phdr";
+		break;
+	default:
+		if (type >= PT_LOPROC &&
+		    type <= PT_HIPROC) {
+			return "processor-specific";
+		} else {
+			return "unknown";
+		}
+	}
+}
+
+void
+ElfModule::print_program_header (struct elf32_program_header header) const
+{
+	std::cout << "type="<<p_type_to_str (header.p_type)<<", ";
+	std::cout << "offset=0x"<<std::hex<<header.p_offset<<std::dec<<", ";
+	std::cout << "vaddr=0x"<<std::hex<<header.p_vaddr<<std::dec<<", ";
+	std::cout << "paddr=0x"<<std::hex<<header.p_paddr<<std::dec<<", ";
+	std::cout << "filesz=0x"<<std::hex<<header.p_filesz<<std::dec<<", ";
+	std::cout << "memsz=0x"<<std::hex<<header.p_memsz<<std::dec<<", ";
+	std::cout << "flags=0x"<<std::hex<<header.p_flags<<std::dec<<", ";
+	std::cout << "align=0x"<<std::hex<<header.p_align<<std::dec<<std::endl;
+}
+
 void
 ElfModule::run (void)
 {
@@ -148,8 +196,27 @@ ElfModule::run (void)
 	ReaderBuffer buffer = ReaderBuffer (fd);
 	Reader reader = Reader (&buffer);
 
-	struct elf32_header elf32_header = read_header (&reader);
-	
+	struct elf32_header header = read_header (&reader);
+	if (header.e_phoff == 0) {
+		REPORT ("no program header table");
+		goto error;
+	}
+	reader.seek (header.e_phoff);
+	struct elf32_program_header p_header;
+	for (uint16_t i = 0; i < header.e_phnum; i++) {
+		p_header.p_type = reader.read_u32 ();
+		p_header.p_offset = reader.read_u32 ();
+		p_header.p_vaddr = reader.read_u32 ();
+		p_header.p_paddr = reader.read_u32 ();
+		p_header.p_filesz = reader.read_u32 ();
+		p_header.p_memsz = reader.read_u32 ();
+		p_header.p_flags = reader.read_u32 ();
+		p_header.p_align = reader.read_u32 ();
+		print_program_header (p_header);
+		reader.seek (header.e_phoff+i*header.e_phentsize);
+	}
+ error:
+	return;
 }
 
 }; // namespace yans

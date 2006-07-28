@@ -37,6 +37,8 @@ public:
 	void run (void);
 private:
 	struct elf32_header read_header (Reader *reader) const;
+	char const *p_type_to_str (uint32_t type) const;
+	void print_program_header (struct elf32_program_header header) const;
 	std::string m_filename;
 	std::string m_root_dir;
 };

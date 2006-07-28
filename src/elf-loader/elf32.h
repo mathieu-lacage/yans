@@ -53,6 +53,87 @@ enum {
 	EM_MIPS_RS4_BE  = 10
 };
 
+/* segment type */
+enum {
+	PT_NULL     = 0,
+	PT_LOAD     = 1,
+	PT_DYNAMIC  = 2,
+	PT_INTERP   = 3,
+	PT_NOTE     = 4,
+	PT_SHLIB    = 5,
+	PT_PHDR     = 6,
+	PT_LOPROC  = 0x70000000,
+	PT_HIPROC  = 0x7fffffff
+};
+
+/* segment permissions */
+enum {
+	PF_X        = 0x1,
+	PF_W        = 0x2,
+	PF_R        = 0x4,
+	PF_MASKPROC = 0xf0000000
+};
+
+enum {
+        STT_NOTYPE  = 0,
+        STT_OBJECT  = 1,
+        STT_FUNC    = 2,
+        STT_SECTION = 3,
+        STT_FILE    = 4,
+        STT_COMMON  = 5,
+        STT_TLS     = 6,
+        STT_LOOS    = 10,
+        STT_HIOS    = 12,
+        STT_LOPROC  = 13,
+        STT_HIPROC  = 15
+};
+
+enum {
+	SHN_UNDEF      = 0,
+	SHN_LORESERVE  = 0xff00,
+	SHN_LOPROC     = 0xff00,
+	SHN_HIPROC     = 0xff1f,
+	SHN_LOOS       = 0xff20,
+	SHN_HIOS       = 0xff3f,
+	SHN_ABS        = 0xfff1,
+	SHN_COMMON     = 0xfff2,
+	SHN_XINDEX     = 0xffff,
+	SHN_HIRESERVE  = 0xffff
+};
+
+struct elf32_symbol {
+        uint32_t st_name;
+        uint32_t st_value;
+        uint32_t st_size;
+        uint8_t st_info;
+        uint8_t st_other;
+        uint16_t st_shndx;
+};                                                                                                                                                             
+struct elf32_section_header {
+        uint32_t sh_name;
+        uint32_t sh_type;
+        uint32_t sh_flags;
+        uint32_t sh_addr;
+        uint32_t sh_offset;
+        uint32_t sh_size;
+        uint32_t sh_link;
+        uint32_t sh_info;
+        uint32_t sh_addralign;
+        uint32_t sh_entsize;
+};
+
+struct elf32_program_header {
+	uint32_t p_type;
+	uint32_t p_offset;
+	uint32_t p_vaddr;
+	uint32_t p_paddr;
+	uint32_t p_filesz;
+	uint32_t p_memsz;
+	uint32_t p_flags;
+	uint32_t p_align;
+};
+
+
 
 struct elf32_header {
         uint16_t e_type;
