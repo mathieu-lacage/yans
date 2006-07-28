@@ -22,8 +22,11 @@
 #define ELF_MODULE_H
 
 #include <string>
+#include "elf32.h"
 
 namespace yans {
+
+class Reader;
 
 class ElfModule {
 public:
@@ -33,6 +36,7 @@ public:
 	// invoke the main function of the module
 	void run (void);
 private:
+	struct elf32_header read_header (Reader *reader) const;
 	std::string m_filename;
 	std::string m_root_dir;
 };
