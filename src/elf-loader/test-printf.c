@@ -18,10 +18,12 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#include <stdio.h>
+
+extern int printf (const char *format,...);
 
 int main (int argc, char *argv[])
 {
+	
 	printf ("this is a printf test a=%d\n", 5);
 	return 0;
 }
