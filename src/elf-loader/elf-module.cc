@@ -208,6 +208,20 @@ ElfModule::print_program_header (struct elf32_program_header header) const
 	std::cout << "0x"<<std::hex<<header.p_align<<std::dec<<std::endl;
 }
 
+struct segment_map {
+	struct segment_map *next;
+	uint32_t offset;
+	uint32_t start;
+	uint32_t size;
+	uint32_t flags;
+};
+
+struct segment_map *segment_new (void)
+{
+	struct segment_map *segment = new struct segment_map ();
+	return segment;
+}
+
 void
 ElfModule::run (void)
 {
