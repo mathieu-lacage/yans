@@ -407,6 +407,7 @@ YANS_LIBC_SRC := \
 YANS_LIBC_INST_HDR := \
  src/libc/stdio.h \
  src/libc/unistd.h \
+ src/libc/fcntl.h \
  $(NULL)
 YANS_LIBC_NAME:=c
 YANS_LIBC_OUTPUT_DIR=sys
@@ -417,7 +418,6 @@ YANS_LIBC_LDFLAGS:=-nodefaultlibs $(LDFLAGS)
 YANS_LIBC_SYS_NAME=c/sys
 YANS_LIBC_SYS_TYPE:=headers
 YANS_LIBC_SYS_INST_HDR:= \
- src/libc/sys/fcntl.h \
  src/libc/sys/socket.h \
  src/libc/sys/types.h \
  $(NULL)
