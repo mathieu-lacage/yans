@@ -1,4 +1,4 @@
-all: test-dlmopen libtestc.so test-printf.so 
+all: test-dlmopen libc.so test-printf.so 
 
 CFLAGS:= -g -O0
 
@@ -25,11 +25,11 @@ test-dlmopen: LDFLAGS+=-ldl
 test-dlmopen: test-dlmopen.o
 
 
-libtestc.so: test-libc.o
+libc.so: test-libc.o
 	gcc -shared -nodefaultlibs -o $@ $^
 test-libc.o: CFLAGS += -fPIC 
 test-printf.so: test-printf.o
-	gcc -shared -nodefaultlibs -L. -ltestc -o $@ $^
+	gcc -shared -nodefaultlibs -L. -lc -o $@ $^
 test-printf.o: CFLAGS += -fPIC
 
 load-test: load-test.cc elf-module.cc reader.cc
