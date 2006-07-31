@@ -89,8 +89,9 @@ $(if $(findstring python-cxx-module,$($(1)_TYPE)),$(call platform-pymod-name,$($
 $(if $(findstring python-module,$($(1)_TYPE)),$($(1)_NAME),\
 $(if $(findstring python-executable,$($(1)_TYPE)),$($(1)_NAME),\
 $(if $(findstring executable,$($(1)_TYPE)),$($(1)_NAME),\
+$(if $(findstring headers,$($(1)_TYPE)),,\
 $(warning unknown output name -- $(1))\
-))))))
+)))))))
 calculate-output-dir=$(strip \
 $(TOP_BUILD_DIR)/$(strip \
 $(if $(findstring shared-library,$($(1)_TYPE)),lib,\
@@ -98,32 +99,36 @@ $(if $(findstring python-cxx-module,$($(1)_TYPE)),lib/python,\
 $(if $(findstring python-module,$($(1)_TYPE)),lib/python/$(subst .,/,$($(1)_NAME)),\
 $(if $(findstring python-executable,$($(1)_TYPE)),bin,\
 $(if $(findstring executable,$($(1)_TYPE)),bin,\
+$(if $(findstring headers,$($(1)_TYPE)),,\
 $(warning unknown output dir -- $(1) $($(1)_TYPE))\
-))))))$(if $($(1)_OUTPUT_DIR),/$($(1)_OUTPUT_DIR),))
+))))))$(if $($(1)_OUTPUT_DIR),/$($(1)_OUTPUT_DIR),)))
 calculate-build-flags=$(strip \
 $(if $(findstring shared-library,$($(1)_TYPE)),$(platform-sharedlib-build-flags),\
 $(if $(findstring python-cxx-module,$($(1)_TYPE)),$(platform-pymod-build-flags),\
 $(if $(findstring python-module,$($(1)_TYPE)),,\
 $(if $(findstring python-executable,$($(1)_TYPE)),,\
 $(if $(findstring executable,$($(1)_TYPE)),,\
+$(if $(findstring headers,$($(1)_TYPE)),,\
 $(warning unknown build flags -- $(1) $($(1)_TYPE))\
-))))))
+)))))))
 calculate-link-flags=$(strip \
 $(if $(findstring shared-library,$($(1)_TYPE)),$(platform-sharedlib-link-flags),\
 $(if $(findstring python-cxx-module,$($(1)_TYPE)),$(platform-pymod-link-flags),\
 $(if $(findstring python-module,$($(1)_TYPE)),,\
 $(if $(findstring python-executable,$($(1)_TYPE)),,\
 $(if $(findstring executable,$($(1)_TYPE)),,\
+$(if $(findstring headers,$($(1)_TYPE)),,\
 $(warning unknown link flags -- $(1) $($(1)_TYPE))\
-))))))
+)))))))
 calculate-link-command=$(strip \
 $(if $(findstring shared-library,$($(1)_TYPE)),$(CXX) $($(1)_LDFLAGS) -o $@ $^,\
 $(if $(findstring python-cxx-module,$($(1)_TYPE)),$(CXX) $($(1)_LDFLAGS) -o $@ $^,\
 $(if $(findstring python-module,$($(1)_TYPE)),$(CP) $^ $(dir $@);$(ECHO) empty >$@;,\
 $(if $(findstring python-executable,$($(1)_TYPE)),$(CP) $^ $@,\
 $(if $(findstring executable,$($(1)_TYPE)),$(CXX) $($(1)_LDFLAGS) -o $@ $^,\
+$(if $(findstring headers,$($(1)_TYPE)),,\
 $(warning unknown link command -- $(1) $($(1)_TYPE))\
-))))))
+)))))))
 define OUTPUT_template
 $(1)_OUTPUT := $(call calculate-output-dir,$(1))/$(call calculate-output-name,$(1))
 $(1)_OBJ := $(call gen-obj,$($(1)_SRC),$(TOP_BUILD_DIR)/)

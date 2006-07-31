@@ -72,7 +72,7 @@ config.mk:
 	@echo BOOST_PREFIX_INC:=$(CONF_B_INC) >>config.mk
 	@echo PYTHON_PREFIX_INC:=$(CONF_P_INC) >>config.mk
     ifneq ($(CONF_P_USE),)
-	@echo PYTHON_USE:=y >>config.mk
+	@echo PYTHON_USE:=n >>config.mk
     else
 	@echo PYTHON_USE:= \# set it to \"y\" to enable python >>config.mk
     endif
@@ -392,6 +392,36 @@ YANS_CXXFLAGS += -DTCP_USE_BSD
 YANS_CXXFLAGS += -I$(TOP_SRC_DIR)/src/ipv4/tcp-bsd/
 endif
 
+YANS_SRC += \
+ src/libc/libc.cc \
+ src/libc/elf-process.cc \
+ $(NULL)
+src/libc/elf-process.cc_CXXFLAGS:=-Isrc/libc/sys
+src/libc/libc.cc_CXXFLAGS:=-Isrc/libc/sys
+YANS_LIBC_SRC := \
+ src/libc/internal-libc.c \
+ src/libc/stdio.c \
+ src/libc/fcntl.c \
+ src/libc/unistd.c \
+ $(NULL)
+YANS_LIBC_INST_HDR := \
+ src/libc/stdio.h \
+ src/libc/unistd.h \
+ $(NULL)
+YANS_LIBC_NAME:=c
+YANS_LIBC_OUTPUT_DIR=sys
+YANS_LIBC_TYPE:=shared-library
+YANS_LIBC_CFLAGS:=-Isrc/libc/sys
+YANS_LIBC_LDFLAGS:=-nodefaultlibs $(LDFLAGS)
+
+YANS_LIBC_SYS_NAME=c/sys
+YANS_LIBC_SYS_TYPE:=headers
+YANS_LIBC_SYS_INST_HDR:= \
+ src/libc/sys/fcntl.h \
+ src/libc/sys/socket.h \
+ src/libc/sys/types.h \
+ $(NULL)
+
 REPLAY_SIMULATION_SRC:=utils/replay-simulation.cc
 REPLAY_SIMULATION_NAME:=replay-simulation
 REPLAY_SIMULATION_TYPE:=executable
@@ -709,6 +739,8 @@ YANS_PYTHON_SAMPLE_SIMPLE_TYPE:=python-executable
 
 ALL:= \
 	YANS \
+	YANS_LIBC \
+	YANS_LIBC_SYS \
 	REPLAY_SIMULATION \
 	BENCH \
 	BENCH_PACKET \
