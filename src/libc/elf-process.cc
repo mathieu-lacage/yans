@@ -23,9 +23,10 @@
 
 namespace yans {
 
-ElfProcess::ElfProcess (char const *root_path)
+ElfProcess::ElfProcess (char const *root_path, char const *binary)
 {
 	m_libc = libc_new (root_path);
+	m_binary = binary;
 }
 ElfProcess::~ElfProcess ()
 {
@@ -34,6 +35,8 @@ ElfProcess::~ElfProcess ()
 
 void 
 ElfProcess::start (int argc, char *argv[])
-{}
+{
+	
+}
 
 }; // namespace yans

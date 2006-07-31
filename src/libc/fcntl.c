@@ -26,14 +26,11 @@
 
 int open(char const*pathname, int flags,...)
 {
-	if (flags & O_CREAT) {
-		va_list arg;
-		va_start(arg, flags);
-		mode_t mode = va_arg(arg, int);
-		va_end(arg);
-		return g_libc->open_mode (g_libc, pathname, flags, mode);
-	}
-	return g_libc->open (g_libc, pathname, flags);
+	va_list ap;
+	va_start (ap, flags);
+	int retval = g_libc->vopen (g_libc, pathname, flags, ap);
+	va_end (ap);
+	return retval;
 }
 int creat(char const*pathname, mode_t mode)
 {}

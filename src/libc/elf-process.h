@@ -21,18 +21,21 @@
 #ifndef ELF_PROCESS_H
 #define ELF_PROCESS_H
 
+#include <string>
+
 struct Libc;
 
 namespace yans {
 
 class ElfProcess {
 public:
-	ElfProcess (char const *root_path);
+	ElfProcess (char const *root_path, char const *binary);
 	~ElfProcess ();
 
 	void start (int argc, char *argv[]);
 private:
 	struct Libc *m_libc;
+	std::string m_binary;
 };
 
 }; // namespace yans

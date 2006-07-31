@@ -45,14 +45,17 @@ void libc_delete (struct Libc *libc);
 struct Libc {
 	struct libc_FILE*(*fopen) (struct Libc *libc, char const *filename,char const *modes);
 	int (*fclose) (struct Libc *libc, struct libc_FILE*fp);
+	void (*clearerr) (struct Libc *libc, struct libc_FILE *stream);
+	int (*feof) (struct Libc *libc, struct libc_FILE *stream);
+	int (*ferror) (struct Libc *libc, struct libc_FILE *stream);
+	int (*fileno) (struct Libc *libc, struct libc_FILE*stream);
 	size_t (*fread) (struct Libc *libc, void *ptr, size_t size,size_t n, struct libc_FILE*stream);
 	size_t (*fwrite) (struct Libc *libc, void const* ptr, size_t size,size_t n, struct libc_FILE*stream);
 	int (*vfprintf) (struct Libc *libc, struct libc_FILE*stream, const char *format, va_list ap);
 	int (*vsprintf) (struct Libc *libc, char *str, const char *format, va_list ap);
 	int (*vsnprintf) (struct Libc *libc, char *str, size_t size, const char *format, va_list ap);
 
-	int (*open) (struct Libc *libc, char const*pathname, int flags);
-	int (*open_mode) (struct Libc *libc, char const*pathname, int flags, mode_t mode);
+	int (*vopen) (struct Libc *libc, char const*pathname, int flags, va_list ap);
 	ssize_t (*read) (struct Libc *libc, int fd, void *buf, size_t nbytes);
 	ssize_t (*write) (struct Libc *libc, int fd, void const*buf, size_t n);
 	int (*close) (struct Libc *libc, int fd);
