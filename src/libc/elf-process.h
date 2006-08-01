@@ -22,6 +22,7 @@
 #define ELF_PROCESS_H
 
 #include <string>
+#include <vector>
 
 struct Libc;
 
@@ -32,10 +33,16 @@ public:
 	ElfProcess (char const *root_path, char const *binary);
 	~ElfProcess ();
 
+	void add_arg (char const *arg);
 	void start (int argc, char *argv[]);
+	void start (void);
 private:
+	typedef std::vector<char *> Args;
+	typedef std::vector<char *>::iterator ArgsI;
 	struct Libc *m_libc;
 	std::string m_binary;
+	Args m_args;
+	void *m_module;
 };
 
 }; // namespace yans

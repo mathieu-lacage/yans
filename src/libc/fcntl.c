@@ -19,9 +19,9 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #include "fcntl.h"
-#include "mode-t.h"
+#include "bits/mode-t.h"
 #include "internal-libc.h"
-#include "libc.h"
+#include "indirect-libc.h"
 #include <stdarg.h>
 
 int open(char const*pathname, int flags,...)

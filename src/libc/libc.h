@@ -21,13 +21,11 @@
 #ifndef LIBC_H
 #define LIBC_H
 
-#include "size-t.h"
-#include "ssize-t.h"
-#include "mode-t.h"
 #include <stdarg.h>
 
 struct libc_FILE;
 struct LibcPrivate;
+
 
 struct Libc *libc_new (char const*root_path);
 void libc_delete (struct Libc *libc);
@@ -60,6 +58,14 @@ struct Libc {
 	ssize_t (*write) (struct Libc *libc, int fd, void const*buf, size_t n);
 	int (*close) (struct Libc *libc, int fd);
 	int (*socket) (struct Libc *libc, int domain, int type, int protocol);
+
+
+	int (*pthread_create) (pthread_t *thread,
+			       pthread_attr_t const *attr,
+			       void *(*start_routine)(void*), void *arg);
+	void (*pthread_exit) (void *value_ptr);
+	int (*pthread_join) (pthread_t thread, void **value_ptr);
+	
 
 	struct libc_FILE *stdout;
 	struct libc_FILE *stderr;

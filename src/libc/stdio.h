@@ -21,7 +21,7 @@
 #ifndef STDIO_H
 #define STDIO_H
 
-#include "size-t.h"
+#include "bits/size-t.h"
 
 #ifdef __cplusplus
 extern "C" {

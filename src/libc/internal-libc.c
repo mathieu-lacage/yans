@@ -19,15 +19,17 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #include "stdio.h"
-#include "libc.h"
 
 struct Libc *g_libc = 0;
 
 void 
-set_libc (struct Libc *libc)
+set_libc (struct Libc *libc, 
+	  struct libc_FILE *in, 
+	  struct libc_FILE *out, 
+	  struct libc_FILE *err)
 {
 	g_libc = libc;
-	stdin = libc->stdin;
-	stdout = libc->stdout;
-	stderr = libc->stderr;
+	stdin = in;
+	stdout = out;
+	stderr = err;
 }

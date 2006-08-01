@@ -381,7 +381,7 @@ YANS_INCLUDES:=\
  $(NULL)
 YANS_CXXFLAGS:=$(CXXFLAGS) $(YANS_INCLUDES) -DDISABLE_IPV4_CHECKSUM=1
 YANS_CFLAGS:=$(CFLAGS) $(YANS_INCLUDES) -DDISABLE_IPV4_CHECKSUM=1
-YANS_LDFLAGS:=$(LDFLAGS)
+YANS_LDFLAGS:=$(LDFLAGS) -lpthread -ldl
 YANS_NAME:=yans
 YANS_TYPE:=shared-library
 YANS_OUTPUT_DIR:=
@@ -396,7 +396,9 @@ YANS_SRC += \
  src/libc/libc.cc \
  src/libc/elf-process.cc \
  $(NULL)
-src/libc/elf-process.cc_CXXFLAGS:=-Isrc/libc/sys
+YANS_INST_HDR += \
+ src/libc/elf-process.h \
+ $(NULL)
 src/libc/libc.cc_CXXFLAGS:=-Isrc/libc/sys
 YANS_LIBC_SRC := \
  src/libc/internal-libc.c \
@@ -415,12 +417,31 @@ YANS_LIBC_TYPE:=shared-library
 YANS_LIBC_CFLAGS:=-Isrc/libc/sys
 YANS_LIBC_LDFLAGS:=-nodefaultlibs $(LDFLAGS)
 
+YANS_LIBC_BITS_NAME:=c/bits
+YANS_LIBC_BITS_TYPE:=headers
+YANS_LIBC_BITS_INST_HDR:= \
+ src/libc/bits/size-t.h \
+ src/libc/bits/ssize-t.h \
+ src/libc/bits/mode-t.h \
+ $(NULL)
+
 YANS_LIBC_SYS_NAME=c/sys
 YANS_LIBC_SYS_TYPE:=headers
 YANS_LIBC_SYS_INST_HDR:= \
  src/libc/sys/socket.h \
  src/libc/sys/types.h \
  $(NULL)
+
+TEST_LIBC_SRC:=samples/test-libc.cc
+TEST_LIBC_TYPE:=executable
+TEST_LIBC_NAME:=test-libc
+TEST_LIBC_LDFLAGS:=-L$(TOP_BUILD_DIR)/lib -lyans
+
+TEST_LIBC_BIN_SRC:=samples/test-libc-binary.cc
+TEST_LIBC_BIN_TYPE:=shared-library
+TEST_LIBC_BIN_NAME:=test-libc-binary
+TEST_LIBC_BIN_CXXFLAGS:=-isystem $(TOP_BUILD_DIR)/include/c
+TEST_LIBC_BIN_LDFLAGS:=-nodefaultlibs -L$(TOP_BUILD_DIR)/lib/sys -lc
 
 REPLAY_SIMULATION_SRC:=utils/replay-simulation.cc
 REPLAY_SIMULATION_NAME:=replay-simulation
@@ -740,7 +761,10 @@ YANS_PYTHON_SAMPLE_SIMPLE_TYPE:=python-executable
 ALL:= \
 	YANS \
 	YANS_LIBC \
+	YANS_LIBC_BITS \
 	YANS_LIBC_SYS \
+	TEST_LIBC \
+	TEST_LIBC_BIN \
 	REPLAY_SIMULATION \
 	BENCH \
 	BENCH_PACKET \

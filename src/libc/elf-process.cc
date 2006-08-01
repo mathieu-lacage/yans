@@ -20,6 +20,8 @@
  */
 #include "elf-process.h"
 #include "libc.h"
+#include <dlfcn.h>
+#include <iostream>
 
 namespace yans {
 
@@ -31,12 +33,45 @@ ElfProcess::ElfProcess (char const *root_path, char const *binary)
 ElfProcess::~ElfProcess ()
 {
 	libc_delete (m_libc);
+	for (ArgsI i = m_args.begin (); i != m_args.end (); i++) {
+		free (*i);
+	}
+	m_args.erase (m_args.begin (), m_args.end ());
+}
+
+void 
+ElfProcess::add_arg (char const *arg)
+{
+	m_args.push_back (strdup (arg));
 }
 
 void 
 ElfProcess::start (int argc, char *argv[])
 {
-	
+	m_module = dlmopen (LM_ID_NEWLM, m_binary.c_str (), RTLD_NOW);	
+	if (m_module == 0) {
+		std::cerr << "error=\""<< dlerror ()<<"\""<<std::endl;
+		return;
+	}
+	void *symbol = dlsym (m_module, "set_libc");
+	if (symbol == 0) {
+		std::cerr << "error lookup set_libc."<<std::endl;
+		return;
+	}
+	void (*set_libc) (struct Libc *,struct libc_FILE*,struct libc_FILE*,struct libc_FILE*) = 
+		(void (*) (struct Libc *,struct libc_FILE*,struct libc_FILE*,struct libc_FILE*))symbol;
+	(*set_libc) (m_libc, m_libc->stdin, m_libc->stdout, m_libc->stderr);
+}
+
+void
+ElfProcess::start (void)
+{
+	char **argv;
+	argv = (char **)malloc (sizeof (char **) * m_args.size ());
+	for (unsigned int i = 0; i < m_args.size (); i++) {
+		argv[i] = m_args[i];
+	}
+	start (m_args.size (), argv);
 }
 
 }; // namespace yans

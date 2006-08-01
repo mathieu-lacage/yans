@@ -89,7 +89,7 @@ $(if $(findstring python-cxx-module,$($(1)_TYPE)),$(call platform-pymod-name,$($
 $(if $(findstring python-module,$($(1)_TYPE)),$($(1)_NAME),\
 $(if $(findstring python-executable,$($(1)_TYPE)),$($(1)_NAME),\
 $(if $(findstring executable,$($(1)_TYPE)),$($(1)_NAME),\
-$(if $(findstring headers,$($(1)_TYPE)),,\
+$(if $(findstring headers,$($(1)_TYPE)),$(1),\
 $(warning unknown output name -- $(1))\
 )))))))
 calculate-output-dir=$(strip \
@@ -126,7 +126,7 @@ $(if $(findstring python-cxx-module,$($(1)_TYPE)),$(CXX) $($(1)_LDFLAGS) -o $@ $
 $(if $(findstring python-module,$($(1)_TYPE)),$(CP) $^ $(dir $@);$(ECHO) empty >$@;,\
 $(if $(findstring python-executable,$($(1)_TYPE)),$(CP) $^ $@,\
 $(if $(findstring executable,$($(1)_TYPE)),$(CXX) $($(1)_LDFLAGS) -o $@ $^,\
-$(if $(findstring headers,$($(1)_TYPE)),,\
+$(if $(findstring headers,$($(1)_TYPE)),touch $@,\
 $(warning unknown link command -- $(1) $($(1)_TYPE))\
 )))))))
 define OUTPUT_template

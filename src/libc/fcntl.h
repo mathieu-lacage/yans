@@ -21,7 +21,7 @@
 #ifndef FCNTL_H
 #define FCNTL_H
 
-#include "mode-t.h"
+#include "bits/mode-t.h"
 /* XXX */
 #define O_CREAT 0100
 

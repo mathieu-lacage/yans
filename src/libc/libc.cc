@@ -18,11 +18,12 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#include "libc.h"
 #include <string>
 #include <stdio.h>
 #include <sys/fcntl.h>
 #include <errno.h>
+#include <pthread.h>
+#include "libc.h"
 
 
 #define NOBIT_OPEN_FILES 8

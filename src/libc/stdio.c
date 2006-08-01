@@ -20,7 +20,7 @@
  */
 #include "stdio.h"
 #include "internal-libc.h"
-#include "libc.h"
+#include "indirect-libc.h"
 #include <stdarg.h>
 
 

@@ -20,8 +20,7 @@
  */
 #include "unistd.h"
 #include "internal-libc.h"
-#include "libc.h"
-
+#include "indirect-libc.h"
 
 int close (int fd)
 {

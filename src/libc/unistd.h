@@ -21,8 +21,8 @@
 #ifndef UNISTD_H
 #define UNISTD_H
 
-#include "size-t.h"
-#include "ssize-t.h"
+#include "bits/size-t.h"
+#include "bits/ssize-t.h"
 
 int close (int fd);
 ssize_t read (int fd, void *buf, size_t nbytes);
