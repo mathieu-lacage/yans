@@ -23,6 +23,7 @@
 #define EVENT_H
 
 #include <algorithm>
+#include "event-impl.h"
 
 namespace yans {
 
@@ -43,12 +44,47 @@ class EventImpl;
  */
 class Event {
 public:
-	INL_EXPE Event ();
-	INL_EXPE Event (EventImpl *impl);
-	INL_EXPE Event (Event const &o);
-	INL_EXPE ~Event ();
-	INL_EXPE Event &operator = (Event const&o);
-	INL_EXPE void operator () (void);
+	Event ()
+		: m_impl (0)
+	{}
+	Event (EventImpl *impl)
+		: m_impl (impl)
+	{}
+	Event (Event const &o)
+		: m_impl (o.m_impl)
+	{
+		if (m_impl != 0) {
+			m_impl->m_count++;
+		}
+	}
+	~Event ()
+	{
+		if (m_impl != 0) {
+			m_impl->m_count--;
+			if (m_impl->m_count == 0) {
+				delete m_impl;
+			}
+		}
+		m_impl = 0;
+	}
+	Event &operator = (Event const&o)
+	{
+		if (m_impl != 0) {
+			m_impl->m_count--;
+			if (m_impl->m_count == 0) {
+				delete m_impl;
+			}
+		}
+		m_impl = o.m_impl;
+		if (m_impl != 0) {
+			m_impl->m_count++;
+		}
+		return *this;
+	}
+	void operator () (void)
+	{
+		m_impl->invoke ();
+	}
 	/**
 	 * Cancel an event. This operation has O(1) 
 	 * complexity since it merely sets a "cancel" bit
@@ -57,7 +93,12 @@ public:
 	 * the scheduler checks this cancel bit and, if set,
 	 * does not execute the event.
 	 */
-	INL_EXPE void cancel (void);
+	void cancel (void)
+	{
+		if (m_impl != 0) {
+			m_impl->cancel ();
+		}
+	}
 	/**
 	 * Return true if the event is in RUNNING state.
 	 * Return false otherwise.
@@ -69,101 +110,31 @@ public:
 	 * It is important to note that an event is in RUNNING
 	 * state while being executed.
 	 */
-	INL_EXPE bool is_running (void);
+	bool is_running (void)
+	{
+		if (m_impl != 0 && m_impl->is_running ()) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
 private:
 	friend class SchedulerHeap;
 	friend class SchedulerList;
 	friend class SchedulerMap;
-	friend INL_EXPE void swap (Event &a, Event &b);
-	INL_EXPE void set_tag (void *tag);
-	INL_EXPE void *get_tag (void) const;
+	void set_tag (void *tag)
+	{
+		return m_impl->set_tag (tag);
+	}
+	void *get_tag (void) const
+	{
+		return m_impl->get_tag ();
+	}
+
 	EventImpl *m_impl;
 };
 
-INL_EXPE void swap (Event &a, Event &b);
-
-
 }; // namespace yans
 
-#ifdef INL_EXPE
-#include "event-impl.h"
-#include <cassert>
-
-namespace yans {
-
-Event::Event ()
-	: m_impl (0)
-{}
-Event::Event (EventImpl *impl)
-	: m_impl (impl)
-{}
-Event::Event (Event const &o)
-	: m_impl (o.m_impl)
-{
-	if (m_impl != 0) {
-		m_impl->ref ();
-	}
-}
-Event::~Event ()
-{
-	if (m_impl != 0) {
-		m_impl->unref ();
-	}
-	m_impl = 0;
-}
-Event &
-Event::operator = (Event const&o)
-{
-	if (m_impl != 0) {
-		m_impl->unref ();
-	}
-	m_impl = o.m_impl;
-	if (m_impl != 0) {
-		m_impl->ref ();
-	}
-	return *this;
-}
-void 
-Event::operator () (void)
-{
-	assert (m_impl != 0);
-	m_impl->invoke ();
-}
-void 
-Event::set_tag (void *tag)
-{
-	m_impl->set_tag (tag);
-}
-void *
-Event::get_tag (void) const
-{
-	return m_impl->get_tag ();
-}
-void
-Event::cancel (void)
-{
-	if (m_impl != 0) {
-		m_impl->cancel ();
-	}
-}
-
-bool 
-Event::is_running (void)
-{
-	if (m_impl != 0 && m_impl->is_running ()) {
-		return true;
-	} else {
-		return false;
-	}
-}
-
-
-
-INL_EXPE void swap (Event &a, Event &b)
-{
-	std::swap (a.m_impl, b.m_impl);
-}
-
-}; // namespace yans
-#endif
 #endif /* EVENT_H */

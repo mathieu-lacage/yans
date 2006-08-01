@@ -29,5 +29,4 @@ EventImpl::~EventImpl ()
 {}
 
 
-
 }; // namespace yans

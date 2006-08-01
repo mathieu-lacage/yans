@@ -47,6 +47,8 @@ std::cout << "HEAP TRACE " << x << std::endl;
 #endif /* TRACE_HEAP */
 
 
+
+
 namespace yans {
 
 SchedulerHeap::SchedulerHeap ()
@@ -127,7 +129,7 @@ SchedulerHeap::exch (uint32_t a, uint32_t b)
 	TRACE ("exch " << a << ", " << b);
 #if 1
 	std::swap (m_heap[a].second, m_heap[b].second);
-	swap (m_heap[a].first, m_heap[b].first);
+	std::swap (m_heap[a].first.m_impl, m_heap[b].first.m_impl);
 #else
 	std::pair<Event , Scheduler::EventKey> tmp (m_heap[a]);
 	m_heap[a] = m_heap[b];
