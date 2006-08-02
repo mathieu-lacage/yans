@@ -19,9 +19,38 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #include <stdio.h>
+#include <pthread.h>
+
+static __thread int g_var;
+
+static void *run_a (void *data)
+{
+	g_var = (int)data;
+}
+
+static void *run_b (void *data)
+{
+	g_var = (int)data;
+}
 
 int main (int argc, char *argv[])
 {
 	printf ("starting process %s\n" , argv[0]);
+
+	pthread_t th;
+	pthread_attr_t attr;
+	int retval;
+
+	retval = pthread_create (&th, 0, run_a, (void*)2);
+	if (retval != 0) {
+		goto err;
+	}
+	retval = pthread_create (&th, 0, run_a, (void*)3);
+	if (retval != 0) {
+		goto err;
+	}
+
 	return 0;
+ err:
+	return 1;
 }

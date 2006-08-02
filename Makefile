@@ -405,14 +405,15 @@ YANS_LIBC_SRC := \
  src/libc/stdio.c \
  src/libc/fcntl.c \
  src/libc/unistd.c \
+ src/libc/pthread.c \
  $(NULL)
 YANS_LIBC_INST_HDR := \
  src/libc/stdio.h \
  src/libc/unistd.h \
  src/libc/fcntl.h \
+ src/libc/pthread.h \
  $(NULL)
-YANS_LIBC_NAME:=c
-YANS_LIBC_OUTPUT_DIR=sys
+YANS_LIBC_NAME:=sysc
 YANS_LIBC_TYPE:=shared-library
 YANS_LIBC_CFLAGS:=-Isrc/libc/sys
 YANS_LIBC_LDFLAGS:=-nodefaultlibs $(LDFLAGS)
@@ -437,11 +438,11 @@ TEST_LIBC_TYPE:=executable
 TEST_LIBC_NAME:=test-libc
 TEST_LIBC_LDFLAGS:=-L$(TOP_BUILD_DIR)/lib -lyans
 
-TEST_LIBC_BIN_SRC:=samples/test-libc-binary.cc
+TEST_LIBC_BIN_SRC:=samples/test-libc-binary.c
 TEST_LIBC_BIN_TYPE:=shared-library
 TEST_LIBC_BIN_NAME:=test-libc-binary
 TEST_LIBC_BIN_CXXFLAGS:=-isystem $(TOP_BUILD_DIR)/include/c
-TEST_LIBC_BIN_LDFLAGS:=-nodefaultlibs -L$(TOP_BUILD_DIR)/lib/sys -lc
+TEST_LIBC_BIN_LDFLAGS:=-nodefaultlibs -L$(TOP_BUILD_DIR)/lib/sys -lsysc
 
 REPLAY_SIMULATION_SRC:=utils/replay-simulation.cc
 REPLAY_SIMULATION_NAME:=replay-simulation

@@ -65,6 +65,8 @@ struct Libc {
 			       void *(*start_routine)(void*), void *arg);
 	void (*pthread_exit) (void *value_ptr);
 	int (*pthread_join) (pthread_t thread, void **value_ptr);
+
+	//tls_get_addr (
 	
 
 	struct libc_FILE *stdout;

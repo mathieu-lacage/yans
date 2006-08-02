@@ -18,18 +18,13 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef PTHREAD_H
-#define PTHREAD_H
-
-typedef struct _pthread_t pthread_t;
-typedef struct _pthread_attr_t pthread_attr_t;
-
-struct _pthread_t {};
-struct _pthread_attr_t {};
+#include "pthread.h"
+#include "internal-libc.h"
+#include "indirect-libc.h"
 
 int pthread_create(pthread_t *thread,
 		   const pthread_attr_t *attr,
-		   void *(*start_routine)(void*), void *arg);
-
-
-#endif /* PTHREAD_H */
+		   void *(*start_routine)(void*), void *arg)
+{
+	return g_libc->pthread_create (thread, attr, start_routine, arg);
+}
