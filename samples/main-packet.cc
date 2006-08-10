@@ -138,6 +138,7 @@ static void
 receive (PacketPtr p)
 {
 	MyChunk my;
+	p->peek (&my);
 	p->remove (&my);
 	std::cout << "received data=" << my.get_data () << std::endl;
 	MyTag my_tag;
