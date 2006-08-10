@@ -22,106 +22,68 @@
 #define GPACKET_H
 
 #include <stdint.h>
-#include "packet.h"
+#include "gbuffer.h"
+#include "chunk.h"
 
 namespace yans {
 
-class Packet;
-class Tag;
-class Chunk;
-
 class GPacket {
 public:
-	GPacket ()
-		: m_packet (Packet::create ()) {}
-	GPacket (GPacket const &o) 
-	{
-		o.m_packet->m_count++;
-		m_packet = o.m_packet;
-	}
-
-	~GPacket ()
-	{
-		m_packet->m_count--;
-		if (m_packet->m_count == 0) {
-			m_packet->destroy ();
-		}
-	}
-
-	GPacket &operator = (GPacket const &o)
-	{
-		m_packet->m_count--;
-		if (m_packet->m_count == 0) {
-			m_packet->destroy ();
-		}
-		o.m_packet->m_count++;
-		m_packet = o.m_packet;
-		return *this;
-	}
-
-
-	GPacket create_fragment (uint32_t start, uint32_t length) const
-	{
-		return GPacket (m_packet->copy (start, length));
-	}
-	uint32_t get_size (void) const
-	{
-		return m_packet->get_size ();
-	}
-	void add_tag (Tag const*tag)
-	{
-		if (m_packet->m_count > 1) {
-			m_packet->m_count--;
-			m_packet = m_packet->copy ();
-		}
-		m_packet->add_tag (tag);
-	}
-	void remove_tag (Tag *tag)
-	{
-		if (m_packet->m_count > 1) {
-			m_packet->m_count--;
-			m_packet = m_packet->copy ();
-		}
-		m_packet->remove_tag (tag);
-	}
-	void peek_tag (Tag *tag) const
-	{
-		m_packet->peek_tag (tag);
-	}
-	void update_tag (Tag *tag)
-	{
-		if (m_packet->m_count > 1) {
-			m_packet->m_count--;
-			m_packet = m_packet->copy ();
-		}
-		m_packet->update_tag (tag);
-	}
-	void add (Chunk *chunk)
-	{
-		if (m_packet->m_count > 1) {
-			m_packet->m_count--;
-			m_packet = m_packet->copy ();
-		}
-		m_packet->add (chunk);
-	}
-	void peek (Chunk *chunk) const
-	{
-		m_packet->peek (chunk);
-	}
-	void remove (Chunk *chunk)
-	{
-		if (m_packet->m_count > 1) {
-			m_packet->m_count--;
-			m_packet = m_packet->copy ();
-		}
-		m_packet->remove (chunk);
-	}
-
+	inline GPacket ();
+	inline GPacket create_fragment (uint32_t start, uint32_t length) const;
+	inline uint32_t get_size (void) const;
+	inline void add (Chunk *chunk);
+	inline void peek (Chunk *chunk) const;
+	inline void remove (Chunk *chunk);
 private:
-	GPacket (Packet *p)
-		: m_packet (p) {}
-	Packet *m_packet;
+	inline GPacket (GBuffer buffer);
+	GBuffer m_buffer;
 };
+
+}; // namespace yans
+
+namespace yans {
+
+GPacket::GPacket ()
+	: m_buffer () {}
+
+GPacket 
+GPacket::create_fragment (uint32_t start, uint32_t length) const
+{
+	GBuffer tmp = m_buffer;
+	tmp.remove_at_start (start);
+	tmp.remove_at_end (m_buffer.get_size () - (start + length));
+	return GPacket (tmp);
+}
+
+uint32_t 
+GPacket::get_size (void) const
+{
+	return m_buffer.get_size ();
+}
+
+void 
+GPacket::add (Chunk *chunk)
+{
+	chunk->add (m_buffer);
+}
+
+void 
+GPacket::peek (Chunk *chunk) const
+{
+	chunk->peek (m_buffer);
+}
+
+void 
+GPacket::remove (Chunk *chunk)
+{
+	chunk->remove (m_buffer);
+}
+
+
+GPacket::GPacket (GBuffer buffer)
+	: m_buffer (buffer)
+{}
 
 }; // namespace yans
 
