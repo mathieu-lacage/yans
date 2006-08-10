@@ -28,5 +28,40 @@ namespace yans {
 EventImpl::~EventImpl ()
 {}
 
+EventImpl::EventImpl ()
+	: m_id (0),
+	  m_count (1),
+	  m_cancel (0),
+	  m_running (1)
+{}
+void 
+EventImpl::invoke (void)
+{
+	if (m_cancel == 0) {
+		notify ();
+	}
+	m_running = 0;
+}
+void 
+EventImpl::set_tag (void *tag)
+{
+	m_id = tag;
+}
+void *
+EventImpl::get_tag (void) const
+{
+	return m_id;
+}
+void 
+EventImpl::cancel (void)
+{
+	m_cancel = 1;
+	m_running = 0;
+}
+bool 
+EventImpl::is_running (void)
+{
+	return (m_running == 1);
+}
 
 }; // namespace yans

@@ -27,36 +27,12 @@ namespace yans {
 
 class EventImpl {
 public:
-	EventImpl ()
-		: m_id (0),
-		  m_count (1),
-		  m_cancel (0),
-		  m_running (1)
-	{}
-	void invoke (void)
-	{
-		if (m_cancel == 0) {
-			notify ();
-		}
-		m_running = 0;
-	}
-	void set_tag (void *tag)
-	{
-		m_id = tag;
-	}
-	void *get_tag (void) const
-	{
-		return m_id;
-	}
-	void cancel (void)
-	{
-		m_cancel = 1;
-		m_running = 0;
-	}
-	bool is_running (void)
-	{
-		return (m_running == 1);
-	}
+	EventImpl ();
+	void invoke (void);
+	void set_tag (void *tag);
+	void *get_tag (void) const;
+	void cancel (void);
+	bool is_running (void);
 protected:
 	virtual ~EventImpl () = 0;
 private:
