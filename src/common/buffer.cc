@@ -236,6 +236,7 @@ Buffer::end (void) const
 	return Buffer::Iterator (start, end, end);
 }
 
+#ifndef INL_EXPE
 Buffer::Iterator::Iterator ()
 	: m_start (0), m_end (0), m_current (0)
 {}
@@ -330,8 +331,6 @@ Buffer::Iterator::write_u8 (uint8_t  data, uint32_t len)
 	memset (m_current, data, len);
 	m_current += len;
 }
-
-#ifndef INL_EXPE
 void 
 Buffer::Iterator::write_u8  (uint8_t  data)
 {
@@ -339,7 +338,6 @@ Buffer::Iterator::write_u8  (uint8_t  data)
 	*m_current = data;
 	m_current++;
 }
-#endif
 void 
 Buffer::Iterator::write_u16 (uint16_t data)
 {
@@ -364,7 +362,6 @@ Buffer::Iterator::write_u64 (uint64_t data)
 	*buffer = data;
 	m_current += 8;
 }
-#ifndef INL_EXPE
 void 
 Buffer::Iterator::write_hton_u16 (uint16_t data)
 {
@@ -373,7 +370,6 @@ Buffer::Iterator::write_hton_u16 (uint16_t data)
 	*(m_current+1) = (data >> 0) & 0xff;
 	m_current += 2;
 }
-#endif
 void 
 Buffer::Iterator::write_hton_u32 (uint32_t data)
 {
@@ -483,7 +479,7 @@ Buffer::Iterator::read (uint8_t *buffer, uint16_t size)
 	memcpy (buffer, m_current, size);
 	m_current += size;
 }
-
+#endif /* INL_EXP */
 }; // namespace yans
 
 
