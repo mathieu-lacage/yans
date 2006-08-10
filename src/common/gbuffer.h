@@ -322,11 +322,11 @@ private:
 	};
 	typedef std::vector<struct GBuffer::GBufferData*> GBufferDataList;
 
-	uint8_t *get_start (void) const;
-	void recycle (struct GBuffer::GBufferData *data);
-	static struct GBuffer::GBufferData *create (void);
-	static struct GBuffer::GBufferData *allocate (uint32_t size, uint32_t start);
-	static void deallocate (struct GBuffer::GBufferData *data);
+	inline uint8_t *get_start (void) const;
+	inline void recycle (struct GBuffer::GBufferData *data);
+	inline static struct GBuffer::GBufferData *create (void);
+	inline static struct GBuffer::GBufferData *allocate (uint32_t size, uint32_t start);
+	inline static void deallocate (struct GBuffer::GBufferData *data);
 
 	static GBufferDataList m_free_list;
 	static uint32_t m_prefered_size;

@@ -22,6 +22,7 @@
 #define CHUNK_UTILS_H
 
 #include "buffer.h"
+#include "gbuffer.h"
 #include "ipv4-address.h"
 #include "mac-address.h"
 
@@ -32,6 +33,12 @@ void write_to (Buffer::Iterator &i, MacAddress ad);
 
 void read_from (Buffer::Iterator &i, Ipv4Address &ad);
 void read_from (Buffer::Iterator &i, MacAddress &ad);
+
+void write_to (GBuffer::Iterator &i, Ipv4Address ad);
+void write_to (GBuffer::Iterator &i, MacAddress ad);
+
+void read_from (GBuffer::Iterator &i, Ipv4Address &ad);
+void read_from (GBuffer::Iterator &i, MacAddress &ad);
 
 };
 

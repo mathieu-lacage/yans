@@ -288,6 +288,93 @@ ChunkIpv4::print (std::ostream *os) const
 	    << ", source=" << m_source
 	    << ", destination=" << m_destination;
 }
+void 
+ChunkIpv4::add_to (GBuffer buffer) const
+{
+	buffer.add_at_start (get_size ());
+	GBuffer::Iterator i = buffer.begin ();
+	
+	//TRACE ("init ipv4 current="<<buffer->get_current ());
+	uint8_t ver_ihl = (4 << 4) | (5);
+	i.write_u8 (ver_ihl);
+	i.write_u8 (m_tos);
+	i.write_hton_u16 (m_payload_size + 5*4);
+	i.write_hton_u16 (m_identification);
+	uint32_t fragment_offset = m_fragment_offset / 8;
+	uint8_t flags_frag = (fragment_offset >> 8) & 0x1f;
+	if (m_flags & DONT_FRAGMENT) {
+		flags_frag |= (1<<6);
+	}
+	if (m_flags & MORE_FRAGMENTS) {
+		flags_frag |= (1<<5);
+	}
+	i.write_u8 (flags_frag);
+	uint8_t frag = fragment_offset & 0xff;
+	i.write_u8 (frag);
+	i.write_u8 (m_ttl);
+	i.write_u8 (m_protocol);
+	i.write_hton_u16 (0);
+	i.write_hton_u32 (m_source.get_host_order ());
+	i.write_hton_u32 (m_destination.get_host_order ());
+
+	i = buffer.begin ();
+	uint8_t *data = i.peek_data ();
+	//TRACE ("fini ipv4 current="<<state->get_current ());
+	uint16_t checksum = utils_checksum_calculate (0, data, get_size ());
+	checksum = utils_checksum_complete (checksum);
+	//TRACE ("checksum=" <<checksum);
+	i.next (10);
+	i.write_u16 (checksum);
+}
+void 
+ChunkIpv4::peek_from (GBuffer const buffer)
+{
+	GBuffer::Iterator i = buffer.begin ();
+	uint8_t ver_ihl = i.read_u8 ();
+	uint8_t ihl = ver_ihl & 0x0f; 
+	uint16_t header_size = ihl * 4;
+	assert ((ver_ihl >> 4) == 4);
+	m_tos = i.read_u8 ();
+	uint16_t size = i.read_ntoh_u16 ();
+	m_payload_size = size - header_size;
+	m_identification = i.read_ntoh_u16 ();
+	uint8_t flags = i.read_u8 ();
+	m_flags = 0;
+	if (flags & (1<<6)) {
+		m_flags |= DONT_FRAGMENT;
+	}
+	if (flags & (1<<5)) {
+		m_flags |= MORE_FRAGMENTS;
+	}
+	//XXXX I think we should clear some bits in fragment_offset !
+	i.prev ();
+	m_fragment_offset = i.read_ntoh_u16 ();
+	m_fragment_offset *= 8;
+	m_ttl = i.read_u8 ();
+	m_protocol = i.read_u8 ();
+	i.next (2); // checksum
+	m_source.set_host_order (i.read_ntoh_u32 ());
+	m_destination.set_host_order (i.read_ntoh_u32 ());
+
+	i = buffer.begin ();
+	uint8_t *data = i.peek_data ();
+	//TRACE ("fini ipv4 current="<<state->get_current ());
+	uint16_t local_checksum = utils_checksum_calculate (0, data, header_size);
+	if (local_checksum == 0xffff) {
+		m_good_checksum = true;
+	} else {
+		m_good_checksum = false;
+	}
+}
+void 
+ChunkIpv4::remove_from (GBuffer buffer)
+{
+	GBuffer::Iterator i = buffer.begin ();
+	uint8_t ver_ihl = i.read_u8 ();
+	uint8_t ihl = ver_ihl & 0x0f; 
+	uint16_t header_size = ihl * 4;
+	buffer.remove_at_start (header_size);
+}
 
 uint32_t 
 ChunkIpv4::get_size (void) const

@@ -21,6 +21,9 @@ private:
 	virtual void peek_from (Buffer const*buffer);
 	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
+	virtual void add_to (GBuffer buffer) const;
+	virtual void peek_from (GBuffer const buffer);
+	virtual void remove_from (GBuffer buffer);
 
 	uint16_t m_data;
 };
@@ -55,6 +58,28 @@ void
 MyChunk::print (std::ostream *os) const
 {
 	*os << "MyChunk data=" << m_data << std::endl;
+}
+void 
+MyChunk::add_to (GBuffer buffer) const
+{
+	// reserve 2 bytes at head of buffer
+	buffer.add_at_start (2);
+	GBuffer::Iterator i = buffer.begin ();
+	// serialize in head of buffer
+	i.write_hton_u16 (m_data);
+}
+void 
+MyChunk::peek_from (GBuffer const buffer)
+{
+	GBuffer::Iterator i = buffer.begin ();
+	// deserialize from head of buffer
+	m_data = i.read_ntoh_u16 ();
+}
+void 
+MyChunk::remove_from (GBuffer buffer)
+{
+	// remove deserialized data
+	buffer.remove_at_start (2);
 }
 
 void 

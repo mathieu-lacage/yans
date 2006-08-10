@@ -121,5 +121,34 @@ ChunkMacEth::print (std::ostream *os) const
 	*os << " length: " << m_length;
 }
 
+void 
+ChunkMacEth::add_to (GBuffer buffer) const
+{
+	buffer.add_at_start (get_size ());
+	GBuffer::Iterator i = buffer.begin ();
+	write_to (i, m_source);
+	write_to (i, m_destination);
+	assert (m_length <= 0x05dc);
+	/* ieee 802.3 says length is msb. */
+	TRACE ("length="<<m_length);
+	i.write_hton_u16 (m_length + 8);
+}
+void 
+ChunkMacEth::peek_from (GBuffer const buffer)
+{
+	GBuffer::Iterator i = buffer.begin ();
+	read_from (i, m_source);
+	read_from (i, m_destination);
+	m_length = i.read_ntoh_u16 () - 8;
+	TRACE ("length="<<m_length);
+}
+
+void 
+ChunkMacEth::remove_from (GBuffer buffer)
+{
+	buffer.remove_at_start (get_size ());
+}
+
+
 
 }; // namespace yans

@@ -24,6 +24,7 @@
 
 #include <stdint.h>
 #include <ostream>
+#include "gbuffer.h"
 
 namespace yans {
 
@@ -48,6 +49,10 @@ public:
 	void peek (Buffer const*buffer);
 	void remove (Buffer *buffer);
 	void print (std::ostream &os) const;
+
+	void add (GBuffer buffer) const;
+	void peek (GBuffer const buffer);
+	void remove (GBuffer buffer);
 private:
 	bool m_must_peek_before_remove;
 	/**
@@ -79,6 +84,31 @@ private:
 	 *           protocol header must print itself.
 	 */
 	virtual void print (std::ostream *os) const = 0;
+
+	/**
+	 * \param buffer the buffer in which the protocol header
+	 *        must serialize itself.
+	 *
+	 * This method must:
+	 *   - reserve room for its serialized representation in the input buffer
+	 *   - serialize itself in this reserved room
+	 */
+	virtual void add_to (GBuffer buffer) const = 0;
+	/**
+	 * \param buffer the buffer from which the protocol header must
+	 *        deserialize itself.
+	 *
+	 */
+	virtual void peek_from (GBuffer const buffer) = 0;
+	/**
+	 * \param buffer the buffer from which the protocol header
+	 *        must remove itself.
+	 *
+	 * This method must remove its serialized representation 
+	 * from the input buffer. This method does not need to deserialize
+	 * the data itself.
+	 */
+	virtual void remove_from (GBuffer buffer) = 0;
 };
 
 std::ostream& operator<< (std::ostream& os, Chunk const& chunk);

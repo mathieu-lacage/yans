@@ -134,5 +134,39 @@ ChunkUdp::print (std::ostream *os) const
 	    << ", length=" << m_payload_size;
 }
 
+void 
+ChunkUdp::add_to (GBuffer buffer) const
+{
+	buffer.add_at_start (get_size ());
+	GBuffer::Iterator i = buffer.begin ();
+	i.write_hton_u16 (m_source_port);
+	i.write_hton_u16 (m_destination_port);
+	i.write_hton_u16 (m_payload_size + get_size ());
+	i.write_hton_u16 (0);
+
+	i = buffer.begin ();
+	uint16_t checksum = utils_checksum_calculate (m_initial_checksum, 
+						      i.peek_data (), 
+						      get_size () + m_payload_size);
+	checksum = utils_checksum_complete (checksum);
+	i.next (6);
+	i.write_u16 (checksum);
+}
+void 
+ChunkUdp::peek_from (GBuffer const buffer)
+{
+	GBuffer::Iterator i = buffer.begin ();
+	m_source_port = i.read_ntoh_u16 ();
+	m_destination_port = i.read_ntoh_u16 ();
+	m_payload_size = i.read_ntoh_u16 () - get_size ();
+	// XXX verify checksum.
+}
+void 
+ChunkUdp::remove_from (GBuffer buffer)
+{
+	buffer.remove_at_start (get_size ());
+}
+
+
 
 }; // namespace yans
