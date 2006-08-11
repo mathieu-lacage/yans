@@ -63,26 +63,26 @@ void
 ChunkMac80211Fcs::print (std::ostream *os) const
 {}
 void 
-ChunkMac80211Fcs::add_to (GBuffer buffer) const
+ChunkMac80211Fcs::add_to (GBuffer *buffer) const
 {
-	buffer.add_at_end (4);
-	GBuffer::Iterator i = buffer.end ();
+	buffer->add_at_end (4);
+	GBuffer::Iterator i = buffer->end ();
 	i.prev (4);
 	i.write_u32 (0);
 }
 void 
-ChunkMac80211Fcs::peek_from (GBuffer const buffer)
+ChunkMac80211Fcs::peek_from (GBuffer const *buffer)
 {
-	GBuffer::Iterator i = buffer.end ();
+	GBuffer::Iterator i = buffer->end ();
 	i.prev (4);
 	// unused var: quiet compiler
 	//uint32_t fcs = i.read_u32 ();
 	//assert (fcs == 0);
 }
 void 
-ChunkMac80211Fcs::remove_from (GBuffer buffer)
+ChunkMac80211Fcs::remove_from (GBuffer *buffer)
 {
-	buffer.remove_at_end (4);
+	buffer->remove_at_end (4);
 }
 
 

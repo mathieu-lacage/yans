@@ -50,9 +50,9 @@ public:
 	void remove (Buffer *buffer);
 	void print (std::ostream &os) const;
 
-	void add (GBuffer buffer) const;
-	void peek (GBuffer const buffer);
-	void remove (GBuffer buffer);
+	void add (GBuffer *buffer) const;
+	void peek (GBuffer const *buffer);
+	void remove (GBuffer *buffer);
 private:
 	bool m_must_peek_before_remove;
 	/**
@@ -93,13 +93,13 @@ private:
 	 *   - reserve room for its serialized representation in the input buffer
 	 *   - serialize itself in this reserved room
 	 */
-	virtual void add_to (GBuffer buffer) const = 0;
+	virtual void add_to (GBuffer *buffer) const = 0;
 	/**
 	 * \param buffer the buffer from which the protocol header must
 	 *        deserialize itself.
 	 *
 	 */
-	virtual void peek_from (GBuffer const buffer) = 0;
+	virtual void peek_from (GBuffer const *buffer) = 0;
 	/**
 	 * \param buffer the buffer from which the protocol header
 	 *        must remove itself.
@@ -108,7 +108,7 @@ private:
 	 * from the input buffer. This method does not need to deserialize
 	 * the data itself.
 	 */
-	virtual void remove_from (GBuffer buffer) = 0;
+	virtual void remove_from (GBuffer *buffer) = 0;
 };
 
 std::ostream& operator<< (std::ostream& os, Chunk const& chunk);

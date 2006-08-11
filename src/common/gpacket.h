@@ -65,19 +65,19 @@ GPacket::get_size (void) const
 void 
 GPacket::add (Chunk *chunk)
 {
-	chunk->add (m_buffer);
+	chunk->add (&m_buffer);
 }
 
 void 
 GPacket::peek (Chunk *chunk) const
 {
-	chunk->peek (m_buffer);
+	chunk->peek (&m_buffer);
 }
 
 void 
 GPacket::remove (Chunk *chunk)
 {
-	chunk->remove (m_buffer);
+	chunk->remove (&m_buffer);
 }
 
 

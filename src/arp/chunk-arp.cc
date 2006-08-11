@@ -144,10 +144,10 @@ ChunkArp::print (std::ostream *os) const
 	}
 }
 void 
-ChunkArp::add_to (GBuffer buffer) const
+ChunkArp::add_to (GBuffer *buffer) const
 {
-	buffer.add_at_start (get_size ());
-	GBuffer::Iterator i = buffer.begin ();
+	buffer->add_at_start (get_size ());
+	GBuffer::Iterator i = buffer->begin ();
 
 	/* ethernet */
 	i.write_hton_u16 (0x0001);
@@ -162,9 +162,9 @@ ChunkArp::add_to (GBuffer buffer) const
 	write_to (i, m_ipv4_dest);
 }
 void 
-ChunkArp::peek_from (GBuffer const buffer)
+ChunkArp::peek_from (GBuffer const *buffer)
 {
-	GBuffer::Iterator i = buffer.begin ();
+	GBuffer::Iterator i = buffer->begin ();
 	i.next (2+2+1+1);
 	m_type = i.read_ntoh_u16 ();
 	read_from (i, m_mac_source);
@@ -173,9 +173,9 @@ ChunkArp::peek_from (GBuffer const buffer)
 	read_from (i, m_ipv4_dest);
 }
 void 
-ChunkArp::remove_from (GBuffer buffer)
+ChunkArp::remove_from (GBuffer *buffer)
 {
-	buffer.remove_at_start (get_size ());
+	buffer->remove_at_start (get_size ());
 }
 
 }; // namespace yans

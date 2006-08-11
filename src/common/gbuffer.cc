@@ -23,7 +23,7 @@
 namespace yans {
 
 GBuffer::GBufferDataList  GBuffer::m_free_list;
-uint32_t GBuffer::m_prefered_size = 0;
+uint32_t GBuffer::m_prefered_size = 1;
 uint32_t GBuffer::m_prefered_start = 0;
 
 }; // namespace yans

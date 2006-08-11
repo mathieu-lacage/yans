@@ -348,6 +348,7 @@ namespace yans {
 struct GBuffer::GBufferData *
 GBuffer::allocate (uint32_t req_size, uint32_t req_start)
 {
+	assert (req_size >= 1);
 	uint32_t size = req_size - 1 + sizeof (struct GBuffer::GBufferData);
 	uint8_t *b = new uint8_t [size];
 	struct GBufferData *data = reinterpret_cast<struct GBuffer::GBufferData*>(b);

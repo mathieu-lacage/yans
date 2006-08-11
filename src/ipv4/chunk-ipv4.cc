@@ -289,10 +289,10 @@ ChunkIpv4::print (std::ostream *os) const
 	    << ", destination=" << m_destination;
 }
 void 
-ChunkIpv4::add_to (GBuffer buffer) const
+ChunkIpv4::add_to (GBuffer *buffer) const
 {
-	buffer.add_at_start (get_size ());
-	GBuffer::Iterator i = buffer.begin ();
+	buffer->add_at_start (get_size ());
+	GBuffer::Iterator i = buffer->begin ();
 	
 	//TRACE ("init ipv4 current="<<buffer->get_current ());
 	uint8_t ver_ihl = (4 << 4) | (5);
@@ -317,7 +317,7 @@ ChunkIpv4::add_to (GBuffer buffer) const
 	i.write_hton_u32 (m_source.get_host_order ());
 	i.write_hton_u32 (m_destination.get_host_order ());
 
-	i = buffer.begin ();
+	i = buffer->begin ();
 	uint8_t *data = i.peek_data ();
 	//TRACE ("fini ipv4 current="<<state->get_current ());
 	uint16_t checksum = utils_checksum_calculate (0, data, get_size ());
@@ -327,9 +327,9 @@ ChunkIpv4::add_to (GBuffer buffer) const
 	i.write_u16 (checksum);
 }
 void 
-ChunkIpv4::peek_from (GBuffer const buffer)
+ChunkIpv4::peek_from (GBuffer const *buffer)
 {
-	GBuffer::Iterator i = buffer.begin ();
+	GBuffer::Iterator i = buffer->begin ();
 	uint8_t ver_ihl = i.read_u8 ();
 	uint8_t ihl = ver_ihl & 0x0f; 
 	uint16_t header_size = ihl * 4;
@@ -356,7 +356,7 @@ ChunkIpv4::peek_from (GBuffer const buffer)
 	m_source.set_host_order (i.read_ntoh_u32 ());
 	m_destination.set_host_order (i.read_ntoh_u32 ());
 
-	i = buffer.begin ();
+	i = buffer->begin ();
 	uint8_t *data = i.peek_data ();
 	//TRACE ("fini ipv4 current="<<state->get_current ());
 	uint16_t local_checksum = utils_checksum_calculate (0, data, header_size);
@@ -367,13 +367,13 @@ ChunkIpv4::peek_from (GBuffer const buffer)
 	}
 }
 void 
-ChunkIpv4::remove_from (GBuffer buffer)
+ChunkIpv4::remove_from (GBuffer *buffer)
 {
-	GBuffer::Iterator i = buffer.begin ();
+	GBuffer::Iterator i = buffer->begin ();
 	uint8_t ver_ihl = i.read_u8 ();
 	uint8_t ihl = ver_ihl & 0x0f; 
 	uint16_t header_size = ihl * 4;
-	buffer.remove_at_start (header_size);
+	buffer->remove_at_start (header_size);
 }
 
 uint32_t 

@@ -92,26 +92,26 @@ ChunkLlcSnap::print (std::ostream *os) const
 }
 
 void 
-ChunkLlcSnap::add_to (GBuffer buffer) const
+ChunkLlcSnap::add_to (GBuffer *buffer) const
 {
-	buffer.add_at_start (get_size ());
-	GBuffer::Iterator i = buffer.begin ();
+	buffer->add_at_start (get_size ());
+	GBuffer::Iterator i = buffer->begin ();
 	uint8_t buf[] = {0xaa, 0x03, 0, 0, 0};
 	i.write (buf, 5);
 	i.next (1);
 	i.write_hton_u16 (m_ether_type);
 }
 void 
-ChunkLlcSnap::peek_from (GBuffer const buffer)
+ChunkLlcSnap::peek_from (GBuffer const *buffer)
 {
-	GBuffer::Iterator i = buffer.begin ();
+	GBuffer::Iterator i = buffer->begin ();
 	i.next (5+1);
 	m_ether_type = i.read_ntoh_u16 ();
 }
 void 
-ChunkLlcSnap::remove_from (GBuffer buffer)
+ChunkLlcSnap::remove_from (GBuffer *buffer)
 {
-	buffer.remove_at_start (get_size ());
+	buffer->remove_at_start (get_size ());
 }
 
 

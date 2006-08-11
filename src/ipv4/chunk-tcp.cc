@@ -531,10 +531,10 @@ ChunkTcp::print (std::ostream *os) const
 	}
 }
 
-void ChunkTcp::add_to (GBuffer buffer) const
+void ChunkTcp::add_to (GBuffer *buffer) const
 {
-	buffer.add_at_start (get_size ());
-	GBuffer::Iterator i = buffer.begin ();
+	buffer->add_at_start (get_size ());
+	GBuffer::Iterator i = buffer->begin ();
 	i.write_hton_u16 (m_source_port);
 	i.write_hton_u16 (m_destination_port);
 	i.write_hton_u32 (m_sequence_number);
@@ -585,16 +585,16 @@ void ChunkTcp::add_to (GBuffer buffer) const
 
 	uint16_t checksum;
 	checksum = utils_checksum_calculate (m_initial_checksum, 
-					     buffer.begin ().peek_data (),
-					     buffer.get_size ());
+					     buffer->begin ().peek_data (),
+					     buffer->get_size ());
 	checksum = utils_checksum_complete (checksum);
-	i = buffer.begin ();
+	i = buffer->begin ();
 	i.next (16);
 	i.write_u16 (checksum);
 }
-void ChunkTcp::peek_from (GBuffer const buffer)
+void ChunkTcp::peek_from (GBuffer const *buffer)
 {
-	GBuffer::Iterator i = buffer.begin ();
+	GBuffer::Iterator i = buffer->begin ();
 	m_source_port = i.read_ntoh_u16 ();
 	m_destination_port = i.read_ntoh_u16 ();
 	m_sequence_number = i.read_ntoh_u32 ();
@@ -675,8 +675,8 @@ void ChunkTcp::peek_from (GBuffer const buffer)
 
 	uint16_t checksum;
 	checksum = utils_checksum_calculate (m_initial_checksum, 
-					     buffer.begin ().peek_data (),
-					     buffer.get_size ());
+					     buffer->begin ().peek_data (),
+					     buffer->get_size ());
 	checksum = utils_checksum_complete (checksum);
 	if (checksum == 0) {
 		m_is_checksum_ok = 1;
@@ -687,9 +687,9 @@ void ChunkTcp::peek_from (GBuffer const buffer)
  out:
 	return;
 }
-void ChunkTcp::remove_from (GBuffer buffer)
+void ChunkTcp::remove_from (GBuffer *buffer)
 {
-	buffer.remove_at_start (get_size ());
+	buffer->remove_at_start (get_size ());
 }
 
 

@@ -870,10 +870,10 @@ void
 ChunkMac80211Hdr::print (std::ostream *os) const
 {}
 void 
-ChunkMac80211Hdr::add_to (GBuffer buffer) const
+ChunkMac80211Hdr::add_to (GBuffer *buffer) const
 {
-	buffer.add_at_start (get_size ());
-	GBuffer::Iterator i = buffer.begin ();
+	buffer->add_at_start (get_size ());
+	GBuffer::Iterator i = buffer->begin ();
 	i.write_hton_u16 (get_frame_control ());
 	i.write_hton_u16 (m_duration);
 	write_to (i, m_addr1);
@@ -920,9 +920,9 @@ ChunkMac80211Hdr::add_to (GBuffer buffer) const
 	}
 }
 void 
-ChunkMac80211Hdr::peek_from (GBuffer const buffer)
+ChunkMac80211Hdr::peek_from (GBuffer const *buffer)
 {
-	GBuffer::Iterator i = buffer.begin ();
+	GBuffer::Iterator i = buffer->begin ();
 	uint16_t frame_control = i.read_ntoh_u16 ();
 	set_frame_control (frame_control);
 	m_duration = i.read_ntoh_u16 ();
@@ -962,9 +962,9 @@ ChunkMac80211Hdr::peek_from (GBuffer const buffer)
 	}
 }
 void 
-ChunkMac80211Hdr::remove_from (GBuffer buffer)
+ChunkMac80211Hdr::remove_from (GBuffer *buffer)
 {
-	buffer.remove_at_start (get_size ());
+	buffer->remove_at_start (get_size ());
 }
 
 }; // namespace yans

@@ -122,10 +122,10 @@ ChunkMacEth::print (std::ostream *os) const
 }
 
 void 
-ChunkMacEth::add_to (GBuffer buffer) const
+ChunkMacEth::add_to (GBuffer *buffer) const
 {
-	buffer.add_at_start (get_size ());
-	GBuffer::Iterator i = buffer.begin ();
+	buffer->add_at_start (get_size ());
+	GBuffer::Iterator i = buffer->begin ();
 	write_to (i, m_source);
 	write_to (i, m_destination);
 	assert (m_length <= 0x05dc);
@@ -134,9 +134,9 @@ ChunkMacEth::add_to (GBuffer buffer) const
 	i.write_hton_u16 (m_length + 8);
 }
 void 
-ChunkMacEth::peek_from (GBuffer const buffer)
+ChunkMacEth::peek_from (GBuffer const *buffer)
 {
-	GBuffer::Iterator i = buffer.begin ();
+	GBuffer::Iterator i = buffer->begin ();
 	read_from (i, m_source);
 	read_from (i, m_destination);
 	m_length = i.read_ntoh_u16 () - 8;
@@ -144,9 +144,9 @@ ChunkMacEth::peek_from (GBuffer const buffer)
 }
 
 void 
-ChunkMacEth::remove_from (GBuffer buffer)
+ChunkMacEth::remove_from (GBuffer *buffer)
 {
-	buffer.remove_at_start (get_size ());
+	buffer->remove_at_start (get_size ());
 }
 
 

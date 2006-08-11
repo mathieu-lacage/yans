@@ -51,18 +51,18 @@ Chunk::print (std::ostream &os) const
 	print (&os);
 }
 void 
-Chunk::add (GBuffer buffer) const
+Chunk::add (GBuffer *buffer) const
 {
 	add_to (buffer);
 }
 void 
-Chunk::peek (GBuffer const buffer)
+Chunk::peek (GBuffer const *buffer)
 {
 	peek_from (buffer);
 	m_must_peek_before_remove = true;
 }
 void 
-Chunk::remove (GBuffer buffer)
+Chunk::remove (GBuffer *buffer)
 {
 	assert (m_must_peek_before_remove);
 	remove_from (buffer);
