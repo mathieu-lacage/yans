@@ -20,7 +20,7 @@
  */
 #include "llc-snap-encapsulation.h"
 #include "chunk-llc-snap.h"
-#include "packet.h"
+#include "gpacket.h"
 #include "chunk.h"
 #include "mac-network-interface.h"
 #include <cassert>
@@ -49,29 +49,29 @@ LlcSnapEncapsulation::set_mac_interface (MacNetworkInterface *interface)
 	m_interface = interface;
 }
 void 
-LlcSnapEncapsulation::send_ipv4 (PacketPtr packet, MacAddress to)
+LlcSnapEncapsulation::send_ipv4 (GPacket packet, MacAddress to)
 {
 	ChunkLlcSnap llc;
 	llc.set_type (ChunkLlcSnap::TYPE_IPV4);
-	packet->add (&llc);
+	packet.add (&llc);
 	m_interface->send (packet, to);
 }
 void 
-LlcSnapEncapsulation::send_arp (PacketPtr packet, MacAddress to)
+LlcSnapEncapsulation::send_arp (GPacket packet, MacAddress to)
 {
 	ChunkLlcSnap llc;
 	llc.set_type (ChunkLlcSnap::TYPE_ARP);
-	packet->add (&llc);
+	packet.add (&llc);
 	m_interface->send (packet, to);
 }
 
 void
-LlcSnapEncapsulation::receive (PacketPtr packet, MacNetworkInterface *interface)
+LlcSnapEncapsulation::receive (GPacket packet, MacNetworkInterface *interface)
 {
 	assert (interface == m_interface);
 	ChunkLlcSnap llc;
-	packet->peek (&llc);
-	packet->remove (&llc);
+	packet.peek (&llc);
+	packet.remove (&llc);
 	switch (llc.get_type ()) {
 	case ChunkLlcSnap::TYPE_IPV4:
 		m_ipv4_callback (packet);

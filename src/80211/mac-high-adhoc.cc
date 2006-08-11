@@ -22,7 +22,7 @@
 #include "mac-high-adhoc.h"
 #include "dca-txop.h"
 #include "network-interface-80211.h"
-#include "packet.h"
+#include "gpacket.h"
 
 #define noADHOC_TRACE 1
 
@@ -67,9 +67,9 @@ MacHighAdhoc::get_bssid (void) const
 }
 
 void 
-MacHighAdhoc::enqueue (PacketPtr packet, MacAddress to)
+MacHighAdhoc::enqueue (GPacket packet, MacAddress to)
 {
-	TRACE ("enqueue size="<<packet->get_size ()<<", to="<<to<<
+	TRACE ("enqueue size="<<packet.get_size ()<<", to="<<to<<
 	       ", queue_size="<<m_queue->get_size ());
 	ChunkMac80211Hdr hdr;
 	hdr.set_type (MAC_80211_DATA);
@@ -82,9 +82,9 @@ MacHighAdhoc::enqueue (PacketPtr packet, MacAddress to)
 }
 
 void 
-MacHighAdhoc::receive (PacketPtr packet, ChunkMac80211Hdr const *hdr)
+MacHighAdhoc::receive (GPacket packet, ChunkMac80211Hdr const *hdr)
 {
-	TRACE ("received size="<<packet->get_size ()<<", from="<<hdr->get_addr2 ());
+	TRACE ("received size="<<packet.get_size ()<<", from="<<hdr->get_addr2 ());
 	m_callback (packet);
 }
 

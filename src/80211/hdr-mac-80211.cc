@@ -44,7 +44,7 @@
 
 #include "hdr-mac-80211.h"
 
-#include "packet.h"
+#include "gpacket.h"
 #include "ip.h"
 
 static class Mac80211HeaderClass : public PacketHeaderClass {

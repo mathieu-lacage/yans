@@ -40,7 +40,7 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "packet.h"
+#include "gpacket.h"
 
 #include "mac-high-qsta.h"
 #include "mac-traces.h"
@@ -292,22 +292,22 @@ MacHighQsta::gotCFPoll (Packet *packet)
 void
 MacHighQsta::gotReAssociated (Packet *packet)
 {
-	updateEDCAParameters (packet->accessdata ());
+	updateEDCAParameters (packet.accessdata ());
 }
 void
 MacHighQsta::gotAssociated (Packet *packet)
 {
-	updateEDCAParameters (packet->accessdata ());
+	updateEDCAParameters (packet.accessdata ());
 }
 void
 MacHighQsta::gotBeacon (Packet *packet)
 {
-	updateEDCAParameters (packet->accessdata ());
+	updateEDCAParameters (packet.accessdata ());
 }
 void 
 MacHighQsta::gotAddTsResponse (Packet *packet)
 {
-	uint8_t *buffer = packet->accessdata ();
+	uint8_t *buffer = packet.accessdata ();
 	enum mac_80211_request_status status = *((enum mac_80211_request_status *)buffer);
 	buffer += sizeof (status);
 	TSpecRequest *request = *((TSpecRequest **)buffer);
@@ -325,7 +325,7 @@ MacHighQsta::gotAddTsResponse (Packet *packet)
 void 
 MacHighQsta::gotDelTsResponse (Packet *packet)
 {
-	uint8_t *buffer = packet->accessdata ();
+	uint8_t *buffer = packet.accessdata ();
 	enum mac_80211_request_status status = *((enum mac_80211_request_status *)buffer);
 	buffer += sizeof (status);
 	TSpecRequest *request = *((TSpecRequest **)buffer);

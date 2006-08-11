@@ -25,7 +25,7 @@
 #include <stdint.h>
 #include "callback.h"
 #include "chunk-mac-80211-hdr.h"
-#include "packet.h"
+#include "gpacket.h"
 #include "callback-logger.h"
 
 namespace yans {
@@ -62,7 +62,7 @@ public:
 
 	void register_traces (TraceContainer *container);
 
-	void queue (PacketPtr packet, ChunkMac80211Hdr const &hdr);
+	void queue (GPacket packet, ChunkMac80211Hdr const &hdr);
 private:
 	class AccessListener;
 	class TransmissionListener;
@@ -92,7 +92,7 @@ private:
 	uint32_t get_fragment_size (void);
 	bool is_last_fragment (void);
 	void next_fragment (void);
-	PacketPtr get_fragment_packet (ChunkMac80211Hdr *hdr);
+	GPacket get_fragment_packet (ChunkMac80211Hdr *hdr);
 
 	Dcf *m_dcf;
 	TxOk m_tx_ok_callback;
@@ -107,7 +107,8 @@ private:
 	PhyListener *m_phy_listener;
 	
 
-	PacketPtr m_current_packet;
+	GPacket m_current_packet;
+	bool m_has_current;
 	ChunkMac80211Hdr m_current_hdr;
 	uint32_t m_ssrc;
 	uint32_t m_slrc;

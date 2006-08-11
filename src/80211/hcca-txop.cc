@@ -60,7 +60,7 @@
 #include "net-interface-80211.h"
 #include "phy-80211.h"
 
-#include "packet.h"
+#include "gpacket.h"
 
 #ifndef HCCA_TXOP_TRACE
 #define HCCA_TXOP_TRACE 1

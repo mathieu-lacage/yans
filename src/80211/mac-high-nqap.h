@@ -24,7 +24,7 @@
 #include "mac-address.h"
 #include "callback.h"
 #include "supported-rates.h"
-#include "packet.h"
+#include "gpacket.h"
 #include <stdint.h>
 
 namespace yans {
@@ -36,7 +36,7 @@ class MacStations;
 
 class MacHighNqap {
 public:
-	typedef Callback<void, PacketPtr > ForwardCallback;
+	typedef Callback<void, GPacket > ForwardCallback;
 
 	MacHighNqap ();
 	~MacHighNqap ();
@@ -48,11 +48,11 @@ public:
 	void set_supported_rates (SupportedRates rates);
 	void set_beacon_interval_us (uint64_t us);
 
-	void queue (PacketPtr packet, MacAddress to);
+	void queue (GPacket packet, MacAddress to);
 
-	void receive (PacketPtr packet, ChunkMac80211Hdr const *hdr);
+	void receive (GPacket packet, ChunkMac80211Hdr const *hdr);
 private:
-	void forward_down (PacketPtr packet, MacAddress from, MacAddress to);
+	void forward_down (GPacket packet, MacAddress from, MacAddress to);
 	void tx_ok (ChunkMac80211Hdr const &hdr);
 	void tx_failed (ChunkMac80211Hdr const &hdr);
 	void send_probe_resp (MacAddress to);

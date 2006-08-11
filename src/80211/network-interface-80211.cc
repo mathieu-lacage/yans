@@ -24,7 +24,7 @@
 #include "base-channel-80211.h"
 #include "mac-stations.h"
 #include "mac-station.h"
-#include "packet.h"
+#include "gpacket.h"
 #include "trace-container.h"
 #include "mac-low.h"
 #include "mac-parameters.h"
@@ -75,7 +75,7 @@ NetworkInterface80211::register_traces (TraceContainer *container)
 	m_phy->register_traces (container);
 }
 void 
-NetworkInterface80211::forward_up_data (PacketPtr packet)
+NetworkInterface80211::forward_up_data (GPacket packet)
 {
 	m_rx_logger->log (packet);
 	MacNetworkInterface::forward_up (packet);
@@ -112,7 +112,7 @@ NetworkInterface80211Adhoc::register_dca_traces (TraceContainer *container)
 	m_dca->register_traces (container);
 }
 void 
-NetworkInterface80211Adhoc::real_send (PacketPtr packet, MacAddress to)
+NetworkInterface80211Adhoc::real_send (GPacket packet, MacAddress to)
 {
 	m_high->enqueue (packet, to);
 }
@@ -149,7 +149,7 @@ NetworkInterface80211Nqsta::register_dca_traces (TraceContainer *container)
 	m_dca->register_traces (container);
 }
 void 
-NetworkInterface80211Nqsta::real_send (PacketPtr packet, MacAddress to)
+NetworkInterface80211Nqsta::real_send (GPacket packet, MacAddress to)
 {
 	m_high->queue (packet, to);
 }
@@ -189,7 +189,7 @@ NetworkInterface80211Nqap::register_dca_traces (TraceContainer *container)
 	m_dca->register_traces (container);
 }
 void 
-NetworkInterface80211Nqap::real_send (PacketPtr packet, MacAddress to)
+NetworkInterface80211Nqap::real_send (GPacket packet, MacAddress to)
 {
 	m_high->queue (packet, to);
 }

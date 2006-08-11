@@ -23,7 +23,7 @@
 #include "cable.h"
 #include "chunk-mac-crc.h"
 #include "chunk-mac-eth.h"
-#include "packet.h"
+#include "gpacket.h"
 #include "callback.h"
 #include "packet-logger.h"
 #include "trace-container.h"
@@ -66,24 +66,24 @@ EthernetNetworkInterface::connect_to (Cable *cable)
 	m_cable = cable;
 }
 void 
-EthernetNetworkInterface::recv (PacketPtr packet)
+EthernetNetworkInterface::recv (GPacket packet)
 {
-	TRACE ("rx init size="<<packet->get_size ());
+	TRACE ("rx init size="<<packet.get_size ());
 	m_recv_logger->log (packet);
 	ChunkMacEth eth;
 	ChunkMacCrc trailer;
-	packet->peek (&eth);
-	packet->remove (&eth);
-	TRACE ("rx no header size="<<packet->get_size ());
-	if (eth.get_length () < packet->get_size () - 4) {
-		uint32_t padding = packet->get_size () - 4 - eth.get_length ();
+	packet.peek (&eth);
+	packet.remove (&eth);
+	TRACE ("rx no header size="<<packet.get_size ());
+	if (eth.get_length () < packet.get_size () - 4) {
+		uint32_t padding = packet.get_size () - 4 - eth.get_length ();
 		TRACE ("rx read padding="<<padding);
 		trailer.set_pad (padding);
 	} else {
-		TRACE ("rx no padding, length="<<eth.get_length ()<<", packet="<<packet->get_size ());
+		TRACE ("rx no padding, length="<<eth.get_length ()<<", packet="<<packet.get_size ());
 	}
-	packet->peek (&trailer);
-	packet->remove (&trailer);
+	packet.peek (&trailer);
+	packet.remove (&trailer);
 	forward_up (packet);
 }
 
@@ -101,22 +101,22 @@ EthernetNetworkInterface::notify_down (void)
 {}
 
 void 
-EthernetNetworkInterface::real_send (PacketPtr packet, MacAddress dest)
+EthernetNetworkInterface::real_send (GPacket packet, MacAddress dest)
 {
-	TRACE ("tx init size="<<packet->get_size ());
+	TRACE ("tx init size="<<packet.get_size ());
 	ChunkMacEth eth;
 	eth.set_destination (dest);
 	eth.set_source (get_mac_address ());
-	eth.set_length (packet->get_size ());
+	eth.set_length (packet.get_size ());
 	ChunkMacCrc trailer;
-	if (packet->get_size () < 38) {
-		trailer.set_pad (38 - packet->get_size ());
-		TRACE ("tx set padding="<<38 - packet->get_size ());
+	if (packet.get_size () < 38) {
+		trailer.set_pad (38 - packet.get_size ());
+		TRACE ("tx set padding="<<38 - packet.get_size ());
 	}
-	packet->add (&eth);
-	TRACE ("tx header size="<<packet->get_size ());
-	packet->add (&trailer);
-	TRACE ("tx final size="<<packet->get_size ());
+	packet.add (&eth);
+	TRACE ("tx header size="<<packet.get_size ());
+	packet.add (&trailer);
+	TRACE ("tx final size="<<packet.get_size ());
 	m_send_logger->log (packet);
 	m_cable->send (packet, this);
 }

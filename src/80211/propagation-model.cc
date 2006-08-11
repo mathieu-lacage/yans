@@ -22,7 +22,7 @@
 #include "position.h"
 #include "channel-80211.h"
 #include "simulator.h"
-#include "packet.h"
+#include "gpacket.h"
 #include "event.tcc"
 #include <math.h>
 
@@ -67,7 +67,7 @@ PropagationModel::set_receive_callback (RxCallback callback)
 }
 
 void 
-PropagationModel::send (ConstPacketPtr packet, double tx_power_dbm, 
+PropagationModel::send (GPacket const packet, double tx_power_dbm, 
 			uint8_t tx_mode, uint8_t stuff) const
 {
 	m_channel->send (packet, tx_power_dbm + m_tx_gain_dbm, 
@@ -93,7 +93,7 @@ PropagationModel::get_rx_power_w (double tx_power_dbm, double from_x, double fro
 	return rx_power_w;
 }
 void 
-PropagationModel::receive (ConstPacketPtr packet, 
+PropagationModel::receive (GPacket const packet, 
 			   double rx_power_w,
 			   uint8_t tx_mode, uint8_t stuff)
 {

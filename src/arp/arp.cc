@@ -25,7 +25,7 @@
 #include "packet-logger.h"
 #include "trace-container.h"
 #include "chunk-arp.h"
-#include "packet.h"
+#include "gpacket.h"
 #include <cassert>
 
 #define noTRACE_ARP 1
@@ -120,9 +120,9 @@ Arp::send_arp_request (Ipv4Address to)
 			 m_interface->get_ipv4_address (),
 			 to);
 	Packet *packet = new Packet ();
-	packet->add (&arp);
+	packet.add (&arp);
 	m_send_arp (packet, MacAddress::get_broadcast ());
-	packet->unref ();
+	packet.unref ();
 }
 
 void
@@ -133,9 +133,9 @@ Arp::send_arp_reply (Ipv4Address to_ip, MacAddress to_mac)
 		       m_interface->get_ipv4_address (),
 		       to_mac, to_ip);
 	Packet *packet = new Packet ();
-	packet->add (&arp);
+	packet.add (&arp);
 	m_send_arp (packet, to_mac);
-	packet->unref ();
+	packet.unref ();
 }
 
 
@@ -186,8 +186,8 @@ void
 Arp::recv_arp (Packet *packet)
 {
 	ChunkArp arp;
-	packet->peek (&arp);
-	packet->remove (&arp);
+	packet.peek (&arp);
+	packet.remove (&arp);
 	if (arp.is_request () && 
 	    arp.get_destination_ipv4_address () == m_interface->get_ipv4_address ()) {
 		TRACE ("got request from " << arp.get_source_ipv4_address () << " -- send reply");

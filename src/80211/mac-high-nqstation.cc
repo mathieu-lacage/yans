@@ -19,7 +19,7 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "packet.h"
+#include "gpacket.h"
 
 #include "mac-high-nqstation.h"
 #include "dcf.h"

@@ -20,7 +20,6 @@
  */
 
 #include "tcp-buffer.h"
-#include "packet.h"
 #include <cassert>
 
 
@@ -54,9 +53,9 @@ TcpBuffer::check_state (void)
 	uint32_t prev_end = 0;
 	TRACE ("state");
 	for (PiecesI i = m_pieces.begin (); i != m_pieces.end (); i++) {
-		assert ((*i).first != 0);
+		//assert ((*i).first != 0);
 		uint32_t cur_start = (*i).second;
-		uint32_t cur_end = cur_start + (*i).first->get_size ();
+		uint32_t cur_end = cur_start + (*i).first.get_size ();
 #ifdef TRACE_TCP_PIECES
 		uint32_t seq_start = m_start + cur_start;
 		uint32_t seq_end = m_start + cur_end;
@@ -94,23 +93,23 @@ TcpBuffer::get_current (void)
 	return m_start;
 }
 void
-TcpBuffer::insert_piece_at (PiecesI i, PacketPtr piece, uint32_t offset)
+TcpBuffer::insert_piece_at (PiecesI i, GPacket piece, uint32_t offset)
 {
-	if (piece->get_size () > 0) {
+	if (piece.get_size () > 0) {
 		m_pieces.insert (i, std::make_pair (piece, offset));
 	}
 }
 
 void
-TcpBuffer::insert_piece_at_back (PacketPtr piece, uint32_t offset)
+TcpBuffer::insert_piece_at_back (GPacket piece, uint32_t offset)
 {
-	if (offset + piece->get_size () > m_size) {
+	if (offset + piece.get_size () > m_size) {
 		/* we have to trim the input piece if it is bigger
 		 * than the room we have left.
 		 */
-		piece->remove_at_end (offset + piece->get_size () - m_size);
+		piece.remove_at_end (offset + piece.get_size () - m_size);
 	}
-	if (piece->get_size () > 0) {
+	if (piece.get_size () > 0) {
 		insert_piece_at (m_pieces.end (), piece, offset);
 	}
 }
@@ -125,20 +124,20 @@ TcpBuffer::seq_sub (uint32_t a, uint32_t b)
 }
 
 uint32_t 
-TcpBuffer::add_at (ConstPacketPtr packet, uint32_t seq_offset)
+TcpBuffer::add_at (GPacket const packet, uint32_t seq_offset)
 {
-	assert (packet != 0);
+	//assert (packet != 0);
 
-	if (packet->get_size () == 0) {
+	if (packet.get_size () == 0) {
 		return 0;
 	}
 
-	PacketPtr piece = packet->copy ();
+	GPacket piece = packet;
 	int delta = seq_sub (seq_offset, m_start);
 	uint32_t offset;
 
 	if (delta < 0) {
-		piece->remove_at_start (-delta);
+		piece.remove_at_start (-delta);
 		offset = 0;
 	} else {
 		offset = delta;
@@ -150,16 +149,16 @@ TcpBuffer::add_at (ConstPacketPtr packet, uint32_t seq_offset)
 	}
 	for (PiecesI i = m_pieces.begin (); i != m_pieces.end (); i++) {
 		uint32_t cur_start = (*i).second;
-		uint32_t cur_end = cur_start + (*i).first->get_size ();
+		uint32_t cur_end = cur_start + (*i).first.get_size ();
 		if (cur_start > offset) {
-			if (offset + piece->get_size () <= cur_start) {
+			if (offset + piece.get_size () <= cur_start) {
 				/* we fit perfectly well right before the current chunk. */
 				insert_piece_at (i, piece, offset);
 			} else {
 				/* we need to trim the end of this piece because it
 				 * overlaps the current chunk. 
 				 */
-				piece->remove_at_end (offset + piece->get_size () - cur_start);
+				piece.remove_at_end (offset + piece.get_size () - cur_start);
 				insert_piece_at (i, piece, offset);
 			}
 			goto done;
@@ -169,43 +168,43 @@ TcpBuffer::add_at (ConstPacketPtr packet, uint32_t seq_offset)
 			 */
 			if (offset < cur_end) {
 				/* damn, we do overlap. */
-				piece->remove_at_start (cur_end - offset);
+				piece.remove_at_start (cur_end - offset);
 				offset += cur_end - offset;
 			}
 		}
 	}
 	insert_piece_at_back (piece, offset);
  done:
-	if (piece->get_size () == 0) {
+	if (piece.get_size () == 0) {
 		CHECK_STATE;
 		return 0;
 	}
 	CHECK_STATE;
-	return piece->get_size ();
+	return piece.get_size ();
 }
 uint32_t 
-TcpBuffer::add_at_back (ConstPacketPtr packet)
+TcpBuffer::add_at_back (GPacket const packet)
 {
 	uint32_t stored = 0;
 	if (m_pieces.empty ()) {
 		stored = add_at (packet, m_start);
 	} else {
 		Piece last = *(--(m_pieces.end ()));
-		stored = add_at (packet, m_start + last.second + last.first->get_size ());
+		stored = add_at (packet, m_start + last.second + last.first.get_size ());
 	}
 	return stored;
 }
 
-PacketPtr 
-TcpBuffer::get_at_front (uint32_t size)
+GPacket 
+TcpBuffer::get_at_front (uint32_t size, bool *found)
 {
-	return get_at (0, size);
+	return get_at (0, size, found);
 }
-PacketPtr 
-TcpBuffer::get_at (uint32_t offset, uint32_t size)
+GPacket 
+TcpBuffer::get_at (uint32_t offset, uint32_t size, bool *found)
 {
 	assert (size > 0);
-	PacketPtr packet = Packet::create ();
+	GPacket packet;
 	uint32_t expected_start = 0;
 	uint32_t end = offset + size;
 	bool adding = false;
@@ -213,7 +212,7 @@ TcpBuffer::get_at (uint32_t offset, uint32_t size)
 	assert (end >= offset + size);
 	for (PiecesI i = m_pieces.begin (); i != m_pieces.end (); i++) {
 		uint32_t cur_start = (*i).second;
-		uint32_t cur_end = (*i).second + (*i).first->get_size ();
+		uint32_t cur_end = (*i).second + (*i).first.get_size ();
 		if (adding && expected_start != cur_start) {
 			break;
 		}
@@ -235,16 +234,18 @@ TcpBuffer::get_at (uint32_t offset, uint32_t size)
 		} else {
 			piece_end = cur_end;
 		}
-		packet->add_at_end ((*i).first, trim_start, piece_end - trim_start);
+		packet.add_at_end ((*i).first, trim_start, piece_end - trim_start);
 		if (!adding) {
 			break;
 		}
 		expected_start = cur_end;
 	}
-	if (packet->get_size () == 0) {
+	if (packet.get_size () == 0) {
 		TRACE ("foo");
-		return 0;
+		*found = false;
+		return GPacket ();
 	}
+	*found = true;
 	return packet;	
 }
 
@@ -261,17 +262,17 @@ TcpBuffer::remove_at_front (uint32_t size)
 	PiecesI last = m_pieces.begin ();
 	for (PiecesI i = m_pieces.begin (); i != m_pieces.end (); i++) {
 		uint32_t cur_start = (*i).second;
-		uint32_t cur_size = (*i).first->get_size ();
+		uint32_t cur_size = (*i).first.get_size ();
 		uint32_t cur_end = (*i).second + cur_size;
 
 		assert (cur_start == expected_start);
 		if (cur_start >= size) {
 			break;
 		}
-		PacketPtr packet = (*i).first;
+		GPacket packet = (*i).first;
 		if (cur_end > size) {
 			assert (cur_start < size);
-			packet->remove_at_start (cur_size - (cur_end - size));
+			packet.remove_at_start (cur_size - (cur_end - size));
 			break;
 		}
 		expected_start = cur_end;
@@ -307,7 +308,7 @@ TcpBuffer::get_data_at_front (void)
 		if ((*i).second != expected_offset) {
 			break;
 		}
-		expected_offset = (*i).second + (*i).first->get_size ();
+		expected_offset = (*i).second + (*i).first.get_size ();
 	}
 	return expected_offset;
 }
@@ -318,7 +319,7 @@ TcpBuffer::get_empty_at_back (void)
 		return m_size;
 	}
 	Piece end = m_pieces.back ();
-	uint32_t offset = end.second + end.first->get_size ();	
+	uint32_t offset = end.second + end.first.get_size ();	
 	assert (offset <= m_size);
 	return m_size - offset;
 }
@@ -344,17 +345,17 @@ class TcpBufferTest : public Test {
 public:
 	TcpBufferTest ();
 private:
-	PacketPtr create_one_packet (uint32_t size);
+	GPacket create_one_packet (uint32_t size);
 	bool check_front_data (TcpBuffer *buffer, uint32_t expected_data, int line);
 	bool test_buffer (uint32_t start);
 	virtual bool run_tests (void);
 };
-PacketPtr 
+GPacket 
 TcpBufferTest::create_one_packet (uint32_t size)
 {
-	PacketPtr packet = Packet::create ();
+	GPacket packet;
 	ChunkConstantData data (size, 0);
-	packet->add (&data);
+	packet.add (&data);
 	return packet;
 }
 #define CHECK_FRONT_DATA(pieces, size)            \
@@ -380,7 +381,7 @@ TcpBufferTest::test_buffer (uint32_t start)
 	TcpBuffer *buffer = new TcpBuffer ();
 	buffer->set_start (start);
 	buffer->set_size (100);
-	PacketPtr piece;
+	GPacket piece;
 	CHECK_FRONT_DATA (buffer, 0);
 	piece = create_one_packet (1);
 	buffer->add_at (piece, start+0);

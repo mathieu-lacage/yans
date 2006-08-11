@@ -22,7 +22,7 @@
 
 #include "callback.h"
 #include "tcp-source.h"
-#include "packet.h"
+#include "gpacket.h"
 #include "host.h"
 #include "tcp.h"
 #include "ipv4-route.h"
@@ -90,7 +90,7 @@ TcpSource::start_disconnect_now (void)
 	m_connection->start_disconnect ();
 }
 void 
-TcpSource::send (PacketPtr packet)
+TcpSource::send (GPacket packet)
 {
 	m_connection->send (packet);
 }
@@ -142,7 +142,7 @@ void
 TcpSource::transmitted (void)
 {}
 void 
-TcpSource::got_ack (PacketPtr packet)
+TcpSource::got_ack (GPacket packet)
 {}
 
 

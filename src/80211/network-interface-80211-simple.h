@@ -26,7 +26,7 @@
 #include "mac-address.h"
 #include "ipv4-address.h"
 #include "ui-traced-variable.tcc"
-#include "packet.h"
+#include "gpacket.h"
 #include <string>
 
 namespace yans {
@@ -48,9 +48,9 @@ public:
 private:
 	virtual void notify_up (void);
 	virtual void notify_down (void);
-	virtual void real_send (PacketPtr packet, MacAddress to);
+	virtual void real_send (GPacket packet, MacAddress to);
 
-	void forward_data_up (PacketPtr packet);
+	void forward_data_up (GPacket packet);
 	friend class NetworkInterface80211SimpleFactory;
 	NetworkInterface80211Simple (MacAddress address);
 

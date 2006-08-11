@@ -22,19 +22,19 @@
 
 #include "defrag-state.h"
 #include "simulator.h"
-#include "packet.h"
+#include "gpacket.h"
 #include "chunk-ipv4.h"
 #include <cassert>
 
 namespace yans {
 
 
-DefragFragment::DefragFragment (PacketPtr fragment, ChunkIpv4 *ip)
+DefragFragment::DefragFragment (GPacket fragment, ChunkIpv4 *ip)
 	: m_fragment (fragment),
 	  m_is_last (ip->is_last_fragment ()),
 	  m_offset (ip->get_fragment_offset ())
 {}
-PacketPtr 
+GPacket 
 DefragFragment::get_fragment (void)
 {
 	return m_fragment;
@@ -52,7 +52,7 @@ DefragFragment::get_offset (void)
 uint32_t 
 DefragFragment::get_size (void)
 {
-	return m_fragment->get_size ();
+	return m_fragment.get_size ();
 }
 
 
@@ -72,7 +72,7 @@ DefragState::~DefragState ()
 }
 
 void 
-DefragState::add (PacketPtr fragment, ChunkIpv4 *ip_frag)
+DefragState::add (GPacket fragment, ChunkIpv4 *ip_frag)
 {
 	assert (m_identification == ip_frag->get_identification ());
 	assert (m_source == ip_frag->get_source ());
@@ -110,14 +110,14 @@ DefragState::is_complete (void)
 	}
 	return complete;
 }
-PacketPtr 
+GPacket 
 DefragState::get_complete (void)
 {
 	assert (is_complete ());
 
-	PacketPtr packet = Packet::create ();
+	GPacket packet;
 	for (FragmentsI i = m_fragments.begin (); i != m_fragments.end (); i++) {
-		packet->add_at_end ((*i).get_fragment ());
+		packet.add_at_end ((*i).get_fragment ());
 	}
 	return packet;
 }

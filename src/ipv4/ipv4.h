@@ -26,7 +26,7 @@
 
 #include "ipv4-address.h"
 #include "callback.h"
-#include "packet.h"
+#include "gpacket.h"
 
 namespace yans {
 
@@ -43,7 +43,7 @@ class TraceContainer;
 
 class Ipv4 {
 public:
-	typedef Callback<void,PacketPtr> TransportProtocolCallback;
+	typedef Callback<void,GPacket> TransportProtocolCallback;
 
 	Ipv4 ();
 	~Ipv4 ();
@@ -51,25 +51,25 @@ public:
 	void set_host (Host *host);
 
 	void set_protocol (uint8_t protocol);
-	void send (PacketPtr packet);
+	void send (GPacket packet);
 
 	void register_trace (TraceContainer *container);
 
 	/* invoked from higher-layers. */
 	void register_transport_protocol (TransportProtocolCallback callback, uint8_t protocol);
 	/* invoked from lower-layers. */
-	void receive (PacketPtr packet, Ipv4NetworkInterface *from);
+	void receive (GPacket packet, Ipv4NetworkInterface *from);
 
 private:
-	bool forwarding (PacketPtr packet, ChunkIpv4 *ip, Ipv4NetworkInterface *from);
+	bool forwarding (GPacket packet, ChunkIpv4 *ip, Ipv4NetworkInterface *from);
 	Ipv4Route *get_route (void);
 	TransportProtocolCallback lookup_protocol (uint8_t id);
-	void send_icmp_time_exceeded_ttl (PacketPtr original, ChunkIpv4 *ip, Ipv4NetworkInterface *interface);
-	bool send_out (PacketPtr packet, ChunkIpv4 *ip, Route const*route);
-	void send_real_out (PacketPtr packet, ChunkIpv4 *ip, Route const*route);
-	PacketPtr re_assemble (PacketPtr fragment, ChunkIpv4 *ip);
-	void receive_packet (PacketPtr packet, ChunkIpv4 *ip, Ipv4NetworkInterface *interface);
-	void receive_icmp (PacketPtr packet);
+	void send_icmp_time_exceeded_ttl (GPacket original, ChunkIpv4 *ip, Ipv4NetworkInterface *interface);
+	bool send_out (GPacket packet, ChunkIpv4 *ip, Route const*route);
+	void send_real_out (GPacket packet, ChunkIpv4 *ip, Route const*route);
+	GPacket re_assemble (GPacket fragment, ChunkIpv4 *ip, bool *complete);
+	void receive_packet (GPacket packet, ChunkIpv4 *ip, Ipv4NetworkInterface *interface);
+	void receive_icmp (GPacket packet);
 
 	static const uint8_t ICMP_PROTOCOL;
 

@@ -21,13 +21,13 @@
 
 #include "mac-queue-80211e.h"
 #include "simulator.h"
-#include "packet.h"
+#include "gpacket.h"
 
 using namespace std;
 
 namespace yans {
 
-MacQueue80211e::Item::Item (PacketPtr packet, 
+MacQueue80211e::Item::Item (GPacket packet, 
 			    ChunkMac80211Hdr const &hdr, 
 			    uint64_t tstamp)
 	: packet (packet), hdr (hdr), tstamp (tstamp)
@@ -53,7 +53,7 @@ MacQueue80211e::set_max_delay_us (uint64_t us)
 	m_max_delay_us = us;
 }
 void 
-MacQueue80211e::enqueue (PacketPtr packet, ChunkMac80211Hdr const &hdr)
+MacQueue80211e::enqueue (GPacket packet, ChunkMac80211Hdr const &hdr)
 {
 	cleanup ();
 	if (m_size == m_max_size) {
@@ -84,8 +84,8 @@ MacQueue80211e::cleanup (void)
 	m_queue.erase (m_queue.begin (), end);
 }
 
-PacketPtr 
-MacQueue80211e::dequeue (ChunkMac80211Hdr *hdr)
+GPacket 
+MacQueue80211e::dequeue (ChunkMac80211Hdr *hdr, bool *found)
 {
 	cleanup ();
 	if (!m_queue.empty ()) {
@@ -93,9 +93,11 @@ MacQueue80211e::dequeue (ChunkMac80211Hdr *hdr)
 		m_queue.pop_front ();
 		m_size--;
 		*hdr = i.hdr;
+		*found = true;
 		return i.packet;
 	}
-	return 0;
+	*found = false;
+	return GPacket ();
 }
 
 

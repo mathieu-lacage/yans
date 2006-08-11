@@ -23,7 +23,7 @@
 
 #include <stdint.h>
 #include "callback.h"
-#include "packet.h"
+#include "gpacket.h"
 
 namespace yans {
 /**
@@ -46,7 +46,7 @@ class BaseChannel80211;
 
 class PropagationModel {
 public:
-	typedef Callback<void,ConstPacketPtr, double, uint8_t, uint8_t> RxCallback;
+	typedef Callback<void,GPacket const, double, uint8_t, uint8_t> RxCallback;
 	PropagationModel ();
 	~PropagationModel ();
 
@@ -61,8 +61,8 @@ public:
 
 
 	/* tx power unit: dBm */
-	void send (ConstPacketPtr packet, double tx_power_dbm, uint8_t tx_mode, uint8_t stuff) const;
-	void receive (ConstPacketPtr packet, double rx_power_w,
+	void send (GPacket const packet, double tx_power_dbm, uint8_t tx_mode, uint8_t stuff) const;
+	void receive (GPacket const packet, double rx_power_w,
 		      uint8_t tx_mode, uint8_t stuff);
 
 	/* unit: dBm */

@@ -23,7 +23,7 @@
 #define CABLE_H
 
 #include <list>
-#include "packet.h"
+#include "gpacket.h"
 
 namespace yans {
 
@@ -44,7 +44,7 @@ public:
 	void connect_to (EthernetNetworkInterface *a,
 			 EthernetNetworkInterface *b);
 
-	void send (PacketPtr packet, EthernetNetworkInterface *sender);
+	void send (GPacket packet, EthernetNetworkInterface *sender);
 
 private:
 	static const double SPEED_OF_LIGHT;

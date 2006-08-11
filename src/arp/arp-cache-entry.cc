@@ -22,7 +22,7 @@
 #include "simulator.h"
 #include "arp-ipv4-network-interface.h"
 #include "arp-cache-entry.h"
-#include "packet.h"
+#include "gpacket.h"
 #include <cassert>
 
 namespace yans {
@@ -30,7 +30,7 @@ namespace yans {
 ArpCacheEntry::ArpCacheEntry (ArpIpv4NetworkInterface *arp)
 	: m_arp (arp),
 	  m_state (ALIVE),
-	  m_waiting (0)
+	  m_waiting ()
 {}
 
 
@@ -55,39 +55,39 @@ void
 ArpCacheEntry::mark_dead (void) 
 {
 	m_state = DEAD;
-	assert (m_waiting != 0);
+	//assert (m_waiting != 0);
 	update_seen ();
 }
-PacketPtr 
+GPacket 
 ArpCacheEntry::mark_alive (MacAddress mac_address) 
 {
 	assert (m_state == WAIT_REPLY);
-	assert (m_waiting != 0);
+	//assert (m_waiting != 0);
 	m_mac_address = mac_address;
 	m_state = ALIVE;
 	update_seen ();
-	PacketPtr waiting = m_waiting;
-	m_waiting = 0;
+	GPacket waiting = m_waiting;
+	//m_waiting = 0;
 	return waiting;
 }
 
-PacketPtr 
-ArpCacheEntry::update_wait_reply (PacketPtr waiting)
+GPacket 
+ArpCacheEntry::update_wait_reply (GPacket waiting)
 {
 	assert (m_state == WAIT_REPLY);
 	/* We are already waiting for an answer so
 	 * we dump the previously waiting packet and
 	 * replace it with this one.
 	 */
-	PacketPtr old = m_waiting;
+	GPacket old = m_waiting;
 	m_waiting = waiting;
 	return old;
 }
 void 
-ArpCacheEntry::mark_wait_reply (PacketPtr waiting)
+ArpCacheEntry::mark_wait_reply (GPacket waiting)
 {
 	assert (m_state == ALIVE || m_state == DEAD);
-	assert (m_waiting == 0);
+	//assert (m_waiting == 0);
 	m_state = WAIT_REPLY;
 	m_waiting = waiting;
 	update_seen ();

@@ -25,7 +25,7 @@
 #include <stdint.h>
 #include <list>
 #include <utility>
-#include "packet.h"
+#include "gpacket.h"
 
 namespace yans {
 
@@ -44,13 +44,13 @@ public:
 	 * the copy internally, and return the number of
 	 * bytes copied.
 	 */
-	uint32_t add_at (ConstPacketPtr packet, uint32_t offset);
-	uint32_t add_at_back (ConstPacketPtr packet);
+	uint32_t add_at (GPacket const packet, uint32_t offset);
+	uint32_t add_at_back (GPacket const packet);
 
 	/* Returns 0 if no data could be found at the front
 	 * of the buffer.
 	 */
-	PacketPtr get_at_front (uint32_t size);
+	GPacket get_at_front (uint32_t size, bool *found);
 
 
 	void remove_at_front (uint32_t size);
@@ -61,14 +61,14 @@ public:
 	bool is_empty (void);
 
 private:
-	typedef std::pair<PacketPtr , uint32_t> Piece;
+	typedef std::pair<GPacket , uint32_t> Piece;
 	typedef std::list<Piece> Pieces;
 	typedef std::list<Piece>::iterator PiecesI;
 
-	PacketPtr get_at (uint32_t offset, uint32_t size);
+	GPacket get_at (uint32_t offset, uint32_t size, bool *found);
 	int32_t seq_sub (uint32_t a, uint32_t b);
-	void insert_piece_at_back (PacketPtr piece, uint32_t offset);
-	void insert_piece_at (PiecesI i, PacketPtr piece, uint32_t offset);
+	void insert_piece_at_back (GPacket piece, uint32_t offset);
+	void insert_piece_at (PiecesI i, GPacket piece, uint32_t offset);
 	void check_state (void);
 	
 	Pieces m_pieces;

@@ -25,7 +25,7 @@
 
 #include "ipv4-address.h"
 #include "callback.h"
-#include "packet.h"
+#include "gpacket.h"
 #include <list>
 
 namespace yans {
@@ -79,8 +79,8 @@ private:
 
 	void slow_timer (void);
 	void fast_timer (void);
-	void receive (PacketPtr packet);
-	void send_reset (PacketPtr packet, ChunkTcp *tcp_chunk);
+	void receive (GPacket packet);
+	void send_reset (GPacket packet, ChunkTcp *tcp_chunk);
 	void destroy_connection (TcpConnection *listener);
 
 	Host *m_host;

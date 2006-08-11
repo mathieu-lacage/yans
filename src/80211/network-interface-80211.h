@@ -26,7 +26,7 @@
 #include "mac-address.h"
 #include "ipv4-address.h"
 #include "ssid.h"
-#include "packet.h"
+#include "gpacket.h"
 #include <string>
 
 namespace yans {
@@ -62,11 +62,11 @@ public:
 
 protected:
 	NetworkInterface80211 (MacAddress address);
-	void forward_up_data (PacketPtr packet);
+	void forward_up_data (GPacket packet);
 private:
 	virtual void notify_up (void);
 	virtual void notify_down (void);
-	virtual void real_send (PacketPtr packet, MacAddress to) = 0;
+	virtual void real_send (GPacket packet, MacAddress to) = 0;
 	void associated (void);
 
 	friend class NetworkInterface80211Factory;
@@ -92,7 +92,7 @@ public:
 
 	void register_dca_traces (TraceContainer *container);
 private:
-	virtual void real_send (PacketPtr packet, MacAddress to);
+	virtual void real_send (GPacket packet, MacAddress to);
 	friend class NetworkInterface80211Factory;
 	Ssid m_ssid;
 	DcaTxop *m_dca;
@@ -110,7 +110,7 @@ public:
 	void register_dca_traces (TraceContainer *container);
 private:
 	void associated (void);
-	virtual void real_send (PacketPtr packet, MacAddress to);
+	virtual void real_send (GPacket packet, MacAddress to);
 	friend class NetworkInterface80211Factory;
 	Ssid m_ssid;
 	DcaTxop *m_dca;
@@ -128,7 +128,7 @@ public:
 	void register_dca_traces (TraceContainer *container);
 
 private:
-	virtual void real_send (PacketPtr packet, MacAddress to);
+	virtual void real_send (GPacket packet, MacAddress to);
 	friend class NetworkInterface80211Factory;
 	Ssid m_ssid;
 	DcaTxop *m_dca;

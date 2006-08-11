@@ -24,7 +24,7 @@
 
 #include <stdint.h>
 #include "ipv4-address.h"
-#include "packet.h"
+#include "gpacket.h"
 
 namespace yans {
 
@@ -43,7 +43,7 @@ class TcpSource {
 	void start_connect_now (Ipv4Address address, uint16_t port);
 	void start_connect_at (Ipv4Address address, uint16_t port, double at);
 	void start_disconnect_at (double at);
-	void send (PacketPtr packet);
+	void send (GPacket packet);
 	void register_trace (TraceContainer *container);
  private:
 	bool should_accept (Ipv4Address from, uint16_t from_port);
@@ -52,7 +52,7 @@ class TcpSource {
 	void disconnect_completed (void);
 	void receive (void);
 	void transmitted (void);
-	void got_ack (PacketPtr packet);
+	void got_ack (GPacket packet);
 	void start_disconnect_now (void);
 
 	Host *m_host;

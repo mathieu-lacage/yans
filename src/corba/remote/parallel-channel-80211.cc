@@ -33,7 +33,7 @@ forward_up (yans::CountPtrHolder<yans::Packet const> p, double rx_power, uint8_t
 {
 	yans::Packet const*packet = p.remove ();
 	propagation->receive (packet, rx_power, tx_mode, stuff);
-	packet->unref ();
+	packet.unref ();
 }
 void
 null_callback (void)
@@ -90,7 +90,7 @@ ParallelChannel80211::receive (const ::Remote::SourcePosition& source_position,
 {
 	yans::Packet *packet = yans::PacketFactory::create ();
 	ChunkCorba chunk = ChunkCorba (buffer);
-	packet->add (&chunk);
+	packet.add (&chunk);
 	for (ModelsCI i = m_models.begin (); i != m_models.end (); i++) {
 		uint64_t delay_us = (*i)->get_delay_us (source_position.x, source_position.y, source_position.z);
 		double rx_power_w = (*i)->get_rx_power_w (tx_power, source_position.x, 
@@ -100,7 +100,7 @@ ParallelChannel80211::receive (const ::Remote::SourcePosition& source_position,
 							 yans::make_const_count_ptr_holder (packet),
 							 rx_power_w, tx_mode, stuff, *i));
 	}
-	packet->unref ();
+	packet.unref ();
 }
 void 
 ParallelChannel80211::real_add (yans::PropagationModel *model)
@@ -127,9 +127,9 @@ ParallelChannel80211::real_send (yans::Packet const *packet, double tx_power_dbm
 	position.x = from_x;
 	position.y = from_y;
 	position.z = from_z;
-	Remote::Buffer buffer = Remote::Buffer (packet->get_size (),
-						packet->get_size (),
-						packet->peek_data (),
+	Remote::Buffer buffer = Remote::Buffer (packet.get_size (),
+						packet.get_size (),
+						packet.peek_data (),
 						0 /* make sure we (the caller) keep ownership
 						     of the data buffer. */);
 	

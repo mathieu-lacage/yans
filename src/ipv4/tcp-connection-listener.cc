@@ -22,7 +22,7 @@
 #include "tcp-connection-listener.h"
 #include "tag-ipv4.h"
 #include "chunk-tcp.h"
-#include "packet.h"
+#include "gpacket.h"
 #include "tcp-connection.h"
 #include "host.h"
 #include "ipv4-route.h"
@@ -38,10 +38,10 @@ TcpConnectionListener::~TcpConnectionListener ()
 {}
 
 void 
-TcpConnectionListener::receive (PacketPtr packet, Chunk *chunk)
+TcpConnectionListener::receive (GPacket packet, Chunk *chunk)
 {
 	TagInIpv4 tag;
-	packet->peek_tag (&tag);
+	packet.peek_tag (&tag);
 	ChunkTcp *tcp_chunk = static_cast <ChunkTcp *> (chunk);
 	if (tcp_chunk->is_flag_syn () &&
 	    !tcp_chunk->is_flag_ack ()) {

@@ -23,7 +23,7 @@
 
 #include "ipv4-network-interface.h"
 #include "ipv4-address.h"
-#include "packet.h"
+#include "gpacket.h"
 
 namespace yans {
 
@@ -33,7 +33,7 @@ public:
 	virtual ~LoopbackIpv4 ();
 private:
 	virtual uint16_t real_get_mtu (void) const;
-	virtual void real_send (PacketPtr packet, Ipv4Address to);
+	virtual void real_send (GPacket packet, Ipv4Address to);
 
 };
 

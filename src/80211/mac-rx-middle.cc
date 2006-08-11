@@ -20,10 +20,11 @@
  */
 
 #include "mac-rx-middle.h"
-#include "packet.h"
+#include "gpacket.h"
 #include "chunk-mac-80211-hdr.h"
 
 #include <cassert>
+#include <list>
 
 #define noRX_MIDDLE_TRACE 1
 
@@ -39,6 +40,13 @@ namespace yans {
 
 
 class OriginatorRxStatus {
+private:
+	typedef std::list<GPacket> Fragments;
+	typedef std::list<GPacket>::const_iterator FragmentsCI;
+
+	bool m_defragmenting;
+	uint16_t m_last_sequence_control;
+	Fragments m_fragments;
 public:
 	OriginatorRxStatus () {
 		/* this is a magic value necessary. */
@@ -53,23 +61,23 @@ public:
 	bool is_de_fragmenting (void) {
 		return m_defragmenting;
 	}
-	void accumulate_first_fragment (ConstPacketPtr packet) {
+	void accumulate_first_fragment (GPacket const packet) {
 		assert (!m_defragmenting);
 		m_defragmenting = true;
 		m_fragments.push_back (packet);
 	}
-	PacketPtr accumulate_last_fragment (ConstPacketPtr packet) {
+	GPacket accumulate_last_fragment (GPacket const packet) {
 		assert (m_defragmenting);
 		m_fragments.push_back (packet);
 		m_defragmenting = false;
-		PacketPtr full = Packet::create ();
+		GPacket full;
 		for (FragmentsCI i = m_fragments.begin (); i != m_fragments.end (); i++) {
-			full->add_at_end (*i);
+			full.add_at_end (*i);
 		}
 		m_fragments.erase (m_fragments.begin (), m_fragments.end ());
 		return full;
 	}
-	void accumulate_fragment (ConstPacketPtr packet) {
+	void accumulate_fragment (GPacket const packet) {
 		assert (m_defragmenting);
 		m_fragments.push_back (packet);
 	}
@@ -88,13 +96,6 @@ public:
 		m_last_sequence_control = sequence_control;
 	}
 
-private:
-	typedef std::list<ConstPacketPtr> Fragments;
-	typedef std::list<ConstPacketPtr>::const_iterator FragmentsCI;
-
-	bool m_defragmenting;
-	uint16_t m_last_sequence_control;
-	Fragments m_fragments;
 };
 
 
@@ -178,57 +179,56 @@ MacRxMiddle::is_duplicate (ChunkMac80211Hdr const*hdr,
 	return false;
 }
 
-PacketPtr 
-MacRxMiddle::handle_fragments (PacketPtr packet, ChunkMac80211Hdr const*hdr,
-			       OriginatorRxStatus *originator)
+GPacket 
+MacRxMiddle::handle_fragments (GPacket packet, ChunkMac80211Hdr const*hdr,
+			       OriginatorRxStatus *originator, bool *complete)
 {
 	if (originator->is_de_fragmenting ()) {
 		if (hdr->is_more_fragments ()) {
 			if (originator->is_next_fragment (hdr->get_sequence_control ())) {
 				TRACE ("accumulate fragment seq="<<hdr->get_sequence_number ()<<
 				       ", frag="<<hdr->get_fragment_number ()<<
-				       ", size="<<packet->get_size ());
+				       ", size="<<packet.get_size ());
 				originator->accumulate_fragment (packet);
 				originator->set_sequence_control (hdr->get_sequence_control ());
 			} else {
 				TRACE ("non-ordered fragment");
 			}
-			return 0;
+			*complete = false;
+			return GPacket ();
 		} else {
 			if (originator->is_next_fragment (hdr->get_sequence_control ())) {
-				/* Each fragment is a copy of the original non-fragmented
-				 * packet except for its size which is set to the size of
-				 * the real fragment. This allows us to re-use the last 
-				 * fragment to change its size back to the original packet 
-				 * size and to pass it up to the higher-level layers.
-				 */
 				TRACE ("accumulate last fragment seq="<<hdr->get_sequence_number ()<<
 				       ", frag="<<hdr->get_fragment_number ()<<
 				       ", size="<<hdr->get_size ());
 				packet = originator->accumulate_last_fragment (packet);
 				originator->set_sequence_control (hdr->get_sequence_control ());
+				*complete = true;
 				return packet;
 			} else {
 				TRACE ("non-ordered fragment");
-				return 0;
+				*complete = false;
+				return GPacket ();
 			}
 		}
 	} else {
 		if (hdr->is_more_fragments ()) {
 			TRACE ("accumulate first fragment seq="<<hdr->get_sequence_number ()<<
 			       ", frag="<<hdr->get_fragment_number ()<<
-			       ", size="<<packet->get_size ());
+			       ", size="<<packet.get_size ());
 			originator->accumulate_first_fragment (packet);
 			originator->set_sequence_control (hdr->get_sequence_control ());
-			return 0;
+			*complete = false;
+			return GPacket ();
 		} else {
+			*complete = true;
 			return packet;
 		}
 	}
 }
 
 void
-MacRxMiddle::receive (PacketPtr packet, ChunkMac80211Hdr const *hdr)
+MacRxMiddle::receive (GPacket packet, ChunkMac80211Hdr const *hdr)
 {
 	OriginatorRxStatus *originator = lookup (hdr);
 	if (hdr->is_data ()) {
@@ -241,8 +241,9 @@ MacRxMiddle::receive (PacketPtr packet, ChunkMac80211Hdr const *hdr)
 			       ", frag="<<hdr->get_fragment_number ());
 			return;
 		}
-		PacketPtr agregate = handle_fragments (packet, hdr, originator);
-		if (agregate == 0) {
+		bool complete;
+		GPacket agregate = handle_fragments (packet, hdr, originator, &complete);
+		if (!complete) {
 			return;
 		}
 		TRACE ("forwarding data from="<<hdr->get_addr2 ()<<

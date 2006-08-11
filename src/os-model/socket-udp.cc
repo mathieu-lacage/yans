@@ -20,7 +20,7 @@
  */
 
 #include "socket-udp.h"
-#include "packet.h"
+#include "gpacket.h"
 #include "ipv4-route.h"
 #include "host.h"
 #include "chunk-data.h"
@@ -104,9 +104,9 @@ SocketUdp::send (Chunk *data)
 	tag->set_sport (m_self_port);
 	tag->set_dport (m_peer_port);
 	tag->set_daddress (m_peer_address);
-	packet->add_tag (TagOutIpv4::get_tag (), tag);
-	packet->add_destroy_notifier (new SocketUdpPacketDestroyNotifier (this, data->get_size ()));
-	packet->add_header (data);
+	packet.add_tag (TagOutIpv4::get_tag (), tag);
+	packet.add_destroy_notifier (new SocketUdpPacketDestroyNotifier (this, data->get_size ()));
+	packet.add_header (data);
 	m_udp->send (packet);
 	return data->get_size ();
 }
