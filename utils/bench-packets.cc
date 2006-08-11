@@ -140,7 +140,7 @@ bench_cow_b (uint32_t n)
 }
 
 static void
-cow_c2 (GPacket &p)
+cow_c2 (GPacket p)
 {
 	ChunkConstantData data = ChunkConstantData (2000, 1);
 	ChunkUdp udp;
@@ -151,7 +151,7 @@ cow_c2 (GPacket &p)
 	p.remove (&data);
 }
 static void
-cow_c1 (GPacket &p)
+cow_c1 (GPacket p)
 {
 	ChunkIpv4 ipv4;
 
