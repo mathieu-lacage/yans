@@ -24,6 +24,7 @@
 #include <stdint.h>
 #include "gbuffer.h"
 #include "chunk.h"
+#include "tag.h"
 
 namespace yans {
 
@@ -35,9 +36,14 @@ public:
 	inline void add (Chunk *chunk);
 	inline void peek (Chunk *chunk) const;
 	inline void remove (Chunk *chunk);
+	inline void add_tag (Tag const*tag);
+	inline void remove_tag (Tag *tag);
+	inline void peek_tag (Tag *tag) const;
+	inline void update_tag (Tag *tag);
 private:
 	inline GPacket (GBuffer buffer);
 	GBuffer m_buffer;
+	Tags m_tags;
 };
 
 }; // namespace yans
@@ -84,6 +90,28 @@ GPacket::remove (Chunk *chunk)
 GPacket::GPacket (GBuffer buffer)
 	: m_buffer (buffer)
 {}
+
+void 
+GPacket::add_tag (Tag const*tag)
+{
+	m_tags.add (tag);
+}
+void 
+GPacket::remove_tag (Tag *tag)
+{
+	m_tags.remove (tag);
+}
+void 
+GPacket::peek_tag (Tag *tag) const
+{
+	m_tags.peek (tag);
+}
+void 
+GPacket::update_tag (Tag *tag)
+{
+	m_tags.update (tag);
+}
+
 
 }; // namespace yans
 
