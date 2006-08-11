@@ -25,93 +25,34 @@
 #include "gbuffer.h"
 #include "chunk.h"
 #include "tag.h"
+#include "callback.h"
 
 namespace yans {
 
 class GPacket {
 public:
-	inline GPacket ();
-	inline GPacket create_fragment (uint32_t start, uint32_t length) const;
-	inline uint32_t get_size (void) const;
-	inline void add (Chunk *chunk);
-	inline void peek (Chunk *chunk) const;
-	inline void remove (Chunk *chunk);
-	inline void add_tag (Tag const*tag);
-	inline void remove_tag (Tag *tag);
-	inline void peek_tag (Tag *tag) const;
-	inline void update_tag (Tag *tag);
+	typedef Callback<void,uint8_t *,uint32_t> PacketReadWriteCallback;
+	GPacket ();
+	GPacket create_fragment (uint32_t start, uint32_t length) const;
+	uint32_t get_size (void) const;
+	void add (Chunk *chunk);
+	void peek (Chunk *chunk) const;
+	void remove (Chunk *chunk);
+	void add_tag (Tag const*tag);
+	void remove_tag (Tag *tag);
+	void peek_tag (Tag *tag) const;
+	void update_tag (Tag *tag);
+	void write (PacketReadWriteCallback callback) const;
+	void add_at_end (GPacket packet);
+	void add_at_end (GPacket packet, uint32_t offset, uint32_t size);
+	void remove_at_end (uint32_t size);
+	void remove_at_start (uint32_t size);
+
 private:
-	inline GPacket (GBuffer buffer);
+	GPacket (GBuffer buffer);
 	GBuffer m_buffer;
 	Tags m_tags;
 };
-
-}; // namespace yans
-
-namespace yans {
-
-GPacket::GPacket ()
-	: m_buffer () {}
-
-GPacket 
-GPacket::create_fragment (uint32_t start, uint32_t length) const
-{
-	GBuffer tmp = m_buffer;
-	tmp.remove_at_start (start);
-	tmp.remove_at_end (m_buffer.get_size () - (start + length));
-	return GPacket (tmp);
-}
-
-uint32_t 
-GPacket::get_size (void) const
-{
-	return m_buffer.get_size ();
-}
-
-void 
-GPacket::add (Chunk *chunk)
-{
-	chunk->add (&m_buffer);
-}
-
-void 
-GPacket::peek (Chunk *chunk) const
-{
-	chunk->peek (&m_buffer);
-}
-
-void 
-GPacket::remove (Chunk *chunk)
-{
-	chunk->remove (&m_buffer);
-}
-
-
-GPacket::GPacket (GBuffer buffer)
-	: m_buffer (buffer)
-{}
-
-void 
-GPacket::add_tag (Tag const*tag)
-{
-	m_tags.add (tag);
-}
-void 
-GPacket::remove_tag (Tag *tag)
-{
-	m_tags.remove (tag);
-}
-void 
-GPacket::peek_tag (Tag *tag) const
-{
-	m_tags.peek (tag);
-}
-void 
-GPacket::update_tag (Tag *tag)
-{
-	m_tags.update (tag);
-}
-
 
 }; // namespace yans
 
