@@ -114,7 +114,7 @@ Packet::copy (uint32_t start_off, uint32_t length) const
 	assert (start_off < get_size ());
 	assert (start_off + length <= get_size ());
 	Packet *other = Packet::create ();
-	other->m_tags->copy_from (*(this->m_tags));
+	//other->m_tags->copy_from (*(this->m_tags));
 	Buffer *tmp = other->m_buffer;
 	tmp->add_at_start (length);
 	Buffer::Iterator dest, start, end;
