@@ -97,15 +97,36 @@ GPacket::write (PacketReadWriteCallback callback) const
 
 void 
 GPacket::add_at_end (GPacket packet)
-{}
+{
+	GBuffer src = packet.m_buffer;
+	m_buffer.add_at_end (src.get_size ());
+	GBuffer::Iterator dest_start = m_buffer.end ();
+	dest_start.prev (src.get_size ());
+	dest_start.write (src.begin (), src.end ());
+}
 void 
-GPacket::add_at_end (GPacket packet, uint32_t offset, uint32_t size)
-{}
+GPacket::add_at_end (GPacket packet, uint32_t start, uint32_t size)
+{
+	assert (packet.get_size () <= start + size);
+	GBuffer src = packet.m_buffer;
+	m_buffer.add_at_end (src.get_size ());
+	GBuffer::Iterator dest_start = m_buffer.end ();
+	dest_start.prev (size);
+	GBuffer::Iterator src_start = src.begin ();
+	src_start.next (start);
+	GBuffer::Iterator src_end = src_start;
+	src_end.next (size);
+	dest_start.write (src_start, src_end);
+}
 void 
 GPacket::remove_at_end (uint32_t size)
-{}
+{
+	m_buffer.remove_at_end (size);
+}
 void 
 GPacket::remove_at_start (uint32_t size)
-{}
+{
+	m_buffer.remove_at_start (size);
+}
 
 }; // namespace yans
