@@ -369,11 +369,15 @@ GBuffer::deallocate (struct GBuffer::GBufferData *data)
 void
 GBuffer::recycle (struct GBuffer::GBufferData *data)
 {
+	/* get rid of it if it is too small for later reuse. */
+	if (data->m_size < GBuffer::m_prefered_size) {
+		GBuffer::deallocate (data);
+	}
 	/* update buffer statistics */
+	uint32_t cur_prefered_end = GBuffer::m_prefered_size - GBuffer::m_prefered_start;
 	if (m_total_added_start > GBuffer::m_prefered_start) {
 		GBuffer::m_prefered_start = m_total_added_start;
 	}
-	uint32_t cur_prefered_end = GBuffer::m_prefered_size - GBuffer::m_prefered_start;
 	uint32_t prefered_end;
 	if (m_total_added_end > cur_prefered_end) {
 		prefered_end = m_total_added_end;
@@ -381,33 +385,34 @@ GBuffer::recycle (struct GBuffer::GBufferData *data)
 		prefered_end = cur_prefered_end;
 	}
 	GBuffer::m_prefered_size = GBuffer::m_prefered_start + prefered_end;
+	assert (GBuffer::m_prefered_size >= GBuffer::m_prefered_start);
 	/* feed into free list */
 	if (GBuffer::m_free_list.size () > 1000) {
-	GBuffer::deallocate (data);
-} else {
-	GBuffer::m_free_list.push_back (data);
- }
+		GBuffer::deallocate (data);
+	} else {
+		GBuffer::m_free_list.push_back (data);
+	}
 }
 
 GBuffer::GBufferData *
 GBuffer::create (void)
 {
-	if (!GBuffer::m_free_list.empty ()) {
+	/* try to find a buffer correctly sized. */
+	while (!GBuffer::m_free_list.empty ()) {
 		struct GBuffer::GBufferData *data = GBuffer::m_free_list.back ();
 		GBuffer::m_free_list.pop_back ();
-		if (GBuffer::m_prefered_start > data->m_size) {
-			data->m_dirty_start = 0;
-		} else {
+		if (data->m_size > GBuffer::m_prefered_size) {
+			assert (GBuffer::m_prefered_size >= GBuffer::m_prefered_start);
 			data->m_dirty_start = GBuffer::m_prefered_start;
+			data->m_dirty_size = 0;
+			data->m_count = 1;
+			return data;
 		}
-		data->m_dirty_size = 0;
-		data->m_count = 1;
-		return data;
-	} else {
-		struct GBuffer::GBufferData *data = GBuffer::allocate (GBuffer::m_prefered_size, 
-								       GBuffer::m_prefered_start);
-		return data;
+		GBuffer::deallocate (data);
 	}
+	struct GBuffer::GBufferData *data = GBuffer::allocate (GBuffer::m_prefered_size, 
+							       GBuffer::m_prefered_start);
+	return data;
 }
 
 GBuffer::GBuffer ()
