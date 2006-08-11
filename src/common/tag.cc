@@ -70,17 +70,22 @@ Tags::deallocate (struct TagData *data)
 void
 Tags::recycle (struct TagData *data)
 {
-	if (data->m_size >= Tags::m_prefered_size) {
+#if 0
+       if (data->m_size >= Tags::m_prefered_size) {
 		Tags::m_prefered_size = data->m_size;
 		Tags::m_free_list.push_back (data);
 	} else {
 		Tags::deallocate (data);
 	}
+#else
+       	Tags::deallocate (data);
+#endif
 }
 
 struct Tags::TagData *
 Tags::create (void)
 {
+#if 0
 	while (!Tags::m_free_list.empty ()) {
 		struct TagData *data = Tags::m_free_list.back ();
 		Tags::m_free_list.pop_back ();
@@ -92,6 +97,10 @@ Tags::create (void)
 	}
 	struct TagData *data = Tags::allocate (Tags::m_prefered_size);
 	return data;
+#else
+	struct TagData *data = Tags::allocate (Tags::m_prefered_size);
+	return data;
+#endif
 }
 
 Tags::Tags ()
@@ -108,6 +117,10 @@ Tags::Tags (Tags const &o)
 Tags &
 Tags::operator = (Tags const &o)
 {
+	m_data->m_count--;
+	if (m_data->m_count == 0) {
+		Tags::recycle (m_data);
+	}
 	m_size = o.m_size;
 	m_data = o.m_data;
 	m_index = o.m_index;
