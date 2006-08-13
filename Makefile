@@ -157,6 +157,8 @@ YANS_SRC:= \
 	src/common/mac-address-factory.cc \
 	src/common/mac-network-interface.cc \
 	src/common/tag.cc \
+	src/common/uid-factory.cc \
+	src/common/gtags.cc \
 	src/common/utils.cc \
 	src/common/population-analysis.cc \
 	src/common/data-writer.cc \

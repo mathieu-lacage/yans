@@ -109,7 +109,7 @@ GTags::add (uint8_t *buffer, uint32_t size, uint32_t id)
 }
 
 void 
-GTags::remove (uint8_t *buffer, uint32_t size, uint32_t id)
+GTags::remove (uint32_t id)
 {
 	struct TagData *new_start = 0;
 	struct TagData **prev_next = &new_start;
@@ -158,15 +158,8 @@ GTags::peek (uint8_t *buffer, uint32_t size, uint32_t id)
 void 
 GTags::update (uint8_t *buffer, uint32_t size, uint32_t id)
 {
-	for (struct TagData *cur = m_next; cur != 0; cur = cur->m_next) {
-		if (cur->m_id == id) {
-			/* found tag */
-			memcpy (cur->m_data, buffer, size);
-			return;
-		}
-	}
-	/* no tag found */
-	assert (false);
+	remove (id);
+	add (buffer, size, id);
 }
 
 

@@ -55,7 +55,7 @@ private:
 		uint8_t m_data[GTags::SIZE];
 	};
 	void add (uint8_t *buffer, uint32_t size, uint32_t id);
-	void remove (uint8_t *buffer, uint32_t size, uint32_t id);
+	void remove (uint32_t id);
 	void peek (uint8_t *buffer, uint32_t size, uint32_t id);
 	void update (uint8_t *buffer, uint32_t size, uint32_t id);
 	struct TagData *alloc_data (void);
