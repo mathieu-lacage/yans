@@ -41,13 +41,7 @@ GTags::GTags (GTags const &o)
 GTags &
 GTags::operator = (GTags const &o)
 {
-	for (struct TagData *cur = m_next; cur != 0; cur = cur->m_next) {
-		cur->m_count--;
-		if (cur->m_count > 0) {
-			break;
-		}
-		free_data (cur);
-	}
+	remove_all_tags ();
 	m_next = o.m_next;
 	if (m_next != 0) {
 		m_next->m_count++;
@@ -56,6 +50,12 @@ GTags::operator = (GTags const &o)
 }
 
 GTags::~GTags ()
+{
+	remove_all_tags ();
+}
+
+void
+GTags::remove_all_tags (void)
 {
 	for (struct TagData *cur = m_next; cur != 0; cur = cur->m_next) {
 		cur->m_count--;
@@ -120,7 +120,8 @@ GTags::remove (uint32_t id)
 	if (!found) {
 		return false;
 	}
-	struct TagData **prev_next = &m_next;
+	struct TagData *start = 0;
+	struct TagData **prev_next = &start;
 	for (struct TagData *cur = m_next; cur != 0; cur = cur->m_next) {
 		if (cur->m_id == id) {
 			continue;
@@ -133,6 +134,9 @@ GTags::remove (uint32_t id)
 		*prev_next = copy;
 		prev_next = &copy->m_next;
 	}
+	*prev_next = 0;
+	remove_all_tags ();
+	m_next = start;
 	return true;
 }
 bool
@@ -182,6 +186,9 @@ struct my_tag_a {
 struct my_tag_b {
 	uint32_t b;
 };
+struct my_tag_c {
+	uint8_t c [GTags::SIZE];
+};
 struct my_invalid_tag {
 	uint8_t invalid [GTags::SIZE+1];
 };
@@ -198,15 +205,73 @@ GTagsTest::run_tests (void)
 {
 	bool ok = true;
 
+	// build initial tag.
 	GTags tags;
 	struct my_tag_a a;
-	struct my_tag_b b;
-	struct my_invalid_tag invalid;
+	a.a = 10;
 	tags.add (&a);
+	a.a = 0;
+	tags.peek (&a);
+	if (a.a != 10) {
+		ok = false;
+	}
+	struct my_tag_b b;
+	b.b = 0xff;
 	tags.add (&b);
-	tags.add (&invalid);
+	b.b = 0;
+	tags.peek (&b);
+	if (b.b != 0xff) {
+		ok = false;
+	}
 
+	// make sure copy contains copy.
 	GTags other = tags;
+	struct my_tag_a o_a;
+	o_a.a = 0;
+	other.peek (&o_a);
+	if (o_a.a != 10) {
+		ok = false;
+	}
+	struct my_tag_b o_b;
+	other.peek (&o_b);
+	if (o_b.b != 0xff) {
+		ok = false;
+	}
+	// remove data.
+	other.remove (&o_a);
+	if (other.peek (&o_a)) {
+		ok = false;
+	}
+	if (!tags.peek (&o_a)) {
+		ok = false;
+	}
+	other.remove (&o_b);
+	if (other.peek (&o_b)) {
+		ok = false;
+	}
+	if (!tags.peek (&o_b)) {
+		ok = false;
+	}
+
+	other = tags;
+	GTags another = other;
+	struct my_tag_c c;
+	c.c[0] = 0x66;
+	another.add (&c);
+	c.c[0] = 0;
+	another.peek (&c);
+	if (!another.peek (&c)) {
+		ok = false;
+	}
+	if (tags.peek (&c)) {
+		ok = false;
+	}
+
+
+
+	//struct my_invalid_tag invalid;
+	//tags.add (&invalid);
+
 	return ok;
 }
 
