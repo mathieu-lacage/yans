@@ -41,11 +41,12 @@ GTags::GTags (GTags const &o)
 GTags &
 GTags::operator = (GTags const &o)
 {
-	if (m_next != 0) {
-		m_next->m_count--;
-		if (m_next->m_count == 0) {
-			// XXX
+	for (struct TagData *cur = m_next; cur != 0; cur = cur->m_next) {
+		cur->m_count--;
+		if (cur->m_count > 0) {
+			break;
 		}
+		free_data (cur);
 	}
 	m_next = o.m_next;
 	if (m_next != 0) {
@@ -56,11 +57,12 @@ GTags::operator = (GTags const &o)
 
 GTags::~GTags ()
 {
-	if (m_next != 0) {
-		m_next->m_count--;
-		if (m_next == 0) {
-			// XXX
+	for (struct TagData *cur = m_next; cur != 0; cur = cur->m_next) {
+		cur->m_count--;
+		if (cur->m_count > 0) {
+			break;
 		}
+		free_data (cur);
 	}
 }
 
