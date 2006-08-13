@@ -71,13 +71,9 @@ GTags::alloc_data (void)
 	if (m_free != 0) {
 		retval = m_free;
 		m_free = retval->m_next;
-		retval->m_next = 0;
-		retval->m_count = 1;
 		m_n_free--;
 	} else {
 		retval = new struct TagData ();
-		retval->m_count = 1;
-		retval->m_next = 0;
 	}
 	return retval;
 }
@@ -102,64 +98,63 @@ GTags::add (uint8_t *buffer, uint32_t size, uint32_t id)
 		assert (cur->m_id != id);
 	}
 	struct TagData *new_start = alloc_data ();
+	new_start->m_count = 1;
+	new_start->m_next = 0;
 	new_start->m_id = id;
 	memcpy (new_start->m_data, buffer, size);
 	new_start->m_next = m_next;
 	m_next = new_start;
 }
 
-void 
+bool
 GTags::remove (uint32_t id)
 {
-	struct TagData *new_start = 0;
-	struct TagData **prev_next = &new_start;
+	bool found = false;
 	for (struct TagData *cur = m_next; cur != 0; cur = cur->m_next) {
-		struct TagData *data;
-		if (cur->m_count > 1 && 
-		    cur->m_id != id) {
-			/* we are not the sole owner of this tag so we need to 
-			   copy it before updating the next pointer. */
-			data = alloc_data ();
-			*data = *cur;
-			memcpy (data->m_data, cur->m_data, GTags::SIZE);
-		} else {
-			/* sole owner */
-			data = cur;
-		}
 		if (cur->m_id == id) {
-			/* found tag */
-			*prev_next = data->m_next;
-			m_next = new_start;
-			return;
-		} else {
-			*prev_next = data;
-			prev_next = &data->m_next;
+			found = true;
 		}
-
 	}
-	/* no tag found */
-	assert (false);
+	if (!found) {
+		return false;
+	}
+	struct TagData **prev_next = &m_next;
+	for (struct TagData *cur = m_next; cur != 0; cur = cur->m_next) {
+		if (cur->m_id == id) {
+			continue;
+		}
+		struct TagData *copy = alloc_data ();
+		copy->m_id = cur->m_id;
+		copy->m_count = 1;
+		copy->m_next = 0;
+		memcpy (copy->m_data, cur->m_data, GTags::SIZE);
+		*prev_next = copy;
+		prev_next = &copy->m_next;
+	}
+	return true;
 }
-
-void 
+bool
 GTags::peek (uint8_t *buffer, uint32_t size, uint32_t id)
 {
 	for (struct TagData *cur = m_next; cur != 0; cur = cur->m_next) {
 		if (cur->m_id == id) {
 			/* found tag */
 			memcpy (buffer, cur->m_data, size);
-			return;
+			return true;
 		}
 	}
 	/* no tag found */
-	assert (false);
+	return false;
 }
 
-void 
+bool
 GTags::update (uint8_t *buffer, uint32_t size, uint32_t id)
 {
-	remove (id);
+	if (!remove (id)) {
+		return false;
+	}
 	add (buffer, size, id);
+	return true;
 }
 
 
