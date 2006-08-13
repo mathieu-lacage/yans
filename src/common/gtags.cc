@@ -210,6 +210,8 @@ GTagsTest::run_tests (void)
 	return ok;
 }
 
+static GTagsTest g_tags_test;
+
 
 }; // namespace yans
 
