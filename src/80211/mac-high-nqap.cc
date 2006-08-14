@@ -80,7 +80,7 @@ MacHighNqap::set_beacon_interval_us (uint64_t us)
 	m_beacon_interval_us = us;
 }
 void 
-MacHighNqap::forward_down (PacketPtr packet, MacAddress from, MacAddress to)
+MacHighNqap::forward_down (GPacket packet, MacAddress from, MacAddress to)
 {
 	ChunkMac80211Hdr hdr;
 	hdr.set_type_data ();
@@ -92,7 +92,7 @@ MacHighNqap::forward_down (PacketPtr packet, MacAddress from, MacAddress to)
 	m_dca->queue (packet, hdr);	
 }
 void 
-MacHighNqap::queue (PacketPtr packet, MacAddress to)
+MacHighNqap::queue (GPacket packet, MacAddress to)
 {
 	forward_down (packet, m_interface->get_mac_address (), to);
 }
@@ -112,13 +112,13 @@ MacHighNqap::send_probe_resp (MacAddress to)
 	hdr.set_addr3 (m_interface->get_mac_address ());
 	hdr.set_ds_not_from ();
 	hdr.set_ds_not_to ();
-	PacketPtr packet = Packet::create ();
+	GPacket packet;
 	ChunkMgtProbeResponse probe;
 	probe.set_ssid (m_interface->get_ssid ());
 	SupportedRates rates = get_supported_rates ();
 	probe.set_supported_rates (rates);
 	probe.set_beacon_interval_us (m_beacon_interval_us);
-	packet->add (&probe);
+	packet.add (&probe);
 	
 	m_dca->queue (packet, hdr);
 }
@@ -133,12 +133,12 @@ MacHighNqap::send_assoc_resp (MacAddress to)
 	hdr.set_addr3 (m_interface->get_mac_address ());
 	hdr.set_ds_not_from ();
 	hdr.set_ds_not_to ();
-	PacketPtr packet = Packet::create ();
+	GPacket packet;
 	ChunkMgtAssocResponse assoc;
 	StatusCode code;
 	code.set_success ();
 	assoc.set_status_code (code);
-	packet->add (&assoc);
+	packet.add (&assoc);
 	
 	m_dca->queue (packet, hdr);
 }
@@ -163,7 +163,7 @@ MacHighNqap::tx_failed (ChunkMac80211Hdr const &hdr)
 	}
 }
 void 
-MacHighNqap::receive (PacketPtr packet, ChunkMac80211Hdr const *hdr)
+MacHighNqap::receive (GPacket packet, ChunkMac80211Hdr const *hdr)
 {
 	MacStation *station = m_stations->lookup (hdr->get_addr2 ());
 
@@ -175,7 +175,7 @@ MacHighNqap::receive (PacketPtr packet, ChunkMac80211Hdr const *hdr)
 			if (hdr->get_addr3 () == m_interface->get_mac_address ()) {
 				m_forward_up (packet);
 			} else {
-				forward_down (packet->copy (), 
+				forward_down (packet,
 					      hdr->get_addr2 (), 
 					      hdr->get_addr3 ());
 				m_forward_up (packet);

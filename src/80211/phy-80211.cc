@@ -24,7 +24,7 @@
 #include "qam-mode.h"
 #include "propagation-model.h"
 #include "simulator.h"
-#include "packet.h"
+#include "gpacket.h"
 #include "random-uniform.h"
 #include "count-ptr-holder.tcc"
 #include "event.tcc"
@@ -228,16 +228,16 @@ Phy80211::set_receive_error_callback (SyncErrorCallback callback)
 	m_sync_error_callback = callback;
 }
 void 
-Phy80211::receive_packet (ConstPacketPtr packet, 
+Phy80211::receive_packet (GPacket const packet, 
 			  double rx_power_w,
 			  uint8_t tx_mode,
 			  uint8_t stuff)
 {
-	uint64_t rx_duration_us = calculate_tx_duration_us (packet->get_size (), tx_mode);
+	uint64_t rx_duration_us = calculate_tx_duration_us (packet.get_size (), tx_mode);
 	uint64_t end_rx = now_us () + rx_duration_us;
 	m_start_rx_logger (rx_duration_us, rx_power_w);
 
-	RxEvent *event = new RxEvent (packet->get_size (), 
+	RxEvent *event = new RxEvent (packet.get_size (), 
 				      tx_mode,
 				      rx_duration_us,
 				      rx_power_w);
@@ -309,7 +309,7 @@ Phy80211::receive_packet (ConstPacketPtr packet,
 	event->unref ();
 }
 void 
-Phy80211::send_packet (ConstPacketPtr packet, uint8_t tx_mode, uint8_t tx_power, uint8_t stuff)
+Phy80211::send_packet (GPacket const packet, uint8_t tx_mode, uint8_t tx_power, uint8_t stuff)
 {
 	/* Transmission can happen if:
 	 *  - we are syncing on a packet. It is the responsability of the
@@ -323,7 +323,7 @@ Phy80211::send_packet (ConstPacketPtr packet, uint8_t tx_mode, uint8_t tx_power,
 		m_end_sync_event.cancel ();
 	}
 
-	uint64_t tx_duration_us = calculate_tx_duration_us (packet->get_size (), tx_mode);
+	uint64_t tx_duration_us = calculate_tx_duration_us (packet.get_size (), tx_mode);
 	m_start_tx_logger (tx_duration_us, get_mode_bit_rate (tx_mode), get_power_dbm (tx_power));
 	notify_tx_start (tx_duration_us);
 	switch_to_tx (tx_duration_us);
@@ -884,7 +884,7 @@ Phy80211::calculate_per (RxEvent const *event, NiChanges *ni) const
 
 
 void
-Phy80211::end_sync (ConstPacketPtr packet, CountPtrHolder<RxEvent> ev, uint8_t stuff)
+Phy80211::end_sync (GPacket const packet, CountPtrHolder<RxEvent> ev, uint8_t stuff)
 {
 	RxEvent *event = ev.remove ();
 	assert (is_state_sync ());
@@ -902,7 +902,7 @@ Phy80211::end_sync (ConstPacketPtr packet, CountPtrHolder<RxEvent> ev, uint8_t s
 	double per = calculate_per (event, &ni);
 	TRACE ("mode="<<((uint32_t)event->get_payload_mode ())<<
 	       ", ber="<<(1-get_mode (event->get_payload_mode ())->get_chunk_success_rate (snr, 1))<<
-	       ", snr="<<snr<<", per="<<per<<", size="<<packet->get_size ());
+	       ", snr="<<snr<<", per="<<per<<", size="<<packet.get_size ());
 	
 	if (m_random->get_double () > per) {
 		m_end_sync_logger (true);

@@ -26,7 +26,7 @@
 #include <stdint.h>
 #include "ipv4-address.h"
 #include "callback.h"
-#include "packet.h"
+#include "gpacket.h"
 
 namespace yans {
 
@@ -38,7 +38,7 @@ class TraceContainer;
 
 class TcpSink {
 public:
-	typedef Callback<void, PacketPtr > TcpSinkCallback;
+	typedef Callback<void, GPacket > TcpSinkCallback;
 
 	TcpSink (Host *host);
 	~TcpSink ();
@@ -57,7 +57,7 @@ private:
 	void disconnect_completed (void);
 	void receive (void);
 	void transmitted (void);
-	void got_ack (PacketPtr packet);
+	void got_ack (GPacket packet);
 	void stop_listen_now (void);
 
 	Host *m_host;

@@ -21,7 +21,7 @@
 
 #include "periodic-generator.h"
 #include "simulator.h"
-#include "packet.h"
+#include "gpacket.h"
 #include "chunk-constant-data.h"
 #include "event.h"
 #include "event.tcc"
@@ -95,9 +95,9 @@ PeriodicGenerator::send_next_packet (void)
 	m_current_event = make_event (&PeriodicGenerator::send_next_packet, this);
 	Simulator::schedule_rel_us (m_interval_us, m_current_event);
 	/* create packet. */
-	PacketPtr packet = Packet::create ();
+	GPacket packet;
 	ChunkConstantData data (m_size, m_n);
-	packet->add (&data);
+	packet.add (&data);
 	m_callback (packet);
 	m_n++;
 }

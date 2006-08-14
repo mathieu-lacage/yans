@@ -23,7 +23,7 @@
 #define PACKET_LOGGER_H
 
 #include "callback.h"
-#include "packet.h"
+#include "gpacket.h"
 
 namespace yans {
 
@@ -32,14 +32,14 @@ namespace yans {
  */
 class PacketLogger {
 public:
-	typedef Callback<void,ConstPacketPtr> PacketLoggerCallback;
+	typedef Callback<void,GPacket const> PacketLoggerCallback;
 	PacketLogger ();
 	/**
 	 * \param packet to log
 	 * If a non-null callback was set, the packet
 	 * is forwarded to that callback.
 	 */
-	void log (ConstPacketPtr packet);
+	void log (GPacket const packet);
 	/**
 	 * \param callback callback to store
 	 */

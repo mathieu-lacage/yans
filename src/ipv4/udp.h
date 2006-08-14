@@ -25,7 +25,7 @@
 #include <stdint.h>
 
 #include "ipv4-address.h"
-#include "packet.h"
+#include "gpacket.h"
 
 namespace yans {
 
@@ -52,9 +52,9 @@ public:
 	Ipv4EndPoint *allocate (Ipv4Address local_address, uint16_t local_port,
 			       Ipv4Address peer_address, uint16_t peer_port);
 
-	void send (PacketPtr packet);
+	void send (GPacket packet);
  private:
-	void receive (PacketPtr packet);
+	void receive (GPacket packet);
 
 	static const uint8_t UDP_PROTOCOL;
 	Ipv4 *m_ipv4;

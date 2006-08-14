@@ -88,7 +88,7 @@
 #include "common.h"
 #include "phy-80211.h"
 
-#include "packet.h"
+#include "gpacket.h"
 
 
 #ifndef QAP_SCHEDULER_TRACE
@@ -272,8 +272,8 @@ QapScheduler::setInterface (NetInterface80211 *interface)
 void
 QapScheduler::storeEdcaParametersInPacket (Packet *packet)
 {
-	packet->allocdata (4*4);
-	unsigned char *buffer = packet->accessdata ();
+	packet.allocdata (4*4);
+	unsigned char *buffer = packet.accessdata ();
 
 	for (uint8_t ac = 0; ac < 4; ac++) {
 		m_dcfParameters[ac]->writeTo (buffer, (enum ac_e)ac);

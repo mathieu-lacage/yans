@@ -24,7 +24,7 @@
 
 #include <stdint.h>
 #include "ipv4-address.h"
-#include "packet.h"
+#include "gpacket.h"
 
 namespace yans {
 
@@ -43,9 +43,9 @@ public:
 
 	void set_peer (Ipv4Address address, uint16_t port);
 
-	void send (PacketPtr packet);
+	void send (GPacket packet);
 private:
-	void receive (PacketPtr packet, Chunk *chunk);
+	void receive (GPacket packet, Chunk *chunk);
 	void unbind_now (void);
 	Host *m_host;
 	Ipv4EndPoint *m_end_point;

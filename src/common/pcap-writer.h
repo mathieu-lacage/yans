@@ -24,7 +24,7 @@
 
 #include "callback.h"
 #include <stdint.h>
-#include "packet.h"
+#include "gpacket.h"
 
 namespace yans {
 
@@ -58,7 +58,7 @@ public:
 	/**
 	 * \param packet packet to write to output file
 	 */
-	void write_packet (ConstPacketPtr packet);
+	void write_packet (GPacket const packet);
 
 private:
 	void write_data (uint8_t *buffer, uint32_t size);

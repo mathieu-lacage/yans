@@ -26,7 +26,7 @@ namespace yans {
 PacketLogger::PacketLogger ()
 {}
 void 
-PacketLogger::log (ConstPacketPtr packet)
+PacketLogger::log (GPacket const packet)
 {
 	if (!m_callback.is_null ()) {
 		m_callback (packet);

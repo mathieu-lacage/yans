@@ -86,11 +86,11 @@ private:
 class Tags {
 public:
 	Tags ();
+	Tags (Tags const &o);
+	Tags &operator = (Tags const &o);
 	~Tags ();
 
 	void reset (void);
-
-	void copy_from (Tags const &o);
 
 	void add (Tag const *tag);
 	void peek (Tag *tag) const;
@@ -102,15 +102,27 @@ private:
 		uint32_t size;
 		uint32_t start;
 	};
+	struct TagData {
+		uint32_t m_count;
+		uint32_t m_size;
+		uint8_t m_data;
+	};
 	typedef std::vector<struct IndexEntry> Index;
 	typedef std::vector<struct IndexEntry>::iterator IndexI;
 	typedef std::vector<struct IndexEntry>::const_iterator IndexCI;
+	typedef std::vector<struct TagData *> FreeList;
 
-	Tags (Tags const&o);
+	static struct Tags::TagData *allocate (uint32_t size);
+	static void deallocate (struct TagData *data);
+	static struct Tags::TagData *create (void);
+	static void recycle (struct TagData *data);
 	void reserve_at_end (uint32_t room);
-	uint32_t m_real_size;
+	uint8_t *get_buffer (void) const;
+
+	static uint32_t m_prefered_size;
+	static FreeList m_free_list;
 	uint32_t m_size;
-	uint8_t *m_data;
+	struct TagData *m_data;
 	Index m_index;
 };
 

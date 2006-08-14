@@ -86,7 +86,7 @@ template <typename T>
 class UiTracedVariable : public UiTracedVariableBase {
 public:
 	UiTracedVariable ()
-		: m_var (0)
+		: m_var ()
 	{}
 	UiTracedVariable (T const &var) 
 		: m_var (var)

@@ -44,7 +44,7 @@
 #include <deque>
 #include <utility>
 #include "chunk-mac-80211-hdr.h"
-#include "packet.h"
+#include "gpacket.h"
 
 namespace yans {
 
@@ -58,8 +58,8 @@ public:
 	void set_max_size (uint32_t max_size);
 	void set_max_delay_us (uint64_t us);
 
-	void enqueue (PacketPtr packet, ChunkMac80211Hdr const &hdr);
-	PacketPtr dequeue (ChunkMac80211Hdr *hdr);
+	void enqueue (GPacket packet, ChunkMac80211Hdr const &hdr);
+	GPacket dequeue (ChunkMac80211Hdr *hdr, bool *found);
 
 	void flush (void);
 
@@ -69,10 +69,10 @@ public:
 private:
 	void cleanup (void);
 	struct Item {
-		Item (PacketPtr packet, 
+		Item (GPacket packet, 
 		      ChunkMac80211Hdr const&hdr, 
 		      uint64_t tstamp);
-		PacketPtr packet;
+		GPacket packet;
 		ChunkMac80211Hdr hdr;
 		uint64_t tstamp;
 	};

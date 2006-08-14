@@ -19,7 +19,7 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #include "yans/wall-clock-ms.h"
-#include "yans/packet.h"
+#include "yans/gpacket.h"
 #include "yans/chunk-constant-data.h"
 #include "yans/chunk-udp.h"
 #include "yans/chunk-ipv4.h"
@@ -35,17 +35,17 @@ bench_ptr_a (uint32_t n)
 	ChunkIpv4 ipv4;
 
 	for (uint32_t i = 0; i < n; i++) {
-		PacketPtr p = Packet::create ();
-		p->add (&data);
-		p->add (&udp);
-		p->add (&ipv4);
-		PacketPtr o = p->copy ();
-		o->peek (&ipv4);
-		o->remove (&ipv4);
-		o->peek (&udp);
-		o->remove (&udp);
-		o->peek (&data);
-		o->remove (&data);
+		GPacket p;
+		p.add (&data);
+		p.add (&udp);
+		p.add (&ipv4);
+		GPacket o = p;
+		o.peek (&ipv4);
+		o.remove (&ipv4);
+		o.peek (&udp);
+		o.remove (&udp);
+		o.peek (&data);
+		o.remove (&data);
 	}
 }
 
@@ -57,31 +57,31 @@ bench_ptr_b (uint32_t n)
 	ChunkIpv4 ipv4;
 
 	for (uint32_t i = 0; i < n; i++) {
-		PacketPtr p = Packet::create ();
-		p->add (&data);
-		p->add (&udp);
-		p->add (&ipv4);
+		GPacket p;
+		p.add (&data);
+		p.add (&udp);
+		p.add (&ipv4);
 	}
 }
 
 static void
-ptr_c2 (PacketPtr p)
+ptr_c2 (GPacket p)
 {
 	ChunkConstantData data = ChunkConstantData (2000, 1);
 	ChunkUdp udp;
 
-	p->peek (&udp);
-	p->remove (&udp);
-	p->peek (&data);
-	p->remove (&data);
+	p.peek (&udp);
+	p.remove (&udp);
+	p.peek (&data);
+	p.remove (&data);
 }
 
 static void 
-ptr_c1 (PacketPtr p)
+ptr_c1 (GPacket p)
 {
 	ChunkIpv4 ipv4;
-	p->peek (&ipv4);
-	p->remove (&ipv4);
+	p.peek (&ipv4);
+	p.remove (&ipv4);
 	ptr_c2 (p);
 }
 
@@ -93,10 +93,10 @@ bench_ptr_c (uint32_t n)
 	ChunkIpv4 ipv4;
 
 	for (uint32_t i = 0; i < n; i++) {
-		PacketPtr p = Packet::create ();
-		p->add (&data);
-		p->add (&udp);
-		p->add (&ipv4);
+		GPacket p;
+		p.add (&data);
+		p.add (&udp);
+		p.add (&ipv4);
 		ptr_c1 (p);
 	}
 }

@@ -25,7 +25,7 @@
 #include "mac-address.h"
 #include "callback.h"
 #include "event.h"
-#include "packet.h"
+#include "gpacket.h"
 
 namespace yans {
 
@@ -36,7 +36,7 @@ class MacNetworkInterface;
 
 class MacSimple {
 public:
-	typedef Callback<void, PacketPtr > RxCallback;
+	typedef Callback<void, GPacket > RxCallback;
 
 	MacSimple ();
 	~MacSimple ();
@@ -46,9 +46,9 @@ public:
 	void set_rts_cts_threshold (uint32_t size);
 	void set_receiver (RxCallback data);
 
-	void send (PacketPtr packet, MacAddress to);
-	void receive_ok (ConstPacketPtr packet, double snr, uint8_t tx_mode, uint8_t stuff);
-	void receive_error (ConstPacketPtr packet, double snr);
+	void send (GPacket packet, MacAddress to);
+	void receive_ok (GPacket const packet, double snr, uint8_t tx_mode, uint8_t stuff);
+	void receive_error (GPacket const packet, double snr);
 private:
 	void send_cts (uint8_t tx_mode, MacAddress to, uint8_t rts_snr);
 	void send_ack (uint8_t tx_mode, MacAddress to, uint8_t data_snr);
@@ -73,7 +73,8 @@ private:
 	uint32_t m_data_retry_max;
 	uint64_t m_rts_timeout_us;
 	uint64_t m_data_timeout_us;
-	PacketPtr m_current;
+	GPacket m_current;
+	bool m_has_current;
 	MacAddress m_current_to;
 	Event m_rts_timeout_event;
 	Event m_data_timeout_event;

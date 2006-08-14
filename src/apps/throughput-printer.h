@@ -23,7 +23,7 @@
 
 #include <stdint.h>
 #include "event.h"
-#include "packet.h"
+#include "gpacket.h"
 
 namespace yans {
 
@@ -32,7 +32,7 @@ public:
 	ThroughputPrinter ();
 	void set_print_interval_us (uint64_t us);
 	void stop (void);
-	void receive (ConstPacketPtr packet);
+	void receive (GPacket const packet);
 private:
 	void timeout (void);
 	uint32_t m_current;

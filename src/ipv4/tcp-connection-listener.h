@@ -25,7 +25,7 @@
 #include "callback.h"
 #include "ipv4-address.h"
 #include <stdint.h>
-#include "packet.h"
+#include "gpacket.h"
 
 namespace yans {
 
@@ -50,7 +50,7 @@ public:
 	void set_tcp (Tcp *tcp);
 	void set_end_point (Ipv4EndPoint *end_point);
 
-	void receive (PacketPtr packet, Chunk *chunk);
+	void receive (GPacket packet, Chunk *chunk);
 
 	void set_callbacks (ConnectionAcception connection_acception,
 			    ConnectionCreated connection_created);

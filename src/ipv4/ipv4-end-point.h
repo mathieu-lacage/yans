@@ -25,7 +25,7 @@
 #include "callback.h"
 #include "ipv4-address.h"
 #include <stdint.h>
-#include "packet.h"
+#include "gpacket.h"
 
 namespace yans {
 
@@ -33,7 +33,7 @@ class Chunk;
 
 class Ipv4EndPoint {
 public:
-	typedef Callback<void,PacketPtr , Chunk *> ReceptionCallback;
+	typedef Callback<void,GPacket , Chunk *> ReceptionCallback;
 	typedef Callback<void,Ipv4EndPoint *> DestroyCallback;
 
 	Ipv4EndPoint (Ipv4Address address, uint16_t port);
@@ -46,7 +46,7 @@ public:
 
 	void set_peer (Ipv4Address address, uint16_t port);
 
-	void receive (PacketPtr packet, Chunk *chunk);
+	void receive (GPacket packet, Chunk *chunk);
 	void set_callback (ReceptionCallback reception);
 	void set_destroy_callback (DestroyCallback destroy);
 private:

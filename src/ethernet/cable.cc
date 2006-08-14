@@ -20,7 +20,7 @@
  */
 
 #include "cable.h"
-#include "packet.h"
+#include "gpacket.h"
 #include "ethernet-network-interface.h"
 #include "event.h"
 #include "event.tcc"
@@ -53,9 +53,9 @@ Cable::connect_to (EthernetNetworkInterface *a,
 }
 
 void 
-Cable::send (PacketPtr packet, EthernetNetworkInterface *sender)
+Cable::send (GPacket packet, EthernetNetworkInterface *sender)
 {
-	double delay = packet->get_size () * 8 / m_bandwidth + m_length / SPEED_OF_LIGHT;
+	double delay = packet.get_size () * 8 / m_bandwidth + m_length / SPEED_OF_LIGHT;
 	EthernetNetworkInterface *rx;
 	if (sender == m_a) {
 		rx = m_b;

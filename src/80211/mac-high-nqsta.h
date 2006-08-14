@@ -25,7 +25,7 @@
 #include "callback.h"
 #include "supported-rates.h"
 #include "event.h"
-#include "packet.h"
+#include "gpacket.h"
 #include <stdint.h>
 
 namespace yans {
@@ -37,7 +37,7 @@ class Timeout;
 
 class MacHighNqsta {
 public:
-	typedef Callback<void, PacketPtr > ForwardCallback;
+	typedef Callback<void, GPacket > ForwardCallback;
 	typedef Callback<void> AssociatedCallback;
 
 	MacHighNqsta ();
@@ -57,9 +57,9 @@ public:
 
 	void start_active_association (void);
 
-	void queue (PacketPtr packet, MacAddress to);
+	void queue (GPacket packet, MacAddress to);
 
-	void receive (PacketPtr packet, ChunkMac80211Hdr const *hdr);
+	void receive (GPacket packet, ChunkMac80211Hdr const *hdr);
 private:
 	void set_bssid (MacAddress bssid);
 	MacAddress get_broadcast_bssid (void);

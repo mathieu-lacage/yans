@@ -21,7 +21,7 @@
 
 #include "udp-source.h"
 #include "event.h"
-#include "packet.h"
+#include "gpacket.h"
 #include "ipv4-end-point.h"
 #include "host.h"
 #include "udp.h"
@@ -69,7 +69,7 @@ UdpSource::set_peer (Ipv4Address address, uint16_t port)
 }
 
 void
-UdpSource::send (PacketPtr packet)
+UdpSource::send (GPacket packet)
 {
 	if (m_end_point == 0) {
 		// not bound.
@@ -88,15 +88,15 @@ UdpSource::send (PacketPtr packet)
 	port_tag.m_dport = m_peer_port;
 	addr_tag.m_daddr = m_peer_address;
 	addr_tag.m_saddr = m_end_point->get_local_address ();
-	packet->add_tag (&port_tag);
-	packet->add_tag (&addr_tag);
-	packet->add_tag (route);
+	packet.add_tag (&port_tag);
+	packet.add_tag (&addr_tag);
+	packet.add_tag (route);
 	/* send packet. */
 	m_host->get_udp ()->send (packet);
 }
 
 void 
-UdpSource::receive (PacketPtr packet, Chunk *chunk)
+UdpSource::receive (GPacket packet, Chunk *chunk)
 {}
 
 void

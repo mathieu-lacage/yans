@@ -143,5 +143,39 @@ ChunkArp::print (std::ostream *os) const
 		    << " dest ipv4: " <<m_ipv4_dest;
 	}
 }
+void 
+ChunkArp::add_to (GBuffer *buffer) const
+{
+	buffer->add_at_start (get_size ());
+	GBuffer::Iterator i = buffer->begin ();
+
+	/* ethernet */
+	i.write_hton_u16 (0x0001);
+	/* ipv4 */
+	i.write_hton_u16 (0x0800);
+	i.write_u8 (6);
+	i.write_u8 (4);
+	i.write_hton_u16 (m_type);
+	write_to (i, m_mac_source);
+	write_to (i, m_ipv4_source);
+	write_to (i, m_mac_dest);
+	write_to (i, m_ipv4_dest);
+}
+void 
+ChunkArp::peek_from (GBuffer const *buffer)
+{
+	GBuffer::Iterator i = buffer->begin ();
+	i.next (2+2+1+1);
+	m_type = i.read_ntoh_u16 ();
+	read_from (i, m_mac_source);
+	read_from (i, m_ipv4_source);
+	read_from (i, m_mac_dest);
+	read_from (i, m_ipv4_dest);
+}
+void 
+ChunkArp::remove_from (GBuffer *buffer)
+{
+	buffer->remove_at_start (get_size ());
+}
 
 }; // namespace yans

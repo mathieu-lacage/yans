@@ -26,7 +26,7 @@
 #include <utility>
 #include "callback.h"
 #include "mac-address.h"
-#include "packet.h"
+#include "gpacket.h"
 
 namespace yans {
 
@@ -36,19 +36,19 @@ class OriginatorRxStatus;
 class MacRxMiddle
 {
 public:
-	typedef Callback<void, PacketPtr , ChunkMac80211Hdr const *> ForwardUpCallback;
+	typedef Callback<void, GPacket , ChunkMac80211Hdr const *> ForwardUpCallback;
 
 	MacRxMiddle ();
 	~MacRxMiddle ();
 
 	void set_forward_callback (ForwardUpCallback callback);
 
-	void receive (PacketPtr packet, ChunkMac80211Hdr const *hdr);
+	void receive (GPacket packet, ChunkMac80211Hdr const *hdr);
 private:
 	OriginatorRxStatus *lookup (ChunkMac80211Hdr const*hdr);
 	bool is_duplicate (ChunkMac80211Hdr const *hdr, OriginatorRxStatus *originator) const;
-	PacketPtr handle_fragments (PacketPtr packet, ChunkMac80211Hdr const*hdr,
-				       OriginatorRxStatus *originator);
+	GPacket handle_fragments (GPacket packet, ChunkMac80211Hdr const*hdr,
+				  OriginatorRxStatus *originator, bool *complete);
 	bool sequence_control_smaller (int seqa, int seqb);
 
 	typedef std::map <MacAddress, OriginatorRxStatus *, std::less<MacAddress> > Originators;

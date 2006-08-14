@@ -24,7 +24,7 @@
 #define TRAFFIC_ANALYSER_H
 
 #include <stdint.h>
-#include "packet.h"
+#include "gpacket.h"
 
 namespace yans {
 
@@ -35,7 +35,7 @@ public:
 	TrafficAnalyser ();
 	~TrafficAnalyser ();
 
-	void receive (PacketPtr packet);
+	void receive (GPacket packet);
 
 	void print_stats (void);
 

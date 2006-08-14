@@ -23,7 +23,7 @@
 #define ARP_CACHE_ENTRY_H
 
 #include "mac-address.h"
-#include "packet.h"
+#include "gpacket.h"
 
 namespace yans {
 
@@ -34,9 +34,9 @@ public:
 	ArpCacheEntry (ArpIpv4NetworkInterface *arp);
 
 	void mark_dead (void);
-	PacketPtr mark_alive (MacAddress mac_address);
-	void mark_wait_reply (PacketPtr waiting);
-	PacketPtr update_wait_reply (PacketPtr waiting);
+	GPacket mark_alive (MacAddress mac_address);
+	void mark_wait_reply (GPacket waiting);
+	GPacket update_wait_reply (GPacket waiting);
 
 	bool is_dead (void);
 	bool is_alive (void);
@@ -57,7 +57,7 @@ private:
 	ArpCacheEntryState_e m_state;
 	uint64_t m_last_seen_time_us;
 	MacAddress m_mac_address;
-	PacketPtr m_waiting;
+	GPacket m_waiting;
 };
 
 }; // namespace yans

@@ -22,7 +22,7 @@
 
 #include "traffic-analyser.h"
 #include "population-analysis.h"
-#include "packet.h"
+#include "gpacket.h"
 #include "simulator.h"
 #include <iostream>
 
@@ -42,9 +42,9 @@ TrafficAnalyser::~TrafficAnalyser ()
 
 
 void 
-TrafficAnalyser::receive (PacketPtr packet)
+TrafficAnalyser::receive (GPacket packet)
 {
-	m_data->add_term (packet->get_size ());
+	m_data->add_term (packet.get_size ());
 	uint64_t now_us = Simulator::now_us ();
 	if (m_previous_arrival >= 0) {
 		m_inter_arrival_time->add_term (now_us - m_previous_arrival);

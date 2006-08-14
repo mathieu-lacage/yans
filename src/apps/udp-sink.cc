@@ -23,7 +23,7 @@
 #include "udp.h"
 #include "host.h"
 #include "ipv4-end-point.h"
-#include "packet.h"
+#include "gpacket.h"
 #include "simulator.h"
 #include "event.tcc"
 
@@ -72,7 +72,7 @@ UdpSink::unbind_at (double at)
 }
 
 void
-UdpSink::receive (PacketPtr packet, Chunk *chunk)
+UdpSink::receive (GPacket packet, Chunk *chunk)
 {
 	if (!m_callback.is_null ()) {
 		m_callback (packet);

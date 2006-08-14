@@ -24,7 +24,7 @@
 #include "channel-80211.h"
 #include "mac-stations.h"
 #include "mac-station.h"
-#include "packet.h"
+#include "gpacket.h"
 #include "ipv4.h"
 #include "trace-container.h"
 #include "mac-simple.h"
@@ -64,15 +64,15 @@ void
 NetworkInterface80211Simple::notify_down (void)
 {}
 void 
-NetworkInterface80211Simple::real_send (PacketPtr packet, MacAddress to)
+NetworkInterface80211Simple::real_send (GPacket packet, MacAddress to)
 {
 	m_mac->send (packet, to);
 }
 
 void 
-NetworkInterface80211Simple::forward_data_up (PacketPtr packet)
+NetworkInterface80211Simple::forward_data_up (GPacket packet)
 {
-	m_bytes_rx += packet->get_size ();
+	m_bytes_rx += packet.get_size ();
 	MacNetworkInterface::forward_up (packet);
 }
 

@@ -57,7 +57,7 @@
 #include "tspec.h"
 #include "net-interface-80211.h"
 
-#include "packet.h"
+#include "gpacket.h"
 
 #ifndef QAP_TRACE
 #define QAP_TRACE 1
@@ -303,8 +303,8 @@ MacHighQap::queueTsResponse (int destination, TSpecRequest *request,
 	Packet *packet = getPacketFor (destination);
 	setSize (packet, parameters ()->getPacketSize (type));
 	setType (packet, type);
-	packet->allocdata (sizeof (status)+sizeof (request));
-	uint8_t *buffer = packet->accessdata ();
+	packet.allocdata (sizeof (status)+sizeof (request));
+	uint8_t *buffer = packet.accessdata ();
 	*((enum mac_80211_request_status *)buffer) = status;
 	buffer += sizeof (status);
 	*((TSpecRequest **)buffer) = request;
@@ -354,7 +354,7 @@ void
 MacHighQap::gotAddTsRequest (Packet *packet)
 {
 	/* request send by a STA */
-	TSpecRequest *request = *(reinterpret_cast<TSpecRequest **> (packet->accessdata ()));
+	TSpecRequest *request = *(reinterpret_cast<TSpecRequest **> (packet.accessdata ()));
 	TSpec *tspec = request->getTSpec ();
 	if (m_scheduler->addTsRequest (getSource (packet), tspec)) {
 		TRACE ("accept tspec for tsid %u from %u", tspec->getTSID (), getSource (packet));
@@ -369,7 +369,7 @@ void
 MacHighQap::gotDelTsRequest (Packet *packet)
 {
 	/* request send by a STA */
-	TSpecRequest *request = *(reinterpret_cast<TSpecRequest **> (packet->accessdata ()));
+	TSpecRequest *request = *(reinterpret_cast<TSpecRequest **> (packet.accessdata ()));
 	TSpec *tspec = request->getTSpec ();
 	if (m_scheduler->delTsRequest (getSource (packet), tspec)) {
 		TRACE ("accept del tspec for tsid %u from %u", tspec->getTSID (), getSource (packet));

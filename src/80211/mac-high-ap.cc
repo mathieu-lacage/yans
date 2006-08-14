@@ -48,7 +48,7 @@
 #include "mac-station.h"
 #include "ll-arp.h"
 
-#include "packet.h"
+#include "gpacket.h"
 
 #ifndef AP_TRACE
 #define nopeAP_TRACE 1
@@ -170,7 +170,7 @@ MacHighAp::receiveFromMacLow (Packet *packet)
 			TRACE ("forward broadcast from %d", getSource (packet));
 			setDestination (packet, getFinalDestination (packet));
 			setSource (packet, interface ()->getMacAddress ());
-			forwardQueueToLow (packet->copy ());
+			forwardQueueToLow (packet.copy ());
 			interface ()->ll ()->sendUp (packet);
 		} else {
 			goto drop;

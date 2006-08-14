@@ -25,7 +25,7 @@
 #include "tcp-connection-listener.h"
 #include "tcp.h"
 #include "host.h"
-#include "packet.h"
+#include "gpacket.h"
 #include "simulator.h"
 #include "event.tcc"
 
@@ -70,10 +70,7 @@ TcpSink::~TcpSink ()
 void
 TcpSink::receive (void)
 {	
-	PacketPtr packet = m_connection->recv (m_connection->get_data_ready ());
-	if (packet == 0) {
-		return;
-	}
+	GPacket packet = m_connection->recv (m_connection->get_data_ready ());
 	if (!m_callback.is_null ()) {
 		m_callback (packet);
 	}
@@ -107,7 +104,7 @@ TcpSink::transmitted (void)
 {}
 
 void
-TcpSink::got_ack (PacketPtr packet)
+TcpSink::got_ack (GPacket packet)
 {}
 
 void

@@ -24,7 +24,7 @@
 #include "mac-stations.h"
 #include "event.tcc"
 #include "simulator.h"
-#include "packet.h"
+#include "gpacket.h"
 #include "chunk-mac-80211-hdr.h"
 #include "mac-network-interface.h"
 #include <cassert>
@@ -48,7 +48,7 @@ MacSimple::MacSimple ()
 	m_data_retry = 0;
 	m_rts_retry_max = 3;
 	m_data_retry_max = 3;
-	m_current = 0;
+	m_has_current = false;
 	m_rts_cts_threshold = 1;
 
 	m_rts_timeout_us = (uint64_t) ((10 /*cts*/ + 2/* padding for prop time*/)* 8 / 3e6 * 1e6) + 80;
@@ -95,12 +95,13 @@ MacSimple::set_rts_cts_threshold (uint32_t size)
 	m_rts_cts_threshold = size;
 }
 void 
-MacSimple::send (PacketPtr packet, MacAddress to)
+MacSimple::send (GPacket packet, MacAddress to)
 {
 	if (!m_phy->is_state_idle () ||
-	    m_current != 0) {
-		if (m_current == 0) {
+	    m_has_current) {
+		if (!m_has_current) {
 			m_current = packet;
+			m_has_current = true;
 			m_current_to = to;
 			m_rts_retry = 0;
 			m_data_retry = 0;
@@ -114,6 +115,7 @@ MacSimple::send (PacketPtr packet, MacAddress to)
 		return;
 	}
 	m_current = packet;
+	m_has_current = true;
 	m_current_to = to;
 	m_rts_retry = 0;
 	m_data_retry = 0;
@@ -126,10 +128,10 @@ MacSimple::send (PacketPtr packet, MacAddress to)
 	}
 }
 void 
-MacSimple::receive_ok (ConstPacketPtr p, double snr, uint8_t tx_mode, uint8_t stuff)
+MacSimple::receive_ok (GPacket const p, double snr, uint8_t tx_mode, uint8_t stuff)
 {
 	ChunkMac80211Hdr hdr;
-	p->peek (&hdr);
+	p.peek (&hdr);
 	if (hdr.is_rts () && 
 	    hdr.get_addr1 () == m_interface->get_mac_address ()) {
 		MacStation *station = get_station (hdr.get_addr2 ());
@@ -164,17 +166,17 @@ MacSimple::receive_ok (ConstPacketPtr p, double snr, uint8_t tx_mode, uint8_t st
 		station->report_data_ok (snr, tx_mode, stuff);
 		assert (m_data_timeout_event.is_running ());
 		m_data_timeout_event.cancel ();
-		m_current = 0;
+		m_has_current = false;
 	}
 	return;
  rx_packet:
-	PacketPtr packet = p->copy ();
-	packet->remove (&hdr);
+	GPacket packet = p;
+	packet.remove (&hdr);
 	m_data_rx (packet);
 	return;
 }
 void 
-MacSimple::receive_error (ConstPacketPtr packet, double snr)
+MacSimple::receive_error (GPacket const packet, double snr)
 {
 	TRACE ("error packet snr="<<snr);
 }
@@ -182,22 +184,22 @@ MacSimple::receive_error (ConstPacketPtr packet, double snr)
 void
 MacSimple::send_cts (uint8_t tx_mode, MacAddress to, uint8_t rts_snr)
 {
-	PacketPtr packet = Packet::create ();
+	GPacket packet;
 	ChunkMac80211Hdr cts;
 	cts.set_type (MAC_80211_CTL_CTS);
 	cts.set_addr1 (to);
-	packet->add (&cts);
+	packet.add (&cts);
 	m_phy->send_packet (packet, tx_mode, 0, rts_snr);
 }
 
 void
 MacSimple::send_ack (uint8_t tx_mode, MacAddress to, uint8_t data_snr)
 {
-	PacketPtr packet = Packet::create ();
+	GPacket packet;
 	ChunkMac80211Hdr ack;
 	ack.set_type (MAC_80211_CTL_ACK);
 	ack.set_addr1 (to);
-	packet->add (&ack);
+	packet.add (&ack);
 	m_phy->send_packet (packet, tx_mode, 0, data_snr);
 }
 
@@ -206,13 +208,13 @@ void
 MacSimple::send_rts (void)
 {
 	MacStation *station = get_station (m_current_to);
-	PacketPtr packet = Packet::create ();
+	GPacket packet;
 	ChunkMac80211Hdr rts;
 	rts.set_type (MAC_80211_CTL_RTS);
 	rts.set_addr1 (m_current_to);
 	rts.set_addr2 (m_interface->get_mac_address ());
-	packet->add (&rts);
-	uint64_t tx_duration = m_phy->calculate_tx_duration_us (packet->get_size (), station->get_rts_mode ());
+	packet.add (&rts);
+	uint64_t tx_duration = m_phy->calculate_tx_duration_us (packet.get_size (), station->get_rts_mode ());
 	assert (!m_rts_timeout_event.is_running ());
 	m_rts_timeout_event = make_event (&MacSimple::retry_rts, this);
 	Simulator::schedule_rel_us (tx_duration + get_rts_timeout_us (), m_rts_timeout_event);
@@ -223,22 +225,22 @@ void
 MacSimple::send_data (void)
 {
 	MacStation *station = get_station (m_current_to);
-	PacketPtr packet = m_current->copy ();
+	GPacket packet = m_current;
 	ChunkMac80211Hdr hdr;
 	hdr.set_type (MAC_80211_DATA);
 	hdr.set_addr1 (m_current_to);
 	hdr.set_addr2 (m_interface->get_mac_address ());
-	packet->add (&hdr);
+	packet.add (&hdr);
 	if (m_current_to.is_broadcast ()) {
-		m_current = 0;
+		m_has_current = false;
 	} else {
-		uint64_t tx_duration = m_phy->calculate_tx_duration_us (packet->get_size (), 
-									station->get_data_mode (packet->get_size ()));
+		uint64_t tx_duration = m_phy->calculate_tx_duration_us (packet.get_size (), 
+									station->get_data_mode (packet.get_size ()));
 		m_data_timeout_event = make_event (&MacSimple::retry_data, this);
 		Simulator::schedule_rel_us (tx_duration + get_data_timeout_us (), 
 					 m_data_timeout_event);
 	}
-	m_phy->send_packet (packet, station->get_data_mode (packet->get_size ()), 0, 0);
+	m_phy->send_packet (packet, station->get_data_mode (packet.get_size ()), 0, 0);
 }
 
 MacStation *
@@ -254,8 +256,8 @@ MacSimple::retry_data (void)
 	MacStation *station = get_station (m_current_to);
 	station->report_data_failed ();
 	if (m_data_retry > m_data_retry_max) {
-		assert (m_current != 0);
-		m_current = 0;
+		assert (m_has_current);
+		m_has_current = false;
 		TRACE ("stop data retry");
 		return;
 	}
@@ -270,8 +272,8 @@ MacSimple::retry_rts (void)
 	MacStation *station = get_station (m_current_to);
 	station->report_rts_failed ();
 	if (m_rts_retry > m_rts_retry_max) {
-		assert (m_current != 0);
-		m_current = 0;
+		assert (m_has_current);
+		m_has_current = false;
 		TRACE ("stop rts retry");
 		return;
 	}
@@ -288,7 +290,7 @@ MacSimple::send_later (void)
 bool 
 MacSimple::use_rts (void)
 {
-	if (m_rts_cts_threshold < m_current->get_size () &&
+	if (m_rts_cts_threshold < m_current.get_size () &&
 	    !m_current_to.is_broadcast ()) {
 		return true;
 	} else {
@@ -301,7 +303,7 @@ MacSimple::send_if_we_can (void)
 {
 	if (!m_phy->is_state_idle ()) {
 		TRACE ("send later again");
-		assert (m_current != 0);
+		assert (m_has_current);
 		if (!m_send_later_event.is_running ()) {
 			m_send_later_event = make_event (&MacSimple::send_later, this);
 			Simulator::schedule_rel_us (m_phy->get_delay_until_idle_us (),

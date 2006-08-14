@@ -21,7 +21,7 @@
 
 #include "udp.h"
 #include "chunk-udp.h"
-#include "packet.h"
+#include "gpacket.h"
 #include "ipv4.h"
 #include "tag-ipv4.h"
 #include "ipv4-end-point.h"
@@ -96,20 +96,21 @@ Udp::allocate (Ipv4Address local_address, uint16_t local_port,
 
 
 void 
-Udp::receive (PacketPtr packet)
+Udp::receive (GPacket packet)
 {
 	m_recv_logger->log (packet);
 	ChunkUdp udp_chunk;
-	packet->peek (&udp_chunk);
-	packet->remove (&udp_chunk);
+	packet.peek (&udp_chunk);
+	packet.remove (&udp_chunk);
 	TagInPortPair port_tag;
 	port_tag.m_dport = udp_chunk.get_destination ();
 	port_tag.m_sport = udp_chunk.get_source ();
-	packet->add_tag (&port_tag);
+	packet.add_tag (&port_tag);
 	TagInIpv4AddressPair addr_tag;
-	packet->peek_tag (&addr_tag);
+	packet.peek_tag (&addr_tag);
 	Ipv4EndPoint *end_point = m_end_points->lookup (addr_tag.m_daddr, port_tag.m_dport,
 							addr_tag.m_saddr, port_tag.m_sport);
+
 	if (end_point == 0) {
 		return;
 	}
@@ -117,21 +118,21 @@ Udp::receive (PacketPtr packet)
 }
 
 void
-Udp::send (PacketPtr packet)
+Udp::send (GPacket packet)
 {
 	TagOutPortPair port_tag;
 	TagOutIpv4AddressPair addr_tag;
-	packet->peek_tag (&port_tag);
-	packet->peek_tag (&addr_tag);
+	packet.peek_tag (&port_tag);
+	packet.peek_tag (&addr_tag);
 	ChunkUdp udp_chunk;
 	udp_chunk.set_destination (port_tag.m_dport);
 	udp_chunk.set_source (port_tag.m_sport);
-	udp_chunk.set_payload_size (packet->get_size ());
+	udp_chunk.set_payload_size (packet.get_size ());
 	udp_chunk.initialize_checksum (addr_tag.m_saddr,
 				       addr_tag.m_daddr,
 				       UDP_PROTOCOL);
 
-	packet->add (&udp_chunk);
+	packet.add (&udp_chunk);
 
 	m_ipv4->set_protocol (UDP_PROTOCOL);
 	m_send_logger->log (packet);

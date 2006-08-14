@@ -19,7 +19,7 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #include "throughput-printer.h"
-#include "packet.h"
+#include "gpacket.h"
 #include "simulator.h"
 #include "event.tcc"
 #include <iostream>
@@ -45,9 +45,9 @@ ThroughputPrinter::stop (void)
 	m_timeout_event.cancel ();
 }
 void 
-ThroughputPrinter::receive (ConstPacketPtr packet)
+ThroughputPrinter::receive (GPacket const packet)
 {
-	m_current += packet->get_size ();
+	m_current += packet.get_size ();
 }
 
 void

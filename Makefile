@@ -150,6 +150,8 @@ YANS_SRC:= \
 	src/common/chunk.cc \
 	src/common/chunk-utils.cc \
 	src/common/packet.cc \
+	src/common/gpacket.cc \
+	src/common/gbuffer.cc \
 	src/common/chunk-constant-data.cc \
 	src/common/ipv4-address.cc \
 	src/common/mac-address.cc \
@@ -268,6 +270,8 @@ YANS_INST_HDR := \
 	src/common/uid-factory.h \
 	src/common/tags.h \
 	src/common/packet.h \
+	src/common/gpacket.h \
+	src/common/gbuffer.h \
 	src/common/system-thread.h \
 	src/common/system-mutex.h \
 	src/common/exec-commands.h \

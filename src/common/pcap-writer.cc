@@ -26,7 +26,7 @@
 
 #include "pcap-writer.h"
 #include "simulator.h"
-#include "packet.h"
+#include "gpacket.h"
 #include "data-writer.h"
 
 namespace yans {
@@ -65,15 +65,15 @@ PcapWriter::write_header_ethernet (void)
 }
 
 void 
-PcapWriter::write_packet (ConstPacketPtr packet)
+PcapWriter::write_packet (GPacket const packet)
 {
 	if (m_writer != 0) {
 		uint64_t current = Simulator::now_us ();
 		write_32 ((current >> 32) & 0xffffffff);
 		write_32 (current & 0xffffffff);
-		write_32 (packet->get_size ());
-		write_32 (packet->get_size ());
-		packet->write (m_write_callback);
+		write_32 (packet.get_size ());
+		write_32 (packet.get_size ());
+		packet.write (m_write_callback);
 	}
 }
 

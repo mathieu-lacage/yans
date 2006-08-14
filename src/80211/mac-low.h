@@ -28,7 +28,7 @@
 #include "mac-address.h"
 #include "callback.h"
 #include "event.h"
-#include "packet.h"
+#include "gpacket.h"
 
 namespace yans {
 
@@ -143,7 +143,7 @@ private:
 
 class MacLow {
 public:
-	typedef Callback<void, PacketPtr , ChunkMac80211Hdr const*> MacLowRxCallback;
+	typedef Callback<void, GPacket , ChunkMac80211Hdr const*> MacLowRxCallback;
 
 	MacLow ();
 	~MacLow ();
@@ -163,13 +163,13 @@ public:
 					      MacLowTransmissionParameters const&parameters) const;
 
 	/* start the transmission of the currently-stored data. */
-	void start_transmission (PacketPtr packet, 
+	void start_transmission (GPacket packet, 
 				 ChunkMac80211Hdr const*hdr, 
 				 MacLowTransmissionParameters parameters,
 				 MacLowTransmissionListener *listener);
 
-	void receive_ok (ConstPacketPtr packet, double rx_snr, uint8_t tx_mode, uint8_t stuff);
-	void receive_error (ConstPacketPtr packet, double rx_snr);
+	void receive_ok (GPacket const packet, double rx_snr, uint8_t tx_mode, uint8_t stuff);
+	void receive_error (GPacket const packet, double rx_snr);
 private:
 	void cancel_all_events (void);
 	uint32_t get_ack_size (void) const;
@@ -182,7 +182,7 @@ private:
 	uint32_t get_current_size (void) const;
 	uint64_t now_us (void) const;
 	MacStation *get_station (MacAddress to) const;
-	void forward_down (ConstPacketPtr packet, ChunkMac80211Hdr const *hdr, 
+	void forward_down (GPacket const packet, ChunkMac80211Hdr const *hdr, 
 			   uint8_t tx_mode, uint8_t stuff);
 	uint64_t calculate_overall_tx_time_us (uint32_t size,
 					       MacAddress to,
@@ -229,7 +229,8 @@ private:
 	Event m_send_data_event;
 	Event m_wait_sifs_event;
 
-	PacketPtr m_current_packet;
+	GPacket m_current_packet;
+	bool m_has_current;
 	ChunkMac80211Hdr m_current_hdr;
 	MacLowTransmissionParameters m_tx_params;
 	MacLowTransmissionListener *m_listener;
