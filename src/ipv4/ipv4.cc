@@ -68,6 +68,7 @@ Ipv4::~Ipv4 ()
 	m_protocols.erase (m_protocols.begin (), m_protocols.end ());
 	delete m_send_logger;
 	delete m_recv_logger;
+	delete m_routing_table;
 	for (Ipv4NetworkInterfacesI i = m_interfaces.begin ();
 	     i != m_interfaces.end (); i++) {
 		delete (*i);
