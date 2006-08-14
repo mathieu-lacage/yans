@@ -40,16 +40,18 @@ TcpConnectionListener::~TcpConnectionListener ()
 void 
 TcpConnectionListener::receive (PacketPtr packet, Chunk *chunk)
 {
-	TagInIpv4 tag;
-	packet->peek_tag (&tag);
+	TagInPortPair port_tag;
+	TagInIpv4AddressPair addr_tag;
+	packet->peek_tag (&port_tag);
+	packet->peek_tag (&addr_tag);
 	ChunkTcp *tcp_chunk = static_cast <ChunkTcp *> (chunk);
 	if (tcp_chunk->is_flag_syn () &&
 	    !tcp_chunk->is_flag_ack ()) {
-		if (m_acception (tag.get_saddress (), tag.get_sport ())) {
+		if (m_acception (addr_tag.m_saddr, port_tag.m_sport)) {
 			Ipv4EndPoint *end_point = m_tcp->allocate (m_end_point->get_local_address (),
-								  m_end_point->get_local_port (), 
-								  tag.get_saddress (), 
-								  tag.get_sport ());
+								   m_end_point->get_local_port (), 
+								   addr_tag.m_saddr, 
+								   port_tag.m_sport);
 			if (end_point == 0) {
 				/* We cannot really allocate an endpoint here. 
 				 * I think that this is a bad error here because since 

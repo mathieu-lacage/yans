@@ -155,7 +155,6 @@ YANS_SRC:= \
 	src/common/mac-address.cc \
 	src/common/mac-address-factory.cc \
 	src/common/mac-network-interface.cc \
-	src/common/tag.cc \
 	src/common/uid-factory.cc \
 	src/common/gtags.cc \
 	src/common/utils.cc \
@@ -178,7 +177,6 @@ YANS_SRC:= \
 	src/common/position.cc \
 	src/common/static-position.cc \
 	src/common/static-speed-position.cc \
-	src/ipv4/tag-ipv4.cc \
 	src/ipv4/ipv4-end-point.cc \
 	src/ipv4/ipv4-end-points.cc \
 	src/ipv4/ipv4-route.cc \
@@ -267,11 +265,12 @@ YANS_INST_HDR := \
 	src/common/mac-address-factory.h \
 	src/common/mac-network-interface.h \
 	src/common/ref-ptr.h \
+	src/common/uid-factory.h \
+	src/common/gtags.h \
 	src/common/packet.h \
 	src/common/system-thread.h \
 	src/common/system-mutex.h \
 	src/common/exec-commands.h \
-	src/common/tag.h \
 	src/common/chunk.h \
 	src/common/packet-logger.h \
 	src/common/trace-container.h \

@@ -23,139 +23,48 @@
 
 namespace yans {
 
-TagOutIpv4::TagOutIpv4 ()
-{}
-
-TagOutIpv4::TagOutIpv4 (Route const*route)
-	: m_route (*route)
-{}
 
 uint16_t 
-TagOutIpv4::get_dport (void)
+TagPortPair::get_dport (void)
 {
 	return m_dport;
 }
 uint16_t 
-TagOutIpv4::get_sport (void)
+TagPortPair::get_sport (void)
 {
 	return m_sport;
 }
-
-Ipv4Address
-TagOutIpv4::get_daddress (void)
-{
-	return m_daddress;
-}
-Ipv4Address
-TagOutIpv4::get_saddress (void)
-{
-	return m_saddress;
-}
 void 
-TagOutIpv4::set_dport (uint16_t dport)
+TagPortPair::set_dport (uint16_t dport)
 {
 	m_dport = dport;
 }
 void 
-TagOutIpv4::set_sport (uint16_t sport)
+TagPortPair::set_sport (uint16_t sport)
 {
 	m_sport = sport;
 }
-void 
-TagOutIpv4::set_daddress (Ipv4Address daddress)
-{
-	m_daddress = daddress;
-}
-void 
-TagOutIpv4::set_saddress (Ipv4Address saddress)
-{
-	m_saddress = saddress;
-}
-Route const *
-TagOutIpv4::get_route (void)
-{
-	return &m_route;
-}
 
-uint32_t 
-TagOutIpv4::real_get_id (void) const
-{
-	static uint32_t tag = TagManager::register_tag ("out-ipv4");
-	return tag;
-}
-uint32_t 
-TagOutIpv4::real_get_size (void) const
-{
-	return sizeof (*this);
-}
-
-
-
-TagInIpv4::TagInIpv4 ()
-{}
-
-TagInIpv4::TagInIpv4 (Ipv4NetworkInterface *interface)
-	: m_interface (interface)
-{}
-
-uint16_t 
-TagInIpv4::get_dport (void)
-{
-	return m_dport;
-}
-uint16_t 
-TagInIpv4::get_sport (void)
-{
-	return m_sport;
-}
 
 Ipv4Address
-TagInIpv4::get_daddress (void)
+TagIpv4AddressPair::get_daddress (void)
 {
-	return m_daddress;
+	return m_daddr;
 }
 Ipv4Address
-TagInIpv4::get_saddress (void)
+TagIpv4AddressPair::get_saddress (void)
 {
-	return m_saddress;
-}
-
-void 
-TagInIpv4::set_dport (uint16_t dport)
-{
-	m_dport = dport;
+	return m_saddr;
 }
 void 
-TagInIpv4::set_sport (uint16_t sport)
+TagIpv4AddressPair::set_daddress (Ipv4Address daddress)
 {
-	m_sport = sport;
+	m_daddr = daddress;
 }
 void 
-TagInIpv4::set_daddress (Ipv4Address daddress)
+TagIpv4AddressPair::set_saddress (Ipv4Address saddress)
 {
-	m_daddress = daddress;
-}
-void 
-TagInIpv4::set_saddress (Ipv4Address saddress)
-{
-	m_saddress = saddress;
-}
-Ipv4NetworkInterface *
-TagInIpv4::get_interface (void)
-{
-	return m_interface;
-}
-
-uint32_t 
-TagInIpv4::real_get_id (void) const
-{
-	static uint32_t tag = TagManager::register_tag ("in-ipv4");
-	return tag;
-}
-uint32_t 
-TagInIpv4::real_get_size (void) const
-{
-	return sizeof (*this);
+	m_saddr = saddress;
 }
 
 }; // namespace yans

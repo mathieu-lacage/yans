@@ -44,6 +44,8 @@ public:
 	template <typename T>
 	bool update (T const*tag);
 
+	void remove_all_tags (void);
+
 	enum {
 		SIZE = 16
 	};
@@ -58,7 +60,6 @@ private:
 	bool remove (uint32_t id);
 	bool peek (uint8_t *buffer, uint32_t size, uint32_t id) const;
 	bool update (uint8_t const*buffer, uint32_t size, uint32_t id);
-	void remove_all_tags (void);
 	struct TagData *alloc_data (void);
 	void free_data (struct TagData *data);
 
@@ -80,10 +81,7 @@ class TypeUid {
 public:
 	static uint32_t get_uid (void);
 private:
-	union {
-		T real_type;
-		uint8_t padding[GTags::SIZE];
-	};
+	T real_type;
 };
 template <typename T>
 uint32_t TypeUid<T>::get_uid (void)

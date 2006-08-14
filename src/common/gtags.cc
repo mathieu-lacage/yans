@@ -64,6 +64,7 @@ GTags::remove_all_tags (void)
 		}
 		free_data (cur);
 	}
+	m_next = 0;
 }
 
 struct GTags::TagData *

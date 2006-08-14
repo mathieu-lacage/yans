@@ -70,43 +70,9 @@ MyChunk::get_data (void) const
 
 /* A sample Tag implementation
  */
-class MyTag : public Tag {
-public:
-	MyTag ();
-	virtual ~MyTag ();
-	void set_stream_id (uint16_t stream_id);
-	uint16_t get_stream_id (void);
-private:
-	virtual uint32_t real_get_id (void) const;
-	virtual uint32_t real_get_size (void) const;
+struct MyTag {
 	uint16_t m_stream_id;
 };
-
-MyTag::MyTag ()
-{}
-MyTag::~MyTag ()
-{}
-void 
-MyTag::set_stream_id (uint16_t stream_id)
-{
-	m_stream_id = stream_id;
-}
-uint16_t 
-MyTag::get_stream_id (void)
-{
-	return m_stream_id;
-}
-uint32_t 
-MyTag::real_get_id (void) const
-{
-	static uint32_t id = TagManager::register_tag ("MyTag");
-	return id;
-}
-uint32_t 
-MyTag::real_get_size (void) const
-{
-	return sizeof (*this);
-}
 
 
 static void
@@ -115,8 +81,8 @@ receive (PacketPtr p)
 	MyChunk my;
 	p->remove (&my);
 	std::cout << "received data=" << my.get_data () << std::endl;
-	MyTag my_tag;
-	p->remove_tag (&my_tag);
+	struct MyTag my_tag;
+	p->peek_tag (&my_tag);
 }
 
 
@@ -127,8 +93,8 @@ int main (int argc, char *argv[])
 	my.set_data (2);
 	std::cout << "send data=2" << std::endl;
 	p->add (&my);
-	MyTag my_tag;
-	my_tag.set_stream_id (5);
+	struct MyTag my_tag;
+	my_tag.m_stream_id = 5;
 	p->add_tag (&my_tag);
 	receive (p);
 	return 0;

@@ -22,7 +22,6 @@
 #ifndef TAG_IPV4_H
 #define TAG_IPV4_H
 
-#include "tag.h"
 #include "ipv4-address.h"
 #include "ipv4-route.h"
 
@@ -30,60 +29,26 @@ namespace yans {
 
 class Ipv4NetworkInterface;
 
-class TagOutIpv4 : public Tag {
-public:
-	TagOutIpv4 ();
-	TagOutIpv4 (Route const *route);
-
-	uint16_t get_dport (void);
-	uint16_t get_sport (void);
-	Ipv4Address get_daddress (void);
-	Ipv4Address get_saddress (void);
-
-	void set_dport (uint16_t dport);
-	void set_sport (uint16_t sport);
-	void set_daddress (Ipv4Address daddress);
-	void set_saddress (Ipv4Address saddress);
-
-	Route const *get_route (void);
-	
- private:
-	virtual uint32_t real_get_id (void) const;
-	virtual uint32_t real_get_size (void) const;
-
-	Route m_route;
-	Ipv4Address m_daddress;
-	Ipv4Address m_saddress;
+struct TagOutPortPair {
 	uint16_t m_sport;
 	uint16_t m_dport;
 };
 
-class TagInIpv4 : public Tag {
-public:
-	TagInIpv4 ();
-	TagInIpv4 (Ipv4NetworkInterface *interface);
-
-	Ipv4NetworkInterface *get_interface (void);
-	uint16_t get_dport (void);
-	uint16_t get_sport (void);
-	Ipv4Address get_daddress (void);
-	Ipv4Address get_saddress (void);
-
-	void set_dport (uint16_t dport);
-	void set_sport (uint16_t sport);
-	void set_daddress (Ipv4Address daddress);
-	void set_saddress (Ipv4Address saddress);
-
-public:	
-	virtual uint32_t real_get_id (void) const;
-	virtual uint32_t real_get_size (void) const;
-
-	Ipv4NetworkInterface *m_interface;
-	Ipv4Address m_daddress;
-	Ipv4Address m_saddress;
+struct TagInPortPair {
 	uint16_t m_sport;
 	uint16_t m_dport;
 };
+
+struct TagOutIpv4AddressPair {
+	Ipv4Address m_saddr;
+	Ipv4Address m_daddr;
+};
+
+struct TagInIpv4AddressPair {
+	Ipv4Address m_saddr;
+	Ipv4Address m_daddr;
+};
+
 
 }; // namespace yans
 

@@ -111,10 +111,10 @@ Ipv4::send (PacketPtr packet)
 {
 	ChunkIpv4 ip_header;
 
-	TagOutIpv4 tag;
-	packet->remove_tag (&tag);
-	ip_header.set_source (tag.get_saddress ());
-	ip_header.set_destination (tag.get_daddress ());
+	TagOutIpv4AddressPair tag;
+	packet->peek_tag (&tag);
+	ip_header.set_source (tag.m_saddr);
+	ip_header.set_destination (tag.m_daddr);
 	ip_header.set_protocol (m_send_protocol);
 	ip_header.set_payload_size (packet->get_size ());
 	ip_header.set_ttl (m_default_ttl);
@@ -123,10 +123,11 @@ Ipv4::send (PacketPtr packet)
 
 	m_identification ++;
 
-	Route const *route = tag.get_route ();
-	assert (route != 0);
+	Route route;
+	bool found = packet->peek_tag (&route);
+	assert (found);
 
-	send_out (packet, &ip_header, route);
+	send_out (packet, &ip_header, &route);
 }
 
 void 
@@ -307,9 +308,9 @@ void
 Ipv4::receive_packet (PacketPtr packet, ChunkIpv4 *ip, Ipv4NetworkInterface *interface)
 {
 	/* receive the packet. */
-	TagInIpv4 tag;
-	tag.set_daddress (ip->get_destination ());
-	tag.set_saddress (ip->get_source ());
+	TagInIpv4AddressPair tag;
+	tag.m_daddr = ip->get_destination ();
+	tag.m_saddr = ip->get_source ();
 	packet->add_tag (&tag);
 	TransportProtocolCallback protocol = lookup_protocol (ip->get_protocol ());
 	if (!protocol.is_null ()) {

@@ -28,6 +28,7 @@
 #include <utility>
 
 #include "callback.h"
+#include "gtags.h"
 #include "ref-ptr.h"
 
 namespace yans {
@@ -35,8 +36,6 @@ namespace yans {
 class Packet;
 class Chunk;
 class Buffer;
-class Tag;
-class Tags;
 
 /**
  * \brief smart-pointer for Packet
@@ -156,27 +155,31 @@ public:
 	 *
 	 * Make a copy of the input tag and store it in the Packet.
 	 */
-	void add_tag (Tag const*tag);
+	template <typename T>
+	void add_tag (T const *tag);
 	/**
 	 * \param tag tag to remove from packet.
 	 *
 	 * Copy and remove the tag stored in this Packet identified
 	 * by the input tag type.
 	 */
-	void remove_tag (Tag *tag);
+	template <typename T>
+	bool remove_tag (T *tag);
 	/**
 	 * \param tag tag to copy
 	 *
 	 * Copy the tag stored in this Packet identified by the
 	 * input tag type.
 	 */
-	void peek_tag (Tag *tag) const;
+	template <typename T>
+	bool peek_tag (T *tag) const;
 	/**
 	 * \param tag tag to update
 	 *
 	 * Copy this tag into the Packet.
 	 */
-	void update_tag (Tag *tag);
+	template <typename T>
+	bool update_tag (T const*tag);
 
 	/**
 	 * \param chunk chunk to add to Packet
@@ -244,10 +247,36 @@ public:
 
 	mutable uint32_t m_count;
 	Buffer *m_buffer;
-	Tags *m_tags;
+	GTags m_tags;
 };
 
 std::ostream& operator<< (std::ostream& os, Packet const& packet);
+
+}; // namespace yans
+
+namespace yans {
+
+template <typename T>
+void Packet::add_tag (T const*tag)
+{
+	m_tags.add (tag);
+}
+template <typename T>
+bool Packet::remove_tag (T *tag)
+{
+	return m_tags.remove (tag);
+}
+template <typename T>
+bool Packet::peek_tag (T *tag) const
+{
+	return m_tags.peek (tag);
+}
+template <typename T>
+bool Packet::update_tag (T const*tag)
+{
+	return m_tags.update (tag);
+}
+
 
 }; // namespace yans
 

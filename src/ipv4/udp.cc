@@ -99,16 +99,17 @@ void
 Udp::receive (PacketPtr packet)
 {
 	m_recv_logger->log (packet);
-	TagInIpv4 tag;
-	packet->peek_tag (&tag);
 	ChunkUdp udp_chunk;
 	packet->peek (&udp_chunk);
 	packet->remove (&udp_chunk);
-	tag.set_dport (udp_chunk.get_destination ());
-	tag.set_sport (udp_chunk.get_source ());
-	packet->update_tag (&tag);
-	Ipv4EndPoint *end_point = m_end_points->lookup (tag.get_daddress (), tag.get_dport (),
-							tag.get_saddress (), tag.get_sport ());
+	TagInPortPair port_tag;
+	port_tag.m_dport = udp_chunk.get_destination ();
+	port_tag.m_sport = udp_chunk.get_source ();
+	packet->add_tag (&port_tag);
+	TagInIpv4AddressPair addr_tag;
+	packet->peek_tag (&addr_tag);
+	Ipv4EndPoint *end_point = m_end_points->lookup (addr_tag.m_daddr, port_tag.m_dport,
+							addr_tag.m_saddr, port_tag.m_sport);
 	if (end_point == 0) {
 		return;
 	}
@@ -118,14 +119,16 @@ Udp::receive (PacketPtr packet)
 void
 Udp::send (PacketPtr packet)
 {
-	TagOutIpv4 tag;
-	packet->peek_tag (&tag);
+	TagOutPortPair port_tag;
+	TagOutIpv4AddressPair addr_tag;
+	packet->peek_tag (&port_tag);
+	packet->peek_tag (&addr_tag);
 	ChunkUdp udp_chunk;
-	udp_chunk.set_destination (tag.get_dport ());
-	udp_chunk.set_source (tag.get_sport ());
+	udp_chunk.set_destination (port_tag.m_dport);
+	udp_chunk.set_source (port_tag.m_sport);
 	udp_chunk.set_payload_size (packet->get_size ());
-	udp_chunk.initialize_checksum (tag.get_saddress (),
-				       tag.get_daddress (),
+	udp_chunk.initialize_checksum (addr_tag.m_saddr,
+				       addr_tag.m_daddr,
 				       UDP_PROTOCOL);
 
 	packet->add (&udp_chunk);

@@ -108,19 +108,27 @@ Tcp::allocate (Ipv4Address local_address, uint16_t local_port,
 void
 Tcp::send_reset (PacketPtr packet, ChunkTcp *tcp_chunk)
 {
-	TagInIpv4 in_tag;
-	packet->remove_tag (&in_tag);
-	Route *route = m_host->get_routing_table ()->lookup (in_tag.get_saddress ());
+	TagInIpv4AddressPair in_addr_tag;
+	TagInPortPair in_port_tag;
+	packet->peek_tag (&in_addr_tag);
+	packet->peek_tag (&in_port_tag);
+	Route *route = m_host->get_routing_table ()->lookup (in_addr_tag.m_saddr);
 	if (route == 0) {
-		TRACE ("cannot send back RST to " << in_tag.get_saddress ());
+		TRACE ("cannot send back RST to " << in_addr_tag.m_saddr);
 		return;
 	}
-	TagOutIpv4 out_tag = TagOutIpv4 (route);
-	out_tag.set_daddress (in_tag.get_saddress ());
-	out_tag.set_saddress (in_tag.get_daddress ());
-	out_tag.set_dport (in_tag.get_sport ());
-	out_tag.set_sport (in_tag.get_dport ());
-	packet->add_tag (&out_tag);
+
+	PacketPtr rst = Packet::create ();
+	
+	TagOutIpv4AddressPair out_addr_tag;
+	TagOutPortPair out_port_tag;
+	out_addr_tag.m_daddr = in_addr_tag.m_saddr;
+	out_addr_tag.m_saddr = in_addr_tag.m_daddr;
+	out_port_tag.m_dport = in_port_tag.m_sport;
+	out_port_tag.m_sport = in_port_tag.m_dport;
+	rst->add_tag (&out_addr_tag);
+	rst->add_tag (&out_port_tag);
+	rst->add_tag (route);
 
 	tcp_chunk->disable_flag_syn ();
 	tcp_chunk->enable_flag_rst ();
@@ -136,11 +144,11 @@ Tcp::send_reset (PacketPtr packet, ChunkTcp *tcp_chunk)
 	tcp_chunk->enable_flag_ack ();
 	tcp_chunk->set_sequence_number (0);
 
-	packet->add (tcp_chunk);
+	rst->add (tcp_chunk);
 
-	TRACE ("send back RST to " << in_tag.get_saddress ());
+	TRACE ("send back RST to " << in_addr_tag.m_saddr);
 	m_ipv4->set_protocol (TCP_PROTOCOL);
-	m_ipv4->send (packet);
+	m_ipv4->send (rst);
 }
 
 
@@ -148,16 +156,17 @@ Tcp::send_reset (PacketPtr packet, ChunkTcp *tcp_chunk)
 void
 Tcp::receive (PacketPtr packet)
 {
-	TagInIpv4 tag;
-	packet->peek_tag (&tag);
+	TagInIpv4AddressPair in_addr_tag;
+	packet->peek_tag (&in_addr_tag);
 	ChunkTcp tcp_chunk;
 	packet->peek (&tcp_chunk);
 	packet->remove (&tcp_chunk);
-	tag.set_dport (tcp_chunk.get_destination_port ());
-	tag.set_sport (tcp_chunk.get_source_port ());
-	Ipv4EndPoint *end_p = m_end_p->lookup (tag.get_daddress (), tag.get_dport (), 
-					       tag.get_saddress (), tag.get_sport ());
-	packet->update_tag (&tag);
+	TagInPortPair in_port_tag;
+	in_port_tag.m_dport = tcp_chunk.get_destination_port ();
+	in_port_tag.m_sport = tcp_chunk.get_source_port ();
+	Ipv4EndPoint *end_p = m_end_p->lookup (in_addr_tag.m_daddr, in_port_tag.m_dport, 
+					       in_addr_tag.m_saddr, in_port_tag.m_sport);
+	packet->add_tag (&in_port_tag);
 	if (end_p == 0) {
 		if (tcp_chunk.is_flag_syn () &&
 		    !tcp_chunk.is_flag_ack ()) {

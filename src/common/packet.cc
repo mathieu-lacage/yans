@@ -22,8 +22,8 @@
 #include "packet.h"
 #include "chunk.h"
 #include "buffer.h"
-#include "tag.h"
 #include <cassert>
+#include <vector>
 
 #define TRACE_PACKET 1
 
@@ -86,20 +86,19 @@ Packet::destroy (void)
 Packet::Packet ()
 	: m_count (1),
 	  m_buffer (new Buffer ()),
-	  m_tags (new Tags ())
+	  m_tags ()
 {}
 
 Packet::~Packet ()
 {
 	delete m_buffer;
-	delete m_tags;
 }
 
 void
 Packet::reset (void)
 {
 	m_buffer->reset ();
-	m_tags->reset ();
+	m_tags.remove_all_tags ();
 }
 
 Packet *
@@ -114,7 +113,7 @@ Packet::copy (uint32_t start_off, uint32_t length) const
 	assert (start_off < get_size ());
 	assert (start_off + length <= get_size ());
 	Packet *other = Packet::create ();
-	other->m_tags->copy_from (*(this->m_tags));
+	other->m_tags = m_tags;
 	Buffer *tmp = other->m_buffer;
 	tmp->add_at_start (length);
 	Buffer::Iterator dest, start, end;
@@ -138,28 +137,6 @@ Packet::peek_data (void) const
 {
 	return m_buffer->begin ().peek_data ();
 }
-
-void 
-Packet::add_tag (Tag const*tag)
-{
-	m_tags->add (tag);
-}
-void 
-Packet::remove_tag (Tag *tag)
-{
-	m_tags->remove (tag);
-}
-void 
-Packet::peek_tag (Tag *tag) const
-{
-	m_tags->peek (tag);
-}
-void 
-Packet::update_tag (Tag *tag)
-{
-	m_tags->update (tag);
-}
-
 
 
 void 
