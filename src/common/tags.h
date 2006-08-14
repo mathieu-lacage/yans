@@ -25,6 +25,8 @@
 
 namespace yans {
 
+struct TagData;
+
 class Tags {
 public:
 	Tags ();
@@ -50,12 +52,6 @@ public:
 		SIZE = 16
 	};
 private:
-	struct TagData {
-		struct TagData *m_next;
-		uint32_t m_id;
-		uint32_t m_count;
-		uint8_t m_data[Tags::SIZE];
-	};
 	void add (uint8_t const*buffer, uint32_t size, uint32_t id);
 	bool remove (uint32_t id);
 	bool peek (uint8_t *buffer, uint32_t size, uint32_t id) const;

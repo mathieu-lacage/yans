@@ -23,18 +23,27 @@
 
 namespace yans {
 
-#if 0
-static struct Tags::TagData *g_free = 0;
+struct TagData {
+	struct TagData *m_next;
+	uint32_t m_id;
+	uint32_t m_count;
+	uint8_t m_data[Tags::SIZE];
+};
+
+
+#if 1
+
+static struct TagData *g_free = 0;
 static uint32_t g_n_free = 0;
 
-struct Tags::TagData *
+struct TagData *
 Tags::alloc_data (void)
 {
 	struct TagData *retval;
-	if (m_free != 0) {
-		retval = m_free;
-		m_free = m_free->m_next;
-		m_n_free--;
+	if (g_free != 0) {
+		retval = g_free;
+		g_free = g_free->m_next;
+		g_n_free--;
 	} else {
 		retval = new struct TagData ();
 	}
@@ -44,16 +53,16 @@ Tags::alloc_data (void)
 void
 Tags::free_data (struct TagData *data)
 {
-	if (m_n_free > 1000) {
+	if (g_n_free > 1000) {
 		delete data;
 		return;
 	}
-	m_n_free++;
-	data->m_next = m_free;
-	m_free = data;
+	g_n_free++;
+	data->m_next = g_free;
+	g_free = data;
 }
 #else
-struct Tags::TagData *
+struct TagData *
 Tags::alloc_data (void)
 {
 	struct TagData *retval;
