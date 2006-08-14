@@ -18,19 +18,19 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef GTAGS_H
-#define GTAGS_H
+#ifndef TAGS_H
+#define TAGS_H
 
 #include <stdint.h>
 
 namespace yans {
 
-class GTags {
+class Tags {
 public:
-	GTags ();
-	GTags (GTags const &o);
-	GTags &operator = (GTags const &o);
-	~GTags ();
+	Tags ();
+	Tags (Tags const &o);
+	Tags &operator = (Tags const &o);
+	~Tags ();
 
 	template <typename T>
 	void add (T const*tag);
@@ -54,7 +54,7 @@ private:
 		struct TagData *m_next;
 		uint32_t m_id;
 		uint32_t m_count;
-		uint8_t m_data[GTags::SIZE];
+		uint8_t m_data[Tags::SIZE];
 	};
 	void add (uint8_t const*buffer, uint32_t size, uint32_t id);
 	bool remove (uint32_t id);
@@ -93,39 +93,39 @@ uint32_t TypeUid<T>::get_uid (void)
 
 template <typename T>
 void 
-GTags::add (T const*tag)
+Tags::add (T const*tag)
 {
-	assert (sizeof (T) <= GTags::SIZE);
+	assert (sizeof (T) <= Tags::SIZE);
 	uint8_t const*buf = reinterpret_cast<uint8_t const*> (tag);
 	add (buf, sizeof (T), TypeUid<T>::get_uid ());
 }
 
 template <typename T>
 bool
-GTags::remove (T *tag)
+Tags::remove (T *tag)
 {
-	assert (sizeof (T) <= GTags::SIZE);
+	assert (sizeof (T) <= Tags::SIZE);
 	return remove (TypeUid<T>::get_uid ());
 }
 
 template <typename T>
 bool
-GTags::peek (T *tag) const
+Tags::peek (T *tag) const
 {
-	assert (sizeof (T) <= GTags::SIZE);
+	assert (sizeof (T) <= Tags::SIZE);
 	uint8_t *buf = reinterpret_cast<uint8_t *> (tag);
 	return peek (buf, sizeof (T), TypeUid<T>::get_uid ());
 }
 
 template <typename T>
 bool
-GTags::update (T const*tag)
+Tags::update (T const*tag)
 {
-	assert (sizeof (T) <= GTags::SIZE);
+	assert (sizeof (T) <= Tags::SIZE);
 	uint8_t const*buf = reinterpret_cast<uint8_t const*> (tag);
 	return update (buf, sizeof (T), TypeUid<T>::get_uid ());
 }
 
 }; // namespace yans
 
-#endif /* GTAGS_H */
+#endif /* TAGS_H */

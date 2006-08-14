@@ -23,14 +23,14 @@
 
 namespace yans {
 
-struct GTags::TagData *GTags::m_free = 0;
-uint32_t GTags::m_n_free = 0;
+struct Tags::TagData *Tags::m_free = 0;
+uint32_t Tags::m_n_free = 0;
 
-GTags::GTags ()
+Tags::Tags ()
 	: m_next ()
 {}
 
-GTags::GTags (GTags const &o)
+Tags::Tags (Tags const &o)
 	: m_next (o.m_next)
 {
 	if (m_next != 0) {
@@ -38,8 +38,8 @@ GTags::GTags (GTags const &o)
 	}
 }
 
-GTags &
-GTags::operator = (GTags const &o)
+Tags &
+Tags::operator = (Tags const &o)
 {
 	remove_all_tags ();
 	m_next = o.m_next;
@@ -49,13 +49,13 @@ GTags::operator = (GTags const &o)
 	return *this;
 }
 
-GTags::~GTags ()
+Tags::~Tags ()
 {
 	remove_all_tags ();
 }
 
 void
-GTags::remove_all_tags (void)
+Tags::remove_all_tags (void)
 {
 	for (struct TagData *cur = m_next; cur != 0; cur = cur->m_next) {
 		cur->m_count--;
@@ -67,8 +67,8 @@ GTags::remove_all_tags (void)
 	m_next = 0;
 }
 
-struct GTags::TagData *
-GTags::alloc_data (void)
+struct Tags::TagData *
+Tags::alloc_data (void)
 {
 	struct TagData *retval;
 	if (m_free != 0) {
@@ -82,7 +82,7 @@ GTags::alloc_data (void)
 }
 
 void
-GTags::free_data (struct TagData *data)
+Tags::free_data (struct TagData *data)
 {
 	if (m_n_free > 1000) {
 		delete data;
@@ -94,7 +94,7 @@ GTags::free_data (struct TagData *data)
 }
 
 void
-GTags::add (uint8_t const*buffer, uint32_t size, uint32_t id)
+Tags::add (uint8_t const*buffer, uint32_t size, uint32_t id)
 {
 	// ensure this id was not yet added
 	for (struct TagData *cur = m_next; cur != 0; cur = cur->m_next) {
@@ -110,7 +110,7 @@ GTags::add (uint8_t const*buffer, uint32_t size, uint32_t id)
 }
 
 bool
-GTags::remove (uint32_t id)
+Tags::remove (uint32_t id)
 {
 	bool found = false;
 	for (struct TagData *cur = m_next; cur != 0; cur = cur->m_next) {
@@ -131,7 +131,7 @@ GTags::remove (uint32_t id)
 		copy->m_id = cur->m_id;
 		copy->m_count = 1;
 		copy->m_next = 0;
-		memcpy (copy->m_data, cur->m_data, GTags::SIZE);
+		memcpy (copy->m_data, cur->m_data, Tags::SIZE);
 		*prev_next = copy;
 		prev_next = &copy->m_next;
 	}
@@ -141,7 +141,7 @@ GTags::remove (uint32_t id)
 	return true;
 }
 bool
-GTags::peek (uint8_t *buffer, uint32_t size, uint32_t id) const
+Tags::peek (uint8_t *buffer, uint32_t size, uint32_t id) const
 {
 	for (struct TagData *cur = m_next; cur != 0; cur = cur->m_next) {
 		if (cur->m_id == id) {
@@ -155,7 +155,7 @@ GTags::peek (uint8_t *buffer, uint32_t size, uint32_t id) const
 }
 
 bool
-GTags::update (uint8_t const*buffer, uint32_t size, uint32_t id)
+Tags::update (uint8_t const*buffer, uint32_t size, uint32_t id)
 {
 	if (!remove (id)) {
 		return false;
@@ -174,10 +174,10 @@ GTags::update (uint8_t const*buffer, uint32_t size, uint32_t id)
 
 namespace yans {
 
-class GTagsTest : Test {
+class TagsTest : Test {
 public:
-	GTagsTest ();
-	virtual ~GTagsTest ();
+	TagsTest ();
+	virtual ~TagsTest ();
 	virtual bool run_tests (void);
 };
 
@@ -188,26 +188,26 @@ struct my_tag_b {
 	uint32_t b;
 };
 struct my_tag_c {
-	uint8_t c [GTags::SIZE];
+	uint8_t c [Tags::SIZE];
 };
 struct my_invalid_tag {
-	uint8_t invalid [GTags::SIZE+1];
+	uint8_t invalid [Tags::SIZE+1];
 };
 
 
-GTagsTest::GTagsTest ()
-	: Test ("GTags")
+TagsTest::TagsTest ()
+	: Test ("Tags")
 {}
-GTagsTest::~GTagsTest ()
+TagsTest::~TagsTest ()
 {}
 
 bool 
-GTagsTest::run_tests (void)
+TagsTest::run_tests (void)
 {
 	bool ok = true;
 
 	// build initial tag.
-	GTags tags;
+	Tags tags;
 	struct my_tag_a a;
 	a.a = 10;
 	tags.add (&a);
@@ -226,7 +226,7 @@ GTagsTest::run_tests (void)
 	}
 
 	// make sure copy contains copy.
-	GTags other = tags;
+	Tags other = tags;
 	struct my_tag_a o_a;
 	o_a.a = 0;
 	other.peek (&o_a);
@@ -255,7 +255,7 @@ GTagsTest::run_tests (void)
 	}
 
 	other = tags;
-	GTags another = other;
+	Tags another = other;
 	struct my_tag_c c;
 	c.c[0] = 0x66;
 	another.add (&c);
@@ -276,7 +276,7 @@ GTagsTest::run_tests (void)
 	return ok;
 }
 
-static GTagsTest g_tags_test;
+static TagsTest g_tags_test;
 
 
 }; // namespace yans

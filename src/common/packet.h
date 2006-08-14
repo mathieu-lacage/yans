@@ -247,7 +247,7 @@ public:
 
 	mutable uint32_t m_count;
 	Buffer *m_buffer;
-	GTags m_tags;
+	Tags m_tags;
 };
 
 std::ostream& operator<< (std::ostream& os, Packet const& packet);
