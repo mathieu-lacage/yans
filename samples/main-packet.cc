@@ -2,7 +2,6 @@
 #include "yans/packet.h"
 #include "yans/chunk.h"
 #include "yans/buffer.h"
-#include "yans/tag.h"
 #include <iostream>
 
 using namespace yans;

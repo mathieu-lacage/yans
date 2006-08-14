@@ -28,7 +28,7 @@
 #include <utility>
 
 #include "callback.h"
-#include "gtags.h"
+#include "tags.h"
 #include "ref-ptr.h"
 
 namespace yans {

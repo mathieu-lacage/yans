@@ -124,7 +124,8 @@ Ipv4::send (PacketPtr packet)
 	m_identification ++;
 
 	Route route;
-	bool found = packet->peek_tag (&route);
+	bool found;
+	found = packet->peek_tag (&route);
 	assert (found);
 
 	send_out (packet, &ip_header, &route);

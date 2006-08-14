@@ -18,7 +18,7 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#include "gtags.h"
+#include "tags.h"
 #include <string.h>
 
 namespace yans {
