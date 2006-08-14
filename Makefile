@@ -156,7 +156,7 @@ YANS_SRC:= \
 	src/common/mac-address-factory.cc \
 	src/common/mac-network-interface.cc \
 	src/common/uid-factory.cc \
-	src/common/gtags.cc \
+	src/common/tags.cc \
 	src/common/utils.cc \
 	src/common/population-analysis.cc \
 	src/common/data-writer.cc \
@@ -266,7 +266,7 @@ YANS_INST_HDR := \
 	src/common/mac-network-interface.h \
 	src/common/ref-ptr.h \
 	src/common/uid-factory.h \
-	src/common/gtags.h \
+	src/common/tags.h \
 	src/common/packet.h \
 	src/common/system-thread.h \
 	src/common/system-mutex.h \
