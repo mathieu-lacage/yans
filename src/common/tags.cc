@@ -100,12 +100,19 @@ Tags::~Tags ()
 void
 Tags::remove_all_tags (void)
 {
+	struct TagData *prev = 0;
 	for (struct TagData *cur = m_next; cur != 0; cur = cur->m_next) {
 		cur->m_count--;
 		if (cur->m_count > 0) {
 			break;
 		}
-		free_data (cur);
+		if (prev != 0) {
+			free_data (prev);
+		}
+		prev = cur;
+	}
+	if (prev != 0) {
+		free_data (prev);
 	}
 	m_next = 0;
 }
