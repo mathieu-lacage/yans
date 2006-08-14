@@ -204,7 +204,7 @@ int main (int argc, char *argv[])
 	wifi_ap->set_ssid("Hi");
 	pos_ap->set(0.0,0.0,0.0);
 	Host *hap = new Host ("ap");
-	Ipv4NetworkInterface *ni_ap =
+	uint32_t ni_ap =
 		hap->add_ipv4_arp_interface (wifi_ap,
 					     Ipv4Address ("192.168.0.1"), 
 					     Ipv4Mask ("255.255.255.0"));
@@ -223,7 +223,7 @@ int main (int argc, char *argv[])
 	pos_client->set (5.0, 0.0, 0.0);
 	Simulator::schedule_rel_s (1.0, make_event (&advance, pos_client));
 	Host *hclient = new Host ("client");
-	Ipv4NetworkInterface *ni_client =
+	uint32_t ni_client =
 		hclient->add_ipv4_arp_interface (wifi_client, 
 						 Ipv4Address ("192.168.0.3"), 
 						 Ipv4Mask ("255.255.255.0"));
@@ -259,7 +259,7 @@ int main (int argc, char *argv[])
 					      make_callback (&ThroughputPrinter::receive, 
 							     printer));
 	Host *hserver = new Host ("server");
-	Ipv4NetworkInterface *ni_server =
+	uint32_t ni_server =
 		hserver->add_ipv4_arp_interface (wifi_server, 
 						 Ipv4Address ("192.168.0.2"), 
 						 Ipv4Mask ("255.255.255.0"));

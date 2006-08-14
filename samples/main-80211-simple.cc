@@ -119,7 +119,7 @@ int main (int argc, char *argv[])
 	Host *hclient, *hserver;
 	hclient = new Host ("client");
 	hserver = new Host ("server");
-	Ipv4NetworkInterface *ip_client, *ip_server;
+	uint32_t ip_client, ip_server;
 	ip_client = hclient->add_ipv4_arp_interface (wifi_client, 
 						     Ipv4Address ("192.168.0.3"),
 						     Ipv4Mask ("255.255.255.0"));

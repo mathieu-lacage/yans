@@ -51,6 +51,7 @@ const uint8_t Ipv4::ICMP_PROTOCOL = 1;
 
 Ipv4::Ipv4 ()
 {
+	m_routing_table = new Ipv4Route ();
 	register_transport_protocol (make_callback (&Ipv4::receive_icmp, this), 
 				     ICMP_PROTOCOL);
 	/* this is recommended by rfc 1700 */
@@ -67,6 +68,11 @@ Ipv4::~Ipv4 ()
 	m_protocols.erase (m_protocols.begin (), m_protocols.end ());
 	delete m_send_logger;
 	delete m_recv_logger;
+	for (Ipv4NetworkInterfacesI i = m_interfaces.begin ();
+	     i != m_interfaces.end (); i++) {
+		delete (*i);
+	}
+	m_interfaces.erase (m_interfaces.begin (), m_interfaces.end ());
 }
 
 void 
@@ -76,17 +82,23 @@ Ipv4::register_trace (TraceContainer *container)
 	container->register_packet_logger ("ipv4-recv", m_recv_logger);
 }
 
-void 
-Ipv4::set_host (Host *host)
+Ipv4Route *
+Ipv4::get_routing_table (void)
 {
-	m_host = host;
+	return m_routing_table;
 }
 
-Ipv4Route *
-Ipv4::get_route (void)
+uint32_t 
+Ipv4::add_interface (Ipv4NetworkInterface *interface, 
+		     Ipv4Address address, Ipv4Mask mask)
 {
-	return m_host->get_routing_table ();
+	interface->set_address (address);
+	interface->set_mask (mask);
+	interface->set_rx_callback (make_callback (&Ipv4::receive, this));
+	m_interfaces.push_back (interface);
+	return m_interfaces.size () - 1;
 }
+
 
 void 
 Ipv4::set_protocol (uint8_t protocol)
@@ -139,7 +151,7 @@ void
 Ipv4::send_real_out (PacketPtr packet, ChunkIpv4 *ip, Route const *route)
 {
 	packet->add (ip);
-	Ipv4NetworkInterface *out_interface = route->get_interface ();
+	Ipv4NetworkInterface *out_interface = m_interfaces[route->get_interface ()];
 	assert (packet->get_size () <= out_interface->get_mtu ());
 	m_send_logger->log (packet);
 	if (route->is_gateway ()) {
@@ -152,7 +164,7 @@ Ipv4::send_real_out (PacketPtr packet, ChunkIpv4 *ip, Route const *route)
 bool
 Ipv4::send_out (PacketPtr packet, ChunkIpv4 *ip, Route const *route)
 {
-	Ipv4NetworkInterface *out_interface = route->get_interface ();
+	Ipv4NetworkInterface *out_interface = m_interfaces[route->get_interface ()];
 
 	if (packet->get_size () + ip->get_size () > out_interface->get_mtu ()) {
 		/* we need to fragment. */
@@ -222,7 +234,7 @@ Ipv4::send_icmp_time_exceeded_ttl (PacketPtr original, ChunkIpv4 *ip, Ipv4Networ
 	ip_real.set_ttl (m_default_ttl);
 	ip_real.set_identification (m_identification);
 
-	Route *route = m_host->get_routing_table ()->lookup (ip_real.get_destination ());
+	Route *route = m_routing_table->lookup (ip_real.get_destination ());
 	if (route == 0) {
 		TRACE ("cannot send back icmp message to " << ip_real.get_destination ());
 		return;
@@ -236,9 +248,8 @@ Ipv4::send_icmp_time_exceeded_ttl (PacketPtr original, ChunkIpv4 *ip, Ipv4Networ
 bool
 Ipv4::forwarding (PacketPtr packet, ChunkIpv4 *ip_header, Ipv4NetworkInterface *interface)
 {
-	Ipv4NetworkInterfaces const * interfaces = m_host->get_interfaces ();
-	for (Ipv4NetworkInterfacesCI i = interfaces->begin ();
-	     i != interfaces->end (); i++) {
+	for (Ipv4NetworkInterfacesCI i = m_interfaces.begin ();
+	     i != m_interfaces.end (); i++) {
 		if ((*i)->get_address ().is_equal (ip_header->get_destination ())) {
 			TRACE ("for me 1");
 			return false;
@@ -262,7 +273,7 @@ Ipv4::forwarding (PacketPtr packet, ChunkIpv4 *ip_header, Ipv4NetworkInterface *
 		return true;
 	}
 	ip_header->set_ttl (ip_header->get_ttl () - 1);
-	Route *route = m_host->get_routing_table ()->lookup (ip_header->get_destination ());
+	Route *route = m_routing_table->lookup (ip_header->get_destination ());
 	if (route == 0) {
 		TRACE ("not for me -- forwarding but no route to host. drop.");
 		return true;

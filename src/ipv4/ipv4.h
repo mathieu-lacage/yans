@@ -48,8 +48,6 @@ public:
 	Ipv4 ();
 	~Ipv4 ();
 
-	void set_host (Host *host);
-
 	void set_protocol (uint8_t protocol);
 	void send (PacketPtr packet);
 
@@ -60,9 +58,13 @@ public:
 	/* invoked from lower-layers. */
 	void receive (PacketPtr packet, Ipv4NetworkInterface *from);
 
+	uint32_t add_interface (Ipv4NetworkInterface *interface, 
+				Ipv4Address address, Ipv4Mask mask);
+	Ipv4Route *get_routing_table (void);
+	
+
 private:
 	bool forwarding (PacketPtr packet, ChunkIpv4 *ip, Ipv4NetworkInterface *from);
-	Ipv4Route *get_route (void);
 	TransportProtocolCallback lookup_protocol (uint8_t id);
 	void send_icmp_time_exceeded_ttl (PacketPtr original, ChunkIpv4 *ip, Ipv4NetworkInterface *interface);
 	bool send_out (PacketPtr packet, ChunkIpv4 *ip, Route const*route);
@@ -73,9 +75,14 @@ private:
 
 	static const uint8_t ICMP_PROTOCOL;
 
-	Host *m_host;
 	typedef std::vector<std::pair<uint8_t, TransportProtocolCallback > > Protocols;
 	typedef std::vector<std::pair<uint8_t, TransportProtocolCallback > >::iterator ProtocolsI;
+	typedef std::vector<Ipv4NetworkInterface *> Ipv4NetworkInterfaces;
+	typedef std::vector<Ipv4NetworkInterface *>::iterator Ipv4NetworkInterfacesI;
+	typedef std::vector<Ipv4NetworkInterface *>::const_iterator Ipv4NetworkInterfacesCI;
+
+	Ipv4Route *m_routing_table;
+	Ipv4NetworkInterfaces m_interfaces;
 	Protocols m_protocols;
 	Ipv4Address m_send_destination;
 	uint8_t m_send_protocol;

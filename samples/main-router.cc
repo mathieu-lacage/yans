@@ -51,7 +51,7 @@ int main (int argc, char *argv[])
 	hclient = new Host ("client");
 	hserver = new Host ("server");
 	hrouter = new Host ("router");
-	Ipv4NetworkInterface *ip_client, *ip_server, *ip_router_client, *ip_router_server;
+	uint32_t ip_client, ip_server, ip_router_client, ip_router_server;
 	ip_client = hclient->add_ipv4_arp_interface (eth_client, 
 						     Ipv4Address ("192.168.0.2"), 
 						     Ipv4Mask ("255.255.255.0"));

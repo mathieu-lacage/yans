@@ -92,7 +92,7 @@ int main (int argc, char *argv[])
 	Host *hclient, *hserver;
 	hclient = new Host ("client");
 	hserver = new Host ("server");
-	Ipv4NetworkInterface *ni_server, *ni_client;
+	uint32_t ni_server, ni_client;
 	ni_client = hclient->add_ipv4_arp_interface (eth_client, 
 						     Ipv4Address ("192.168.0.3"),
 						     Ipv4Mask ("255.255.255.0"));

@@ -36,9 +36,6 @@ class Udp;
 class Tcp;
 class LoopbackIpv4;
 
-typedef std::vector<Ipv4NetworkInterface *> Ipv4NetworkInterfaces;
-typedef std::vector<Ipv4NetworkInterface *>::const_iterator Ipv4NetworkInterfacesCI;
-
 class Host {
 public:
 	Host (char const *path);
@@ -46,9 +43,8 @@ public:
 
 	Ipv4Route *get_routing_table (void);
 
-	Ipv4NetworkInterfaces const*get_interfaces (void);
-	Ipv4NetworkInterface *add_ipv4_arp_interface (MacNetworkInterface *interface, 
-						      Ipv4Address address, Ipv4Mask mask);
+	uint32_t add_ipv4_arp_interface (MacNetworkInterface *interface, 
+					 Ipv4Address address, Ipv4Mask mask);
 	
 	Udp *get_udp (void);
 	Tcp *get_tcp (void);
@@ -61,10 +57,6 @@ public:
 	void set_z (double z);
 
 private:
-	typedef std::vector<Ipv4NetworkInterface *>::iterator Ipv4NetworkInterfacesI;
-
-	Ipv4NetworkInterfaces m_interfaces;
-	Ipv4Route *m_routing_table;
 	Ipv4 *m_ipv4;
 	Udp *m_udp;
 	Tcp *m_tcp;

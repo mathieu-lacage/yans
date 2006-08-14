@@ -36,7 +36,6 @@ Host::Host (char const *path)
 	m_z = 0.0;
 
 	m_ipv4 = new Ipv4 ();
-	m_ipv4->set_host (this);
 
 	m_udp = new Udp ();
 	m_udp->set_host (this);
@@ -46,15 +45,12 @@ Host::Host (char const *path)
 	m_tcp->set_host (this);
 	m_tcp->set_ipv4 (m_ipv4);
 
-	m_routing_table = new Ipv4Route ();
-	LoopbackIpv4 *loopback = new LoopbackIpv4 ();
-	loopback->set_address (Ipv4Address::get_loopback ());
-	loopback->set_mask (Ipv4Mask::get_loopback ());
-	loopback->set_rx_callback (make_callback (&Ipv4::receive, m_ipv4));
-	m_interfaces.push_back (loopback);
-
-	m_routing_table->add_host_route_to (Ipv4Address::get_loopback (),
-					    loopback);
+	LoopbackIpv4 *loopback = new LoopbackIpv4 ();	
+	uint32_t loopback_id = m_ipv4->add_interface (loopback,
+						      Ipv4Address::get_loopback (),
+						      Ipv4Mask::get_loopback ());
+	m_ipv4->get_routing_table ()->add_host_route_to (Ipv4Address::get_loopback (),
+							 loopback_id);
 	m_root = new std::string (path);
 }
 
@@ -62,37 +58,22 @@ Host::~Host ()
 {
 	delete m_root;
 	delete m_ipv4;
-	delete m_routing_table;
 	delete m_udp;
 	delete m_tcp;
-	for (Ipv4NetworkInterfacesI i = m_interfaces.begin ();
-	     i != m_interfaces.end (); i++) {
-		delete (*i);
-	}
-	m_interfaces.erase (m_interfaces.begin (), m_interfaces.end ());
 }
 
 Ipv4Route *
 Host::get_routing_table (void)
 {
-	return m_routing_table;
+	return m_ipv4->get_routing_table ();
 }
 
-Ipv4NetworkInterfaces const *
-Host::get_interfaces (void)
-{
-	return &m_interfaces;
-}
 
-Ipv4NetworkInterface *
+uint32_t
 Host::add_ipv4_arp_interface (MacNetworkInterface *interface, Ipv4Address address, Ipv4Mask mask)
 {
 	ArpIpv4NetworkInterface *ipv4 = new ArpIpv4NetworkInterface (interface);
-	ipv4->set_address (address);
-	ipv4->set_mask (mask);
-	ipv4->set_rx_callback (make_callback (&Ipv4::receive, m_ipv4));
-	m_interfaces.push_back (ipv4);
-	return ipv4;
+	return m_ipv4->add_interface (ipv4, address, mask);
 }
 
 Udp *
