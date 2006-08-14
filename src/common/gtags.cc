@@ -93,7 +93,7 @@ GTags::free_data (struct TagData *data)
 }
 
 void
-GTags::add (uint8_t *buffer, uint32_t size, uint32_t id)
+GTags::add (uint8_t const*buffer, uint32_t size, uint32_t id)
 {
 	// ensure this id was not yet added
 	for (struct TagData *cur = m_next; cur != 0; cur = cur->m_next) {
@@ -140,7 +140,7 @@ GTags::remove (uint32_t id)
 	return true;
 }
 bool
-GTags::peek (uint8_t *buffer, uint32_t size, uint32_t id)
+GTags::peek (uint8_t *buffer, uint32_t size, uint32_t id) const
 {
 	for (struct TagData *cur = m_next; cur != 0; cur = cur->m_next) {
 		if (cur->m_id == id) {
@@ -154,7 +154,7 @@ GTags::peek (uint8_t *buffer, uint32_t size, uint32_t id)
 }
 
 bool
-GTags::update (uint8_t *buffer, uint32_t size, uint32_t id)
+GTags::update (uint8_t const*buffer, uint32_t size, uint32_t id)
 {
 	if (!remove (id)) {
 		return false;

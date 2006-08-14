@@ -33,16 +33,16 @@ public:
 	~GTags ();
 
 	template <typename T>
-	void add (T *tag);
+	void add (T const*tag);
 
 	template <typename T>
 	bool remove (T *tag);
 
 	template <typename T>
-	bool peek (T *tag);
+	bool peek (T *tag) const;
 
 	template <typename T>
-	bool update (T *tag);
+	bool update (T const*tag);
 
 	enum {
 		SIZE = 16
@@ -54,10 +54,10 @@ private:
 		uint32_t m_count;
 		uint8_t m_data[GTags::SIZE];
 	};
-	void add (uint8_t *buffer, uint32_t size, uint32_t id);
+	void add (uint8_t const*buffer, uint32_t size, uint32_t id);
 	bool remove (uint32_t id);
-	bool peek (uint8_t *buffer, uint32_t size, uint32_t id);
-	bool update (uint8_t *buffer, uint32_t size, uint32_t id);
+	bool peek (uint8_t *buffer, uint32_t size, uint32_t id) const;
+	bool update (uint8_t const*buffer, uint32_t size, uint32_t id);
 	void remove_all_tags (void);
 	struct TagData *alloc_data (void);
 	void free_data (struct TagData *data);
@@ -95,10 +95,10 @@ uint32_t TypeUid<T>::get_uid (void)
 
 template <typename T>
 void 
-GTags::add (T *tag)
+GTags::add (T const*tag)
 {
 	assert (sizeof (T) <= GTags::SIZE);
-	uint8_t *buf = reinterpret_cast<uint8_t *> (tag);
+	uint8_t const*buf = reinterpret_cast<uint8_t const*> (tag);
 	add (buf, sizeof (T), TypeUid<T>::get_uid ());
 }
 
@@ -112,7 +112,7 @@ GTags::remove (T *tag)
 
 template <typename T>
 bool
-GTags::peek (T *tag)
+GTags::peek (T *tag) const
 {
 	assert (sizeof (T) <= GTags::SIZE);
 	uint8_t *buf = reinterpret_cast<uint8_t *> (tag);
@@ -121,10 +121,10 @@ GTags::peek (T *tag)
 
 template <typename T>
 bool
-GTags::update (T *tag)
+GTags::update (T const*tag)
 {
 	assert (sizeof (T) <= GTags::SIZE);
-	uint8_t *buf = reinterpret_cast<uint8_t *> (tag);
+	uint8_t const*buf = reinterpret_cast<uint8_t const*> (tag);
 	return update (buf, sizeof (T), TypeUid<T>::get_uid ());
 }
 
