@@ -63,8 +63,6 @@ private:
 	struct TagData *alloc_data (void);
 	void free_data (struct TagData *data);
 
-	static struct TagData *m_free;
-	static uint32_t m_n_free;
 	struct TagData *m_next;
 };
 

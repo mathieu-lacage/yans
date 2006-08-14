@@ -23,8 +23,51 @@
 
 namespace yans {
 
-struct Tags::TagData *Tags::m_free = 0;
-uint32_t Tags::m_n_free = 0;
+#if 0
+static struct Tags::TagData *g_free = 0;
+static uint32_t g_n_free = 0;
+
+struct Tags::TagData *
+Tags::alloc_data (void)
+{
+	struct TagData *retval;
+	if (m_free != 0) {
+		retval = m_free;
+		m_free = m_free->m_next;
+		m_n_free--;
+	} else {
+		retval = new struct TagData ();
+	}
+	return retval;
+}
+
+void
+Tags::free_data (struct TagData *data)
+{
+	if (m_n_free > 1000) {
+		delete data;
+		return;
+	}
+	m_n_free++;
+	data->m_next = m_free;
+	m_free = data;
+}
+#else
+struct Tags::TagData *
+Tags::alloc_data (void)
+{
+	struct TagData *retval;
+	retval = new struct TagData ();
+	return retval;
+}
+
+void
+Tags::free_data (struct TagData *data)
+{
+	delete data;
+}
+#endif
+
 
 Tags::Tags ()
 	: m_next ()
@@ -66,33 +109,6 @@ Tags::remove_all_tags (void)
 	}
 	m_next = 0;
 }
-
-struct Tags::TagData *
-Tags::alloc_data (void)
-{
-	struct TagData *retval;
-	if (m_free != 0) {
-		retval = m_free;
-		m_free = retval->m_next;
-		m_n_free--;
-	} else {
-		retval = new struct TagData ();
-	}
-	return retval;
-}
-
-void
-Tags::free_data (struct TagData *data)
-{
-	if (m_n_free > 1000) {
-		delete data;
-		return;
-	}
-	m_n_free++;
-	data->m_next = m_free;
-	m_free = data;
-}
-
 void
 Tags::add (uint8_t const*buffer, uint32_t size, uint32_t id)
 {
