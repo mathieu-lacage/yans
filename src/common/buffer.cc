@@ -58,6 +58,7 @@ Buffer::recycle (struct Buffer::BufferData *data)
 		return; 
 	}
 	/* update buffer statistics */
+	assert (Buffer::m_prefered_size >= Buffer::m_prefered_start);
 	uint32_t cur_prefered_end = Buffer::m_prefered_size - Buffer::m_prefered_start;
 	if (m_total_added_start > Buffer::m_prefered_start) {
 		Buffer::m_prefered_start = m_total_added_start;
@@ -114,8 +115,6 @@ Buffer::create (void)
 #endif
 
 }; // namespace yans
-
-
 
 
 #ifdef RUN_SELF_TESTS

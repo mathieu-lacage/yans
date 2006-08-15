@@ -309,7 +309,6 @@ public:
 	inline Buffer::Iterator end (void) const;
 
 	inline Buffer (Buffer const &o);
-	inline Buffer (Buffer &o);
 	inline Buffer &operator = (Buffer const &o);
 	inline Buffer ();
 	inline ~Buffer ();
@@ -360,18 +359,8 @@ Buffer::Buffer ()
 
 Buffer::Buffer (Buffer const&o)
 	: m_data (o.m_data),
-	  m_total_added_start (0),
-	  m_total_added_end (0),
-	  m_start (o.m_start),
-	  m_size (o.m_size)
-{
-	m_data->m_count++;
-}
-
-Buffer::Buffer (Buffer &o)
-	: m_data (o.m_data),
-	  m_total_added_start (0),
-	  m_total_added_end (0),
+	  m_total_added_start (o.m_total_added_start),
+	  m_total_added_end (o.m_total_added_end),
 	  m_start (o.m_start),
 	  m_size (o.m_size)
 {
@@ -759,7 +748,6 @@ Buffer::Iterator::read (uint8_t *buffer, uint16_t size)
 
 
 }; // namespace yans
-
 
 
 
