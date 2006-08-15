@@ -300,7 +300,7 @@ TagsTest::run_tests (void)
 		ok = false;
 	}
 
-
+	other = other;
 
 	//struct my_invalid_tag invalid;
 	//tags.add (&invalid);
