@@ -23,29 +23,21 @@
 
 namespace yans {
 
-struct TagData {
-	struct TagData *m_next;
-	uint32_t m_id;
-	uint32_t m_count;
-	uint8_t m_data[Tags::SIZE];
-};
-
-
 #ifdef USE_FREE_LIST
 
-static struct TagData *g_free = 0;
-static uint32_t g_n_free = 0;
+struct Tags::TagData *Tags::g_free = 0;
+uint32_t Tags::g_n_free = 0;
 
-struct TagData *
+struct Tags::TagData *
 Tags::alloc_data (void)
 {
-	struct TagData *retval;
+	struct Tags::TagData *retval;
 	if (g_free != 0) {
 		retval = g_free;
 		g_free = g_free->m_next;
 		g_n_free--;
 	} else {
-		retval = new struct TagData ();
+		retval = new struct Tags::TagData ();
 	}
 	return retval;
 }
@@ -62,11 +54,11 @@ Tags::free_data (struct TagData *data)
 	g_free = data;
 }
 #else
-struct TagData *
+struct Tags::TagData *
 Tags::alloc_data (void)
 {
-	struct TagData *retval;
-	retval = new struct TagData ();
+	struct Tags::TagData *retval;
+	retval = new struct Tags::TagData ();
 	return retval;
 }
 
@@ -78,53 +70,7 @@ Tags::free_data (struct TagData *data)
 #endif
 
 
-Tags::Tags ()
-	: m_next ()
-{}
 
-Tags::Tags (Tags const &o)
-	: m_next (o.m_next)
-{
-	if (m_next != 0) {
-		m_next->m_count++;
-	}
-}
-
-Tags &
-Tags::operator = (Tags const &o)
-{
-	remove_all_tags ();
-	m_next = o.m_next;
-	if (m_next != 0) {
-		m_next->m_count++;
-	}
-	return *this;
-}
-
-Tags::~Tags ()
-{
-	remove_all_tags ();
-}
-
-void
-Tags::remove_all_tags (void)
-{
-	struct TagData *prev = 0;
-	for (struct TagData *cur = m_next; cur != 0; cur = cur->m_next) {
-		cur->m_count--;
-		if (cur->m_count > 0) {
-			break;
-		}
-		if (prev != 0) {
-			free_data (prev);
-		}
-		prev = cur;
-	}
-	if (prev != 0) {
-		free_data (prev);
-	}
-	m_next = 0;
-}
 void
 Tags::add (uint8_t const*buffer, uint32_t size, uint32_t id)
 {

@@ -29,10 +29,10 @@ struct TagData;
 
 class Tags {
 public:
-	Tags ();
-	Tags (Tags const &o);
-	Tags &operator = (Tags const &o);
-	~Tags ();
+	inline Tags ();
+	inline Tags (Tags const &o);
+	inline Tags &operator = (Tags const &o);
+	inline ~Tags ();
 
 	template <typename T>
 	void add (T const*tag);
@@ -46,18 +46,28 @@ public:
 	template <typename T>
 	bool update (T const*tag);
 
-	void remove_all_tags (void);
+	inline void remove_all_tags (void);
 
 	enum {
 		SIZE = 16
 	};
 private:
+	struct TagData {
+		struct TagData *m_next;
+		uint32_t m_id;
+		uint32_t m_count;
+		uint8_t m_data[Tags::SIZE];
+	};
+
 	void add (uint8_t const*buffer, uint32_t size, uint32_t id);
 	bool remove (uint32_t id);
 	bool peek (uint8_t *buffer, uint32_t size, uint32_t id) const;
 	bool update (uint8_t const*buffer, uint32_t size, uint32_t id);
-	struct TagData *alloc_data (void);
+	struct Tags::TagData *alloc_data (void);
 	void free_data (struct TagData *data);
+
+	static struct Tags::TagData *g_free;
+	static uint32_t g_n_free;
 
 	struct TagData *m_next;
 };
@@ -119,6 +129,56 @@ Tags::update (T const*tag)
 	uint8_t const*buf = reinterpret_cast<uint8_t const*> (tag);
 	return update (buf, sizeof (T), TypeUid<T>::get_uid ());
 }
+
+
+Tags::Tags ()
+	: m_next ()
+{}
+
+Tags::Tags (Tags const &o)
+	: m_next (o.m_next)
+{
+	if (m_next != 0) {
+		m_next->m_count++;
+	}
+}
+
+Tags &
+Tags::operator = (Tags const &o)
+{
+	remove_all_tags ();
+	m_next = o.m_next;
+	if (m_next != 0) {
+		m_next->m_count++;
+	}
+	return *this;
+}
+
+Tags::~Tags ()
+{
+	remove_all_tags ();
+}
+
+void
+Tags::remove_all_tags (void)
+{
+	struct TagData *prev = 0;
+	for (struct TagData *cur = m_next; cur != 0; cur = cur->m_next) {
+		cur->m_count--;
+		if (cur->m_count > 0) {
+			break;
+		}
+		if (prev != 0) {
+			free_data (prev);
+		}
+		prev = cur;
+	}
+	if (prev != 0) {
+		free_data (prev);
+	}
+	m_next = 0;
+}
+
 
 }; // namespace yans
 
