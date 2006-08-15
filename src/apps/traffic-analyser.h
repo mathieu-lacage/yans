@@ -24,7 +24,7 @@
 #define TRAFFIC_ANALYSER_H
 
 #include <stdint.h>
-#include "gpacket.h"
+#include "packet.h"
 
 namespace yans {
 

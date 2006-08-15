@@ -33,7 +33,7 @@
 #include "mac-container.h"
 #include "mac-traces.h"
 
-#include "gpacket.h"
+#include "packet.h"
 
 #ifndef STATION_TRACE
 #define nopeSTATION_TRACE 1

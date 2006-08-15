@@ -19,7 +19,7 @@
  * Author: Mathieu Lacage, <mathieu.lacage@sophia.inria.fr>
  */
 #include "channel-80211.h"
-#include "gpacket.h"
+#include "packet.h"
 #include "propagation-model.h"
 #include "simulator.h"
 #include "event.tcc"

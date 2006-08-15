@@ -18,7 +18,7 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#include "gpacket.h"
+#include "packet.h"
 #include <cassert>
 
 namespace yans {

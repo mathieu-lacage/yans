@@ -20,7 +20,7 @@
  */
 
 #include "mac-low.h"
-#include "gpacket.h"
+#include "packet.h"
 #include "phy-80211.h"
 #include "simulator.h"
 #include "chunk-mac-80211-fcs.h"

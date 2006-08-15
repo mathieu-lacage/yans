@@ -24,7 +24,7 @@
 #include <list>
 #include <stdint.h>
 #include "base-channel-80211.h"
-#include "gpacket.h"
+#include "packet.h"
 
 namespace yans {
 

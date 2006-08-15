@@ -20,7 +20,7 @@
  */
 
 #include "cable.h"
-#include "gpacket.h"
+#include "packet.h"
 #include "ethernet-network-interface.h"
 #include "event.h"
 #include "event.tcc"

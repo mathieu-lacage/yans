@@ -21,7 +21,7 @@
 
 #include "periodic-generator.h"
 #include "simulator.h"
-#include "gpacket.h"
+#include "packet.h"
 #include "chunk-constant-data.h"
 #include "event.h"
 #include "event.tcc"

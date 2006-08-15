@@ -23,7 +23,7 @@
 #define PACKET_LOGGER_H
 
 #include "callback.h"
-#include "gpacket.h"
+#include "packet.h"
 
 namespace yans {
 

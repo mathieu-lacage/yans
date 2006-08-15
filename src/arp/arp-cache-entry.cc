@@ -22,7 +22,7 @@
 #include "simulator.h"
 #include "arp-ipv4-network-interface.h"
 #include "arp-cache-entry.h"
-#include "gpacket.h"
+#include "packet.h"
 #include <cassert>
 
 namespace yans {

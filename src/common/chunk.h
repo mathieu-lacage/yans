@@ -24,7 +24,7 @@
 
 #include <stdint.h>
 #include <ostream>
-#include "gbuffer.h"
+#include "buffer.h"
 
 namespace yans {
 

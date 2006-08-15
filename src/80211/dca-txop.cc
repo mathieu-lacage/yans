@@ -25,7 +25,7 @@
 #include "mac-low.h"
 #include "mac-queue-80211e.h"
 #include "mac-tx-middle.h"
-#include "gpacket.h"
+#include "packet.h"
 #include "phy-80211.h"
 #include "trace-container.h"
 

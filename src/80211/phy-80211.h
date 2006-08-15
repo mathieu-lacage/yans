@@ -28,7 +28,7 @@
 #include "callback.h"
 #include "count-ptr-holder.tcc"
 #include "event.h"
-#include "gpacket.h"
+#include "packet.h"
 #include "callback-logger.h"
 
 

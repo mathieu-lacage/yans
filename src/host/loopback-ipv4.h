@@ -23,7 +23,7 @@
 
 #include "ipv4-network-interface.h"
 #include "ipv4-address.h"
-#include "gpacket.h"
+#include "packet.h"
 
 namespace yans {
 

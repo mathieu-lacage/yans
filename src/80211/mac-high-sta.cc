@@ -55,7 +55,7 @@
 #include "common.h"
 #include "ll-arp.h"
 
-#include "gpacket.h"
+#include "packet.h"
 
 #ifndef STATION_TRACE
 #define nopeSTATION_TRACE 1

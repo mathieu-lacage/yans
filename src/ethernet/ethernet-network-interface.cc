@@ -23,7 +23,7 @@
 #include "cable.h"
 #include "chunk-mac-crc.h"
 #include "chunk-mac-eth.h"
-#include "gpacket.h"
+#include "packet.h"
 #include "callback.h"
 #include "packet-logger.h"
 #include "trace-container.h"

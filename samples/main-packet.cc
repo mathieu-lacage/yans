@@ -1,5 +1,5 @@
 /* -*-	Mode:C++; c-basic-offset:8; tab-width:8; indent-tabs-mode:t -*- */
-#include "yans/gpacket.h"
+#include "yans/packet.h"
 #include "yans/chunk.h"
 #include <iostream>
 

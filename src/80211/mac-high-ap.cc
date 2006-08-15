@@ -48,7 +48,7 @@
 #include "mac-station.h"
 #include "ll-arp.h"
 
-#include "gpacket.h"
+#include "packet.h"
 
 #ifndef AP_TRACE
 #define nopeAP_TRACE 1

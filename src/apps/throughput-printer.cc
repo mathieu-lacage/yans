@@ -19,7 +19,7 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #include "throughput-printer.h"
-#include "gpacket.h"
+#include "packet.h"
 #include "simulator.h"
 #include "event.tcc"
 #include <iostream>

@@ -22,7 +22,7 @@
 #include "tcp-connection-listener.h"
 #include "tag-ipv4.h"
 #include "chunk-tcp.h"
-#include "gpacket.h"
+#include "packet.h"
 #include "tcp-connection.h"
 #include "host.h"
 #include "ipv4-route.h"

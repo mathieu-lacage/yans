@@ -22,7 +22,7 @@
 #include "mac-high-adhoc.h"
 #include "dca-txop.h"
 #include "network-interface-80211.h"
-#include "gpacket.h"
+#include "packet.h"
 
 #define noADHOC_TRACE 1
 

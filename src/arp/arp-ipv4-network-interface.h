@@ -26,7 +26,7 @@
 #include "ipv4-address.h"
 #include "mac-address.h"
 #include "sgi-hashmap.h"
-#include "gpacket.h"
+#include "packet.h"
 
 namespace yans {
 

@@ -24,7 +24,7 @@
 #include "qam-mode.h"
 #include "propagation-model.h"
 #include "simulator.h"
-#include "gpacket.h"
+#include "packet.h"
 #include "random-uniform.h"
 #include "count-ptr-holder.tcc"
 #include "event.tcc"

@@ -21,7 +21,7 @@
 #ifndef CHUNK_UTILS_H
 #define CHUNK_UTILS_H
 
-#include "gbuffer.h"
+#include "buffer.h"
 #include "ipv4-address.h"
 #include "mac-address.h"
 

@@ -21,7 +21,7 @@
 
 #include "mac-container.h"
 #include "mac-80211.h"
-#include "gpacket.h"
+#include "packet.h"
 
 
 MacContainer::MacContainer (Mac80211 *nsMac)

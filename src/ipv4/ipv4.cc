@@ -21,7 +21,7 @@
 
 #include "ipv4.h"
 #include "chunk-ipv4.h"
-#include "gpacket.h"
+#include "packet.h"
 #include "ipv4-network-interface.h"
 #include "ipv4-route.h"
 #include "host.h"

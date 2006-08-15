@@ -22,7 +22,7 @@
 #include "position.h"
 #include "channel-80211.h"
 #include "simulator.h"
-#include "gpacket.h"
+#include "packet.h"
 #include "event.tcc"
 #include <math.h>
 

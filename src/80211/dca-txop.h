@@ -25,7 +25,7 @@
 #include <stdint.h>
 #include "callback.h"
 #include "chunk-mac-80211-hdr.h"
-#include "gpacket.h"
+#include "packet.h"
 #include "callback-logger.h"
 
 namespace yans {

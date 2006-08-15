@@ -22,7 +22,7 @@
 #include "tcp.h"
 #include "ipv4.h"
 #include "tag-ipv4.h"
-#include "gpacket.h"
+#include "packet.h"
 #include "chunk-tcp.h"
 #include "host.h"
 #include "ipv4-end-point.h"

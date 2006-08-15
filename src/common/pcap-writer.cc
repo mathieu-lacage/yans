@@ -26,7 +26,7 @@
 
 #include "pcap-writer.h"
 #include "simulator.h"
-#include "gpacket.h"
+#include "packet.h"
 #include "data-writer.h"
 
 namespace yans {

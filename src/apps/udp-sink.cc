@@ -23,7 +23,7 @@
 #include "udp.h"
 #include "host.h"
 #include "ipv4-end-point.h"
-#include "gpacket.h"
+#include "packet.h"
 #include "simulator.h"
 #include "event.tcc"
 

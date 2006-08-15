@@ -19,7 +19,7 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #include "yans/wall-clock-ms.h"
-#include "yans/gpacket.h"
+#include "yans/packet.h"
 #include "yans/chunk-constant-data.h"
 #include "yans/chunk-udp.h"
 #include "yans/chunk-ipv4.h"

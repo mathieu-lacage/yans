@@ -22,7 +22,7 @@
 
 #include "defrag-state.h"
 #include "simulator.h"
-#include "gpacket.h"
+#include "packet.h"
 #include "chunk-ipv4.h"
 #include <cassert>
 

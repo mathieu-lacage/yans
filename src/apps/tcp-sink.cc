@@ -25,7 +25,7 @@
 #include "tcp-connection-listener.h"
 #include "tcp.h"
 #include "host.h"
-#include "gpacket.h"
+#include "packet.h"
 #include "simulator.h"
 #include "event.tcc"
 

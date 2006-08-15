@@ -22,7 +22,7 @@
 
 #include "traffic-analyser.h"
 #include "population-analysis.h"
-#include "gpacket.h"
+#include "packet.h"
 #include "simulator.h"
 #include <iostream>
 

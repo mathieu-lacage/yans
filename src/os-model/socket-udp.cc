@@ -20,7 +20,7 @@
  */
 
 #include "socket-udp.h"
-#include "gpacket.h"
+#include "packet.h"
 #include "ipv4-route.h"
 #include "host.h"
 #include "chunk-data.h"

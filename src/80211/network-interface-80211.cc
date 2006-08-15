@@ -24,7 +24,7 @@
 #include "base-channel-80211.h"
 #include "mac-stations.h"
 #include "mac-station.h"
-#include "gpacket.h"
+#include "packet.h"
 #include "trace-container.h"
 #include "mac-low.h"
 #include "mac-parameters.h"

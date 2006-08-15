@@ -24,7 +24,7 @@
 #include "mac-address.h"
 #include "callback.h"
 #include "supported-rates.h"
-#include "gpacket.h"
+#include "packet.h"
 #include <stdint.h>
 
 namespace yans {

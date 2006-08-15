@@ -27,7 +27,7 @@
 #include "f-traced-variable.tcc"
 #include "callback-logger.h"
 #include "callback.h"
-#include "gpacket.h"
+#include "packet.h"
 #include <list>
 #include <string>
 

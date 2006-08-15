@@ -41,7 +41,7 @@
  */
 
 // ns header.
-#include "gpacket.h"
+#include "packet.h"
 
 // 802.11 headers.
 #include "edca-txop.h"

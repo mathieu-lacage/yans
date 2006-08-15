@@ -20,7 +20,7 @@
  */
 #include "llc-snap-encapsulation.h"
 #include "chunk-llc-snap.h"
-#include "gpacket.h"
+#include "packet.h"
 #include "chunk.h"
 #include "mac-network-interface.h"
 #include <cassert>

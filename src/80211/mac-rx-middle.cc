@@ -20,7 +20,7 @@
  */
 
 #include "mac-rx-middle.h"
-#include "gpacket.h"
+#include "packet.h"
 #include "chunk-mac-80211-hdr.h"
 
 #include <cassert>

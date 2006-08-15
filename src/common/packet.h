@@ -22,7 +22,7 @@
 #define GPACKET_H
 
 #include <stdint.h>
-#include "gbuffer.h"
+#include "buffer.h"
 #include "chunk.h"
 #include "tags.h"
 #include "callback.h"

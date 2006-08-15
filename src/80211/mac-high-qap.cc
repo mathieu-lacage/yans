@@ -57,7 +57,7 @@
 #include "tspec.h"
 #include "net-interface-80211.h"
 
-#include "gpacket.h"
+#include "packet.h"
 
 #ifndef QAP_TRACE
 #define QAP_TRACE 1

@@ -26,7 +26,7 @@
 #include <utility>
 #include "callback.h"
 #include "mac-address.h"
-#include "gpacket.h"
+#include "packet.h"
 
 namespace yans {
 

@@ -21,7 +21,7 @@
 
 #include "mac-queue-80211e.h"
 #include "simulator.h"
-#include "gpacket.h"
+#include "packet.h"
 
 using namespace std;
 

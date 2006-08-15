@@ -21,7 +21,7 @@
 #include "mac-high-nqsta.h"
 #include "chunk-mac-80211-hdr.h"
 #include "network-interface-80211.h"
-#include "gpacket.h"
+#include "packet.h"
 #include "chunk-mgt.h"
 #include "phy-80211.h"
 #include "event.tcc"

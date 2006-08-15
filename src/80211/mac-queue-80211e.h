@@ -44,7 +44,7 @@
 #include <deque>
 #include <utility>
 #include "chunk-mac-80211-hdr.h"
-#include "gpacket.h"
+#include "packet.h"
 
 namespace yans {
 

@@ -88,7 +88,7 @@
 #include "common.h"
 #include "phy-80211.h"
 
-#include "gpacket.h"
+#include "packet.h"
 
 
 #ifndef QAP_SCHEDULER_TRACE

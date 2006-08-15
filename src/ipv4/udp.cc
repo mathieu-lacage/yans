@@ -21,7 +21,7 @@
 
 #include "udp.h"
 #include "chunk-udp.h"
-#include "gpacket.h"
+#include "packet.h"
 #include "ipv4.h"
 #include "tag-ipv4.h"
 #include "ipv4-end-point.h"

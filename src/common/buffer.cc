@@ -18,7 +18,7 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#include "gbuffer.h"
+#include "buffer.h"
 #include <cassert>
 
 namespace yans {

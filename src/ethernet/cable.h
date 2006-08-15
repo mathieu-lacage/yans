@@ -23,7 +23,7 @@
 #define CABLE_H
 
 #include <list>
-#include "gpacket.h"
+#include "packet.h"
 
 namespace yans {
 

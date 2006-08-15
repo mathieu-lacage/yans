@@ -23,7 +23,7 @@
 #define ARP_CACHE_ENTRY_H
 
 #include "mac-address.h"
-#include "gpacket.h"
+#include "packet.h"
 
 namespace yans {
 

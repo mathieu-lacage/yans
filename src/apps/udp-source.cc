@@ -21,7 +21,7 @@
 
 #include "udp-source.h"
 #include "event.h"
-#include "gpacket.h"
+#include "packet.h"
 #include "ipv4-end-point.h"
 #include "host.h"
 #include "udp.h"

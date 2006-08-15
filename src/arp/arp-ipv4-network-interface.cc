@@ -25,7 +25,7 @@
 #include "packet-logger.h"
 #include "trace-container.h"
 #include "chunk-arp.h"
-#include "gpacket.h"
+#include "packet.h"
 #include "llc-snap-encapsulation.h"
 #include <cassert>
 

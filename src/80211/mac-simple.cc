@@ -24,7 +24,7 @@
 #include "mac-stations.h"
 #include "event.tcc"
 #include "simulator.h"
-#include "gpacket.h"
+#include "packet.h"
 #include "chunk-mac-80211-hdr.h"
 #include "mac-network-interface.h"
 #include <cassert>

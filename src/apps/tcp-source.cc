@@ -22,7 +22,7 @@
 
 #include "callback.h"
 #include "tcp-source.h"
-#include "gpacket.h"
+#include "packet.h"
 #include "host.h"
 #include "tcp.h"
 #include "ipv4-route.h"
