@@ -114,7 +114,7 @@ Tags::remove (uint32_t id)
 		prev_next = &copy->m_next;
 	}
 	*prev_next = 0;
-	remove_all_tags ();
+	remove_all ();
 	m_next = start;
 	return true;
 }

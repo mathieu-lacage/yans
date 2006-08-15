@@ -46,7 +46,7 @@ public:
 	template <typename T>
 	bool update (T const*tag);
 
-	inline void remove_all_tags (void);
+	inline void remove_all (void);
 
 	enum {
 		SIZE = 16
@@ -150,7 +150,7 @@ Tags::operator = (Tags const &o)
 	if (m_next == o.m_next) {
 		return *this;
 	}
-	remove_all_tags ();
+	remove_all ();
 	m_next = o.m_next;
 	if (m_next != 0) {
 		m_next->m_count++;
@@ -160,11 +160,11 @@ Tags::operator = (Tags const &o)
 
 Tags::~Tags ()
 {
-	remove_all_tags ();
+	remove_all ();
 }
 
 void
-Tags::remove_all_tags (void)
+Tags::remove_all (void)
 {
 	struct TagData *prev = 0;
 	for (struct TagData *cur = m_next; cur != 0; cur = cur->m_next) {
