@@ -26,8 +26,9 @@ namespace yans {
 Packet::Packet ()
 	: m_buffer () {}
 
-Packet::Packet (Buffer buffer)
-	: m_buffer (buffer)
+Packet::Packet (Buffer buffer, Tags tags)
+	: m_buffer (buffer),
+	  m_tags (tags)
 {}
 
 
@@ -37,7 +38,7 @@ Packet::create_fragment (uint32_t start, uint32_t length) const
 	Buffer tmp = m_buffer;
 	tmp.remove_at_start (start);
 	tmp.remove_at_end (m_buffer.get_size () - (start + length));
-	return Packet (tmp);
+	return Packet (tmp, m_tags);
 }
 
 uint32_t 
@@ -106,6 +107,12 @@ void
 Packet::remove_at_start (uint32_t size)
 {
 	m_buffer.remove_at_start (size);
+}
+
+void 
+Packet::remove_all_tags (void)
+{
+	m_tags.remove_all ();
 }
 
 }; // namespace yans

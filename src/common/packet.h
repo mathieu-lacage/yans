@@ -46,6 +46,7 @@ public:
 	bool peek_tag (T *tag) const;
 	template <typename T>
 	bool update_tag (T const*tag);
+	void remove_all_tags (void);
 	void write (PacketReadWriteCallback callback) const;
 	void add_at_end (Packet packet);
 	void add_at_end (Packet packet, uint32_t offset, uint32_t size);
@@ -53,7 +54,7 @@ public:
 	void remove_at_start (uint32_t size);
 
 private:
-	Packet (Buffer buffer);
+	Packet (Buffer buffer, Tags tags);
 	Buffer m_buffer;
 	Tags m_tags;
 };
