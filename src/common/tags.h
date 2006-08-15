@@ -146,6 +146,10 @@ Tags::Tags (Tags const &o)
 Tags &
 Tags::operator = (Tags const &o)
 {
+	// self assignment
+	if (m_next == o.m_next) {
+		return *this;
+	}
 	remove_all_tags ();
 	m_next = o.m_next;
 	if (m_next != 0) {
