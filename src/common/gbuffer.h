@@ -309,6 +309,7 @@ public:
 	inline GBuffer::Iterator end (void) const;
 
 	inline GBuffer (GBuffer const &o);
+	inline GBuffer (GBuffer &o);
 	inline GBuffer &operator = (GBuffer const &o);
 	inline GBuffer ();
 	inline ~GBuffer ();
@@ -323,10 +324,10 @@ private:
 	typedef std::vector<struct GBuffer::GBufferData*> GBufferDataList;
 
 	inline uint8_t *get_start (void) const;
-	inline void recycle (struct GBuffer::GBufferData *data);
-	inline static struct GBuffer::GBufferData *create (void);
-	inline static struct GBuffer::GBufferData *allocate (uint32_t size, uint32_t start);
-	inline static void deallocate (struct GBuffer::GBufferData *data);
+	void recycle (struct GBuffer::GBufferData *data);
+	static struct GBuffer::GBufferData *create (void);
+	static struct GBuffer::GBufferData *allocate (uint32_t size, uint32_t start);
+	static void deallocate (struct GBuffer::GBufferData *data);
 
 	static GBufferDataList m_free_list;
 	static uint32_t m_prefered_size;
@@ -344,76 +345,6 @@ private:
 #include <cassert>
 
 namespace yans {
-
-struct GBuffer::GBufferData *
-GBuffer::allocate (uint32_t req_size, uint32_t req_start)
-{
-	assert (req_size >= 1);
-	uint32_t size = req_size - 1 + sizeof (struct GBuffer::GBufferData);
-	uint8_t *b = new uint8_t [size];
-	struct GBufferData *data = reinterpret_cast<struct GBuffer::GBufferData*>(b);
-	data->m_size = req_size;
-	data->m_dirty_start = req_start;
-	data->m_dirty_size = 0;
-	data->m_count = 1;
-	return data;
-}
-
-void
-GBuffer::deallocate (struct GBuffer::GBufferData *data)
-{
-	uint8_t *buf = reinterpret_cast<uint8_t *> (data);
-	delete [] buf;
-}
-
-void
-GBuffer::recycle (struct GBuffer::GBufferData *data)
-{
-	/* get rid of it if it is too small for later reuse. */
-	if (data->m_size < GBuffer::m_prefered_size) {
-		GBuffer::deallocate (data);
-	}
-	/* update buffer statistics */
-	uint32_t cur_prefered_end = GBuffer::m_prefered_size - GBuffer::m_prefered_start;
-	if (m_total_added_start > GBuffer::m_prefered_start) {
-		GBuffer::m_prefered_start = m_total_added_start;
-	}
-	uint32_t prefered_end;
-	if (m_total_added_end > cur_prefered_end) {
-		prefered_end = m_total_added_end;
-	} else {
-		prefered_end = cur_prefered_end;
-	}
-	GBuffer::m_prefered_size = GBuffer::m_prefered_start + prefered_end;
-	assert (GBuffer::m_prefered_size >= GBuffer::m_prefered_start);
-	/* feed into free list */
-	if (GBuffer::m_free_list.size () > 1000) {
-		GBuffer::deallocate (data);
-	} else {
-		GBuffer::m_free_list.push_back (data);
-	}
-}
-
-GBuffer::GBufferData *
-GBuffer::create (void)
-{
-	/* try to find a buffer correctly sized. */
-	while (!GBuffer::m_free_list.empty ()) {
-		struct GBuffer::GBufferData *data = GBuffer::m_free_list.back ();
-		GBuffer::m_free_list.pop_back ();
-		if (data->m_size > GBuffer::m_prefered_size) {
-			assert (GBuffer::m_prefered_size >= GBuffer::m_prefered_start);
-			data->m_dirty_start = GBuffer::m_prefered_start;
-			data->m_dirty_size = 0;
-			data->m_count = 1;
-			return data;
-		}
-		GBuffer::deallocate (data);
-	}
-	struct GBuffer::GBufferData *data = GBuffer::allocate (GBuffer::m_prefered_size, 
-							       GBuffer::m_prefered_start);
-	return data;
-}
 
 GBuffer::GBuffer ()
 	: m_data (GBuffer::create ()),
@@ -437,9 +368,25 @@ GBuffer::GBuffer (GBuffer const&o)
 	m_data->m_count++;
 }
 
+GBuffer::GBuffer (GBuffer &o)
+	: m_data (o.m_data),
+	  m_total_added_start (0),
+	  m_total_added_end (0),
+	  m_start (o.m_start),
+	  m_size (o.m_size)
+{
+	m_data->m_count++;
+}
+
 GBuffer &
 GBuffer::operator = (GBuffer const&o)
 {
+	// self assignment
+	if (m_data == o.m_data) {
+		m_start = o.m_start;
+		m_size = o.m_size;
+		return *this;
+	}
 	m_data->m_count--;
 	if (m_data->m_count == 0) {
 		recycle (m_data);
@@ -483,7 +430,6 @@ GBuffer::add_at_start (uint32_t start)
 		/* plenty of extra space in the buffer */
 		if (m_start > m_data->m_dirty_start && m_data->m_count > 1) {
 			/* the buffer is dirty */
-			m_data->m_count--;
 			goto alloc_new_buffer;
 		}
 		m_start -= start;
@@ -513,7 +459,6 @@ GBuffer::add_at_end (uint32_t end)
 		if ((m_start + m_size) < (m_data->m_dirty_start + m_data->m_dirty_size) &&
 		    m_data->m_count > 1) {
 			/* the buffer is dirty */
-			m_data->m_count--;
 			goto alloc_new_buffer;
 		}
 		m_size += end;
@@ -814,6 +759,8 @@ GBuffer::Iterator::read (uint8_t *buffer, uint16_t size)
 
 
 }; // namespace yans
+
+
 
 
 #endif /* GBUFFER_H */
