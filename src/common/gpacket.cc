@@ -19,13 +19,17 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #include "gpacket.h"
-#include "gpacket.h"
 #include <cassert>
 
 namespace yans {
 
 GPacket::GPacket ()
 	: m_buffer () {}
+
+GPacket::GPacket (GBuffer buffer)
+	: m_buffer (buffer)
+{}
+
 
 GPacket 
 GPacket::create_fragment (uint32_t start, uint32_t length) const
@@ -60,10 +64,6 @@ GPacket::remove (Chunk *chunk)
 	chunk->remove (&m_buffer);
 }
 
-
-GPacket::GPacket (GBuffer buffer)
-	: m_buffer (buffer)
-{}
 
 void 
 GPacket::write (PacketReadWriteCallback callback) const
