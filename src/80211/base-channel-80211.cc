@@ -30,7 +30,7 @@ BaseChannel80211::add (PropagationModel *model)
 	real_add (model);
 }
 void 
-BaseChannel80211::send (GPacket const packet, double tx_power_dbm,
+BaseChannel80211::send (Packet const packet, double tx_power_dbm,
 			uint8_t tx_mode, uint8_t stuff, 
 			PropagationModel const*caller) const
 {

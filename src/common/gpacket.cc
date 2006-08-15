@@ -23,50 +23,50 @@
 
 namespace yans {
 
-GPacket::GPacket ()
+Packet::Packet ()
 	: m_buffer () {}
 
-GPacket::GPacket (GBuffer buffer)
+Packet::Packet (Buffer buffer)
 	: m_buffer (buffer)
 {}
 
 
-GPacket 
-GPacket::create_fragment (uint32_t start, uint32_t length) const
+Packet 
+Packet::create_fragment (uint32_t start, uint32_t length) const
 {
-	GBuffer tmp = m_buffer;
+	Buffer tmp = m_buffer;
 	tmp.remove_at_start (start);
 	tmp.remove_at_end (m_buffer.get_size () - (start + length));
-	return GPacket (tmp);
+	return Packet (tmp);
 }
 
 uint32_t 
-GPacket::get_size (void) const
+Packet::get_size (void) const
 {
 	return m_buffer.get_size ();
 }
 
 void 
-GPacket::add (Chunk *chunk)
+Packet::add (Chunk *chunk)
 {
 	chunk->add (&m_buffer);
 }
 
 void 
-GPacket::peek (Chunk *chunk) const
+Packet::peek (Chunk *chunk) const
 {
 	chunk->peek (&m_buffer);
 }
 
 void 
-GPacket::remove (Chunk *chunk)
+Packet::remove (Chunk *chunk)
 {
 	chunk->remove (&m_buffer);
 }
 
 
 void 
-GPacket::write (PacketReadWriteCallback callback) const
+Packet::write (PacketReadWriteCallback callback) const
 {
 	uint8_t *data = m_buffer.begin ().peek_data ();
 	uint32_t to_write = get_size ();
@@ -75,35 +75,35 @@ GPacket::write (PacketReadWriteCallback callback) const
 
 
 void 
-GPacket::add_at_end (GPacket packet)
+Packet::add_at_end (Packet packet)
 {
-	GBuffer src = packet.m_buffer;
+	Buffer src = packet.m_buffer;
 	m_buffer.add_at_end (src.get_size ());
-	GBuffer::Iterator dest_start = m_buffer.end ();
+	Buffer::Iterator dest_start = m_buffer.end ();
 	dest_start.prev (src.get_size ());
 	dest_start.write (src.begin (), src.end ());
 }
 void 
-GPacket::add_at_end (GPacket packet, uint32_t start, uint32_t size)
+Packet::add_at_end (Packet packet, uint32_t start, uint32_t size)
 {
 	assert (packet.get_size () <= start + size);
-	GBuffer src = packet.m_buffer;
+	Buffer src = packet.m_buffer;
 	m_buffer.add_at_end (src.get_size ());
-	GBuffer::Iterator dest_start = m_buffer.end ();
+	Buffer::Iterator dest_start = m_buffer.end ();
 	dest_start.prev (size);
-	GBuffer::Iterator src_start = src.begin ();
+	Buffer::Iterator src_start = src.begin ();
 	src_start.next (start);
-	GBuffer::Iterator src_end = src_start;
+	Buffer::Iterator src_end = src_start;
 	src_end.next (size);
 	dest_start.write (src_start, src_end);
 }
 void 
-GPacket::remove_at_end (uint32_t size)
+Packet::remove_at_end (uint32_t size)
 {
 	m_buffer.remove_at_end (size);
 }
 void 
-GPacket::remove_at_start (uint32_t size)
+Packet::remove_at_start (uint32_t size)
 {
 	m_buffer.remove_at_start (size);
 }

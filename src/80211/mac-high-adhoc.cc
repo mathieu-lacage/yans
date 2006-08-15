@@ -67,7 +67,7 @@ MacHighAdhoc::get_bssid (void) const
 }
 
 void 
-MacHighAdhoc::enqueue (GPacket packet, MacAddress to)
+MacHighAdhoc::enqueue (Packet packet, MacAddress to)
 {
 	TRACE ("enqueue size="<<packet.get_size ()<<", to="<<to<<
 	       ", queue_size="<<m_queue->get_size ());
@@ -82,7 +82,7 @@ MacHighAdhoc::enqueue (GPacket packet, MacAddress to)
 }
 
 void 
-MacHighAdhoc::receive (GPacket packet, ChunkMac80211Hdr const *hdr)
+MacHighAdhoc::receive (Packet packet, ChunkMac80211Hdr const *hdr)
 {
 	TRACE ("received size="<<packet.get_size ()<<", from="<<hdr->get_addr2 ());
 	m_callback (packet);

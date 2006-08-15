@@ -60,7 +60,7 @@ Ipv4NetworkInterface::get_broadcast (void) const
 }
 
 void 
-Ipv4NetworkInterface::send (GPacket packet, Ipv4Address to)
+Ipv4NetworkInterface::send (Packet packet, Ipv4Address to)
 {
 	real_send (packet, to);
 }
@@ -72,7 +72,7 @@ Ipv4NetworkInterface::set_rx_callback (RxCallback callback)
 }
 
 void 
-Ipv4NetworkInterface::forward_up (GPacket packet)
+Ipv4NetworkInterface::forward_up (Packet packet)
 {
 	m_rx_callback (packet, this);
 }

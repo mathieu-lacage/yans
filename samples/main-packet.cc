@@ -16,9 +16,9 @@ public:
 	uint16_t get_data (void) const;
 private:
 	virtual void print (std::ostream *os) const;
-	virtual void add_to (GBuffer *buffer) const;
-	virtual void peek_from (GBuffer const *buffer);
-	virtual void remove_from (GBuffer *buffer);
+	virtual void add_to (Buffer *buffer) const;
+	virtual void peek_from (Buffer const *buffer);
+	virtual void remove_from (Buffer *buffer);
 
 	uint16_t m_data;
 };
@@ -33,23 +33,23 @@ MyChunk::print (std::ostream *os) const
 	*os << "MyChunk data=" << m_data << std::endl;
 }
 void 
-MyChunk::add_to (GBuffer *buffer) const
+MyChunk::add_to (Buffer *buffer) const
 {
 	// reserve 2 bytes at head of buffer
 	buffer->add_at_start (2);
-	GBuffer::Iterator i = buffer->begin ();
+	Buffer::Iterator i = buffer->begin ();
 	// serialize in head of buffer
 	i.write_hton_u16 (m_data);
 }
 void 
-MyChunk::peek_from (GBuffer const *buffer)
+MyChunk::peek_from (Buffer const *buffer)
 {
-	GBuffer::Iterator i = buffer->begin ();
+	Buffer::Iterator i = buffer->begin ();
 	// deserialize from head of buffer
 	m_data = i.read_ntoh_u16 ();
 }
 void 
-MyChunk::remove_from (GBuffer *buffer)
+MyChunk::remove_from (Buffer *buffer)
 {
 	// remove deserialized data
 	buffer->remove_at_start (2);
@@ -74,7 +74,7 @@ struct MyTag {
 
 
 static void
-receive (GPacket p)
+receive (Packet p)
 {
 	MyChunk my;
 	p.peek (&my);
@@ -87,7 +87,7 @@ receive (GPacket p)
 
 int main (int argc, char *argv[])
 {
-	GPacket p;
+	Packet p;
 	MyChunk my;
 	my.set_data (2);
 	std::cout << "send data=2" << std::endl;

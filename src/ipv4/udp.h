@@ -52,9 +52,9 @@ public:
 	Ipv4EndPoint *allocate (Ipv4Address local_address, uint16_t local_port,
 			       Ipv4Address peer_address, uint16_t peer_port);
 
-	void send (GPacket packet);
+	void send (Packet packet);
  private:
-	void receive (GPacket packet);
+	void receive (Packet packet);
 
 	static const uint8_t UDP_PROTOCOL;
 	Ipv4 *m_ipv4;

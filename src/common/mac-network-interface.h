@@ -30,7 +30,7 @@ namespace yans {
 
 class MacNetworkInterface {
 public:
-	typedef Callback<void, GPacket , MacNetworkInterface *> RxCallback;
+	typedef Callback<void, Packet , MacNetworkInterface *> RxCallback;
 	typedef Callback<void,MacNetworkInterface *> StatusChangeCallback; 
 
 	MacNetworkInterface (MacAddress self, uint16_t max_mtu);
@@ -46,14 +46,14 @@ public:
 
 	void set_status_change_callback (StatusChangeCallback callback);
 	void set_rx_callback (RxCallback callback);
-	void send (GPacket packet, MacAddress to);
+	void send (Packet packet, MacAddress to);
 protected:
-	void forward_up (GPacket packet);
+	void forward_up (Packet packet);
 	void notify_status_change (void);
 private:
 	virtual void notify_up (void) = 0;
 	virtual void notify_down (void) = 0;
-	virtual void real_send (GPacket packet, MacAddress to) = 0;
+	virtual void real_send (Packet packet, MacAddress to) = 0;
 
 	StatusChangeCallback m_status_change_callback;
 	RxCallback m_rx_callback;

@@ -46,11 +46,11 @@ ChunkMacCrc::print (std::ostream *os) const
 	*os << "(mac) crc";
 }
 void 
-ChunkMacCrc::add_to (GBuffer *buffer) const
+ChunkMacCrc::add_to (Buffer *buffer) const
 {
 	uint32_t end = buffer->get_size ();
 	buffer->add_at_end (get_size ());
-	GBuffer::Iterator i = buffer->begin ();
+	Buffer::Iterator i = buffer->begin ();
 	i.next (end);
 	for (uint8_t j = 0; j < m_pad_size; j++) {
 		i.write_u8 (j);
@@ -58,10 +58,10 @@ ChunkMacCrc::add_to (GBuffer *buffer) const
 	i.write_u32 (0);
 }
 void 
-ChunkMacCrc::peek_from (GBuffer const *buffer)
+ChunkMacCrc::peek_from (Buffer const *buffer)
 {}
 void 
-ChunkMacCrc::remove_from (GBuffer *buffer)
+ChunkMacCrc::remove_from (Buffer *buffer)
 {
 	buffer->remove_at_end (get_size ());
 }

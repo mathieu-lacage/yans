@@ -29,11 +29,11 @@
 
 namespace yans {
 
-class GPacket {
+class Packet {
 public:
 	typedef Callback<void,uint8_t *,uint32_t> PacketReadWriteCallback;
-	GPacket ();
-	GPacket create_fragment (uint32_t start, uint32_t length) const;
+	Packet ();
+	Packet create_fragment (uint32_t start, uint32_t length) const;
 	uint32_t get_size (void) const;
 	void add (Chunk *chunk);
 	void peek (Chunk *chunk) const;
@@ -47,14 +47,14 @@ public:
 	template <typename T>
 	bool update_tag (T const*tag);
 	void write (PacketReadWriteCallback callback) const;
-	void add_at_end (GPacket packet);
-	void add_at_end (GPacket packet, uint32_t offset, uint32_t size);
+	void add_at_end (Packet packet);
+	void add_at_end (Packet packet, uint32_t offset, uint32_t size);
 	void remove_at_end (uint32_t size);
 	void remove_at_start (uint32_t size);
 
 private:
-	GPacket (GBuffer buffer);
-	GBuffer m_buffer;
+	Packet (Buffer buffer);
+	Buffer m_buffer;
 	Tags m_tags;
 };
 
@@ -63,22 +63,22 @@ private:
 namespace yans {
 
 template <typename T>
-void GPacket::add_tag (T const*tag)
+void Packet::add_tag (T const*tag)
 {
 	m_tags.add (tag);
 }
 template <typename T>
-bool GPacket::remove_tag (T *tag)
+bool Packet::remove_tag (T *tag)
 {
 	return m_tags.remove (tag);
 }
 template <typename T>
-bool GPacket::peek_tag (T *tag) const
+bool Packet::peek_tag (T *tag) const
 {
 	return m_tags.peek (tag);
 }
 template <typename T>
-bool GPacket::update_tag (T const*tag)
+bool Packet::update_tag (T const*tag)
 {
 	return m_tags.update (tag);
 }

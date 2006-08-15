@@ -31,7 +31,7 @@ namespace yans {
 
 class PeriodicGenerator {
 public:
-	typedef Callback<void, GPacket> GeneratorCallback;
+	typedef Callback<void, Packet> GeneratorCallback;
 
 	PeriodicGenerator ();
 	~PeriodicGenerator ();

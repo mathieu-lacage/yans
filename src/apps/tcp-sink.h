@@ -38,7 +38,7 @@ class TraceContainer;
 
 class TcpSink {
 public:
-	typedef Callback<void, GPacket > TcpSinkCallback;
+	typedef Callback<void, Packet > TcpSinkCallback;
 
 	TcpSink (Host *host);
 	~TcpSink ();
@@ -57,7 +57,7 @@ private:
 	void disconnect_completed (void);
 	void receive (void);
 	void transmitted (void);
-	void got_ack (GPacket packet);
+	void got_ack (Packet packet);
 	void stop_listen_now (void);
 
 	Host *m_host;

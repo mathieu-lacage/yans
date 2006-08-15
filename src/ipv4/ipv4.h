@@ -43,20 +43,20 @@ class TraceContainer;
 
 class Ipv4 {
 public:
-	typedef Callback<void,GPacket> TransportProtocolCallback;
+	typedef Callback<void,Packet> TransportProtocolCallback;
 
 	Ipv4 ();
 	~Ipv4 ();
 
 	void set_protocol (uint8_t protocol);
-	void send (GPacket packet);
+	void send (Packet packet);
 
 	void register_trace (TraceContainer *container);
 
 	/* invoked from higher-layers. */
 	void register_transport_protocol (TransportProtocolCallback callback, uint8_t protocol);
 	/* invoked from lower-layers. */
-	void receive (GPacket packet, Ipv4NetworkInterface *from);
+	void receive (Packet packet, Ipv4NetworkInterface *from);
 
 	uint32_t add_interface (Ipv4NetworkInterface *interface, 
 				Ipv4Address address, Ipv4Mask mask);
@@ -64,14 +64,14 @@ public:
 	
 
 private:
-	bool forwarding (GPacket packet, ChunkIpv4 *ip, Ipv4NetworkInterface *from);
+	bool forwarding (Packet packet, ChunkIpv4 *ip, Ipv4NetworkInterface *from);
 	TransportProtocolCallback lookup_protocol (uint8_t id);
-	void send_icmp_time_exceeded_ttl (GPacket original, ChunkIpv4 *ip, Ipv4NetworkInterface *interface);
-	bool send_out (GPacket packet, ChunkIpv4 *ip, Route const*route);
-	void send_real_out (GPacket packet, ChunkIpv4 *ip, Route const*route);
-	GPacket re_assemble (GPacket fragment, ChunkIpv4 *ip, bool *complete);
-	void receive_packet (GPacket packet, ChunkIpv4 *ip, Ipv4NetworkInterface *interface);
-	void receive_icmp (GPacket packet);
+	void send_icmp_time_exceeded_ttl (Packet original, ChunkIpv4 *ip, Ipv4NetworkInterface *interface);
+	bool send_out (Packet packet, ChunkIpv4 *ip, Route const*route);
+	void send_real_out (Packet packet, ChunkIpv4 *ip, Route const*route);
+	Packet re_assemble (Packet fragment, ChunkIpv4 *ip, bool *complete);
+	void receive_packet (Packet packet, ChunkIpv4 *ip, Ipv4NetworkInterface *interface);
+	void receive_icmp (Packet packet);
 
 	static const uint8_t ICMP_PROTOCOL;
 

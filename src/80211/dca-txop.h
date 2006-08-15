@@ -62,7 +62,7 @@ public:
 
 	void register_traces (TraceContainer *container);
 
-	void queue (GPacket packet, ChunkMac80211Hdr const &hdr);
+	void queue (Packet packet, ChunkMac80211Hdr const &hdr);
 private:
 	class AccessListener;
 	class TransmissionListener;
@@ -92,7 +92,7 @@ private:
 	uint32_t get_fragment_size (void);
 	bool is_last_fragment (void);
 	void next_fragment (void);
-	GPacket get_fragment_packet (ChunkMac80211Hdr *hdr);
+	Packet get_fragment_packet (ChunkMac80211Hdr *hdr);
 
 	Dcf *m_dcf;
 	TxOk m_tx_ok_callback;
@@ -107,7 +107,7 @@ private:
 	PhyListener *m_phy_listener;
 	
 
-	GPacket m_current_packet;
+	Packet m_current_packet;
 	bool m_has_current;
 	ChunkMac80211Hdr m_current_hdr;
 	uint32_t m_ssrc;

@@ -25,7 +25,7 @@ void
 generate_trace_events (void)
 {
 	// log en empty packet
-	a.log (GPacket ());
+	a.log (Packet ());
 	b = 10;
 	b += 100;
 	b += 50;

@@ -79,8 +79,8 @@ private:
 
 	void slow_timer (void);
 	void fast_timer (void);
-	void receive (GPacket packet);
-	void send_reset (GPacket packet, ChunkTcp *tcp_chunk);
+	void receive (Packet packet);
+	void send_reset (Packet packet, ChunkTcp *tcp_chunk);
 	void destroy_connection (TcpConnection *listener);
 
 	Host *m_host;

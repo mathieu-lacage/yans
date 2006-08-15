@@ -201,10 +201,10 @@ ChunkIpv4::print (std::ostream *os) const
 	    << ", destination=" << m_destination;
 }
 void 
-ChunkIpv4::add_to (GBuffer *buffer) const
+ChunkIpv4::add_to (Buffer *buffer) const
 {
 	buffer->add_at_start (get_size ());
-	GBuffer::Iterator i = buffer->begin ();
+	Buffer::Iterator i = buffer->begin ();
 	
 	//TRACE ("init ipv4 current="<<buffer->get_current ());
 	uint8_t ver_ihl = (4 << 4) | (5);
@@ -239,9 +239,9 @@ ChunkIpv4::add_to (GBuffer *buffer) const
 	i.write_u16 (checksum);
 }
 void 
-ChunkIpv4::peek_from (GBuffer const *buffer)
+ChunkIpv4::peek_from (Buffer const *buffer)
 {
-	GBuffer::Iterator i = buffer->begin ();
+	Buffer::Iterator i = buffer->begin ();
 	uint8_t ver_ihl = i.read_u8 ();
 	uint8_t ihl = ver_ihl & 0x0f; 
 	uint16_t header_size = ihl * 4;
@@ -279,9 +279,9 @@ ChunkIpv4::peek_from (GBuffer const *buffer)
 	}
 }
 void 
-ChunkIpv4::remove_from (GBuffer *buffer)
+ChunkIpv4::remove_from (Buffer *buffer)
 {
-	GBuffer::Iterator i = buffer->begin ();
+	Buffer::Iterator i = buffer->begin ();
 	uint8_t ver_ihl = i.read_u8 ();
 	uint8_t ihl = ver_ihl & 0x0f; 
 	uint16_t header_size = ihl * 4;

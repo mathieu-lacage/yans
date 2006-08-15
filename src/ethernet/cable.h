@@ -44,7 +44,7 @@ public:
 	void connect_to (EthernetNetworkInterface *a,
 			 EthernetNetworkInterface *b);
 
-	void send (GPacket packet, EthernetNetworkInterface *sender);
+	void send (Packet packet, EthernetNetworkInterface *sender);
 
 private:
 	static const double SPEED_OF_LIGHT;

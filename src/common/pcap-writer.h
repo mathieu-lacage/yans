@@ -58,7 +58,7 @@ public:
 	/**
 	 * \param packet packet to write to output file
 	 */
-	void write_packet (GPacket const packet);
+	void write_packet (Packet const packet);
 
 private:
 	void write_data (uint8_t *buffer, uint32_t size);

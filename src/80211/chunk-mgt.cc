@@ -30,15 +30,15 @@ get_size (CapabilityInformation const &self)
 {
 	return 2;
 }
-GBuffer::Iterator
-write_to (GBuffer::Iterator i, CapabilityInformation const&self)
+Buffer::Iterator
+write_to (Buffer::Iterator i, CapabilityInformation const&self)
 {
 	//XXX
 	i.next (get_size (self));
 	return i;
 }
-GBuffer::Iterator
-read_from (GBuffer::Iterator i, CapabilityInformation &self)
+Buffer::Iterator
+read_from (Buffer::Iterator i, CapabilityInformation &self)
 {
 	//XXX
 	i.next (get_size (self));
@@ -50,8 +50,8 @@ get_size (Ssid const&ssid)
 {
 	return ssid.get_length () + 1 + 1;
 }
-GBuffer::Iterator
-write_to (GBuffer::Iterator i, Ssid const &self)
+Buffer::Iterator
+write_to (Buffer::Iterator i, Ssid const &self)
 {
 	i.write_u8 (0); // ssid element id
 	uint32_t size = self.get_length ();
@@ -61,8 +61,8 @@ write_to (GBuffer::Iterator i, Ssid const &self)
 	i.write (ssid, size);
 	return i;
 }
-GBuffer::Iterator
-read_from (GBuffer::Iterator i, Ssid &self)
+Buffer::Iterator
+read_from (Buffer::Iterator i, Ssid &self)
 {
 	//uint8_t element_id = buffer->read_u8 ();
 	//assert (element_id == 0);
@@ -81,14 +81,14 @@ get_size (StatusCode const&self)
 {
 	return 2;
 }
-GBuffer::Iterator
-write_to (GBuffer::Iterator i, StatusCode const&self)
+Buffer::Iterator
+write_to (Buffer::Iterator i, StatusCode const&self)
 {
 	i.write_hton_u16 (self.peek_code ());
 	return i;
 }
-GBuffer::Iterator
-read_from (GBuffer::Iterator i, StatusCode &self)
+Buffer::Iterator
+read_from (Buffer::Iterator i, StatusCode &self)
 {
 	self.set_code (i.read_ntoh_u16 ());
 	return i;
@@ -100,8 +100,8 @@ get_size (SupportedRates const&rates)
 {
 	return rates.get_n_rates () + 1 + 1;
 }
-GBuffer::Iterator
-write_to (GBuffer::Iterator i, SupportedRates const &self)
+Buffer::Iterator
+write_to (Buffer::Iterator i, SupportedRates const &self)
 {
 	i.write_u8 (1); // supported rates element id
 	i.write_u8 (self.get_n_rates ());
@@ -110,8 +110,8 @@ write_to (GBuffer::Iterator i, SupportedRates const &self)
 	i.write (rates, self.get_n_rates ());
 	return i;
 }
-GBuffer::Iterator
-read_from (GBuffer::Iterator i, SupportedRates &self)
+Buffer::Iterator
+read_from (Buffer::Iterator i, SupportedRates &self)
 {
 	//uint8_t rates_id = buffer->read_u8 ();
 	//assert (rates_id == 1);
@@ -167,23 +167,23 @@ ChunkMgtProbeRequest::print (std::ostream *os) const
 	//XXX
 }
 void 
-ChunkMgtProbeRequest::add_to (GBuffer *buffer) const
+ChunkMgtProbeRequest::add_to (Buffer *buffer) const
 {	
 	buffer->add_at_start (get_size ());
-	GBuffer::Iterator i = buffer->begin ();
+	Buffer::Iterator i = buffer->begin ();
 	i = write_to (i, m_ssid);
 	i = write_to (i, m_rates);
 }
 void 
-ChunkMgtProbeRequest::peek_from (GBuffer const *buffer)
+ChunkMgtProbeRequest::peek_from (Buffer const *buffer)
 {
-	GBuffer::Iterator i = buffer->begin ();
+	Buffer::Iterator i = buffer->begin ();
 	i = read_from (i, m_ssid);
 	i = read_from (i, m_rates);
 	m_read_size = buffer->begin ().get_distance_from (i);
 }
 void 
-ChunkMgtProbeRequest::remove_from (GBuffer *buffer)
+ChunkMgtProbeRequest::remove_from (Buffer *buffer)
 {
 	buffer->remove_at_start (m_read_size);
 }
@@ -242,7 +242,7 @@ ChunkMgtProbeResponse::print (std::ostream *os) const
 	//XXX
 }
 void 
-ChunkMgtProbeResponse::add_to (GBuffer *buffer) const
+ChunkMgtProbeResponse::add_to (Buffer *buffer) const
 {
 	// timestamp
 	// beacon interval
@@ -255,7 +255,7 @@ ChunkMgtProbeResponse::add_to (GBuffer *buffer) const
 	// ibss parameter set
 	//XXX
 	buffer->add_at_start (get_size ());
-	GBuffer::Iterator i = buffer->begin ();
+	Buffer::Iterator i = buffer->begin ();
 	i.write_u64 (Simulator::now_us ());
 	i.write_hton_u16 (m_beacon_interval / 1024);
 	i = write_to (i, m_capability);
@@ -264,9 +264,9 @@ ChunkMgtProbeResponse::add_to (GBuffer *buffer) const
 	i.next (3); // ds parameter set.
 }
 void 
-ChunkMgtProbeResponse::peek_from (GBuffer const *buffer)
+ChunkMgtProbeResponse::peek_from (Buffer const *buffer)
 {
-	GBuffer::Iterator i = buffer->begin ();
+	Buffer::Iterator i = buffer->begin ();
 	i.next (8); // timestamp
 	m_beacon_interval = i.read_ntoh_u16 ();
 	m_beacon_interval *= 1024;
@@ -277,7 +277,7 @@ ChunkMgtProbeResponse::peek_from (GBuffer const *buffer)
 	m_read_size = buffer->begin ().get_distance_from (i);
 }
 void 
-ChunkMgtProbeResponse::remove_from (GBuffer *buffer)
+ChunkMgtProbeResponse::remove_from (Buffer *buffer)
 {
 	buffer->remove_at_start (m_read_size);
 }
@@ -334,19 +334,19 @@ ChunkMgtAssocRequest::print (std::ostream *os) const
 	//XXX
 }
 void 
-ChunkMgtAssocRequest::add_to (GBuffer *buffer) const
+ChunkMgtAssocRequest::add_to (Buffer *buffer) const
 {
 	buffer->add_at_start (get_size ());
-	GBuffer::Iterator i = buffer->begin ();
+	Buffer::Iterator i = buffer->begin ();
 	i = write_to (i, m_capability);
 	i.write_hton_u16 (m_listen_interval);
 	i = write_to (i, m_ssid);
 	i = write_to (i, m_rates);
 }
 void 
-ChunkMgtAssocRequest::peek_from (GBuffer const *buffer)
+ChunkMgtAssocRequest::peek_from (Buffer const *buffer)
 {
-	GBuffer::Iterator i = buffer->begin ();
+	Buffer::Iterator i = buffer->begin ();
 	i = read_from (i, m_capability);
 	m_listen_interval = i.read_ntoh_u16 ();
 	i = read_from (i, m_ssid);
@@ -354,7 +354,7 @@ ChunkMgtAssocRequest::peek_from (GBuffer const *buffer)
 	m_read_size = buffer->begin ().get_distance_from (i);
 }
 void 
-ChunkMgtAssocRequest::remove_from (GBuffer *buffer)
+ChunkMgtAssocRequest::remove_from (Buffer *buffer)
 {
 	buffer->remove_at_start (m_read_size);
 }
@@ -392,19 +392,19 @@ ChunkMgtAssocResponse::print (std::ostream *os) const
 	//XXX
 }
 void 
-ChunkMgtAssocResponse::add_to (GBuffer *buffer) const
+ChunkMgtAssocResponse::add_to (Buffer *buffer) const
 {
 	buffer->add_at_start (get_size ());
-	GBuffer::Iterator i = buffer->begin ();
+	Buffer::Iterator i = buffer->begin ();
 	i = write_to (i, m_capability);
 	i = write_to (i, m_code);
 	i.next (2);
 	i = write_to (i, m_rates);
 }
 void 
-ChunkMgtAssocResponse::peek_from (GBuffer const *buffer)
+ChunkMgtAssocResponse::peek_from (Buffer const *buffer)
 {
-	GBuffer::Iterator i = buffer->begin ();
+	Buffer::Iterator i = buffer->begin ();
 	i = read_from (i, m_capability);
 	i = read_from (i, m_code);
 	m_aid = i.read_ntoh_u16 ();
@@ -413,7 +413,7 @@ ChunkMgtAssocResponse::peek_from (GBuffer const *buffer)
 	m_read_size = buffer->begin ().get_distance_from (i);
 }
 void 
-ChunkMgtAssocResponse::remove_from (GBuffer *buffer)
+ChunkMgtAssocResponse::remove_from (Buffer *buffer)
 {
 	buffer->remove_at_start (m_read_size);
 }

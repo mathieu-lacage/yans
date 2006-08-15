@@ -70,7 +70,7 @@ TcpSink::~TcpSink ()
 void
 TcpSink::receive (void)
 {	
-	GPacket packet = m_connection->recv (m_connection->get_data_ready ());
+	Packet packet = m_connection->recv (m_connection->get_data_ready ());
 	if (!m_callback.is_null ()) {
 		m_callback (packet);
 	}
@@ -104,7 +104,7 @@ TcpSink::transmitted (void)
 {}
 
 void
-TcpSink::got_ack (GPacket packet)
+TcpSink::got_ack (Packet packet)
 {}
 
 void

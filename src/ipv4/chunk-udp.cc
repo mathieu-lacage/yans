@@ -101,10 +101,10 @@ ChunkUdp::print (std::ostream *os) const
 }
 
 void 
-ChunkUdp::add_to (GBuffer *buffer) const
+ChunkUdp::add_to (Buffer *buffer) const
 {
 	buffer->add_at_start (get_size ());
-	GBuffer::Iterator i = buffer->begin ();
+	Buffer::Iterator i = buffer->begin ();
 	i.write_hton_u16 (m_source_port);
 	i.write_hton_u16 (m_destination_port);
 	i.write_hton_u16 (m_payload_size + get_size ());
@@ -119,16 +119,16 @@ ChunkUdp::add_to (GBuffer *buffer) const
 	i.write_u16 (checksum);
 }
 void 
-ChunkUdp::peek_from (GBuffer const *buffer)
+ChunkUdp::peek_from (Buffer const *buffer)
 {
-	GBuffer::Iterator i = buffer->begin ();
+	Buffer::Iterator i = buffer->begin ();
 	m_source_port = i.read_ntoh_u16 ();
 	m_destination_port = i.read_ntoh_u16 ();
 	m_payload_size = i.read_ntoh_u16 () - get_size ();
 	// XXX verify checksum.
 }
 void 
-ChunkUdp::remove_from (GBuffer *buffer)
+ChunkUdp::remove_from (Buffer *buffer)
 {
 	buffer->remove_at_start (get_size ());
 }

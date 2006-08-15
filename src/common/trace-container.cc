@@ -64,7 +64,7 @@ TraceContainer::set_f_variable_callback (char const *name, Callback<void,double,
 	assert (false);
 }
 void 
-TraceContainer::set_packet_logger_callback (char const *name, Callback<void,GPacket const> callback)
+TraceContainer::set_packet_logger_callback (char const *name, Callback<void,Packet const> callback)
 {
 	for (PacketLoggerListI i = m_packet_logger_list.begin (); i != m_packet_logger_list.end (); i++) {
 		if ((*i).second == name) {

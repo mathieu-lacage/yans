@@ -228,7 +228,7 @@ Phy80211::set_receive_error_callback (SyncErrorCallback callback)
 	m_sync_error_callback = callback;
 }
 void 
-Phy80211::receive_packet (GPacket const packet, 
+Phy80211::receive_packet (Packet const packet, 
 			  double rx_power_w,
 			  uint8_t tx_mode,
 			  uint8_t stuff)
@@ -309,7 +309,7 @@ Phy80211::receive_packet (GPacket const packet,
 	event->unref ();
 }
 void 
-Phy80211::send_packet (GPacket const packet, uint8_t tx_mode, uint8_t tx_power, uint8_t stuff)
+Phy80211::send_packet (Packet const packet, uint8_t tx_mode, uint8_t tx_power, uint8_t stuff)
 {
 	/* Transmission can happen if:
 	 *  - we are syncing on a packet. It is the responsability of the
@@ -884,7 +884,7 @@ Phy80211::calculate_per (RxEvent const *event, NiChanges *ni) const
 
 
 void
-Phy80211::end_sync (GPacket const packet, CountPtrHolder<RxEvent> ev, uint8_t stuff)
+Phy80211::end_sync (Packet const packet, CountPtrHolder<RxEvent> ev, uint8_t stuff)
 {
 	RxEvent *event = ev.remove ();
 	assert (is_state_sync ());

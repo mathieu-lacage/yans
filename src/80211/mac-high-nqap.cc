@@ -80,7 +80,7 @@ MacHighNqap::set_beacon_interval_us (uint64_t us)
 	m_beacon_interval_us = us;
 }
 void 
-MacHighNqap::forward_down (GPacket packet, MacAddress from, MacAddress to)
+MacHighNqap::forward_down (Packet packet, MacAddress from, MacAddress to)
 {
 	ChunkMac80211Hdr hdr;
 	hdr.set_type_data ();
@@ -92,7 +92,7 @@ MacHighNqap::forward_down (GPacket packet, MacAddress from, MacAddress to)
 	m_dca->queue (packet, hdr);	
 }
 void 
-MacHighNqap::queue (GPacket packet, MacAddress to)
+MacHighNqap::queue (Packet packet, MacAddress to)
 {
 	forward_down (packet, m_interface->get_mac_address (), to);
 }
@@ -112,7 +112,7 @@ MacHighNqap::send_probe_resp (MacAddress to)
 	hdr.set_addr3 (m_interface->get_mac_address ());
 	hdr.set_ds_not_from ();
 	hdr.set_ds_not_to ();
-	GPacket packet;
+	Packet packet;
 	ChunkMgtProbeResponse probe;
 	probe.set_ssid (m_interface->get_ssid ());
 	SupportedRates rates = get_supported_rates ();
@@ -133,7 +133,7 @@ MacHighNqap::send_assoc_resp (MacAddress to)
 	hdr.set_addr3 (m_interface->get_mac_address ());
 	hdr.set_ds_not_from ();
 	hdr.set_ds_not_to ();
-	GPacket packet;
+	Packet packet;
 	ChunkMgtAssocResponse assoc;
 	StatusCode code;
 	code.set_success ();
@@ -163,7 +163,7 @@ MacHighNqap::tx_failed (ChunkMac80211Hdr const &hdr)
 	}
 }
 void 
-MacHighNqap::receive (GPacket packet, ChunkMac80211Hdr const *hdr)
+MacHighNqap::receive (Packet packet, ChunkMac80211Hdr const *hdr)
 {
 	MacStation *station = m_stations->lookup (hdr->get_addr2 ());
 

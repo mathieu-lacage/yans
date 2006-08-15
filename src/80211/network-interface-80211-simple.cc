@@ -64,13 +64,13 @@ void
 NetworkInterface80211Simple::notify_down (void)
 {}
 void 
-NetworkInterface80211Simple::real_send (GPacket packet, MacAddress to)
+NetworkInterface80211Simple::real_send (Packet packet, MacAddress to)
 {
 	m_mac->send (packet, to);
 }
 
 void 
-NetworkInterface80211Simple::forward_data_up (GPacket packet)
+NetworkInterface80211Simple::forward_data_up (Packet packet)
 {
 	m_bytes_rx += packet.get_size ();
 	MacNetworkInterface::forward_up (packet);

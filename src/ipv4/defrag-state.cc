@@ -29,12 +29,12 @@
 namespace yans {
 
 
-DefragFragment::DefragFragment (GPacket fragment, ChunkIpv4 *ip)
+DefragFragment::DefragFragment (Packet fragment, ChunkIpv4 *ip)
 	: m_fragment (fragment),
 	  m_is_last (ip->is_last_fragment ()),
 	  m_offset (ip->get_fragment_offset ())
 {}
-GPacket 
+Packet 
 DefragFragment::get_fragment (void)
 {
 	return m_fragment;
@@ -72,7 +72,7 @@ DefragState::~DefragState ()
 }
 
 void 
-DefragState::add (GPacket fragment, ChunkIpv4 *ip_frag)
+DefragState::add (Packet fragment, ChunkIpv4 *ip_frag)
 {
 	assert (m_identification == ip_frag->get_identification ());
 	assert (m_source == ip_frag->get_source ());
@@ -110,12 +110,12 @@ DefragState::is_complete (void)
 	}
 	return complete;
 }
-GPacket 
+Packet 
 DefragState::get_complete (void)
 {
 	assert (is_complete ());
 
-	GPacket packet;
+	Packet packet;
 	for (FragmentsI i = m_fragments.begin (); i != m_fragments.end (); i++) {
 		packet.add_at_end ((*i).get_fragment ());
 	}

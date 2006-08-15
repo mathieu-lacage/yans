@@ -37,7 +37,7 @@ class Timeout;
 
 class MacHighNqsta {
 public:
-	typedef Callback<void, GPacket > ForwardCallback;
+	typedef Callback<void, Packet > ForwardCallback;
 	typedef Callback<void> AssociatedCallback;
 
 	MacHighNqsta ();
@@ -57,9 +57,9 @@ public:
 
 	void start_active_association (void);
 
-	void queue (GPacket packet, MacAddress to);
+	void queue (Packet packet, MacAddress to);
 
-	void receive (GPacket packet, ChunkMac80211Hdr const *hdr);
+	void receive (Packet packet, ChunkMac80211Hdr const *hdr);
 private:
 	void set_bssid (MacAddress bssid);
 	MacAddress get_broadcast_bssid (void);

@@ -34,9 +34,9 @@ public:
 	ArpCacheEntry (ArpIpv4NetworkInterface *arp);
 
 	void mark_dead (void);
-	GPacket mark_alive (MacAddress mac_address);
-	void mark_wait_reply (GPacket waiting);
-	GPacket update_wait_reply (GPacket waiting);
+	Packet mark_alive (MacAddress mac_address);
+	void mark_wait_reply (Packet waiting);
+	Packet update_wait_reply (Packet waiting);
 
 	bool is_dead (void);
 	bool is_alive (void);
@@ -57,7 +57,7 @@ private:
 	ArpCacheEntryState_e m_state;
 	uint64_t m_last_seen_time_us;
 	MacAddress m_mac_address;
-	GPacket m_waiting;
+	Packet m_waiting;
 };
 
 }; // namespace yans

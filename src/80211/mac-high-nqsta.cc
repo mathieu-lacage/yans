@@ -156,7 +156,7 @@ MacHighNqsta::send_probe_request (void)
 	hdr.set_addr3 (get_broadcast_bssid ());
 	hdr.set_ds_not_from ();
 	hdr.set_ds_not_to ();
-	GPacket packet;
+	Packet packet;
 	ChunkMgtProbeRequest probe;
 	probe.set_ssid (m_interface->get_ssid ());
 	SupportedRates rates = get_supported_rates ();
@@ -181,7 +181,7 @@ MacHighNqsta::send_association_request ()
 	hdr.set_addr3 (get_bssid ());
 	hdr.set_ds_not_from ();
 	hdr.set_ds_not_to ();
-	GPacket packet;
+	Packet packet;
 	ChunkMgtAssocRequest assoc;
 	assoc.set_ssid (m_interface->get_ssid ());
 	SupportedRates rates = get_supported_rates ();
@@ -258,7 +258,7 @@ MacHighNqsta::is_associated (void)
 }
 
 void 
-MacHighNqsta::queue (GPacket packet, MacAddress to)
+MacHighNqsta::queue (Packet packet, MacAddress to)
 {
 	if (!is_associated ()) {
 		try_to_ensure_associated ();
@@ -276,7 +276,7 @@ MacHighNqsta::queue (GPacket packet, MacAddress to)
 }
 
 void 
-MacHighNqsta::receive (GPacket packet, ChunkMac80211Hdr const *hdr)
+MacHighNqsta::receive (Packet packet, ChunkMac80211Hdr const *hdr)
 {
 	assert (!hdr->is_ctl ());
 	if (hdr->get_addr1 () != m_interface->get_mac_address () &&

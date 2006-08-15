@@ -36,7 +36,7 @@ class MacStations;
 
 class MacHighNqap {
 public:
-	typedef Callback<void, GPacket > ForwardCallback;
+	typedef Callback<void, Packet > ForwardCallback;
 
 	MacHighNqap ();
 	~MacHighNqap ();
@@ -48,11 +48,11 @@ public:
 	void set_supported_rates (SupportedRates rates);
 	void set_beacon_interval_us (uint64_t us);
 
-	void queue (GPacket packet, MacAddress to);
+	void queue (Packet packet, MacAddress to);
 
-	void receive (GPacket packet, ChunkMac80211Hdr const *hdr);
+	void receive (Packet packet, ChunkMac80211Hdr const *hdr);
 private:
-	void forward_down (GPacket packet, MacAddress from, MacAddress to);
+	void forward_down (Packet packet, MacAddress from, MacAddress to);
 	void tx_ok (ChunkMac80211Hdr const &hdr);
 	void tx_failed (ChunkMac80211Hdr const &hdr);
 	void send_probe_resp (MacAddress to);

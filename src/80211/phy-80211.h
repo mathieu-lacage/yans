@@ -68,8 +68,8 @@ public:
 class Phy80211
 {
 public:
-	typedef Callback<void,GPacket const , double, uint8_t, uint8_t> SyncOkCallback;
-	typedef Callback<void,GPacket const , double> SyncErrorCallback;
+	typedef Callback<void,Packet const , double, uint8_t, uint8_t> SyncOkCallback;
+	typedef Callback<void,Packet const , double> SyncErrorCallback;
 
 	Phy80211 ();
 	virtual ~Phy80211 ();
@@ -81,11 +81,11 @@ public:
 	void set_receive_error_callback (SyncErrorCallback callback);
 
 	/* rx_power unit is Watt */
-	void receive_packet (GPacket const packet,
+	void receive_packet (Packet const packet,
 			     double rx_power_w,
 			     uint8_t tx_mode,
 			     uint8_t stuff);
-	void send_packet (GPacket const packet, uint8_t tx_mode, uint8_t tx_power, uint8_t stuff);
+	void send_packet (Packet const packet, uint8_t tx_mode, uint8_t tx_power, uint8_t stuff);
 
 	void register_listener (Phy80211Listener *listener);
 
@@ -166,7 +166,7 @@ private:
 	double calculate_snr (double signal, double noise_interference, TransmissionMode *mode) const;
 	double calculate_chunk_success_rate (double snir, uint64_t delay, TransmissionMode *mode) const;
 	double calculate_per (RxEvent const*event, NiChanges *ni) const;
-	void end_sync (GPacket const packet, CountPtrHolder<RxEvent> event, uint8_t stuff);
+	void end_sync (Packet const packet, CountPtrHolder<RxEvent> event, uint8_t stuff);
 	double get_snr_for_ber (TransmissionMode *mode, double ber) const;
 private:
 	uint64_t m_tx_prepare_delay_us;

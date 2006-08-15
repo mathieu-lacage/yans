@@ -38,7 +38,7 @@ TcpConnectionListener::~TcpConnectionListener ()
 {}
 
 void 
-TcpConnectionListener::receive (GPacket packet, Chunk *chunk)
+TcpConnectionListener::receive (Packet packet, Chunk *chunk)
 {
 	TagInPortPair port_tag;
 	TagInIpv4AddressPair addr_tag;

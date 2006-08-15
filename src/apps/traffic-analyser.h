@@ -35,7 +35,7 @@ public:
 	TrafficAnalyser ();
 	~TrafficAnalyser ();
 
-	void receive (GPacket packet);
+	void receive (Packet packet);
 
 	void print_stats (void);
 

@@ -95,7 +95,7 @@ MacSimple::set_rts_cts_threshold (uint32_t size)
 	m_rts_cts_threshold = size;
 }
 void 
-MacSimple::send (GPacket packet, MacAddress to)
+MacSimple::send (Packet packet, MacAddress to)
 {
 	if (!m_phy->is_state_idle () ||
 	    m_has_current) {
@@ -128,7 +128,7 @@ MacSimple::send (GPacket packet, MacAddress to)
 	}
 }
 void 
-MacSimple::receive_ok (GPacket const p, double snr, uint8_t tx_mode, uint8_t stuff)
+MacSimple::receive_ok (Packet const p, double snr, uint8_t tx_mode, uint8_t stuff)
 {
 	ChunkMac80211Hdr hdr;
 	p.peek (&hdr);
@@ -170,13 +170,13 @@ MacSimple::receive_ok (GPacket const p, double snr, uint8_t tx_mode, uint8_t stu
 	}
 	return;
  rx_packet:
-	GPacket packet = p;
+	Packet packet = p;
 	packet.remove (&hdr);
 	m_data_rx (packet);
 	return;
 }
 void 
-MacSimple::receive_error (GPacket const packet, double snr)
+MacSimple::receive_error (Packet const packet, double snr)
 {
 	TRACE ("error packet snr="<<snr);
 }
@@ -184,7 +184,7 @@ MacSimple::receive_error (GPacket const packet, double snr)
 void
 MacSimple::send_cts (uint8_t tx_mode, MacAddress to, uint8_t rts_snr)
 {
-	GPacket packet;
+	Packet packet;
 	ChunkMac80211Hdr cts;
 	cts.set_type (MAC_80211_CTL_CTS);
 	cts.set_addr1 (to);
@@ -195,7 +195,7 @@ MacSimple::send_cts (uint8_t tx_mode, MacAddress to, uint8_t rts_snr)
 void
 MacSimple::send_ack (uint8_t tx_mode, MacAddress to, uint8_t data_snr)
 {
-	GPacket packet;
+	Packet packet;
 	ChunkMac80211Hdr ack;
 	ack.set_type (MAC_80211_CTL_ACK);
 	ack.set_addr1 (to);
@@ -208,7 +208,7 @@ void
 MacSimple::send_rts (void)
 {
 	MacStation *station = get_station (m_current_to);
-	GPacket packet;
+	Packet packet;
 	ChunkMac80211Hdr rts;
 	rts.set_type (MAC_80211_CTL_RTS);
 	rts.set_addr1 (m_current_to);
@@ -225,7 +225,7 @@ void
 MacSimple::send_data (void)
 {
 	MacStation *station = get_station (m_current_to);
-	GPacket packet = m_current;
+	Packet packet = m_current;
 	ChunkMac80211Hdr hdr;
 	hdr.set_type (MAC_80211_DATA);
 	hdr.set_addr1 (m_current_to);

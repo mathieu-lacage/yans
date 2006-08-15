@@ -44,13 +44,13 @@ public:
 	 * the copy internally, and return the number of
 	 * bytes copied.
 	 */
-	uint32_t add_at (GPacket const packet, uint32_t offset);
-	uint32_t add_at_back (GPacket const packet);
+	uint32_t add_at (Packet const packet, uint32_t offset);
+	uint32_t add_at_back (Packet const packet);
 
 	/* Returns 0 if no data could be found at the front
 	 * of the buffer.
 	 */
-	GPacket get_at_front (uint32_t size, bool *found);
+	Packet get_at_front (uint32_t size, bool *found);
 
 
 	void remove_at_front (uint32_t size);
@@ -61,14 +61,14 @@ public:
 	bool is_empty (void);
 
 private:
-	typedef std::pair<GPacket , uint32_t> Piece;
+	typedef std::pair<Packet , uint32_t> Piece;
 	typedef std::list<Piece> Pieces;
 	typedef std::list<Piece>::iterator PiecesI;
 
-	GPacket get_at (uint32_t offset, uint32_t size, bool *found);
+	Packet get_at (uint32_t offset, uint32_t size, bool *found);
 	int32_t seq_sub (uint32_t a, uint32_t b);
-	void insert_piece_at_back (GPacket piece, uint32_t offset);
-	void insert_piece_at (PiecesI i, GPacket piece, uint32_t offset);
+	void insert_piece_at_back (Packet piece, uint32_t offset);
+	void insert_piece_at (PiecesI i, Packet piece, uint32_t offset);
 	void check_state (void);
 	
 	Pieces m_pieces;

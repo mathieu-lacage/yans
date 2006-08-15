@@ -87,10 +87,10 @@ ChunkIcmp::print (std::ostream *os) const
 }
 
 void 
-ChunkIcmp::add_to (GBuffer *buffer) const
+ChunkIcmp::add_to (Buffer *buffer) const
 {
 	buffer->add_at_start (get_size ());
-	GBuffer::Iterator i = buffer->begin ();
+	Buffer::Iterator i = buffer->begin ();
 	i.write_u8 (m_type);
 	i.write_u8 (m_code);
 	i.write_hton_u16 (0);
@@ -126,13 +126,13 @@ ChunkIcmp::add_to (GBuffer *buffer) const
 	}	
 }
 void 
-ChunkIcmp::peek_from (GBuffer const *buffer)
+ChunkIcmp::peek_from (Buffer const *buffer)
 {
-	GBuffer::Iterator i = buffer->begin ();
+	Buffer::Iterator i = buffer->begin ();
 	m_type = i.read_u8 ();
 }
 void 
-ChunkIcmp::remove_from (GBuffer *buffer)
+ChunkIcmp::remove_from (Buffer *buffer)
 {
 	buffer->remove_at_start (get_size ());
 }

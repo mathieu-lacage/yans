@@ -48,9 +48,9 @@ class ChunkArp : public Chunk {
 
 private:
 	virtual void print (std::ostream *os) const;
-	virtual void add_to (GBuffer *buffer) const;
-	virtual void peek_from (GBuffer const *buffer);
-	virtual void remove_from (GBuffer *buffer);
+	virtual void add_to (Buffer *buffer) const;
+	virtual void peek_from (Buffer const *buffer);
+	virtual void remove_from (Buffer *buffer);
 	uint32_t get_size (void) const;
 	enum ArpType_e {
 		ARP_TYPE_REQUEST = 1,

@@ -32,13 +32,13 @@ class ChunkIpv4;
 
 class DefragFragment {
 public:
-	DefragFragment (GPacket fragment, ChunkIpv4 *ip);
-	GPacket get_fragment (void);
+	DefragFragment (Packet fragment, ChunkIpv4 *ip);
+	Packet get_fragment (void);
 	bool is_last (void);
 	uint16_t get_offset (void);
 	uint32_t get_size (void);
 private:
-	GPacket m_fragment;
+	Packet m_fragment;
 	bool m_is_last;
 	uint16_t m_offset;
 };
@@ -48,9 +48,9 @@ public:
 	DefragState (ChunkIpv4 const *ip);
 	~DefragState ();
 
-	void add (GPacket fragment, ChunkIpv4 *ip);
+	void add (Packet fragment, ChunkIpv4 *ip);
 	bool is_complete (void);
-	GPacket get_complete (void);
+	Packet get_complete (void);
 
 	bool is_too_old (void);
 	bool matches (ChunkIpv4 const *ip);

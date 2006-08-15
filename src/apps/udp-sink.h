@@ -36,7 +36,7 @@ class Chunk;
 
 class UdpSink {
 public:
-	typedef Callback<void, GPacket > UdpSinkCallback;
+	typedef Callback<void, Packet > UdpSinkCallback;
 
 	UdpSink (Host *host);
 	~UdpSink ();
@@ -46,7 +46,7 @@ public:
 	bool bind (Ipv4Address address, uint16_t port);
 	void unbind_at (double at);
 private:
-	void receive (GPacket packet, Chunk *chunk);
+	void receive (Packet packet, Chunk *chunk);
 	void unbind_now (void);
 	Host *m_host;
 	Ipv4EndPoint *m_end_point;

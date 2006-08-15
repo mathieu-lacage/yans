@@ -94,7 +94,7 @@ public:
 	 *
 	 * This method targets only event sources which are of type PacketLogger.
 	 */
-	void set_packet_logger_callback (char const *name, Callback<void,GPacket const> callback);
+	void set_packet_logger_callback (char const *name, Callback<void,Packet const> callback);
 	/**
 	 * \param name the name of the target event source
 	 * \param os the output stream being connected to the source trace stream

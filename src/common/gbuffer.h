@@ -37,10 +37,10 @@ namespace yans {
  * The correct maximum size is learned at runtime during use by 
  * recording the maximum size of each packet.
  */
-class GBuffer {
+class Buffer {
 public:
 	/**
-	 * \brief iterator in a GBuffer instance
+	 * \brief iterator in a Buffer instance
 	 */
 	class Iterator {
 	public:
@@ -248,7 +248,7 @@ public:
 		 */
 		inline void read (uint8_t *buffer, uint16_t size);
 	private:
-		friend class GBuffer;
+		friend class Buffer;
 		inline Iterator (uint8_t *start, uint8_t *end, uint8_t *current);
 		uint8_t *m_start;
 		uint8_t *m_end;
@@ -301,39 +301,39 @@ public:
 	 * \return an Iterator which points to the
 	 * start of this Buffer.
 	 */
-	inline GBuffer::Iterator begin (void) const;
+	inline Buffer::Iterator begin (void) const;
 	/**
 	 * \return an Iterator which points to the
 	 * end of this Buffer.
 	 */
-	inline GBuffer::Iterator end (void) const;
+	inline Buffer::Iterator end (void) const;
 
-	inline GBuffer (GBuffer const &o);
-	inline GBuffer (GBuffer &o);
-	inline GBuffer &operator = (GBuffer const &o);
-	inline GBuffer ();
-	inline ~GBuffer ();
+	inline Buffer (Buffer const &o);
+	inline Buffer (Buffer &o);
+	inline Buffer &operator = (Buffer const &o);
+	inline Buffer ();
+	inline ~Buffer ();
 private:
-	struct GBufferData {
+	struct BufferData {
 		uint32_t m_count;
 		uint32_t m_size;
 		uint32_t m_dirty_start;
 		uint32_t m_dirty_size;
 		uint8_t m_data;
 	};
-	typedef std::vector<struct GBuffer::GBufferData*> GBufferDataList;
+	typedef std::vector<struct Buffer::BufferData*> BufferDataList;
 
 	inline uint8_t *get_start (void) const;
-	void recycle (struct GBuffer::GBufferData *data);
-	static struct GBuffer::GBufferData *create (void);
-	static struct GBuffer::GBufferData *allocate (uint32_t size, uint32_t start);
-	static void deallocate (struct GBuffer::GBufferData *data);
+	void recycle (struct Buffer::BufferData *data);
+	static struct Buffer::BufferData *create (void);
+	static struct Buffer::BufferData *allocate (uint32_t size, uint32_t start);
+	static void deallocate (struct Buffer::BufferData *data);
 
-	static GBufferDataList m_free_list;
+	static BufferDataList m_free_list;
 	static uint32_t m_prefered_size;
 	static uint32_t m_prefered_start;
 
-	struct GBufferData *m_data;
+	struct BufferData *m_data;
 	uint32_t m_total_added_start;
 	uint32_t m_total_added_end;
 	uint32_t m_start;
@@ -346,11 +346,11 @@ private:
 
 namespace yans {
 
-GBuffer::GBuffer ()
-	: m_data (GBuffer::create ()),
+Buffer::Buffer ()
+	: m_data (Buffer::create ()),
 	  m_total_added_start (0),
 	  m_total_added_end (0),
-	  m_start (GBuffer::m_prefered_start),
+	  m_start (Buffer::m_prefered_start),
 	  m_size (0)
 {
 	if (m_start > m_data->m_size) {
@@ -358,7 +358,7 @@ GBuffer::GBuffer ()
 	}
 }
 
-GBuffer::GBuffer (GBuffer const&o)
+Buffer::Buffer (Buffer const&o)
 	: m_data (o.m_data),
 	  m_total_added_start (0),
 	  m_total_added_end (0),
@@ -368,7 +368,7 @@ GBuffer::GBuffer (GBuffer const&o)
 	m_data->m_count++;
 }
 
-GBuffer::GBuffer (GBuffer &o)
+Buffer::Buffer (Buffer &o)
 	: m_data (o.m_data),
 	  m_total_added_start (0),
 	  m_total_added_end (0),
@@ -378,8 +378,8 @@ GBuffer::GBuffer (GBuffer &o)
 	m_data->m_count++;
 }
 
-GBuffer &
-GBuffer::operator = (GBuffer const&o)
+Buffer &
+Buffer::operator = (Buffer const&o)
 {
 	// self assignment
 	if (m_data == o.m_data) {
@@ -400,7 +400,7 @@ GBuffer::operator = (GBuffer const&o)
 	return *this;
 }
 
-GBuffer::~GBuffer ()
+Buffer::~Buffer ()
 {
 	m_data->m_count--;
 	if (m_data->m_count == 0) {
@@ -410,20 +410,20 @@ GBuffer::~GBuffer ()
 
 
 uint8_t *
-GBuffer::get_start (void) const
+Buffer::get_start (void) const
 {
 	uint8_t *buf = &m_data->m_data;
 	return &buf[m_start];
 }
 
 uint32_t 
-GBuffer::get_size (void) const
+Buffer::get_size (void) const
 {
 	return m_size;
 }
 
 void 
-GBuffer::add_at_start (uint32_t start)
+Buffer::add_at_start (uint32_t start)
 {
 	m_total_added_start += start;
 	if (m_start >= start) {
@@ -439,19 +439,19 @@ GBuffer::add_at_start (uint32_t start)
 	}
  alloc_new_buffer:
 	uint32_t new_size = m_size + start;
-	struct GBuffer::GBufferData *new_data = GBuffer::allocate (new_size, 0);
+	struct Buffer::BufferData *new_data = Buffer::allocate (new_size, 0);
 	uint8_t *buf = &new_data->m_data;
 	memcpy (buf+start, get_start (), m_size);
 	m_data->m_count--;
 	if (m_data->m_count == 0) {
-		GBuffer::deallocate (m_data);
+		Buffer::deallocate (m_data);
 	}
 	m_data = new_data;
 	m_size = new_size;
 	m_start = 0;
 }
 void 
-GBuffer::add_at_end (uint32_t end)
+Buffer::add_at_end (uint32_t end)
 {
 	m_total_added_end += end;
 	if (m_start + m_size + end < m_data->m_size) {
@@ -466,18 +466,18 @@ GBuffer::add_at_end (uint32_t end)
 	}
  alloc_new_buffer:
 	uint32_t new_size = m_size + end;
-	struct GBuffer::GBufferData *new_data = GBuffer::allocate (new_size, 0);
+	struct Buffer::BufferData *new_data = Buffer::allocate (new_size, 0);
 	memcpy (&new_data->m_data, get_start (), m_size);
 	m_data->m_count--;
 	if (m_data->m_count == 0) {
-		GBuffer::deallocate (m_data);
+		Buffer::deallocate (m_data);
 	}
 	m_data = new_data;
 	m_size = new_size;
 	m_start = 0;
 }
 void 
-GBuffer::remove_at_start (uint32_t start)
+Buffer::remove_at_start (uint32_t start)
 {
 	if (m_size <= start) {
 		m_start += m_size;
@@ -488,7 +488,7 @@ GBuffer::remove_at_start (uint32_t start)
 	m_size -= start;
 }
 void 
-GBuffer::remove_at_end (uint32_t end)
+Buffer::remove_at_end (uint32_t end)
 {
 	if (m_size <= end) {
 		m_size = 0;
@@ -497,34 +497,34 @@ GBuffer::remove_at_end (uint32_t end)
 	m_size -= end;
 }
 
-GBuffer::Iterator 
-GBuffer::begin (void) const
+Buffer::Iterator 
+Buffer::begin (void) const
 {
 	uint8_t *start = get_start ();
 	uint8_t *end = start + m_size;
-	return GBuffer::Iterator (start, end, start);
+	return Buffer::Iterator (start, end, start);
 }
-GBuffer::Iterator 
-GBuffer::end (void) const
+Buffer::Iterator 
+Buffer::end (void) const
 {
 	uint8_t *start = get_start ();
 	uint8_t *end = start + m_size;
-	return GBuffer::Iterator (start, end, end);
+	return Buffer::Iterator (start, end, end);
 }
 
 
-GBuffer::Iterator::Iterator ()
+Buffer::Iterator::Iterator ()
 	: m_start (0), m_end (0), m_current (0)
 {}
-GBuffer::Iterator::Iterator (uint8_t *start, uint8_t *end, uint8_t *current)
+Buffer::Iterator::Iterator (uint8_t *start, uint8_t *end, uint8_t *current)
 	: m_start (start), m_end (end), m_current (current)
 {}
 
-GBuffer::Iterator::Iterator (Iterator const&o)
+Buffer::Iterator::Iterator (Iterator const&o)
 	: m_start (o.m_start), m_end (o.m_end), m_current (o.m_current)
 {}
-GBuffer::Iterator &
-GBuffer::Iterator::operator = (Iterator const &o)
+Buffer::Iterator &
+Buffer::Iterator::operator = (Iterator const &o)
 {
 	m_start = o.m_start;
 	m_end = o.m_end;
@@ -532,31 +532,31 @@ GBuffer::Iterator::operator = (Iterator const &o)
 	return *this;
 }
 void 
-GBuffer::Iterator::next (void)
+Buffer::Iterator::next (void)
 {
 	assert (m_current + 1 <= m_end);
 	m_current++;
 }
 void 
-GBuffer::Iterator::prev (void)
+Buffer::Iterator::prev (void)
 {
 	assert (m_current - 1 >= m_start);
 	m_current--;
 }
 void 
-GBuffer::Iterator::next (uint32_t delta)
+Buffer::Iterator::next (uint32_t delta)
 {
 	assert (m_current + delta <= m_end);
 	m_current += delta;
 }
 void 
-GBuffer::Iterator::prev (uint32_t delta)
+Buffer::Iterator::prev (uint32_t delta)
 {
 	assert (m_current - delta >= m_start);
 	m_current -= delta;
 }
 uint32_t
-GBuffer::Iterator::get_distance_from (Iterator const &o) const
+Buffer::Iterator::get_distance_from (Iterator const &o) const
 {
 	assert (m_start == o.m_start);
 	assert (m_end == o.m_end);
@@ -566,24 +566,24 @@ GBuffer::Iterator::get_distance_from (Iterator const &o) const
 }
 
 bool 
-GBuffer::Iterator::is_end (void) const
+Buffer::Iterator::is_end (void) const
 {
 	return m_current == m_end;
 }
 bool 
-GBuffer::Iterator::is_start (void) const
+Buffer::Iterator::is_start (void) const
 {
 	return m_current == m_start;
 }
 
 uint8_t *
-GBuffer::Iterator::peek_data (void)
+Buffer::Iterator::peek_data (void)
 {
 	return m_current;
 }
 
 void 
-GBuffer::Iterator::write (Iterator start, Iterator end)
+Buffer::Iterator::write (Iterator start, Iterator end)
 {
 	assert (start.m_current <= end.m_current);
 	assert (start.m_start == end.m_start);
@@ -601,21 +601,21 @@ GBuffer::Iterator::write (Iterator start, Iterator end)
 }
 
 void 
-GBuffer::Iterator::write_u8 (uint8_t  data, uint32_t len)
+Buffer::Iterator::write_u8 (uint8_t  data, uint32_t len)
 {
 	assert (m_current + len <= m_end);
 	memset (m_current, data, len);
 	m_current += len;
 }
 void 
-GBuffer::Iterator::write_u8  (uint8_t  data)
+Buffer::Iterator::write_u8  (uint8_t  data)
 {
 	assert (m_current + 1 <= m_end);
 	*m_current = data;
 	m_current++;
 }
 void 
-GBuffer::Iterator::write_u16 (uint16_t data)
+Buffer::Iterator::write_u16 (uint16_t data)
 {
 	assert (m_current + 2 <= m_end);
 	uint16_t *buffer = (uint16_t *)m_current;
@@ -623,7 +623,7 @@ GBuffer::Iterator::write_u16 (uint16_t data)
 	m_current += 2;
 }
 void 
-GBuffer::Iterator::write_u32 (uint32_t data)
+Buffer::Iterator::write_u32 (uint32_t data)
 {
 	assert (m_current + 4 <= m_end);
 	uint32_t *buffer = (uint32_t *)m_current;
@@ -631,7 +631,7 @@ GBuffer::Iterator::write_u32 (uint32_t data)
 	m_current += 4;
 }
 void 
-GBuffer::Iterator::write_u64 (uint64_t data)
+Buffer::Iterator::write_u64 (uint64_t data)
 {
 	assert (m_current + 8 <= m_end);
 	uint64_t *buffer = (uint64_t *)m_current;
@@ -639,7 +639,7 @@ GBuffer::Iterator::write_u64 (uint64_t data)
 	m_current += 8;
 }
 void 
-GBuffer::Iterator::write_hton_u16 (uint16_t data)
+Buffer::Iterator::write_hton_u16 (uint16_t data)
 {
 	assert (m_current + 2 <= m_end);
 	*(m_current+0) = (data >> 8) & 0xff;
@@ -647,7 +647,7 @@ GBuffer::Iterator::write_hton_u16 (uint16_t data)
 	m_current += 2;
 }
 void 
-GBuffer::Iterator::write_hton_u32 (uint32_t data)
+Buffer::Iterator::write_hton_u32 (uint32_t data)
 {
 	assert (m_current + 4 <= m_end);
 	*(m_current+0) = (data >> 24) & 0xff;
@@ -657,7 +657,7 @@ GBuffer::Iterator::write_hton_u32 (uint32_t data)
 	m_current += 4;
 }
 void 
-GBuffer::Iterator::write_hton_u64 (uint64_t data)
+Buffer::Iterator::write_hton_u64 (uint64_t data)
 {
 	assert (m_current + 8 <= m_end);
 	*(m_current+0) = (data >> 56) & 0xff;
@@ -671,7 +671,7 @@ GBuffer::Iterator::write_hton_u64 (uint64_t data)
 	m_current += 8;
 }
 void 
-GBuffer::Iterator::write (uint8_t const*buffer, uint16_t size)
+Buffer::Iterator::write (uint8_t const*buffer, uint16_t size)
 {
 	assert (m_current + size <= m_end);
 	memcpy (m_current, buffer, size);
@@ -679,7 +679,7 @@ GBuffer::Iterator::write (uint8_t const*buffer, uint16_t size)
 }
 
 uint8_t  
-GBuffer::Iterator::read_u8 (void)
+Buffer::Iterator::read_u8 (void)
 {
 	assert (m_current + 1 <= m_end);
 	uint8_t data = *m_current;
@@ -687,7 +687,7 @@ GBuffer::Iterator::read_u8 (void)
 	return data;
 }
 uint16_t 
-GBuffer::Iterator::read_u16 (void)
+Buffer::Iterator::read_u16 (void)
 {
 	assert (m_current + 2 <= m_end);
 	uint16_t *buffer = reinterpret_cast<uint16_t *>(m_current);
@@ -695,7 +695,7 @@ GBuffer::Iterator::read_u16 (void)
 	return *buffer;
 }
 uint32_t 
-GBuffer::Iterator::read_u32 (void)
+Buffer::Iterator::read_u32 (void)
 {
 	assert (m_current + 4 <= m_end);
 	uint32_t *buffer = reinterpret_cast<uint32_t *>(m_current);
@@ -703,7 +703,7 @@ GBuffer::Iterator::read_u32 (void)
 	return *buffer;
 }
 uint64_t 
-GBuffer::Iterator::read_u64 (void)
+Buffer::Iterator::read_u64 (void)
 {
 	assert (m_current + 8 <= m_end);
 	uint64_t *buffer = reinterpret_cast<uint64_t *>(m_current);
@@ -711,7 +711,7 @@ GBuffer::Iterator::read_u64 (void)
 	return *buffer;
 }
 uint16_t 
-GBuffer::Iterator::read_ntoh_u16 (void)
+Buffer::Iterator::read_ntoh_u16 (void)
 {
 	assert (m_current + 2 <= m_end);
 	uint16_t retval = 0;
@@ -721,7 +721,7 @@ GBuffer::Iterator::read_ntoh_u16 (void)
 	return retval;
 }
 uint32_t 
-GBuffer::Iterator::read_ntoh_u32 (void)
+Buffer::Iterator::read_ntoh_u32 (void)
 {
 	assert (m_current + 4 <= m_end);
 	uint32_t retval = 0;
@@ -733,7 +733,7 @@ GBuffer::Iterator::read_ntoh_u32 (void)
 	return retval;
 }
 uint64_t 
-GBuffer::Iterator::read_ntoh_u64 (void)
+Buffer::Iterator::read_ntoh_u64 (void)
 {
 	assert (m_current + 8 <= m_end);
 	uint64_t retval = 0;
@@ -749,7 +749,7 @@ GBuffer::Iterator::read_ntoh_u64 (void)
 	return retval;
 }
 void 
-GBuffer::Iterator::read (uint8_t *buffer, uint16_t size)
+Buffer::Iterator::read (uint8_t *buffer, uint16_t size)
 {
 	assert (m_current + size <= m_end);
 	memcpy (buffer, m_current, size);

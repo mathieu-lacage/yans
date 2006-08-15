@@ -50,7 +50,7 @@ public:
 	void set_tcp (Tcp *tcp);
 	void set_end_point (Ipv4EndPoint *end_point);
 
-	void receive (GPacket packet, Chunk *chunk);
+	void receive (Packet packet, Chunk *chunk);
 
 	void set_callbacks (ConnectionAcception connection_acception,
 			    ConnectionCreated connection_created);

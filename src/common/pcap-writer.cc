@@ -65,7 +65,7 @@ PcapWriter::write_header_ethernet (void)
 }
 
 void 
-PcapWriter::write_packet (GPacket const packet)
+PcapWriter::write_packet (Packet const packet)
 {
 	if (m_writer != 0) {
 		uint64_t current = Simulator::now_us ();

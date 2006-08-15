@@ -95,7 +95,7 @@ PeriodicGenerator::send_next_packet (void)
 	m_current_event = make_event (&PeriodicGenerator::send_next_packet, this);
 	Simulator::schedule_rel_us (m_interval_us, m_current_event);
 	/* create packet. */
-	GPacket packet;
+	Packet packet;
 	ChunkConstantData data (m_size, m_n);
 	packet.add (&data);
 	m_callback (packet);

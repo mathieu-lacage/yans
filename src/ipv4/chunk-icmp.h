@@ -55,9 +55,9 @@ public:
 
 private:
 	virtual void print (std::ostream *os) const;
-	virtual void add_to (GBuffer *buffer) const;
-	virtual void peek_from (GBuffer const *buffer);
-	virtual void remove_from (GBuffer *buffer);
+	virtual void add_to (Buffer *buffer) const;
+	virtual void peek_from (Buffer const *buffer);
+	virtual void remove_from (Buffer *buffer);
 	/* unimplemented for now. */
 	void set_identifier_and_sequence (uint16_t identifier, uint16_t sequence_number);
 	void set_redirect (uint8_t code, Ipv4Address gateway);

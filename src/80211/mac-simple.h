@@ -36,7 +36,7 @@ class MacNetworkInterface;
 
 class MacSimple {
 public:
-	typedef Callback<void, GPacket > RxCallback;
+	typedef Callback<void, Packet > RxCallback;
 
 	MacSimple ();
 	~MacSimple ();
@@ -46,9 +46,9 @@ public:
 	void set_rts_cts_threshold (uint32_t size);
 	void set_receiver (RxCallback data);
 
-	void send (GPacket packet, MacAddress to);
-	void receive_ok (GPacket const packet, double snr, uint8_t tx_mode, uint8_t stuff);
-	void receive_error (GPacket const packet, double snr);
+	void send (Packet packet, MacAddress to);
+	void receive_ok (Packet const packet, double snr, uint8_t tx_mode, uint8_t stuff);
+	void receive_error (Packet const packet, double snr);
 private:
 	void send_cts (uint8_t tx_mode, MacAddress to, uint8_t rts_snr);
 	void send_ack (uint8_t tx_mode, MacAddress to, uint8_t data_snr);
@@ -73,7 +73,7 @@ private:
 	uint32_t m_data_retry_max;
 	uint64_t m_rts_timeout_us;
 	uint64_t m_data_timeout_us;
-	GPacket m_current;
+	Packet m_current;
 	bool m_has_current;
 	MacAddress m_current_to;
 	Event m_rts_timeout_event;

@@ -90,7 +90,7 @@ TcpSource::start_disconnect_now (void)
 	m_connection->start_disconnect ();
 }
 void 
-TcpSource::send (GPacket packet)
+TcpSource::send (Packet packet)
 {
 	m_connection->send (packet);
 }
@@ -142,7 +142,7 @@ void
 TcpSource::transmitted (void)
 {}
 void 
-TcpSource::got_ack (GPacket packet)
+TcpSource::got_ack (Packet packet)
 {}
 
 

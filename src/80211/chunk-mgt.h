@@ -46,9 +46,9 @@ public:
 
 private:
 	virtual void print (std::ostream *os) const;
-	virtual void add_to (GBuffer *buffer) const;
-	virtual void peek_from (GBuffer const *buffer);
-	virtual void remove_from (GBuffer *buffer);
+	virtual void add_to (Buffer *buffer) const;
+	virtual void peek_from (Buffer const *buffer);
+	virtual void remove_from (Buffer *buffer);
 	uint32_t get_size (void) const;
 	Ssid m_ssid;
 	SupportedRates m_rates;
@@ -67,9 +67,9 @@ public:
 
 private:
 	virtual void print (std::ostream *os) const;
-	virtual void add_to (GBuffer *buffer) const;
-	virtual void peek_from (GBuffer const *buffer);
-	virtual void remove_from (GBuffer *buffer);
+	virtual void add_to (Buffer *buffer) const;
+	virtual void peek_from (Buffer const *buffer);
+	virtual void remove_from (Buffer *buffer);
 	uint32_t get_size (void) const;
 	SupportedRates m_rates;
 	CapabilityInformation m_capability;
@@ -89,9 +89,9 @@ public:
 
 private:
 	virtual void print (std::ostream *os) const;
-	virtual void add_to (GBuffer *buffer) const;
-	virtual void peek_from (GBuffer const *buffer);
-	virtual void remove_from (GBuffer *buffer);
+	virtual void add_to (Buffer *buffer) const;
+	virtual void peek_from (Buffer const *buffer);
+	virtual void remove_from (Buffer *buffer);
 	uint32_t get_size (void) const;
 	Ssid m_ssid;
 	SupportedRates m_rates;
@@ -113,9 +113,9 @@ public:
 
 private:
 	virtual void print (std::ostream *os) const;
-	virtual void add_to (GBuffer *buffer) const;
-	virtual void peek_from (GBuffer const *buffer);
-	virtual void remove_from (GBuffer *buffer);
+	virtual void add_to (Buffer *buffer) const;
+	virtual void peek_from (Buffer const *buffer);
+	virtual void remove_from (Buffer *buffer);
 	uint32_t get_size (void) const;
 	Ssid m_ssid;
 	uint64_t m_beacon_interval;

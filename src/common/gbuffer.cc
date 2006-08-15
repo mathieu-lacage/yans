@@ -23,17 +23,17 @@
 
 namespace yans {
 
-GBuffer::GBufferDataList  GBuffer::m_free_list;
-uint32_t GBuffer::m_prefered_size = 1;
-uint32_t GBuffer::m_prefered_start = 0;
+Buffer::BufferDataList  Buffer::m_free_list;
+uint32_t Buffer::m_prefered_size = 1;
+uint32_t Buffer::m_prefered_start = 0;
 
-struct GBuffer::GBufferData *
-GBuffer::allocate (uint32_t req_size, uint32_t req_start)
+struct Buffer::BufferData *
+Buffer::allocate (uint32_t req_size, uint32_t req_start)
 {
 	assert (req_size >= 1);
-	uint32_t size = req_size - 1 + sizeof (struct GBuffer::GBufferData);
+	uint32_t size = req_size - 1 + sizeof (struct Buffer::BufferData);
 	uint8_t *b = new uint8_t [size];
-	struct GBufferData *data = reinterpret_cast<struct GBuffer::GBufferData*>(b);
+	struct BufferData *data = reinterpret_cast<struct Buffer::BufferData*>(b);
 	data->m_size = req_size;
 	data->m_dirty_start = req_start;
 	data->m_dirty_size = 0;
@@ -42,25 +42,25 @@ GBuffer::allocate (uint32_t req_size, uint32_t req_start)
 }
 
 void
-GBuffer::deallocate (struct GBuffer::GBufferData *data)
+Buffer::deallocate (struct Buffer::BufferData *data)
 {
 	uint8_t *buf = reinterpret_cast<uint8_t *> (data);
 	delete [] buf;
 }
 #ifdef USE_FREE_LIST
 void
-GBuffer::recycle (struct GBuffer::GBufferData *data)
+Buffer::recycle (struct Buffer::BufferData *data)
 {
 	assert (data->m_count == 0);
 	/* get rid of it if it is too small for later reuse. */
-	if (data->m_size < GBuffer::m_prefered_size) {
-		GBuffer::deallocate (data);
+	if (data->m_size < Buffer::m_prefered_size) {
+		Buffer::deallocate (data);
 		return; 
 	}
 	/* update buffer statistics */
-	uint32_t cur_prefered_end = GBuffer::m_prefered_size - GBuffer::m_prefered_start;
-	if (m_total_added_start > GBuffer::m_prefered_start) {
-		GBuffer::m_prefered_start = m_total_added_start;
+	uint32_t cur_prefered_end = Buffer::m_prefered_size - Buffer::m_prefered_start;
+	if (m_total_added_start > Buffer::m_prefered_start) {
+		Buffer::m_prefered_start = m_total_added_start;
 	}
 	uint32_t prefered_end;
 	if (m_total_added_end > cur_prefered_end) {
@@ -68,48 +68,48 @@ GBuffer::recycle (struct GBuffer::GBufferData *data)
 	} else {
 		prefered_end = cur_prefered_end;
 	}
-	GBuffer::m_prefered_size = GBuffer::m_prefered_start + prefered_end;
-	assert (GBuffer::m_prefered_size >= GBuffer::m_prefered_start);
+	Buffer::m_prefered_size = Buffer::m_prefered_start + prefered_end;
+	assert (Buffer::m_prefered_size >= Buffer::m_prefered_start);
 	/* feed into free list */
-	if (GBuffer::m_free_list.size () > 1000) {
-		GBuffer::deallocate (data);
+	if (Buffer::m_free_list.size () > 1000) {
+		Buffer::deallocate (data);
 	} else {
-		GBuffer::m_free_list.push_back (data);
+		Buffer::m_free_list.push_back (data);
 	}
 }
 
-GBuffer::GBufferData *
-GBuffer::create (void)
+Buffer::BufferData *
+Buffer::create (void)
 {
 	/* try to find a buffer correctly sized. */
-	while (!GBuffer::m_free_list.empty ()) {
-		struct GBuffer::GBufferData *data = GBuffer::m_free_list.back ();
-		GBuffer::m_free_list.pop_back ();
-		if (data->m_size > GBuffer::m_prefered_size) {
-			assert (GBuffer::m_prefered_size >= GBuffer::m_prefered_start);
-			data->m_dirty_start = GBuffer::m_prefered_start;
+	while (!Buffer::m_free_list.empty ()) {
+		struct Buffer::BufferData *data = Buffer::m_free_list.back ();
+		Buffer::m_free_list.pop_back ();
+		if (data->m_size > Buffer::m_prefered_size) {
+			assert (Buffer::m_prefered_size >= Buffer::m_prefered_start);
+			data->m_dirty_start = Buffer::m_prefered_start;
 			data->m_dirty_size = 0;
 			data->m_count = 1;
 			return data;
 		}
-		GBuffer::deallocate (data);
+		Buffer::deallocate (data);
 	}
-	struct GBuffer::GBufferData *data = GBuffer::allocate (GBuffer::m_prefered_size, 
-							       GBuffer::m_prefered_start);
+	struct Buffer::BufferData *data = Buffer::allocate (Buffer::m_prefered_size, 
+							       Buffer::m_prefered_start);
 	assert (data->m_count == 1);
 	return data;
 }
 #else
 void
-GBuffer::recycle (struct GBuffer::GBufferData *data)
+Buffer::recycle (struct Buffer::BufferData *data)
 {
-	GBuffer::deallocate (data);
+	Buffer::deallocate (data);
 }
 
-GBuffer::GBufferData *
-GBuffer::create (void)
+Buffer::BufferData *
+Buffer::create (void)
 {
-	return GBuffer::allocate (GBuffer::m_prefered_size, GBuffer::m_prefered_start);
+	return Buffer::allocate (Buffer::m_prefered_size, Buffer::m_prefered_start);
 }
 #endif
 
@@ -125,20 +125,20 @@ GBuffer::create (void)
 
 namespace yans {
 
-class GBufferTest: public Test {
+class BufferTest: public Test {
 private:
-  bool ensure_written_bytes (GBuffer::Iterator i, uint32_t n, uint8_t array[]);
+  bool ensure_written_bytes (Buffer::Iterator i, uint32_t n, uint8_t array[]);
 public:
   virtual bool run_tests (void);
-  GBufferTest ();
+  BufferTest ();
 };
 
 
-GBufferTest::GBufferTest ()
-	: Test ("GBuffer") {}
+BufferTest::BufferTest ()
+	: Test ("Buffer") {}
 
 bool
-GBufferTest::ensure_written_bytes (GBuffer::Iterator i, uint32_t n, uint8_t array[])
+BufferTest::ensure_written_bytes (Buffer::Iterator i, uint32_t n, uint8_t array[])
 {
 	bool success = true;
 	uint8_t *expected = array;
@@ -181,11 +181,11 @@ GBufferTest::ensure_written_bytes (GBuffer::Iterator i, uint32_t n, uint8_t arra
 }
 
 bool
-GBufferTest::run_tests (void)
+BufferTest::run_tests (void)
 {
 	bool ok = true;
-	GBuffer buffer;
-	GBuffer::Iterator i;
+	Buffer buffer;
+	Buffer::Iterator i;
 	buffer.add_at_start (6);
 	i = buffer.begin ();
 	i.write_u8 (0x66);
@@ -234,7 +234,7 @@ GBufferTest::run_tests (void)
 	i.prev (2);
 	i.write_u16 (saved);
 	ENSURE_WRITTEN_BYTES (buffer.begin (), 5, 0xff, 0x69, 0xde, 0xad, 0xff);
-	GBuffer o = buffer;
+	Buffer o = buffer;
 	ENSURE_WRITTEN_BYTES (o.begin (), 5, 0xff, 0x69, 0xde, 0xad, 0xff);
 	o.add_at_start (1);
 	i = o.begin ();
@@ -253,7 +253,7 @@ GBufferTest::run_tests (void)
 
 
 
-static GBufferTest g_buffer_test;
+static BufferTest g_buffer_test;
 
 }; // namespace yans
 

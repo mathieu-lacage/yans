@@ -32,14 +32,14 @@ namespace yans {
  */
 class PacketLogger {
 public:
-	typedef Callback<void,GPacket const> PacketLoggerCallback;
+	typedef Callback<void,Packet const> PacketLoggerCallback;
 	PacketLogger ();
 	/**
 	 * \param packet to log
 	 * If a non-null callback was set, the packet
 	 * is forwarded to that callback.
 	 */
-	void log (GPacket const packet);
+	void log (Packet const packet);
 	/**
 	 * \param callback callback to store
 	 */

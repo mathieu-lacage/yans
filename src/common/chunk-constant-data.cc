@@ -40,7 +40,7 @@ ChunkConstantData::print (std::ostream *os) const
 }
 
 void 
-ChunkConstantData::add_to (GBuffer *buffer) const
+ChunkConstantData::add_to (Buffer *buffer) const
 {
 	buffer->add_at_start (m_len);
 #ifndef NDEBUG
@@ -48,13 +48,13 @@ ChunkConstantData::add_to (GBuffer *buffer) const
 #endif
 }
 void 
-ChunkConstantData::peek_from (GBuffer const *buffer)
+ChunkConstantData::peek_from (Buffer const *buffer)
 {
 	m_len = buffer->get_size ();
 	m_data = buffer->begin ().read_u8 ();
 }
 void 
-ChunkConstantData::remove_from (GBuffer *buffer)
+ChunkConstantData::remove_from (Buffer *buffer)
 {
 	buffer->remove_at_start (m_len);
 }

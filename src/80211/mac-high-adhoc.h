@@ -34,7 +34,7 @@ class ChunkMac80211Hdr;
 
 class MacHighAdhoc {
 public:
-	typedef Callback<void, GPacket > ForwardCallback;
+	typedef Callback<void, Packet > ForwardCallback;
 
 	MacHighAdhoc ();
 	~MacHighAdhoc ();
@@ -45,10 +45,10 @@ public:
 
 	MacAddress get_bssid (void) const;
 
-	void enqueue (GPacket packet, MacAddress to);
+	void enqueue (Packet packet, MacAddress to);
 
 	/* invoked by the MacLows. */
-	void receive (GPacket packet, ChunkMac80211Hdr const*hdr);
+	void receive (Packet packet, ChunkMac80211Hdr const*hdr);
 private:
 	DcaTxop *m_dca;
 	NetworkInterface80211 *m_interface;

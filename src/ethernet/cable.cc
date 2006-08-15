@@ -53,7 +53,7 @@ Cable::connect_to (EthernetNetworkInterface *a,
 }
 
 void 
-Cable::send (GPacket packet, EthernetNetworkInterface *sender)
+Cable::send (Packet packet, EthernetNetworkInterface *sender)
 {
 	double delay = packet.get_size () * 8 / m_bandwidth + m_length / SPEED_OF_LIGHT;
 	EthernetNetworkInterface *rx;

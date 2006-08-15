@@ -96,7 +96,7 @@ Udp::allocate (Ipv4Address local_address, uint16_t local_port,
 
 
 void 
-Udp::receive (GPacket packet)
+Udp::receive (Packet packet)
 {
 	m_recv_logger->log (packet);
 	ChunkUdp udp_chunk;
@@ -118,7 +118,7 @@ Udp::receive (GPacket packet)
 }
 
 void
-Udp::send (GPacket packet)
+Udp::send (Packet packet)
 {
 	TagOutPortPair port_tag;
 	TagOutIpv4AddressPair addr_tag;

@@ -35,11 +35,11 @@ bench_ptr_a (uint32_t n)
 	ChunkIpv4 ipv4;
 
 	for (uint32_t i = 0; i < n; i++) {
-		GPacket p;
+		Packet p;
 		p.add (&data);
 		p.add (&udp);
 		p.add (&ipv4);
-		GPacket o = p;
+		Packet o = p;
 		o.peek (&ipv4);
 		o.remove (&ipv4);
 		o.peek (&udp);
@@ -57,7 +57,7 @@ bench_ptr_b (uint32_t n)
 	ChunkIpv4 ipv4;
 
 	for (uint32_t i = 0; i < n; i++) {
-		GPacket p;
+		Packet p;
 		p.add (&data);
 		p.add (&udp);
 		p.add (&ipv4);
@@ -65,7 +65,7 @@ bench_ptr_b (uint32_t n)
 }
 
 static void
-ptr_c2 (GPacket p)
+ptr_c2 (Packet p)
 {
 	ChunkConstantData data = ChunkConstantData (2000, 1);
 	ChunkUdp udp;
@@ -77,7 +77,7 @@ ptr_c2 (GPacket p)
 }
 
 static void 
-ptr_c1 (GPacket p)
+ptr_c1 (Packet p)
 {
 	ChunkIpv4 ipv4;
 	p.peek (&ipv4);
@@ -93,7 +93,7 @@ bench_ptr_c (uint32_t n)
 	ChunkIpv4 ipv4;
 
 	for (uint32_t i = 0; i < n; i++) {
-		GPacket p;
+		Packet p;
 		p.add (&data);
 		p.add (&udp);
 		p.add (&ipv4);

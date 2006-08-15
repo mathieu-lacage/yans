@@ -33,7 +33,7 @@ public:
 	virtual ~LoopbackIpv4 ();
 private:
 	virtual uint16_t real_get_mtu (void) const;
-	virtual void real_send (GPacket packet, Ipv4Address to);
+	virtual void real_send (Packet packet, Ipv4Address to);
 
 };
 

@@ -48,9 +48,9 @@ public:
 private:
 	virtual void notify_up (void);
 	virtual void notify_down (void);
-	virtual void real_send (GPacket packet, MacAddress to);
+	virtual void real_send (Packet packet, MacAddress to);
 
-	void forward_data_up (GPacket packet);
+	void forward_data_up (Packet packet);
 	friend class NetworkInterface80211SimpleFactory;
 	NetworkInterface80211Simple (MacAddress address);
 

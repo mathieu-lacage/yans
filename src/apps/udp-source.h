@@ -43,9 +43,9 @@ public:
 
 	void set_peer (Ipv4Address address, uint16_t port);
 
-	void send (GPacket packet);
+	void send (Packet packet);
 private:
-	void receive (GPacket packet, Chunk *chunk);
+	void receive (Packet packet, Chunk *chunk);
 	void unbind_now (void);
 	Host *m_host;
 	Ipv4EndPoint *m_end_point;

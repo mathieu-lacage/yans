@@ -43,7 +43,7 @@ public:
 	typedef Callback<void> DisConnectCompletedCallback;
 	typedef Callback<void> DataReceivedCallback;
 	typedef Callback<void> DataTransmittedCallback;
-	typedef Callback<void, GPacket > AckReceivedCallback;
+	typedef Callback<void, Packet > AckReceivedCallback;
 	typedef Callback<void, TcpConnection *> TcpConnectionDestroy;
 
 	virtual ~TcpConnection () = 0;
@@ -67,8 +67,8 @@ public:
 
 	virtual uint32_t get_room_left (void) = 0;
 	virtual uint32_t get_data_ready (void) = 0;
-	virtual uint32_t send (GPacket packet) = 0;
-	virtual GPacket recv (uint32_t size) = 0;
+	virtual uint32_t send (Packet packet) = 0;
+	virtual Packet recv (uint32_t size) = 0;
 
 	virtual void slow_timer (void) = 0;
 	virtual void fast_timer (void) = 0;

@@ -108,7 +108,7 @@ Ipv4::set_protocol (uint8_t protocol)
 }
 
 void 
-Ipv4::send (GPacket packet)
+Ipv4::send (Packet packet)
 {
 	ChunkIpv4 ip_header;
 
@@ -151,7 +151,7 @@ Ipv4::lookup_protocol (uint8_t protocol)
 }
 
 void
-Ipv4::send_real_out (GPacket packet, ChunkIpv4 *ip, Route const *route)
+Ipv4::send_real_out (Packet packet, ChunkIpv4 *ip, Route const *route)
 {
 
 	packet.add (ip);
@@ -166,7 +166,7 @@ Ipv4::send_real_out (GPacket packet, ChunkIpv4 *ip, Route const *route)
 }
 
 bool
-Ipv4::send_out (GPacket packet, ChunkIpv4 *ip, Route const *route)
+Ipv4::send_out (Packet packet, ChunkIpv4 *ip, Route const *route)
 {
 	Ipv4NetworkInterface *out_interface = m_interfaces[route->get_interface ()];
 
@@ -184,7 +184,7 @@ Ipv4::send_out (GPacket packet, ChunkIpv4 *ip, Route const *route)
 		assert (n_fragments > 1);
 		ChunkIpv4 ip_fragment = *ip;
 		for (uint16_t i = 0; i < n_fragments - 1; i++) {
-			GPacket fragment = packet.create_fragment (current_offset - ip->get_fragment_offset (),
+			Packet fragment = packet.create_fragment (current_offset - ip->get_fragment_offset (),
 								   fragment_length);
 
 			ip_fragment.set_more_fragments ();
@@ -196,7 +196,7 @@ Ipv4::send_out (GPacket packet, ChunkIpv4 *ip, Route const *route)
 		}
 
 		/* generate the last fragment */
-		GPacket last_fragment = packet.create_fragment (current_offset - ip->get_fragment_offset (),
+		Packet last_fragment = packet.create_fragment (current_offset - ip->get_fragment_offset (),
 								last_fragment_length);
 		ip_fragment = *ip;
 		if (!ip->is_last_fragment ()) {
@@ -219,9 +219,9 @@ Ipv4::send_out (GPacket packet, ChunkIpv4 *ip, Route const *route)
 }
 
 void
-Ipv4::send_icmp_time_exceeded_ttl (GPacket original, ChunkIpv4 *ip, Ipv4NetworkInterface *interface)
+Ipv4::send_icmp_time_exceeded_ttl (Packet original, ChunkIpv4 *ip, Ipv4NetworkInterface *interface)
 {
-	GPacket packet = original;
+	Packet packet = original;
 	packet.add (ip);
 	packet.remove_at_end (packet.get_size ()- (ip->get_payload_size () + 8));
 	
@@ -250,7 +250,7 @@ Ipv4::send_icmp_time_exceeded_ttl (GPacket original, ChunkIpv4 *ip, Ipv4NetworkI
 }
 
 bool
-Ipv4::forwarding (GPacket packet, ChunkIpv4 *ip_header, Ipv4NetworkInterface *interface)
+Ipv4::forwarding (Packet packet, ChunkIpv4 *ip_header, Ipv4NetworkInterface *interface)
 {
 	for (Ipv4NetworkInterfacesCI i = m_interfaces.begin ();
 	     i != m_interfaces.end (); i++) {
@@ -287,8 +287,8 @@ Ipv4::forwarding (GPacket packet, ChunkIpv4 *ip_header, Ipv4NetworkInterface *in
 	return true;
 }
 
-GPacket 
-Ipv4::re_assemble (GPacket fragment, ChunkIpv4 *ip, bool *complete)
+Packet 
+Ipv4::re_assemble (Packet fragment, ChunkIpv4 *ip, bool *complete)
 {
 	DefragState *state = m_defrag_states->lookup (ip);
 	if (state == 0) {
@@ -296,22 +296,22 @@ Ipv4::re_assemble (GPacket fragment, ChunkIpv4 *ip, bool *complete)
 		state->add (fragment, ip);
 		m_defrag_states->add (state);
 		*complete = false;
-		return GPacket ();
+		return Packet ();
 	}
 	state->add (fragment, ip);
 	if (state->is_complete ()) {
-		GPacket completed = state->get_complete ();
+		Packet completed = state->get_complete ();
 		m_defrag_states->remove (state);
 		delete state;
 		*complete = true;
 		return completed;
 	}
 	*complete = false;
-	return GPacket ();
+	return Packet ();
 }
 
 void
-Ipv4::receive_packet (GPacket packet, ChunkIpv4 *ip, Ipv4NetworkInterface *interface)
+Ipv4::receive_packet (Packet packet, ChunkIpv4 *ip, Ipv4NetworkInterface *interface)
 {
 	/* receive the packet. */
 	TagInIpv4AddressPair tag;
@@ -325,7 +325,7 @@ Ipv4::receive_packet (GPacket packet, ChunkIpv4 *ip, Ipv4NetworkInterface *inter
 }
 
 void 
-Ipv4::receive (GPacket packet, Ipv4NetworkInterface *interface)
+Ipv4::receive (Packet packet, Ipv4NetworkInterface *interface)
 {
 	m_recv_logger->log (packet);
 	ChunkIpv4 ip_header;
@@ -342,7 +342,7 @@ Ipv4::receive (GPacket packet, Ipv4NetworkInterface *interface)
 	if (!ip_header.is_last_fragment () ||
 	    ip_header.get_fragment_offset () != 0) {
 		bool complete;
-		GPacket new_packet = re_assemble (packet, &ip_header, &complete);
+		Packet new_packet = re_assemble (packet, &ip_header, &complete);
 		if (!complete) {
 			TRACE ("reassemble fragment not finished.");
 			return;
@@ -357,7 +357,7 @@ Ipv4::receive (GPacket packet, Ipv4NetworkInterface *interface)
 
 
 void 
-Ipv4::receive_icmp (GPacket packet)
+Ipv4::receive_icmp (Packet packet)
 {}
 
 }; // namespace yans

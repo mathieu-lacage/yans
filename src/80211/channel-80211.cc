@@ -36,7 +36,7 @@ Channel80211::real_add (PropagationModel *model)
 	m_models.push_back (model);
 }
 void 
-Channel80211::real_send (GPacket const packet, double tx_power_dbm,
+Channel80211::real_send (Packet const packet, double tx_power_dbm,
 			 uint8_t tx_mode, uint8_t stuff,
 			 PropagationModel const *caller) const
 {

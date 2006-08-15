@@ -106,7 +106,7 @@ Tcp::allocate (Ipv4Address local_address, uint16_t local_port,
 
 
 void
-Tcp::send_reset (GPacket packet, ChunkTcp *tcp_chunk)
+Tcp::send_reset (Packet packet, ChunkTcp *tcp_chunk)
 {
 	TagInIpv4AddressPair in_addr_tag;
 	TagInPortPair in_port_tag;
@@ -118,7 +118,7 @@ Tcp::send_reset (GPacket packet, ChunkTcp *tcp_chunk)
 		return;
 	}
 
-	GPacket rst;
+	Packet rst;
 	
 	TagOutIpv4AddressPair out_addr_tag;
 	TagOutPortPair out_port_tag;
@@ -154,7 +154,7 @@ Tcp::send_reset (GPacket packet, ChunkTcp *tcp_chunk)
 
 
 void
-Tcp::receive (GPacket packet)
+Tcp::receive (Packet packet)
 {
 	TagInIpv4AddressPair in_addr_tag;
 	packet.peek_tag (&in_addr_tag);

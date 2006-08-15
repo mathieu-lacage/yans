@@ -265,7 +265,7 @@ MacLow::register_nav_listener (MacLowNavListener *listener)
 
 
 void 
-MacLow::start_transmission (GPacket packet, 
+MacLow::start_transmission (Packet packet, 
 			    ChunkMac80211Hdr const*hdr, 
 			    MacLowTransmissionParameters parameters,
 			    MacLowTransmissionListener *listener)
@@ -308,7 +308,7 @@ MacLow::start_transmission (GPacket packet,
 }
 
 void
-MacLow::receive_error (GPacket const packet, double rx_snr)
+MacLow::receive_error (Packet const packet, double rx_snr)
 {
 	TRACE ("rx failed ");
 	m_drop_error->log (packet);
@@ -321,7 +321,7 @@ MacLow::receive_error (GPacket const packet, double rx_snr)
 }
 
 void 
-MacLow::receive_ok (GPacket const p, double rx_snr, uint8_t tx_mode, uint8_t stuff)
+MacLow::receive_ok (Packet const p, double rx_snr, uint8_t tx_mode, uint8_t stuff)
 {
 	/* A packet is received from the PHY.
 	 * When we have handled this packet,
@@ -427,7 +427,7 @@ MacLow::receive_ok (GPacket const p, double rx_snr, uint8_t tx_mode, uint8_t stu
 	}
 	return;
  rx_packet:
-	GPacket packet = p;
+	Packet packet = p;
 	packet.remove (&hdr);
 	ChunkMac80211Fcs fcs;
 	packet.peek (&fcs);
@@ -598,7 +598,7 @@ MacLow::notify_nav (uint64_t now_time_us, ChunkMac80211Hdr const *hdr)
 }
 
 void
-MacLow::forward_down (GPacket const packet, ChunkMac80211Hdr const* hdr, uint8_t tx_mode, uint8_t stuff)
+MacLow::forward_down (Packet const packet, ChunkMac80211Hdr const* hdr, uint8_t tx_mode, uint8_t stuff)
 {
 	m_phy->send_packet (packet, tx_mode, 0, stuff);
 	/* Note that it is really important to notify the NAV 
@@ -688,7 +688,7 @@ MacLow::send_rts_for_packet (void)
 	m_cts_timeout_event = make_event (&MacLow::cts_timeout, this);
 	Simulator::schedule_rel_s (timer_delay_us, m_cts_timeout_event);
 
-	GPacket packet;
+	Packet packet;
 	packet.add (&rts);
 	ChunkMac80211Fcs fcs;
 	packet.add (&fcs);
@@ -800,7 +800,7 @@ MacLow::send_cts_after_rts (MacAddress source, uint64_t duration_us, uint8_t tx_
 	duration_us -= get_sifs_us ();
 	cts.set_duration_us (duration_us);
 
-	GPacket packet;
+	Packet packet;
 	packet.add (&cts);
 	ChunkMac80211Fcs fcs;
 	packet.add (&fcs);
@@ -863,7 +863,7 @@ MacLow::send_ack_after_data (MacAddress source, uint64_t duration_us, uint8_t tx
 	duration_us -= get_sifs_us ();
 	ack.set_duration_us (duration_us);
 
-	GPacket packet;
+	Packet packet;
 	packet.add (&ack);
 	ChunkMac80211Fcs fcs;
 	packet.add (&fcs);

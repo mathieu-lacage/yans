@@ -236,7 +236,7 @@ DcaTxop::register_traces (TraceContainer *container)
 }
 
 void 
-DcaTxop::queue (GPacket packet, ChunkMac80211Hdr const &hdr)
+DcaTxop::queue (Packet packet, ChunkMac80211Hdr const &hdr)
 {
 	m_queue->enqueue (packet, hdr);
 	m_dcf->request_access ();
@@ -326,13 +326,13 @@ DcaTxop::get_next_fragment_size (void)
 	}
 }
 
-GPacket 
+Packet 
 DcaTxop::get_fragment_packet (ChunkMac80211Hdr *hdr)
 {
 	*hdr = m_current_hdr;
 	hdr->set_fragment_number (m_fragment_number);
 	uint32_t start_offset = m_fragment_number * get_fragment_size ();
-	GPacket fragment;
+	Packet fragment;
 	if (is_last_fragment ()) {
 		hdr->set_no_more_fragments ();
 		fragment = m_current_packet.create_fragment (start_offset, 
@@ -412,7 +412,7 @@ DcaTxop::access_granted_now (void)
 		if (need_fragmentation ()) {
 			params.disable_rts ();
 			ChunkMac80211Hdr hdr;
-			GPacket fragment = get_fragment_packet (&hdr);
+			Packet fragment = get_fragment_packet (&hdr);
 			if (is_last_fragment ()) {
 				TRACE ("fragmenting last fragment size="<<fragment->get_size ());
 				params.disable_next_data ();
@@ -435,7 +435,7 @@ DcaTxop::access_granted_now (void)
 			// retransmit the packet: the MacLow modifies the input
 			// Packet so, we would retransmit a modified packet
 			// if we were not to make a copy.
-			GPacket copy = m_current_packet;
+			Packet copy = m_current_packet;
 			low ()->start_transmission (copy, &m_current_hdr,
 						    params, m_transmission_listener);
 		}
@@ -515,7 +515,7 @@ DcaTxop::start_next (void)
 	/* this callback is used only for fragments. */
 	next_fragment ();
 	ChunkMac80211Hdr hdr;
-	GPacket fragment = get_fragment_packet (&hdr);
+	Packet fragment = get_fragment_packet (&hdr);
 	MacLowTransmissionParameters params;
 	params.enable_ack ();
 	params.disable_rts ();

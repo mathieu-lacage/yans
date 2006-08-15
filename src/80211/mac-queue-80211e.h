@@ -58,8 +58,8 @@ public:
 	void set_max_size (uint32_t max_size);
 	void set_max_delay_us (uint64_t us);
 
-	void enqueue (GPacket packet, ChunkMac80211Hdr const &hdr);
-	GPacket dequeue (ChunkMac80211Hdr *hdr, bool *found);
+	void enqueue (Packet packet, ChunkMac80211Hdr const &hdr);
+	Packet dequeue (ChunkMac80211Hdr *hdr, bool *found);
 
 	void flush (void);
 
@@ -69,10 +69,10 @@ public:
 private:
 	void cleanup (void);
 	struct Item {
-		Item (GPacket packet, 
+		Item (Packet packet, 
 		      ChunkMac80211Hdr const&hdr, 
 		      uint64_t tstamp);
-		GPacket packet;
+		Packet packet;
 		ChunkMac80211Hdr hdr;
 		uint64_t tstamp;
 	};

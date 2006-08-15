@@ -93,7 +93,7 @@ TcpBuffer::get_current (void)
 	return m_start;
 }
 void
-TcpBuffer::insert_piece_at (PiecesI i, GPacket piece, uint32_t offset)
+TcpBuffer::insert_piece_at (PiecesI i, Packet piece, uint32_t offset)
 {
 	if (piece.get_size () > 0) {
 		m_pieces.insert (i, std::make_pair (piece, offset));
@@ -101,7 +101,7 @@ TcpBuffer::insert_piece_at (PiecesI i, GPacket piece, uint32_t offset)
 }
 
 void
-TcpBuffer::insert_piece_at_back (GPacket piece, uint32_t offset)
+TcpBuffer::insert_piece_at_back (Packet piece, uint32_t offset)
 {
 	if (offset + piece.get_size () > m_size) {
 		/* we have to trim the input piece if it is bigger
@@ -124,7 +124,7 @@ TcpBuffer::seq_sub (uint32_t a, uint32_t b)
 }
 
 uint32_t 
-TcpBuffer::add_at (GPacket const packet, uint32_t seq_offset)
+TcpBuffer::add_at (Packet const packet, uint32_t seq_offset)
 {
 	//assert (packet != 0);
 
@@ -132,7 +132,7 @@ TcpBuffer::add_at (GPacket const packet, uint32_t seq_offset)
 		return 0;
 	}
 
-	GPacket piece = packet;
+	Packet piece = packet;
 	int delta = seq_sub (seq_offset, m_start);
 	uint32_t offset;
 
@@ -183,7 +183,7 @@ TcpBuffer::add_at (GPacket const packet, uint32_t seq_offset)
 	return piece.get_size ();
 }
 uint32_t 
-TcpBuffer::add_at_back (GPacket const packet)
+TcpBuffer::add_at_back (Packet const packet)
 {
 	uint32_t stored = 0;
 	if (m_pieces.empty ()) {
@@ -195,16 +195,16 @@ TcpBuffer::add_at_back (GPacket const packet)
 	return stored;
 }
 
-GPacket 
+Packet 
 TcpBuffer::get_at_front (uint32_t size, bool *found)
 {
 	return get_at (0, size, found);
 }
-GPacket 
+Packet 
 TcpBuffer::get_at (uint32_t offset, uint32_t size, bool *found)
 {
 	assert (size > 0);
-	GPacket packet;
+	Packet packet;
 	uint32_t expected_start = 0;
 	uint32_t end = offset + size;
 	bool adding = false;
@@ -243,7 +243,7 @@ TcpBuffer::get_at (uint32_t offset, uint32_t size, bool *found)
 	if (packet.get_size () == 0) {
 		TRACE ("foo");
 		*found = false;
-		return GPacket ();
+		return Packet ();
 	}
 	*found = true;
 	return packet;	
@@ -269,7 +269,7 @@ TcpBuffer::remove_at_front (uint32_t size)
 		if (cur_start >= size) {
 			break;
 		}
-		GPacket packet = (*i).first;
+		Packet packet = (*i).first;
 		if (cur_end > size) {
 			assert (cur_start < size);
 			packet.remove_at_start (cur_size - (cur_end - size));
@@ -345,15 +345,15 @@ class TcpBufferTest : public Test {
 public:
 	TcpBufferTest ();
 private:
-	GPacket create_one_packet (uint32_t size);
+	Packet create_one_packet (uint32_t size);
 	bool check_front_data (TcpBuffer *buffer, uint32_t expected_data, int line);
 	bool test_buffer (uint32_t start);
 	virtual bool run_tests (void);
 };
-GPacket 
+Packet 
 TcpBufferTest::create_one_packet (uint32_t size)
 {
-	GPacket packet;
+	Packet packet;
 	ChunkConstantData data (size, 0);
 	packet.add (&data);
 	return packet;
@@ -381,7 +381,7 @@ TcpBufferTest::test_buffer (uint32_t start)
 	TcpBuffer *buffer = new TcpBuffer ();
 	buffer->set_start (start);
 	buffer->set_size (100);
-	GPacket piece;
+	Packet piece;
 	CHECK_FRONT_DATA (buffer, 0);
 	piece = create_one_packet (1);
 	buffer->add_at (piece, start+0);

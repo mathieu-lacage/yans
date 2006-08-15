@@ -32,15 +32,15 @@ class MacNetworkInterface;
 
 class LlcSnapEncapsulation {
 public:	
-	typedef Callback<void, GPacket > RxCallback;
+	typedef Callback<void, Packet > RxCallback;
 
 	uint32_t get_overhead (void) const;
 	void set_ipv4_callback (RxCallback callback);
 	void set_arp_callback (RxCallback callback);
 	void set_mac_interface (MacNetworkInterface *interface);
-	void send_ipv4 (GPacket packet, MacAddress to);
-	void send_arp (GPacket packet, MacAddress to);
-	void receive (GPacket packet, MacNetworkInterface *interface);
+	void send_ipv4 (Packet packet, MacAddress to);
+	void send_arp (Packet packet, MacAddress to);
+	void receive (Packet packet, MacNetworkInterface *interface);
 private:
 	RxCallback m_ipv4_callback;
 	RxCallback m_arp_callback;

@@ -121,7 +121,7 @@ ArpIpv4NetworkInterface::send_arp_request (Ipv4Address to)
 	arp.set_request (m_interface->get_mac_address (),
 			 get_address (),
 			 to);
-	GPacket packet;
+	Packet packet;
 	packet.add (&arp);
 	m_llc->send_arp (packet, MacAddress::get_broadcast ());
 }
@@ -133,7 +133,7 @@ ArpIpv4NetworkInterface::send_arp_reply (Ipv4Address to_ip, MacAddress to_mac)
 	arp.set_reply (m_interface->get_mac_address (),
 		       get_address (),
 		       to_mac, to_ip);
-	GPacket packet;
+	Packet packet;
 	packet.add (&arp);
 	m_llc->send_arp (packet, to_mac);
 }
@@ -145,7 +145,7 @@ ArpIpv4NetworkInterface::flush_cache (MacNetworkInterface *self)
 }
 
 void 
-ArpIpv4NetworkInterface::receive_arp (GPacket packet)
+ArpIpv4NetworkInterface::receive_arp (Packet packet)
 {
 	ChunkArp arp;
 	packet.peek (&arp);
@@ -166,7 +166,7 @@ ArpIpv4NetworkInterface::receive_arp (GPacket packet)
 				TRACE ("got reply from " << arp.get_source_ipv4_address ()
 				       << " for waiting entry -- flush");
 				MacAddress from_mac = arp.get_source_hardware_address ();
-				GPacket waiting = entry->mark_alive (from_mac);
+				Packet waiting = entry->mark_alive (from_mac);
 				m_llc->send_ipv4 (waiting, from_mac);
 			} else {
 				// ignore this reply which might well be an attempt 
@@ -185,7 +185,7 @@ ArpIpv4NetworkInterface::receive_arp (GPacket packet)
 
 
 void 
-ArpIpv4NetworkInterface::real_send (GPacket packet, Ipv4Address to)
+ArpIpv4NetworkInterface::real_send (Packet packet, Ipv4Address to)
 {
 	if (m_arp_cache.find (to) != m_arp_cache.end ()) {
 		ArpCacheEntry *entry = m_arp_cache[to];
@@ -213,7 +213,7 @@ ArpIpv4NetworkInterface::real_send (GPacket packet, Ipv4Address to)
 				m_llc->send_ipv4 (packet, entry->get_mac_address ());
 			} else if (entry->is_wait_reply ()) {
 				TRACE ("wait reply for " << to << " valid -- drop previous");
-				GPacket old = entry->update_wait_reply (packet);
+				Packet old = entry->update_wait_reply (packet);
 				m_drop->log (old);
 			}
 		}
