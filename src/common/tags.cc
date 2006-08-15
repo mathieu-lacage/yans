@@ -31,7 +31,7 @@ struct TagData {
 };
 
 
-#if 1
+#ifdef USE_FREE_LIST
 
 static struct TagData *g_free = 0;
 static uint32_t g_n_free = 0;
