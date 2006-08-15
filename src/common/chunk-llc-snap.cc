@@ -20,7 +20,6 @@
  */
 
 #include "chunk-llc-snap.h"
-#include "buffer.h"
 #include <cassert>
 
 #define noTRACE_CHUNK_LLC_SNAP 1
@@ -58,29 +57,6 @@ ChunkLlcSnap::get_size (void) const
 {
 	return 1 + 1 + 1 + 3 + 2;
 }
-void 
-ChunkLlcSnap::add_to (Buffer *buffer) const
-{
-	buffer->add_at_start (get_size ());
-	Buffer::Iterator i = buffer->begin ();
-	uint8_t buf[] = {0xaa, 0x03, 0, 0, 0};
-	i.write (buf, 5);
-	i.next (1);
-	i.write_hton_u16 (m_ether_type);
-}
-void 
-ChunkLlcSnap::peek_from (Buffer const*buffer)
-{
-	Buffer::Iterator i = buffer->begin ();
-	i.next (5+1);
-	m_ether_type = i.read_ntoh_u16 ();
-}
-void 
-ChunkLlcSnap::remove_from (Buffer *buffer)
-{
-	buffer->remove_at_start (get_size ());
-}
-
 void 
 ChunkLlcSnap::print (std::ostream *os) const
 {

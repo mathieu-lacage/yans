@@ -21,7 +21,6 @@
 
 #include "utils.h"
 #include "ipv4-address.h"
-#include "buffer.h"
 
 namespace yans {
 

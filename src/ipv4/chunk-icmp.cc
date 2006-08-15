@@ -20,7 +20,6 @@
  */
 
 #include "chunk-icmp.h"
-#include "buffer.h"
 #include <cassert>
 
 namespace yans {
@@ -77,57 +76,6 @@ ChunkIcmp::get_size (void) const
 	}
 }
 
-
-void 
-ChunkIcmp::add_to (Buffer *buffer) const
-{
-	buffer->add_at_start (get_size ());
-	Buffer::Iterator i = buffer->begin ();
-	i.write_u8 (m_type);
-	i.write_u8 (m_code);
-	i.write_hton_u16 (0);
-	if (m_type == UNREACH ||
-	    m_type == TIME_EXCEEDED ||
-	    m_type == SOURCE_QUENCH) {
-		/* unused */
-		i.write_hton_u32 (0);
-	} else if (m_type == PARAMETER_PROBLEM) {
-		/* pointer */
-		i.write_u8 (0);
-		/* unused */
-		i.write_u8 (0);
-		i.write_u8 (0);
-		i.write_u8 (0);
-	} else if (m_type == REDIRECT) {
-		i.write_hton_u32 (m_gateway.get_host_order ());
-	} else if (m_type == ECHO ||
-		   m_type == ECHO_REPLY) {
-		i.write_hton_u16 (m_identifier);
-		i.write_hton_u16 (m_seq_number);
-	} else if (m_type == TIMESTAMP ||
-		   m_type == TIMESTAMP_REPLY) {
-		i.write_hton_u16 (m_identifier);
-		i.write_hton_u16 (m_seq_number);
-		i.write_hton_u32 (m_org_timestamp);
-		i.write_hton_u32 (m_rx_timestamp);
-		i.write_hton_u32 (m_tx_timestamp);
-	} else if (m_type == INFORMATION_REQUEST ||
-		   m_type == INFORMATION_REPLY) {
-		i.write_hton_u16 (m_identifier);
-		i.write_hton_u16 (m_seq_number);
-	}	
-}
-void 
-ChunkIcmp::peek_from (Buffer const*buffer)
-{
-	Buffer::Iterator i = buffer->begin ();
-	m_type = i.read_u8 ();
-}
-void 
-ChunkIcmp::remove_from (Buffer *buffer)
-{
-	buffer->remove_at_start (get_size ());
-}
 
 void 
 ChunkIcmp::print (std::ostream *os) const

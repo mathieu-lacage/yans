@@ -20,7 +20,6 @@
  */
 
 #include "mac-address.h"
-#include "buffer.h"
 #include "utils.h"
 
 namespace yans {

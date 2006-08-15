@@ -20,7 +20,6 @@
  */
 
 #include "chunk-constant-data.h"
-#include "buffer.h"
 
 namespace yans {
 
@@ -31,25 +30,6 @@ ChunkConstantData::ChunkConstantData (uint32_t len, uint8_t data)
 ChunkConstantData::~ChunkConstantData ()
 {}
 
-void 
-ChunkConstantData::add_to (Buffer *buffer) const
-{
-	buffer->add_at_start (m_len);
-#ifndef NDEBUG
-	buffer->begin ().write_u8 (m_data, m_len);
-#endif
-}
-void 
-ChunkConstantData::peek_from (Buffer const*buffer)
-{
-	m_len = buffer->get_size ();
-	m_data = buffer->begin ().read_u8 ();
-}
-void 
-ChunkConstantData::remove_from (Buffer *buffer)
-{
-	buffer->remove_at_start (m_len);
-}
 
 void 
 ChunkConstantData::print (std::ostream *os) const

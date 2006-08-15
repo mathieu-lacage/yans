@@ -96,7 +96,7 @@ else # PLATFORM
 DEFINES:=-DRUN_SELF_TESTS=1
 INCLUDES:=
 OPTI_FLAGS:=-O0
-FLAGS:=-Wall -Werror -g3 $(OPTI_FLAGS)
+FLAGS:=-Wall -Werror -g3 $(OPTI_FLAGS) -DUSE_FREE_LIST=1
 
 
 LDFLAGS+=
@@ -146,10 +146,8 @@ YANS_SRC:= \
 	src/common/unix-system-mutex.cc \
 	src/common/unix-exec-commands.cc \
 	src/common/wall-clock-ms-unix.cc \
-	src/common/buffer.cc \
 	src/common/chunk.cc \
 	src/common/chunk-utils.cc \
-	src/common/packet.cc \
 	src/common/gpacket.cc \
 	src/common/gbuffer.cc \
 	src/common/chunk-constant-data.cc \
@@ -256,7 +254,6 @@ YANS_INST_HDR := \
 	src/simulator/scheduler.h \
 	src/simulator/system-semaphore.h \
 	src/common/wall-clock-ms.h \
-	src/common/buffer.h \
 	src/common/data-writer.h \
 	src/common/pcap-writer.h \
 	src/common/ipv4-address.h \
@@ -269,7 +266,6 @@ YANS_INST_HDR := \
 	src/common/ref-ptr.h \
 	src/common/uid-factory.h \
 	src/common/tags.h \
-	src/common/packet.h \
 	src/common/gpacket.h \
 	src/common/gbuffer.h \
 	src/common/system-thread.h \

@@ -19,7 +19,6 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #include "chunk-mac-80211-fcs.h"
-#include "buffer.h"
 #include <cassert>
 
 namespace yans {
@@ -36,28 +35,6 @@ ChunkMac80211Fcs::get_size (void) const
 	return 4;
 }
 
-void 
-ChunkMac80211Fcs::add_to (Buffer *buffer) const
-{
-	buffer->add_at_end (4);
-	Buffer::Iterator i = buffer->end ();
-	i.prev (4);
-	i.write_u32 (0);
-}
-void 
-ChunkMac80211Fcs::peek_from (Buffer const*buffer)
-{
-	Buffer::Iterator i = buffer->end ();
-	i.prev (4);
-	// unused var: quiet compiler
-	//uint32_t fcs = i.read_u32 ();
-	//assert (fcs == 0);
-}
-void 
-ChunkMac80211Fcs::remove_from (Buffer *buffer)
-{
-	buffer->remove_at_end (4);
-}
 
 void 
 ChunkMac80211Fcs::print (std::ostream *os) const

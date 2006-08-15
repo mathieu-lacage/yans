@@ -24,12 +24,9 @@
 
 #include "chunk.h"
 #include <stdint.h>
-#include <ostream>
-
 
 namespace yans {
 
-class Buffer;
 
 class ChunkConstantData : public Chunk {
 public:
@@ -37,9 +34,6 @@ public:
 	~ChunkConstantData ();
 
 private:
-	virtual void add_to (Buffer *buffer) const;
-	virtual void peek_from (Buffer const*buffer);
-	virtual void remove_from (Buffer *buffer);
 	virtual void print (std::ostream *os) const;
 	virtual void add_to (GBuffer *buffer) const;
 	virtual void peek_from (GBuffer const *buffer);

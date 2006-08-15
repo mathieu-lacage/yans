@@ -20,7 +20,6 @@
  */
 #include "chunk-mac-80211-hdr.h"
 #include "chunk-utils.h"
-#include "buffer.h"
 #include <cassert>
 
 #define CHUNK80211_DEBUG 1
@@ -769,103 +768,6 @@ case MAC_80211_ ## x: \
 }
 
 
-void 
-ChunkMac80211Hdr::add_to (Buffer *buffer) const
-{
-	buffer->add_at_start (get_size ());
-	Buffer::Iterator i = buffer->begin ();
-	i.write_hton_u16 (get_frame_control ());
-	i.write_hton_u16 (m_duration);
-	write_to (i, m_addr1);
-	switch (m_ctrl_type) {
-	case TYPE_MGT:
-		write_to (i, m_addr2);
-		write_to (i, m_addr3);
-		i.write_hton_u16 (get_sequence_control ());
-		break;
-	case TYPE_CTL:
-		switch (m_ctrl_subtype) {
-		case SUBTYPE_CTL_RTS:
-			write_to (i, m_addr2);
-			break;
-		case SUBTYPE_CTL_CTS:
-		case SUBTYPE_CTL_ACK:
-			break;
-		case SUBTYPE_CTL_BACKREQ:
-		case SUBTYPE_CTL_BACKRESP:
-			// NOT IMPLEMENTED
-			assert (false);
-			break;
-		default:
-			//NOTREACHED
-			assert (false);
-			break;
-		}
-		break;
-	case TYPE_DATA: {
-		write_to (i, m_addr2);
-		write_to (i, m_addr3);
-		i.write_hton_u16 (get_sequence_control ());
-		if (m_ctrl_to_ds && m_ctrl_from_ds) {
-			write_to (i, m_addr4);
-		}
-		if (m_ctrl_subtype & 0x08) {
-			i.write_hton_u16 (get_qos_control ());
-		}
-		} break;
-	default:
-		//NOTREACHED
-		assert (false);
-		break;
-	}
-}
-void 
-ChunkMac80211Hdr::peek_from (Buffer const*buffer)
-{
-	Buffer::Iterator i = buffer->begin ();
-	uint16_t frame_control = i.read_ntoh_u16 ();
-	set_frame_control (frame_control);
-	m_duration = i.read_ntoh_u16 ();
-	read_from (i, m_addr1);
-	switch (m_ctrl_type) {
-	case TYPE_MGT:
-		read_from (i, m_addr2);
-		read_from (i, m_addr3);
-		set_sequence_control (i.read_ntoh_u16 ());
-		break;
-	case TYPE_CTL:
-		switch (m_ctrl_subtype) {
-		case SUBTYPE_CTL_RTS:
-			read_from (i, m_addr2);
-			break;
-		case SUBTYPE_CTL_CTS:
-		case SUBTYPE_CTL_ACK:
-			break;
-		case SUBTYPE_CTL_BACKREQ:
-		case SUBTYPE_CTL_BACKRESP:
-			// NOT IMPLEMENTED
-			assert (false);
-			break;
-		}
-		break;
-	case TYPE_DATA:
-		read_from (i, m_addr2);
-		read_from (i, m_addr3);
-		set_sequence_control (i.read_ntoh_u16 ());
-		if (m_ctrl_to_ds && m_ctrl_from_ds) {
-			read_from (i, m_addr4);
-		}
-		if (m_ctrl_subtype & 0x08) {
-			set_qos_control (i.read_ntoh_u16 ());
-		}
-		break;
-	}
-}
-void 
-ChunkMac80211Hdr::remove_from (Buffer *buffer)
-{
-	buffer->remove_at_start (get_size ());
-}
 void 
 ChunkMac80211Hdr::print (std::ostream *os) const
 {}

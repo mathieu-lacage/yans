@@ -21,7 +21,6 @@
 
 #include "chunk-mac-eth.h"
 #include "chunk-utils.h"
-#include "buffer.h"
 #include <cassert>
 
 #define noTRACE_CHUNK_ETH 1
@@ -81,33 +80,6 @@ uint32_t
 ChunkMacEth::get_size (void) const
 {
 	return 6 + 6 + 2;
-}
-void 
-ChunkMacEth::add_to (Buffer *buffer) const
-{
-	buffer->add_at_start (get_size ());
-	Buffer::Iterator i = buffer->begin ();
-	write_to (i, m_source);
-	write_to (i, m_destination);
-	assert (m_length <= 0x05dc);
-	/* ieee 802.3 says length is msb. */
-	TRACE ("length="<<m_length);
-	i.write_hton_u16 (m_length + 8);
-}
-void 
-ChunkMacEth::peek_from (Buffer const*buffer)
-{
-	Buffer::Iterator i = buffer->begin ();
-	read_from (i, m_source);
-	read_from (i, m_destination);
-	m_length = i.read_ntoh_u16 () - 8;
-	TRACE ("length="<<m_length);
-}
-
-void 
-ChunkMacEth::remove_from (Buffer *buffer)
-{
-	buffer->remove_at_start (get_size ());
 }
 
 void 
