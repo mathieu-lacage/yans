@@ -23,6 +23,15 @@
 
 namespace yans {
 
+uint32_t
+Tags::UidFactory::create (void)
+{
+	static uint32_t uid = 0;
+	uid++;
+	return uid;
+}
+
+
 #ifdef USE_FREE_LIST
 
 struct Tags::TagData *Tags::g_free = 0;
@@ -69,24 +78,6 @@ Tags::free_data (struct TagData *data)
 }
 #endif
 
-
-
-void
-Tags::add (uint8_t const*buffer, uint32_t size, uint32_t id)
-{
-	// ensure this id was not yet added
-	for (struct TagData *cur = m_next; cur != 0; cur = cur->m_next) {
-		assert (cur->m_id != id);
-	}
-	struct TagData *new_start = alloc_data ();
-	new_start->m_count = 1;
-	new_start->m_next = 0;
-	new_start->m_id = id;
-	memcpy (new_start->m_data, buffer, size);
-	new_start->m_next = m_next;
-	m_next = new_start;
-}
-
 bool
 Tags::remove (uint32_t id)
 {
@@ -118,27 +109,20 @@ Tags::remove (uint32_t id)
 	m_next = start;
 	return true;
 }
-bool
-Tags::peek (uint8_t *buffer, uint32_t size, uint32_t id) const
-{
-	for (struct TagData *cur = m_next; cur != 0; cur = cur->m_next) {
-		if (cur->m_id == id) {
-			/* found tag */
-			memcpy (buffer, cur->m_data, size);
-			return true;
-		}
-	}
-	/* no tag found */
-	return false;
-}
 
 bool
-Tags::update (uint8_t const*buffer, uint32_t size, uint32_t id)
+Tags::update (uint8_t const*buffer, uint32_t id)
 {
 	if (!remove (id)) {
 		return false;
 	}
-	add (buffer, size, id);
+	struct TagData *new_start = alloc_data ();
+	new_start->m_count = 1;
+	new_start->m_next = 0;
+	new_start->m_id = id;
+	memcpy (new_start->m_data, buffer, Tags::SIZE);
+	new_start->m_next = m_next;
+	m_next = new_start;
 	return true;
 }
 

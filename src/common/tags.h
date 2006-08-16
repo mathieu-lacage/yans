@@ -58,11 +58,21 @@ private:
 		uint32_t m_count;
 		uint8_t m_data[Tags::SIZE];
 	};
+	template <typename T>
+	class TypeUid {
+	public:
+		static const uint32_t get_uid (void);
+	private:
+		T real_type;
+	};
+	class UidFactory {
+	public:
+		static uint32_t create (void);
+	};
 
-	void add (uint8_t const*buffer, uint32_t size, uint32_t id);
+
 	bool remove (uint32_t id);
-	bool peek (uint8_t *buffer, uint32_t size, uint32_t id) const;
-	bool update (uint8_t const*buffer, uint32_t size, uint32_t id);
+	bool update (uint8_t const*buffer, uint32_t id);
 	struct Tags::TagData *alloc_data (void);
 	void free_data (struct TagData *data);
 
@@ -76,21 +86,14 @@ private:
 
 
 #include <cassert>
-#include "uid-factory.h"
+#include <string.h>
 
 namespace yans {
 
 template <typename T>
-class TypeUid {
-public:
-	static uint32_t get_uid (void);
-private:
-	T real_type;
-};
-template <typename T>
-uint32_t TypeUid<T>::get_uid (void)
+const uint32_t Tags::TypeUid<T>::get_uid (void)
 {
-	static uint32_t uid = UidFactory::create ();
+	static const uint32_t uid = UidFactory::create ();
 	return uid;
 }
 
@@ -101,7 +104,17 @@ Tags::add (T const*tag)
 {
 	assert (sizeof (T) <= Tags::SIZE);
 	uint8_t const*buf = reinterpret_cast<uint8_t const*> (tag);
-	add (buf, sizeof (T), TypeUid<T>::get_uid ());
+	// ensure this id was not yet added
+	for (struct TagData *cur = m_next; cur != 0; cur = cur->m_next) {
+		assert (cur->m_id != Tags::TypeUid<T>::get_uid ());
+	}
+	struct TagData *new_start = alloc_data ();
+	new_start->m_count = 1;
+	new_start->m_next = 0;
+	new_start->m_id = Tags::TypeUid<T>::get_uid ();
+	memcpy (new_start->m_data, buf, sizeof (T));
+	new_start->m_next = m_next;
+	m_next = new_start;
 }
 
 template <typename T>
@@ -109,7 +122,7 @@ bool
 Tags::remove (T *tag)
 {
 	assert (sizeof (T) <= Tags::SIZE);
-	return remove (TypeUid<T>::get_uid ());
+	return remove (Tags::TypeUid<T>::get_uid ());
 }
 
 template <typename T>
@@ -118,7 +131,15 @@ Tags::peek (T *tag) const
 {
 	assert (sizeof (T) <= Tags::SIZE);
 	uint8_t *buf = reinterpret_cast<uint8_t *> (tag);
-	return peek (buf, sizeof (T), TypeUid<T>::get_uid ());
+	for (struct TagData *cur = m_next; cur != 0; cur = cur->m_next) {
+		if (cur->m_id == TypeUid<T>::get_uid ()) {
+			/* found tag */
+			memcpy (buf, cur->m_data, sizeof (T));
+			return true;
+		}
+	}
+	/* no tag found */
+	return false;
 }
 
 template <typename T>
@@ -127,7 +148,7 @@ Tags::update (T const*tag)
 {
 	assert (sizeof (T) <= Tags::SIZE);
 	uint8_t const*buf = reinterpret_cast<uint8_t const*> (tag);
-	return update (buf, sizeof (T), TypeUid<T>::get_uid ());
+	return update (buf, TypeUid<T>::get_uid ());
 }
 
 
