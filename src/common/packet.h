@@ -18,8 +18,8 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef GPACKET_H
-#define GPACKET_H
+#ifndef PACKET_H
+#define PACKET_H
 
 #include <stdint.h>
 #include "buffer.h"
@@ -86,4 +86,4 @@ bool Packet::update_tag (T const*tag)
 
 }; // namespace yans
 
-#endif /* GPACKET_H */
+#endif /* PACKET_H */
