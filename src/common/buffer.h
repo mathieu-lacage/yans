@@ -18,8 +18,8 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
-#ifndef GBUFFER_H
-#define GBUFFER_H
+#ifndef BUFFER_H
+#define BUFFER_H
 
 #include <stdint.h>
 #include <vector>
@@ -343,4 +343,4 @@ private:
 }; // namespace yans
 
 
-#endif /* GBUFFER_H */
+#endif /* BUFFER_H */
