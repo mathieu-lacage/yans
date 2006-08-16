@@ -22,8 +22,8 @@
 #include <cassert>
 
 #include <iostream>
-//#define TRACE(x) std::cout << x << std::endl;
-#define TRACE(x)
+#define TRACE(x) std::cout << x << std::endl;
+//#define TRACE(x)
 
 namespace yans {
 
@@ -54,7 +54,7 @@ Buffer::deallocate (struct Buffer::BufferData *data)
 	uint8_t *buf = reinterpret_cast<uint8_t *> (data);
 	delete [] buf;
 }
-#ifdef USE_FREE_LIST
+#if 1
 void
 Buffer::recycle (struct Buffer::BufferData *data)
 {
@@ -79,7 +79,7 @@ Buffer::create (void)
 	while (!Buffer::m_free_list.empty ()) {
 		struct Buffer::BufferData *data = Buffer::m_free_list.back ();
 		Buffer::m_free_list.pop_back ();
-		if (data->m_size > (m_max_total_add_start + m_max_total_add_end)) {
+		if (data->m_size >= (m_max_total_add_start + m_max_total_add_end)) {
 			data->m_dirty_start = m_max_total_add_start;
 			data->m_dirty_size = 0;
 			data->m_count = 1;
@@ -114,68 +114,6 @@ Buffer::create (void)
 
 namespace yans {
 
-Buffer::Buffer ()
-	: m_data (Buffer::create ()),
-	  m_initial_start (m_max_total_add_start),
-	  m_start (m_max_total_add_start),
-	  m_size (0)
-{
-	if (m_start > m_data->m_size) {
-		m_start = 0;
-	}
-	assert (m_start <= m_data->m_size);
-}
-
-Buffer::Buffer (Buffer const&o)
-	: m_data (o.m_data),
-	  m_initial_start (o.m_initial_start),
-	  m_start (o.m_start),
-	  m_size (o.m_size)
-{
-	m_data->m_count++;
-	assert (m_start <= m_data->m_size);
-}
-
-Buffer &
-Buffer::operator = (Buffer const&o)
-{
-	if (m_data != o.m_data) {
-		// not assignment to self.
-		m_data->m_count--;
-		if (m_data->m_count == 0) {
-			recycle (m_data);
-		}
-		m_data = o.m_data;
-		m_data->m_count++;
-	}
-	m_initial_start = o.m_initial_start;
-	m_start = o.m_start;
-	m_size = o.m_size;
-	assert (m_start <= m_data->m_size);
-	return *this;
-}
-
-Buffer::~Buffer ()
-{
-	m_data->m_count--;
-	if (m_data->m_count == 0) {
-		recycle (m_data);
-	}
-}
-
-
-uint8_t *
-Buffer::get_start (void) const
-{
-	uint8_t *buf = &m_data->m_data;
-	return &buf[m_start];
-}
-
-uint32_t 
-Buffer::get_size (void) const
-{
-	return m_size;
-}
 
 void 
 Buffer::add_at_start (uint32_t start)
@@ -183,12 +121,10 @@ Buffer::add_at_start (uint32_t start)
 	assert (m_start <= m_initial_start);
 	bool is_dirty = m_data->m_count > 1 && m_start > m_data->m_dirty_start;
 	if (m_start >= start && !is_dirty) {
-		TRACE ("start ok");
 		/* enough space in the buffer and not dirty. */
 		m_start -= start;
 		m_size += start;
 	} else if (m_size + start <= m_data->m_size && !is_dirty) {
-		TRACE ("start shuffle");
 		/* enough space but need to move data around to fit new data */
                 memmove (&m_data->m_data + start, get_start (), m_size);
                 m_start = 0;
@@ -196,7 +132,6 @@ Buffer::add_at_start (uint32_t start)
 		assert (start > m_start);
 		m_initial_start += start - m_start;
 	} else if (m_start < start) {
-		TRACE ("start resize");
 		/* not enough space in buffer */
 		uint32_t new_size = m_size + start;
 		struct Buffer::BufferData *new_data = Buffer::allocate (new_size, 0);
@@ -210,7 +145,6 @@ Buffer::add_at_start (uint32_t start)
 		m_size = new_size;
 		m_initial_start += start;
 	} else {
-		TRACE ("start dirty");
 		/* enough space in the buffer but it is dirty ! */
 		assert (is_dirty);
 		struct Buffer::BufferData *new_data = Buffer::create ();
@@ -235,22 +169,17 @@ Buffer::add_at_start (uint32_t start)
 	if (added_at_start > m_max_total_add_start) {
 		m_max_total_add_start = added_at_start;
 	}
-	TRACE ("start add="<<start<<", start="<<m_start<<", size="<<m_size<<
-	       ", real size="<<m_data->m_size<<", ini start="<<m_initial_start<<
-	       ", dirty start="<<m_data->m_dirty_start<<", dirty size="<<m_data->m_dirty_size);
 }
 void 
 Buffer::add_at_end (uint32_t end)
 {
 	assert (m_start <= m_initial_start);
-	bool is_dirty = m_data->m_count > 1 ||
+	bool is_dirty = m_data->m_count > 1 &&
 		m_start + m_size < m_data->m_dirty_start + m_data->m_dirty_size;
 	if (m_start + m_size + end <= m_data->m_size && !is_dirty) {
-		TRACE ("end ok");
 		/* enough space in buffer and not dirty */
 		m_size += end;
 	} else if (m_size + end <= m_data->m_size && !is_dirty) {
-		TRACE ("end shuffle");
 		/* enough space but need to move data around to fit the extra data */
                 uint32_t new_start = m_data->m_size - (m_size + end);
                 memmove (&m_data->m_data + new_start, get_start (), m_size);
@@ -259,7 +188,6 @@ Buffer::add_at_end (uint32_t end)
                 m_start = new_start;
                 m_size += end;
 	} else if (m_start + m_size + end > m_data->m_size) {
-		TRACE ("end resize");
 		/* not enough space in buffer */
 		uint32_t new_size = m_size + end;
 		struct Buffer::BufferData *new_data = Buffer::allocate (new_size, 0);
@@ -272,7 +200,6 @@ Buffer::add_at_end (uint32_t end)
 		m_size = new_size;
 		m_start = 0;
 	} else {
-		TRACE ("end dirty");
 		/* enough space in the buffer but it is dirty ! */
 		assert (is_dirty);
 		struct Buffer::BufferData *new_data = Buffer::create ();
@@ -297,295 +224,8 @@ Buffer::add_at_end (uint32_t end)
 	if (added_at_end > m_max_total_add_end) {
 		m_max_total_add_end = added_at_end;
 	}
-	TRACE ("end add="<<end<<", start="<<m_start<<", size="<<m_size<<
-	       ", real size="<<m_data->m_size<<", ini start="<<m_initial_start<<
-	       ", dirty start="<<m_data->m_dirty_start<<", dirty size="<<m_data->m_dirty_size);
-}
-void 
-Buffer::remove_at_start (uint32_t start)
-{
-	if (m_size <= start) {
-		m_start += m_size;
-		m_size = 0;
-		return;
-	}
-	m_start += start;
-	m_size -= start;
-	TRACE ("start remove="<<start<<", start="<<m_start<<", size="<<m_size<<
-	       ", real size="<<m_data->m_size<<", ini start="<<m_initial_start<<
-	       ", dirty start="<<m_data->m_dirty_start<<", dirty size="<<m_data->m_dirty_size);
-}
-void 
-Buffer::remove_at_end (uint32_t end)
-{
-	if (m_size <= end) {
-		m_size = 0;
-		return;
-	}
-	m_size -= end;
-	TRACE ("end remove="<<end<<", start="<<m_start<<", size="<<m_size<<
-	       ", real size="<<m_data->m_size<<", ini start="<<m_initial_start<<
-	       ", dirty start="<<m_data->m_dirty_start<<", dirty size="<<m_data->m_dirty_size);
 }
 
-Buffer::Iterator 
-Buffer::begin (void) const
-{
-	uint8_t *start = get_start ();
-	uint8_t *end = start + m_size;
-	return Buffer::Iterator (start, end, start);
-}
-Buffer::Iterator 
-Buffer::end (void) const
-{
-	uint8_t *start = get_start ();
-	uint8_t *end = start + m_size;
-	return Buffer::Iterator (start, end, end);
-}
-
-
-Buffer::Iterator::Iterator ()
-	: m_start (0), m_end (0), m_current (0)
-{}
-Buffer::Iterator::Iterator (uint8_t *start, uint8_t *end, uint8_t *current)
-	: m_start (start), m_end (end), m_current (current)
-{}
-
-Buffer::Iterator::Iterator (Iterator const&o)
-	: m_start (o.m_start), m_end (o.m_end), m_current (o.m_current)
-{}
-Buffer::Iterator &
-Buffer::Iterator::operator = (Iterator const &o)
-{
-	m_start = o.m_start;
-	m_end = o.m_end;
-	m_current = o.m_current;
-	return *this;
-}
-void 
-Buffer::Iterator::next (void)
-{
-	assert (m_current + 1 <= m_end);
-	m_current++;
-}
-void 
-Buffer::Iterator::prev (void)
-{
-	assert (m_current - 1 >= m_start);
-	m_current--;
-}
-void 
-Buffer::Iterator::next (uint32_t delta)
-{
-	assert (m_current + delta <= m_end);
-	m_current += delta;
-}
-void 
-Buffer::Iterator::prev (uint32_t delta)
-{
-	assert (m_current - delta >= m_start);
-	m_current -= delta;
-}
-uint32_t
-Buffer::Iterator::get_distance_from (Iterator const &o) const
-{
-	assert (m_start == o.m_start);
-	assert (m_end == o.m_end);
-	unsigned long int start = reinterpret_cast<unsigned long int> (m_current);
-	unsigned long int end = reinterpret_cast<unsigned long int> (o.m_current);
-	return end - start;
-}
-
-bool 
-Buffer::Iterator::is_end (void) const
-{
-	return m_current == m_end;
-}
-bool 
-Buffer::Iterator::is_start (void) const
-{
-	return m_current == m_start;
-}
-
-uint8_t *
-Buffer::Iterator::peek_data (void)
-{
-	return m_current;
-}
-
-void 
-Buffer::Iterator::write (Iterator start, Iterator end)
-{
-	assert (start.m_current <= end.m_current);
-	assert (start.m_start == end.m_start);
-	assert (start.m_end == end.m_end);
-	assert (start.m_start != m_start);
-	assert (start.m_end != m_end);
-	assert (end.m_start != m_start);
-	assert (end.m_end != m_end);
-	unsigned long int i_end = reinterpret_cast<unsigned long int> (end.m_current);
-	unsigned long int i_start = reinterpret_cast<unsigned long int> (start.m_current);
-	unsigned long int i_size = i_end - i_start;
-	assert (m_current + i_size <= m_end);
-	memcpy (m_current, start.m_current, i_size);
-	m_current += i_size;
-}
-
-void 
-Buffer::Iterator::write_u8 (uint8_t  data, uint32_t len)
-{
-	assert (m_current + len <= m_end);
-	memset (m_current, data, len);
-	m_current += len;
-}
-void 
-Buffer::Iterator::write_u8  (uint8_t  data)
-{
-	assert (m_current + 1 <= m_end);
-	*m_current = data;
-	m_current++;
-}
-void 
-Buffer::Iterator::write_u16 (uint16_t data)
-{
-	assert (m_current + 2 <= m_end);
-	uint16_t *buffer = (uint16_t *)m_current;
-	*buffer = data;
-	m_current += 2;
-}
-void 
-Buffer::Iterator::write_u32 (uint32_t data)
-{
-	assert (m_current + 4 <= m_end);
-	uint32_t *buffer = (uint32_t *)m_current;
-	*buffer = data;
-	m_current += 4;
-}
-void 
-Buffer::Iterator::write_u64 (uint64_t data)
-{
-	assert (m_current + 8 <= m_end);
-	uint64_t *buffer = (uint64_t *)m_current;
-	*buffer = data;
-	m_current += 8;
-}
-void 
-Buffer::Iterator::write_hton_u16 (uint16_t data)
-{
-	assert (m_current + 2 <= m_end);
-	*(m_current+0) = (data >> 8) & 0xff;
-	*(m_current+1) = (data >> 0) & 0xff;
-	m_current += 2;
-}
-void 
-Buffer::Iterator::write_hton_u32 (uint32_t data)
-{
-	assert (m_current + 4 <= m_end);
-	*(m_current+0) = (data >> 24) & 0xff;
-	*(m_current+1) = (data >> 16) & 0xff;
-	*(m_current+2) = (data >> 8) & 0xff;
-	*(m_current+3) = (data >> 0) & 0xff;
-	m_current += 4;
-}
-void 
-Buffer::Iterator::write_hton_u64 (uint64_t data)
-{
-	assert (m_current + 8 <= m_end);
-	*(m_current+0) = (data >> 56) & 0xff;
-	*(m_current+1) = (data >> 48) & 0xff;
-	*(m_current+2) = (data >> 40) & 0xff;
-	*(m_current+3) = (data >> 32) & 0xff;
-	*(m_current+4) = (data >> 24) & 0xff;
-	*(m_current+5) = (data >> 16) & 0xff;
-	*(m_current+6) = (data >> 8) & 0xff;
-	*(m_current+7) = (data >> 0) & 0xff;
-	m_current += 8;
-}
-void 
-Buffer::Iterator::write (uint8_t const*buffer, uint16_t size)
-{
-	assert (m_current + size <= m_end);
-	memcpy (m_current, buffer, size);
-	m_current += size;
-}
-
-uint8_t  
-Buffer::Iterator::read_u8 (void)
-{
-	assert (m_current + 1 <= m_end);
-	uint8_t data = *m_current;
-	m_current++;
-	return data;
-}
-uint16_t 
-Buffer::Iterator::read_u16 (void)
-{
-	assert (m_current + 2 <= m_end);
-	uint16_t *buffer = reinterpret_cast<uint16_t *>(m_current);
-	m_current += 2;
-	return *buffer;
-}
-uint32_t 
-Buffer::Iterator::read_u32 (void)
-{
-	assert (m_current + 4 <= m_end);
-	uint32_t *buffer = reinterpret_cast<uint32_t *>(m_current);
-	m_current += 4;
-	return *buffer;
-}
-uint64_t 
-Buffer::Iterator::read_u64 (void)
-{
-	assert (m_current + 8 <= m_end);
-	uint64_t *buffer = reinterpret_cast<uint64_t *>(m_current);
-	m_current += 8;
-	return *buffer;
-}
-uint16_t 
-Buffer::Iterator::read_ntoh_u16 (void)
-{
-	assert (m_current + 2 <= m_end);
-	uint16_t retval = 0;
-	retval |= static_cast<uint16_t> (m_current[0]) << 8;
-	retval |= static_cast<uint16_t> (m_current[1]) << 0;
-	m_current += 2;
-	return retval;
-}
-uint32_t 
-Buffer::Iterator::read_ntoh_u32 (void)
-{
-	assert (m_current + 4 <= m_end);
-	uint32_t retval = 0;
-	retval |= static_cast<uint32_t> (m_current[0]) << 24;
-	retval |= static_cast<uint32_t> (m_current[1]) << 16;
-	retval |= static_cast<uint32_t> (m_current[2]) << 8;
-	retval |= static_cast<uint32_t> (m_current[3]) << 0;
-	m_current += 4;
-	return retval;
-}
-uint64_t 
-Buffer::Iterator::read_ntoh_u64 (void)
-{
-	assert (m_current + 8 <= m_end);
-	uint64_t retval = 0;
-	retval |= static_cast<uint64_t> (m_current[0]) << 56;
-	retval |= static_cast<uint64_t> (m_current[1]) << 48;
-	retval |= static_cast<uint64_t> (m_current[2]) << 40;
-	retval |= static_cast<uint64_t> (m_current[3]) << 32;
-	retval |= static_cast<uint64_t> (m_current[4]) << 24;
-	retval |= static_cast<uint64_t> (m_current[5]) << 16;
-	retval |= static_cast<uint64_t> (m_current[6]) << 8;
-	retval |= static_cast<uint64_t> (m_current[7]) << 0;
-	m_current += 8;
-	return retval;
-}
-void 
-Buffer::Iterator::read (uint8_t *buffer, uint16_t size)
-{
-	assert (m_current + size <= m_end);
-	memcpy (buffer, m_current, size);
-	m_current += size;
-}
 
 }; // namespace yans
 
