@@ -22,7 +22,8 @@
 #include <cassert>
 
 #include <iostream>
-#define TRACE(x) std::cout << x << std::endl;
+//#define TRACE(x) std::cout << x << std::endl;
+#define TRACE(x)
 
 namespace yans {
 
@@ -180,12 +181,26 @@ void
 Buffer::add_at_start (uint32_t start)
 {
 	assert (m_start <= m_initial_start);
-	if (start > m_start) {
+	bool is_dirty = m_data->m_count > 1 && m_start > m_data->m_dirty_start;
+	if (m_start >= start && !is_dirty) {
+		TRACE ("start ok");
+		/* enough space in the buffer and not dirty. */
+		m_start -= start;
+		m_size += start;
+	} else if (m_size + start <= m_data->m_size && !is_dirty) {
+		TRACE ("start shuffle");
+		/* enough space but need to move data around to fit new data */
+                memmove (&m_data->m_data + start, get_start (), m_size);
+                m_start = 0;
+                m_size += start;
+		assert (start > m_start);
+		m_initial_start += start - m_start;
+	} else if (m_start < start) {
+		TRACE ("start resize");
 		/* not enough space in buffer */
 		uint32_t new_size = m_size + start;
 		struct Buffer::BufferData *new_data = Buffer::allocate (new_size, 0);
-		uint8_t *buf = &new_data->m_data;
-		memcpy (buf+start, get_start (), m_size);
+		memcpy (&new_data->m_data + start, get_start (), m_size);
 		m_data->m_count--;
 		if (m_data->m_count == 0) {
 			Buffer::deallocate (m_data);
@@ -194,11 +209,12 @@ Buffer::add_at_start (uint32_t start)
 		m_start = 0;
 		m_size = new_size;
 		m_initial_start += start;
-	} else if (m_start > m_data->m_dirty_start && m_data->m_count > 1) {
+	} else {
+		TRACE ("start dirty");
 		/* enough space in the buffer but it is dirty ! */
+		assert (is_dirty);
 		struct Buffer::BufferData *new_data = Buffer::create ();
-		uint8_t *buf = &new_data->m_data;
-		memcpy (buf+m_start, get_start (), m_size);
+		memcpy (&new_data->m_data + m_start, get_start (), m_size);
 		m_data->m_count--;
 		if (m_data->m_count == 0) {
 			recycle (m_data);
@@ -206,11 +222,7 @@ Buffer::add_at_start (uint32_t start)
 		m_data = new_data;
 		m_start -= start;
 		m_size += start;
-	} else {
-		/* enough space in the buffer and not dirty. */
-		m_start -= start;
-		m_size += start;
-	}
+	} 
 	m_data->m_dirty_start = m_start;
 	m_data->m_dirty_size = m_size;
 	// update m_max_total_add_start
@@ -231,7 +243,23 @@ void
 Buffer::add_at_end (uint32_t end)
 {
 	assert (m_start <= m_initial_start);
-	if (m_start + m_size + end > m_data->m_size) {
+	bool is_dirty = m_data->m_count > 1 ||
+		m_start + m_size < m_data->m_dirty_start + m_data->m_dirty_size;
+	if (m_start + m_size + end <= m_data->m_size && !is_dirty) {
+		TRACE ("end ok");
+		/* enough space in buffer and not dirty */
+		m_size += end;
+	} else if (m_size + end <= m_data->m_size && !is_dirty) {
+		TRACE ("end shuffle");
+		/* enough space but need to move data around to fit the extra data */
+                uint32_t new_start = m_data->m_size - (m_size + end);
+                memmove (&m_data->m_data + new_start, get_start (), m_size);
+		assert (new_start < m_start);
+		m_initial_start -= m_start - new_start;
+                m_start = new_start;
+                m_size += end;
+	} else if (m_start + m_size + end > m_data->m_size) {
+		TRACE ("end resize");
 		/* not enough space in buffer */
 		uint32_t new_size = m_size + end;
 		struct Buffer::BufferData *new_data = Buffer::allocate (new_size, 0);
@@ -243,21 +271,19 @@ Buffer::add_at_end (uint32_t end)
 		m_data = new_data;
 		m_size = new_size;
 		m_start = 0;
-	} else if ((m_start + m_size) < (m_data->m_dirty_start + m_data->m_dirty_size) && m_data->m_count > 1) {
+	} else {
+		TRACE ("end dirty");
 		/* enough space in the buffer but it is dirty ! */
+		assert (is_dirty);
 		struct Buffer::BufferData *new_data = Buffer::create ();
-		uint8_t *buf = &new_data->m_data;
-		memcpy (buf+m_start, get_start (), m_size);
+		memcpy (&new_data->m_data + m_start, get_start (), m_size);
 		m_data->m_count--;
 		if (m_data->m_count == 0) {
 			recycle (m_data);
 		}
 		m_data = new_data;
 		m_size += end;
-	} else {
-		/* plenty of extra space in the buffer */
-		m_size += end;
-	}
+	} 
 	m_data->m_dirty_start = m_start;
 	m_data->m_dirty_size = m_size;
 	// update m_max_total_add_end
@@ -597,8 +623,8 @@ BufferTest::ensure_written_bytes (Buffer::Iterator i, uint32_t n, uint8_t array[
 	}
 	if (!success) {
 		failure () << "Buffer -- ";
-		failure () << "expected: ";
-		failure () << n << " ";
+		failure () << "expected: n=";
+		failure () << n << ", ";
 		failure ().setf (std::ios::hex, std::ios::basefield);
 		for (uint32_t j = 0; j < n; j++) {
 			failure () << (uint16_t)expected[j] << " ";
