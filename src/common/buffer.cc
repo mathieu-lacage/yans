@@ -180,8 +180,8 @@ void
 Buffer::add_at_start (uint32_t start)
 {
 	assert (m_start <= m_initial_start);
-	if (start > m_start ||
-	    (m_start > m_data->m_dirty_start && m_data->m_count > 1)) {
+	if (start > m_start) {
+		/* not enough space in buffer */
 		uint32_t new_size = m_size + start;
 		struct Buffer::BufferData *new_data = Buffer::allocate (new_size, 0);
 		uint8_t *buf = &new_data->m_data;
@@ -193,13 +193,23 @@ Buffer::add_at_start (uint32_t start)
 		m_data = new_data;
 		m_start = 0;
 		m_size = new_size;
+		m_initial_start += start;
+	} else if (m_start > m_data->m_dirty_start && m_data->m_count > 1) {
+		/* enough space in the buffer but it is dirty ! */
+		struct Buffer::BufferData *new_data = Buffer::create ();
+		uint8_t *buf = &new_data->m_data;
+		memcpy (buf+m_start, get_start (), m_size);
+		m_data->m_count--;
+		if (m_data->m_count == 0) {
+			recycle (m_data);
+		}
+		m_data = new_data;
+		m_start -= start;
+		m_size += start;
 	} else {
 		/* enough space in the buffer and not dirty. */
 		m_start -= start;
 		m_size += start;
-	}
-	if (start > m_start) {
-		m_initial_start += start;
 	}
 	m_data->m_dirty_start = m_start;
 	m_data->m_dirty_size = m_size;
@@ -221,8 +231,8 @@ void
 Buffer::add_at_end (uint32_t end)
 {
 	assert (m_start <= m_initial_start);
-	if (m_start + m_size + end > m_data->m_size ||
-	    ((m_start + m_size) < (m_data->m_dirty_start + m_data->m_dirty_size) && m_data->m_count > 1)) {
+	if (m_start + m_size + end > m_data->m_size) {
+		/* not enough space in buffer */
 		uint32_t new_size = m_size + end;
 		struct Buffer::BufferData *new_data = Buffer::allocate (new_size, 0);
 		memcpy (&new_data->m_data, get_start (), m_size);
@@ -233,6 +243,17 @@ Buffer::add_at_end (uint32_t end)
 		m_data = new_data;
 		m_size = new_size;
 		m_start = 0;
+	} else if ((m_start + m_size) < (m_data->m_dirty_start + m_data->m_dirty_size) && m_data->m_count > 1) {
+		/* enough space in the buffer but it is dirty ! */
+		struct Buffer::BufferData *new_data = Buffer::create ();
+		uint8_t *buf = &new_data->m_data;
+		memcpy (buf+m_start, get_start (), m_size);
+		m_data->m_count--;
+		if (m_data->m_count == 0) {
+			recycle (m_data);
+		}
+		m_data = new_data;
+		m_size += end;
 	} else {
 		/* plenty of extra space in the buffer */
 		m_size += end;
