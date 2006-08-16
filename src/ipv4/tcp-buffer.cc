@@ -269,10 +269,9 @@ TcpBuffer::remove_at_front (uint32_t size)
 		if (cur_start >= size) {
 			break;
 		}
-		Packet packet = (*i).first;
 		if (cur_end > size) {
 			assert (cur_start < size);
-			packet.remove_at_start (cur_size - (cur_end - size));
+			i->first.remove_at_start (cur_size - (cur_end - size));
 			break;
 		}
 		expected_start = cur_end;
