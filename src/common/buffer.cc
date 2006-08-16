@@ -54,7 +54,7 @@ Buffer::deallocate (struct Buffer::BufferData *data)
 	uint8_t *buf = reinterpret_cast<uint8_t *> (data);
 	delete [] buf;
 }
-#if 1
+#ifdef USE_FREE_LIST
 void
 Buffer::recycle (struct Buffer::BufferData *data)
 {
