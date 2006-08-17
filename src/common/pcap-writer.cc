@@ -29,6 +29,7 @@
 #include "packet.h"
 #include "data-writer.h"
 
+
 namespace yans {
 
 enum {
@@ -69,8 +70,10 @@ PcapWriter::write_packet (Packet const packet)
 {
 	if (m_writer != 0) {
 		uint64_t current = Simulator::now_us ();
-		write_32 ((current >> 32) & 0xffffffff);
-		write_32 (current & 0xffffffff);
+		uint64_t s = current / 1000000;
+		uint64_t us = current % 1000000;
+		write_32 (s & 0xffffffff);
+		write_32 (us & 0xffffffff);
 		write_32 (packet.get_size ());
 		write_32 (packet.get_size ());
 		packet.write (m_write_callback);
