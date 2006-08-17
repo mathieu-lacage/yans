@@ -279,21 +279,22 @@ Buffer::remove_at_end (uint32_t end)
 	assert (m_data->m_initial_start >= m_start);
 	uint32_t zero_start = m_data->m_initial_start - m_start;
 	uint32_t zero_end = zero_start + m_zero_area_size;
+	uint32_t data_end = m_size + m_zero_area_size;
 	assert (zero_start <= m_size);
 	assert (zero_end <= m_size + m_zero_area_size);
-	if (m_size <= end) {
+	if (data_end <= end) {
 		/* remove all buffer */
 		m_zero_area_size = 0;
 		m_start += m_size;
 		m_size = 0;
-	} else if (m_size - zero_start <= end) {
+	} else if (data_end - zero_start <= end) {
 		/* remove end of buffer, zero area, part of start of buffer */
 		assert (end >= m_zero_area_size);
 		m_size -= end - m_zero_area_size;
 		m_zero_area_size = 0;
-	} else if (m_size - zero_end <= end) {
+	} else if (data_end - zero_end <= end) {
 		/* remove end of buffer, part of zero area */
-		uint32_t zero_delta = end - (m_size - zero_end);
+		uint32_t zero_delta = end - (data_end - zero_end);
 		m_zero_area_size -= zero_delta;
 		m_size -= end - zero_delta;
 	} else {
