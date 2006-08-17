@@ -24,6 +24,8 @@
 
 namespace yans {
 
+bool ChunkUdp::m_calc_checksum = false;
+
 /* The magic values below are used only for debugging.
  * They can be used to easily detect memory corruption
  * problems so you can see the patterns in memory.
@@ -39,6 +41,12 @@ ChunkUdp::~ChunkUdp ()
 	m_source_port = 0xfffe;
 	m_destination_port = 0xfffe;
 	m_payload_size = 0xfffe;
+}
+
+void 
+ChunkUdp::enable_checksums (void)
+{
+	m_calc_checksum = true;
 }
 
 void 
@@ -108,15 +116,17 @@ ChunkUdp::add_to (Buffer *buffer) const
 	i.write_hton_u16 (m_source_port);
 	i.write_hton_u16 (m_destination_port);
 	i.write_hton_u16 (m_payload_size + get_size ());
-	i.write_hton_u16 (0);
+	i.write_u16 (0);
 
-	i = buffer->begin ();
-	uint16_t checksum = utils_checksum_calculate (m_initial_checksum, 
-						      i.peek_data (), 
-						      get_size () + m_payload_size);
-	checksum = utils_checksum_complete (checksum);
-	i.next (6);
-	i.write_u16 (checksum);
+	if (m_calc_checksum) {
+		uint16_t checksum = utils_checksum_calculate (m_initial_checksum, 
+							      buffer->peek_data (), 
+							      get_size () + m_payload_size);
+		checksum = utils_checksum_complete (checksum);
+		i = buffer->begin ();
+		i.next (6);
+		i.write_u16 (checksum);
+	}
 }
 void 
 ChunkUdp::peek_from (Buffer const *buffer)
@@ -125,7 +135,9 @@ ChunkUdp::peek_from (Buffer const *buffer)
 	m_source_port = i.read_ntoh_u16 ();
 	m_destination_port = i.read_ntoh_u16 ();
 	m_payload_size = i.read_ntoh_u16 () - get_size ();
-	// XXX verify checksum.
+	if (m_calc_checksum) {
+		// XXX verify checksum.
+	}
 }
 void 
 ChunkUdp::remove_from (Buffer *buffer)

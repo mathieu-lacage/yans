@@ -295,29 +295,42 @@ Buffer::remove_at_end (uint32_t end)
 Buffer 
 Buffer::create_fragment (uint32_t start, uint32_t length) const
 {
-	Buffer tmp;
 	uint32_t zero_start = m_data->m_initial_start - m_start;
 	uint32_t zero_end = zero_start + m_zero_area_size;
-	if (m_zero_area_size == 0 ||
-	    start + length <= zero_start ||
-	    start > zero_end) {
-		tmp = *this;
-		tmp.remove_at_start (start);
-		tmp.remove_at_end (get_size () - (start + length));
-	} else {
-		tmp.add_at_start (m_zero_area_size);
-		tmp.begin ().write_u8 (0, m_zero_area_size);
-		uint32_t data_start = m_data->m_initial_start - m_start;
-		tmp.add_at_start (data_start);
-		tmp.begin ().write (m_data->m_data+m_start, data_start);
-		uint32_t data_end = start + m_start - m_data->m_initial_start;
-		tmp.add_at_end (data_end);
-		tmp.begin ().write (m_data->m_data+m_data->m_initial_start,data_end);
-		*const_cast<Buffer *> (this) = tmp;
-		tmp.remove_at_start (start);
-		tmp.remove_at_end (get_size () - (start + length));
+	if (m_zero_area_size != 0 &&
+	    start + length > zero_start &&
+	    start <= zero_end) {
+		transform_into_real_buffer ();
 	}
+	Buffer tmp = *this;
+	tmp.remove_at_start (start);
+	tmp.remove_at_end (get_size () - (start + length));
 	return tmp;
+}
+
+void
+Buffer::transform_into_real_buffer (void) const
+{
+	assert (m_data->m_initial_start >= m_start);
+	assert (m_size >= (m_data->m_initial_start - m_start));
+	Buffer tmp;
+	tmp.add_at_start (m_zero_area_size);
+	tmp.begin ().write_u8 (0, m_zero_area_size);
+	uint32_t data_start = m_data->m_initial_start - m_start;
+	tmp.add_at_start (data_start);
+	tmp.begin ().write (m_data->m_data+m_start, data_start);
+	uint32_t data_end = m_size - (m_data->m_initial_start - m_start);
+	tmp.add_at_end (data_end);
+	tmp.begin ().write (m_data->m_data+m_data->m_initial_start,data_end);
+	*const_cast<Buffer *> (this) = tmp;
+}
+
+
+uint8_t *
+Buffer::peek_data (void) const
+{
+	transform_into_real_buffer ();
+	return m_data->m_data + m_start;
 }
 
 
@@ -334,7 +347,7 @@ namespace yans {
 
 class BufferTest: public Test {
 private:
-  bool ensure_written_bytes (Buffer::Iterator i, uint32_t n, uint8_t array[]);
+  bool ensure_written_bytes (Buffer b, uint32_t n, uint8_t array[]);
 public:
   virtual bool run_tests (void);
   BufferTest ();
@@ -345,12 +358,12 @@ BufferTest::BufferTest ()
 	: Test ("Buffer") {}
 
 bool
-BufferTest::ensure_written_bytes (Buffer::Iterator i, uint32_t n, uint8_t array[])
+BufferTest::ensure_written_bytes (Buffer b, uint32_t n, uint8_t array[])
 {
 	bool success = true;
 	uint8_t *expected = array;
 	uint8_t *got;
-	got = i.peek_data ();
+	got = b.peek_data ();
 	for (uint32_t j = 0; j < n; j++) {
 		if (got[j] != expected[j]) {
 			success = false;
@@ -379,10 +392,10 @@ BufferTest::ensure_written_bytes (Buffer::Iterator i, uint32_t n, uint8_t array[
  * available which is the case for gcc.
  * XXX
  */
-#define ENSURE_WRITTEN_BYTES(iterator, n, ...) \
+#define ENSURE_WRITTEN_BYTES(buffer, n, ...) \
 { \
 	uint8_t bytes[] = {__VA_ARGS__}; \
-	if (!ensure_written_bytes (iterator, n , bytes)) { \
+	if (!ensure_written_bytes (buffer, n , bytes)) { \
 		ok = false; \
 	} \
 }
@@ -396,36 +409,36 @@ BufferTest::run_tests (void)
 	buffer.add_at_start (6);
 	i = buffer.begin ();
 	i.write_u8 (0x66);
-	ENSURE_WRITTEN_BYTES (buffer.begin (), 1, 0x66);
+	ENSURE_WRITTEN_BYTES (buffer, 1, 0x66);
 	i = buffer.begin ();
 	i.write_u8 (0x67);
-	ENSURE_WRITTEN_BYTES (buffer.begin (), 1, 0x67);
+	ENSURE_WRITTEN_BYTES (buffer, 1, 0x67);
 	i.write_hton_u16 (0x6568);
 	i = buffer.begin ();
-	ENSURE_WRITTEN_BYTES (buffer.begin (), 3, 0x67, 0x65, 0x68);
+	ENSURE_WRITTEN_BYTES (buffer, 3, 0x67, 0x65, 0x68);
 	i.write_hton_u16 (0x6369);
-	ENSURE_WRITTEN_BYTES (buffer.begin (), 3, 0x63, 0x69, 0x68);
+	ENSURE_WRITTEN_BYTES (buffer, 3, 0x63, 0x69, 0x68);
 	i.write_hton_u32 (0xdeadbeaf);
-	ENSURE_WRITTEN_BYTES (buffer.begin (), 6, 0x63, 0x69, 0xde, 0xad, 0xbe, 0xaf);
+	ENSURE_WRITTEN_BYTES (buffer, 6, 0x63, 0x69, 0xde, 0xad, 0xbe, 0xaf);
 	buffer.add_at_start (2);
 	i = buffer.begin ();
 	i.write_u16 (0);
-	ENSURE_WRITTEN_BYTES (buffer.begin (), 8, 0, 0, 0x63, 0x69, 0xde, 0xad, 0xbe, 0xaf);
+	ENSURE_WRITTEN_BYTES (buffer, 8, 0, 0, 0x63, 0x69, 0xde, 0xad, 0xbe, 0xaf);
 	buffer.add_at_end (2);
 	i = buffer.begin ();
 	i.next (8);
 	i.write_u16 (0);
-	ENSURE_WRITTEN_BYTES (buffer.begin (), 10, 0, 0, 0x63, 0x69, 0xde, 0xad, 0xbe, 0xaf, 0, 0);
+	ENSURE_WRITTEN_BYTES (buffer, 10, 0, 0, 0x63, 0x69, 0xde, 0xad, 0xbe, 0xaf, 0, 0);
 	buffer.remove_at_start (3);
 	i = buffer.begin ();
-	ENSURE_WRITTEN_BYTES (buffer.begin (), 7, 0x69, 0xde, 0xad, 0xbe, 0xaf, 0, 0);
+	ENSURE_WRITTEN_BYTES (buffer, 7, 0x69, 0xde, 0xad, 0xbe, 0xaf, 0, 0);
 	buffer.remove_at_end (4);
 	i = buffer.begin ();
-	ENSURE_WRITTEN_BYTES (buffer.begin (), 3, 0x69, 0xde, 0xad);
+	ENSURE_WRITTEN_BYTES (buffer, 3, 0x69, 0xde, 0xad);
 	buffer.add_at_start (1);
 	i = buffer.begin ();
 	i.write_u8 (0xff);
-	ENSURE_WRITTEN_BYTES (buffer.begin (), 4, 0xff, 0x69, 0xde, 0xad);
+	ENSURE_WRITTEN_BYTES (buffer, 4, 0xff, 0x69, 0xde, 0xad);
 	buffer.add_at_end (1);
 	i = buffer.begin ();
 	i.next (4);
@@ -440,21 +453,30 @@ BufferTest::run_tests (void)
 	}
 	i.prev (2);
 	i.write_u16 (saved);
-	ENSURE_WRITTEN_BYTES (buffer.begin (), 5, 0xff, 0x69, 0xde, 0xad, 0xff);
+	ENSURE_WRITTEN_BYTES (buffer, 5, 0xff, 0x69, 0xde, 0xad, 0xff);
 	Buffer o = buffer;
-	ENSURE_WRITTEN_BYTES (o.begin (), 5, 0xff, 0x69, 0xde, 0xad, 0xff);
+	ENSURE_WRITTEN_BYTES (o, 5, 0xff, 0x69, 0xde, 0xad, 0xff);
 	o.add_at_start (1);
 	i = o.begin ();
 	i.write_u8 (0xfe);
-	ENSURE_WRITTEN_BYTES (o.begin (), 6, 0xfe, 0xff, 0x69, 0xde, 0xad, 0xff);
+	ENSURE_WRITTEN_BYTES (o, 6, 0xfe, 0xff, 0x69, 0xde, 0xad, 0xff);
 	buffer.add_at_start (2);
 	i = buffer.begin ();
 	i.write_u8 (0xfd);
 	i.write_u8 (0xfd);
-	ENSURE_WRITTEN_BYTES (o.begin (), 6, 0xfe, 0xff, 0x69, 0xde, 0xad, 0xff);
-	ENSURE_WRITTEN_BYTES (buffer.begin (), 7, 0xfd, 0xfd, 0xff, 0x69, 0xde, 0xad, 0xff);
+	ENSURE_WRITTEN_BYTES (o, 6, 0xfe, 0xff, 0x69, 0xde, 0xad, 0xff);
+	ENSURE_WRITTEN_BYTES (buffer, 7, 0xfd, 0xfd, 0xff, 0x69, 0xde, 0xad, 0xff);
 
-	o = o;
+	// test self-assignment
+	{
+		Buffer a = o;
+		a = a;
+	}
+
+	// test zero area.
+	
+	
+
 	return ok;
 }
 

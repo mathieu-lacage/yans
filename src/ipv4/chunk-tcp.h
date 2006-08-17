@@ -32,6 +32,8 @@ public:
 	ChunkTcp ();
 	virtual ~ChunkTcp ();
 
+	static void enable_checksums (void);
+
 	void set_source_port (uint16_t port);
 	void set_destination_port (uint16_t port);
 	void set_sequence_number (uint32_t sequence);
@@ -126,6 +128,8 @@ private:
 	uint32_t m_option_timestamp_value;
 	uint32_t m_option_timestamp_reply;
 	uint16_t m_initial_checksum;
+
+	static bool m_calc_checksum;
 };
 
 }; // namespace yans

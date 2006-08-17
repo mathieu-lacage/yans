@@ -67,7 +67,7 @@ Packet::remove (Chunk *chunk)
 void 
 Packet::write (PacketReadWriteCallback callback) const
 {
-	uint8_t *data = m_buffer.begin ().peek_data ();
+	uint8_t *data = m_buffer.peek_data ();
 	uint32_t to_write = get_size ();
 	callback (data, to_write);
 }

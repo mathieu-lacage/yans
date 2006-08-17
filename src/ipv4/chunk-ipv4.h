@@ -32,6 +32,8 @@ public:
 	ChunkIpv4 ();
 	virtual ~ChunkIpv4 ();
 
+	static void enable_checksums (void);
+
 	void set_payload_size (uint16_t size);
 	void set_identification (uint16_t identification);
 	void set_tos (uint8_t);
@@ -70,6 +72,8 @@ private:
 		DONT_FRAGMENT = (1<<0),
 		MORE_FRAGMENTS = (1<<1)
 	};
+
+	static bool m_calc_checksum;
 
 	uint16_t m_payload_size;
 	uint16_t m_identification;

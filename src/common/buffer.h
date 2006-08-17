@@ -85,15 +85,6 @@ public:
 		inline bool is_start (void) const;
 
 		/**
-		 * \return a pointer to the current position in the
-		 *         internal buffer
-		 *
-		 * Please, try to never ever use this method. It is really
-		 * evil and is present only for a few specific uses.
-		 */
-		inline uint8_t *peek_data (void);
-
-		/**
 		 * \param data data to write in buffer
 		 *
 		 * Write the data in buffer and avance the iterator position
@@ -261,6 +252,17 @@ public:
 	inline uint32_t get_size (void) const;
 
 	/**
+	 * \return a pointer to the start of the internal 
+	 * byte buffer.
+	 *
+	 * The returned pointer points to an area of
+	 * memory which is yans::Buffer::get_size () bytes big.
+	 * Please, try to never ever use this method. It is really
+	 * evil and is present only for a few specific uses.
+	 */
+	uint8_t *peek_data (void) const;
+
+	/**
 	 * \param start size to reserve
 	 *
 	 * Add bytes at the start of the Buffer. The
@@ -334,6 +336,7 @@ private:
 	typedef std::vector<struct Buffer::BufferData*> BufferDataList;
 
 	inline uint8_t *get_start (void) const;
+	void transform_into_real_buffer (void) const;
 	static void recycle (struct Buffer::BufferData *data);
 	static struct Buffer::BufferData *create (void);
 	static struct Buffer::BufferData *allocate (uint32_t size, uint32_t start);
@@ -507,12 +510,6 @@ bool
 Buffer::Iterator::is_start (void) const
 {
 	return m_current == m_start;
-}
-
-uint8_t *
-Buffer::Iterator::peek_data (void)
-{
-	return m_current;
 }
 
 void 

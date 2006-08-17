@@ -33,6 +33,8 @@ public:
 	ChunkUdp ();
 	virtual ~ChunkUdp ();
 
+	static void enable_checksums (void);
+
 	void set_destination (uint16_t port);
 	void set_source (uint16_t port);
 	uint16_t get_source (void) const;
@@ -55,6 +57,8 @@ private:
 	uint16_t m_destination_port;
 	uint16_t m_payload_size;
 	uint16_t m_initial_checksum;
+
+	static bool m_calc_checksum;
 };
 
 }; // namespace yans

@@ -36,6 +36,8 @@ std::cout << "CHUNK TCP TRACE " << Simulator::now_s () << " " << x << std::endl;
 
 namespace yans {
 
+bool ChunkTcp::m_calc_checksum = false;
+
 ChunkTcp::ChunkTcp ()
 	: m_source_port (0),
 	  m_destination_port (0),
@@ -53,6 +55,12 @@ ChunkTcp::ChunkTcp ()
 
 ChunkTcp::~ChunkTcp ()
 {}
+
+void
+ChunkTcp::enable_checksums (void)
+{
+	m_calc_checksum = true;
+}
 
 void 
 ChunkTcp::set_source_port (uint16_t port)
@@ -315,16 +323,17 @@ ChunkTcp::initialize_checksum (Ipv4Address source,
 			       uint8_t protocol,
 			       uint16_t payload_size)
 {
-	uint8_t buf[12];
-	source.serialize (buf);
-	destination.serialize (buf+4);
-	buf[8] = 0;
-	buf[9] = protocol;
-	uint16_t udp_length = payload_size + get_size ();
-	buf[10] = udp_length >> 8;
-	buf[11] = udp_length & 0xff;
-
-	m_initial_checksum = utils_checksum_calculate (0, buf, 12);
+	if (m_calc_checksum) {
+		uint8_t buf[12];
+		source.serialize (buf);
+		destination.serialize (buf+4);
+		buf[8] = 0;
+		buf[9] = protocol;
+		uint16_t udp_length = payload_size + get_size ();
+		buf[10] = udp_length >> 8;
+		buf[11] = udp_length & 0xff;
+		m_initial_checksum = utils_checksum_calculate (0, buf, 12);
+	}
 }
 
 
@@ -421,14 +430,16 @@ void ChunkTcp::add_to (Buffer *buffer) const
 	uint32_t padding = get_padding ();
 	i.write_u8 (0, padding);
 
-	uint16_t checksum;
-	checksum = utils_checksum_calculate (m_initial_checksum, 
-					     buffer->begin ().peek_data (),
-					     buffer->get_size ());
-	checksum = utils_checksum_complete (checksum);
-	i = buffer->begin ();
-	i.next (16);
-	i.write_u16 (checksum);
+	if (m_calc_checksum) {
+		uint16_t checksum;
+		checksum = utils_checksum_calculate (m_initial_checksum, 
+						     buffer->peek_data (),
+						     buffer->get_size ());
+		checksum = utils_checksum_complete (checksum);
+		i = buffer->begin ();
+		i.next (16);
+		i.write_u16 (checksum);
+	}
 }
 void ChunkTcp::peek_from (Buffer const *buffer)
 {
@@ -511,15 +522,17 @@ void ChunkTcp::peek_from (Buffer const *buffer)
 		}
 	}
 
-	uint16_t checksum;
-	checksum = utils_checksum_calculate (m_initial_checksum, 
-					     buffer->begin ().peek_data (),
-					     buffer->get_size ());
-	checksum = utils_checksum_complete (checksum);
-	if (checksum == 0) {
-		m_is_checksum_ok = 1;
-	} else {
-		m_is_checksum_ok = 0;
+	if (m_calc_checksum) {
+		uint16_t checksum;
+		checksum = utils_checksum_calculate (m_initial_checksum, 
+						     buffer->peek_data (),
+						     buffer->get_size ());
+		checksum = utils_checksum_complete (checksum);
+		if (checksum == 0) {
+			m_is_checksum_ok = 1;
+		} else {
+			m_is_checksum_ok = 0;
+		}
 	}
 	
  out:

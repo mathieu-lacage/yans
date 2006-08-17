@@ -37,6 +37,8 @@ std::cout << "CHUNK IPV4 TRACE " << Simulator::now_s () << " " << x << std::endl
 
 namespace yans {
 
+bool ChunkIpv4::m_calc_checksum = false;
+
 ChunkIpv4::ChunkIpv4 ()
 	: m_payload_size (0),
 	  m_identification (0),
@@ -44,10 +46,17 @@ ChunkIpv4::ChunkIpv4 ()
 	  m_ttl (0),
 	  m_protocol (0),
 	  m_flags (0),
-	  m_fragment_offset (0)
+	  m_fragment_offset (0),
+	  m_good_checksum (true)
 {}
 ChunkIpv4::~ChunkIpv4 ()
 {}
+
+void 
+ChunkIpv4::enable_checksums (void)
+{
+	m_calc_checksum = true;
+}
 
 void 
 ChunkIpv4::set_payload_size (uint16_t size)
@@ -176,11 +185,7 @@ ChunkIpv4::get_destination (void) const
 bool
 ChunkIpv4::is_checksum_ok (void) const
 {
-#if DISABLE_IPV4_CHECKSUM
-	return true;
-#else
 	return m_good_checksum;
-#endif
 }
 
 
@@ -229,14 +234,16 @@ ChunkIpv4::add_to (Buffer *buffer) const
 	i.write_hton_u32 (m_source.get_host_order ());
 	i.write_hton_u32 (m_destination.get_host_order ());
 
-	i = buffer->begin ();
-	uint8_t *data = i.peek_data ();
-	//TRACE ("fini ipv4 current="<<state->get_current ());
-	uint16_t checksum = utils_checksum_calculate (0, data, get_size ());
-	checksum = utils_checksum_complete (checksum);
-	//TRACE ("checksum=" <<checksum);
-	i.next (10);
-	i.write_u16 (checksum);
+	if (m_calc_checksum) {
+		uint8_t *data = buffer->peek_data ();
+		//TRACE ("fini ipv4 current="<<state->get_current ());
+		uint16_t checksum = utils_checksum_calculate (0, data, get_size ());
+		checksum = utils_checksum_complete (checksum);
+		//TRACE ("checksum=" <<checksum);
+		i = buffer->begin ();
+		i.next (10);
+		i.write_u16 (checksum);
+	}
 }
 void 
 ChunkIpv4::peek_from (Buffer const *buffer)
@@ -268,14 +275,15 @@ ChunkIpv4::peek_from (Buffer const *buffer)
 	m_source.set_host_order (i.read_ntoh_u32 ());
 	m_destination.set_host_order (i.read_ntoh_u32 ());
 
-	i = buffer->begin ();
-	uint8_t *data = i.peek_data ();
-	//TRACE ("fini ipv4 current="<<state->get_current ());
-	uint16_t local_checksum = utils_checksum_calculate (0, data, header_size);
-	if (local_checksum == 0xffff) {
-		m_good_checksum = true;
-	} else {
-		m_good_checksum = false;
+	if (m_calc_checksum) {
+		uint8_t *data = buffer->peek_data ();
+		//TRACE ("fini ipv4 current="<<state->get_current ());
+		uint16_t local_checksum = utils_checksum_calculate (0, data, header_size);
+		if (local_checksum == 0xffff) {
+			m_good_checksum = true;
+		} else {
+			m_good_checksum = false;
+		}
 	}
 }
 void 
