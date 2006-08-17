@@ -311,14 +311,17 @@ public:
 	inline Buffer (Buffer const &o);
 	inline Buffer &operator = (Buffer const &o);
 	inline Buffer ();
+	inline Buffer (uint32_t data_size);
 	inline ~Buffer ();
 private:
 	struct BufferData {
 		uint32_t m_count;
 		uint32_t m_size;
+		uint32_t m_initial_start;
+		uint32_t m_zero_area_size;
 		uint32_t m_dirty_start;
 		uint32_t m_dirty_size;
-		uint8_t m_data;
+		uint8_t m_data[1];
 	};
 	typedef std::vector<struct Buffer::BufferData*> BufferDataList;
 
@@ -333,7 +336,6 @@ private:
 	static uint32_t m_max_total_add_end;
 
 	struct BufferData *m_data;
-	uint32_t m_initial_start;
 	uint32_t m_start;
 	uint32_t m_size;
 };
@@ -346,7 +348,6 @@ namespace yans {
 
 Buffer::Buffer ()
 	: m_data (Buffer::create ()),
-	  m_initial_start (m_max_total_add_start),
 	  m_start (m_max_total_add_start),
 	  m_size (0)
 {
@@ -356,9 +357,21 @@ Buffer::Buffer ()
 	assert (m_start <= m_data->m_size);
 }
 
+Buffer::Buffer (uint32_t data_size)
+	: m_data (Buffer::create ()),
+	  m_start (m_max_total_add_start),
+	  m_size (0)
+{
+	if (m_start > m_data->m_size) {
+		m_start = 0;
+	}
+	m_data->m_zero_area_size = data_size;
+	assert (m_start <= m_data->m_size);
+}
+
+
 Buffer::Buffer (Buffer const&o)
 	: m_data (o.m_data),
-	  m_initial_start (o.m_initial_start),
 	  m_start (o.m_start),
 	  m_size (o.m_size)
 {
@@ -378,7 +391,6 @@ Buffer::operator = (Buffer const&o)
 		m_data = o.m_data;
 		m_data->m_count++;
 	}
-	m_initial_start = o.m_initial_start;
 	m_start = o.m_start;
 	m_size = o.m_size;
 	assert (m_start <= m_data->m_size);
@@ -397,8 +409,7 @@ Buffer::~Buffer ()
 uint8_t *
 Buffer::get_start (void) const
 {
-	uint8_t *buf = &m_data->m_data;
-	return &buf[m_start];
+	return m_data->m_data + m_start;
 }
 
 uint32_t 

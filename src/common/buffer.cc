@@ -42,6 +42,8 @@ Buffer::allocate (uint32_t req_size, uint32_t req_start)
 	uint8_t *b = new uint8_t [size];
 	struct BufferData *data = reinterpret_cast<struct Buffer::BufferData*>(b);
 	data->m_size = req_size;
+	data->m_initial_start = req_start;
+	data->m_zero_area_size = 0;
 	data->m_dirty_start = req_start;
 	data->m_dirty_size = 0;
 	data->m_count = 1;
@@ -80,6 +82,8 @@ Buffer::create (void)
 		struct Buffer::BufferData *data = Buffer::m_free_list.back ();
 		Buffer::m_free_list.pop_back ();
 		if (data->m_size >= (m_max_total_add_start + m_max_total_add_end)) {
+			data->m_initial_start = m_max_total_add_start;
+			data->m_zero_area_size = 0;
 			data->m_dirty_start = m_max_total_add_start;
 			data->m_dirty_size = 0;
 			data->m_count = 1;
@@ -118,7 +122,7 @@ namespace yans {
 void 
 Buffer::add_at_start (uint32_t start)
 {
-	assert (m_start <= m_initial_start);
+	assert (m_start <= m_data->m_initial_start);
 	bool is_dirty = m_data->m_count > 1 && m_start > m_data->m_dirty_start;
 	if (m_start >= start && !is_dirty) {
 		/* enough space in the buffer and not dirty. */
@@ -126,16 +130,16 @@ Buffer::add_at_start (uint32_t start)
 		m_size += start;
 	} else if (m_size + start <= m_data->m_size && !is_dirty) {
 		/* enough space but need to move data around to fit new data */
-                memmove (&m_data->m_data + start, get_start (), m_size);
+                memmove (m_data->m_data + start, get_start (), m_size);
+		assert (start > m_start);
+		m_data->m_initial_start += start;
                 m_start = 0;
                 m_size += start;
-		assert (start > m_start);
-		m_initial_start += start - m_start;
 	} else if (m_start < start) {
 		/* not enough space in buffer */
 		uint32_t new_size = m_size + start;
 		struct Buffer::BufferData *new_data = Buffer::allocate (new_size, 0);
-		memcpy (&new_data->m_data + start, get_start (), m_size);
+		memcpy (new_data->m_data + start, get_start (), m_size);
 		m_data->m_count--;
 		if (m_data->m_count == 0) {
 			Buffer::deallocate (m_data);
@@ -143,12 +147,12 @@ Buffer::add_at_start (uint32_t start)
 		m_data = new_data;
 		m_start = 0;
 		m_size = new_size;
-		m_initial_start += start;
+		m_data->m_initial_start += start;
 	} else {
 		/* enough space in the buffer but it is dirty ! */
 		assert (is_dirty);
 		struct Buffer::BufferData *new_data = Buffer::create ();
-		memcpy (&new_data->m_data + m_start, get_start (), m_size);
+		memcpy (new_data->m_data + m_start, get_start (), m_size);
 		m_data->m_count--;
 		if (m_data->m_count == 0) {
 			recycle (m_data);
@@ -157,12 +161,13 @@ Buffer::add_at_start (uint32_t start)
 		m_start -= start;
 		m_size += start;
 	} 
+	// update dirty area
 	m_data->m_dirty_start = m_start;
 	m_data->m_dirty_size = m_size;
 	// update m_max_total_add_start
 	uint32_t added_at_start;
-	if (m_initial_start > m_start) {
-		added_at_start = m_initial_start - m_start;
+	if (m_data->m_initial_start > m_start) {
+		added_at_start = m_data->m_initial_start - m_start;
 	} else {
 		added_at_start = 0;
 	}
@@ -173,7 +178,7 @@ Buffer::add_at_start (uint32_t start)
 void 
 Buffer::add_at_end (uint32_t end)
 {
-	assert (m_start <= m_initial_start);
+	assert (m_start <= m_data->m_initial_start);
 	bool is_dirty = m_data->m_count > 1 &&
 		m_start + m_size < m_data->m_dirty_start + m_data->m_dirty_size;
 	if (m_start + m_size + end <= m_data->m_size && !is_dirty) {
@@ -182,16 +187,16 @@ Buffer::add_at_end (uint32_t end)
 	} else if (m_size + end <= m_data->m_size && !is_dirty) {
 		/* enough space but need to move data around to fit the extra data */
                 uint32_t new_start = m_data->m_size - (m_size + end);
-                memmove (&m_data->m_data + new_start, get_start (), m_size);
+                memmove (m_data->m_data + new_start, get_start (), m_size);
 		assert (new_start < m_start);
-		m_initial_start -= m_start - new_start;
+		m_data->m_initial_start -= m_start - new_start;
                 m_start = new_start;
                 m_size += end;
 	} else if (m_start + m_size + end > m_data->m_size) {
 		/* not enough space in buffer */
 		uint32_t new_size = m_size + end;
 		struct Buffer::BufferData *new_data = Buffer::allocate (new_size, 0);
-		memcpy (&new_data->m_data, get_start (), m_size);
+		memcpy (new_data->m_data, get_start (), m_size);
 		m_data->m_count--;
 		if (m_data->m_count == 0) {
 			Buffer::deallocate (m_data);
@@ -203,7 +208,7 @@ Buffer::add_at_end (uint32_t end)
 		/* enough space in the buffer but it is dirty ! */
 		assert (is_dirty);
 		struct Buffer::BufferData *new_data = Buffer::create ();
-		memcpy (&new_data->m_data + m_start, get_start (), m_size);
+		memcpy (new_data->m_data + m_start, get_start (), m_size);
 		m_data->m_count--;
 		if (m_data->m_count == 0) {
 			recycle (m_data);
@@ -211,13 +216,14 @@ Buffer::add_at_end (uint32_t end)
 		m_data = new_data;
 		m_size += end;
 	} 
+	// update dirty area
 	m_data->m_dirty_start = m_start;
 	m_data->m_dirty_size = m_size;
 	// update m_max_total_add_end
 	uint32_t end_loc = m_start + m_size;
 	uint32_t added_at_end;
-	if (m_initial_start < end_loc) {
-		added_at_end = end_loc - m_initial_start;
+	if (m_data->m_initial_start < end_loc) {
+		added_at_end = end_loc - m_data->m_initial_start;
 	} else {
 		added_at_end = 0;
 	}
