@@ -173,6 +173,9 @@ Buffer::add_at_start (uint32_t start)
 	if (added_at_start > m_max_total_add_start) {
 		m_max_total_add_start = added_at_start;
 	}
+	TRACE ("start add="<<start<<", start="<<m_start<<", size="<<m_size<<", zero="<<m_zero_area_size<<
+	       ", real size="<<m_data->m_size<<", ini start="<<m_data->m_initial_start<<
+	       ", dirty start="<<m_data->m_dirty_start<<", dirty size="<<m_data->m_dirty_size); 
 }
 void 
 Buffer::add_at_end (uint32_t end)
@@ -231,6 +234,9 @@ Buffer::add_at_end (uint32_t end)
 	if (added_at_end > m_max_total_add_end) {
 		m_max_total_add_end = added_at_end;
 	}
+	TRACE ("end add="<<end<<", start="<<m_start<<", size="<<m_size<<", zero="<<m_zero_area_size<<
+	       ", real size="<<m_data->m_size<<", ini start="<<m_data->m_initial_start<<
+	       ", dirty start="<<m_data->m_dirty_start<<", dirty size="<<m_data->m_dirty_size); 
 }
 
 void 
@@ -262,6 +268,9 @@ Buffer::remove_at_start (uint32_t start)
 		m_size = 0;
 		m_zero_area_size = 0;
 	}
+	TRACE ("start remove="<<start<<", start="<<m_start<<", size="<<m_size<<", zero="<<m_zero_area_size<<
+	       ", real size="<<m_data->m_size<<", ini start="<<m_data->m_initial_start<<
+	       ", dirty start="<<m_data->m_dirty_start<<", dirty size="<<m_data->m_dirty_size); 
 }
 void 
 Buffer::remove_at_end (uint32_t end)
@@ -290,6 +299,9 @@ Buffer::remove_at_end (uint32_t end)
 		/* remove part of end of buffer */
 		m_size -= end;
 	}
+	TRACE ("end remove="<<end<<", start="<<m_start<<", size="<<m_size<<", zero="<<m_zero_area_size<<
+	       ", real size="<<m_data->m_size<<", ini start="<<m_data->m_initial_start<<
+	       ", dirty start="<<m_data->m_dirty_start<<", dirty size="<<m_data->m_dirty_size); 
 }
 
 Buffer 
@@ -311,18 +323,20 @@ Buffer::create_fragment (uint32_t start, uint32_t length) const
 void
 Buffer::transform_into_real_buffer (void) const
 {
-	assert (m_data->m_initial_start >= m_start);
-	assert (m_size >= (m_data->m_initial_start - m_start));
-	Buffer tmp;
-	tmp.add_at_start (m_zero_area_size);
-	tmp.begin ().write_u8 (0, m_zero_area_size);
-	uint32_t data_start = m_data->m_initial_start - m_start;
-	tmp.add_at_start (data_start);
-	tmp.begin ().write (m_data->m_data+m_start, data_start);
-	uint32_t data_end = m_size - (m_data->m_initial_start - m_start);
-	tmp.add_at_end (data_end);
-	tmp.begin ().write (m_data->m_data+m_data->m_initial_start,data_end);
-	*const_cast<Buffer *> (this) = tmp;
+	if (m_zero_area_size != 0) {
+		assert (m_data->m_initial_start >= m_start);
+		assert (m_size >= (m_data->m_initial_start - m_start));
+		Buffer tmp;
+		tmp.add_at_start (m_zero_area_size);
+		tmp.begin ().write_u8 (0, m_zero_area_size);
+		uint32_t data_start = m_data->m_initial_start - m_start;
+		tmp.add_at_start (data_start);
+		tmp.begin ().write (m_data->m_data+m_start, data_start);
+		uint32_t data_end = m_size - (m_data->m_initial_start - m_start);
+		tmp.add_at_end (data_end);
+		tmp.begin ().write (m_data->m_data+m_data->m_initial_start,data_end);
+		*const_cast<Buffer *> (this) = tmp;
+	}
 }
 
 
@@ -474,6 +488,8 @@ BufferTest::run_tests (void)
 	}
 
 	// test zero area.
+	buffer = Buffer (5);
+	ENSURE_WRITTEN_BYTES (buffer, 5, 0, 0, 0, 0, 0);
 	
 	
 
