@@ -508,17 +508,16 @@ Buffer::Iterator::is_start (void) const
 uint32_t
 Buffer::Iterator::get_index (uint32_t n)
 {
-	bool ok = 
-		(m_current + n < m_data_end) &&
-		((m_current < m_zero_end && m_current + n < m_zero_end) ||
-		 (m_current >= m_zero_end && m_current + n > m_zero_end))
-		 ;
-	assert (ok);
+	assert ( 
+		(m_current + n <= m_data_end) &&
+		((m_current + n <= m_zero_start) ||
+		 (m_current >= m_zero_end))
+		);
 	uint32_t index;
 	if (m_current < m_zero_start) {
 		index = m_current;
 	} else {
-		index = m_current - m_zero_end;
+		index = m_current - (m_zero_end-m_zero_start);
 	}
 	return index;
 }
@@ -553,21 +552,21 @@ Buffer::Iterator::write_u8  (uint8_t  data)
 void 
 Buffer::Iterator::write_u16 (uint16_t data)
 {
-	uint16_t *buffer = (uint16_t *)m_data[get_index (2)];
+	uint16_t *buffer = (uint16_t *)(m_data + get_index (2));
 	*buffer = data;
 	m_current += 2;
 }
 void 
 Buffer::Iterator::write_u32 (uint32_t data)
 {
-	uint32_t *buffer = (uint32_t *)m_data[get_index (4)];
+	uint32_t *buffer = (uint32_t *)(m_data + get_index (4));
 	*buffer = data;
 	m_current += 4;
 }
 void 
 Buffer::Iterator::write_u64 (uint64_t data)
 {
-	uint64_t *buffer = (uint64_t *)m_data[get_index (8)];
+	uint64_t *buffer = (uint64_t *)(m_data + get_index (8));
 	*buffer = data;
 	m_current += 8;
 }
