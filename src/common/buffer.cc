@@ -245,6 +245,7 @@ Buffer::remove_at_start (uint32_t start)
 	assert (m_data->m_initial_start >= m_start);
 	uint32_t zero_start = m_data->m_initial_start - m_start;
 	uint32_t zero_end = zero_start + m_zero_area_size;
+	uint32_t data_end = m_size + m_zero_area_size;
 	if (start <= zero_start) {
 		/* only remove start of buffer */
 		m_start += start;
@@ -252,11 +253,11 @@ Buffer::remove_at_start (uint32_t start)
 	} else if (start <= zero_end) {
 		/* remove start of buffer _and_ start of zero area */
 		m_start += zero_start;
-		uint32_t zero_delta = zero_end - start;
+		uint32_t zero_delta = start - zero_start;
 		m_zero_area_size -= zero_delta;
 		assert (zero_delta <= start);
-		m_size -= start - zero_delta;
-	} else if (start <= m_size) {
+		m_size -= zero_start;
+	} else if (start <= data_end) {
 		/* remove start of buffer, complete zero area, and part
 		 * of end of buffer */
 		m_start += start - m_zero_area_size;
@@ -490,6 +491,11 @@ BufferTest::run_tests (void)
 	// test zero area.
 	buffer = Buffer (5);
 	ENSURE_WRITTEN_BYTES (buffer, 5, 0, 0, 0, 0, 0);
+	buffer.remove_at_start (1);
+	ENSURE_WRITTEN_BYTES (buffer, 4, 0, 0, 0, 0);
+	buffer.add_at_start (1);
+	buffer.begin ().write_u8 (0xff);
+	ENSURE_WRITTEN_BYTES (buffer, 5, 0xff, 0, 0, 0, 0);
 	
 	
 
