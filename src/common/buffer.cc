@@ -22,8 +22,8 @@
 #include <cassert>
 
 #include <iostream>
-#define TRACE(x) std::cout << x << std::endl;
-//#define TRACE(x)
+//#define TRACE(x) std::cout << x << std::endl;
+#define TRACE(x)
 
 namespace yans {
 
