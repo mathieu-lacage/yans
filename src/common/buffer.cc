@@ -335,7 +335,9 @@ Buffer::transform_into_real_buffer (void) const
 		tmp.begin ().write (m_data->m_data+m_start, data_start);
 		uint32_t data_end = m_size - (m_data->m_initial_start - m_start);
 		tmp.add_at_end (data_end);
-		tmp.begin ().write (m_data->m_data+m_data->m_initial_start,data_end);
+		Buffer::Iterator i = tmp.end ();
+		i.prev (data_end);
+		i.write (m_data->m_data+m_data->m_initial_start,data_end);
 		*const_cast<Buffer *> (this) = tmp;
 	}
 }
