@@ -350,6 +350,7 @@ Buffer::peek_data (void) const
 
 
 
+
 }; // namespace yans
 
 
@@ -488,7 +489,7 @@ BufferTest::run_tests (void)
 		a = a;
 	}
 
-	// test zero area.
+	// test remove start.
 	buffer = Buffer (5);
 	ENSURE_WRITTEN_BYTES (buffer, 5, 0, 0, 0, 0, 0);
 	buffer.remove_at_start (1);
@@ -503,6 +504,18 @@ BufferTest::run_tests (void)
 	ENSURE_WRITTEN_BYTES (buffer, 6,  0xde, 0xad, 0xbe, 0xaf, 0, 0);
 	buffer.remove_at_start (2);
 	ENSURE_WRITTEN_BYTES (buffer, 4,  0xbe, 0xaf, 0, 0);
+	buffer.add_at_end (4);
+	i = buffer.begin ();
+	i.next (4);
+	i.write_hton_u32 (0xdeadbeaf);
+	ENSURE_WRITTEN_BYTES (buffer, 8,  0xbe, 0xaf, 0, 0, 0xde, 0xad, 0xbe, 0xaf);
+	buffer.remove_at_start (5);
+	ENSURE_WRITTEN_BYTES (buffer, 3,  0xad, 0xbe, 0xaf);
+	// test remove end
+	buffer = Buffer (5);
+	ENSURE_WRITTEN_BYTES (buffer, 5, 0, 0, 0, 0, 0);
+	buffer.remove_at_end (1);
+	ENSURE_WRITTEN_BYTES (buffer, 4, 0, 0, 0, 0);
 	
 	
 
