@@ -35,9 +35,7 @@ Packet::Packet (Buffer buffer, Tags tags)
 Packet 
 Packet::create_fragment (uint32_t start, uint32_t length) const
 {
-	Buffer tmp = m_buffer;
-	tmp.remove_at_start (start);
-	tmp.remove_at_end (m_buffer.get_size () - (start + length));
+	Buffer tmp = m_buffer.create_fragment (start, length);
 	return Packet (tmp, m_tags);
 }
 

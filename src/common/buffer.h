@@ -287,7 +287,7 @@ public:
 	 * Any call to this method invalidates any Iterator
 	 * pointing to this Buffer.
 	 */
-	inline void remove_at_start (uint32_t start);
+	void remove_at_start (uint32_t start);
 	/**
 	 * \param end size to remove
 	 *
@@ -295,7 +295,16 @@ public:
 	 * Any call to this method invalidates any Iterator
 	 * pointing to this Buffer.
 	 */
-	inline void remove_at_end (uint32_t end);
+	void remove_at_end (uint32_t end);
+
+	/**
+	 * \param start offset from start of packet
+	 * \param length
+	 *
+	 * \return a fragment of size length starting at offset
+	 * start.
+	 */
+	Buffer create_fragment (uint32_t start, uint32_t length) const;
 
 	/**
 	 * \return an Iterator which points to the
@@ -318,7 +327,6 @@ private:
 		uint32_t m_count;
 		uint32_t m_size;
 		uint32_t m_initial_start;
-		uint32_t m_zero_area_size;
 		uint32_t m_dirty_start;
 		uint32_t m_dirty_size;
 		uint8_t m_data[1];
@@ -336,6 +344,7 @@ private:
 	static uint32_t m_max_total_add_end;
 
 	struct BufferData *m_data;
+	uint32_t m_zero_area_size;
 	uint32_t m_start;
 	uint32_t m_size;
 };
@@ -348,6 +357,7 @@ namespace yans {
 
 Buffer::Buffer ()
 	: m_data (Buffer::create ()),
+	  m_zero_area_size (0),
 	  m_start (m_max_total_add_start),
 	  m_size (0)
 {
@@ -359,19 +369,20 @@ Buffer::Buffer ()
 
 Buffer::Buffer (uint32_t data_size)
 	: m_data (Buffer::create ()),
+	  m_zero_area_size (data_size),
 	  m_start (m_max_total_add_start),
 	  m_size (0)
 {
 	if (m_start > m_data->m_size) {
 		m_start = 0;
 	}
-	m_data->m_zero_area_size = data_size;
 	assert (m_start <= m_data->m_size);
 }
 
 
 Buffer::Buffer (Buffer const&o)
 	: m_data (o.m_data),
+	  m_zero_area_size (o.m_zero_area_size),
 	  m_start (o.m_start),
 	  m_size (o.m_size)
 {
@@ -391,6 +402,7 @@ Buffer::operator = (Buffer const&o)
 		m_data = o.m_data;
 		m_data->m_count++;
 	}
+	m_zero_area_size = o.m_zero_area_size;
 	m_start = o.m_start;
 	m_size = o.m_size;
 	assert (m_start <= m_data->m_size);
@@ -415,27 +427,7 @@ Buffer::get_start (void) const
 uint32_t 
 Buffer::get_size (void) const
 {
-	return m_size;
-}
-void 
-Buffer::remove_at_start (uint32_t start)
-{
-	if (m_size <= start) {
-		m_start += m_size;
-		m_size = 0;
-		return;
-	}
-	m_start += start;
-	m_size -= start;
-}
-void 
-Buffer::remove_at_end (uint32_t end)
-{
-	if (m_size <= end) {
-		m_size = 0;
-		return;
-	}
-	m_size -= end;
+	return m_size + m_zero_area_size;
 }
 
 Buffer::Iterator 
