@@ -519,6 +519,47 @@ BufferTest::run_tests (void)
 	ENSURE_WRITTEN_BYTES (buffer, 5, 0, 0, 0, 0, 0);
 	buffer.remove_at_end (1);
 	ENSURE_WRITTEN_BYTES (buffer, 4, 0, 0, 0, 0);
+	buffer.add_at_end (2);
+	i = buffer.begin ();
+	i.next (4);
+	i.write_u8 (0xab);
+	i.write_u8 (0xac);
+	ENSURE_WRITTEN_BYTES (buffer, 6, 0, 0, 0, 0, 0xab, 0xac);
+	buffer.remove_at_end (1);
+	ENSURE_WRITTEN_BYTES (buffer, 5, 0, 0, 0, 0, 0xab);
+	buffer.remove_at_end (3);
+	ENSURE_WRITTEN_BYTES (buffer, 2, 0, 0);
+	buffer.add_at_end (6);
+	i = buffer.begin ();
+	i.next (2);
+	i.write_u8 (0xac);
+	i.write_u8 (0xad);
+	i.write_u8 (0xae);
+	i.write_u8 (0xaf);
+	i.write_u8 (0xba);
+	i.write_u8 (0xbb);
+	ENSURE_WRITTEN_BYTES (buffer, 8, 0, 0, 0xac, 0xad, 0xae, 0xaf, 0xba, 0xbb);
+	buffer.add_at_start (3);
+	i = buffer.begin ();
+	i.write_u8 (0x30);
+	i.write_u8 (0x31);
+	i.write_u8 (0x32);
+	ENSURE_WRITTEN_BYTES (buffer, 11, 0x30, 0x31, 0x32, 0, 0, 0xac, 0xad, 0xae, 0xaf, 0xba, 0xbb);
+	buffer.remove_at_end (9);
+	ENSURE_WRITTEN_BYTES (buffer, 2, 0x30, 0x31);
+	buffer = Buffer (3);
+	buffer.add_at_end (2);
+	i = buffer.begin ();
+	i.next (3);
+	i.write_hton_u16 (0xabcd);
+	buffer.add_at_start (1);
+	buffer.begin ().write_u8 (0x21);
+	ENSURE_WRITTEN_BYTES (buffer, 6, 0x21, 0, 0, 0, 0xab, 0xcd);
+	buffer.remove_at_end (8);
+	if (buffer.get_size () != 0) {
+		ok = false;
+	}
+	
 	
 	
 
