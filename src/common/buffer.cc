@@ -280,7 +280,7 @@ Buffer::remove_at_end (uint32_t end)
 	uint32_t zero_start = m_data->m_initial_start - m_start;
 	uint32_t zero_end = zero_start + m_zero_area_size;
 	assert (zero_start <= m_size);
-	assert (zero_end <= m_size);
+	assert (zero_end <= m_size + m_zero_area_size);
 	if (m_size <= end) {
 		/* remove all buffer */
 		m_zero_area_size = 0;
