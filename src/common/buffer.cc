@@ -140,6 +140,8 @@ Buffer::add_at_start (uint32_t start)
 		uint32_t new_size = m_size + start;
 		struct Buffer::BufferData *new_data = Buffer::allocate (new_size, 0);
 		memcpy (new_data->m_data + start, get_start (), m_size);
+		new_data->m_initial_start = m_data->m_initial_start + start;
+		new_data->m_zero_area_size = m_data->m_zero_area_size;
 		m_data->m_count--;
 		if (m_data->m_count == 0) {
 			Buffer::deallocate (m_data);
@@ -147,12 +149,13 @@ Buffer::add_at_start (uint32_t start)
 		m_data = new_data;
 		m_start = 0;
 		m_size = new_size;
-		m_data->m_initial_start += start;
 	} else {
 		/* enough space in the buffer but it is dirty ! */
 		assert (is_dirty);
 		struct Buffer::BufferData *new_data = Buffer::create ();
 		memcpy (new_data->m_data + m_start, get_start (), m_size);
+		new_data->m_initial_start = m_data->m_initial_start;
+		new_data->m_zero_area_size = m_data->m_zero_area_size;
 		m_data->m_count--;
 		if (m_data->m_count == 0) {
 			recycle (m_data);
@@ -197,6 +200,8 @@ Buffer::add_at_end (uint32_t end)
 		uint32_t new_size = m_size + end;
 		struct Buffer::BufferData *new_data = Buffer::allocate (new_size, 0);
 		memcpy (new_data->m_data, get_start (), m_size);
+		new_data->m_initial_start = m_data->m_initial_start;
+		new_data->m_zero_area_size = m_data->m_zero_area_size;
 		m_data->m_count--;
 		if (m_data->m_count == 0) {
 			Buffer::deallocate (m_data);
@@ -209,6 +214,8 @@ Buffer::add_at_end (uint32_t end)
 		assert (is_dirty);
 		struct Buffer::BufferData *new_data = Buffer::create ();
 		memcpy (new_data->m_data + m_start, get_start (), m_size);
+		new_data->m_initial_start = m_data->m_initial_start;
+		new_data->m_zero_area_size = m_data->m_zero_area_size;
 		m_data->m_count--;
 		if (m_data->m_count == 0) {
 			recycle (m_data);
