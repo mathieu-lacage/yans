@@ -496,6 +496,13 @@ BufferTest::run_tests (void)
 	buffer.add_at_start (1);
 	buffer.begin ().write_u8 (0xff);
 	ENSURE_WRITTEN_BYTES (buffer, 5, 0xff, 0, 0, 0, 0);
+	buffer.remove_at_start(3);
+	ENSURE_WRITTEN_BYTES (buffer, 2, 0, 0);
+	buffer.add_at_start (4);
+	buffer.begin ().write_hton_u32 (0xdeadbeaf);
+	ENSURE_WRITTEN_BYTES (buffer, 6,  0xde, 0xad, 0xbe, 0xaf, 0, 0);
+	buffer.remove_at_start (2);
+	ENSURE_WRITTEN_BYTES (buffer, 4,  0xbe, 0xaf, 0, 0);
 	
 	
 
