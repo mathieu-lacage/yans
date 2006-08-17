@@ -72,9 +72,8 @@ ChunkLlcSnap::add_to (Buffer *buffer) const
 {
 	buffer->add_at_start (get_size ());
 	Buffer::Iterator i = buffer->begin ();
-	uint8_t buf[] = {0xaa, 0x03, 0, 0, 0};
-	i.write (buf, 5);
-	i.next (1);
+	uint8_t buf[] = {0xaa, 0xaa, 0x03, 0, 0, 0};
+	i.write (buf, 6);
 	i.write_hton_u16 (m_ether_type);
 }
 void 
