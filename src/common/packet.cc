@@ -26,6 +26,9 @@ namespace yans {
 Packet::Packet ()
 	: m_buffer () {}
 
+Packet::Packet (uint32_t size)
+	: m_buffer (size)
+{}
 Packet::Packet (Buffer buffer, Tags tags)
 	: m_buffer (buffer),
 	  m_tags (tags)

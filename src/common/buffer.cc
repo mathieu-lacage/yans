@@ -242,32 +242,42 @@ Buffer::add_at_end (uint32_t end)
 void 
 Buffer::remove_at_start (uint32_t start)
 {
-	assert (m_data->m_initial_start >= m_start);
-	uint32_t zero_start = m_data->m_initial_start - m_start;
-	uint32_t zero_end = zero_start + m_zero_area_size;
-	uint32_t data_end = m_size + m_zero_area_size;
-	if (start <= zero_start) {
-		/* only remove start of buffer */
-		m_start += start;
-		m_size -= start;
-	} else if (start <= zero_end) {
-		/* remove start of buffer _and_ start of zero area */
-		m_start += zero_start;
-		uint32_t zero_delta = start - zero_start;
-		m_zero_area_size -= zero_delta;
-		assert (zero_delta <= start);
-		m_size -= zero_start;
-	} else if (start <= data_end) {
-		/* remove start of buffer, complete zero area, and part
-		 * of end of buffer */
-		m_start += start - m_zero_area_size;
-		m_size -= start - m_zero_area_size;
-		m_zero_area_size = 0;
+	if (m_zero_area_size == 0) {
+		if (m_size <= start) {
+			m_start += m_size;
+			m_size = 0;
+		} else {
+			m_start += start;
+			m_size -= start;
+		}
 	} else {
-		/* remove all buffer */
-		m_start += m_size;
-		m_size = 0;
-		m_zero_area_size = 0;
+		assert (m_data->m_initial_start >= m_start);
+		uint32_t zero_start = m_data->m_initial_start - m_start;
+		uint32_t zero_end = zero_start + m_zero_area_size;
+		uint32_t data_end = m_size + m_zero_area_size;
+		if (start <= zero_start) {
+			/* only remove start of buffer */
+			m_start += start;
+			m_size -= start;
+		} else if (start <= zero_end) {
+			/* remove start of buffer _and_ start of zero area */
+			m_start += zero_start;
+			uint32_t zero_delta = start - zero_start;
+			m_zero_area_size -= zero_delta;
+			assert (zero_delta <= start);
+			m_size -= zero_start;
+		} else if (start <= data_end) {
+			/* remove start of buffer, complete zero area, and part
+			 * of end of buffer */
+			m_start += start - m_zero_area_size;
+			m_size -= start - m_zero_area_size;
+			m_zero_area_size = 0;
+		} else {
+			/* remove all buffer */
+			m_start += m_size;
+			m_size = 0;
+			m_zero_area_size = 0;
+		}
 	}
 	TRACE ("start remove="<<start<<", start="<<m_start<<", size="<<m_size<<", zero="<<m_zero_area_size<<
 	       ", real size="<<m_data->m_size<<", ini start="<<m_data->m_initial_start<<
@@ -276,30 +286,38 @@ Buffer::remove_at_start (uint32_t start)
 void 
 Buffer::remove_at_end (uint32_t end)
 {
-	assert (m_data->m_initial_start >= m_start);
-	uint32_t zero_start = m_data->m_initial_start - m_start;
-	uint32_t zero_end = zero_start + m_zero_area_size;
-	uint32_t data_end = m_size + m_zero_area_size;
-	assert (zero_start <= m_size);
-	assert (zero_end <= m_size + m_zero_area_size);
-	if (data_end <= end) {
-		/* remove all buffer */
-		m_zero_area_size = 0;
-		m_start += m_size;
-		m_size = 0;
-	} else if (data_end - zero_start <= end) {
-		/* remove end of buffer, zero area, part of start of buffer */
-		assert (end >= m_zero_area_size);
-		m_size -= end - m_zero_area_size;
-		m_zero_area_size = 0;
-	} else if (data_end - zero_end <= end) {
-		/* remove end of buffer, part of zero area */
-		uint32_t zero_delta = end - (data_end - zero_end);
-		m_zero_area_size -= zero_delta;
-		m_size -= end - zero_delta;
+	if (m_zero_area_size == 0) {
+		if (m_size <= end) {
+			m_size = 0;
+		} else {
+			m_size -= end;
+		} 
 	} else {
-		/* remove part of end of buffer */
-		m_size -= end;
+		assert (m_data->m_initial_start >= m_start);
+		uint32_t zero_start = m_data->m_initial_start - m_start;
+		uint32_t zero_end = zero_start + m_zero_area_size;
+		uint32_t data_end = m_size + m_zero_area_size;
+		assert (zero_start <= m_size);
+		assert (zero_end <= m_size + m_zero_area_size);
+		if (data_end <= end) {
+			/* remove all buffer */
+			m_zero_area_size = 0;
+			m_start += m_size;
+			m_size = 0;
+		} else if (data_end - zero_start <= end) {
+			/* remove end of buffer, zero area, part of start of buffer */
+			assert (end >= m_zero_area_size);
+			m_size -= end - m_zero_area_size;
+			m_zero_area_size = 0;
+		} else if (data_end - zero_end <= end) {
+			/* remove end of buffer, part of zero area */
+			uint32_t zero_delta = end - (data_end - zero_end);
+			m_zero_area_size -= zero_delta;
+			m_size -= end - zero_delta;
+		} else {
+			/* remove part of end of buffer */
+			m_size -= end;
+		}
 	}
 	TRACE ("end remove="<<end<<", start="<<m_start<<", size="<<m_size<<", zero="<<m_zero_area_size<<
 	       ", real size="<<m_data->m_size<<", ini start="<<m_data->m_initial_start<<

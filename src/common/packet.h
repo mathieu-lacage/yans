@@ -33,6 +33,7 @@ class Packet {
 public:
 	typedef Callback<void,uint8_t *,uint32_t> PacketReadWriteCallback;
 	Packet ();
+	Packet (uint32_t size);
 	Packet create_fragment (uint32_t start, uint32_t length) const;
 	uint32_t get_size (void) const;
 	void add (Chunk *chunk);
