@@ -84,6 +84,10 @@ Packet::add_at_end (Packet packet)
 	Buffer::Iterator dest_start = m_buffer.end ();
 	dest_start.prev (src.get_size ());
 	dest_start.write (src.begin (), src.end ());
+	/**
+	 * XXX: we might need to merge the tag list of the
+	 * other packet into the current packet.
+	 */
 }
 void 
 Packet::add_at_end (Packet packet, uint32_t start, uint32_t size)
@@ -98,6 +102,10 @@ Packet::add_at_end (Packet packet, uint32_t start, uint32_t size)
 	Buffer::Iterator src_end = src_start;
 	src_end.next (size);
 	dest_start.write (src_start, src_end);
+	/**
+	 * XXX: we might need to merge the tag list of the
+	 * other packet into the current packet.
+	 */
 }
 void 
 Packet::remove_at_end (uint32_t size)

@@ -94,6 +94,12 @@ Tags::remove (uint32_t id)
 	struct TagData **prev_next = &start;
 	for (struct TagData *cur = m_next; cur != 0; cur = cur->m_next) {
 		if (cur->m_id == id) {
+			/**
+			 * XXX
+			 * Note: I believe that we could optimize this to
+			 * avoid copying each TagData located after the target id
+			 * and just link the already-copied list to the next tag.
+			 */
 			continue;
 		}
 		struct TagData *copy = alloc_data ();
