@@ -23,6 +23,39 @@
 
 namespace yans {
 
+TagsPrettyPrinterRegistry::PrettyPrinters TagsPrettyPrinterRegistry::g_pretty_printers;
+
+void 
+TagsPrettyPrinterRegistry::record (uint32_t uid, void (*cb) (uint8_t [Tags::SIZE], std::ostream &))
+{
+	for (PrettyPrintersI i = g_pretty_printers.begin (); 
+	     i != g_pretty_printers.end (); i++) {
+		if (i->first == uid) {
+			i->second = cb;
+			return;
+		}
+	}
+	g_pretty_printers.push_back (std::make_pair (uid, cb));
+}
+void 
+TagsPrettyPrinterRegistry::pretty_print (uint32_t uid, uint8_t buf[Tags::SIZE], std::ostream &os)
+{
+	for (PrettyPrintersI i = g_pretty_printers.begin (); 
+	     i != g_pretty_printers.end (); i++) {
+		if (i->first == uid) {
+			if (i->second == 0) {
+				os << "tag uid="<<uid<<" null pretty printer."<<std::endl;
+			} else {
+				(*(i->second)) (buf, os);
+			}
+			return;
+		}
+	}
+	os << "tag uid="<<uid<<" no pretty printer registered."<< std::endl;
+}
+
+
+
 uint32_t
 Tags::UidFactory::create (void)
 {
@@ -132,6 +165,14 @@ Tags::update (uint8_t const*buffer, uint32_t id)
 	return true;
 }
 
+void 
+Tags::pretty_print (std::ostream &os)
+{
+	for (struct TagData *cur = m_next; cur != 0; cur = cur->m_next) {
+		TagsPrettyPrinterRegistry::pretty_print (cur->m_id, cur->m_data, os);
+	}
+}
+
 
 }; // namespace yans
 
@@ -139,6 +180,7 @@ Tags::update (uint8_t const*buffer, uint32_t id)
 
 #include "test.h"
 #include <iomanip>
+#include <iostream>
 
 namespace yans {
 
@@ -162,6 +204,27 @@ struct my_invalid_tag {
 	uint8_t invalid [Tags::SIZE+1];
 };
 
+static void 
+my_tag_a_pretty_printer_cb (struct my_tag_a *a, std::ostream &os)
+{
+	os << "struct my_tag_a, a="<<(uint32_t)a->a<<std::endl;
+}
+static void 
+my_tag_b_pretty_printer_cb (struct my_tag_b *b, std::ostream &os)
+{
+	os << "struct my_tag_b, b="<<b->b<<std::endl;
+}
+static void 
+my_tag_c_pretty_printer_cb (struct my_tag_c *c, std::ostream &os)
+{
+	os << "struct my_tag_c, c="<<(uint32_t)c->c[0]<<std::endl;
+}
+
+
+static TagPrettyPrinter<struct my_tag_a> g_my_tag_a_pretty_printer (&my_tag_a_pretty_printer_cb);
+static TagPrettyPrinter<struct my_tag_b> g_my_tag_b_pretty_printer (&my_tag_b_pretty_printer_cb);
+static TagPrettyPrinter<struct my_tag_c> g_my_tag_c_pretty_printer (&my_tag_c_pretty_printer_cb);
+
 
 TagsTest::TagsTest ()
 	: Test ("Tags")
@@ -184,6 +247,7 @@ TagsTest::run_tests (void)
 	if (a.a != 10) {
 		ok = false;
 	}
+	//tags.pretty_print (std::cout);
 	struct my_tag_b b;
 	b.b = 0xff;
 	tags.add (&b);
@@ -192,9 +256,12 @@ TagsTest::run_tests (void)
 	if (b.b != 0xff) {
 		ok = false;
 	}
+	//tags.pretty_print (std::cout);
 
 	// make sure copy contains copy.
 	Tags other = tags;
+	//other.pretty_print (std::cout);
+	//tags.pretty_print (std::cout);
 	struct my_tag_a o_a;
 	o_a.a = 0;
 	other.peek (&o_a);
@@ -211,6 +278,7 @@ TagsTest::run_tests (void)
 	if (other.peek (&o_a)) {
 		ok = false;
 	}
+	//other.pretty_print (std::cout);
 	if (!tags.peek (&o_a)) {
 		ok = false;
 	}
@@ -237,6 +305,7 @@ TagsTest::run_tests (void)
 	}
 
 	other = other;
+	//other.pretty_print (std::cout);
 
 	//struct my_invalid_tag invalid;
 	//tags.add (&invalid);
