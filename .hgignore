@@ -1,6 +1,7 @@
 .*\.o$
 .*~$
 build-dir
+build
 massif.*
 src/ipv4/tcp-bsd
 patch
