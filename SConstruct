@@ -1,5 +1,6 @@
 
 import os.path
+import shutil
 
 class Ns3Module:
 	def __init__ (self, name, dir):
@@ -25,15 +26,16 @@ class Ns3Module:
 		self.inst_headers.extend (headers)
 	def get_static_output_file (self):
 		full_name = 'lib' + self.name + '.a'
-		return full_name
+		return os.path.join ('lib', full_name)
 	def get_shared_output_file (self):
 		full_name = 'lib' + self.name + '.so'
-		return full_name
+		return os.path.join ('lib', full_name)
 
 class Ns3App:
 	def __init__ (self, name, dir):
 		self.sources = []
 		self.headers = []
+		self.inst_headers = []
 		self.deps = []
 		self.name = name
 		self.dir = dir
@@ -46,16 +48,24 @@ class Ns3App:
 	def add_header (self, header):
 		self.headers.append (header)
 	def get_shared_output_file (self):
-		return self.name
+		return os.path.join ('bin', self.name)
 	def get_static_output_file (self):
-		return self.name
+		return os.path.join ('bin', self.name)
+
+def install_header_action (target, source, env):
+	shutil.copy (source[0].path, target[0].path)
 
 class Ns3:
 	def __init__ (self):
 		self.__modules = []
+		self.__apps = []
 		self.build_dir = 'build'
 	def add (self, module):
 		self.__modules.append (module)
+	def add_module (self, module):
+		self.__modules.append (module)
+	def add_apps (self, app):
+		self.__apps.append (app)
 	# return order in which modules must be built
 	def sort_modules (self):
 		modules = []
@@ -90,24 +100,31 @@ class Ns3:
 	def generate_dependencies (self):
 		flags = '-g3 -Wall -Werror'
 		env = Environment (CFLAGS=flags,CXXFLAGS=flags)
+		header_builder = Builder (action = Action (install_header_action))
+		env.Append (BUILDERS = {'HeaderBuilder':header_builder})
 		build_dir = os.path.join (self.build_dir, 'opt', 'static')
+		include_dir = os.path.join (build_dir, 'include', 'yans')
+		cpp_flags = '-I'+os.path.join (build_dir, 'include')
 		for module in self.__modules:
 			objects = []
 			include_list = ''
-			for dep_name in module.deps:
-				dep = self.__get_module (dep_name)
-				include_list = include_list + '-I' + dep.dir + ' '
 			for source in module.sources:
 				obj_file = os.path.splitext (source)[0] + '.o'
 				tgt = os.path.join (build_dir, module.dir, obj_file)
 				src = os.path.join (module.dir, source)
-				obj = env.StaticObject (target = tgt, source = src, CPPFLAGS=include_list)
+				obj = env.StaticObject (target = tgt, source = src, CPPFLAGS=cpp_flags)
 				objects.append (obj)
-			filename = os.path.join (build_dir, module.dir, module.get_static_output_file ())
+			filename = os.path.join (build_dir, module.get_static_output_file ())
 			library = env.StaticLibrary (target = filename, source = objects)
+			for header in module.inst_headers:
+				tgt = os.path.join (include_dir, header)
+				src = os.path.join (module.dir, header)
+				#builder = env.Install (target = tgt, source = src)
+				builder = env.HeaderBuilder (target = tgt, source = src)
+				env.Depends (library, builder)
 			for dep_name in module.deps:
 				dep = self.__get_module (dep_name)
-				filename = os.path.join (build_dir, dep.dir, dep.get_static_output_file ())
+				filename = os.path.join (build_dir, dep.get_static_output_file ())
 				env.Depends (library, filename)
 			env.Alias ('opt-static', library)
 		return
@@ -133,7 +150,7 @@ core.add_inst_headers ([
         'system-mutex.h',
         'exec-commands.h',
         'wall-clock-ms.h',
-        'reference-list.tcc',
+        'reference-list.h',
         'callback.h',
         'test.h'
 	])
