@@ -23,7 +23,7 @@
 #include "scheduler.h"
 #include "event.h"
 #include "event.tcc"
-#include "system-semaphore.h"
+#include "yans/system-semaphore.h"
 
 #include <math.h>
 #include <cassert>
