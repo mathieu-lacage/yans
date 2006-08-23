@@ -133,17 +133,19 @@ class Ns3:
 		
 	def generate_dependencies (self):
 		flags = '-g3 -Wall -Werror'
-		env = Environment (CFLAGS=flags,CXXFLAGS=flags)
+		env = Environment (CFLAGS=flags,
+				   CXXFLAGS=flags,
+				   CPPDEFINES=['RUN_SELF_TESTS'])
 		header_builder = Builder (action = Action (InstallHeader))
 		env.Append (BUILDERS = {'HeaderBuilder':header_builder})
 		variant = Ns3BuildVariant ()
 		builders = []
 
-		# code coverage analysis
 		gcov_env = env.Copy ()
 		gcov_env.Append (CFLAGS=' -fprofile-arcs -ftest-coverage',
 				 CXXFLAGS=' -fprofile-arcs -ftest-coverage',
 				 LINKFLAGS='-fprofile-arcs')
+		# code coverage analysis
 		variant.opti = False
 		variant.static = False
 		variant.build_root = os.path.join (self.build_dir, 'gcov')
@@ -151,8 +153,12 @@ class Ns3:
 		for builder in builders:
 			gcov_env.Alias ('gcov', builder)
 
+
 		opt_env = env.Copy ()
-		opt_env.Append (CFLAGS=' -O3', CXXFLAGS=' -O3')
+		opt_env.Append (CFLAGS=' -O3',
+				CXXFLAGS=' -O3',
+				CPPDEFINES=['NDEBUG'])
+		# optimized static support
 		variant.opti = True
 		variant.static = True
 		variant.build_root = os.path.join (self.build_dir, 'opt', 'static')
@@ -160,6 +166,7 @@ class Ns3:
 		for builder in builders:
 			opt_env.Alias ('opt-static', builder)
 
+		# optimized shared support
 		variant.opti = True
 		variant.static = False
 		variant.build_root = os.path.join (self.build_dir, 'opt', 'shared')
@@ -167,7 +174,9 @@ class Ns3:
 		for builder in builders:
 			opt_env.Alias ('opt-shared', builder)
 
+
 		dbg_env = env.Copy ()
+		# debug static support
 		variant.opti = False
 		variant.static = True
 		variant.build_root = os.path.join (self.build_dir, 'dbg', 'static')
@@ -175,6 +184,7 @@ class Ns3:
 		for builder in builders:
 			dbg_env.Alias ('dbg-static', builder)
 
+		# debug shared support
 		variant.opti = False
 		variant.static = False
 		variant.build_root = os.path.join (self.build_dir, 'dbg', 'shared')
