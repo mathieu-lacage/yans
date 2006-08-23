@@ -75,19 +75,16 @@ class Ns3:
 			src = os.path.join (module.dir, source)
 			cxx_flags = ''
 			c_flags = ''
-			if variant.opti:
-				cxx_flags = '-O3'
-				c_flags = '-O3'
 			if variant.static:
 				obj_builder = env.StaticObject (target = tgt, source = src,
 								CPPFLAGS=cpp_flags,
 								CXXFLAGS=env['CXXFLAGS'] + ' ' + cxx_flags,
-								CFLAGS=c_flags)
+								CFLAGS=env['CFLAGS'] + ' ' + c_flags)
 			else:
 				obj_builder = env.SharedObject (target = tgt, source = src,
 								CPPFLAGS=cpp_flags,
 								CXXFLAGS=env['CXXFLAGS'] + ' ' + cxx_flags,
-								CFLAGS=c_flags)
+								CFLAGS=env['CFLAGS'] + ' ' + c_flags)
 			objects.append (obj_builder)
 		return objects
 	def get_all_deps (self, module, hash):
@@ -109,17 +106,14 @@ class Ns3:
 			self.get_all_deps (module, all_deps)
 			libs = all_deps.keys ()
 
+			filename = self.get_mod_output (module, variant)
 			if module.executable:
-				filename = os.path.join (build_root, 'bin', module.name)
 				module_builder = env.Program (target = filename, source = objects,
 							      LIBPATH=lib_path, LIBS=libs, RPATH=lib_path)
 			else:
-				filename = os.path.join (build_root, 'lib', 'lib' + module.name )
 				if variant.static:
-					filename = filename + '.a'
 					module_builder = env.StaticLibrary (target = filename, source = objects)
 				else:
-					filename = filename + '.so'
 					module_builder = env.SharedLibrary (target = filename, source = objects,
 									    LIBPATH=lib_path, LIBS=libs)
 					
@@ -144,34 +138,49 @@ class Ns3:
 		env.Append (BUILDERS = {'HeaderBuilder':header_builder})
 		variant = Ns3BuildVariant ()
 		builders = []
-		
+
+		# code coverage analysis
+		gcov_env = env.Copy ()
+		gcov_env.Append (CFLAGS=' -fprofile-arcs -ftest-coverage',
+				 CXXFLAGS=' -fprofile-arcs -ftest-coverage',
+				 LINKFLAGS='-fprofile-arcs')
+		variant.opti = False
+		variant.static = False
+		variant.build_root = os.path.join (self.build_dir, 'gcov')
+		builders = self.gen_mod_dep (gcov_env, variant)
+		for builder in builders:
+			gcov_env.Alias ('gcov', builder)
+
+		opt_env = env.Copy ()
+		opt_env.Append (CFLAGS=' -O3', CXXFLAGS=' -O3')
 		variant.opti = True
 		variant.static = True
 		variant.build_root = os.path.join (self.build_dir, 'opt', 'static')
-		builders = self.gen_mod_dep (env, variant)
+		builders = self.gen_mod_dep (opt_env, variant)
 		for builder in builders:
-			env.Alias ('opt-static', builder)
+			opt_env.Alias ('opt-static', builder)
 
 		variant.opti = True
 		variant.static = False
 		variant.build_root = os.path.join (self.build_dir, 'opt', 'shared')
-		builders = self.gen_mod_dep (env, variant)
+		builders = self.gen_mod_dep (opt_env, variant)
 		for builder in builders:
-			env.Alias ('opt-shared', builder)
+			opt_env.Alias ('opt-shared', builder)
 
+		dbg_env = env.Copy ()
 		variant.opti = False
 		variant.static = True
 		variant.build_root = os.path.join (self.build_dir, 'dbg', 'static')
-		builders = self.gen_mod_dep (env, variant)
+		builders = self.gen_mod_dep (dbg_env, variant)
 		for builder in builders:
-			env.Alias ('dbg-static', builder)
+			dbg_env.Alias ('dbg-static', builder)
 
 		variant.opti = False
 		variant.static = False
 		variant.build_root = os.path.join (self.build_dir, 'dbg', 'shared')
-		builders = self.gen_mod_dep (env, variant)
+		builders = self.gen_mod_dep (dbg_env, variant)
 		for builder in builders:
-			env.Alias ('dbg-shared', builder)
+			dbg_env.Alias ('dbg-shared', builder)
 
 		env.Alias ('dbg', 'dbg-shared')
 		env.Alias ('opt', 'opt-shared')
