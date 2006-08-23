@@ -197,6 +197,7 @@ class Ns3:
 		env.Alias ('dbg', 'dbg-shared')
 		env.Alias ('opt', 'opt-shared')
 		env.Default ('dbg')
+		env.Alias ('all', ['dbg-shared', 'dbg-static', 'opt-shared', 'opt-static'])
 
 
 ns3 = Ns3 ()
