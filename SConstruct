@@ -8,6 +8,7 @@ class Ns3Module:
 		self.inst_headers = []
 		self.headers = []
 		self.deps = []
+		self.external_deps = []
 		self.name = name
 		self.dir = dir
 		self.executable = False
@@ -18,6 +19,8 @@ class Ns3Module:
 	def set_executable (self):
 		self.library = False
 		self.executable = True
+	def add_external_dep (self, dep):
+		self.external_deps.append (dep)
 	def add_dep (self, dep):
 		self.deps.append (dep)
 	def add_source (self, source):
@@ -53,11 +56,6 @@ class Ns3:
 			if module.name == name:
 				return module
 		return None
-	def __get_static_output_file (self, module):
-		if module.executable:
-			return os.path.join ('bin', module.get_static_output_file ())
-		else:
-			return os.path.join ('lib', module.get_static_output_file ())
 	def get_mod_output (self, module, variant):
 		if module.executable:
 			filename = os.path.join (variant.build_root, 'bin', module.name)
@@ -83,12 +81,12 @@ class Ns3:
 			if variant.static:
 				obj_builder = env.StaticObject (target = tgt, source = src,
 								CPPFLAGS=cpp_flags,
-								CXXFLAGS=cxx_flags,
+								CXXFLAGS=env['CXXFLAGS'] + ' ' + cxx_flags,
 								CFLAGS=c_flags)
 			else:
 				obj_builder = env.SharedObject (target = tgt, source = src,
 								CPPFLAGS=cpp_flags,
-								CXXFLAGS=cxx_flags,
+								CXXFLAGS=env['CXXFLAGS'] + ' ' + cxx_flags,
 								CFLAGS=c_flags)
 			objects.append (obj_builder)
 		return objects
@@ -100,11 +98,14 @@ class Ns3:
 		module_builders = []
 		for module in self.__modules:
 			objects = self.get_obj_builders (env, variant, module)
+			libs = ''
+			for dep_name in module.deps:
+				libs = libs + ' ' + dep_name
+			for dep_name in module.external_deps:
+				libs = libs + ' ' + dep_name
+
 			if module.executable:
 				filename = os.path.join (build_root, 'bin', module.name)
-				libs = ''
-				for dep_name in module.deps:
-					libs = libs + ' ' + dep_name
 				module_builder = env.Program (target = filename, source = objects,
 							      LIBPATH=lib_path, LIBS=libs)
 			else:
@@ -114,7 +115,8 @@ class Ns3:
 					module_builder = env.StaticLibrary (target = filename, source = objects)
 				else:
 					filename = filename + '.so'
-					module_builder = env.SharedLibrary (target = filename, source = objects)
+					module_builder = env.SharedLibrary (target = filename, source = objects,
+									    LIBPATH=lib_path, LIBS=libs)
 					
 			for dep_name in module.deps:
 				dep = self.__get_module (dep_name)
@@ -176,6 +178,7 @@ ns3.build_dir = 'build'
 
 core = Ns3Module ('core', 'src/core')
 ns3.add (core)
+core.add_external_dep ('pthread')
 core.add_sources ([
 	'unix-system-semaphore.cc',
         'unix-system-thread.cc',
