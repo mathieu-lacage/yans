@@ -19,7 +19,7 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #include "event.tcc"
-#include "test.h"
+#include "yans/test.h"
 
 #ifdef RUN_SELF_TESTS
 
