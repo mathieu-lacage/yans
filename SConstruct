@@ -10,6 +10,14 @@ class Ns3Module:
 		self.deps = []
 		self.name = name
 		self.dir = dir
+		self.executable = False
+		self.library = True
+	def set_library (self):
+		self.library = True
+		self.executable = False
+	def set_executable (self):
+		self.library = False
+		self.executable = True
 	def add_dep (self, dep):
 		self.deps.append (dep)
 	def add_source (self, source):
@@ -24,110 +32,144 @@ class Ns3Module:
 		self.inst_headers.append (header)
 	def add_inst_headers (self, headers):
 		self.inst_headers.extend (headers)
-	def get_static_output_file (self):
-		full_name = 'lib' + self.name + '.a'
-		return os.path.join ('lib', full_name)
-	def get_shared_output_file (self):
-		full_name = 'lib' + self.name + '.so'
-		return os.path.join ('lib', full_name)
 
-class Ns3App:
-	def __init__ (self, name, dir):
-		self.sources = []
-		self.headers = []
-		self.inst_headers = []
-		self.deps = []
-		self.name = name
-		self.dir = dir
-	def add_dep (self, dep):
-		self.deps.append (dep)
-	def add_source (self, source):
-		self.sources.append (source)
-	def add_sources (self, sources):
-		self.sources.append (sources)
-	def add_header (self, header):
-		self.headers.append (header)
-	def get_shared_output_file (self):
-		return os.path.join ('bin', self.name)
-	def get_static_output_file (self):
-		return os.path.join ('bin', self.name)
-
-def install_header_action (target, source, env):
+def InstallHeader (target, source, env):
 	shutil.copy (source[0].path, target[0].path)
+
+class Ns3BuildVariant:
+	def __init__ (self):
+		self.static = False
+		self.opti = False
+		self.build_root = ''
 
 class Ns3:
 	def __init__ (self):
 		self.__modules = []
-		self.__apps = []
 		self.build_dir = 'build'
 	def add (self, module):
 		self.__modules.append (module)
-	def add_module (self, module):
-		self.__modules.append (module)
-	def add_apps (self, app):
-		self.__apps.append (app)
-	# return order in which modules must be built
-	def sort_modules (self):
-		modules = []
-		for module in self.__modules:
-			copy = module.get_deps ()
-			modules.append ([module, copy])
-		sorted = []
-		while len (modules) > 0:
-			to_remove = []
-			# identify which modules to remove
-			for module in modules:
-				if len (module[1]) == 0:
-					to_remove.append (module)
-			# remove identified modules
-			for to_rem in to_remove:
-				modules.remove (to_rem)
-			# update modules left
-			for module in modules:
-				for to_rem in to_remove:
-					if to_rem[0].name in module[1]:
-						module[1].remove (to_rem[0].name)
-			sorted.extend (to_remove)
-		retval = []
-		for i in sorted:
-			retval.append (i[0])
-		return retval
 	def __get_module (self, name):
 		for module in self.__modules:
 			if module.name == name:
 				return module
 		return None
-	def generate_dependencies (self):
-		flags = '-g3 -Wall -Werror'
-		env = Environment (CFLAGS=flags,CXXFLAGS=flags)
-		header_builder = Builder (action = Action (install_header_action))
-		env.Append (BUILDERS = {'HeaderBuilder':header_builder})
-		build_dir = os.path.join (self.build_dir, 'opt', 'static')
-		include_dir = os.path.join (build_dir, 'include', 'yans')
-		cpp_flags = '-I'+os.path.join (build_dir, 'include')
+	def __get_static_output_file (self, module):
+		if module.executable:
+			return os.path.join ('bin', module.get_static_output_file ())
+		else:
+			return os.path.join ('lib', module.get_static_output_file ())
+	def get_mod_output (self, module, variant):
+		if module.executable:
+			filename = os.path.join (variant.build_root, 'bin', module.name)
+		else:
+			filename = os.path.join (variant.build_root, 'lib', 'lib' + module.name )
+			if variant.static:
+				filename = filename + '.a'
+			else:
+				filename = filename + '.so'
+		return filename
+	def get_obj_builders (self, env, variant, module):
+		cpp_flags = '-I' + os.path.join (variant.build_root, 'include')
+		objects = []
+		for source in module.sources:
+			obj_file = os.path.splitext (source)[0] + '.o'
+			tgt = os.path.join (variant.build_root, module.dir, obj_file)
+			src = os.path.join (module.dir, source)
+			cxx_flags = ''
+			c_flags = ''
+			if variant.opti:
+				cxx_flags = '-O3'
+				c_flags = '-O3'
+			if variant.static:
+				obj_builder = env.StaticObject (target = tgt, source = src,
+								CPPFLAGS=cpp_flags,
+								CXXFLAGS=cxx_flags,
+								CFLAGS=c_flags)
+			else:
+				obj_builder = env.SharedObject (target = tgt, source = src,
+								CPPFLAGS=cpp_flags,
+								CXXFLAGS=cxx_flags,
+								CFLAGS=c_flags)
+			objects.append (obj_builder)
+		return objects
+	def gen_mod_dep (self, env, variant):
+		build_root = variant.build_root
+		include_dir = os.path.join (build_root, 'include', 'yans')
+		lib_path = os.path.join (build_root, 'lib')
+		cpp_flags = '-I' + os.path.join (build_root, 'include')
+		module_builders = []
 		for module in self.__modules:
-			objects = []
-			include_list = ''
-			for source in module.sources:
-				obj_file = os.path.splitext (source)[0] + '.o'
-				tgt = os.path.join (build_dir, module.dir, obj_file)
-				src = os.path.join (module.dir, source)
-				obj = env.StaticObject (target = tgt, source = src, CPPFLAGS=cpp_flags)
-				objects.append (obj)
-			filename = os.path.join (build_dir, module.get_static_output_file ())
-			library = env.StaticLibrary (target = filename, source = objects)
+			objects = self.get_obj_builders (env, variant, module)
+			if module.executable:
+				filename = os.path.join (build_root, 'bin', module.name)
+				libs = ''
+				for dep_name in module.deps:
+					libs = libs + ' ' + dep_name
+				module_builder = env.Program (target = filename, source = objects,
+							      LIBPATH=lib_path, LIBS=libs)
+			else:
+				filename = os.path.join (build_root, 'lib', 'lib' + module.name )
+				if variant.static:
+					filename = filename + '.a'
+					module_builder = env.StaticLibrary (target = filename, source = objects)
+				else:
+					filename = filename + '.so'
+					module_builder = env.SharedLibrary (target = filename, source = objects)
+					
+			for dep_name in module.deps:
+				dep = self.__get_module (dep_name)
+				env.Depends (module_builder, self.get_mod_output (dep, variant))
+					
 			for header in module.inst_headers:
 				tgt = os.path.join (include_dir, header)
 				src = os.path.join (module.dir, header)
 				#builder = env.Install (target = tgt, source = src)
-				builder = env.HeaderBuilder (target = tgt, source = src)
-				env.Depends (library, builder)
-			for dep_name in module.deps:
-				dep = self.__get_module (dep_name)
-				filename = os.path.join (build_dir, dep.get_static_output_file ())
-				env.Depends (library, filename)
-			env.Alias ('opt-static', library)
-		return
+				header_builder = env.HeaderBuilder (target = tgt, source = src)
+				env.Depends (module_builder, header_builder)
+				
+			module_builders.append (module_builder)
+		return module_builders
+		
+	def generate_dependencies (self):
+		flags = '-g3 -Wall -Werror'
+		env = Environment (CFLAGS=flags,CXXFLAGS=flags)
+		header_builder = Builder (action = Action (InstallHeader))
+		env.Append (BUILDERS = {'HeaderBuilder':header_builder})
+		variant = Ns3BuildVariant ()
+		builders = []
+		
+		variant.opti = True
+		variant.static = True
+		variant.build_root = os.path.join (self.build_dir, 'opt', 'static')
+		builders = self.gen_mod_dep (env, variant)
+		for builder in builders:
+			env.Alias ('opt-static', builder)
+
+		variant.opti = True
+		variant.static = False
+		variant.build_root = os.path.join (self.build_dir, 'opt', 'shared')
+		builders = self.gen_mod_dep (env, variant)
+		for builder in builders:
+			env.Alias ('opt-shared', builder)
+
+		variant.opti = False
+		variant.static = True
+		variant.build_root = os.path.join (self.build_dir, 'dbg', 'static')
+		builders = self.gen_mod_dep (env, variant)
+		for builder in builders:
+			env.Alias ('dbg-static', builder)
+
+		variant.opti = False
+		variant.static = False
+		variant.build_root = os.path.join (self.build_dir, 'dbg', 'shared')
+		builders = self.gen_mod_dep (env, variant)
+		for builder in builders:
+			env.Alias ('dbg-shared', builder)
+
+		env.Alias ('dbg', 'dbg-shared')
+		env.Alias ('opt', 'opt-shared')
+		env.Default ('dbg')
+
 
 ns3 = Ns3 ()
 ns3.build_dir = 'build'
@@ -182,12 +224,14 @@ simu.add_inst_headers ([
 	])
 
 
-main_callback = Ns3App ('main-callback', 'samples')
+main_callback = Ns3Module ('main-callback', 'samples')
+main_callback.set_executable ()
 ns3.add (main_callback)
 main_callback.add_dep ('core')
 main_callback.add_source ('main-callback.cc')
 
-main_event = Ns3App ('main-event', 'samples')
+main_event = Ns3Module ('main-event', 'samples')
+main_event.set_executable ()
 ns3.add (main_event)
 main_event.add_dep ('simulator')
 main_event.add_source ('main-event.cc')
