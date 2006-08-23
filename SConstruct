@@ -23,6 +23,8 @@ class Ns3Module:
 		self.external_deps.append (dep)
 	def add_dep (self, dep):
 		self.deps.append (dep)
+	def add_deps (self, deps):
+		self.deps.extend (deps)
 	def add_source (self, source):
 		self.sources.append (source)
 	def add_sources (self, sources):
@@ -250,6 +252,11 @@ simu.add_inst_headers ([
 	'event.tcc'
 	])
 
+run_tests = Ns3Module ('run-tests', 'utils')
+ns3.add (run_tests)
+run_tests.set_executable ()
+run_tests.add_deps (['core', 'simulator'])
+run_tests.add_source ('run-tests.cc')
 
 main_callback = Ns3Module ('main-callback', 'samples')
 main_callback.set_executable ()

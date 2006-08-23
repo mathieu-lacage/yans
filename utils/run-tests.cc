@@ -19,7 +19,7 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "test.h"
+#include "yans/test.h"
 
 int main (int argc, char *argv[])
 {
