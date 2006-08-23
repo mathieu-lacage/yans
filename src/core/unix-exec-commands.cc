@@ -509,8 +509,8 @@ ExecCommandsTest::run_tests (void)
 
 static ExecCommandsTest g_exec_commands_test;
 
+}; // namespace yans
+
 #endif /* RUN_SELF_TESTS */
 
-
-}; // namespace yans
 

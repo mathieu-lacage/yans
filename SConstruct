@@ -2,6 +2,14 @@
 import os.path
 
 source_files = [
+        'src/core/unix-system-semaphore.cc',
+        'src/core/unix-system-thread.cc',
+        'src/core/unix-system-mutex.cc',
+        'src/core/unix-exec-commands.cc',
+        'src/core/unix-wall-clock-ms.cc',
+        'src/core/reference-list-test.cc',
+        'src/core/callback-test.cc',
+        'src/core/test.cc'
 	'src/simulator/scheduler.cc', 
 	'src/simulator/scheduler-list.cc',
         'src/simulator/scheduler-heap.cc',
@@ -10,15 +18,6 @@ source_files = [
         'src/simulator/event-tcc.cc',
         'src/simulator/event-tcc-test.cc',
         'src/simulator/simulator.cc',
-        'src/simulator/unix-system-semaphore.cc',
-        'src/thread/semaphore.cc',
-        'src/thread/fiber.cc',
-        'src/thread/fiber-scheduler.cc',
-        'src/thread/thread.cc',
-        'src/common/unix-system-thread.cc',
-        'src/common/unix-system-mutex.cc',
-        'src/common/unix-exec-commands.cc',
-        'src/common/wall-clock-ms-unix.cc',
         'src/common/chunk.cc',
         'src/common/chunk-utils.cc',
         'src/common/packet.cc',
@@ -32,8 +31,6 @@ source_files = [
         'src/common/utils.cc',
         'src/common/population-analysis.cc',
         'src/common/data-writer.cc',
-        'src/common/callback-test.cc',
-        'src/common/reference-list-test.cc',
         'src/common/traced-variable-test.cc',
         'src/common/trace-stream-test.cc',
         'src/common/packet-logger.cc',
@@ -113,8 +110,7 @@ source_files = [
         'src/80211/mac-high-nqsta.cc',
         'src/80211/mac-high-nqap.cc',
         'src/80211/network-interface-80211.cc',
-        'src/80211/network-interface-80211-factory.cc',
-        'src/test/test.cc'
+        'src/80211/network-interface-80211-factory.cc'
 ]
 
 class Ns3BuildConfig:
