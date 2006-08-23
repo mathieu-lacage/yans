@@ -112,7 +112,7 @@ class Ns3:
 			if module.executable:
 				filename = os.path.join (build_root, 'bin', module.name)
 				module_builder = env.Program (target = filename, source = objects,
-							      LIBPATH=lib_path, LIBS=libs)
+							      LIBPATH=lib_path, LIBS=libs, RPATH=lib_path)
 			else:
 				filename = os.path.join (build_root, 'lib', 'lib' + module.name )
 				if variant.static:
