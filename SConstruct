@@ -90,6 +90,13 @@ class Ns3:
 								CFLAGS=c_flags)
 			objects.append (obj_builder)
 		return objects
+	def get_all_deps (self, module, hash):
+		for dep_name in module.deps:
+			hash[dep_name] = 1
+			dep = self.__get_module (dep_name)
+			self.get_all_deps (dep, hash)
+		for dep_name in module.external_deps:
+			hash[dep_name] = 1
 	def gen_mod_dep (self, env, variant):
 		build_root = variant.build_root
 		include_dir = os.path.join (build_root, 'include', 'yans')
@@ -98,11 +105,9 @@ class Ns3:
 		module_builders = []
 		for module in self.__modules:
 			objects = self.get_obj_builders (env, variant, module)
-			libs = ''
-			for dep_name in module.deps:
-				libs = libs + ' ' + dep_name
-			for dep_name in module.external_deps:
-				libs = libs + ' ' + dep_name
+			all_deps = {}
+			self.get_all_deps (module, all_deps)
+			libs = all_deps.keys ()
 
 			if module.executable:
 				filename = os.path.join (build_root, 'bin', module.name)

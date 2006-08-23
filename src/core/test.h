@@ -27,6 +27,8 @@
 #include <utility>
 #include <ostream>
 
+#ifdef RUN_SELF_TESTS
+
 namespace yans {
 
 class TestManager;
@@ -67,5 +69,7 @@ private:
 	bool m_verbose;
 };
 }; // namespace yans 
+
+#endif /* RUN_SELF_TESTS */
 
 #endif /* TEST_H */

@@ -21,6 +21,8 @@
 #include "reference-list.h"
 #include "test.h"
 
+#ifdef RUN_SELF_TESTS
+
 #define noREFTEST_DEBUG 1
 
 #ifdef REFTEST_DEBUG 
@@ -114,3 +116,5 @@ RefTest::run_tests (void)
 static RefTest g_ref_test = RefTest ();
 
 }; // namespace
+
+#endif /* RUN_SELF_TESTS */

@@ -23,6 +23,8 @@
 #include "callback.h"
 #include <stdint.h>
 
+#ifdef RUN_SELF_TESTS
+
 namespace yans {
 
 static bool g_test5 = false;
@@ -192,3 +194,4 @@ static CallbackTest g_callback_test;
 
 }; // namespace
 
+#endif /* RUN_SELF_TESTS */
