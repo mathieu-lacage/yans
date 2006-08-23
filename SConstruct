@@ -1,184 +1,182 @@
 
 import os.path
 
-source_files = [
-        'src/core/unix-system-semaphore.cc',
-        'src/core/unix-system-thread.cc',
-        'src/core/unix-system-mutex.cc',
-        'src/core/unix-exec-commands.cc',
-        'src/core/unix-wall-clock-ms.cc',
-        'src/core/reference-list-test.cc',
-        'src/core/callback-test.cc',
-        'src/core/test.cc'
-	'src/simulator/scheduler.cc', 
-	'src/simulator/scheduler-list.cc',
-        'src/simulator/scheduler-heap.cc',
-        'src/simulator/scheduler-map.cc',
-        'src/simulator/event-impl.cc',
-        'src/simulator/event-tcc.cc',
-        'src/simulator/event-tcc-test.cc',
-        'src/simulator/simulator.cc',
-        'src/common/chunk.cc',
-        'src/common/chunk-utils.cc',
-        'src/common/packet.cc',
-        'src/common/buffer.cc',
-        'src/common/chunk-constant-data.cc',
-        'src/common/ipv4-address.cc',
-        'src/common/mac-address.cc',
-        'src/common/mac-address-factory.cc',
-        'src/common/mac-network-interface.cc',
-        'src/common/tags.cc',
-        'src/common/utils.cc',
-        'src/common/population-analysis.cc',
-        'src/common/data-writer.cc',
-        'src/common/traced-variable-test.cc',
-        'src/common/trace-stream-test.cc',
-        'src/common/packet-logger.cc',
-        'src/common/trace-container.cc',
-        'src/common/pcap-writer.cc',
-        'src/common/seed-generator-mrg32k3a.cc',
-        'src/common/random-uniform-mrg32k3a.cc',
-        'src/common/rng-mrg32k3a.cc',
-        'src/common/timeout.cc',
-        'src/common/chunk-llc-snap.cc',
-        'src/common/llc-snap-encapsulation.cc',
-        'src/common/ipv4-network-interface.cc',
-        'src/common/position.cc',
-        'src/common/static-position.cc',
-        'src/common/static-speed-position.cc',
-        'src/ipv4/ipv4-end-point.cc',
-        'src/ipv4/ipv4-end-points.cc',
-        'src/ipv4/ipv4-route.cc',
-        'src/ipv4/ipv4.cc',
-        'src/ipv4/defrag-state.cc',
-        'src/ipv4/chunk-ipv4.cc',
-        'src/ipv4/udp.cc',
-        'src/ipv4/chunk-udp.cc',
-        'src/ipv4/chunk-icmp.cc',
-        'src/ipv4/chunk-tcp.cc',
-        'src/ipv4/tcp.cc',
-        'src/ipv4/tcp-connection-listener.cc',
-        'src/ipv4/tcp-connection.cc',
-        'src/ipv4/tcp-buffer.cc',
-        'src/arp/arp-ipv4-network-interface.cc',
-        'src/arp/chunk-arp.cc',
-        'src/arp/arp-cache-entry.cc',
-        'src/host/loopback-ipv4.cc',
-        'src/host/host.cc',
-        'src/ethernet/cable.cc',
-        'src/ethernet/chunk-mac-crc.cc',
-        'src/ethernet/chunk-mac-eth.cc',
-        'src/ethernet/ethernet-network-interface.cc',
-        'src/apps/udp-source.cc',
-        'src/apps/udp-sink.cc',
-        'src/apps/tcp-source.cc',
-        'src/apps/tcp-sink.cc',
-        'src/apps/periodic-generator.cc',
-        'src/apps/traffic-analyser.cc',
-        'src/apps/throughput-printer.cc',
-        'src/80211/chunk-mac-80211-hdr.cc',
-        'src/80211/chunk-mac-80211-fcs.cc',
-        'src/80211/mac-stations.cc',
-        'src/80211/mac-station.cc',
-        'src/80211/arf-mac-stations.cc',
-        'src/80211/aarf-mac-stations.cc',
-        'src/80211/cr-mac-stations.cc',
-        'src/80211/ideal-mac-stations.cc',
-        'src/80211/propagation-model.cc',
-        'src/80211/base-channel-80211.cc',
-        'src/80211/channel-80211.cc',
-        'src/80211/transmission-mode.cc',
-        'src/80211/bpsk-mode.cc',
-        'src/80211/qam-mode.cc',
-        'src/80211/phy-80211.cc',
-        'src/80211/network-interface-80211-simple.cc',
-        'src/80211/network-interface-80211-simple-factory.cc',
-        'src/80211/mac-simple.cc',
-        'src/80211/mac-low.cc',
-        'src/80211/mac-parameters.cc',
-        'src/80211/dcf.cc',
-        'src/80211/mac-tx-middle.cc',
-        'src/80211/mac-rx-middle.cc',
-        'src/80211/dca-txop.cc',
-        'src/80211/mac-queue-80211e.cc',
-        'src/80211/mac-high-adhoc.cc',
-        'src/80211/ssid.cc',
-        'src/80211/supported-rates.cc',
-        'src/80211/capability-information.cc',
-        'src/80211/status-code.cc',
-        'src/80211/chunk-mgt.cc',
-        'src/80211/mac-high-nqsta.cc',
-        'src/80211/mac-high-nqap.cc',
-        'src/80211/network-interface-80211.cc',
-        'src/80211/network-interface-80211-factory.cc'
-]
+class Ns3Module:
+	def __init__ (self, name, dir):
+		self.sources = []
+		self.inst_headers = []
+		self.headers = []
+		self.deps = []
+		self.name = name
+		self.dir = dir
+	def add_dep (self, dep):
+		self.deps.append (dep)
+	def add_source (self, source):
+		self.sources.append (source)
+	def add_sources (self, sources):
+		self.sources.extend (sources)
+	def add_header (self, header):
+		self.headers.append (header)
+	def add_headers (self, headers):
+		self.headers.extend (headers)
+	def add_inst_header (self, header):
+		self.inst_headers.append (header)
+	def add_inst_headers (self, headers):
+		self.inst_headers.extend (headers)
+	def get_static_output_file (self):
+		full_name = 'lib' + self.name + '.a'
+		return full_name
+	def get_shared_output_file (self):
+		full_name = 'lib' + self.name + '.so'
+		return full_name
 
-class Ns3BuildConfig:
-	def __init__(self):
-		self.opti = False
-		self.static = False
+class Ns3App:
+	def __init__ (self, name, dir):
+		self.sources = []
+		self.headers = []
+		self.deps = []
+		self.name = name
+		self.dir = dir
+	def add_dep (self, dep):
+		self.deps.append (dep)
+	def add_source (self, source):
+		self.sources.append (source)
+	def add_sources (self, sources):
+		self.sources.append (sources)
+	def add_header (self, header):
+		self.headers.append (header)
+	def get_shared_output_file (self):
+		return self.name
+	def get_static_output_file (self):
+		return self.name
+
+class Ns3:
+	def __init__ (self):
+		self.__modules = []
 		self.build_dir = 'build'
-	def get_obj (self, source):
-		obj_file = os.path.splitext (os.path.join (self.__get_build_dir (), source))[0] + '.o'
-		return obj_file
-	def __get_build_dir (self):
-		base_output_dir = 'build'
-		if self.static:
-			static_output_dir = '-static'
-		else:
-			static_output_dir = '-shared'
-		if self.opti:
-			opti_output_dir = 'opt'
-		else:
-			opti_output_dir = 'dbg'
-		output_dir = os.path.join (base_output_dir + static_output_dir, opti_output_dir)
-		return output_dir
-	def __get_lib (self, name):
-		if self.static:
-			full_name = 'lib' + name + '.a'
-		else:
-			full_name = 'lib' + name + '.so'
-		return os.path.join (self.__get_build_dir (), full_name)
-	def generate_library (self, env, name, source_files):
-		object_files = []
-		if self.static:
-			for src in source_files:
-				object_files.append (env.StaticObject (target = ns3.get_obj (src), source = src))
-			library = env.StaticLibrary (target = self.__get_lib (name), source = object_files)
-		else:
-			for src in source_files:
-				object_files.append (env.SharedObject (target = ns3.get_obj (src), source = src))
-			library = env.SharedLibrary (target = self.__get_lib (name), source = object_files)
-		return library
+	def add (self, module):
+		self.__modules.append (module)
+	# return order in which modules must be built
+	def sort_modules (self):
+		modules = []
+		for module in self.__modules:
+			copy = module.get_deps ()
+			modules.append ([module, copy])
+		sorted = []
+		while len (modules) > 0:
+			to_remove = []
+			# identify which modules to remove
+			for module in modules:
+				if len (module[1]) == 0:
+					to_remove.append (module)
+			# remove identified modules
+			for to_rem in to_remove:
+				modules.remove (to_rem)
+			# update modules left
+			for module in modules:
+				for to_rem in to_remove:
+					if to_rem[0].name in module[1]:
+						module[1].remove (to_rem[0].name)
+			sorted.extend (to_remove)
+		retval = []
+		for i in sorted:
+			retval.append (i[0])
+		return retval
+	def __get_module (self, name):
+		for module in self.__modules:
+			if module.name == name:
+				return module
+		return None
+	def generate_dependencies (self):
+		flags = '-g3 -Wall -Werror'
+		env = Environment (CFLAGS=flags,CXXFLAGS=flags)
+		build_dir = os.path.join (self.build_dir, 'opt', 'static')
+		for module in self.__modules:
+			objects = []
+			include_list = ''
+			for dep_name in module.deps:
+				dep = self.__get_module (dep_name)
+				include_list = include_list + '-I' + dep.dir + ' '
+			for source in module.sources:
+				obj_file = os.path.splitext (source)[0] + '.o'
+				tgt = os.path.join (build_dir, module.dir, obj_file)
+				src = os.path.join (module.dir, source)
+				obj = env.StaticObject (target = tgt, source = src, CPPFLAGS=include_list)
+				objects.append (obj)
+			filename = os.path.join (build_dir, module.dir, module.get_static_output_file ())
+			library = env.StaticLibrary (target = filename, source = objects)
+			for dep_name in module.deps:
+				dep = self.__get_module (dep_name)
+				filename = os.path.join (build_dir, dep.dir, dep.get_static_output_file ())
+				env.Depends (library, filename)
+			env.Alias ('opt-static', library)
+		return
 
-	
+ns3 = Ns3 ()
+ns3.build_dir = 'build'
 
-env = Environment ()
+core = Ns3Module ('core', 'src/core')
+ns3.add (core)
+core.add_sources ([
+	'unix-system-semaphore.cc',
+        'unix-system-thread.cc',
+        'unix-system-mutex.cc',
+        'unix-exec-commands.cc',
+        'unix-wall-clock-ms.cc',
+        'reference-list-test.cc',
+        'callback-test.cc',
+        'test.cc'
+	])
+core.add_inst_headers ([
+	'system-semaphore.h',
+        'system-thread.h',
+        'system-mutex.h',
+        'exec-commands.h',
+        'wall-clock-ms.h',
+        'reference-list.tcc',
+        'callback.h',
+        'test.h'
+	])
 
-ns3 = Ns3BuildConfig ()
+simu = Ns3Module ('simulator', 'src/simulator')
+ns3.add (simu)
+simu.add_dep ('core')
+simu.add_sources ([
+	'scheduler.cc', 
+	'scheduler-list.cc',
+        'scheduler-heap.cc',
+        'scheduler-map.cc',
+        'event-impl.cc',
+        'event-tcc.cc',
+        'event-tcc-test.cc',
+        'simulator.cc',
+	])
+simu.add_headers ([
+	'scheduler.h',
+	'scheduler-heap.h',
+	'scheduler-map.h',
+	'scheduler-list.h'
+	])
+simu.add_inst_headers ([
+	'event.h',
+	'event-impl.h',
+	'simulator.h',
+	'event.tcc'
+	])
 
-ns3.opti = False
-ns3.static = True
-library = ns3.generate_library (env, 'yans', source_files)
-env.Alias ('dbg-static', library)
 
-ns3.opti = False
-ns3.static = False
-library = ns3.generate_library (env, 'yans', source_files)
-env.Alias ('dbg-shared', library)
-env.Alias ('dbg', library)
-env.Default (library)
+main_callback = Ns3App ('main-callback', 'samples')
+ns3.add (main_callback)
+main_callback.add_dep ('core')
+main_callback.add_source ('main-callback.cc')
 
-ns3.opti = True
-ns3.static = True
-library = ns3.generate_library (env, 'yans', source_files)
-env.Alias ('opti-static', library)
+main_event = Ns3App ('main-event', 'samples')
+ns3.add (main_event)
+main_event.add_dep ('simulator')
+main_event.add_source ('main-event.cc')
 
-ns3.opti = True
-ns3.static = False
-library = ns3.generate_library (env, 'yans', source_files)
-env.Alias ('opti-shared', library)
-env.Alias ('opti', library)
+
+ns3.generate_dependencies ()
 
 
 
