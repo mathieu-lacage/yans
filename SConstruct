@@ -44,17 +44,33 @@ class Ns3Module:
 		self.inst_headers.extend (headers)
 
 def MyCopyAction (target, source, env):
-	shutil.copy (source[0].path, target[0].path)
-	return 0
+	try:
+		if len (target) == len (source):
+			for i in range (len(target)):
+				shutil.copy (source[i].path, target[i].path)
+			return 0
+		else:
+			return 'invalid target/source match'
+	except:
+		print
+		return 'exception'
 def MyCopyActionPrint (target, source, env):
-	return 'copy \'' + source[0].path + '\' to \'' + target[0].path  + '\''
+	if len (target) == len (source):
+		output = ''
+		for i in range (len(target)):
+			output = output + 'copy \'' + source[i].path + '\' to \'' + target[i].path  + '\''
+			if i < len (target) - 1:
+				output = output + '\n'
+		return output
+	else:
+		return 'error in copy'
 def GcxxEmitter (target, source, env):
 	if os.path.exists (source[0].path):
 		return [target, source]
 	else:
 		return [[], []]
 def MyRmTree (target, source, env):
-	#shutil.rmtree (env['RM_DIR'])
+	shutil.rmtree (env['RM_DIR'])
 	return 0
 def MyRmTreePrint (target, source, env):
 	return ''
@@ -299,11 +315,14 @@ class Ns3:
 			targets.append (dist_env.MyCopyBuilder (target = tgt, source = src))
 		tar = basename + '.tar.gz'
 		zip = basename + '.zip'
-		dist_env.Tar (tar, targets)
+		tmp_tar = os.path.join (self.build_dir, tar)
+		tmp_zip = os.path.join (self.build_dir, zip)
+		dist_env.Tar (tmp_tar, targets)
+		dist_env.Zip (tmp_zip, targets)
+		dist_builder = dist_env.MyCopyBuilder (target = [tar, zip], source = [tmp_tar, tmp_zip])
+		dist_env.Alias ('dist', dist_builder)
 		dist_env.Append (RM_DIR=basename)
-		dist_env.AddPostAction (tar, dist_env.Action (MyRmTree, strfunction = MyRmTreePrint))
-		dist_env.Zip (zip, targets)
-		dist_builder = dist_env.Alias ('dist', [tar, zip])
+		dist_env.AddPostAction (dist_builder, dist_env.Action (MyRmTree, strfunction = MyRmTreePrint))
 
 
 ns3 = Ns3 ()
