@@ -470,6 +470,21 @@ ipv4.add_sources ([
 	'udp.cc'
 	])
 
+host = Ns3Module ('host', 'src/host')
+ns3.add (host)
+host.add_deps (['ipv4'])
+host.add_sources ([
+	'host.cc',
+	'loopback-ipv4.cc'
+	])
+host.add_inst_headers ([
+	'host.h'
+	])
+host.add_headers ([
+	'loopback-ipv4.h'
+	])
+
+
 run_tests = Ns3Module ('run-tests', 'utils')
 ns3.add (run_tests)
 run_tests.set_executable ()

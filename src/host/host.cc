@@ -19,13 +19,13 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
+#include "yans/arp-ipv4-network-interface.h"
+#include "yans/ipv4.h"
+#include "yans/ipv4-route.h"
+#include "yans/udp.h"
+#include "yans/tcp.h"
 #include "host.h"
-#include "arp-ipv4-network-interface.h"
-#include "ipv4.h"
-#include "ipv4-route.h"
 #include "loopback-ipv4.h"
-#include "udp.h"
-#include "tcp.h"
 
 namespace yans {
 
@@ -86,37 +86,5 @@ Host::get_tcp (void)
 {
 	return m_tcp;
 }
-
-double 
-Host::get_x (void) const
-{
-	return m_x;
-}
-double 
-Host::get_y (void) const
-{
-	return m_y;
-}
-double 
-Host::get_z (void) const
-{
-	return m_z;
-}
-void 
-Host::set_x (double x)
-{
-	m_x = x;
-}
-void 
-Host::set_y (double y)
-{
-	m_y = y;
-}
-void 
-Host::set_z (double z)
-{
-	m_z = z;
-}
-
 
 }; // namespace yans

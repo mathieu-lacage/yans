@@ -21,9 +21,9 @@
 #ifndef LOOPBACK_IPV4_H
 #define LOOPBACK_IPV4_H
 
-#include "ipv4-network-interface.h"
-#include "ipv4-address.h"
-#include "packet.h"
+#include "yans/ipv4-network-interface.h"
+#include "yans/ipv4-address.h"
+#include "yans/packet.h"
 
 namespace yans {
 
