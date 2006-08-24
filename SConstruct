@@ -438,19 +438,19 @@ common.add_inst_headers ([
 	'position.h',
 	'random-uniform.h',
 	'timeout.h',
+	'trace-stream.h',
+	'pcap-writer.h',
+	'mac-address-factory.h',
+	'static-position.h',
 	'utils.h'
 	])
 common.add_headers ([
 	'chunk-llc-snap.h',
 	'data-writer.h',
-	'mac-address-factory.h',
-	'pcap-writer.h',
 	'ref-ptr.h',
 	'rng-mrg32k3a.h',
 	'seed-generator.h',
-	'static-position.h',
-	'static-speed-position.h',
-	'trace-stream.h'
+	'static-speed-position.h'
 	])
 
 ipv4 = Ns3Module ('ipv4', 'src/ipv4')
@@ -532,7 +532,7 @@ apps.add_sources ([
 	'udp-sink.cc',
 	'udp-source.cc'
 	])
-apps.add_headers ([
+apps.add_inst_headers ([
 	'periodic-generator.h',
 	'tcp-sink.h',
 	'tcp-source.h',
@@ -658,6 +658,55 @@ main_event.set_executable ()
 ns3.add (main_event)
 main_event.add_dep ('simulator')
 main_event.add_source ('main-event.cc')
+
+main_trace = Ns3Module ('main-trace', 'samples')
+ns3.add (main_trace)
+main_trace.add_dep ('common')
+main_trace.set_executable ()
+main_trace.add_source ('main-trace.cc')
+
+main_simu = Ns3Module ('main-simulator', 'samples')
+ns3.add (main_simu)
+main_simu.set_executable ()
+main_simu.add_dep ('simulator')
+main_simu.add_source ('main-simulator.cc')
+
+main_packet = Ns3Module ('main-packet', 'samples')
+ns3.add (main_packet)
+main_packet.set_executable ()
+main_packet.add_dep ('common')
+main_packet.add_source ('main-packet.cc')
+
+main_simple = Ns3Module('main-simple', 'samples')
+ns3.add (main_simple)
+main_simple.set_executable ()
+main_simple.add_deps (['ipv4', 'apps', 'common', 'ethernet'])
+main_simple.add_source ('main-simple.cc')
+
+main_router = Ns3Module('main-router', 'samples')
+ns3.add (main_router)
+main_router.set_executable ()
+main_router.add_deps (['ipv4', 'apps', 'common', 'ethernet'])
+main_router.add_source ('main-router.cc')
+
+mainwifi_simple = Ns3Module ('main-80211-simple', 'samples')
+ns3.add (mainwifi_simple)
+mainwifi_simple.set_executable ()
+mainwifi_simple.add_deps (['ipv4', 'apps', 'common', '80211'])
+mainwifi_simple.add_source ('main-80211-simple.cc')
+
+mainwifi_adhoc = Ns3Module ('main-80211-adhoc', 'samples')
+ns3.add (mainwifi_adhoc)
+mainwifi_adhoc.set_executable ()
+mainwifi_adhoc.add_deps (['ipv4', 'apps', 'common', '80211'])
+mainwifi_adhoc.add_source ('main-80211-adhoc.cc')
+
+mainwifi_ap = Ns3Module ('main-80211-ap', 'samples')
+ns3.add (mainwifi_ap)
+mainwifi_ap.set_executable ()
+mainwifi_ap.add_deps (['ipv4', 'apps', 'common', '80211'])
+mainwifi_ap.add_source ('main-80211-ap.cc')
+
 
 
 ns3.generate_dependencies ()
