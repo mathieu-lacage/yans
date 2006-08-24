@@ -323,6 +323,9 @@ class Ns3:
 		dist_env.Alias ('dist', dist_builder)
 		dist_env.Append (RM_DIR=basename)
 		dist_env.AddPostAction (dist_builder, dist_env.Action (MyRmTree, strfunction = MyRmTreePrint))
+		dist_builder = dist_env.MyCopyBuilder (target = [tar, zip], source = [tmp_tar, tmp_zip])
+		dist_env.Alias ('fastdist', [tar, zip])
+
 
 
 ns3 = Ns3 ()
