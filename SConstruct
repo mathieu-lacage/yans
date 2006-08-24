@@ -432,6 +432,7 @@ common.add_inst_headers ([
 	'sgi-hashmap.h',
 	'llc-snap-encapsulation.h',
 	'mac-network-interface.h',
+	'population-analysis.h',
 	'utils.h'
 	])
 common.add_headers ([
@@ -439,7 +440,6 @@ common.add_headers ([
 	'data-writer.h',
 	'mac-address-factory.h',
 	'pcap-writer.h',
-	'population-analysis.h',
 	'position.h',
 	'random-uniform.h',
 	'ref-ptr.h',
@@ -473,7 +473,11 @@ ipv4.add_inst_headers ([
 	'tcp.h',
 	'udp.h',
 	'ipv4.h',
-	'ipv4-route.h'
+	'ipv4-route.h',
+	'tcp-connection.h',
+	'tcp-connection-listener.h',
+	'tag-ipv4.h',
+	'ipv4-end-point.h'
 	])
 ipv4.add_headers ([
 	'chunk-icmp.h',
@@ -481,12 +485,8 @@ ipv4.add_headers ([
 	'chunk-tcp.h',
 	'chunk-udp.h',
 	'defrag-state.h',
-	'ipv4-end-point.h',
 	'ipv4-end-points.h',
-	'tag-ipv4.h',
-	'tcp-buffer.h',
-	'tcp-connection.h',
-	'tcp-connection-listener.h'
+	'tcp-buffer.h'
 	])
 
 arp = Ns3Module ('arp', 'src/arp')
@@ -515,6 +515,28 @@ host.add_inst_headers ([
 	])
 host.add_headers ([
 	'loopback-ipv4.h'
+	])
+
+apps = Ns3Module ('apps', 'src/apps')
+ns3.add (apps)
+apps.add_deps (['ipv4', 'host'])
+apps.add_sources ([
+	'periodic-generator.cc',
+	'tcp-sink.cc',
+	'tcp-source.cc',
+	'throughput-printer.cc',
+	'traffic-analyser.cc',
+	'udp-sink.cc',
+	'udp-source.cc'
+	])
+apps.add_headers ([
+	'periodic-generator.h',
+	'tcp-sink.h',
+	'tcp-source.h',
+	'throughput-printer.h',
+	'traffic-analyser.h',
+	'udp-sink.h',
+	'udp-source.h'
 	])
 
 

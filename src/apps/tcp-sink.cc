@@ -20,14 +20,14 @@
  */
 
 #include "tcp-sink.h"
-#include "ipv4-end-point.h"
-#include "tcp-connection.h"
-#include "tcp-connection-listener.h"
-#include "tcp.h"
-#include "host.h"
-#include "packet.h"
-#include "simulator.h"
-#include "event.tcc"
+#include "yans/ipv4-end-point.h"
+#include "yans/tcp-connection.h"
+#include "yans/tcp-connection-listener.h"
+#include "yans/tcp.h"
+#include "yans/host.h"
+#include "yans/packet.h"
+#include "yans/simulator.h"
+#include "yans/event.tcc"
 
 #define noTRACE_TCP_SINK 1
 

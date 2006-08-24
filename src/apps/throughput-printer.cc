@@ -19,9 +19,9 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #include "throughput-printer.h"
-#include "packet.h"
-#include "simulator.h"
-#include "event.tcc"
+#include "yans/packet.h"
+#include "yans/simulator.h"
+#include "yans/event.tcc"
 #include <iostream>
 
 namespace yans {

@@ -23,9 +23,9 @@
 #define PERIODIC_GENERATOR_H
 
 #include <stdint.h>
-#include "callback.h"
-#include "event.h"
-#include "packet.h"
+#include "yans/callback.h"
+#include "yans/event.h"
+#include "yans/packet.h"
 
 namespace yans {
 

@@ -22,8 +22,8 @@
 #define THROUGHPUT_PRINTER_H
 
 #include <stdint.h>
-#include "event.h"
-#include "packet.h"
+#include "yans/event.h"
+#include "yans/packet.h"
 
 namespace yans {
 

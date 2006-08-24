@@ -20,14 +20,14 @@
  */
 
 #include "udp-source.h"
-#include "event.h"
-#include "packet.h"
-#include "ipv4-end-point.h"
-#include "host.h"
-#include "udp.h"
-#include "tag-ipv4.h"
-#include "simulator.h"
-#include "event.tcc"
+#include "yans/event.h"
+#include "yans/packet.h"
+#include "yans/ipv4-end-point.h"
+#include "yans/host.h"
+#include "yans/udp.h"
+#include "yans/tag-ipv4.h"
+#include "yans/simulator.h"
+#include "yans/event.tcc"
 
 namespace yans {
 

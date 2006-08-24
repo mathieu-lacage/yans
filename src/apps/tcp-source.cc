@@ -19,23 +19,22 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-
-#include "callback.h"
 #include "tcp-source.h"
-#include "packet.h"
-#include "host.h"
-#include "tcp.h"
-#include "ipv4-route.h"
-#include "ipv4-end-point.h"
-#include "tcp-connection.h"
-#include "simulator.h"
-#include "event.tcc"
+#include "yans/callback.h"
+#include "yans/packet.h"
+#include "yans/host.h"
+#include "yans/tcp.h"
+#include "yans/ipv4-route.h"
+#include "yans/ipv4-end-point.h"
+#include "yans/tcp-connection.h"
+#include "yans/simulator.h"
+#include "yans/event.tcc"
 
 #define TRACE_TCP_SOURCE 1
 
 #ifdef TRACE_TCP_SOURCE
 #include <iostream>
-#include "simulator.h"
+#include "yans/simulator.h"
 # define TRACE(x) \
 std::cout << "TCP SOURCE TRACE " << Simulator::now_s () << " " << x << std::endl;
 #else /* TRACE_TCP_SOURCE */

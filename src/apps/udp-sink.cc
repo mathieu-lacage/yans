@@ -19,13 +19,14 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
+#include "yans/udp.h"
+#include "yans/host.h"
+#include "yans/ipv4-end-point.h"
+#include "yans/packet.h"
+#include "yans/simulator.h"
+#include "yans/event.tcc"
+
 #include "udp-sink.h"
-#include "udp.h"
-#include "host.h"
-#include "ipv4-end-point.h"
-#include "packet.h"
-#include "simulator.h"
-#include "event.tcc"
 
 #include <cassert>
 

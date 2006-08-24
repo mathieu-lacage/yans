@@ -21,9 +21,9 @@
 
 
 #include "traffic-analyser.h"
-#include "population-analysis.h"
-#include "packet.h"
-#include "simulator.h"
+#include "yans/population-analysis.h"
+#include "yans/packet.h"
+#include "yans/simulator.h"
 #include <iostream>
 
 namespace yans {

@@ -19,12 +19,13 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
+#include "yans/simulator.h"
+#include "yans/packet.h"
+#include "yans/chunk-constant-data.h"
+#include "yans/event.h"
+#include "yans/event.tcc"
+
 #include "periodic-generator.h"
-#include "simulator.h"
-#include "packet.h"
-#include "chunk-constant-data.h"
-#include "event.h"
-#include "event.tcc"
 #include <cassert>
 
 
