@@ -2,6 +2,8 @@
 import os.path
 import shutil
 
+SCONSFLAGS='-Q'
+
 class Ns3Module:
 	def __init__ (self, name, dir):
 		self.sources = []
@@ -44,15 +46,18 @@ class Ns3Module:
 def MyCopyAction (target, source, env):
 	shutil.copy (source[0].path, target[0].path)
 	return 0
+def MyCopyActionPrint (target, source, env):
+	return 'copy \'' + source[0].path + '\' to \'' + target[0].path  + '\''
 def GcxxEmitter (target, source, env):
 	if os.path.exists (source[0].path):
 		return [target, source]
 	else:
 		return [[], []]
 def MyRmTree (target, source, env):
-	print 'rm tree'
-	print target[0].path
+	#shutil.rmtree (env['RM_DIR'])
 	return 0
+def MyRmTreePrint (target, source, env):
+	return ''
 	
 
 class Ns3BuildVariant:
@@ -173,9 +178,10 @@ class Ns3:
 				   CXXFLAGS=flags,
 				   CPPDEFINES=['RUN_SELF_TESTS'],
 				   TARFLAGS='-c -z')
-		header_builder = Builder (action = Action (MyCopyAction))
+		header_builder = Builder (action = Action (MyCopyAction, strfunction = MyCopyActionPrint))
 		env.Append (BUILDERS = {'MyCopyBuilder':header_builder})
-		gcxx_builder = Builder (action = Action (MyCopyAction), emitter = GcxxEmitter)
+		gcxx_builder = Builder (action = Action (MyCopyAction, strfunction = MyCopyActionPrint),
+					emitter = GcxxEmitter)
 		env.Append (BUILDERS = {'CopyGcxxBuilder':gcxx_builder})
 		variant = Ns3BuildVariant ()
 		builders = []
@@ -270,6 +276,7 @@ class Ns3:
 		env.Alias ('all', ['dbg-shared', 'dbg-static', 'opt-shared', 'opt-static'])
 
 
+		dist_env = env.Copy ()
 		# dist support
 		dist_list = []
 		for module in self.__modules:
@@ -286,15 +293,17 @@ class Ns3:
 		dist_list.append ('SConstruct')
 
 		targets = []
+		basename = self.name + '-' + self.version
 		for src in dist_list:
-			tgt = os.path.join (self.name + '-' + self.version, src)
-			targets.append (env.MyCopyBuilder (target = tgt, source = src))
-		tar = self.name + '-' + self.version + '.tar.gz'
-		zip = self.name + '-' + self.version + '.zip'
-		env.Tar (tar, targets)
-		env.Zip (zip, targets)
-		env.Alias ('dist', [tar, zip])
-		env.AddPostAction ('dist', Action (MyRmTree))
+			tgt = os.path.join (basename, src)
+			targets.append (dist_env.MyCopyBuilder (target = tgt, source = src))
+		tar = basename + '.tar.gz'
+		zip = basename + '.zip'
+		dist_env.Tar (tar, targets)
+		dist_env.Append (RM_DIR=basename)
+		dist_env.AddPostAction (tar, dist_env.Action (MyRmTree, strfunction = MyRmTreePrint))
+		dist_env.Zip (zip, targets)
+		dist_builder = dist_env.Alias ('dist', [tar, zip])
 
 
 ns3 = Ns3 ()
