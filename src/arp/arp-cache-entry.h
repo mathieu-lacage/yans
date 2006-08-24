@@ -22,8 +22,8 @@
 #ifndef ARP_CACHE_ENTRY_H
 #define ARP_CACHE_ENTRY_H
 
-#include "mac-address.h"
-#include "packet.h"
+#include "yans/mac-address.h"
+#include "yans/packet.h"
 
 namespace yans {
 

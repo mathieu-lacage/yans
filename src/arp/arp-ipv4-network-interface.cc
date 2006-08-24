@@ -18,16 +18,18 @@
  *
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
+#include <cassert>
+
+#include "yans/ipv4-network-interface.h"
+#include "yans/mac-network-interface.h"
+#include "yans/packet-logger.h"
+#include "yans/trace-container.h"
+#include "yans/packet.h"
+#include "yans/llc-snap-encapsulation.h"
+
 #include "arp-ipv4-network-interface.h"
 #include "arp-cache-entry.h"
-#include "ipv4-network-interface.h"
-#include "mac-network-interface.h"
-#include "packet-logger.h"
-#include "trace-container.h"
 #include "chunk-arp.h"
-#include "packet.h"
-#include "llc-snap-encapsulation.h"
-#include <cassert>
 
 #ifdef TRACE_ARP
 #include <iostream>

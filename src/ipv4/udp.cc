@@ -50,11 +50,6 @@ Udp::~Udp ()
 }
 
 void 
-Udp::set_host (Host *host)
-{
-	m_host = host;
-}
-void 
 Udp::set_ipv4 (Ipv4 *ipv4)
 {
 	m_ipv4 = ipv4;

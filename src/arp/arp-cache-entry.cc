@@ -19,10 +19,10 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "simulator.h"
+#include "yans/simulator.h"
+#include "yans/packet.h"
 #include "arp-ipv4-network-interface.h"
 #include "arp-cache-entry.h"
-#include "packet.h"
 #include <cassert>
 
 namespace yans {

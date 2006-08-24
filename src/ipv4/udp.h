@@ -32,7 +32,6 @@ namespace yans {
 class Ipv4;
 class Ipv4EndPoints;
 class Ipv4EndPoint;
-class Host;
 class PacketLogger;
 class TraceContainer;
 
@@ -41,7 +40,6 @@ public:
 	Udp ();
 	virtual ~Udp ();
 
-	void set_host (Host *host);
 	void set_ipv4 (Ipv4 *ipv4);
 
 	void register_trace (TraceContainer *container);
@@ -58,7 +56,6 @@ public:
 
 	static const uint8_t UDP_PROTOCOL;
 	Ipv4 *m_ipv4;
-	Host *m_host;
 	Ipv4EndPoints *m_end_points;
 	PacketLogger *m_send_logger;
 	PacketLogger *m_recv_logger;

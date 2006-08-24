@@ -427,16 +427,17 @@ common.add_inst_headers ([
 	'trace-container.h',
 	'packet-logger.h',
 	'chunk-constant-data.h',
+	'mac-address.h',
+	'chunk-utils.h',
+	'sgi-hashmap.h',
+	'llc-snap-encapsulation.h',
+	'mac-network-interface.h',
 	'utils.h'
 	])
 common.add_headers ([
 	'chunk-llc-snap.h',
-	'chunk-utils.h',
 	'data-writer.h',
-	'llc-snap-encapsulation.h',
 	'mac-address-factory.h',
-	'mac-address.h',
-	'mac-network-interface.h',
 	'pcap-writer.h',
 	'population-analysis.h',
 	'position.h',
@@ -444,7 +445,6 @@ common.add_headers ([
 	'ref-ptr.h',
 	'rng-mrg32k3a.h',
 	'seed-generator.h',
-	'sgi-hashmap.h',
 	'static-position.h',
 	'static-speed-position.h',
 	'trace-stream.h'
@@ -469,10 +469,43 @@ ipv4.add_sources ([
 	'tcp-connection-listener.cc',
 	'udp.cc'
 	])
+ipv4.add_inst_headers ([
+	'tcp.h',
+	'udp.h',
+	'ipv4.h',
+	'ipv4-route.h'
+	])
+ipv4.add_headers ([
+	'chunk-icmp.h',
+	'chunk-ipv4.h',
+	'chunk-tcp.h',
+	'chunk-udp.h',
+	'defrag-state.h',
+	'ipv4-end-point.h',
+	'ipv4-end-points.h',
+	'tag-ipv4.h',
+	'tcp-buffer.h',
+	'tcp-connection.h',
+	'tcp-connection-listener.h'
+	])
+
+arp = Ns3Module ('arp', 'src/arp')
+ns3.add (arp)
+arp.add_dep ('common')
+arp.add_sources ([
+	'arp-cache-entry.cc',
+	'arp-ipv4-network-interface.cc',
+	'chunk-arp.cc'
+	])
+arp.add_inst_header ('arp-ipv4-network-interface.h')
+arp.add_headers ([
+	'arp-cache-entry.h',
+	'chunk-arp.h'
+	])
 
 host = Ns3Module ('host', 'src/host')
 ns3.add (host)
-host.add_deps (['ipv4'])
+host.add_deps (['ipv4', 'arp'])
 host.add_sources ([
 	'host.cc',
 	'loopback-ipv4.cc'

@@ -20,7 +20,7 @@
  */
 
 #include "chunk-arp.h"
-#include "chunk-utils.h"
+#include "yans/chunk-utils.h"
 #include <cassert>
 
 

@@ -22,11 +22,11 @@
 #define ARP_IPV4_NETWORK_INTERFACE
 
 #include <stdint.h>
-#include "ipv4-network-interface.h"
-#include "ipv4-address.h"
-#include "mac-address.h"
-#include "sgi-hashmap.h"
-#include "packet.h"
+#include "yans/ipv4-network-interface.h"
+#include "yans/ipv4-address.h"
+#include "yans/mac-address.h"
+#include "yans/sgi-hashmap.h"
+#include "yans/packet.h"
 
 namespace yans {
 
