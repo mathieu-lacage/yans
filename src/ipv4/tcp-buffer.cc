@@ -334,8 +334,8 @@ TcpBuffer::is_empty (void)
 
 #ifdef RUN_SELF_TESTS
 
-#include "chunk-constant-data.h"
-#include "test.h"
+#include "yans/chunk-constant-data.h"
+#include "yans/test.h"
 
 namespace yans {
 

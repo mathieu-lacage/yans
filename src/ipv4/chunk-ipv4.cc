@@ -19,16 +19,16 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "chunk.h"
+#include "yans/chunk.h"
+#include "yans/utils.h"
 #include "chunk-ipv4.h"
-#include "utils.h"
 #include <cassert>
 
 #define TRACE_CHUNK_IPV4 1
 
 #ifdef TRACE_CHUNK_IPV4
 #include <iostream>
-#include "simulator.h"
+#include "yans/simulator.h"
 # define TRACE(x) \
 std::cout << "CHUNK IPV4 TRACE " << Simulator::now_s () << " " << x << std::endl;
 #else /* TRACE_CHUNK_IPV4 */

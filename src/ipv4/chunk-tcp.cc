@@ -20,14 +20,14 @@
  */
 
 #include "chunk-tcp.h"
-#include "utils.h"
+#include "yans/utils.h"
 #include <cassert>
 
 #define TRACE_CHUNK_TCP 1
 
 #ifdef TRACE_CHUNK_TCP
 #include <iostream>
-#include "simulator.h"
+#include "yans/simulator.h"
 # define TRACE(x) \
 std::cout << "CHUNK TCP TRACE " << Simulator::now_s () << " " << x << std::endl;
 #else /* TRACE_CHUNK_TCP */

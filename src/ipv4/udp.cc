@@ -19,16 +19,15 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
+#include "yans/packet.h"
+#include "yans/packet-logger.h"
+#include "yans/trace-container.h"
 #include "udp.h"
 #include "chunk-udp.h"
-#include "packet.h"
 #include "ipv4.h"
 #include "tag-ipv4.h"
 #include "ipv4-end-point.h"
 #include "ipv4-end-points.h"
-#include "host.h"
-#include "packet-logger.h"
-#include "trace-container.h"
 #include <cassert>
 
 namespace yans {

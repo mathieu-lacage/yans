@@ -23,8 +23,8 @@
 #define DEFRAG_STATE_H
 
 #include <list>
-#include "ipv4-address.h"
-#include "packet.h"
+#include "yans/ipv4-address.h"
+#include "yans/packet.h"
 
 namespace yans {
 

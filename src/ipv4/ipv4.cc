@@ -19,17 +19,17 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
+#include "yans/packet.h"
+#include "yans/ipv4-network-interface.h"
+#include "yans/packet-logger.h"
+#include "yans/trace-container.h"
+
 #include "ipv4.h"
 #include "chunk-ipv4.h"
-#include "packet.h"
-#include "ipv4-network-interface.h"
 #include "ipv4-route.h"
-#include "host.h"
 #include "tag-ipv4.h"
 #include "chunk-icmp.h"
 #include "defrag-state.h"
-#include "packet-logger.h"
-#include "trace-container.h"
 #include <cassert>
 
 

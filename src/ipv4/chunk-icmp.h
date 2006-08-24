@@ -22,8 +22,8 @@
 #ifndef CHUNK_ICMP_H
 #define CHUNK_ICMP_H
 
-#include "chunk.h"
-#include "ipv4-address.h"
+#include "yans/chunk.h"
+#include "yans/ipv4-address.h"
 
 namespace yans {
 

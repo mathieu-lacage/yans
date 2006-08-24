@@ -20,7 +20,7 @@
  */
 
 #include "chunk-udp.h"
-#include "utils.h"
+#include "yans/utils.h"
 
 namespace yans {
 

@@ -19,17 +19,17 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
+#include "yans/packet.h"
+#include "yans/event.tcc"
+
 #include "tcp.h"
 #include "ipv4.h"
 #include "tag-ipv4.h"
-#include "packet.h"
 #include "chunk-tcp.h"
-#include "host.h"
 #include "ipv4-end-point.h"
 #include "tcp-connection-listener.h"
 #include "tcp-connection.h"
 #include "ipv4-end-points.h"
-#include "event.tcc"
 #include <cassert>
 
 #ifdef TCP_USE_BSD
@@ -40,7 +40,7 @@
 
 #ifdef TRACE_TCP
 #include <iostream>
-#include "simulator.h"
+#include "yans/simulator.h"
 # define TRACE(x) \
 std::cout << "TCP " << Simulator::now_s () << " " << x << std::endl;
 #else /* TRACE_TCP */
@@ -67,11 +67,6 @@ Tcp::~Tcp ()
 	delete m_end_p;
 }
 
-void 
-Tcp::set_host (Host *host)
-{
-	m_host = host;
-}
 void 
 Tcp::set_ipv4 (Ipv4 *ipv4)
 {
@@ -112,7 +107,7 @@ Tcp::send_reset (Packet packet, ChunkTcp *tcp_chunk)
 	TagInPortPair in_port_tag;
 	packet.peek_tag (&in_addr_tag);
 	packet.peek_tag (&in_port_tag);
-	Route *route = m_host->get_routing_table ()->lookup (in_addr_tag.m_saddr);
+	Route *route = m_ipv4->get_routing_table ()->lookup (in_addr_tag.m_saddr);
 	if (route == 0) {
 		TRACE ("cannot send back RST to " << in_addr_tag.m_saddr);
 		return;
@@ -190,10 +185,9 @@ Tcp::create_connection (Ipv4EndPoint *end_p)
 #else
 	TcpConnection *connection = 0;
 #endif
-	connection->set_host (m_host);
 	connection->set_ipv4 (m_ipv4);
 	connection->set_end_point (end_p);
-	Route *route = m_host->get_routing_table ()->lookup (end_p->get_peer_address ());
+	Route *route = m_ipv4->get_routing_table ()->lookup (end_p->get_peer_address ());
 	connection->set_route (route);
 	connection->set_destroy_handler (make_callback (&Tcp::destroy_connection, this));
 	m_connections.push_back (connection);
@@ -208,7 +202,6 @@ TcpConnectionListener *
 Tcp::create_connection_listener (Ipv4EndPoint *end_p)
 {
 	TcpConnectionListener *connection = new TcpConnectionListener ();
-	connection->set_host (m_host);
 	connection->set_ipv4 (m_ipv4);
 	connection->set_end_point (end_p);
 	connection->set_tcp (this);

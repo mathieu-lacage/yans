@@ -382,6 +382,7 @@ simu.add_inst_headers ([
 	])
 
 common = Ns3Module ('common', 'src/common')
+common.add_deps (['core', 'simulator'])
 ns3.add (common)
 common.add_sources ([
 	'buffer.cc',
@@ -412,7 +413,62 @@ common.add_sources ([
 	'mac-address.cc',
 	'seed-generator-mrg32k3a.cc'
 	])
-common.add_headers ([])
+common.add_inst_headers ([
+	'ipv4-address.h',
+	'buffer.h',
+	'chunk.h',
+	'tags.h',
+	'packet.h',
+	'ipv4-network-interface.h',
+	'ui-traced-variable.tcc',
+	'si-traced-variable.tcc',
+	'f-traced-variable.tcc',
+	'callback-logger.h',
+	'trace-container.h',
+	'packet-logger.h',
+	'chunk-constant-data.h',
+	'utils.h'
+	])
+common.add_headers ([
+	'chunk-llc-snap.h',
+	'chunk-utils.h',
+	'data-writer.h',
+	'llc-snap-encapsulation.h',
+	'mac-address-factory.h',
+	'mac-address.h',
+	'mac-network-interface.h',
+	'pcap-writer.h',
+	'population-analysis.h',
+	'position.h',
+	'random-uniform.h',
+	'ref-ptr.h',
+	'rng-mrg32k3a.h',
+	'seed-generator.h',
+	'sgi-hashmap.h',
+	'static-position.h',
+	'static-speed-position.h',
+	'trace-stream.h'
+	])
+
+ipv4 = Ns3Module ('ipv4', 'src/ipv4')
+ns3.add (ipv4)
+ipv4.add_deps (['core', 'common', 'simulator'])
+ipv4.add_sources ([
+	'chunk-icmp.cc',
+	'chunk-ipv4.cc',
+	'chunk-tcp.cc',
+	'chunk-udp.cc',
+	'defrag-state.cc',
+	'ipv4.cc',
+	'ipv4-end-point.cc',
+	'ipv4-end-points.cc',
+	'ipv4-route.cc',
+	'tcp-buffer.cc',
+	'tcp.cc',
+	'tcp-connection.cc',
+	'tcp-connection-listener.cc',
+	'udp.cc'
+	])
 
 run_tests = Ns3Module ('run-tests', 'utils')
 ns3.add (run_tests)

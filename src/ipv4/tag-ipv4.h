@@ -22,7 +22,7 @@
 #ifndef TAG_IPV4_H
 #define TAG_IPV4_H
 
-#include "ipv4-address.h"
+#include "yans/ipv4-address.h"
 #include "ipv4-route.h"
 
 namespace yans {

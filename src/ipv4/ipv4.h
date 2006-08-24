@@ -24,9 +24,9 @@
 
 #include <vector>
 
-#include "ipv4-address.h"
-#include "callback.h"
-#include "packet.h"
+#include "yans/ipv4-address.h"
+#include "yans/callback.h"
+#include "yans/packet.h"
 
 namespace yans {
 

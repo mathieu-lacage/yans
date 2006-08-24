@@ -22,15 +22,14 @@
 #ifndef TCP_CONNECTION_H
 #define TCP_CONNECTION_H
 
-#include "ipv4-address.h"
-#include "callback.h"
+#include "yans/ipv4-address.h"
+#include "yans/callback.h"
+#include "yans/packet.h"
 #include <stdint.h>
-#include "packet.h"
 
 namespace yans {
 
 class Ipv4;
-class Host;
 class Ipv4EndPoint;
 class Route;
 class TraceContainer;
@@ -49,7 +48,6 @@ public:
 	virtual ~TcpConnection () = 0;
 
 	virtual void set_ipv4 (Ipv4 *ipv4) = 0;
-	virtual void set_host (Host *host) = 0;
 	virtual void set_end_point (Ipv4EndPoint *end_point) = 0;
 	virtual void set_route (Route *route) = 0;
 	virtual void set_destroy_handler (TcpConnectionDestroy handler) = 0;

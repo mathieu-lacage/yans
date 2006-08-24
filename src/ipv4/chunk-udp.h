@@ -23,8 +23,8 @@
 #define CHUNK_UDP_H
 
 #include <stdint.h>
-#include "chunk.h"
-#include "ipv4-address.h"
+#include "yans/chunk.h"
+#include "yans/ipv4-address.h"
 
 namespace yans {
 

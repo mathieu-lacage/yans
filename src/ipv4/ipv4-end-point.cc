@@ -19,9 +19,9 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
+#include "yans/simulator.h"
+#include "yans/event.tcc"
 #include "ipv4-end-point.h"
-#include "simulator.h"
-#include "event.tcc"
 
 namespace {
 void

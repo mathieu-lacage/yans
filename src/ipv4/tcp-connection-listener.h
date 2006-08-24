@@ -22,10 +22,10 @@
 #ifndef TCP_CONNECTION_LISTENER_H
 #define TCP_CONNECTION_LISTENER_H
 
-#include "callback.h"
-#include "ipv4-address.h"
+#include "yans/callback.h"
+#include "yans/ipv4-address.h"
+#include "yans/packet.h"
 #include <stdint.h>
-#include "packet.h"
 
 namespace yans {
 
@@ -57,7 +57,6 @@ public:
 private:
 	ConnectionAcception m_acception;
 	ConnectionCreated m_creation;
-	Host *m_host;
 	Ipv4 *m_ipv4;
 	Tcp *m_tcp;
 	Ipv4EndPoint *m_end_point;

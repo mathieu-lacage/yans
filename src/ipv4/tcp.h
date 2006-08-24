@@ -23,15 +23,14 @@
 #ifndef TCP_H
 #define TCP_H
 
-#include "ipv4-address.h"
-#include "callback.h"
-#include "packet.h"
+#include "yans/ipv4-address.h"
+#include "yans/callback.h"
+#include "yans/packet.h"
 #include <list>
 
 namespace yans {
 
 class Ipv4;
-class Host;
 class Ipv4EndPoint;
 class Ipv4EndPoints;
 class TcpConnectionListener;
@@ -51,7 +50,6 @@ class Tcp {
 	Tcp ();
 	virtual ~Tcp ();
 
-	void set_host (Host *host);
 	void set_ipv4 (Ipv4 *ipv4);
 
 	Ipv4EndPoint *allocate (void);
@@ -83,7 +81,6 @@ private:
 	void send_reset (Packet packet, ChunkTcp *tcp_chunk);
 	void destroy_connection (TcpConnection *listener);
 
-	Host *m_host;
 	Ipv4 *m_ipv4;
 	Ipv4EndPoints *m_end_p;
 	Connections m_connections;

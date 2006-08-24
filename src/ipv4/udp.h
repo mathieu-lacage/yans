@@ -24,8 +24,8 @@
 
 #include <stdint.h>
 
-#include "ipv4-address.h"
-#include "packet.h"
+#include "yans/ipv4-address.h"
+#include "yans/packet.h"
 
 namespace yans {
 

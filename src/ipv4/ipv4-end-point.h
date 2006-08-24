@@ -22,10 +22,10 @@
 #ifndef IPV4_END_POINT_H
 #define IPV4_END_POINT_H
 
-#include "callback.h"
-#include "ipv4-address.h"
+#include "yans/callback.h"
+#include "yans/ipv4-address.h"
+#include "yans/packet.h"
 #include <stdint.h>
-#include "packet.h"
 
 namespace yans {
 

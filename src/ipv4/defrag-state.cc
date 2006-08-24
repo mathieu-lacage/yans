@@ -20,9 +20,9 @@
  */
 
 
+#include "yans/simulator.h"
+#include "yans/packet.h"
 #include "defrag-state.h"
-#include "simulator.h"
-#include "packet.h"
 #include "chunk-ipv4.h"
 #include <cassert>
 

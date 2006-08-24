@@ -25,7 +25,7 @@
 #include <stdint.h>
 #include <list>
 #include <utility>
-#include "packet.h"
+#include "yans/packet.h"
 
 namespace yans {
 

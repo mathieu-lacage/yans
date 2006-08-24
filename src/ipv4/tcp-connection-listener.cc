@@ -19,12 +19,12 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
+#include "yans/packet.h"
 #include "tcp-connection-listener.h"
 #include "tag-ipv4.h"
+#include "ipv4.h"
 #include "chunk-tcp.h"
-#include "packet.h"
 #include "tcp-connection.h"
-#include "host.h"
 #include "ipv4-route.h"
 #include "tcp.h"
 #include "ipv4-end-point.h"
@@ -62,7 +62,7 @@ TcpConnectionListener::receive (Packet packet, Chunk *chunk)
 				 */
 				return;
 			}
-			Route *route = m_host->get_routing_table ()->lookup (end_point->get_peer_address ());
+			Route *route = m_ipv4->get_routing_table ()->lookup (end_point->get_peer_address ());
 			if (route == 0) {
 				/* This is really weird but we have no route to the
 				 * distant host. We fail gracefully here again.
@@ -70,7 +70,7 @@ TcpConnectionListener::receive (Packet packet, Chunk *chunk)
 				delete end_point;
 				return;
 			}
-			TcpConnection *connection = m_host->get_tcp ()->create_connection (end_point);
+			TcpConnection *connection = m_tcp->create_connection (end_point);
 			m_creation (connection, end_point);
 			end_point->receive (packet, chunk);
 		}
@@ -87,11 +87,6 @@ TcpConnectionListener::set_callbacks (ConnectionAcception connection_acception,
 }
 
 
-void 
-TcpConnectionListener::set_host (Host *host)
-{
-	m_host = host;
-}
 void 
 TcpConnectionListener::set_ipv4 (Ipv4 *ipv4)
 {
