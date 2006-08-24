@@ -2,8 +2,6 @@
 import os.path
 import shutil
 
-SCONSFLAGS='-Q'
-
 class Ns3Module:
 	def __init__ (self, name, dir):
 		self.sources = []
