@@ -19,7 +19,7 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #include "trace-stream.h"
-#include "test.h"
+#include "yans/test.h"
 #include <iostream>
 
 #ifdef RUN_SELF_TESTS

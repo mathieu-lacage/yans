@@ -25,7 +25,7 @@
  */
 
 #include "pcap-writer.h"
-#include "simulator.h"
+#include "yans/simulator.h"
 #include "packet.h"
 #include "data-writer.h"
 

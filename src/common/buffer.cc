@@ -377,7 +377,7 @@ Buffer::peek_data (void) const
 
 #ifdef RUN_SELF_TESTS
 
-#include "test.h"
+#include "yans/test.h"
 #include <iomanip>
 
 namespace yans {

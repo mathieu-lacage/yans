@@ -22,7 +22,7 @@
 #ifndef SI_TRACED_VARIABLE_TCC
 #define SI_TRACED_VARIABLE_TCC
 
-#include "callback.h"
+#include "yans/callback.h"
 #include <stdint.h>
 
 namespace yans {

@@ -160,7 +160,7 @@ utils_checksum_complete (uint16_t checksum)
 
 
 #ifdef RUN_SELF_TESTS
-#include "test.h"
+#include "yans/test.h"
 namespace yans {
 
 class UtilsTest : public Test {

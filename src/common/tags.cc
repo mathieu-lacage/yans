@@ -178,7 +178,7 @@ Tags::pretty_print (std::ostream &os)
 
 #ifdef RUN_SELF_TESTS
 
-#include "test.h"
+#include "yans/test.h"
 #include <iomanip>
 #include <iostream>
 

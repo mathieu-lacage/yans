@@ -381,6 +381,39 @@ simu.add_inst_headers ([
 	'event.tcc'
 	])
 
+common = Ns3Module ('common', 'src/common')
+ns3.add (common)
+common.add_sources ([
+	'buffer.cc',
+	'mac-address-factory.cc',
+	'static-position.cc',
+	'chunk.cc',
+	'mac-network-interface.cc',
+	'static-speed-position.cc',
+	'chunk-constant-data.cc',
+	'packet.cc',
+	'tags.cc',
+	'chunk-llc-snap.cc',
+	'packet-logger.cc',
+	'chunk-utils.cc',
+	'pcap-writer.cc',
+	'trace-container.cc',
+	'data-writer.cc',
+	'population-analysis.cc',
+	'traced-variable-test.cc',
+	'ipv4-address.cc',
+	'position.cc',
+	'trace-stream-test.cc',
+	'ipv4-network-interface.cc',
+	'random-uniform-mrg32k3a.cc',
+	'utils.cc',
+	'llc-snap-encapsulation.cc',
+	'rng-mrg32k3a.cc',
+	'mac-address.cc',
+	'seed-generator-mrg32k3a.cc'
+	])
+common.add_headers ([])
+
 run_tests = Ns3Module ('run-tests', 'utils')
 ns3.add (run_tests)
 run_tests.set_executable ()

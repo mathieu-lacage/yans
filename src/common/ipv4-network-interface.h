@@ -22,7 +22,7 @@
 #define IPV4_NETWORK_INTERFACE
 
 #include "ipv4-address.h"
-#include "callback.h"
+#include "yans/callback.h"
 #include "packet.h"
 
 namespace yans {
