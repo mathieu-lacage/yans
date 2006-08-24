@@ -38,13 +38,22 @@ class Ns3Module:
 	def add_inst_headers (self, headers):
 		self.inst_headers.extend (headers)
 
-def InstallHeader (target, source, env):
+def MyCopyAction (target, source, env):
 	shutil.copy (source[0].path, target[0].path)
+def GcxxEmitter (target, source, env):
+	if os.path.exists (source[0].path):
+		return [target, source]
+	else:
+		print 'does not exist ' + source[0].path
+		return [[], []]
+	
 
 class Ns3BuildVariant:
 	def __init__ (self):
 		self.static = False
 		self.opti = False
+		self.gcxx_deps = False
+		self.gcxx_root = ''
 		self.build_root = ''
 
 class Ns3:
@@ -87,6 +96,19 @@ class Ns3:
 								CPPFLAGS=cpp_flags,
 								CXXFLAGS=env['CXXFLAGS'] + ' ' + cxx_flags,
 								CFLAGS=env['CFLAGS'] + ' ' + c_flags)
+			if variant.gcxx_deps:
+				gcno_tgt = os.path.join (variant.build_root, module.dir, 
+							 os.path.splitext (source)[0] + '.gcno')
+				gcda_tgt = os.path.join (variant.build_root, module.dir,
+							 os.path.splitext (source)[0] + '.gcda')
+				gcda_src = os.path.join (variant.gcxx_root, module.dir, 
+							 os.path.splitext (source)[0] + '.gcda')
+				gcno_src = os.path.join (variant.gcxx_root, module.dir, 
+							 os.path.splitext (source)[0] + '.gcno')
+				gcno_builder = env.CopyGcxxBuilder (target = gcno_tgt, source = gcno_src)
+				gcda_builder = env.CopyGcxxBuilder (target = gcda_tgt, source = gcda_src)
+				env.Depends (obj_builder, gcda_builder)
+				env.Depends (obj_builder, gcno_builder)
 			objects.append (obj_builder)
 		return objects
 	def get_all_deps (self, module, hash):
@@ -127,7 +149,7 @@ class Ns3:
 				tgt = os.path.join (include_dir, header)
 				src = os.path.join (module.dir, header)
 				#builder = env.Install (target = tgt, source = src)
-				header_builder = env.HeaderBuilder (target = tgt, source = src)
+				header_builder = env.MyCopyBuilder (target = tgt, source = src)
 				env.Depends (module_builder, header_builder)
 				
 			module_builders.append (module_builder)
@@ -138,10 +160,13 @@ class Ns3:
 		env = Environment (CFLAGS=flags,
 				   CXXFLAGS=flags,
 				   CPPDEFINES=['RUN_SELF_TESTS'])
-		header_builder = Builder (action = Action (InstallHeader))
-		env.Append (BUILDERS = {'HeaderBuilder':header_builder})
+		header_builder = Builder (action = Action (MyCopyAction))
+		env.Append (BUILDERS = {'MyCopyBuilder':header_builder})
+		gcxx_builder = Builder (action = Action (MyCopyAction), emitter = GcxxEmitter)
+		env.Append (BUILDERS = {'CopyGcxxBuilder':gcxx_builder})
 		variant = Ns3BuildVariant ()
 		builders = []
+		
 
 		gcov_env = env.Copy ()
 		gcov_env.Append (CFLAGS=' -fprofile-arcs -ftest-coverage',
@@ -168,6 +193,7 @@ class Ns3:
 		for builder in builders:
 			opt_env.Alias ('opt-static', builder)
 
+
 		# optimized shared support
 		variant.opti = True
 		variant.static = False
@@ -175,6 +201,37 @@ class Ns3:
 		builders = self.gen_mod_dep (opt_env, variant)
 		for builder in builders:
 			opt_env.Alias ('opt-shared', builder)
+
+
+		arc_env = opt_env.Copy ()
+		arc_env.Append (CFLAGS=' -frandom-seed=0 -fprofile-generate',
+				CXXFLAGS=' -frandom-seed=0 -fprofile-generate',
+				LINKFLAGS=' -frandom-seed=0 -fprofile-generate')
+		# arc profiling
+		variant.opti = True
+		variant.static = False
+		variant.build_root = os.path.join (self.build_dir, 'opt-arc')
+		builders = self.gen_mod_dep (arc_env, variant)
+		for builder in builders:
+			arc_env.Alias ('opt-arc', builder)
+
+
+		arcrebuild_env = opt_env.Copy ()
+		arcrebuild_env.Append (CFLAGS=' -frandom-seed=0 -fprofile-use',
+				       CXXFLAGS=' -frandom-seed=0 -fprofile-use',
+				       LINKFLAGS=' -frandom-seed=0 -fprofile-use')
+		# arc rebuild
+		variant.opti = True
+		variant.static = False
+		variant.gcxx_deps = True
+		variant.gcxx_root = os.path.join (self.build_dir, 'opt-arc')
+		variant.build_root = os.path.join (self.build_dir, 'opt-arc-rebuild')
+		builders = self.gen_mod_dep (arcrebuild_env, variant)
+		for builder in builders:
+			arcrebuild_env.Alias ('opt-arc-rebuild', builder)
+		variant.gcxx_deps = False
+
+
 
 
 		dbg_env = env.Copy ()
