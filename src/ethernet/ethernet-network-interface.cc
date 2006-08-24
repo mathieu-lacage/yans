@@ -23,10 +23,10 @@
 #include "cable.h"
 #include "chunk-mac-crc.h"
 #include "chunk-mac-eth.h"
-#include "packet.h"
-#include "callback.h"
-#include "packet-logger.h"
-#include "trace-container.h"
+#include "yans/packet.h"
+#include "yans/callback.h"
+#include "yans/packet-logger.h"
+#include "yans/trace-container.h"
 #include <cassert>
 
 #define noTRACE_ETHERNET 1

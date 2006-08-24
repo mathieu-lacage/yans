@@ -622,6 +622,24 @@ wifi.add_headers ([
 	'mac-high-nqap.h'
 	])
 
+eth = Ns3Module ('ethernet', 'src/ethernet')
+ns3.add (eth)
+eth.add_deps (['core', 'common', 'simulator'])
+eth.add_sources ([
+	'cable.cc',
+	'chunk-mac-crc.cc',
+	'chunk-mac-eth.cc',
+	'ethernet-network-interface.cc'
+	])
+eth.add_headers ([
+	'chunk-mac-crc.h',
+	'chunk-mac-eth.h',	
+	])
+eth.add_inst_headers ([
+	'cable.h',
+	'ethernet-network-interface.h'
+	])
+
 
 run_tests = Ns3Module ('run-tests', 'utils')
 ns3.add (run_tests)

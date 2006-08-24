@@ -22,9 +22,9 @@
 #ifndef CHUNK_MAC_CRC_H
 #define CHUNK_MAC_CRC_H
 
-#include "chunk.h"
-#include "mac-address.h"
-#include "ipv4-address.h"
+#include "yans/chunk.h"
+#include "yans/mac-address.h"
+#include "yans/ipv4-address.h"
 
 namespace yans {
 

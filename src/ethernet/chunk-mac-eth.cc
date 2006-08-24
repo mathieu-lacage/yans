@@ -20,7 +20,7 @@
  */
 
 #include "chunk-mac-eth.h"
-#include "chunk-utils.h"
+#include "yans/chunk-utils.h"
 #include <cassert>
 
 #define noTRACE_CHUNK_ETH 1

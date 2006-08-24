@@ -20,11 +20,11 @@
  */
 
 #include "cable.h"
-#include "packet.h"
 #include "ethernet-network-interface.h"
-#include "event.h"
-#include "event.tcc"
-#include "simulator.h"
+#include "yans/packet.h"
+#include "yans/event.h"
+#include "yans/event.tcc"
+#include "yans/simulator.h"
 #include <cassert>
 
 namespace yans {

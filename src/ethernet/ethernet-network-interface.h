@@ -22,9 +22,9 @@
 #ifndef ETHERNET_NETWORK_INTERFACE_H
 #define ETHERNET_NETWORK_INTERFACE_H
 
-#include "mac-network-interface.h"
-#include "mac-address.h"
-#include "packet.h"
+#include "yans/mac-network-interface.h"
+#include "yans/mac-address.h"
+#include "yans/packet.h"
 
 namespace yans {
 
