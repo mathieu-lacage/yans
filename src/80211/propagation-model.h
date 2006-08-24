@@ -22,8 +22,8 @@
 #define PROPAGATION_MODEL_H
 
 #include <stdint.h>
-#include "callback.h"
-#include "packet.h"
+#include "yans/callback.h"
+#include "yans/packet.h"
 
 namespace yans {
 /**

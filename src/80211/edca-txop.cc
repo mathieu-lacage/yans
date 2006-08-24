@@ -41,7 +41,7 @@
  */
 
 // ns header.
-#include "packet.h"
+#include "yans/packet.h"
 
 // 802.11 headers.
 #include "edca-txop.h"

@@ -40,7 +40,7 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
-#include "packet.h"
+#include "yans/packet.h"
 
 #include "mac-high-qsta.h"
 #include "mac-traces.h"

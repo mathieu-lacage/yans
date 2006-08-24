@@ -20,13 +20,13 @@
  */
 
 #include "mac-low.h"
-#include "packet.h"
+#include "yans/packet.h"
 #include "phy-80211.h"
-#include "simulator.h"
+#include "yans/simulator.h"
 #include "chunk-mac-80211-fcs.h"
-#include "event.tcc"
+#include "yans/event.tcc"
 #include "network-interface-80211.h"
-#include "packet-logger.h"
+#include "yans/packet-logger.h"
 #include "mac-stations.h"
 #include "mac-station.h"
 #include "mac-parameters.h"

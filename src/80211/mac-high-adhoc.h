@@ -21,9 +21,9 @@
 #ifndef MAC_HIGH_ADHOC_H
 #define MAC_HIGH_ADHOC_H
 
-#include "mac-address.h"
-#include "callback.h"
-#include "packet.h"
+#include "yans/mac-address.h"
+#include "yans/callback.h"
+#include "yans/packet.h"
 
 namespace yans {
 

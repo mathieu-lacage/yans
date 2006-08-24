@@ -21,11 +21,11 @@
 #ifndef MAC_HIGH_NQSTA_H
 #define MAC_HIGH_NQSTA_H
 
-#include "mac-address.h"
-#include "callback.h"
+#include "yans/mac-address.h"
+#include "yans/callback.h"
 #include "supported-rates.h"
-#include "event.h"
-#include "packet.h"
+#include "yans/event.h"
+#include "yans/packet.h"
 #include <stdint.h>
 
 namespace yans {

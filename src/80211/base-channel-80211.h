@@ -23,7 +23,7 @@
 
 #include <list>
 #include <stdint.h>
-#include "packet.h"
+#include "yans/packet.h"
 
 namespace yans {
 

@@ -23,12 +23,12 @@
 #include "bpsk-mode.h"
 #include "qam-mode.h"
 #include "propagation-model.h"
-#include "simulator.h"
-#include "packet.h"
-#include "random-uniform.h"
-#include "count-ptr-holder.tcc"
-#include "event.tcc"
-#include "trace-container.h"
+#include "yans/simulator.h"
+#include "yans/packet.h"
+#include "yans/random-uniform.h"
+#include "yans/count-ptr-holder.tcc"
+#include "yans/event.tcc"
+#include "yans/trace-container.h"
 
 #include <cassert>
 #include <math.h>

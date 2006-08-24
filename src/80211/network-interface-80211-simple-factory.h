@@ -23,7 +23,7 @@
 #define NETWORK_INTERFACE_80211_SIMPLE_FACTORY_H
 
 #include <stdint.h>
-#include "mac-address.h"
+#include "yans/mac-address.h"
 
 namespace yans {
 

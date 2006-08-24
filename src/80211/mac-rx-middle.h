@@ -24,9 +24,9 @@
 
 #include <map>
 #include <utility>
-#include "callback.h"
-#include "mac-address.h"
-#include "packet.h"
+#include "yans/callback.h"
+#include "yans/mac-address.h"
+#include "yans/packet.h"
 
 namespace yans {
 

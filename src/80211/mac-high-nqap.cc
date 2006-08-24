@@ -31,7 +31,7 @@
 
 #ifdef NQAP_DEBUG
 #include <iostream>
-#include "simulator.h"
+#include "yans/simulator.h"
 #  define TRACE(x) \
 std::cout << "NQAP now=" << Simulator::now_us () << "us " << x << std::endl;
 #else

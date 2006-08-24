@@ -22,11 +22,10 @@
 #ifndef NETWORK_INTERFACE_80211_H
 #define NETWORK_INTERFACE_80211_H
 
-#include "mac-network-interface.h"
-#include "mac-address.h"
-#include "ipv4-address.h"
+#include "yans/mac-network-interface.h"
+#include "yans/mac-address.h"
 #include "ssid.h"
-#include "packet.h"
+#include "yans/packet.h"
 #include <string>
 
 namespace yans {

@@ -24,8 +24,8 @@
 #include "base-channel-80211.h"
 #include "mac-stations.h"
 #include "mac-station.h"
-#include "packet.h"
-#include "trace-container.h"
+#include "yans/packet.h"
+#include "yans/trace-container.h"
 #include "mac-low.h"
 #include "mac-parameters.h"
 #include "mac-rx-middle.h"
@@ -34,7 +34,7 @@
 #include "mac-high-nqsta.h"
 #include "mac-high-nqap.h"
 #include "dca-txop.h"
-#include "packet-logger.h"
+#include "yans/packet-logger.h"
 
 namespace yans {
 

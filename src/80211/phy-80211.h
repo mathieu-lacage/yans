@@ -25,11 +25,11 @@
 #include <vector>
 #include <list>
 #include <stdint.h>
-#include "callback.h"
-#include "count-ptr-holder.tcc"
-#include "event.h"
-#include "packet.h"
-#include "callback-logger.h"
+#include "yans/callback.h"
+#include "yans/count-ptr-holder.tcc"
+#include "yans/event.h"
+#include "yans/packet.h"
+#include "yans/callback-logger.h"
 
 
 namespace yans {

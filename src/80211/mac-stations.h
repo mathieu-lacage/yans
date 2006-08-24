@@ -23,7 +23,7 @@
 
 #include <list>
 #include <utility>
-#include "mac-address.h"
+#include "yans/mac-address.h"
 
 namespace yans {
 

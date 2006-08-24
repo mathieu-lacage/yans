@@ -24,7 +24,7 @@
 
 #include <stdint.h>
 #include "ssid.h"
-#include "mac-address.h"
+#include "yans/mac-address.h"
 
 namespace yans {
 

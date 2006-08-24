@@ -23,7 +23,7 @@
 
 #include <stdint.h>
 
-#include "chunk.h"
+#include "yans/chunk.h"
 #include "status-code.h"
 #include "capability-information.h"
 #include "supported-rates.h"

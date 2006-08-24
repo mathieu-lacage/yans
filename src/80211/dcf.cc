@@ -24,11 +24,11 @@
 #include <math.h>
 
 #include "dcf.h"
-#include "random-uniform.h"
-#include "event.tcc"
-#include "simulator.h"
+#include "yans/random-uniform.h"
+#include "yans/event.tcc"
+#include "yans/simulator.h"
 #include "mac-parameters.h"
-#include "trace-container.h"
+#include "yans/trace-container.h"
 
 #ifndef max
 #define max(a,b) (((a)>=(b))?(a):(b))
@@ -469,8 +469,8 @@ Dcf::notify_cca_busy_start_now (uint64_t duration)
 }; // namespace yans
 
 #ifdef RUN_SELF_TESTS
-#include "test.h"
-#include "event.tcc"
+#include "yans/test.h"
+#include "yans/event.tcc"
 #include <list>
 
 namespace yans {

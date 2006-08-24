@@ -23,10 +23,10 @@
 #define DCA_TXOP_H
 
 #include <stdint.h>
-#include "callback.h"
+#include "yans/callback.h"
 #include "chunk-mac-80211-hdr.h"
-#include "packet.h"
-#include "callback-logger.h"
+#include "yans/packet.h"
+#include "yans/callback-logger.h"
 
 namespace yans {
 

@@ -24,9 +24,8 @@
 #include "channel-80211.h"
 #include "mac-stations.h"
 #include "mac-station.h"
-#include "packet.h"
-#include "ipv4.h"
-#include "trace-container.h"
+#include "yans/packet.h"
+#include "yans/trace-container.h"
 #include "mac-simple.h"
 
 namespace yans {

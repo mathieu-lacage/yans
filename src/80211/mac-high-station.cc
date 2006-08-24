@@ -33,7 +33,7 @@
 #include "mac-container.h"
 #include "mac-traces.h"
 
-#include "packet.h"
+#include "yans/packet.h"
 
 #ifndef STATION_TRACE
 #define nopeSTATION_TRACE 1

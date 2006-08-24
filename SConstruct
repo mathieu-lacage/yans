@@ -411,6 +411,7 @@ common.add_sources ([
 	'llc-snap-encapsulation.cc',
 	'rng-mrg32k3a.cc',
 	'mac-address.cc',
+	'timeout.cc',
 	'seed-generator-mrg32k3a.cc'
 	])
 common.add_inst_headers ([
@@ -420,6 +421,7 @@ common.add_inst_headers ([
 	'tags.h',
 	'packet.h',
 	'ipv4-network-interface.h',
+	'count-ptr-holder.tcc',
 	'ui-traced-variable.tcc',
 	'si-traced-variable.tcc',
 	'f-traced-variable.tcc',
@@ -433,6 +435,9 @@ common.add_inst_headers ([
 	'llc-snap-encapsulation.h',
 	'mac-network-interface.h',
 	'population-analysis.h',
+	'position.h',
+	'random-uniform.h',
+	'timeout.h',
 	'utils.h'
 	])
 common.add_headers ([
@@ -440,8 +445,6 @@ common.add_headers ([
 	'data-writer.h',
 	'mac-address-factory.h',
 	'pcap-writer.h',
-	'position.h',
-	'random-uniform.h',
 	'ref-ptr.h',
 	'rng-mrg32k3a.h',
 	'seed-generator.h',
@@ -537,6 +540,86 @@ apps.add_headers ([
 	'traffic-analyser.h',
 	'udp-sink.h',
 	'udp-source.h'
+	])
+
+wifi = Ns3Module ('80211', 'src/80211')
+ns3.add (wifi)
+wifi.add_deps (['core', 'common', 'simulator'])
+wifi.add_sources ([
+	'chunk-mac-80211-hdr.cc',
+	'chunk-mac-80211-fcs.cc',
+	'mac-stations.cc',
+	'mac-station.cc',
+	'arf-mac-stations.cc',
+	'aarf-mac-stations.cc',
+	'cr-mac-stations.cc',
+	'ideal-mac-stations.cc',
+	'propagation-model.cc',
+	'base-channel-80211.cc',
+	'channel-80211.cc',
+	'transmission-mode.cc',
+	'bpsk-mode.cc',
+	'qam-mode.cc',
+	'phy-80211.cc',
+	'network-interface-80211-simple.cc',
+	'network-interface-80211-simple-factory.cc',
+	'mac-simple.cc',
+	'mac-low.cc',
+	'mac-parameters.cc',
+	'dcf.cc',
+	'mac-tx-middle.cc',
+	'mac-rx-middle.cc',
+	'dca-txop.cc',
+	'mac-queue-80211e.cc',
+	'mac-high-adhoc.cc',
+	'ssid.cc',
+	'supported-rates.cc',
+	'capability-information.cc',
+	'status-code.cc',
+	'chunk-mgt.cc',
+	'mac-high-nqsta.cc',
+	'mac-high-nqap.cc',
+	'network-interface-80211.cc',
+	'network-interface-80211-factory.cc',
+	])
+wifi.add_inst_headers ([
+	'network-interface-80211-simple.h',
+	'network-interface-80211-simple-factory.h',
+	'network-interface-80211.h',
+	'network-interface-80211-factory.h',
+	'base-channel-80211.h',
+	'channel-80211.h',
+	'propagation-model.h',
+	'ssid.h',
+	'chunk-mac-80211-hdr.h'
+])
+wifi.add_headers ([
+	'chunk-mac-80211-fcs.h',
+	'mac-stations.h',
+	'mac-station.h',
+	'arf-mac-stations.h',
+	'aarf-mac-stations.h',
+	'cr-mac-stations.h',
+	'ideal-mac-stations.h',
+	'transmission-mode.h',
+	'bpsk-mode.h',
+	'qam-mode.h',
+	'phy-80211.h',
+	'mac-simple.h',
+	'mac-low.h',
+	'mac-parameters.h',
+	'dcf.h',
+	'mac-tx-middle.h',
+	'mac-rx-middle.h',
+	'mac-queue-80211e.h',
+	'dca-txop.h',
+	'mac-high-adhoc.h',
+	'supported-rates.h',
+	'capability-information.h',
+	'status-code.h',
+	'chunk-mgt.h',
+	'mac-high-nqsta.h',
+	'mac-high-nqap.h'
 	])
 
 

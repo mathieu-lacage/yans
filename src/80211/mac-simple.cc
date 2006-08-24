@@ -22,11 +22,11 @@
 #include "phy-80211.h"
 #include "mac-station.h"
 #include "mac-stations.h"
-#include "event.tcc"
-#include "simulator.h"
-#include "packet.h"
+#include "yans/event.tcc"
+#include "yans/simulator.h"
+#include "yans/packet.h"
 #include "chunk-mac-80211-hdr.h"
-#include "mac-network-interface.h"
+#include "yans/mac-network-interface.h"
 #include <cassert>
 
 #define noMACSIMPLE_DEBUG 1

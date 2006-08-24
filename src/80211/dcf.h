@@ -23,9 +23,9 @@
 #define DCF_H
 
 #include <stdint.h>
-#include "event.h"
-#include "ui-traced-variable.tcc"
-#include "callback-logger.h"
+#include "yans/event.h"
+#include "yans/ui-traced-variable.tcc"
+#include "yans/callback-logger.h"
 
 namespace yans {
 

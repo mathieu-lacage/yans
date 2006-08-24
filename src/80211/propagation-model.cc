@@ -19,11 +19,11 @@
  * Authors: Hossein Manshaei, Mathieu Lacage
  */
 #include "propagation-model.h"
-#include "position.h"
+#include "yans/position.h"
 #include "channel-80211.h"
-#include "simulator.h"
-#include "packet.h"
-#include "event.tcc"
+#include "yans/simulator.h"
+#include "yans/packet.h"
+#include "yans/event.tcc"
 #include <math.h>
 
 #define PROP_DEBUG 1

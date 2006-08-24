@@ -19,7 +19,7 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #include "chunk-mac-80211-hdr.h"
-#include "chunk-utils.h"
+#include "yans/chunk-utils.h"
 #include <cassert>
 
 #define CHUNK80211_DEBUG 1

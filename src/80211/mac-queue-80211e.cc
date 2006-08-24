@@ -20,8 +20,8 @@
  */
 
 #include "mac-queue-80211e.h"
-#include "simulator.h"
-#include "packet.h"
+#include "yans/simulator.h"
+#include "yans/packet.h"
 
 using namespace std;
 

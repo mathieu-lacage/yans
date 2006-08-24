@@ -25,9 +25,9 @@
 #include "mac-low.h"
 #include "mac-queue-80211e.h"
 #include "mac-tx-middle.h"
-#include "packet.h"
+#include "yans/packet.h"
 #include "phy-80211.h"
-#include "trace-container.h"
+#include "yans/trace-container.h"
 
 #include <cassert>
 
@@ -35,7 +35,7 @@
 #define noDCA_TXOP_TRACE 1
 
 #ifdef DCA_TXOP_TRACE
-#include "simulator.h"
+#include "yans/simulator.h"
 #include <iostream>
 # define TRACE(x) \
   std::cout <<"DCA TXOP now="<<Simulator::now_us ()<<"us "<<x<<std::endl;

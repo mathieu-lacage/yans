@@ -19,10 +19,10 @@
  * Author: Mathieu Lacage, <mathieu.lacage@sophia.inria.fr>
  */
 #include "channel-80211.h"
-#include "packet.h"
+#include "yans/packet.h"
 #include "propagation-model.h"
-#include "simulator.h"
-#include "event.tcc"
+#include "yans/simulator.h"
+#include "yans/event.tcc"
 
 namespace yans {
 

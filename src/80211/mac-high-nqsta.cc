@@ -21,13 +21,13 @@
 #include "mac-high-nqsta.h"
 #include "chunk-mac-80211-hdr.h"
 #include "network-interface-80211.h"
-#include "packet.h"
+#include "yans/packet.h"
 #include "chunk-mgt.h"
 #include "phy-80211.h"
-#include "event.tcc"
+#include "yans/event.tcc"
 #include "dca-txop.h"
-#include "simulator.h"
-#include "timeout.h"
+#include "yans/simulator.h"
+#include "yans/timeout.h"
 
 #include <cassert>
 

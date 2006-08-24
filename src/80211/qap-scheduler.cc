@@ -88,7 +88,7 @@
 #include "common.h"
 #include "phy-80211.h"
 
-#include "packet.h"
+#include "yans/packet.h"
 
 
 #ifndef QAP_SCHEDULER_TRACE

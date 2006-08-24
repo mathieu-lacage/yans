@@ -19,7 +19,7 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 #include "chunk-mgt.h"
-#include "simulator.h"
+#include "yans/simulator.h"
 #include <cassert>
 
 namespace {

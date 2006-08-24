@@ -21,8 +21,8 @@
 #ifndef CHUNK_MAC_80211_FCS_H
 #define CHUNK_MAC_80211_FCS_H
 
-#include "chunk.h"
-#include "mac-address.h"
+#include "yans/chunk.h"
+#include "yans/mac-address.h"
 #include <stdint.h>
 
 namespace yans {

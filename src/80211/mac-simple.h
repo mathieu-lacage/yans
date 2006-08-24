@@ -22,10 +22,10 @@
 #define MAC_SIMPLE_H
 
 #include <stdint.h>
-#include "mac-address.h"
-#include "callback.h"
-#include "event.h"
-#include "packet.h"
+#include "yans/mac-address.h"
+#include "yans/callback.h"
+#include "yans/event.h"
+#include "yans/packet.h"
 
 namespace yans {
 

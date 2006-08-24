@@ -48,7 +48,7 @@
 #include "mac-station.h"
 #include "ll-arp.h"
 
-#include "packet.h"
+#include "yans/packet.h"
 
 #ifndef AP_TRACE
 #define nopeAP_TRACE 1
