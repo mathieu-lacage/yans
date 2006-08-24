@@ -44,7 +44,6 @@ def GcxxEmitter (target, source, env):
 	if os.path.exists (source[0].path):
 		return [target, source]
 	else:
-		print 'does not exist ' + source[0].path
 		return [[], []]
 	
 
