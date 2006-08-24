@@ -648,10 +648,16 @@ run_tests.add_deps (['core', 'simulator'])
 run_tests.add_source ('run-tests.cc')
 
 bench_packets = Ns3Module ('bench-packets', 'utils')
+ns3.add (bench_packets)
 bench_packets.set_executable ()
 bench_packets.add_dep ('core')
 bench_packets.add_source ('bench-packets.cc')
 
+bench_simu = Ns3Module ('bench-simulator', 'utils')
+ns3.add (bench_simu)
+bench_simu.set_executable ()
+bench_simu.add_dep ('simulator')
+bench_simu.add_source ('bench-simulator.cc')
 
 main_callback = Ns3Module ('main-callback', 'samples')
 main_callback.set_executable ()
