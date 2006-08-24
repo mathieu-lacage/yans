@@ -7,6 +7,7 @@ class Ns3Module:
 		self.sources = []
 		self.inst_headers = []
 		self.headers = []
+		self.extra_dist = []
 		self.deps = []
 		self.external_deps = []
 		self.name = name
@@ -19,6 +20,8 @@ class Ns3Module:
 	def set_executable (self):
 		self.library = False
 		self.executable = True
+	def add_extra_dist (self, dist):
+		self.extra_dist.append (dist)
 	def add_external_dep (self, dep):
 		self.external_deps.append (dep)
 	def add_dep (self, dep):
@@ -58,9 +61,14 @@ class Ns3BuildVariant:
 class Ns3:
 	def __init__ (self):
 		self.__modules = []
+		self.extra_dist = []
 		self.build_dir = 'build'
+		self.version = '0.0.1'
+		self.name = 'noname'
 	def add (self, module):
 		self.__modules.append (module)
+	def add_extra_dist (self, dist):
+		self.extra_dist.append (dist)
 	def __get_module (self, name):
 		for module in self.__modules:
 			if module.name == name:
@@ -158,7 +166,8 @@ class Ns3:
 		flags = '-g3 -Wall -Werror'
 		env = Environment (CFLAGS=flags,
 				   CXXFLAGS=flags,
-				   CPPDEFINES=['RUN_SELF_TESTS'])
+				   CPPDEFINES=['RUN_SELF_TESTS'],
+				   TARFLAGS='-c -z')
 		header_builder = Builder (action = Action (MyCopyAction))
 		env.Append (BUILDERS = {'MyCopyBuilder':header_builder})
 		gcxx_builder = Builder (action = Action (MyCopyAction), emitter = GcxxEmitter)
@@ -256,8 +265,31 @@ class Ns3:
 		env.Alias ('all', ['dbg-shared', 'dbg-static', 'opt-shared', 'opt-static'])
 
 
+		# dist support
+		dist_list = []
+		for module in self.__modules:
+			for f in module.sources:
+				dist_list.append (os.path.join (module.dir, f))
+			for f in module.headers:
+				dist_list.append (os.path.join (module.dir, f))
+			for f in module.inst_headers:
+				dist_list.append (os.path.join (module.dir, f))
+			for f in module.extra_dist:
+				dist_list.append (os.path.join (module.dir, f))
+		for f in self.extra_dist:
+			dist_list.append (tag, f)
+		dist_list.append ('SConstruct')
+		tar = self.name + '-' + self.version + '.tar.gz'
+		zip = self.name + '-' + self.version + '.zip'
+		env.Tar (tar, dist_list)
+		env.Zip (zip, dist_list)
+		env.Alias ('dist', [tar, zip])
+
+
 ns3 = Ns3 ()
 ns3.build_dir = 'build'
+ns3.version = '0.0.1'
+ns3.name = 'yans'
 
 core = Ns3Module ('core', 'src/core')
 ns3.add (core)
