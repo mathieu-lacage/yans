@@ -43,11 +43,16 @@ class Ns3Module:
 
 def MyCopyAction (target, source, env):
 	shutil.copy (source[0].path, target[0].path)
+	return 0
 def GcxxEmitter (target, source, env):
 	if os.path.exists (source[0].path):
 		return [target, source]
 	else:
 		return [[], []]
+def MyRmTree (target, source, env):
+	print 'rm tree'
+	print target[0].path
+	return 0
 	
 
 class Ns3BuildVariant:
@@ -279,11 +284,17 @@ class Ns3:
 		for f in self.extra_dist:
 			dist_list.append (tag, f)
 		dist_list.append ('SConstruct')
+
+		targets = []
+		for src in dist_list:
+			tgt = os.path.join (self.name + '-' + self.version, src)
+			targets.append (env.MyCopyBuilder (target = tgt, source = src))
 		tar = self.name + '-' + self.version + '.tar.gz'
 		zip = self.name + '-' + self.version + '.zip'
-		env.Tar (tar, dist_list)
-		env.Zip (zip, dist_list)
+		env.Tar (tar, targets)
+		env.Zip (zip, targets)
 		env.Alias ('dist', [tar, zip])
+		env.AddPostAction ('dist', Action (MyRmTree))
 
 
 ns3 = Ns3 ()
