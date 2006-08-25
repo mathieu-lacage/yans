@@ -324,6 +324,19 @@ class Ns3:
 		dist_builder = dist_env.MyCopyBuilder (target = [tar, zip], source = [tmp_tar, tmp_zip])
 		dist_env.Alias ('fastdist', [tar, zip])
 
+		# distcheck
+		distcheck_list = []
+		for src in dist_list:
+			tgt = os.path.join (self.build_dir, basename, src)
+			distcheck_list.append (tgt)
+		untar = env.Command (distcheck_list, tar,
+				     ['cd ' + self.build_dir + ' && tar -zxf ../' + tar])
+		scons_dir = os.path.join (self.build_dir, basename)
+		distcheck_builder = env.Command ('x',distcheck_list,
+						 ['cd ' + scons_dir + ' && scons'])
+		env.AlwaysBuild (distcheck_builder)
+		env.Alias ('distcheck', distcheck_builder)
+			     
 
 
 ns3 = Ns3 ()
@@ -641,6 +654,7 @@ eth.add_inst_headers ([
 	])
 
 
+# utils
 run_tests = Ns3Module ('run-tests', 'utils')
 ns3.add (run_tests)
 run_tests.set_executable ()
@@ -648,7 +662,7 @@ run_tests.add_deps (['core', 'simulator'])
 run_tests.add_source ('run-tests.cc')
 
 bench_packets = Ns3Module ('bench-packets', 'utils')
-ns3.add (bench_packets)
+#ns3.add (bench_packets)
 bench_packets.set_executable ()
 bench_packets.add_dep ('core')
 bench_packets.add_source ('bench-packets.cc')
@@ -659,6 +673,8 @@ bench_simu.set_executable ()
 bench_simu.add_dep ('simulator')
 bench_simu.add_source ('bench-simulator.cc')
 
+
+# samples
 main_callback = Ns3Module ('main-callback', 'samples')
 main_callback.set_executable ()
 ns3.add (main_callback)
