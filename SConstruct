@@ -72,11 +72,9 @@ def MyRmTree (target, source, env):
 	return 0
 def MyRmTreePrint (target, source, env):
 	return ''
-
 def print_cmd_line(s, target, src, env):
 	sys.stdout.write("Building %s...\n"%\
 			 (' and '.join([str(x) for x in target])))
-
 
 class Ns3BuildVariant:
 	def __init__ (self):
@@ -125,7 +123,7 @@ class Ns3:
 #		return filename
 				
 	def get_obj_builders (self, env, variant, module):
-		cpp_flags = '-I' + os.path.join (variant.build_root, 'include')
+		cpp_path = [os.path.join (variant.build_root, 'include')]
 		objects = []
 		for source in module.sources:
 			obj_file = os.path.splitext (source)[0] + '.o'
@@ -135,12 +133,12 @@ class Ns3:
 			c_flags = ''
 			if variant.static:
 				obj_builder = env.StaticObject (target = tgt, source = src,
-								CPPFLAGS=cpp_flags,
+								CPPPATH=cpp_path,
 								CXXFLAGS=env['CXXFLAGS'] + ' ' + cxx_flags,
 								CFLAGS=env['CFLAGS'] + ' ' + c_flags)
 			else:
 				obj_builder = env.SharedObject (target = tgt, source = src,
-								CPPFLAGS=cpp_flags,
+								CPPPATH=cpp_path,
 								CXXFLAGS=env['CXXFLAGS'] + ' ' + cxx_flags,
 								CFLAGS=env['CFLAGS'] + ' ' + c_flags)
 			if variant.gcxx_deps:
@@ -169,7 +167,6 @@ class Ns3:
 		build_root = variant.build_root
 		include_dir = os.path.join (build_root, 'include', 'yans')
 		lib_path = os.path.join (build_root, 'lib')
-		cpp_flags = '-I' + os.path.join (build_root, 'include')
 		module_builders = []
 		for module in self.__modules:
 			objects = self.get_obj_builders (env, variant, module)
