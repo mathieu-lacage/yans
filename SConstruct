@@ -374,7 +374,7 @@ class Ns3:
 
 
 ns3 = Ns3 ()
-ns3.build_dir = 'build'
+ns3.build_dir = 'build-dir'
 ns3.version = '0.0.1'
 ns3.name = 'yans'
 
