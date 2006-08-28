@@ -360,15 +360,20 @@ core = Ns3Module ('core', 'src/core')
 ns3.add (core)
 core.add_external_dep ('pthread')
 core.add_sources ([
-	'unix-system-semaphore.cc',
-        'unix-system-thread.cc',
-        'unix-system-mutex.cc',
-        'unix-exec-commands.cc',
-        'unix-wall-clock-ms.cc',
         'reference-list-test.cc',
         'callback-test.cc',
         'test.cc'
 	])
+env = Environment ()
+if env['PLATFORM'] == 'posix':
+	core.add_sources ([
+		'unix-system-semaphore.cc',
+		'unix-system-thread.cc',
+		'unix-system-mutex.cc',
+		'unix-exec-commands.cc',
+		'unix-wall-clock-ms.cc'
+		])
+
 core.add_inst_headers ([
 	'system-semaphore.h',
         'system-thread.h',
