@@ -74,8 +74,7 @@ def MyRmTree (target, source, env):
 def MyRmTreePrint (target, source, env):
 	return ''
 def print_cmd_line(s, target, src, env):
-	sys.stdout.write("Building %s...\n"%\
-			 (' and '.join([str(x) for x in target])))
+	print 'Building ' + (' and '.join([str(x) for x in target])) + '...'
 
 class Ns3BuildVariant:
 	def __init__ (self):
