@@ -145,19 +145,24 @@ class Ns3:
 		return objects
 	def get_internal_deps (self, module, hash):
 		for dep_name in module.deps:
-			hash[dep_name] = 1
 			dep = self.__get_module (dep_name)
+			hash[dep_name] = dep
 			self.get_internal_deps (dep, hash)
-	def get_external_deps (self, module, hash):
-		for dep_name in module.external_deps:
-			hash[dep_name] = 1
+	def get_external_deps (self, module):
+		hash = {}
+		self.get_internal_deps (module, hash)
+		ext_hash = {}
+		for mod in hash.values ():
+			for ext_dep in mod.external_deps:
+				ext_hash[ext_dep] = 1
+		return ext_hash.keys ()
 	def get_sorted_deps (self, module):
 		h = {}
 		self.get_internal_deps (module, h)
 		modules = []
 		for dep in h.keys ():
-			mod = self.__get_module (dep)
 			deps_copy = []
+			mod = h[dep]
 			deps_copy.extend (mod.deps)
 			modules.append ([mod, deps_copy])
 		sorted = []
@@ -181,10 +186,10 @@ class Ns3:
 					new_modules.append (mod)
 			modules = new_modules
 			sorted.extend (to_remove)
+		sorted.reverse ()
 		# append external deps
-		ext_hash = {}
-		self.get_external_deps (module, ext_hash)
-		for dep in ext_hash.keys ():
+		ext_deps = self.get_external_deps (module)
+		for dep in ext_deps:
 			sorted.append (dep)
 		return sorted
 			
