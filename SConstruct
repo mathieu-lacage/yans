@@ -79,10 +79,10 @@ def print_cmd_line(s, target, src, env):
 class Ns3BuildVariant:
 	def __init__ (self):
 		self.static = False
-		self.opti = False
 		self.gcxx_deps = False
 		self.gcxx_root = ''
 		self.build_root = ''
+		self.env = None
 
 class Ns3:
 	def __init__ (self):
@@ -102,27 +102,23 @@ class Ns3:
 		return None
 	def get_mod_output (self, module, variant):
 		if module.executable:
-			filename = os.path.join (variant.build_root, 'bin', module.name)
+			suffix = variant.env.subst (variant.env['PROGSUFFIX'])
+			filename = os.path.join (variant.build_root, 'bin',
+						 module.name + suffix)
 		else:
-			filename = os.path.join (variant.build_root, 'lib', 'lib' + module.name )
 			if variant.static:
-				filename = filename + '.a'
+				prefix = variant.env['LIBPREFIX']
+				suffix = variant.env['LIBSUFFIX']
 			else:
-				filename = filename + '.so'
-		return filename
-#		env = Environment ()
-#		if module.executable:
-#			nodes = env.Program (target = module.name, source = '')
-#			filename = os.path.join (variant.build_root, 'bin', nodes[0].path)
-#		else:
-#			if variant.static:
-#				nodes = env.StaticLibrary (target = module.name, source = '')
-#			else:
-#				nodes = env.SharedLibrary (target = module.name, source = '')
-#			filename = os.path.join (variant.build_root, 'bin', nodes[0].path)
-#		return filename
-				
-	def get_obj_builders (self, env, variant, module):
+				prefix = variant.env['SHLIBPREFIX']
+				suffix = variant.env['SHLIBSUFFIX']
+			prefix = variant.env.subst (prefix)
+			suffix = variant.env.subst (suffix)
+			filename = os.path.join (variant.build_root, 'lib',
+						 prefix + module.name + suffix)
+		return filename				
+	def get_obj_builders (self, variant, module):
+		env = variant.env
 		cpp_path = [os.path.join (variant.build_root, 'include')]
 		objects = []
 		for source in module.sources:
@@ -163,13 +159,14 @@ class Ns3:
 			self.get_all_deps (dep, hash)
 		for dep_name in module.external_deps:
 			hash[dep_name] = 1
-	def gen_mod_dep (self, env, variant):
+	def gen_mod_dep (self, variant):
 		build_root = variant.build_root
+		env = variant.env
 		include_dir = os.path.join (build_root, 'include', 'yans')
 		lib_path = os.path.join (build_root, 'lib')
 		module_builders = []
 		for module in self.__modules:
-			objects = self.get_obj_builders (env, variant, module)
+			objects = self.get_obj_builders (variant, module)
 			all_deps = {}
 			self.get_all_deps (module, all_deps)
 			libs = all_deps.keys ()
@@ -222,10 +219,10 @@ class Ns3:
 				 CXXFLAGS=' -fprofile-arcs -ftest-coverage',
 				 LINKFLAGS='-fprofile-arcs')
 		# code coverage analysis
-		variant.opti = False
 		variant.static = False
+		variant.env = gcov_env
 		variant.build_root = os.path.join (self.build_dir, 'gcov')
-		builders = self.gen_mod_dep (gcov_env, variant)
+		builders = self.gen_mod_dep (variant)
 		for builder in builders:
 			gcov_env.Alias ('gcov', builder)
 
@@ -235,19 +232,19 @@ class Ns3:
 				CXXFLAGS=' -O3',
 				CPPDEFINES=['NDEBUG'])
 		# optimized static support
-		variant.opti = True
 		variant.static = True
+		variant.env = opt_env
 		variant.build_root = os.path.join (self.build_dir, 'opt', 'static')
-		builders = self.gen_mod_dep (opt_env, variant)
+		builders = self.gen_mod_dep (variant)
 		for builder in builders:
 			opt_env.Alias ('opt-static', builder)
 
 
 		# optimized shared support
-		variant.opti = True
 		variant.static = False
+		variant.env = opt_env
 		variant.build_root = os.path.join (self.build_dir, 'opt', 'shared')
-		builders = self.gen_mod_dep (opt_env, variant)
+		builders = self.gen_mod_dep (variant)
 		for builder in builders:
 			opt_env.Alias ('opt-shared', builder)
 
@@ -257,10 +254,10 @@ class Ns3:
 				CXXFLAGS=' -frandom-seed=0 -fprofile-generate',
 				LINKFLAGS=' -frandom-seed=0 -fprofile-generate')
 		# arc profiling
-		variant.opti = True
 		variant.static = False
+		variant.env = arc_env
 		variant.build_root = os.path.join (self.build_dir, 'opt-arc')
-		builders = self.gen_mod_dep (arc_env, variant)
+		builders = self.gen_mod_dep (variant)
 		for builder in builders:
 			arc_env.Alias ('opt-arc', builder)
 
@@ -270,12 +267,12 @@ class Ns3:
 				       CXXFLAGS=' -frandom-seed=0 -fprofile-use',
 				       LINKFLAGS=' -frandom-seed=0 -fprofile-use')
 		# arc rebuild
-		variant.opti = True
 		variant.static = False
+		variant.env = arcrebuild_env
 		variant.gcxx_deps = True
 		variant.gcxx_root = os.path.join (self.build_dir, 'opt-arc')
 		variant.build_root = os.path.join (self.build_dir, 'opt-arc-rebuild')
-		builders = self.gen_mod_dep (arcrebuild_env, variant)
+		builders = self.gen_mod_dep (variant)
 		for builder in builders:
 			arcrebuild_env.Alias ('opt-arc-rebuild', builder)
 		variant.gcxx_deps = False
@@ -285,18 +282,18 @@ class Ns3:
 
 		dbg_env = env.Copy ()
 		# debug static support
-		variant.opti = False
 		variant.static = True
+		variant.env = dbg_env
 		variant.build_root = os.path.join (self.build_dir, 'dbg', 'static')
-		builders = self.gen_mod_dep (dbg_env, variant)
+		builders = self.gen_mod_dep (variant)
 		for builder in builders:
 			dbg_env.Alias ('dbg-static', builder)
 
 		# debug shared support
-		variant.opti = False
 		variant.static = False
+		variant.env = dbg_env
 		variant.build_root = os.path.join (self.build_dir, 'dbg', 'shared')
-		builders = self.gen_mod_dep (dbg_env, variant)
+		builders = self.gen_mod_dep (variant)
 		for builder in builders:
 			dbg_env.Alias ('dbg-shared', builder)
 
