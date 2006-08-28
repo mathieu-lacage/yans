@@ -143,13 +143,51 @@ class Ns3:
 				env.Depends (obj_builder, gcno_builder)
 			objects.append (obj_builder)
 		return objects
-	def get_all_deps (self, module, hash):
+	def get_internal_deps (self, module, hash):
 		for dep_name in module.deps:
 			hash[dep_name] = 1
 			dep = self.__get_module (dep_name)
-			self.get_all_deps (dep, hash)
+			self.get_internal_deps (dep, hash)
+	def get_external_deps (self, module, hash):
 		for dep_name in module.external_deps:
 			hash[dep_name] = 1
+	def get_sorted_deps (self, module):
+		h = {}
+		self.get_internal_deps (module, h)
+		modules = []
+		for dep in h.keys ():
+			mod = self.__get_module (dep)
+			deps_copy = []
+			deps_copy.extend (mod.deps)
+			modules.append ([mod, deps_copy])
+		sorted = []
+		while len (modules) > 0:
+			to_remove = []
+			for item in modules:
+				if len (item[1]) == 0:
+					to_remove.append (item[0].name)
+			for item in to_remove:
+				for i in modules:
+					if item in i[1]:
+						i[1].remove (item)
+			new_modules = []
+			for mod in modules:
+				found = False
+				for i in to_remove:
+					if i == mod[0].name:
+						found = True
+						break
+				if not found:
+					new_modules.append (mod)
+			modules = new_modules
+			sorted.extend (to_remove)
+		# append external deps
+		ext_hash = {}
+		self.get_external_deps (module, ext_hash)
+		for dep in ext_hash.keys ():
+			sorted.append (dep)
+		return sorted
+			
 	def gen_mod_dep (self, variant):
 		build_root = variant.build_root
 		cpp_path = os.path.join (variant.build_root, 'include')
@@ -160,9 +198,7 @@ class Ns3:
 		module_builders = []
 		for module in self.__modules:
 			objects = self.get_obj_builders (variant, module)
-			all_deps = {}
-			self.get_all_deps (module, all_deps)
-			libs = all_deps.keys ()
+			libs = self.get_sorted_deps (module)
 
 			filename = self.get_mod_output (module, variant)
 			if module.executable:
