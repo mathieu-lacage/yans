@@ -1,4 +1,5 @@
 
+import os
 import os.path
 import shutil
 
@@ -190,7 +191,7 @@ class Ns3:
 		return module_builders
 		
 	def generate_dependencies (self):
-		env = Environment ()
+		env = Environment(ENV = {'PATH' : os.environ['PATH']})
 		if env['PLATFORM'] == 'posix':
 			common_flags = ['-g3', '-Wall', '-Werror']
 			debug_flags = []
