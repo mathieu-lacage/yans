@@ -328,14 +328,20 @@ class Ns3:
 		zip = basename + '.zip'
 		tmp_tar = os.path.join (self.build_dir, tar)
 		tmp_zip = os.path.join (self.build_dir, zip)
-		dist_env.Tar (tmp_tar, targets)
+		if dist_env['PLATFORM'] == 'win32':
+			dist_tgt = [zip]
+			dist_src = [tmp_zip]
+		else:
+			dist_tgt = [tar, zip]
+			dist_src = [tmp_tar, tmp_zip]
+			dist_env.Tar (tmp_tar, targets)
 		dist_env.Zip (tmp_zip, targets)
-		dist_builder = dist_env.MyCopyBuilder (target = [tar, zip], source = [tmp_tar, tmp_zip])
+		dist_builder = dist_env.MyCopyBuilder (target = dist_tgt, source = dist_src)
 		dist_env.Alias ('dist', dist_builder)
 		dist_env.Append (RM_DIR=basename)
 		dist_env.AddPostAction (dist_builder, dist_env.Action (MyRmTree, strfunction = MyRmTreePrint))
-		dist_builder = dist_env.MyCopyBuilder (target = [tar, zip], source = [tmp_tar, tmp_zip])
-		dist_env.Alias ('fastdist', [tar, zip])
+		dist_builder = dist_env.MyCopyBuilder (target = dist_tgt, source = dist_src)
+		dist_env.Alias ('fastdist', dist_tgt)
 
 		# distcheck
 		distcheck_list = []
