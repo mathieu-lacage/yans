@@ -72,7 +72,11 @@ def MyRmTree (target, source, env):
 	return 0
 def MyRmTreePrint (target, source, env):
 	return ''
-	
+
+def print_cmd_line(s, target, src, env):
+	sys.stdout.write("Building %s...\n"%\
+			 (' and '.join([str(x) for x in target])))
+
 
 class Ns3BuildVariant:
 	def __init__ (self):
@@ -108,6 +112,18 @@ class Ns3:
 			else:
 				filename = filename + '.so'
 		return filename
+#		env = Environment ()
+#		if module.executable:
+#			nodes = env.Program (target = module.name, source = '')
+#			filename = os.path.join (variant.build_root, 'bin', nodes[0].path)
+#		else:
+#			if variant.static:
+#				nodes = env.StaticLibrary (target = module.name, source = '')
+#			else:
+#				nodes = env.SharedLibrary (target = module.name, source = '')
+#			filename = os.path.join (variant.build_root, 'bin', nodes[0].path)
+#		return filename
+				
 	def get_obj_builders (self, env, variant, module):
 		cpp_flags = '-I' + os.path.join (variant.build_root, 'include')
 		objects = []
@@ -192,6 +208,9 @@ class Ns3:
 				   CXXFLAGS=flags,
 				   CPPDEFINES=['RUN_SELF_TESTS'],
 				   TARFLAGS='-c -z')
+		verbose = ARGUMENTS.get('verbose', 'n')
+		if verbose == 'n':
+			env['PRINT_CMD_LINE_FUNC'] = print_cmd_line
 		header_builder = Builder (action = Action (MyCopyAction, strfunction = MyCopyActionPrint))
 		env.Append (BUILDERS = {'MyCopyBuilder':header_builder})
 		gcxx_builder = Builder (action = Action (MyCopyAction, strfunction = MyCopyActionPrint),
@@ -336,7 +355,6 @@ class Ns3:
 						 ['cd ' + scons_dir + ' && scons'])
 		env.AlwaysBuild (distcheck_builder)
 		env.Alias ('distcheck', distcheck_builder)
-			     
 
 
 ns3 = Ns3 ()
