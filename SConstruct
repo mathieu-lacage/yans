@@ -119,24 +119,15 @@ class Ns3:
 		return filename				
 	def get_obj_builders (self, variant, module):
 		env = variant.env
-		cpp_path = [os.path.join (variant.build_root, 'include')]
 		objects = []
 		for source in module.sources:
 			obj_file = os.path.splitext (source)[0] + '.o'
 			tgt = os.path.join (variant.build_root, module.dir, obj_file)
 			src = os.path.join (module.dir, source)
-			cxx_flags = ''
-			c_flags = ''
 			if variant.static:
-				obj_builder = env.StaticObject (target = tgt, source = src,
-								CPPPATH=cpp_path,
-								CXXFLAGS=env['CXXFLAGS'] + ' ' + cxx_flags,
-								CFLAGS=env['CFLAGS'] + ' ' + c_flags)
+				obj_builder = env.StaticObject (target = tgt, source = src)
 			else:
-				obj_builder = env.SharedObject (target = tgt, source = src,
-								CPPPATH=cpp_path,
-								CXXFLAGS=env['CXXFLAGS'] + ' ' + cxx_flags,
-								CFLAGS=env['CFLAGS'] + ' ' + c_flags)
+				obj_builder = env.SharedObject (target = tgt, source = src)
 			if variant.gcxx_deps:
 				gcno_tgt = os.path.join (variant.build_root, module.dir, 
 							 os.path.splitext (source)[0] + '.gcno')
@@ -161,8 +152,10 @@ class Ns3:
 			hash[dep_name] = 1
 	def gen_mod_dep (self, variant):
 		build_root = variant.build_root
+		cpp_path = os.path.join (variant.build_root, 'include')
 		env = variant.env
-		include_dir = os.path.join (build_root, 'include', 'yans')
+		env.Append (CPPPATH=[cpp_path])
+		header_dir = os.path.join (build_root, 'include', 'yans')
 		lib_path = os.path.join (build_root, 'lib')
 		module_builders = []
 		for module in self.__modules:
@@ -187,7 +180,7 @@ class Ns3:
 				env.Depends (module_builder, self.get_mod_output (dep, variant))
 					
 			for header in module.inst_headers:
-				tgt = os.path.join (include_dir, header)
+				tgt = os.path.join (header_dir, header)
 				src = os.path.join (module.dir, header)
 				#builder = env.Install (target = tgt, source = src)
 				header_builder = env.MyCopyBuilder (target = tgt, source = src)
@@ -197,11 +190,18 @@ class Ns3:
 		return module_builders
 		
 	def generate_dependencies (self):
-		flags = '-g3 -Wall -Werror'
-		env = Environment (CFLAGS=flags,
-				   CXXFLAGS=flags,
-				   CPPDEFINES=['RUN_SELF_TESTS'],
-				   TARFLAGS='-c -z')
+		env = Environment ()
+		if env['PLATFORM'] == 'posix':
+			common_flags = ['-g3', '-Wall', '-Werror']
+			debug_flags = []
+			opti_flags = ['-O3']
+		elif env['PLATFORM'] == 'win32':
+			common_flags = []
+			debug_flags = ['-W1', '-GX', '-EHsc', '-D_DEBUG', '/MDd']
+			opti_flags = ['-O2', '-EHsc', '-DNDEBUG', '/MD']
+		env.Append (CCFLAGS=common_flags,
+			    CPPDEFINES=['RUN_SELF_TESTS'],
+			    TARFLAGS='-c -z')
 		verbose = ARGUMENTS.get('verbose', 'n')
 		if verbose == 'n':
 			env['PRINT_CMD_LINE_FUNC'] = print_cmd_line
@@ -215,9 +215,9 @@ class Ns3:
 		
 
 		gcov_env = env.Copy ()
-		gcov_env.Append (CFLAGS=' -fprofile-arcs -ftest-coverage',
-				 CXXFLAGS=' -fprofile-arcs -ftest-coverage',
-				 LINKFLAGS='-fprofile-arcs')
+		gcov_env.Append (CFLAGS=['-fprofile-arcs', '-ftest-coverage'],
+				 CXXFLAGS=['-fprofile-arcs', '-ftest-coverage'],
+				 LINKFLAGS=['-fprofile-arcs'])
 		# code coverage analysis
 		variant.static = False
 		variant.env = gcov_env
@@ -228,8 +228,8 @@ class Ns3:
 
 
 		opt_env = env.Copy ()
-		opt_env.Append (CFLAGS=' -O3',
-				CXXFLAGS=' -O3',
+		opt_env.Append (CFLAGS=opti_flags,
+				CXXFLAGS=opti_flags,
 				CPPDEFINES=['NDEBUG'])
 		# optimized static support
 		variant.static = True
@@ -240,6 +240,10 @@ class Ns3:
 			opt_env.Alias ('opt-static', builder)
 
 
+		opt_env = env.Copy ()
+		opt_env.Append (CFLAGS=opti_flags,
+				CXXFLAGS=opti_flags,
+				CPPDEFINES=['NDEBUG'])
 		# optimized shared support
 		variant.static = False
 		variant.env = opt_env
@@ -249,10 +253,13 @@ class Ns3:
 			opt_env.Alias ('opt-shared', builder)
 
 
-		arc_env = opt_env.Copy ()
-		arc_env.Append (CFLAGS=' -frandom-seed=0 -fprofile-generate',
-				CXXFLAGS=' -frandom-seed=0 -fprofile-generate',
-				LINKFLAGS=' -frandom-seed=0 -fprofile-generate')
+		arc_env = env.Copy ()
+		arc_env.Append (CFLAGS=opti_flags,
+				CXXFLAGS=opti_flags,
+				CPPDEFINES=['NDEBUG'])
+		arc_env.Append (CFLAGS=['-frandom-seed=0','-fprofile-generate'],
+				CXXFLAGS=['-frandom-seed=0','-fprofile-generate'],
+				LINKFLAGS=['-frandom-seed=0', '-fprofile-generate'])
 		# arc profiling
 		variant.static = False
 		variant.env = arc_env
@@ -262,10 +269,13 @@ class Ns3:
 			arc_env.Alias ('opt-arc', builder)
 
 
-		arcrebuild_env = opt_env.Copy ()
-		arcrebuild_env.Append (CFLAGS=' -frandom-seed=0 -fprofile-use',
-				       CXXFLAGS=' -frandom-seed=0 -fprofile-use',
-				       LINKFLAGS=' -frandom-seed=0 -fprofile-use')
+		arcrebuild_env = env.Copy ()
+		arcrebuild_env.Append (CFLAGS=opti_flags,
+				       CXXFLAGS=opti_flags,
+				       CPPDEFINES=['NDEBUG'])
+		arcrebuild_env.Append (CFLAGS=['-frandom-seed=0', '-fprofile-use'],
+				       CXXFLAGS=['-frandom-seed=0', '-fprofile-use'],
+				       LINKFLAGS=['-frandom-seed=0','-fprofile-use'])
 		# arc rebuild
 		variant.static = False
 		variant.env = arcrebuild_env
@@ -281,6 +291,8 @@ class Ns3:
 
 
 		dbg_env = env.Copy ()
+		env.Append (CFLAGS=debug_flags,
+			    CXXFLAGS=debug_flags,)
 		# debug static support
 		variant.static = True
 		variant.env = dbg_env
@@ -289,6 +301,9 @@ class Ns3:
 		for builder in builders:
 			dbg_env.Alias ('dbg-static', builder)
 
+		dbg_env = env.Copy ()
+		env.Append (CFLAGS=debug_flags,
+			    CXXFLAGS=debug_flags,)
 		# debug shared support
 		variant.static = False
 		variant.env = dbg_env
