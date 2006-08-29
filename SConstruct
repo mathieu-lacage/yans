@@ -11,6 +11,7 @@ class Ns3Module:
 		self.extra_dist = []
 		self.deps = []
 		self.external_deps = []
+		self.config = []
 		self.name = name
 		self.dir = dir
 		self.executable = False
@@ -21,6 +22,8 @@ class Ns3Module:
 	def set_executable (self):
 		self.library = False
 		self.executable = True
+	def add_config (self, config_fn):
+		self.config.append (config_fn)
 	def add_extra_dist (self, dist):
 		self.extra_dist.append (dist)
 	def add_external_dep (self, dep):
@@ -120,6 +123,11 @@ class Ns3:
 	def get_obj_builders (self, variant, module):
 		env = variant.env
 		objects = []
+		if len (module.config) > 0:
+			src_config_file = os.path.join (self.build_dir, 'config', module.name + '-config.h')
+			tgt_config_file = os.path.join (variant.build_root, 'include',
+							'yans', module.name + '-config.h')
+		
 		for source in module.sources:
 			obj_file = os.path.splitext (source)[0] + '.o'
 			tgt = os.path.join (variant.build_root, module.dir, obj_file)
@@ -128,6 +136,10 @@ class Ns3:
 				obj_builder = env.StaticObject (target = tgt, source = src)
 			else:
 				obj_builder = env.SharedObject (target = tgt, source = src)
+			if len (module.config) > 0:
+				config_file = env.MyCopyBuilder (target = [tgt_config_file],
+								 source = [src_config_file])
+				env.Depends (obj_builder, config_file)
 			if variant.gcxx_deps:
 				gcno_tgt = os.path.join (variant.build_root, module.dir, 
 							 os.path.splitext (source)[0] + '.gcno')
@@ -229,9 +241,30 @@ class Ns3:
 				
 			module_builders.append (module_builder)
 		return module_builders
-		
+	def gen_mod_config (self, env):
+		config_dir = os.path.join (self.build_dir, 'config')
+		for module in self.__modules:
+			if len (module.config) > 0:
+				config_file = os.path.join (config_dir, module.name + '-config.h')
+				config_file_guard = module.name + '_CONFIG_H'
+				config_file_guard.upper ()
+				if not os.path.isfile (config_file):
+					if not os.path.isdir (config_dir):
+						os.makedirs (config_dir)
+					outfile = open (config_file, 'w')
+					outfile.write ('#ifndef ' + config_file_guard + '\n')
+					outfile.write ('#define ' + config_file_guard + '\n')
+					config = env.Configure ()
+					for fn in module.config:
+						output = fn (env, config)
+						for o in output:
+							outfile.write (o)
+							outfile.write ('\n')
+					outfile.write ('#endif /*' + config_file_guard + '*/\n')
+					config.Finish ()
 	def generate_dependencies (self):
 		env = Environment(ENV = {'PATH' : os.environ['PATH']})
+		self.gen_mod_config (env)
 		if env['PLATFORM'] == 'posix':
 			common_flags = ['-g3', '-Wall', '-Werror']
 			debug_flags = []
@@ -275,7 +308,7 @@ class Ns3:
 		# optimized static support
 		variant.static = True
 		variant.env = opt_env
-		variant.build_root = os.path.join (self.build_dir, 'opt', 'static')
+		variant.build_root = os.path.join (self.build_dir, 'opt-static')
 		builders = self.gen_mod_dep (variant)
 		for builder in builders:
 			opt_env.Alias ('opt-static', builder)
@@ -288,7 +321,7 @@ class Ns3:
 		# optimized shared support
 		variant.static = False
 		variant.env = opt_env
-		variant.build_root = os.path.join (self.build_dir, 'opt', 'shared')
+		variant.build_root = os.path.join (self.build_dir, 'opt-shared')
 		builders = self.gen_mod_dep (variant)
 		for builder in builders:
 			opt_env.Alias ('opt-shared', builder)
@@ -337,7 +370,7 @@ class Ns3:
 		# debug static support
 		variant.static = True
 		variant.env = dbg_env
-		variant.build_root = os.path.join (self.build_dir, 'dbg', 'static')
+		variant.build_root = os.path.join (self.build_dir, 'dbg-static')
 		builders = self.gen_mod_dep (variant)
 		for builder in builders:
 			dbg_env.Alias ('dbg-static', builder)
@@ -348,7 +381,7 @@ class Ns3:
 		# debug shared support
 		variant.static = False
 		variant.env = dbg_env
-		variant.build_root = os.path.join (self.build_dir, 'dbg', 'shared')
+		variant.build_root = os.path.join (self.build_dir, 'dbg-shared')
 		builders = self.gen_mod_dep (variant)
 		for builder in builders:
 			dbg_env.Alias ('dbg-shared', builder)
@@ -418,8 +451,26 @@ ns3.build_dir = 'build-dir'
 ns3.version = '0.0.1'
 ns3.name = 'yans'
 
+
+#
+# The Core module
+#
 core = Ns3Module ('core', 'src/core')
 ns3.add (core)
+def core_config (env, config):
+	output = []
+	if env['PLATFORM'] == 'win32':
+		output.append ('#define WIN32')
+	if not config.CheckHeader ('stdint.h'):
+		output.append ('#undef HAVE_STDINT_H')
+		if not config.CheckHeader ('inttypes.h'):
+			output.append ('#undef HAVE_INTTYPES_H')
+		else:
+			output.append ('#define HAVE_INTTYPES_H')
+	else:
+		output.append ('#define HAVE_STDINT_H')
+	return output
+core.add_config (core_config)
 core.add_external_dep ('pthread')
 core.add_sources ([
         'reference-list-test.cc',
@@ -435,7 +486,6 @@ if env['PLATFORM'] == 'posix':
 		'unix-exec-commands.cc',
 		'unix-wall-clock-ms.cc'
 		])
-
 core.add_inst_headers ([
 	'system-semaphore.h',
         'system-thread.h',
@@ -444,9 +494,14 @@ core.add_inst_headers ([
         'wall-clock-ms.h',
         'reference-list.h',
         'callback.h',
+	'stdint.h',
         'test.h'
 	])
 
+
+#
+# The Simu module
+#
 simu = Ns3Module ('simulator', 'src/simulator')
 ns3.add (simu)
 simu.add_dep ('core')
@@ -473,6 +528,9 @@ simu.add_inst_headers ([
 	'event.tcc'
 	])
 
+#
+# The Common module
+#
 common = Ns3Module ('common', 'src/common')
 common.add_deps (['core', 'simulator'])
 ns3.add (common)
