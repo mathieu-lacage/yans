@@ -41,7 +41,7 @@ SystemThreadPrivate::SystemThreadPrivate (SystemThread *thread)
 	m_system_thread = CreateThread(NULL, 0, 
 				       (LPTHREAD_START_ROUTINE)SystemThreadPrivate::thread_run, 
 				       this, 0, 0);
-	assert (m_system_thread != NULL)
+	assert (m_system_thread != NULL);
 }
 SystemThreadPrivate::~SystemThreadPrivate ()
 {}
