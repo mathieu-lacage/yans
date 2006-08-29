@@ -477,6 +477,13 @@ if env['PLATFORM'] == 'posix':
 		'unix-exec-commands.cc',
 		'unix-wall-clock-ms.cc'
 		])
+elif env['PLATFORM'] == 'win32':
+	core.add_sources ([
+		'win32-system-semaphore.cc',
+		'win32-system-thread.cc',
+		'win32-system-mutex.cc',
+		'win32-wall-clock-ms.cc'
+		])
 core.add_inst_headers ([
 	'system-semaphore.h',
         'system-thread.h',
