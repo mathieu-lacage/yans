@@ -22,39 +22,15 @@
 #include "yans/simulator.h"
 #include "yans/event.h"
 #include "yans/event.tcc"
+#include "yans/wall-clock-ms.h"
 #include <iostream>
 #include <fstream>
 #include <vector>
 
 using namespace yans;
 
-#include "sys/time.h"
 
 bool g_debug = false;
-
-class Time {
-public:
-	void start (void);
-	double end (void);
-private:
-	struct timeval m_start;
-};
-
-void Time::start (void)
-{
-	gettimeofday (&m_start, 0);
-}
-double Time::end (void)
-{
-	uint64_t total_us;
-	struct timeval end;
-	gettimeofday (&end, 0);
-	total_us = (end.tv_sec - m_start.tv_sec) * 1000000;
-	total_us += end.tv_usec - m_start.tv_usec;
-	double total_s = ((double)total_us)/1000000;
-	return total_s;
-}
-
 
 class Bench {
 public:
@@ -94,7 +70,7 @@ Bench::read_distribution (std::istream &input)
 void
 Bench::bench (void) 
 {
-	Time time;
+	WallClockMs time;
 	double init, simu;
 	time.start ();
 	for (std::vector<uint64_t>::const_iterator i = m_distribution.begin ();
