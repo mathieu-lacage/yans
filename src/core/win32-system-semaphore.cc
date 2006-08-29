@@ -65,7 +65,7 @@ SystemSemaphorePrivate::post (uint32_t n)
 void 
 SystemSemaphorePrivate::wait (uint32_t n)
 {
-	for (i = 0; i < n; i++) {
+	for (uint32_t i = 0; i < n; i++) {
 		wait ();
 	}
 }
