@@ -21,7 +21,7 @@
 #ifndef CR_MAC_STATIONS_H
 #define CR_MAC_STATIONS_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 
 #include "mac-stations.h"
 #include "mac-station.h"

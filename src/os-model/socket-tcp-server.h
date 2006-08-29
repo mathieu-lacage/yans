@@ -22,7 +22,7 @@
 #ifndef SOCKET_TCP_SERVER_H
 #define SOCKET_TCP_SERVER_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 #include "ipv4-address.h"
 
 class SocketTcpConnected;

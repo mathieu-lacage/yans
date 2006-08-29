@@ -23,7 +23,7 @@
 #define CHUNK_LLC_SNAP_H
 
 #include "chunk.h"
-#include "yans/stdint.h"
+#include <stdint.h>
 
 namespace yans {
 

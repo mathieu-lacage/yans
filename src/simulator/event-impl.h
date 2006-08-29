@@ -21,7 +21,7 @@
 #ifndef EVENT_IMPL_H
 #define EVENT_IMPL_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 
 namespace yans {
 

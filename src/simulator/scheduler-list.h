@@ -25,7 +25,7 @@
 #include "scheduler.h"
 #include <list>
 #include <utility>
-#include "yans/stdint.h"
+#include <stdint.h>
 
 namespace yans {
 

@@ -22,7 +22,7 @@
 #ifndef SOCKET_UDP_H
 #define SOCKET_UDP_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 #include "ipv4-address.h"
 
 class Udp;

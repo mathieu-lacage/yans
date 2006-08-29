@@ -22,7 +22,7 @@
 #ifndef TRANSMISSION_MODE_H
 #define TRANSMISSION_MODE_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 
 namespace yans {
 

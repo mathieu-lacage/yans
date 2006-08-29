@@ -22,7 +22,7 @@
 #ifndef DCF_H
 #define DCF_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 #include "yans/event.h"
 #include "yans/ui-traced-variable.tcc"
 #include "yans/callback-logger.h"

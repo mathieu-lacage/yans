@@ -22,7 +22,7 @@
 #ifndef IPV4_END_POINTS_H
 #define IPV4_END_POINTS_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 #include <list>
 #include "yans/ipv4-address.h"
 

@@ -22,7 +22,7 @@
 #ifndef NETWORK_INTERFACE_80211_SIMPLE_FACTORY_H
 #define NETWORK_INTERFACE_80211_SIMPLE_FACTORY_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 #include "yans/mac-address.h"
 
 namespace yans {

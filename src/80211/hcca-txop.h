@@ -43,7 +43,7 @@
 #ifndef HCCA_TXOP_H
 #define HCCA_TXOP_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 #include <map>
 
 #include "hdr-mac-80211.h"

@@ -21,7 +21,7 @@
 #ifndef TAGS_H
 #define TAGS_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 #include <ostream>
 #include <vector>
 

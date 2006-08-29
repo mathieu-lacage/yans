@@ -21,7 +21,7 @@
 #ifndef MAC_SIMPLE_H
 #define MAC_SIMPLE_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 #include "yans/mac-address.h"
 #include "yans/callback.h"
 #include "yans/event.h"

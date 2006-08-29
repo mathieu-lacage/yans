@@ -25,7 +25,7 @@
 #include "yans/callback.h"
 #include "yans/ipv4-address.h"
 #include "yans/packet.h"
-#include "yans/stdint.h"
+#include <stdint.h>
 
 namespace yans {
 

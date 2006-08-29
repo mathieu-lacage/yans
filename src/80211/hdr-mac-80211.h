@@ -42,7 +42,7 @@
 #ifndef HDRMAC_80211
 #define HDRMAC_80211
 
-#include "yans/stdint.h"
+#include <stdint.h>
 
 #include "net-node.h"
 

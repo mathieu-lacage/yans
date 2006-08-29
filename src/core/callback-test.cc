@@ -21,7 +21,7 @@
 
 #include "test.h"
 #include "callback.h"
-#include "yans/stdint.h"
+#include <stdint.h>
 
 #ifdef RUN_SELF_TESTS
 

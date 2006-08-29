@@ -22,7 +22,7 @@
 #ifndef CHUNK_UDP_H
 #define CHUNK_UDP_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 #include "yans/chunk.h"
 #include "yans/ipv4-address.h"
 

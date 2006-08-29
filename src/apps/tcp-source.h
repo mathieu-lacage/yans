@@ -22,7 +22,7 @@
 #ifndef TCP_SOURCE_H
 #define TCP_SOURCE_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 #include "yans/ipv4-address.h"
 #include "yans/packet.h"
 

@@ -21,7 +21,7 @@
 #ifndef MAC_NETWORK_INTERFACE_H
 #define MAC_NETWORK_INTERFACE_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 #include "yans/callback.h"
 #include "mac-address.h"
 #include "packet.h"

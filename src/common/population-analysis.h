@@ -23,7 +23,7 @@
 #ifndef POPULATION_ANALYSIS_H
 #define POPULATION_ANALYSIS_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 
 namespace yans {
 

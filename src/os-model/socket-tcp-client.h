@@ -22,7 +22,7 @@
 #ifndef SOCKET_TCP_CLIENT_H
 #define SOCKET_TCP_CLIENT_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 #include "ipv4-address.h"
 
 SocketTcpClient {

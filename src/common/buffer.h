@@ -21,7 +21,7 @@
 #ifndef BUFFER_H
 #define BUFFER_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 #include <vector>
 
 namespace yans {

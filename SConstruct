@@ -265,11 +265,17 @@ class Ns3:
 	def generate_dependencies (self):
 		env = Environment()
 		self.gen_mod_config (env)
-		if env['PLATFORM'] == 'posix':
+		cc = env['CC']
+		cxx = env.subst (env['CXX'])
+		if cc == 'cl' and cxx == 'cl':
+			env = Environment (tools = ['mingw'])
+			cc = env['CC']
+			cxx = env.subst (env['CXX'])
+		if cc == 'gcc' and cxx == 'g++':
 			common_flags = ['-g3', '-Wall', '-Werror']
 			debug_flags = []
 			opti_flags = ['-O3']
-		elif env['PLATFORM'] == 'win32':
+		elif cc == 'cl' and cxx == 'cl':
 			env = Environment (ENV = os.environ)
 			common_flags = []
 			debug_flags = ['-W1', '-GX', '-EHsc', '-D_DEBUG', '/MDd']
@@ -419,8 +425,8 @@ class Ns3:
 		tmp_tar = os.path.join (self.build_dir, tar)
 		tmp_zip = os.path.join (self.build_dir, zip)
 		if dist_env['PLATFORM'] == 'win32':
-			dist_tgt = [zip]
-			dist_src = [tmp_zip]
+			dist_tgt = []
+			dist_src = []
 		else:
 			dist_tgt = [tar, zip]
 			dist_src = [tmp_tar, tmp_zip]
@@ -458,22 +464,6 @@ ns3.name = 'yans'
 #
 core = Ns3Module ('core', 'src/core')
 ns3.add (core)
-def core_config (env, config):
-	output = []
-	if env['PLATFORM'] == 'win32':
-		output.append ('#ifndef WIN32')
-		output.append ('#define WIN32')
-		output.append ('#endif /* WIN32 */')
-	if not config.CheckHeader ('stdint.h'):
-		output.append ('#undef HAVE_STDINT_H')
-		if not config.CheckHeader ('inttypes.h'):
-			output.append ('#undef HAVE_INTTYPES_H')
-		else:
-			output.append ('#define HAVE_INTTYPES_H')
-	else:
-		output.append ('#define HAVE_STDINT_H')
-	return output
-core.add_config (core_config)
 core.add_external_dep ('pthread')
 core.add_sources ([
         'reference-list-test.cc',
@@ -497,7 +487,6 @@ core.add_inst_headers ([
         'wall-clock-ms.h',
         'reference-list.h',
         'callback.h',
-	'stdint.h',
         'test.h'
 	])
 

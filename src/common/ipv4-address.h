@@ -22,7 +22,7 @@
 #ifndef IPV4_ADDRESS_H
 #define IPV4_ADDRESS_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 #include <ostream>
 
 namespace yans {

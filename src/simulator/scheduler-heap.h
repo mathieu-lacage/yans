@@ -23,7 +23,7 @@
 #define SCHEDULER_HEAP_H
 
 #include "scheduler.h"
-#include "yans/stdint.h"
+#include <stdint.h>
 #include <vector>
 
 namespace yans {

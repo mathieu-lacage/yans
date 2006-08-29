@@ -21,7 +21,7 @@
 #ifndef YAPNS_UDP_SINK_H
 #define YAPNS_UDP_SINK_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 #include "simulation-context.h"
 #include "ipv4-address.h"
 #include "callback.h"

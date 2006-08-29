@@ -4,7 +4,7 @@
 #define LOCAL_OBJECT_REGISTRY_H
 
 #include "yans/callback.h"
-#include "yans/stdint.h"
+#include <stdint.h>
 #include <list>
 
 namespace yans {

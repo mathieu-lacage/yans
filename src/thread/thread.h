@@ -22,7 +22,7 @@
 #ifndef THREAD_H
 #define THREAD_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 
 namespace yans {
 

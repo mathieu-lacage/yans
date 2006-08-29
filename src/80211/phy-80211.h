@@ -24,7 +24,7 @@
 
 #include <vector>
 #include <list>
-#include "yans/stdint.h"
+#include <stdint.h>
 #include "yans/callback.h"
 #include "yans/count-ptr-holder.tcc"
 #include "yans/event.h"

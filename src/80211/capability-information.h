@@ -21,7 +21,7 @@
 #ifndef CAPABILITY_INFORMATION_H
 #define CAPABILITY_INFORMATION_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 
 namespace yans {
 

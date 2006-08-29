@@ -21,7 +21,7 @@
 #ifndef SYSTEM_MUTEX_H
 #define SYSTEM_MUTEX_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 
 namespace yans {
 

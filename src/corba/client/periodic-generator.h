@@ -21,7 +21,7 @@
 #ifndef YAPNS_PERIODIC_GENERATOR_H
 #define YAPNS_PERIODIC_GENERATOR_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 #include "simulation-context.h"
 #include "callback.h"
 #include "remote-context.h"

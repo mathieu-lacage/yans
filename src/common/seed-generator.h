@@ -21,7 +21,7 @@
 #ifndef SEED_GENERATOR_H
 #define SEED_GENERATOR_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 
 namespace yans {
 

@@ -21,7 +21,7 @@
 #ifndef PACKET_H
 #define PACKET_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 #include "buffer.h"
 #include "chunk.h"
 #include "tags.h"

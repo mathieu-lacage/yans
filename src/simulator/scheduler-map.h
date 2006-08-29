@@ -23,7 +23,7 @@
 #define SCHEDULER_MAP_H
 
 #include "scheduler.h"
-#include "yans/stdint.h"
+#include <stdint.h>
 #include <map>
 #include <utility>
 

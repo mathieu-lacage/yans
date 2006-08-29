@@ -22,7 +22,7 @@
 #ifndef DATA_WRITER_H
 #define DATA_WRITER_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 
 namespace yans {
 

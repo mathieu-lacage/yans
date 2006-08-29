@@ -22,7 +22,7 @@
 #ifndef CHUNK_H
 #define CHUNK_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 #include <ostream>
 #include "buffer.h"
 

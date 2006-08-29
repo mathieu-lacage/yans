@@ -21,7 +21,7 @@
 #ifndef SSID_H
 #define SSID_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 
 namespace yans {
 

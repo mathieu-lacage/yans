@@ -21,7 +21,7 @@
 #ifndef STATUS_CODE_H
 #define STATUS_CODE_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 
 namespace yans {
 

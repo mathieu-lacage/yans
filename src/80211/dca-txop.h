@@ -22,7 +22,7 @@
 #ifndef DCA_TXOP_H
 #define DCA_TXOP_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 #include "yans/callback.h"
 #include "chunk-mac-80211-hdr.h"
 #include "yans/packet.h"

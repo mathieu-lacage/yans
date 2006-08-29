@@ -22,7 +22,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 
 namespace yans {
 

@@ -21,7 +21,7 @@
 #ifndef MAC_DCF_PARAMETERS_H
 #define MAC_DCF_PARAMETERS_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 
 #include "hdr-mac-80211.h"
 

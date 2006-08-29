@@ -21,7 +21,7 @@
 #ifndef YAPNS_SIMULATOR_H
 #define YAPNS_SIMULATOR_H
 
-#include "yans/stdint.h"
+#include <stdint.h>
 #include "event.h"
 
 namespace {
