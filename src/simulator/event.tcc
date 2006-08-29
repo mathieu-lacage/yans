@@ -52,7 +52,6 @@ public:
 		: m_obj (obj), 
 		  m_function (function)
 	{}
-protected:
 	virtual ~EventMemberImpl0 () {}
 private:
 	virtual void notify (void) { 
@@ -72,7 +71,6 @@ public:
 		  m_function (function),
 		  m_a1 (a1)
 	{ }
-protected:
 	virtual ~EventMemberImpl1 () {}
 private:
 	virtual void notify (void) { 
@@ -94,7 +92,6 @@ public:
 		  m_a1 (a1),
 		  m_a2 (a2)
 	{ }
-protected:
 	virtual ~EventMemberImpl2 () {}
 private:
 	virtual void notify (void) { 
@@ -118,7 +115,6 @@ public:
 		  m_a2 (a2),
 		  m_a3 (a3)
 	{ }
-protected:
 	virtual ~EventMemberImpl3 () {}
 private:
 	virtual void notify (void) { 
@@ -144,7 +140,6 @@ public:
 		  m_a3 (a3),
 		  m_a4 (a4)
 	{ }
-protected:
 	virtual ~EventMemberImpl4 () {}
 private:
 	virtual void notify (void) { 
@@ -172,7 +167,6 @@ public:
 		  m_a4 (a4),
 		  m_a5 (a5)
 	{ }
-protected:
 	virtual ~EventMemberImpl5 () {}
 private:
 	virtual void notify (void) { 
@@ -278,7 +272,6 @@ public:
 		: m_function (function),
 		  m_a1 (a1)
 	{ }
-protected:
 	virtual ~EventFunctionImpl1 () {}
 private:
 	virtual void notify (void) { 
@@ -298,7 +291,6 @@ public:
 		  m_a1 (a1),
 		  m_a2 (a2)
 	{ }
-protected:
 	virtual ~EventFunctionImpl2 () {}
 private:
 	virtual void notify (void) { 
@@ -320,7 +312,6 @@ public:
 		  m_a2 (a2),
 		  m_a3 (a3)
 	{ }
-protected:
 	virtual ~EventFunctionImpl3 () {}
 private:
 	virtual void notify (void) { 
@@ -344,7 +335,6 @@ public:
 		  m_a3 (a3),
 		  m_a4 (a4)
 	{ }
-protected:
 	virtual ~EventFunctionImpl4 () {}
 private:
 	virtual void notify (void) { 
@@ -370,7 +360,6 @@ public:
 		  m_a4 (a4),
 		  m_a5 (a5)
 	{ }
-protected:
 	virtual ~EventFunctionImpl5 () {}
 private:
 	virtual void notify (void) { 

@@ -28,14 +28,13 @@ namespace yans {
 class EventImpl {
 public:
 	EventImpl ();
+	virtual ~EventImpl () = 0;
 	void invoke (void);
 	void set_tag (void *tag);
 	void *get_tag (void) const;
 	void cancel (void);
 	bool is_running (void);
 protected:
-	virtual ~EventImpl () = 0;
-private:
 	virtual void notify (void) = 0;
 private:
 	friend class Event;

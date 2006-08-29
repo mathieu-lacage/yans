@@ -30,12 +30,12 @@ public:
 	EventFunctionImpl0 (F function) 
 		: m_function (function)
 	{}
-protected:
+	virtual ~EventFunctionImpl0 () {}
+private:
 	virtual void notify (void) { 
 		(*m_function) (); 
 	}
 private:
-	virtual ~EventFunctionImpl0 () {}
 	F m_function;
 };
 
