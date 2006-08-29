@@ -793,7 +793,7 @@ eth.add_inst_headers ([
 run_tests = Ns3Module ('run-tests', 'utils')
 ns3.add (run_tests)
 run_tests.set_executable ()
-run_tests.add_deps (['core', 'simulator'])
+run_tests.add_deps (['core', 'simulator', 'common', 'ipv4', 'arp', 'ethernet', '80211'])
 run_tests.add_source ('run-tests.cc')
 
 bench_packets = Ns3Module ('bench-packets', 'utils')
