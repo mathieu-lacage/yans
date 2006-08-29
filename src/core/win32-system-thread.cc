@@ -20,7 +20,7 @@
  */
 
 #include "system-thread.h"
-
+#include <windows.h>
 #include <cassert>
 
 namespace yans {
@@ -30,20 +30,27 @@ public:
 	SystemThreadPrivate (SystemThread *thread);
 	~SystemThreadPrivate ();
 private:
-	static void *pthread_run (void *thread);
+	static void *thread_run (void *thread);
 	SystemThread *m_thread;
+	HANDLE m_system_thread;
 };
 
 SystemThreadPrivate::SystemThreadPrivate (SystemThread *thread)
 	: m_thread (thread)
 {
+	m_system_thread = CreateThread(NULL, 0, 
+				       (LPTHREAD_START_ROUTINE)SystemThreadPrivate::thread_run, 
+				       this, 0, 0);
+	assert (m_system_thread != NULL)
 }
 SystemThreadPrivate::~SystemThreadPrivate ()
 {}
 void *
-SystemThreadPrivate::pthread_run (void *thread)
+SystemThreadPrivate::thread_run (void *thread)
 {
-	return 0;
+	SystemThreadPrivate *self = reinterpret_cast<SystemThreadPrivate *> (thread);
+	self->m_thread->real_run ();
+	return thread;
 }
 
 SystemThread::SystemThread ()
