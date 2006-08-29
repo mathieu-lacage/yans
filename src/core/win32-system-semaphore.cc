@@ -21,7 +21,6 @@
 
 #include "system-semaphore.h"
 
-#include <semaphore.h>
 #include <cassert>
 #include <iostream>
 
@@ -35,7 +34,6 @@ public:
 	void wait (void);
 	void wait (uint32_t n);
 private:
-	sem_t m_sem;
 };
 
 SystemSemaphorePrivate::SystemSemaphorePrivate (uint32_t init)
