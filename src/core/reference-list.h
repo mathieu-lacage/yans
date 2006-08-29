@@ -39,28 +39,38 @@ class ReferenceList {
 public:
 	ReferenceList () 
 		:  m_obj_ptr (),
-		   m_prev (this), 
-		   m_next (this) 
-	{}
+		   m_prev (), 
+		   m_next () 
+	{
+		m_prev = this;
+		m_next = this;
+	}
 	ReferenceList (ReferenceList &o) 
 		: m_obj_ptr (),
-		  m_prev (this), 
-		  m_next (this)
+		  m_prev (), 
+		  m_next ()
 	{
+		m_prev = this;
+		m_next = this;
 		insert_self_in_other (o);
 	}
 	ReferenceList (ReferenceList const&o) 
 		: m_obj_ptr (),
-		  m_prev (this), 
-		  m_next (this)
+		  m_prev (), 
+		  m_next ()
 	{
+		m_prev = this;
+		m_next = this;
 		insert_self_in_other (o);
 	}
 	ReferenceList (OBJ_PTR const &obj_ptr)
 		: m_obj_ptr (obj_ptr), 
-		  m_prev (this), 
-		  m_next (this)
-	{}
+		  m_prev (), 
+		  m_next ()
+	{
+		m_prev = this;
+		m_next = this;
+	}
 	~ReferenceList () {
 		remove_from_list ();
 	}
