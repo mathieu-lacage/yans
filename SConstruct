@@ -263,13 +263,14 @@ class Ns3:
 					outfile.write ('#endif /*' + config_file_guard + '*/\n')
 					config.Finish ()
 	def generate_dependencies (self):
-		env = Environment(ENV = {'PATH' : os.environ['PATH']})
+		env = Environment()
 		self.gen_mod_config (env)
 		if env['PLATFORM'] == 'posix':
 			common_flags = ['-g3', '-Wall', '-Werror']
 			debug_flags = []
 			opti_flags = ['-O3']
 		elif env['PLATFORM'] == 'win32':
+			env = Environment (ENV = os.environ)
 			common_flags = []
 			debug_flags = ['-W1', '-GX', '-EHsc', '-D_DEBUG', '/MDd']
 			opti_flags = ['-O2', '-EHsc', '-DNDEBUG', '/MD']
