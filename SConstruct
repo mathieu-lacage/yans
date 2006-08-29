@@ -399,58 +399,56 @@ class Ns3:
 		env.Alias ('all', ['dbg-shared', 'dbg-static', 'opt-shared', 'opt-static'])
 
 
-		dist_env = env.Copy ()
 		# dist support
-		dist_list = []
-		for module in self.__modules:
-			for f in module.sources:
-				dist_list.append (os.path.join (module.dir, f))
-			for f in module.headers:
-				dist_list.append (os.path.join (module.dir, f))
-			for f in module.inst_headers:
-				dist_list.append (os.path.join (module.dir, f))
-			for f in module.extra_dist:
-				dist_list.append (os.path.join (module.dir, f))
-		for f in self.extra_dist:
-			dist_list.append (tag, f)
-		dist_list.append ('SConstruct')
+		dist_env = env.Copy ()
+		if dist_env['PLATFORM'] == 'posix':
+			dist_list = []
+			for module in self.__modules:
+				for f in module.sources:
+					dist_list.append (os.path.join (module.dir, f))
+				for f in module.headers:
+					dist_list.append (os.path.join (module.dir, f))
+				for f in module.inst_headers:
+					dist_list.append (os.path.join (module.dir, f))
+				for f in module.extra_dist:
+					dist_list.append (os.path.join (module.dir, f))
+			for f in self.extra_dist:
+				dist_list.append (tag, f)
+			dist_list.append ('SConstruct')
 
-		targets = []
-		basename = self.name + '-' + self.version
-		for src in dist_list:
-			tgt = os.path.join (basename, src)
-			targets.append (dist_env.MyCopyBuilder (target = tgt, source = src))
-		tar = basename + '.tar.gz'
-		zip = basename + '.zip'
-		tmp_tar = os.path.join (self.build_dir, tar)
-		tmp_zip = os.path.join (self.build_dir, zip)
-		if dist_env['PLATFORM'] == 'win32':
-			dist_tgt = []
-			dist_src = []
-		else:
+			targets = []
+			basename = self.name + '-' + self.version
+			for src in dist_list:
+				tgt = os.path.join (basename, src)
+				targets.append (dist_env.MyCopyBuilder (target = tgt, source = src))
+			tar = basename + '.tar.gz'
+			zip = basename + '.zip'
+			tmp_tar = os.path.join (self.build_dir, tar)
+			tmp_zip = os.path.join (self.build_dir, zip)
 			dist_tgt = [tar, zip]
 			dist_src = [tmp_tar, tmp_zip]
 			dist_env.Tar (tmp_tar, targets)
-		dist_env.Zip (tmp_zip, targets)
-		dist_builder = dist_env.MyCopyBuilder (target = dist_tgt, source = dist_src)
-		dist_env.Alias ('dist', dist_builder)
-		dist_env.Append (RM_DIR=basename)
-		dist_env.AddPostAction (dist_builder, dist_env.Action (MyRmTree, strfunction = MyRmTreePrint))
-		dist_builder = dist_env.MyCopyBuilder (target = dist_tgt, source = dist_src)
-		dist_env.Alias ('fastdist', dist_tgt)
+			dist_env.Zip (tmp_zip, targets)
+			dist_builder = dist_env.MyCopyBuilder (target = dist_tgt, source = dist_src)
+			dist_env.Alias ('dist', dist_builder)
+			dist_env.Append (RM_DIR=basename)
+			dist_env.AddPostAction (dist_builder, dist_env.Action (MyRmTree,
+									       strfunction = MyRmTreePrint))
+			dist_builder = dist_env.MyCopyBuilder (target = dist_tgt, source = dist_src)
+			dist_env.Alias ('fastdist', dist_tgt)
 
-		# distcheck
-		distcheck_list = []
-		for src in dist_list:
-			tgt = os.path.join (self.build_dir, basename, src)
-			distcheck_list.append (tgt)
-		untar = env.Command (distcheck_list, tar,
-				     ['cd ' + self.build_dir + ' && tar -zxf ../' + tar])
-		scons_dir = os.path.join (self.build_dir, basename)
-		distcheck_builder = env.Command ('x',distcheck_list,
-						 ['cd ' + scons_dir + ' && scons'])
-		env.AlwaysBuild (distcheck_builder)
-		env.Alias ('distcheck', distcheck_builder)
+			# distcheck
+			distcheck_list = []
+			for src in dist_list:
+				tgt = os.path.join (self.build_dir, basename, src)
+				distcheck_list.append (tgt)
+			untar = env.Command (distcheck_list, tar,
+					     ['cd ' + self.build_dir + ' && tar -zxf ../' + tar])
+			scons_dir = os.path.join (self.build_dir, basename)
+			distcheck_builder = env.Command ('x',distcheck_list,
+							 ['cd ' + scons_dir + ' && scons'])
+			env.AlwaysBuild (distcheck_builder)
+			env.Alias ('distcheck', distcheck_builder)
 
 
 ns3 = Ns3 ()
