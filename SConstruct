@@ -3,7 +3,7 @@ import os
 import os.path
 import shutil
 
-class Ns3Module:
+class YansModule:
 	def __init__ (self, name, dir):
 		self.sources = []
 		self.inst_headers = []
@@ -79,7 +79,7 @@ def MyRmTreePrint (target, source, env):
 def print_cmd_line(s, target, src, env):
 	print 'Building ' + (' and '.join([str(x) for x in target])) + '...'
 
-class Ns3BuildVariant:
+class YansBuildVariant:
 	def __init__ (self):
 		self.static = False
 		self.gcxx_deps = False
@@ -87,7 +87,7 @@ class Ns3BuildVariant:
 		self.build_root = ''
 		self.env = None
 
-class Ns3:
+class Yans:
 	def __init__ (self):
 		self.__modules = []
 		self.extra_dist = []
@@ -291,7 +291,7 @@ class Ns3:
 		gcxx_builder = Builder (action = Action (MyCopyAction, strfunction = MyCopyActionPrint),
 					emitter = GcxxEmitter)
 		env.Append (BUILDERS = {'CopyGcxxBuilder':gcxx_builder})
-		variant = Ns3BuildVariant ()
+		variant = YansBuildVariant ()
 		builders = []
 		
 
@@ -451,17 +451,17 @@ class Ns3:
 			env.Alias ('distcheck', distcheck_builder)
 
 
-ns3 = Ns3 ()
-ns3.build_dir = 'build-dir'
-ns3.version = '0.0.1'
-ns3.name = 'yans'
+yans = Yans ()
+yans.build_dir = 'build-dir'
+yans.version = '0.0.1'
+yans.name = 'yans'
 
 
 #
 # The Core module
 #
-core = Ns3Module ('core', 'src/core')
-ns3.add (core)
+core = YansModule ('core', 'src/core')
+yans.add (core)
 core.add_sources ([
         'reference-list-test.cc',
         'callback-test.cc',
@@ -502,8 +502,8 @@ core.add_inst_headers ([
 #
 # The Simu module
 #
-simu = Ns3Module ('simulator', 'src/simulator')
-ns3.add (simu)
+simu = YansModule ('simulator', 'src/simulator')
+yans.add (simu)
 simu.add_dep ('core')
 simu.add_sources ([
 	'scheduler.cc', 
@@ -531,9 +531,9 @@ simu.add_inst_headers ([
 #
 # The Common module
 #
-common = Ns3Module ('common', 'src/common')
+common = YansModule ('common', 'src/common')
 common.add_deps (['core', 'simulator'])
-ns3.add (common)
+yans.add (common)
 common.add_sources ([
 	'buffer.cc',
 	'mac-address-factory.cc',
@@ -601,8 +601,8 @@ common.add_headers ([
 	'static-speed-position.h'
 	])
 
-ipv4 = Ns3Module ('ipv4', 'src/ipv4')
-ns3.add (ipv4)
+ipv4 = YansModule ('ipv4', 'src/ipv4')
+yans.add (ipv4)
 ipv4.add_deps (['core', 'common', 'simulator'])
 ipv4.add_sources ([
 	'chunk-icmp.cc',
@@ -640,8 +640,8 @@ ipv4.add_headers ([
 	'tcp-buffer.h'
 	])
 
-arp = Ns3Module ('arp', 'src/arp')
-ns3.add (arp)
+arp = YansModule ('arp', 'src/arp')
+yans.add (arp)
 arp.add_dep ('common')
 arp.add_sources ([
 	'arp-cache-entry.cc',
@@ -654,8 +654,8 @@ arp.add_headers ([
 	'chunk-arp.h'
 	])
 
-host = Ns3Module ('host', 'src/host')
-ns3.add (host)
+host = YansModule ('host', 'src/host')
+yans.add (host)
 host.add_deps (['ipv4', 'arp'])
 host.add_sources ([
 	'host.cc',
@@ -668,8 +668,8 @@ host.add_headers ([
 	'loopback-ipv4.h'
 	])
 
-apps = Ns3Module ('apps', 'src/apps')
-ns3.add (apps)
+apps = YansModule ('apps', 'src/apps')
+yans.add (apps)
 apps.add_deps (['ipv4', 'host'])
 apps.add_sources ([
 	'periodic-generator.cc',
@@ -690,8 +690,8 @@ apps.add_inst_headers ([
 	'udp-source.h'
 	])
 
-wifi = Ns3Module ('80211', 'src/80211')
-ns3.add (wifi)
+wifi = YansModule ('80211', 'src/80211')
+yans.add (wifi)
 wifi.add_deps (['core', 'common', 'simulator'])
 wifi.add_sources ([
 	'chunk-mac-80211-hdr.cc',
@@ -770,8 +770,8 @@ wifi.add_headers ([
 	'mac-high-nqap.h'
 	])
 
-eth = Ns3Module ('ethernet', 'src/ethernet')
-ns3.add (eth)
+eth = YansModule ('ethernet', 'src/ethernet')
+yans.add (eth)
 eth.add_deps (['core', 'common', 'simulator'])
 eth.add_sources ([
 	'cable.cc',
@@ -790,89 +790,89 @@ eth.add_inst_headers ([
 
 
 # utils
-run_tests = Ns3Module ('run-tests', 'utils')
-ns3.add (run_tests)
+run_tests = YansModule ('run-tests', 'utils')
+yans.add (run_tests)
 run_tests.set_executable ()
 run_tests.add_deps (['core', 'simulator', 'common', 'ipv4', 'arp', 'ethernet', '80211'])
 run_tests.add_source ('run-tests.cc')
 
-bench_packets = Ns3Module ('bench-packets', 'utils')
-#ns3.add (bench_packets)
+bench_packets = YansModule ('bench-packets', 'utils')
+#yans.add (bench_packets)
 bench_packets.set_executable ()
 bench_packets.add_dep ('core')
 bench_packets.add_source ('bench-packets.cc')
 
-bench_simu = Ns3Module ('bench-simulator', 'utils')
-ns3.add (bench_simu)
+bench_simu = YansModule ('bench-simulator', 'utils')
+yans.add (bench_simu)
 bench_simu.set_executable ()
 bench_simu.add_dep ('simulator')
 bench_simu.add_source ('bench-simulator.cc')
 
 
 # samples
-main_callback = Ns3Module ('main-callback', 'samples')
+main_callback = YansModule ('main-callback', 'samples')
 main_callback.set_executable ()
-ns3.add (main_callback)
+yans.add (main_callback)
 main_callback.add_dep ('core')
 main_callback.add_source ('main-callback.cc')
 
-main_event = Ns3Module ('main-event', 'samples')
+main_event = YansModule ('main-event', 'samples')
 main_event.set_executable ()
-ns3.add (main_event)
+yans.add (main_event)
 main_event.add_dep ('simulator')
 main_event.add_source ('main-event.cc')
 
-main_trace = Ns3Module ('main-trace', 'samples')
-ns3.add (main_trace)
+main_trace = YansModule ('main-trace', 'samples')
+yans.add (main_trace)
 main_trace.add_dep ('common')
 main_trace.set_executable ()
 main_trace.add_source ('main-trace.cc')
 
-main_simu = Ns3Module ('main-simulator', 'samples')
-ns3.add (main_simu)
+main_simu = YansModule ('main-simulator', 'samples')
+yans.add (main_simu)
 main_simu.set_executable ()
 main_simu.add_dep ('simulator')
 main_simu.add_source ('main-simulator.cc')
 
-main_packet = Ns3Module ('main-packet', 'samples')
-ns3.add (main_packet)
+main_packet = YansModule ('main-packet', 'samples')
+yans.add (main_packet)
 main_packet.set_executable ()
 main_packet.add_dep ('common')
 main_packet.add_source ('main-packet.cc')
 
-main_simple = Ns3Module('main-simple', 'samples')
-ns3.add (main_simple)
+main_simple = YansModule('main-simple', 'samples')
+yans.add (main_simple)
 main_simple.set_executable ()
 main_simple.add_deps (['ipv4', 'apps', 'common', 'ethernet'])
 main_simple.add_source ('main-simple.cc')
 
-main_router = Ns3Module('main-router', 'samples')
-ns3.add (main_router)
+main_router = YansModule('main-router', 'samples')
+yans.add (main_router)
 main_router.set_executable ()
 main_router.add_deps (['ipv4', 'apps', 'common', 'ethernet'])
 main_router.add_source ('main-router.cc')
 
-mainwifi_simple = Ns3Module ('main-80211-simple', 'samples')
-ns3.add (mainwifi_simple)
+mainwifi_simple = YansModule ('main-80211-simple', 'samples')
+yans.add (mainwifi_simple)
 mainwifi_simple.set_executable ()
 mainwifi_simple.add_deps (['ipv4', 'apps', 'common', '80211'])
 mainwifi_simple.add_source ('main-80211-simple.cc')
 
-mainwifi_adhoc = Ns3Module ('main-80211-adhoc', 'samples')
-ns3.add (mainwifi_adhoc)
+mainwifi_adhoc = YansModule ('main-80211-adhoc', 'samples')
+yans.add (mainwifi_adhoc)
 mainwifi_adhoc.set_executable ()
 mainwifi_adhoc.add_deps (['ipv4', 'apps', 'common', '80211'])
 mainwifi_adhoc.add_source ('main-80211-adhoc.cc')
 
-mainwifi_ap = Ns3Module ('main-80211-ap', 'samples')
-ns3.add (mainwifi_ap)
+mainwifi_ap = YansModule ('main-80211-ap', 'samples')
+yans.add (mainwifi_ap)
 mainwifi_ap.set_executable ()
 mainwifi_ap.add_deps (['ipv4', 'apps', 'common', '80211'])
 mainwifi_ap.add_source ('main-80211-ap.cc')
 
 
 
-ns3.generate_dependencies ()
+yans.generate_dependencies ()
 
 
 
