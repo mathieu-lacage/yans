@@ -21,6 +21,7 @@
 
 #include "system-semaphore.h"
 
+#include <windows.h>
 #include <cassert>
 #include <iostream>
 
@@ -29,31 +30,44 @@ namespace yans {
 class SystemSemaphorePrivate {
 public:
 	SystemSemaphorePrivate (uint32_t init);
+	~SystemSemaphorePrivate ();
 	void post (void);
 	void post (uint32_t n);
 	void wait (void);
 	void wait (uint32_t n);
 private:
+        HANDLE m_sem;
 };
 
 SystemSemaphorePrivate::SystemSemaphorePrivate (uint32_t init)
 {
+	m_sem = CreateSemaphore(NULL, init, 0, "semaphore");
+}
+SystemSemaphorePrivate::~SystemSemaphorePrivate ()
+{
+	CloseHandle (m_sem);
 }
 void 
 SystemSemaphorePrivate::post (void)
 {
+	ReleaseSemaphore(m_sem,1,NULL);
 }
 void 
 SystemSemaphorePrivate::wait (void)
 {
+	WaitForSingleObject (m_sem, INFINITE);
 }
 void 
 SystemSemaphorePrivate::post (uint32_t n)
 {
+	ReleaseSemaphore(m_sem,n,NULL);
 }
 void 
 SystemSemaphorePrivate::wait (uint32_t n)
 {
+	for (i = 0; i < n; i++) {
+		wait ();
+	}
 }
 
 SystemSemaphore::SystemSemaphore (uint32_t init)
