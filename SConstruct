@@ -461,7 +461,9 @@ ns3.add (core)
 def core_config (env, config):
 	output = []
 	if env['PLATFORM'] == 'win32':
+		output.append ('#ifndef WIN32')
 		output.append ('#define WIN32')
+		output.append ('#endif /* WIN32 */')
 	if not config.CheckHeader ('stdint.h'):
 		output.append ('#undef HAVE_STDINT_H')
 		if not config.CheckHeader ('inttypes.h'):
