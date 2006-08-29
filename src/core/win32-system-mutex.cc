@@ -21,6 +21,7 @@
 
 #include "system-mutex.h"
 
+#include <windows.h>
 #include <cassert>
 
 namespace yans {
@@ -31,21 +32,27 @@ public:
 	~SystemMutexPrivate ();
 	void lock (void);
 	void unlock (void);
+private:
+	HANDLE m_mutex;
 };
 
 SystemMutexPrivate::SystemMutexPrivate ()
 {
+	m_mutex = CreateMutex(NULL, FALSE, "mutex");
 }
 SystemMutexPrivate::~SystemMutexPrivate ()
 {
+	CloseHandle (m_mutex);
 }
 void 
 SystemMutexPrivate::lock (void)
 {
+	WaitForSingleObject (m_mutex,INFINITE);
 }
 void 
 SystemMutexPrivate::unlock (void)
 {
+	ReleaseMutex (m_mutex);
 }
 
 SystemMutex::SystemMutex ()
