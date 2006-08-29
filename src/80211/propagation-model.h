@@ -21,7 +21,7 @@
 #ifndef PROPAGATION_MODEL_H
 #define PROPAGATION_MODEL_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 #include "yans/callback.h"
 #include "yans/packet.h"
 

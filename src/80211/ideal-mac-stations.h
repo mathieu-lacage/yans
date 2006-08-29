@@ -21,7 +21,7 @@
 #ifndef IDEAL_MAC_STATIONS_H
 #define IDEAL_MAC_STATIONS_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 #include <vector>
 #include "mac-station.h"
 #include "mac-stations.h"

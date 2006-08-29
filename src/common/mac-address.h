@@ -22,7 +22,7 @@
 #ifndef MAC_ADDRESS_H
 #define MAC_ADDRESS_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 #include <ostream>
 
 namespace yans {

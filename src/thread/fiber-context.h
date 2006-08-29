@@ -3,7 +3,7 @@
 #ifndef FIBER_CONTEXT_H
 #define FIBER_CONTEXT_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 
 #ifdef __cplusplus
 extern "C" {

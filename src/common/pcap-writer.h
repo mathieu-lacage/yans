@@ -23,7 +23,7 @@
 #define PCAP_WRITER_H
 
 #include "yans/callback.h"
-#include <stdint.h>
+#include "yans/stdint.h"
 #include "packet.h"
 
 namespace yans {

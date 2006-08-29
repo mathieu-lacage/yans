@@ -22,7 +22,7 @@
 #ifndef SCHEDULER_H
 #define SCHEDULER_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 #include "event.h"
 
 namespace yans {

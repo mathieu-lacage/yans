@@ -22,7 +22,7 @@
 #ifndef TCP_BUFFER_H
 #define TCP_BUFFER_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 #include <list>
 #include <utility>
 #include "yans/packet.h"

@@ -21,7 +21,7 @@
 #ifndef ARP_IPV4_NETWORK_INTERFACE
 #define ARP_IPV4_NETWORK_INTERFACE
 
-#include <stdint.h>
+#include "yans/stdint.h"
 #include "yans/ipv4-network-interface.h"
 #include "yans/ipv4-address.h"
 #include "yans/mac-address.h"

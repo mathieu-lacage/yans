@@ -21,7 +21,7 @@
 #ifndef MAC_PARAMETERS_H
 #define MAC_PARAMETERS_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 
 namespace yans {
 

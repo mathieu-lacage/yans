@@ -25,7 +25,7 @@
 #ifndef READER_H
 #define READER_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 
 namespace yans {
 

@@ -21,7 +21,7 @@
 #ifndef CHUNK_MGT_H
 #define CHUNK_MGT_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 
 #include "yans/chunk.h"
 #include "status-code.h"

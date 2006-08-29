@@ -22,7 +22,7 @@
 #ifndef NETWORK_INTERFACE_80211_FACTORY_H
 #define NETWORK_INTERFACE_80211_FACTORY_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 #include "ssid.h"
 #include "yans/mac-address.h"
 

@@ -21,7 +21,7 @@
 #ifndef MAC_STATION_H
 #define MAC_STATION_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 
 namespace yans {
 

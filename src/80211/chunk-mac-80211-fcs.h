@@ -23,7 +23,7 @@
 
 #include "yans/chunk.h"
 #include "yans/mac-address.h"
-#include <stdint.h>
+#include "yans/stdint.h"
 
 namespace yans {
 

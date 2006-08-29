@@ -21,7 +21,7 @@
 #ifndef SYSTEM_SEMAPHORE_H
 #define SYSTEM_SEMAPHORE_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 
 namespace yans {
 

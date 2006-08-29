@@ -22,7 +22,7 @@
 #ifndef UDP_SINK_H
 #define UDP_SINK_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 #include "yans/ipv4-address.h"
 #include "yans/callback.h"
 #include "yans/packet.h"

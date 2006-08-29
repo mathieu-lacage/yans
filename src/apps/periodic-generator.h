@@ -22,7 +22,7 @@
 #ifndef PERIODIC_GENERATOR_H
 #define PERIODIC_GENERATOR_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 #include "yans/callback.h"
 #include "yans/event.h"
 #include "yans/packet.h"

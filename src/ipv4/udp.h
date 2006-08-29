@@ -22,7 +22,7 @@
 #ifndef UDP_H
 #define UDP_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 
 #include "yans/ipv4-address.h"
 #include "yans/packet.h"

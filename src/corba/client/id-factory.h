@@ -21,7 +21,7 @@
 #ifndef ID_FACTORY_H
 #define ID_FACTORY_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 
 class IdFactory {
 public:

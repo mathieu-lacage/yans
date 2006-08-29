@@ -22,7 +22,7 @@
 #define CHANNEL_80211_H
 
 #include <list>
-#include <stdint.h>
+#include "yans/stdint.h"
 #include "base-channel-80211.h"
 #include "yans/packet.h"
 

@@ -21,7 +21,7 @@
 #ifndef RANDOM_UNIFORM_H
 #define RANDOM_UNIFORM_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 
 namespace yans {
 

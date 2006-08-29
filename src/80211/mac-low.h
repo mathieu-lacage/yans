@@ -22,7 +22,7 @@
 #define MAC_LOW_H
 
 #include <vector>
-#include <stdint.h>
+#include "yans/stdint.h"
 
 #include "chunk-mac-80211-hdr.h"
 #include "yans/mac-address.h"

@@ -22,7 +22,7 @@
 #ifndef FIBER_H
 #define FIBER_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 #include <string>
 #include "callback.h"
 

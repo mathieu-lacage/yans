@@ -22,7 +22,7 @@
 #ifndef MAC_TX_MIDDLE_H
 #define MAC_TX_MIDDLE_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 
 namespace yans {
 

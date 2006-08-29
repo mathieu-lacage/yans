@@ -25,7 +25,7 @@
 #include "yans/callback.h"
 #include "supported-rates.h"
 #include "yans/packet.h"
-#include <stdint.h>
+#include "yans/stdint.h"
 
 namespace yans {
 

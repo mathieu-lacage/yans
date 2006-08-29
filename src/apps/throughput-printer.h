@@ -21,7 +21,7 @@
 #ifndef THROUGHPUT_PRINTER_H
 #define THROUGHPUT_PRINTER_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 #include "yans/event.h"
 #include "yans/packet.h"
 

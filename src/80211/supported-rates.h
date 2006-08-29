@@ -21,7 +21,7 @@
 #ifndef SUPPORTED_RATES_H
 #define SUPPORTED_RATES_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 
 namespace yans {
 

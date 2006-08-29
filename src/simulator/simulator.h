@@ -22,7 +22,7 @@
 #ifndef SIMULATOR_H
 #define SIMULATOR_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 #include "event.h"
 
 namespace yans {

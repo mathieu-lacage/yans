@@ -22,7 +22,7 @@
 #ifndef WRITE_FILE_H
 #define WRITE_FILE_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 #include <string>
 
 namespace yans {

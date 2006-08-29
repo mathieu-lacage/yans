@@ -21,7 +21,7 @@
 #ifndef YAPNS_UDP_SOURCE_H
 #define YAPNS_UDP_SOURCE_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 #include "simulation-context.h"
 #include "ipv4-address.h"
 

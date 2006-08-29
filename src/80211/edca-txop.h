@@ -43,7 +43,7 @@
 #ifndef EDCA_TXOP_H
 #define EDCA_TXOP_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 
 class Dcf;
 class MacQueue80211e;

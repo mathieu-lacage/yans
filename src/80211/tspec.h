@@ -43,7 +43,7 @@
 #ifndef TSPEC_H
 #define TSPEC_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 
 class TSpec {
 public:

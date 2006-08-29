@@ -21,7 +21,7 @@
 #ifndef LLC_SNAP_ENCAPSULATION
 #define LLC_SNAP_ENCAPSULATION
 
-#include <stdint.h>
+#include "yans/stdint.h"
 #include "yans/callback.h"
 #include "mac-address.h"
 #include "packet.h"

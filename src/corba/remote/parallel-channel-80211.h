@@ -22,7 +22,7 @@
 #define PARALLEL_CHANNEL_80211_H
 
 #include <list>
-#include <stdint.h>
+#include "yans/stdint.h"
 #include "yans/base-channel-80211.h"
 #include "remote-context.h"
 

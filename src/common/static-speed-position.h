@@ -21,7 +21,7 @@
 #ifndef STATIC_SPEED_POSITION_H
 #define STATIC_SPEED_POSITION_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 #include "position.h"
 
 namespace yans {

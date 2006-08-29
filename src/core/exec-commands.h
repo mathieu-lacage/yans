@@ -21,7 +21,7 @@
 #ifndef EXEC_COMMANDS_H
 #define EXEC_COMMANDS_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 #include <string>
 #include <vector>
 #include "callback.h"

@@ -26,7 +26,7 @@
 #include "supported-rates.h"
 #include "yans/event.h"
 #include "yans/packet.h"
-#include <stdint.h>
+#include "yans/stdint.h"
 
 namespace yans {
 

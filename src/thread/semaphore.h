@@ -22,7 +22,7 @@
 #ifndef SEMAPHORE_H
 #define SEMAPHORE_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 #include <list>
 
 namespace yans {

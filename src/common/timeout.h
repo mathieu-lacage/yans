@@ -22,7 +22,7 @@
 #ifndef TIMEOUT_H
 #define TIMEOUT_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 #include "yans/callback.h"
 
 namespace yans {

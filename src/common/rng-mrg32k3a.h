@@ -21,7 +21,7 @@
 #ifndef RNG_MRG32k3A_H
 #define RNG_MRG32k3A_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 
 
 /*

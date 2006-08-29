@@ -23,7 +23,7 @@
 #define CHUNK_CONSTANT_DATA_H
 
 #include "chunk.h"
-#include <stdint.h>
+#include "yans/stdint.h"
 
 namespace yans {
 

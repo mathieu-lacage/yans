@@ -22,7 +22,7 @@
 #ifndef READ_FILE_H
 #define READ_FILE_H
 
-#include <stdint.h>
+#include "yans/stdint.h"
 #include <string>
 
 class ReadFilePrivate;
