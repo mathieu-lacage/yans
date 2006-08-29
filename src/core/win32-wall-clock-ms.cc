@@ -38,6 +38,7 @@ WallClockMsPrivate::start (void)
 unsigned long long 
 WallClockMsPrivate::end (void)
 {
+	return 0;
 }
 
 WallClockMs::WallClockMs ()
