@@ -462,7 +462,6 @@ ns3.name = 'yans'
 #
 core = Ns3Module ('core', 'src/core')
 ns3.add (core)
-core.add_external_dep ('pthread')
 core.add_sources ([
         'reference-list-test.cc',
         'callback-test.cc',
@@ -470,6 +469,7 @@ core.add_sources ([
 	])
 env = Environment ()
 if env['PLATFORM'] == 'posix':
+	core.add_external_dep ('pthread')
 	core.add_sources ([
 		'unix-system-semaphore.cc',
 		'unix-system-thread.cc',
