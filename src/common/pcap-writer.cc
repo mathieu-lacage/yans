@@ -24,10 +24,10 @@
  * http://wiki.ethereal.com/Development/LibpcapFileFormat
  */
 
-#include "pcap-writer.h"
 #include "yans/simulator.h"
+#include "yans/system-file.h"
+#include "pcap-writer.h"
 #include "packet.h"
-#include "data-writer.h"
 
 
 namespace yans {
@@ -49,7 +49,7 @@ PcapWriter::~PcapWriter ()
 void
 PcapWriter::open (char const *name)
 {
-	m_writer = new DataWriter ();
+	m_writer = new SystemFile ();
 	m_writer->open (name);
 }
 

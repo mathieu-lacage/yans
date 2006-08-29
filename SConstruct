@@ -475,19 +475,22 @@ if env['PLATFORM'] == 'posix':
 		'unix-system-thread.cc',
 		'unix-system-mutex.cc',
 		'unix-exec-commands.cc',
-		'unix-wall-clock-ms.cc'
+		'unix-wall-clock-ms.cc',
+		'unix-system-file.cc'
 		])
 elif env['PLATFORM'] == 'win32':
 	core.add_sources ([
 		'win32-system-semaphore.cc',
 		'win32-system-thread.cc',
 		'win32-system-mutex.cc',
-		'win32-wall-clock-ms.cc'
+		'win32-wall-clock-ms.cc',
+		'win32-system-file.cc'
 		])
 core.add_inst_headers ([
 	'system-semaphore.h',
         'system-thread.h',
         'system-mutex.h',
+	'system-file.h',
         'exec-commands.h',
         'wall-clock-ms.h',
         'reference-list.h',
@@ -546,7 +549,6 @@ common.add_sources ([
 	'chunk-utils.cc',
 	'pcap-writer.cc',
 	'trace-container.cc',
-	'data-writer.cc',
 	'population-analysis.cc',
 	'traced-variable-test.cc',
 	'ipv4-address.cc',
@@ -593,7 +595,6 @@ common.add_inst_headers ([
 	])
 common.add_headers ([
 	'chunk-llc-snap.h',
-	'data-writer.h',
 	'ref-ptr.h',
 	'rng-mrg32k3a.h',
 	'seed-generator.h',

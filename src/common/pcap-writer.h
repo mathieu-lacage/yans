@@ -28,7 +28,7 @@
 
 namespace yans {
 
-class DataWriter;
+class SystemFile;
 
 /**
  * \brief Pcap output for Packet logger
@@ -64,7 +64,7 @@ private:
 	void write_data (uint8_t *buffer, uint32_t size);
 	void write_32 (uint32_t data);
 	void write_16 (uint16_t data);
-	DataWriter *m_writer;
+	SystemFile *m_writer;
 	Callback<void,uint8_t *,uint32_t> m_write_callback;
 };
 
