@@ -37,10 +37,10 @@ EventImpl::EventImpl ()
 void 
 EventImpl::invoke (void)
 {
+	m_running = 0;
 	if (m_cancel == 0) {
 		notify ();
 	}
-	m_running = 0;
 }
 void 
 EventImpl::set_tag (void *tag)
