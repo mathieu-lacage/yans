@@ -59,6 +59,15 @@ FecBpskMode::get_chunk_success_rate (double snr, unsigned int nbits) const
 	//printf ("dfree: %d, adfree: %d\n", dFree_, adFree_);
 	double pd = calculate_pd (ber, m_d_free);
 	double pmu = m_ad_free * pd;
+	if (pmu > 1.0) {
+		/**
+		 * If pmu is bigger than 1, then, this calculation is
+		 * giving us a useless bound. A better bound in this case
+		 * is 1 - ber which is necessarily bigger than the real 
+		 * success rate.
+		 */
+		return ber;
+	}
 	double pms = pow (1 - pmu, nbits);
 	//printf ("ber: %g -- pd: %g -- pmu: %g -- pms: %g\n", ber, pd, pmu, pms);
 	return pms;
