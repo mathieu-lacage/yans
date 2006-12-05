@@ -491,10 +491,9 @@ uint64_t
 Phy80211::calculate_tx_duration_us (uint32_t size, uint8_t payload_mode) const
 {
 	uint64_t delay = m_plcp_preamble_delay_us;
-	delay += m_plcp_header_length / get_mode (0)->get_data_rate ();
-	uint64_t tmp = size * 8;
-	tmp *= 1000000;
-	delay +=  tmp / get_mode (payload_mode)->get_data_rate ();
+	delay += m_plcp_header_length * 1000000 / get_mode (0)->get_data_rate ();
+	uint64_t nbits = size * 8;
+	delay += nbits * 1000000 / get_mode (payload_mode)->get_data_rate ();
 	return delay;
 }
 
@@ -816,7 +815,7 @@ Phy80211::calculate_per (RxEvent const *event, NiChanges *ni) const
 	uint64_t previous_us = (*j).get_time_us ();
 	uint64_t plcp_header_start_us = (*j).get_time_us () + m_plcp_preamble_delay_us;
 	uint64_t plcp_payload_start_us = plcp_header_start_us + 
-		m_plcp_header_length * get_mode (event->get_header_mode ())->get_data_rate () / 1000000;
+		m_plcp_header_length * 1000000 / get_mode (event->get_header_mode ())->get_data_rate ();
 	double noise_interference_w = (*j).get_delta ();
 	double power_w = event->get_rx_power_w ();
 	TransmissionMode *payload_mode = get_mode (event->get_payload_mode ());
